@@ -48,6 +48,7 @@
   "MinerStatusKey": "$MinerStatusKey",
   "SwitchingPrevention": "$SwitchingPrevention",
   "ShowMinerWindow": "$ShowMinerWindow",
+  "FastestMinerOnly": "$FastestMinerOnly",
   "GPUs" : "$GPUs",
   "RebootOnGPUFailure": "$RebootOnGPUFailure",
   "MSIApath": "$MSIApath",

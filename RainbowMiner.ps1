@@ -60,6 +60,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$ShowMinerWindow = $false, #if true all miner windows will be visible (they can steal focus)
     [Parameter(Mandatory = $false)]
+    [Switch]$FastestMinerOnly = $false, #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
+    [Parameter(Mandatory = $false)]
     [Switch]$DisableAutoUpdate = $false,
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config.txt", # Path to config file    
@@ -191,6 +193,7 @@ while ($true) {
                 MinerStatusKey      = $MinerStatusKey
                 SwitchingPrevention = $SwitchingPrevention
                 ShowMinerWindow     = $ShowMinerWindow
+                FastestMinerOnly    = $FastestMinerOnly
                 GPUs                = $GPUs
                 RebootOnGPUFailure  = $RebootOnGPUFailure
                 MSIApath            = $MSIApath
@@ -537,6 +540,15 @@ while ($true) {
         ($Miner_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>2 -and ($Miner_WatchdogTimers | Where-Object {$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>1
     }
 
+    #Give API access to the miners information
+    $API.Miners = $Miners
+
+    #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
+    if ( $Config.FastestMinerOnly ) {$Miners = $Miners | Sort-Object -Descending {"$($_.Type -join '')$($_.Index -join '')$($_.HashRates.PSObject.Properties.Name -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.Type -join '')$($_.Index -join '')$($_.HashRates.PSObject.Properties.Name -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
+
+    #Give API access to the fasted miners information
+    $API.FastestMiners = $Miners
+
     #Update the active miners
     if ($Miners.Count -eq 0) {
         Write-Log -Level Warn "No miners available. "
@@ -544,8 +556,6 @@ while ($true) {
         Start-Sleep $Config.Interval
         continue
     }
-    #Give API access to the miners information
-    $API.Miners = $Miners
 
     $ActiveMiners | ForEach-Object {
         $_.Profit = 0
@@ -808,9 +818,9 @@ while ($true) {
     }
 
     #Display benchmarking progress
-    $BenchmarksNeeded = ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null}).Count
+    $BenchmarksNeeded = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null}).Count
     if ($BenchmarksNeeded -gt 0) {
-        Write-Log -Level Warn "Benchmarking in progress: $($BenchmarksNeeded) miners left to benchmark."
+        Write-Log -Level Warn "Benchmarking in progress: $($BenchmarksNeeded) miner$(if ($BenchmarksNeeded -gt 1){'s'}) left to benchmark."
     }
 
     #Display exchange rates

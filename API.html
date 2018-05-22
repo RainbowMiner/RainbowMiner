@@ -1,6 +1,6 @@
 ﻿<html>
   <body>
-    <h1>PoorMansMiner API</h1>
+    <h1>RainbowMiner API</h1>
     
     API data is available at http://localhost:3999/&lt;resource&gt;
 
@@ -8,7 +8,7 @@
     
     <h3>Version</h3>
     <a href="http://localhost:3999/version">/version</a>
-    <p>Returns the version number of MultiPoolMiner.</p>
+    <p>Returns the version number of RainbowMiner.</p>
     
     <h3>Miners</h3>
     <a href="http://localhost:3999/miners">/miners</a>
@@ -21,6 +21,10 @@
     <h3>Active Miners</h3>
     <a href="http://localhost:3999/activeminers">/activeminers</a>
     <p>Shows data about all miners that are enabled.</p>
+
+    <h3>Fastest Miners</h3>
+    <a href="http://localhost:3999/fastestminers">/fastestminers</a>
+    <p>Shows data about the fastest miners (requires 'UseFastestMinerPerAlgoOnly = $true', otherwise will be identical to 'Miners'; see readme).</p>    
     
     <h3>Failed Miners</h3>
     <a href="http://localhost:3999/failedminers">/failedminers</a>
