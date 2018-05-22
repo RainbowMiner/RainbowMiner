@@ -601,7 +601,7 @@ while ($true) {
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                 MSIAprofile          = $Miner.MSIAprofile
-                RunInConsole         = if ($Miner.RunInConsole -or $Config.ShowMinerWindow) {$true} else {$false}
+                ShowMinerWindow      = if ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow) {$true} else {$false}
                 DevFee               = $Miner.DevFee
                 BaseName             = if ($Miner.BaseName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.BaseName}
                 FaultTolerance       = if ($Miner.FaultTolerance -eq $null) {0.1} else {$Miner.FaultTolerance}

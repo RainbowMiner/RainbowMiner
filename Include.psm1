@@ -529,12 +529,10 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$ProcessName = "",
         [Parameter(Mandatory = $false)]
-        [Bool]$RunInConsole = $false
+        [Bool]$ShowMinerWindow = $false
     )
 
-    #$RunInConsole = $true
-
-    if ( $RunInConsole ) {
+    if ( $ShowMinerWindow ) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName
@@ -567,7 +565,6 @@ function Start-SubProcessInBackground {
     $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
     $ScriptBlock += "& '$FilePath'"
     if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
-    #if ($ArgumentList) {$ScriptBlock += " $($ArgumentList -replace "([^'])(\d+,[\d+,]+)([^'])","`$1'`$2'`$3")"}
     $ScriptBlock += " *>&1"
     $ScriptBlock += " | Write-Output"
     if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
@@ -811,9 +808,9 @@ class Miner {
     $LogFile
     $Pool
     hidden [Array]$Data = @()
+    [Bool]$ShowMinerWindow = $false
     $MSIAprofile
     $DevFee
-    [Bool]$RunInConsole = $false
     $BaseName = $null
     $FaultTolerance = 0.1
 
@@ -831,7 +828,7 @@ class Miner {
 
         if (-not $this.Process) {
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.Arguments -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.Type | ForEach-Object {if ($_ -eq "CPU") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -RunInConsole $this.RunInConsole -ProcessName $this.BaseName
+            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.Arguments -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.Type | ForEach-Object {if ($_ -eq "CPU") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.BaseName
 
             if ($this.Process | Get-Job -ErrorAction SilentlyContinue) {
                 $this.Status = [MinerStatus]::Running
@@ -843,7 +840,7 @@ class Miner {
         $this.Status = [MinerStatus]::Failed
 
         if ($this.Process) {
-            if ( $this.RunInConsole -and $this.Process.MiningProcess ) {
+            if ( $this.ShowMinerWindow -and $this.Process.MiningProcess ) {
                 $this.Process.MiningProcess.CloseMainWindow() | Out-Null
                 # Wait up to 10 seconds for the miner to close gracefully
                 $closedgracefully = $this.Process.MiningProcess.WaitForExit(10000)
