@@ -16,7 +16,7 @@ while ($true) {
     Get-Job | ForEach-Object {
         $out = (Receive-Job $_)
         if ( $out ) {$out; $Active[$_.Id] = (Get-Date).ToUniversalTime()}
-        elseif ($Active[$_.Id] -lt (Get-Date).ToUniversalTime().AddSeconds(-10)) {$Active.Remove($_.Id); Remove-Job $_ -Force;}
+        elseif ($Active[$_.Id] -lt (Get-Date).ToUniversalTime().AddMinutes(-10)) {$Active.Remove($_.Id); Remove-Job $_ -Force;}
     }
 
 }
