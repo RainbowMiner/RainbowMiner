@@ -839,6 +839,8 @@ class Miner {
     hidden StopMining() {
         $this.Status = [MinerStatus]::Failed
 
+        $this.Data = @()
+
         if ($this.Process) {
             if ( $this.ShowMinerWindow -and $this.Process.MiningProcess ) {
                 $this.Process.MiningProcess.CloseMainWindow() | Out-Null
