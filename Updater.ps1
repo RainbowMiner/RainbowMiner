@@ -28,7 +28,8 @@ catch {
 $Name = "PowerShell"
 try {
     $ProgressPreference = "SilentlyContinue"
-    $Request = Invoke-RestMethod -Uri "https://api.github.com/repos/powershell/$Name/releases/latest" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-RestMethod -Uri "https://api.github.com/repos/powershell/$Name/releases" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = ($Request | Where-Object tag_name -match "^v\d+\.\d+\.\d+$" | Sort-Object -Descending published_at | Select-Object -First 1)
     $Version = ($Request.tag_name -replace '^v')
     $URI = $Request.assets | Where-Object Name -EQ "$($Name)-$($Version)-win-x64.msi" | Select-Object -ExpandProperty browser_download_url
 
