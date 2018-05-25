@@ -35,6 +35,7 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
     $BlockMasters_Algorithm = $BlockMasters_Request.$_.name
     $BlockMasters_Algorithm_Norm = Get-Algorithm $BlockMasters_Algorithm
     $BlockMasters_Coin = ""
+    $BlockMasters_PoolFee = [double]$BlockMasters_Request.$_.fees
 
     $Divisor = 1000000
 
@@ -71,8 +72,9 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 Region        = $BlockMasters_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
+                PoolFee       = $BlockMasters_PoolFee
             }
         }
     }
 }
-Sleep 0
+

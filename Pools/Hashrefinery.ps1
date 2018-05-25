@@ -35,6 +35,7 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
     $HashRefinery_Algorithm = $HashRefinery_Request.$_.name
     $HashRefinery_Algorithm_Norm = Get-Algorithm $HashRefinery_Algorithm
     $HashRefinery_Coin = ""
+    $HashRefinery_PoolFee = [Double]$HashRefinery_Request.$_.fees
 
     $Divisor = 1000000
 
@@ -71,6 +72,7 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 Region        = $HashRefinery_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
+                PoolFee       = $HashRefinery_PoolFee
             }
         }
     }

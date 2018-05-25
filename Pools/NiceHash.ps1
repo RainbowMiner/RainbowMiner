@@ -26,14 +26,14 @@ if (($NiceHash_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
 }
 
 $NiceHash_Regions = "eu", "usa", "hk", "jp", "in", "br"
+$NiceHash_PoolFee = 2.0
 
-$NiceHash_Request.result.simplemultialgo | Where-Object { [Double]$_.paying -gt 0.00 -and @("nist5","cryptonight") -notcontains $_.name } | ForEach-Object {
+$NiceHash_Request.result.simplemultialgo | Where-Object { [Double]$_.paying -gt 0.00 } | ForEach-Object {
     $NiceHash_Host = "nicehash.com"
     $NiceHash_Port = $_.port
     $NiceHash_Algorithm = $_.name
     $NiceHash_Algorithm_Norm = Get-Algorithm $NiceHash_Algorithm
     $NiceHash_Coin = ""
-    $NiceHash_PoolFee = 2
 
     if ($NiceHash_Algorithm_Norm -eq "Sia") {$NiceHash_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($NiceHash_Algorithm_Norm -eq "Decred") {$NiceHash_Algorithm_Norm = "DecredNiceHash"} #temp fix

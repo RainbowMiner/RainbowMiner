@@ -26,6 +26,7 @@ if (($MiningPoolHubCoins_Request.return | Measure-Object).Count -le 1) {
 }
 
 $MiningPoolHubCoins_Regions = "europe", "us-east", "asia"
+$MiningPoolHubCoins_Fee = 0.9
 
 $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach-Object {
     $MiningPoolHubCoins_Host = $_.host
@@ -34,7 +35,6 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
     $MiningPoolHubCoins_Algorithm = $_.algo
     $MiningPoolHubCoins_Algorithm_Norm = Get-Algorithm $MiningPoolHubCoins_Algorithm
     $MiningPoolHubCoins_Coin = (Get-Culture).TextInfo.ToTitleCase(($_.coin_name -replace "-", " " -replace "_", " ")) -replace " "
-    $MiningPoolHubCoins_Fee = 0.9
 
     if ($MiningPoolHubCoins_Algorithm_Norm -eq "Sia") {$MiningPoolHubCoins_Algorithm_Norm = "SiaClaymore"} #temp fix
 

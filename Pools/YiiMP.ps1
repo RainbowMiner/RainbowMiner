@@ -25,6 +25,7 @@ if (($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 
 $YiiMP_Regions = "us"
 $YiiMP_Currencies = ($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$YiiMP_PoolFee = 2.0
 
 $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
     $YiiMP_Host = "yiimp.eu"
@@ -67,6 +68,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
             Region        = $YiiMP_Region_Norm
             SSL           = $false
             Updated       = $Stat.Updated
+            PoolFee       = $YiiMP_PoolFee
         }
     }
 }

@@ -35,6 +35,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
     $Zpool_Algorithm = $Zpool_Request.$_.name
     $Zpool_Algorithm_Norm = Get-Algorithm $Zpool_Algorithm
     $Zpool_Coin = ""
+    $Zpool_PoolFee = [Double]$Zpool_Request.$_.fees
 
     $Divisor = 1000000
 
@@ -76,6 +77,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
                 Region        = $Zpool_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
+                PoolFee       = $Zpool_PoolFee
             }
         }
     }

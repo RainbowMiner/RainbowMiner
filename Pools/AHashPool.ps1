@@ -34,6 +34,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $AHashPool_Algorithm = $AHashPool_Request.$_.name
     $AHashPool_Algorithm_Norm = Get-Algorithm $AHashPool_Algorithm
     $AHashPool_Coin = ""
+    $AHashPool_PoolFee = [Double]$AHashPool_Request.$_.fees
 
     $Divisor = 1000000
 
@@ -70,6 +71,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Region        = $AHashPool_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
+                PoolFee       = $AHashPool_PoolFee
             }
         }
     }
