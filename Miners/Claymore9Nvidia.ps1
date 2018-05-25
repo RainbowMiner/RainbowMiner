@@ -4,6 +4,9 @@ $Path = ".\Bin\Ethash-Claymore9\monk.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v9.7-claymoredual/claymoredual_9.7.zip"
 $Api = "Claymore"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $DevFee = 0.0
 $DevFeeDual = 0.0
 

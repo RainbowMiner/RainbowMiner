@@ -3,6 +3,10 @@
 $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.10-enemyzealot/z-enemy.1.10.release.7z"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
+
 $Commands = [PSCustomObject]@{
     #"bitcore" = " -N 3" #Bitcore
     #"phi"     = " -N 3" #PHI
@@ -32,7 +36,7 @@ $HashRates_Durations = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$DeviceIDsAll = Get-GPUlist "NVIDIA"
+$DeviceIDsAll = Get-GPUlist $Type
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
@@ -40,7 +44,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
     $HashRates_Duration = if ( $HashRates_Durations.$_ ) { $HashRates_Durations.$_ } else { $Default_HashRates_Duration }
 
     [PSCustomObject]@{
-        Type = "NVIDIA"
+        Type = $Type
         Path = $Path
         Arguments = "-r 0 -d $($DeviceIDsAll -join ',') -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -b 4068$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".$HashRates_Duration}

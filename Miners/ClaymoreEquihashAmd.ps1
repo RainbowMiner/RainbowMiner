@@ -1,8 +1,10 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Equihash-Claymore\ZecMiner64.exe"
-
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.6-claymoreequihash/claymore_equihash_v12.6.zip"
+
+$Type = "AMD"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore

@@ -3,6 +3,9 @@
 $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9e-phoenixminer/PhoenixMiner_2.9e.zip"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $Commands = [PSCustomObject]@{
     "ethash" = " -mi 12" #Ethash
 }
@@ -20,7 +23,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
 
     [PSCustomObject]@{
-        Type = "NVIDIA"
+        Type = $Type
         Path = $Path
         Arguments = "-rmode 0 -cdmport 23334 -cdm 1 -coin auto -gpus $((Get-GPUlist "NVIDIA" 3GB 1) -join '') -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) -nvidia$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $(if (Get-GPUlist "NVIDIA" 3GB) { $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week } else { 0 })}
@@ -31,7 +34,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
         MSIAprofile = 2
     },
     [PSCustomObject]@{
-        Type = "NVIDIA"
+        Type = $Type
         Path = $Path
         Arguments = "-rmode 0 -cdmport 23334 -cdm 1 -coin auto -gpus $((Get-GPUlist "NVIDIA" 0GB 1) -join '') -pool $($proto2gb)$($Pools."$($Algorithm_Norm)2gb".Host):$($Pools."$($Algorithm_Norm)2gb".Port) -wal $($Pools."$($Algorithm_Norm)2gb".User) -pass $($Pools."$($Algorithm_Norm)2gb".Pass)  $($possum2gb) -nvidia$($Commands.$_)"
         HashRates = [PSCustomObject]@{"$($Algorithm_Norm)2gb" = $(if (Get-GPUlist "NVIDIA") { $Stats."$($Name)_$($Algorithm_Norm)2gb_HashRate".Week } else { 0 })}

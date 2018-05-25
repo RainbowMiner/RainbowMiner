@@ -3,6 +3,9 @@
 $Path = ".\Bin\NVIDIA-TPruvot\ccminer.exe"
 $Uri = "https://github.com/tpruvot/ccminer/releases/download/2.2.5-tpruvot/ccminer-x86-2.2.5-cuda9.7z"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
     #"bastion" = "" #bastion
@@ -76,16 +79,16 @@ $Profiles = [PSCustomObject]@{
     "lyra2z" = 4
 }
 
-$DeviceIDsAll = Get-GPUlist "NVIDIA"
+$DeviceIDsAll = (Get-GPUlist $Type) -join ','
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
     $Algorithm_Norm = Get-Algorithm $_
 
     [PSCustomObject]@{
-        Type = "NVIDIA"
+        Type = $Type
         Path = $Path
-        Arguments = "-r 0 -d $($DeviceIDsAll -join ',') -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_) --submit-stale"
+        Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_) --submit-stale"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
         API = "Ccminer"
         Port = 4068

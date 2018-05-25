@@ -4,6 +4,9 @@ $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.7-claymoredual/claymoredual_11.7.zip"
 $Api = "Claymore"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $DevFee = 1.0
 $DevFeeDual = 1.5
 
@@ -125,6 +128,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                 URI       = $Uri
                 DevFee    = $DevFee
                 MSIAprofile = if ( $Profile.$MainAlgorithm_Norm ) {$Profile.$MainAlgorithm_Norm} else {$DefaultProfile}
+                BaseName = "EthDcrMiner64"
             }
         }
         elseif ($_ -match "^.+;.+:\d+$") { # valid dual mining parameter set
@@ -155,6 +159,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                         ($SecondaryAlgorithm_Norm) = 0
                     }
                     MSIAprofile = if ( $Profile.$SecondaryAlgorithm_Norm ) {$Profile.$SecondaryAlgorithm_Norm} else {$DefaultProfile}
+                    BaseName = "EthDcrMiner64"
                 }
                 if ($SecondaryAlgorithm_Norm -eq "Sia" -or $SecondaryAlgorithm_Norm -eq "Decred") {
                     $SecondaryAlgorithm_Norm = "$($SecondaryAlgorithm_Norm)NiceHash"
@@ -172,6 +177,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                             ($SecondaryAlgorithm_Norm) = 0
                         }
                         MSIAprofile = if ( $Profile.$SecondaryAlgorithm_Norm ) {$Profile.$SecondaryAlgorithm_Norm} else {$DefaultProfile}
+                        BaseName = "EthDcrMiner64"
                     }
                 }
             }

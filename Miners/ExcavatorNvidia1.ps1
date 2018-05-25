@@ -5,6 +5,9 @@ $Threads = 1
 $Path = ".\Bin\Excavator\excavator.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.4a-excavator/excavator_v1.4.4a_NVIDIA_Win64.zip"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $Commands = [PSCustomObject]@{
     #"blake2s" = @() #Blake2s
     #"cryptonight" = @() #Cryptonight
@@ -44,7 +47,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
             $res | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $Path)\$($Pools."$Algorithm_Norm$nh".Name)_$($Algorithm_Norm)_$($Pools."$Algorithm_Norm$nh".User)_$($Threads)_Nvidia.json" -Force -ErrorAction Stop
 
             [PSCustomObject]@{
-                Type = "NVIDIA"
+                Type = $Type
                 Path = $Path
                 Arguments = "-p $Port -c $($Pools."$Algorithm_Norm$nh".Name)_$($Algorithm_Norm)_$($Pools."$Algorithm_Norm$nh".User)_$($Threads)_Nvidia.json -na"
                 HashRates = [PSCustomObject]@{"$Algorithm_Norm$nh" = $Stats."$($Name)_$($Algorithm_Norm)$($nh)_HashRate".Week}

@@ -1,8 +1,11 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NeoScrypt-Claymore\NeoScryptMiner.exe"
-
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-claymoreneoscrypt/claymore_neoscrypt_1.2.zip"
+
+$Type = "AMD"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No AMD present in system
+
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore

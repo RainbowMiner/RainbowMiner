@@ -3,6 +3,9 @@
 $Path = ".\Bin\Excavator2\excavator.exe"
 $Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.3a/excavator_v1.5.3a_NVIDIA_Win64.zip"
 
+$Type = "NVIDIA"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+
 $Commands = [PSCustomObject]@{
     #"blake2s" = @() #Blake2s
     #"decred" = @() #Decred
@@ -75,7 +78,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
                     [PSCustomObject]@{
                         Name = $MinerName
-                        Type = "NVIDIA"
+                        Type = $Type
                         Path = $Path
                         Arguments = "-p $Port -c $nhConfig -na"
                         HashRates = [PSCustomObject]@{"$(Get-Algorithm $nhBaseAlgorithm)$nh" = $Stats."$($MinerName)_$(Get-Algorithm $nhBaseAlgorithm)$($nh)_HashRate".Week}
@@ -108,7 +111,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
                         [PSCustomObject]@{
                             Name = $MinerName
-                            Type = "NVIDIA"
+                            Type = $Type
                             Path = $Path
                             Arguments = "-p $Port -c $nhConfig -na"
                             HashRates = [PSCustomObject]@{

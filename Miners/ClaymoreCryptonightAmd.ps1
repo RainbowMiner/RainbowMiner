@@ -1,8 +1,11 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\CryptoNight-Claymore\NsGpuCNMiner.exe"
-
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.3-claymorecryptonight/claymore_cryptonight_11.3.zip"
+
+$Type = "AMD"
+if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No AMD present in system
+
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore
