@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\AMD-Bitcore\sgminer-x64.exe"
-$Uri = "https://github.com/MultiPoolMiner/miner-binaries/releases/download/sgminerbitcore/sgminer-bitcore-5.6.1.9.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.9-sgminerbitcore/sgminer-bitcore-5.6.1.9.zip"
 
 $Type = "AMD"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No AMD present in system
