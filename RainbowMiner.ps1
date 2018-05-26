@@ -77,7 +77,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Array]$ExcludeFromWatchdog = @("x16r","ravenminer"), # Exclude Miners or currencies from watchdog
     [Parameter(Mandatory = $false)]
-    [String]$UIstyle = "full" # ui style: full=show all, light=show only active miner
+    [String]$UIstyle = "full" # ui style: full=show all, lite=show only active miner
 )
 
 Clear-Host
@@ -226,7 +226,7 @@ while ($true) {
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
         $Config.Region = $Config.Region | ForEach-Object {Get-Region $_}
         $Config.Currency = $Config.Currency | ForEach-Object {$_.ToUpper()}
-        $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "light" ) {"full"} else {$Config.UIstyle}
+        $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}
 
         #Only use configured types that are present in system
         #Explicitly include CPU, because it won't show up as a device if OpenGL drivers for CPU are not installed
@@ -924,7 +924,7 @@ while ($true) {
                     $keyPressed = $true
                 }
                 "V" {
-                    $Config.UIstyle = if ( $Config.UIstyle -eq "full" ) {"light"} else {"full"}
+                    $Config.UIstyle = if ( $Config.UIstyle -eq "full" ) {"lite"} else {"full"}
                     Write-Host -NoNewline "[V] pressed - UI will be set to $($Config.UIstyle) in next run. "
                     $keyPressed = $true
                 }
