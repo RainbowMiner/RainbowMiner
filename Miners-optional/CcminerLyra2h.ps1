@@ -1,33 +1,15 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-Xevan\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerxevan/ccminerxevan_1.2.7z"
+$Path = ".\Bin\NVIDIA-Lyra2h\ccminer.exe"
+$Uri = "https://github.com/djm34/ccminer-msvc2015/releases/download/v0.3.0/ccminer.rar"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$Commands = [PSCustomObject]@{
-    #"keccak"    = "" #Keccak
-    #"lyra2v2"   = " -N 1" #Lyra2RE2 (alexis78 is faster)
-    #"skein"     = " -N 1" #Skein
-    "xevan"     = " -N 1" #Xevan
-    
-    # ASIC - never profitable 12/05/2018
-    #"blake2s"   = "" #Blake2s
-    #"blakecoin" = "" #Blakecoin
-    #"decred"   = "" #Decred
-    #"lbry"     = "" #Lbry
-    #"myr-gr"   = "" #MyriadGroestl
-    #"nist5"    = "" #Nist5
-    #"qubit"    = "" #Qubit
-    #"quark"    = "" #Quark
-    #"x12"      = "" #X12
-    #"x14"      = "" #X14
-}
 
-$Default_Profile = 2
-$Profiles = [PSCustomObject]@{
-    "lyra2v2" = 4
+$Commands = [PSCustomObject]@{
+    "lyra2h" = " -i 21" #Lyra2h
+    #"lyra2z" = " -N 1 -i 21" #Lyra2z
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -46,6 +28,6 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
         API = "Ccminer"
         Port = 4068
         URI = $Uri
-        MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
+        MSIAprofile = 4
     }
 }

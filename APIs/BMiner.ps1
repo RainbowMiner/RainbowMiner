@@ -4,7 +4,7 @@ class BMiner : Miner {
     [String[]]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
 
-        $Server = "localhost"
+        $Server = "127.0.0.1"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -13,7 +13,7 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/status" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -21,10 +21,18 @@ class BMiner : Miner {
             return @($Request, $Response)
         }
 
-        $HashRate_Name = [String]$this.Algorithm[0]
-        $HashRate_Value = [Double]($Data.miners | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {$Data.miners.$_.solver.solution_rate} | Measure-Object -Sum).Sum
-
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
+            $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_.algorithm))
+            if ( $HashRate_Name ) {                    
+                if ( $_.algorithm -eq "equihash" ) {$HashRate_Value = [Double]$_.speed_info.solution_rate}
+                else {$HashRate_Value = [Double]$_.speed_info.hash_rate}
+                if ( Get-Member -inputobject $HashRate -name $HashRate_Name ) {
+                    $HashRate.$HashRate_Name += [Int64]$HashRate_Value
+                } else {
+                    $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+                }
+            }
+        }
 
         $this.Data += [PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

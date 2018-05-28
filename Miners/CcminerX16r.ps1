@@ -1,14 +1,14 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-X16r\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerx16r/ccminerx16rx64_1.0.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerx16r-cuda9.2/ccminerx16r_1.2-cuda9.2.7z"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     "x16r"  = " -N 10" #X16R RavenCoin
-    #"x16s"  = " -N 10" #X16S PigeonCoin
+    #"x16s"  = "" #X16S PigeonCoin
 }
 
 $Default_Profile = 2

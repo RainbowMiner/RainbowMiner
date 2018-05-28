@@ -13,17 +13,12 @@ $DevFeeDual = 1.5
 $Commands = [PSCustomObject]@{
     #"ethash" = ""
     #"ethash2gb" = ""
-    "ethash;blake2s:110" = ""
-    "ethash;blake2s:120" = ""
-    "ethash;blake2s:130" = ""
-    "ethash;blake2s:140" = ""
-    #"ethash;blake2s:150" = ""
-    #"ethash;blake2s:160" = ""
-    #"ethash;blake2s:170" = ""
-    #"ethash;blake2s:180" = ""
-    #"ethash;decred:50" = ""
+    "ethash;blake2s:40" = ""
+    "ethash;blake2s:60" = ""
+    "ethash;blake2s:80" = ""
+    #"ethash;decred:40" = ""
     #"ethash;decred:60" = ""
-    #"ethash;decred:70" = ""
+    #"ethash;decred:80" = ""
     "ethash;keccak:27" = ""
     "ethash;keccak:30" = ""
     "ethash;keccak:33" = ""
@@ -39,12 +34,12 @@ $Commands = [PSCustomObject]@{
     #"ethash;pascal:36" = ""
     #"ethash;pascal:39" = ""
     #"ethash;pascal:42" = ""
-    "ethash2gb;blake2s:75" = ""
-    "ethash2gb;blake2s:100" = ""
-    "ethash2gb;blake2s:125" =  ""
-    #"ethash2gb;decred:100" = ""
-    #"ethash2gb;decred:130" = ""
-    #"ethash2gb;decred:160" = ""
+    "ethash2gb;blake2s:40" = ""
+    "ethash2gb;blake2s:60" = ""
+    "ethash2gb;blake2s:80" =  ""
+    #"ethash2gb;decred:40" = ""
+    #"ethash2gb;decred:60" = ""
+    #"ethash2gb;decred:80" = ""
     "ethash2gb;keccak:70" = ""
     "ethash2gb;keccak:90" = ""
     "ethash2gb;keccak:110" = ""
@@ -79,12 +74,10 @@ $Coins = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ( $Name -like "*nvidia*" ) {
-    $Type = "NVIDIA"
+if ( $Type -eq "NVIDIA" ) {
     $Platform = 2
     $Port = 23333
-} elseif ( $Name -like "*amd*" ) {
-    $Type = "AMD"
+} elseif ( $Type -eq "AMD" ) {
     $Platform = 1
     $Port = 13333
 }
@@ -121,7 +114,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                 Name      = $Miner_Name
                 Type      = $Type
                 Path      = $Path
-                Arguments = ("-mode 1 -mport -$($Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass)$MainAlgorithmCommand$($CommonCommands | Select -Index 0) -esm $EthereumStratumMode -allpools 1 -allcoins 1 -platform 2 -di $($DeviceIDs -join '')" -replace "\s+", " ").trim()
+                Arguments = ("-mode 1 -mport -$($Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass)$MainAlgorithmCommand$($CommonCommands | Select -Index 0) -esm $EthereumStratumMode -allpools 1 -allcoins 1 -platform $($Platform) -di $($DeviceIDs -join '')" -replace "\s+", " ").trim()
                 HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $HashRateMainAlgorithm}
                 API       = $Api
                 Port      = $Port

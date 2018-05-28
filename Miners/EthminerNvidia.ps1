@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0.dev10/ethminer-0.15.0.dev10-Windows.zip"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0.dev11/ethminer-0.15.0.dev11-Windows.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system

@@ -93,7 +93,7 @@ Write-Host "Starting up! Please wait.."
 Write-Host " "
 
 
-$Version = "3.1.0.0"
+$Version = "3.1.1.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 $ShowTimer = $false

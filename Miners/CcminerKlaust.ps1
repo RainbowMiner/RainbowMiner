@@ -18,6 +18,7 @@ $Commands = [PSCustomObject]@{
     #"keccak" = "" #Keccak
     "luffa" = "" #Luffa
     #"lyra2v2" = "" #Lyra2RE2
+    #"lyra2z" = " -N 1" #lyra2z
     "neoscrypt" = " -N 1 -i 17.6" #NeoScrypt
     "penta" = "" #Pentablake
     #"skein" = "" #Skein
@@ -45,6 +46,13 @@ $Commands = [PSCustomObject]@{
     #"x15" = "" #x15
 }
 
+$Default_Profile = 2
+$Profiles = [PSCustomObject]@{
+    "lyra2v2" = 4
+    "lyra2z" = 4
+    "neoscrypt" = 3
+}
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $DeviceIDsAll = (Get-GPUlist $Type) -join ','
@@ -61,6 +69,6 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
         API = "Ccminer"
         Port = 4068
         URI = $Uri
-        MSIAprofile = if ( $_ -eq "neoscrypt" ) { 3 } else { 2 }
+        MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
     }
 }

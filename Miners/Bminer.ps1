@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://www.bminercontent.com/releases/bminer-v7.0.0-9c7291b-amd64.zip"
+$URI = "https://www.bminercontent.com/releases/bminer-v8.0.0-32928c5-amd64.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -9,10 +9,13 @@ if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in sy
 $DevFee = [PSCustomObject]@{
     "equihash" = 2.0
     "ethash" = 0.65
+    "ethash;blake2s" = 1.3
+    "ethash;blake14r" = 1.3
 }
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore
+    #"blake14r" = "" #Blake14r
     #"blake2s" = "" #Blake2s
     #"blakecoin" = "" #Blakecoin
     #"vanilla" = "" #BlakeVanilla
@@ -21,6 +24,8 @@ $Commands = [PSCustomObject]@{
     #"decred" = "" #Decred
     "equihash" = "" #" -nofee" #Equihash
     "ethash" = "" #Ethash
+    "ethash;blake2s" = "" #Ethash + Blake2s
+    "ethash;blake14r" = "" #Ethash + Decred
     #"groestl" = "" #Groestl
     #"hmq1725" = "" #HMQ1725
     #"jha" = "" #JHA
@@ -52,31 +57,62 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $DeviceIDsAll = (Get-GPUlist $Type) -join ','
 
-$Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+$Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
 
-    $Algorithm_Norm = Get-Algorithm $_
+    $MinerAlgorithms = $_.Split(";")
 
-    if ( $_ -eq "equihash" ) {
+    $MainAlgorithm = $MinerAlgorithms[0]
+    $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
+
+    if ( $MinerAlgorithms.Count -gt 1 ) {
+        $SecondAlgorithm = $MinerAlgorithms[1]
+        $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
+    } else {
+        $SecondAlgorithm = $false
+    }
+
+    if ( $MainAlgorithm -eq "equihash" ) {
         [PSCustomObject]@{
             Type = $Type
             Path = $Path
-            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$Algorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week)}
+            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+            HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $($Stats."$($Name)_$($MainAlgorithm_Norm)_HashRate".Week)}
             API = "Bminer"
             Port = 1880
             DevFee = $DevFee.$_
             URI = $Uri
         }
-    } elseif ( $_ -eq "ethash" ) {
-        [PSCustomObject]@{
-            Type = $Type
-            Path = $Path
-            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$Algorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week)}
-            API = "Bminer"
-            Port = 1880
-            DevFee = $DevFee.$_
-            URI = $Uri
+    } elseif ( $MainAlgorithm -eq "ethash" ) {        
+        if ( -not $SecondAlgorithm ) {
+            [PSCustomObject]@{
+                Type = $Type
+                Path = $Path
+                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+                HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $($Stats."$($Name)_$($MainAlgorithm_Norm)_HashRate".Week)}
+                API = "Bminer"
+                Port = 1880
+                DevFee = $DevFee.$_
+                URI = $Uri
+            }
+        } else {
+            $MinerName = "$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondAlgorithm_Norm)"
+            [PSCustomObject]@{
+                Name = $MinerName
+                Type = $Type
+                Path = $Path
+                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -uri2 $($SecondAlgorithm)://$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.Pass))@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+                HashRates = [PSCustomObject]@{
+                    $MainAlgorithm_Norm = $($Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week)
+                    $SecondAlgorithm_Norm = $($Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week)
+                }
+                API = "Bminer"
+                Port = 1880
+                DevFee = [PSCustomObject]@{
+                    ($MainAlgorithm_Norm) = $DevFee.$_
+                    ($SecondAlgorithm_Norm) = 0
+                }
+                URI = $Uri
+            }
         }
     }
 }
