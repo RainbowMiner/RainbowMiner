@@ -181,7 +181,7 @@ if ( -not $DonationData ) {
 
 while ($true) {
     #Load the config
-    $ConfigBackup = $Config
+    $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
     $ConfigCheckFields = $true
     if (Test-Path $ConfigFile) {
         if ( -not $Config -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
@@ -366,7 +366,7 @@ while ($true) {
 
     #Update the pool balances every 10 Minutes
     if ( $Config.ShowPoolBalances ) {
-        if ( -not $Balances -or $LastBalances.AddMinutes(-10) -gt $Timer ) {
+        if ( -not $Balances -or $LastBalances -lt $Timer.AddMinutes(-10) ) {
             $Balances = Get-Balance -Config $UserConfig -Rates $Rates -NewRates $NewRates
             $API.Balances = $Balances
             $LastBalances = $Timer
