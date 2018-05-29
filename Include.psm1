@@ -36,17 +36,25 @@ function Get-Balance {
                 $Rates | Add-Member $_ ([Double]$Value) -Force
         }
 
+        # Add total of totals
+        $Total = ($Balances | ForEach-Object {$_.total/$Rates."$($_.currency)"} | Measure-Object -Sum).Sum
+        $Balances += [PSCustomObject]@{
+            currency = "BTC"
+            total = $Total
+            Name  = "*Total*"
+        }
+
         # Add local currency values
         $Balances | Foreach-Object {
             Foreach($Rate in ($Rates.PSObject.Properties)) {
                 $Value = $Rate.Value
                 if ($_.currency -ne "BTC") {$Value = if ($Rate.Name -eq $_.currency){[Double]1}else{[Double]($Value/$Rates."$($_.currency)")}}
-                # Round BTC to 8 decimals, everything else to 2
+                # Round BTC to 8 decimals, everything else is based on BTC value
                 if ($Rate.Name -eq "BTC") {
                     $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
                 } 
                 else {
-                    $_ | Add-Member "Total_$($Rate.Name)" ("{0:N2}" -f ([Double]$Value * $_.total)) -Force
+                    $_ | Add-Member "Total_$($Rate.Name)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
                 }
             }
         }
