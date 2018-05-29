@@ -13,7 +13,8 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $ApiURI = if ($this.Name -eq "Bminer7") {"/api/status"}else{"/api/v1/status/solver"}
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)$($ApiURI)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -21,15 +22,24 @@ class BMiner : Miner {
             return @($Request, $Response)
         }
 
-        $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
-            $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_.algorithm))
-            if ( $HashRate_Name ) {                    
-                if ( $_.algorithm -eq "equihash" ) {$HashRate_Value = [Double]$_.speed_info.solution_rate}
-                else {$HashRate_Value = [Double]$_.speed_info.hash_rate}
-                if ( Get-Member -inputobject $HashRate -name $HashRate_Name ) {
-                    $HashRate.$HashRate_Name += [Int64]$HashRate_Value
-                } else {
-                    $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+
+        if ($this.Name -eq "Bminer7") {
+            # Legacy API for bminer upto version 7.0.0
+            $HashRate_Name = [String]$this.Algorithm[0]
+            $HashRate_Value = [Double]($Data.miners | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {$Data.miners.$_.solver.solution_rate} | Measure-Object -Sum).Sum
+            $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        } else {
+            # API for bminer starting version 8.0.0
+            $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
+                $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_.algorithm))
+                if ( $HashRate_Name ) {                    
+                    if ( $_.algorithm -eq "equihash" ) {$HashRate_Value = [Double]$_.speed_info.solution_rate}
+                    else {$HashRate_Value = [Double]$_.speed_info.hash_rate}
+                    if ( Get-Member -inputobject $HashRate -name $HashRate_Name ) {
+                        $HashRate.$HashRate_Name += [Int64]$HashRate_Value
+                    } else {
+                        $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+                    }
                 }
             }
         }

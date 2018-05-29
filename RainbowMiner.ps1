@@ -64,6 +64,10 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableAutoUpdate = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$ShowPoolBalances = $false,
+    [Parameter(Mandatory = $false)]
+    [Switch]$IgnoreFees = $false,    
+    [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config.txt", # Path to config file    
     [Parameter(Mandatory = $false)]
     [Alias("GPUcount")]
@@ -75,7 +79,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Int]$MSIAprofile = 2, # default MSI Afterburner profile to be set
     [Parameter(Mandatory = $false)]
-    [Array]$ExcludeFromWatchdog = @("x16r","ravenminer"), # Exclude Miners or currencies from watchdog
+    [Array]$ExtendInterval = @("x16r","ravenminer","palginnvidia"), # Extend timing interval for Miners or currencies
     [Parameter(Mandatory = $false)]
     [String]$UIstyle = "full" # ui style: full=show all, lite=show only active miner
 )
@@ -93,13 +97,9 @@ Write-Host "Starting up! Please wait.."
 Write-Host " "
 
 
-$Version = "3.1.1.0"
+$Version = "3.2.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
-$ShowTimer = $false
-
-#Get miner hw info
-$Devices = Get-Devices
 
 Set-Location (Split-Path $MyInvocation.MyCommand.Path)
 Import-Module NetSecurity -ErrorAction Ignore
@@ -118,14 +118,25 @@ $DecayBase = 1 - 0.1 #decimal percentage
 $WatchdogTimers = @()
 $ActiveMiners = @()
 $Rates = [PSCustomObject]@{BTC = [Double]1}
+
 $ConfigTimeStamp = 0
 $SkipSwitchingPrevention = $false
 $StartDownloader = $false
 $PauseMiners = $false
 $Readers = [PSCustomObject]@{}
+$ShowTimer = $false
+$LastBalances = $Timer
+$MSIAcurrentprofile = -1
 
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
+
+Write-Log "********************************************************************"
+Write-Log "***               Starting RainbowMiner $Version                 ***"
+Write-Log "********************************************************************"
+
+#Get miner hw info
+$Devices = Get-Devices
 
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
 (Get-Process -Id $PID).PriorityClass = "BelowNormal"
@@ -157,6 +168,13 @@ if (!(Test-Path $ConfigFile)) {
         Write-Log -Level Error "$($ConfigFile) and Config.default.txt are missing. Cannot continue. "
         Exit
     }
+}
+
+if (Test-Path "data.json") {
+    $DonationData = (Get-ChildItemContent -Path "data.json").Content
+}
+if ( -not $DonationData ) {
+    $DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","User":"bloch2000","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","User":"bloch2000","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","User":"bloch2000","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"]}' | ConvertFrom-Json
 }
 
 [console]::TreatControlCAsInput = $true
@@ -194,11 +212,13 @@ while ($true) {
                 SwitchingPrevention = $SwitchingPrevention
                 ShowMinerWindow     = $ShowMinerWindow
                 FastestMinerOnly    = $FastestMinerOnly
+                IgnoreFees          = $IgnoreFees
+                ShowPoolBalances    = $ShowPoolBalances
                 GPUs                = $GPUs
                 RebootOnGPUFailure  = $RebootOnGPUFailure
                 MSIApath            = $MSIApath
                 MSIAprofile         = $MSIAprofile
-                ExcludeFromWatchdog = $ExcludeFromWatchdog                
+                ExtendInterval      = $ExtendInterval
                 UIstyle             = $UIstyle
             } | Select-Object -ExpandProperty Content
         } else {
@@ -228,13 +248,13 @@ while ($true) {
         $Config.Currency = $Config.Currency | ForEach-Object {$_.ToUpper()}
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}
 
+        #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
+        if ($Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Wallet}      
+
         #Only use configured types that are present in system
         #Explicitly include CPU, because it won't show up as a device if OpenGL drivers for CPU are not installed
         $Config.Type = $Config.Type | Where-Object {$Devices.$_ -or $_ -eq 'CPU'}
     }
-
-    #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
-    if ($Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Wallet}      
 
     Get-ChildItem "Pools" -File | Where-Object {-not $Config.Pools.($_.BaseName)} | ForEach-Object {
         $Config.Pools | Add-Member $_.BaseName (
@@ -248,27 +268,11 @@ while ($true) {
         )
     }
 
+    # Copy the user's config before changing anything for donation runs
+    # This is used when getting pool balances so it doesn't get pool balances of the donation address instead
+    $UserConfig = $Config.PSObject.Copy()
+
     #Activate or deactivate donation  
-    $DonationData = [PSCustomObject]@{
-        NiceHash = [PSCustomObject]@{
-                        Wallet  = "3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f"
-                        BTC     = "3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f"
-                        User    = "bloch2000"
-                        Worker  = "mpx"
-                     }
-        Ravenminer = [PSCustomObject]@{
-                        Wallet  = "RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH"
-                        RVN     = "RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH"
-                        User    = "bloch2000"
-                        Worker  = "mpx"
-                     }
-        Default  = [PSCustomObject]@{
-                        Wallet  = "3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx"
-                        BTC     = "3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx"
-                        User    = "bloch2000"
-                        Worker  = "mpx"
-                     }
-    }      
     $Donate = if ($Config.Donate -lt 30) {30} else {$Config.Donate}
     $DonateDelayHours = 24
     if ($Donate -gt 15) {
@@ -277,10 +281,12 @@ while ($true) {
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($Donate)}
     if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {$LastDonated = $Timer}    
-    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($Donate) -ge $LastDonated) {
+    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($Donate) -ge $LastDonated) {    
         $DonateNow = $false
+        $DonationPools = @()
         Get-ChildItem "Pools" -File | ForEach-Object {
-            $DonationData1 = if ($DonationData.($_.BaseName)) {$DonationData.($_.BaseName)} else {$DonationData.Default};
+            $DonationData1 = if ($DonationData.Wallets.($_.BaseName)) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
+            $DonationPools += $_.BaseName
             if ($DonationData1.User -ne $UserName) {
                 $Config.Pools | Add-Member $_.BaseName $DonationData1 -Force
                 $DonateNow = $true
@@ -288,18 +294,22 @@ while ($true) {
         }
         if ( $DonateNow ) {
             $ConfigTimeStamp = 0
-            $Config | Add-Member ExcludePoolName @() -Force
+            $DonationPoolsAvail = @(Compare-Object $DonationPools $DonationData.Pools -PassThru -IncludeEqual -ExcludeDifferent)
+            if (-not $DonationPoolsAvail) {            
+                $Config | Add-Member ExcludePoolName @() -Force
+            } else {
+                $Config | Add-Member PoolName $DonationPoolsAvail -Force
+                $Config | Add-Member ExcludePoolName @(Compare-Object $DonationPools $DonationPoolsAvail -PassThru) -Force
+            }
         }
     }
 
     #Give API access to the current running configuration
-    $API.Config = $Config
+    $API.Config = $UserConfig
 
     #Actions, when config has changes (or initial)
+    # .. for every change
     if (($ConfigBackup | ConvertTo-Json -Compress) -ne ($Config | ConvertTo-Json -Compress)) {
-
-        Write-Log "Config has been changed -> Reset"
-
         #Clear pool cache if the pool configuration has changed
         if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {
             $AllPools = $null
@@ -308,12 +318,15 @@ while ($true) {
         if ( $Config.Type -ne $ConfigBackup.Type -or $Config.GPUs -ne $ConfigBackup.GPUs ) {
             Set-GPUlist $Config.Type $Config.GPUs
         }
-    
-        # if MSI Afterburner path and a profile number are set, set this profile :)
-        $MSIAcurrentprofile = if ( $Config.MSIApath -and (Test-Path $Config.MSIApath) -and $Config.MSIAprofile ) {
-            Write-Log "MSI Afterburner profile set: $($Config.MSIAprofile)"
-            Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($Config.MSIAprofile)" -Verb RunAs
-            $Config.MSIAprofile
+    }
+    # .. for user changes
+    if (($ConfigBackup | ConvertTo-Json -Compress) -ne ($UserConfig | ConvertTo-Json -Compress)) {
+        #Clear balances if pool configuration or flag has changed
+        if ($ConfigBackup.ShowPoolBalances -ne $UserConfig.ShowPoolBalances) {
+            $Balances = $null
+        }
+        if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($UserConfig.Pools | ConvertTo-Json -Compress)) {
+            $Balances = $null
         }
     }
 
@@ -345,9 +358,19 @@ while ($true) {
         Write-Log "Updating exchange rates from Coinbase. "
         $NewRates = Invoke-RestMethod "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
         $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
+        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates | Add-Member $_ ([Double]1/(Get-Ticker -Symbol $_ | Select-Object -ExpandProperty BTC | Select-Object -ExpandProperty price))}
     }
     catch {
         Write-Log -Level Warn "Coinbase is down. "
+    }
+
+    #Update the pool balances every 10 Minutes
+    if ( $Config.ShowPoolBalances ) {
+        if ( -not $Balances -or $LastBalances.AddMinutes(-10) -gt $Timer ) {
+            $Balances = Get-Balance -Config $UserConfig -Rates $Rates -NewRates $NewRates
+            $API.Balances = $Balances
+            $LastBalances = $Timer
+        }
     }
 
     #Load the stats
@@ -407,7 +430,7 @@ while ($true) {
         $PoolsPrice = "Price"
     }
     $Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
-        $Pools.$_ | Add-Member Price_Bias ($Pools.$_.$PoolsPrice * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Config.SwitchingPrevention,1) * [Math]::Pow($DecayBase, $DecayExponent / ([Math]::Max($Config.SwitchingPrevention,1)))) * 100.00) / 100.00)) * (1-[Double]$Pools.$_.PoolFee/100)) -Force
+        $Pools.$_ | Add-Member Price_Bias ($Pools.$_.$PoolsPrice * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Config.SwitchingPrevention,1) * [Math]::Pow($DecayBase, $DecayExponent / ([Math]::Max($Config.SwitchingPrevention,1)))) * 100.00) / 100.00)) * $(if(-not $Config.IgnoreFees -and $Pools.$_.PoolFee){1-[Double]$Pools.$_.PoolFee/100}else{1})) -Force
         $Pools.$_ | Add-Member Price_Unbias $Pools.$_.$PoolsPrice -Force
     }
 
@@ -440,12 +463,14 @@ while ($true) {
         $Miner_Profits_MarginOfError = [PSCustomObject]@{}
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
+        $Miner_DevFees = [PSCustomObject]@{}
 
         $Miner_Types = $Miner.Type | Select-Object -Unique
         $Miner_Indexes = $Miner.Index | Select-Object -Unique
 
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
-            $Miner_DevFeeFactor = if ( $Miner.DevFee ) {1-[Double]$(if (Get-Member -inputobject $Miner.DevFee -name $_ -Membertype Properties) {$Miner.DevFee.$_} else {$Miner.DevFee})/100} else {1}
+            $Miner_DevFees | Add-Member $_ ([Double]$(if ( -not $Config.IgnoreFees -and $Miner.DevFee ) {[Double]$(if (Get-Member -inputobject $Miner.DevFee -name $_ -Membertype Properties) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
+            $Miner_DevFeeFactor = (1-$Miner_DevFees.$_/100)
             $Miner_HashRates | Add-Member $_ ([Double]$Miner.HashRates.$_)
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Pools_Comparison | Add-Member $_ ([PSCustomObject]$Pools.$_)
@@ -500,6 +525,7 @@ while ($true) {
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
 
+        $Miner | Add-Member DevFee $Miner_DevFees -Force
         $Miner | Add-Member Type ($Miner_Types | Sort-Object) -Force
         $Miner | Add-Member Index ($Miner_Indexes | Sort-Object) -Force
 
@@ -611,7 +637,7 @@ while ($true) {
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                 MSIAprofile          = $Miner.MSIAprofile
-                ShowMinerWindow      = if ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow) {$true} else {$false}
+                ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
                 BaseName             = if ($Miner.BaseName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.BaseName}
                 FaultTolerance       = if ($Miner.FaultTolerance -eq $null) {0.1} else {$Miner.FaultTolerance}
@@ -666,7 +692,6 @@ while ($true) {
             }
         }
     }
-
     $BestMiners_Combo = $BestMiners_Combos | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Bias -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     if ( -not $PauseMiners ) {
@@ -699,8 +724,7 @@ while ($true) {
         }
     }
 
-
-    if ( $ActiveMiners ) {
+    if ( $ActiveMiners | ForEach-Object {$_.GetProcessNames()} ) {
         $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ( $_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0 ) {$_.GetProcessId()}})
         Get-Process | Where-Object { @($ActiveMiners | Select-Object -ExpandProperty BaseName) -contains $_.ProcessName } | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExpandProperty BaseName) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ | Where-Object { $Running -notcontains $_.Id } | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
@@ -725,15 +749,16 @@ while ($true) {
             $_.SetStatus([MinerStatus]::Running)
 
             #Add watchdog timer
-            if ($Config.Watchdog -and $_.Profit -ne $null -and $Config.ExcludeFromWatchdog -notcontains $_.Name) {
+            if ($Config.Watchdog -and $_.Profit -ne $null) {
                 $Miner_Name = $_.Name
-                $_.Algorithm | Where-Object { $Config.ExcludeFromWatchdog -notcontains $_ -and $Config.ExcludeFromWatchdog -notcontains $Pools.$_.Name} | ForEach-Object {
+                $Miner_Type = $_.Type
+                $_.Algorithm | ForEach-Object {
                     $Miner_Algorithm = $_
-
                     $WatchdogTimer = $WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                     if (-not $WatchdogTimer) {
                         $WatchdogTimers += [PSCustomObject]@{
                             MinerName = $Miner_Name
+                            MinerType = $Miner_Type
                             PoolName  = $Pools.$Miner_Algorithm.Name
                             Algorithm = $Miner_Algorithm
                             Kicked    = $Timer
@@ -756,15 +781,19 @@ while ($true) {
 
     #Display mining information
     $Miners | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object -Descending Type, Profit_Bias | Select-Object -First $LimitMiners | Format-Table -GroupBy Type (
-        @{Label = "Miner"; Expression = {$_.Name}}, 
+        @{Label = "Miner"; Expression = {$_.Name}},
         @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 
+        #@{Label = "Fee"; Expression = {if (-not $Config.IgnoreFees -and $_.DevFee -and ($_.DevFee.PSObject.Properties.Value | Measure-Object -Sum).Sum) {$DevFee=$_.DevFee;$_.HashRates.PSObject.Properties.Name | Foreach-Object {"$($DevFee.$_.ToString("N2")) %"}} else {"-"}}},
         @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'}, 
         @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
         @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
         #@{Label = "$($Config.Currency | Select-Object -Index 0)/GH/Day"; Expression = {$_.Pools.PSObject.Properties.Value.Price | ForEach-Object {ConvertTo-LocalCurrency $($_ * 1000000000) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2}}; Align = "right"}, 
-        @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.Info) {"$($_.Name)-$($_.Info)"}else {"$($_.Name)"}}}}
+        @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.Info) {"-$($_.Info)"})"}}}
     ) | Out-Host
 
+    if (-not $Config.IgnoreFees) {
+        #$PoolFees.PSObject.Properties.Name | Sort-Object | Foreach-Object {"$($_): $($PoolFees.$_.ToString("N2")) %"} | Out-Host
+    }
 
     if ( $PauseMiners ) {
         Write-Host -NoNewline "Status: "
@@ -777,37 +806,41 @@ while ($true) {
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property {$_.GetStatus()}, @{Expression = {$_.GetActiveLast()}; Ascending = $false} | Select-Object -First (1 + 6 + 6) | Format-Table -Wrap -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} (
         @{Label = "Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
-        @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}}, 
-        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($Arguments=$_.Arguments;$DonationData.PSObject.Properties.Value | ForEach-Object { $Arguments=$Arguments.Replace("$($_.Wallet)","$($Wallet)").Replace("$($_.User)","$($Username)").Replace("$($_.Worker)","$($WorkerName)") };$Arguments)"}}
+        @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},
+        @{Label = "Type"; Expression = {$_.Type}},         
+        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($Arguments=$_.Arguments;$DonationData.Wallets.PSObject.Properties.Value | ForEach-Object {if ($_.User -ne $Username) {$Arguments=$Arguments.Replace("$($_.Wallet)","$($Wallet)").Replace("$($_.User)","$($Username)").Replace("$($_.Worker)","$($WorkerName)")}};$Arguments)"}}
     ) | Out-Host
 
     if ( $Config.UIstyle -eq "full" ) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogReset) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName}}, 
+            @{Label = "Type"; Expression = {$_.MinerType}},
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
             @{Label = "Algorithm"; Expression = {$_.Algorithm}}, 
             @{Label = "Watchdog Timer"; Expression = {"{0:n0} Seconds" -f ($Timer - $_.Kicked | Select-Object -ExpandProperty TotalSeconds)}; Align = 'right'}
         ) | Out-Host
+    }
 
-        #Display profit comparison
-        if ($Downloader.State -eq "Running") {$Downloader | Wait-Job -Timeout 10 | Out-Null}
-        if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
-            $MinerComparisons = 
-            [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
-            [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name)-$($_.Algorithm -join "/")"}}
+    #Display profit comparison
+    if ($Downloader.State -eq "Running") {$Downloader | Wait-Job -Timeout 10 | Out-Null}
+    if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
+        $MinerComparisons = 
+        [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
+        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name)-$($_.Algorithm -join "/")"}}
 
-            $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
+        $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
 
-            $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
+        $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
 
-            $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
+        $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
 
-            $Config.Currency | ForEach-Object {
-                $MinerComparisons[0] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[0] * $Rates.$_), $MinerComparisons_MarginOfError[0], (($MinerComparisons_Profit[0] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[0])), (($MinerComparisons_Profit[0] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[0])))
-                $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
-            }
+        $Config.Currency | ForEach-Object {
+            $MinerComparisons[0] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[0] * $Rates.$_), $MinerComparisons_MarginOfError[0], (($MinerComparisons_Profit[0] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[0])), (($MinerComparisons_Profit[0] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[0])))
+            $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
+        }
 
+        if ( $Config.UIstyle -eq "full" ) {
             if ([Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
                 $MinerComparisons_Range = ($MinerComparisons_MarginOfError | Measure-Object -Average | Select-Object -ExpandProperty Average), (($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1]) | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
                 Write-Host -BackgroundColor Yellow -ForegroundColor Black "RainbowMiner is between $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])-$MinerComparisons_Range)*100)))% and $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])+$MinerComparisons_Range)*100)))% more profitable than the fastest miner: "
@@ -815,6 +848,14 @@ while ($true) {
 
             $MinerComparisons | Out-Host
         }
+    }
+
+    #Display pool balances, formatting it to show all the user specified currencies
+    if ($Config.ShowPoolBalances) {
+        $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$LastBalances).TotalMinutes
+        $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
+        Write-Host "Pool Balances as of $($LastBalances) (next update $($NextBalances)): "
+        $Balances | Format-Table Name, Total_*
     }
 
     #Display benchmarking progress
@@ -831,12 +872,22 @@ while ($true) {
 
     #Update API miner information
     $API.ActiveMiners = $ActiveMiners
-    $API.RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
     $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
 
     #Reduce Memory
     Get-Job -State Completed | Remove-Job
     [GC]::Collect()
+
+    #When benchmarking miners/algorithm in ExtendInterval... add 10x $Config.Interval to $StatEnd, extend StatSpan, extend watchdog times
+    $BenchmarkingMiners = $RunningMiners | Where-Object {$_.Speed -eq $null}
+    if ($BenchmarkingMiners | Where-Object {$Config.ExtendInterval -icontains $_.Name -or ($_.Algorithm | Where-Object {$Config.ExtendInterval -icontains $_})}) {
+        $StatEnd = $StatEnd.AddSeconds($Config.Interval * 10)
+        $StatSpan = New-TimeSpan $StatStart $StatEnd
+        $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
+        $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
+        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to 10x interval ($($Config.Interval * 10) seconds). "
+    }
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Stopp = $false

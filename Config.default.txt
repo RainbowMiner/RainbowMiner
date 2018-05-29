@@ -49,9 +49,12 @@
   "SwitchingPrevention": "$SwitchingPrevention",
   "ShowMinerWindow": "$ShowMinerWindow",
   "FastestMinerOnly": "$FastestMinerOnly",
+  "IgnoreFees": "$IgnoreFees",
+  "ShowPoolBalances": "$ShowPoolBalances",
   "GPUs" : "$GPUs",
   "RebootOnGPUFailure": "$RebootOnGPUFailure",
   "MSIApath": "$MSIApath",
   "MSIAprofile": "$MSIAprofile",
-  "UIstyle": "$UIstyle"
+  "UIstyle": "$UIstyle",
+  "ExtendInterval": "$ExtendInterval"
 }

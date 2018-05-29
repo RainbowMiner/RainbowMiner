@@ -49,7 +49,11 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         "x11" {$Divisor *= 1000}
     }
 
-    if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+    $AHashPool_Value = [Double]$AHashPool_Request.$_.actual_last24h
+    if ([Double]$AHashPool_Request.$_.estimate_last24h -ne $AHashPool_Value) {$AHashPool_Value /= 1000}
+    $AHashPool_Value = [Math]::min($AHashPool_Value,[Double]$AHashPool_Request.$_.estimate_current)
+
+    if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration (New-TimeSpan -Days 1)}
     else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_current / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $AHashPool_Regions | ForEach-Object {
@@ -60,7 +64,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             [PSCustomObject]@{
                 Algorithm     = $AHashPool_Algorithm_Norm
                 Info          = $AHashPool_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"

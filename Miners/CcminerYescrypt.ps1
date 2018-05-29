@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-Yescrypt\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-klaustyescrypt/KlausTYescrypt_1.0.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccmineryescrypt/ccmineryescrypt_1.0.7z"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system

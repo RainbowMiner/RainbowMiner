@@ -2,6 +2,101 @@
 
 Add-Type -Path .\OpenCL\*.cs
 
+function Get-Balance {
+    [CmdletBinding()]
+    param($Config, $Rates, $NewRates)
+
+    Write-Log "Getting pool balances"
+
+    # If rates weren't specified, just use 1 BTC = 1 BTC
+    if ($Rates -eq $Null) {
+        $Rates = [PSCustomObject]@{BTC = [Double]1}
+    }
+    if ($NewRates -eq $Null) {
+        try {
+            Write-Log "Updating exchange rates from Coinbase. "
+            $NewRates = Invoke-RestMethod "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
+            $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
+        }
+        catch {
+            Write-Log -Level Warn "Coinbase is down. "
+        }
+    }
+
+    $Balances = @()
+
+    if (Test-Path "Balances") {        
+        $Balances = Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
+            Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
+        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru}
+
+        $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {
+                if ($NewRates.$_) {$Value=$NewRates.$_}
+                else {$Value = [Double]1/(Get-Ticker -Symbol $_ | Select-Object -ExpandProperty BTC | Select-Object -ExpandProperty price)}                
+                $Rates | Add-Member $_ ([Double]$Value) -Force
+        }
+
+        # Add local currency values
+        $Balances | Foreach-Object {
+            Foreach($Rate in ($Rates.PSObject.Properties)) {
+                $Value = $Rate.Value
+                if ($_.currency -ne "BTC") {$Value = if ($Rate.Name -eq $_.currency){[Double]1}else{[Double]($Value/$Rates."$($_.currency)")}}
+                # Round BTC to 8 decimals, everything else to 2
+                if ($Rate.Name -eq "BTC") {
+                    $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
+                } 
+                else {
+                    $_ | Add-Member "Total_$($Rate.Name)" ("{0:N2}" -f ([Double]$Value * $_.total)) -Force
+                }
+            }
+        }
+    }
+    Return $Balances
+}
+
+function Get-Ticker {
+    [CmdletBinding()]
+    param($Symbol, $Convert)
+
+    if (-not $Convert) {$Convert="BTC"}
+
+    if (-not (Test-Path Variable:Script:CoinmarketCapList)) {
+        try {
+            $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        }
+        catch {
+            Write-Log -Level Warn "Coinmarketcap API (listings) has failed. "
+        }
+
+        if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+            Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
+            return
+        }
+        $Script:CoinmarketCapList = $Request
+    }
+
+    $Symbol_ID = $Script:CoinmarketCapList.PSObject.Properties.Value | Where-Object {$_.symbol -eq $Symbol} | Select -ExpandProperty id
+    if ( -not $Symbol_ID ) {
+        Write-Log -Level Warn "$($Symbol) not found on Coinmarketcap "
+        return
+    }
+
+
+    try {
+        $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    }
+    catch {
+        Write-Log -Level Warn "Coinmarketcap API (ticker) has failed. "
+    }
+
+    if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+        Write-Log -Level Warn "Coinmarketcap API (ticker) returned nothing. "
+        return
+    }
+
+    $Request | Select -ExpandProperty data | Select -ExpandProperty quotes        
+}
+
 function Get-Devices {
     [CmdletBinding()]
 
@@ -1046,6 +1141,14 @@ class Miner {
         else {
             return $HashRates_Average
         }
+    }
+
+    [bool]HasDevFees() {
+        return $this.DevFee -and ($this.Algorithm.PSObject.Properties.Value | Measure-Object -Sum).Sum
+    }
+
+    [array]GetDevFees() {
+        return @($this.HashRates.PSObject.Properties.Name | Foreach-Object {$this.DevFee.$_})
     }
 }
 

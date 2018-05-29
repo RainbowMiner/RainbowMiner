@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://www.bminercontent.com/releases/bminer-v8.0.0-32928c5-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.0.0-bminer/bminer-v8.0.0-32928c5-amd64.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -14,43 +14,10 @@ $DevFee = [PSCustomObject]@{
 }
 
 $Commands = [PSCustomObject]@{
-    #"bitcore" = "" #Bitcore
-    #"blake14r" = "" #Blake14r
-    #"blake2s" = "" #Blake2s
-    #"blakecoin" = "" #Blakecoin
-    #"vanilla" = "" #BlakeVanilla
-    #"c11" = "" #C11
-    #"cryptonight" = "" #CryptoNight
-    #"decred" = "" #Decred
-    "equihash" = "" #" -nofee" #Equihash
-    "ethash" = "" #Ethash
-    "ethash;blake2s" = "" #Ethash + Blake2s
-    "ethash;blake14r" = "" #Ethash + Decred
-    #"groestl" = "" #Groestl
-    #"hmq1725" = "" #HMQ1725
-    #"jha" = "" #JHA
-    #"keccak" = "" #Keccak
-    #"lbry" = "" #Lbry
-    #"lyra2v2" = "" #Lyra2RE2
-    #"lyra2z" = "" #Lyra2z
-    #"myr-gr" = "" #MyriadGroestl
-    #"neoscrypt" = "" #NeoScrypt
-    #"nist5" = "" #Nist5
-    #"pascal" = "" #Pascal
-    #"quark" = "" #Quark
-    #"qubit" = "" #Qubit
-    #"scrypt" = "" #Scrypt
-    #"sib" = "" #Sib
-    #"skein" = "" #Skein
-    #"skunk" = "" #Skunk
-    #"timetravel" = "" #Timetravel
-    #"tribus" = "" #Tribus
-    #"veltor" = "" #Veltor
-    #"x11" = "" #X11
-    #"x11evo" = "" #X11evo
-    #"x17" = "" #X17
-    #"yescrypt" = "" #Yescrypt
-    #"xevan" = "" #Xevan
+    #"equihash" = "" #" -nofee" #Equihash (bminer v7.0.0 is faster)
+    #"ethash" = "" #Ethash (ethminer is faster and no dev fee)
+    #"ethash;blake2s" = "" #Ethash + Blake2s
+    #"ethash;blake14r" = "" #Ethash + Decred
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

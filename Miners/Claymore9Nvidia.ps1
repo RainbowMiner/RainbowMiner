@@ -19,12 +19,13 @@ $Commands = [PSCustomObject]@{
     "ethash;lbry:30" = ""
     "ethash;lbry:40" = ""
     "ethash;lbry:50" = ""
+    "ethash;pascal:24" = ""
     "ethash;pascal:27" = ""
     "ethash;pascal:30" = ""
     "ethash;pascal:33" = ""
     "ethash;pascal:36" = ""
-    "ethash;pascal:39" = ""
-    "ethash;pascal:42" = ""
+    #"ethash;pascal:39" = ""
+    #"ethash;pascal:42" = ""
     "ethash2gb;decred:30" = ""
     "ethash2gb;decred:40" = ""
     "ethash2gb;decred:50" = ""
@@ -32,8 +33,8 @@ $Commands = [PSCustomObject]@{
     "ethash2gb;lbry:40" = ""
     "ethash2gb;lbry:50" = ""
     "ethash2gb;pascal:27" = ""
+    "ethash2gb;pascal:30" = ""
     "ethash2gb;pascal:33" = ""
-    "ethash2gb;pascal:36" = ""
 }
 $CommonCommands = @(" -logsmaxsize 1", "") # array, first value for main algo, second value for secondary algo
 
