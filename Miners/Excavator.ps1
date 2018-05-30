@@ -13,7 +13,7 @@ $Commands = [PSCustomObject]@{
     #"equihash" = @() #Equihash (bminer7 is fastest)
     "keccak" = @() #Keccak (fastest, but running on nicehash, only!)
     #"lyra2rev2" = @() #Lyra2RE2 (Alexis78 is fastest)
-    #"lyra2z" = @() #Lyra2z (Alexis78 is fastest)
+    #"lyra2z" = @() #Lyra2z (Tpruvot is fastest)
     "neoscrypt" = @() #NeoScrypt (fastest, but running on nicehash, only)
 
     # ASIC - never profitable 20/04/2018
