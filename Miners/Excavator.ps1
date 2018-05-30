@@ -1,23 +1,26 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\Excavator2\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.3a/excavator_v1.5.3a_NVIDIA_Win64.zip"
+$Path = ".\Bin\Excavator\excavator.exe"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.4a/excavator_v1.5.4a_NVIDIA_Win64.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
+    #"daggerhashimoto" = @() #Ethash (Ethminer is fastest)
+    #"daggerhashimoto_decred" = @() #Ethash+Decred (Claymore Dual is fastest)
+    #"daggerhashimoto_pascal" = @() #Ethash+Pascal (Claymore Dual is fastest)
+    #"equihash" = @() #Equihash (bminer7 is fastest)
+    "keccak" = @() #Keccak (fastest, but running on nicehash, only!)
+    #"lyra2rev2" = @() #Lyra2RE2 (Alexis78 is fastest)
+    #"lyra2z" = @() #Lyra2z (Alexis78 is fastest)
+    "neoscrypt" = @() #NeoScrypt (fastest, but running on nicehash, only)
+
+    # ASIC - never profitable 20/04/2018
     #"blake2s" = @() #Blake2s
     #"decred" = @() #Decred
-    #"daggerhashimoto" = @() #Ethash
-    #"equihash" = @() #Equihash
-    "keccak" = @() #Keccak (fastest, but running on nicehash, only!)
     #"lbry" = @() #Lbry
-    #"lyra2rev2" = @() #Lyra2RE2
-    #"neoscrypt" = @() #NeoScrypt
     #"pascal" = @() #Pascal
-    #"daggerhashimoto_decred" = @() #Ethash+Decred
-    #"daggerhashimoto_pascal" = @() #Ethash+Pascal
 }
 
 $Dcris = [PSCustomObject]@{
@@ -33,7 +36,8 @@ $Threads = [PSCustomObject]@{
     "equihash" = 1,2
     "keccak" = 1
     "lbry" = 1
-    "lyra2rev2" = 1,2
+    "lyra2rev2" = 1
+    "lyra2z" = 1
     "neoscrypt" = 1
     "nist5" = 1
     "pascal" = 1

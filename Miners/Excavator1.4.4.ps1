@@ -2,22 +2,24 @@
 
 $Threads = 1
 
-$Path = ".\Bin\Excavator\excavator.exe"
+$Path = ".\Bin\Excavator1.4.4\excavator.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.4a-excavator/excavator_v1.4.4a_NVIDIA_Win64.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    #"blake2s" = @() #Blake2s
-    #"cryptonight" = @() #Cryptonight
-    #"decred" = @() #Decred
     #"daggerhashimoto" = @() #Ethash
     #"equihash" = @() #Equihash
     #"keccak" = @() #Keccak
-    #"lbry" = @() #Lbry
     #"lyra2rev2" = @() #Lyra2RE2
-    "neoscrypt" = @() #NeoScrypt
+    "neoscrypt" = @() #NeoScrypt (fastest for all pools)
+
+    # ASIC - never profitable 20/04/2018
+    #"blake2s" = @() #Blake2s
+    #"cryptonight" = @() #Cryptonight
+    #"decred" = @() #Decred
+    #"lbry" = @() #Lbry
     #"nist5" = @() #Nist5
     #"pascal" = @() #Pascal
 }
