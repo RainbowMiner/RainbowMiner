@@ -1,7 +1,9 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
-$Uri = "https://github.com/KlausT/ccminer/releases/download/8.21/ccminer-821-cuda91-x64.zip"
+#$Uri = "https://github.com/KlausT/ccminer/releases/download/8.21/ccminer-821-cuda91-x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
+
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -9,25 +11,29 @@ if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in sy
 $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
     #"c11" = "" #C11
-    "deep" = "" #deep
-    "dmd-gr" = "" #dmd-gr
-    "fresh" = "" #fresh
-    "fugue256" = "" #Fugue256
-    "groestl" = "" #Groestl
-    "jackpot" = "" #Jackpot
+    #"deep" = "" #deep
+    #"dmd-gr" = "" #dmd-gr
+    #"fresh" = "" #fresh
+    #"fugue256" = "" #Fugue256
+    #"groestl" = "" #Groestl
+    #"jackpot" = "" #Jackpot
     #"keccak" = "" #Keccak
-    "luffa" = "" #Luffa
+    #"luffa" = "" #Luffa
     #"lyra2v2" = "" #Lyra2RE2
     #"lyra2z" = " -N 1" #lyra2z
     "neoscrypt" = " -N 1 -i 17.6" #NeoScrypt
-    "penta" = "" #Pentablake
+    #"penta" = "" #Pentablake
     #"skein" = "" #Skein
-    "s3" = "" #S3
+    #"s3" = "" #S3
     #"tribus" = "" #Tribus
-    "veltor" = "" #Veltor
+    #"veltor" = "" #Veltor
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
     #"X17" = "" #X17 Verge
+    "yescrypt" = "" #yescrypt
+    "yescryptR8" = ""
+    "yescryptR16" = "" #YescryptR16 #Yenten
+    "yescryptR16v2" = "" #PPN
 
     # ASIC - never profitable 20/04/2018
     #"blake" = "" #blake
