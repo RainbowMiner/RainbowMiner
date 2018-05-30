@@ -10,21 +10,21 @@ $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
     "c11" = " -N 1 -i 21" #c11
     "hsr" = " -N 1" #HSR, HShare
-    "keccak" = " -m 2 -i 29" #Keccak
-    "keccakc" = " -i 29" #Keccakc
+    "keccak" = " -N 1 -m 2 -i 29" #Keccak
+    "keccakc" = " -N 1 -i 29" #Keccakc
     #"lyra2" = "" #Lyra2
     "lyra2v2" = " -N 1" #lyra2v2
     #"lyra2z" = " -N 1" #lyra2z
     #"neoscrypt" = "" #NeoScrypt
-    "poly" = "" #Polytimos
-    "skein" = "" #Skein
-    "skein2" = "" #skein2
-    "veltor" = " -i 23" #Veltor
+    "poly" = " -N 1" #Polytimos
+    "skein" = " -N 1" #Skein
+    "skein2" = " -N 1" #skein2
+    "veltor" = " -N 1 -i 23" #Veltor
     #"whirlcoin" = "" #WhirlCoin
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
     "x11evo" = " -N 1 -i 21" #X11evo
-    "x17" = " -N 3 -i 20.5" #X17
+    "x17" = " -N 1 -i 20.5" #X17
 
     # ASIC - never profitable 20/04/2018
     #"blake2s" = "" #Blake2s
@@ -35,7 +35,7 @@ $Commands = [PSCustomObject]@{
     #"decred" = "" #Decred
     #"lbry" = " -N 1" #Lbry (fastest)
     #"myr-gr" = " -N 1" #MyriadGroestl (fastest)
-    "nist5" = " -N 1" #Nist5 (fastest)
+    #"nist5" = " -N 1" #Nist5 (fastest)
     #"quark" = "" #Quark
     #"qubit" = "" #Qubit
     #"scrypt" = "" #Scrypt
