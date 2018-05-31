@@ -12,8 +12,6 @@ $Commands = [PSCustomObject]@{
 
 $Default_Profile = 2
 $Profiles = [PSCustomObject]@{
-    "x16r" = 4
-    "x16s" = 4
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

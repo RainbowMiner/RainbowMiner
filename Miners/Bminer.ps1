@@ -20,6 +20,12 @@ $Commands = [PSCustomObject]@{
     #"ethash;blake14r" = "" #Ethash + Decred
 }
 
+$Profile = [PSCustomObject]@{
+    "ethash;blake2s" = 5
+    "ethash;blake14r" = 5
+}
+$DefaultProfile = 2
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $DeviceIDsAll = (Get-GPUlist $Type) -join ','
@@ -78,6 +84,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                     ($MainAlgorithm_Norm) = $DevFee.$_
                     ($SecondAlgorithm_Norm) = 0
                 }
+                MSIAprofile = if ( $Profile.$_ ) {$Profile.$_} else {$DefaultProfile}
                 URI = $Uri
             }
         }

@@ -776,8 +776,9 @@ while ($true) {
 
     Clear-Host
 
-    $LimitMiners = 50
-    if ( $Config.UIstyle -ne "full" ) { $LimitMiners=3 }
+    #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
+    $BenchmarksNeeded = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null}).Count
+    $LimitMiners = if ( $Config.UIstyle -eq "full" -or $BenchmarksNeeded -gt 0 ) {50} else {3}
 
     #Display mining information
     $Miners | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object -Descending Type, Profit_Bias | Select-Object -First $LimitMiners | Format-Table -GroupBy Type (
@@ -803,7 +804,7 @@ while ($true) {
     }
 
     #Display active miners list
-    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property {$_.GetStatus()}, @{Expression = {$_.GetActiveLast()}; Ascending = $false} | Select-Object -First (1 + 6 + 6) | Format-Table -Wrap -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} (
+    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $BenchmarksNeeded -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property {$_.GetStatus()}, @{Expression = {$_.GetActiveLast()}; Ascending = $false} | Select-Object -First (1 + 6 + 6) | Format-Table -Wrap -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} (
         @{Label = "Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},
@@ -811,7 +812,7 @@ while ($true) {
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($Arguments=$_.Arguments;$DonationData.Wallets.PSObject.Properties.Value | ForEach-Object {if ($_.User -ne $Username) {$Arguments=$Arguments.Replace("$($_.Wallet)","$($Wallet)").Replace("$($_.User)","$($Username)").Replace("$($_.Worker)","$($WorkerName)")}};$Arguments)"}}
     ) | Out-Host
 
-    if ( $Config.UIstyle -eq "full" ) {
+    if ( $Config.UIstyle -eq "full" -or $BenchmarksNeeded -gt 0 ) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogReset) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName}}, 
@@ -840,7 +841,7 @@ while ($true) {
             $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
         }
 
-        if ( $Config.UIstyle -eq "full" ) {
+        if ( $Config.UIstyle -eq "full" -or $BenchmarksNeeded -gt 0 ) {
             if ([Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
                 $MinerComparisons_Range = ($MinerComparisons_MarginOfError | Measure-Object -Average | Select-Object -ExpandProperty Average), (($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1]) | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
                 Write-Host -BackgroundColor Yellow -ForegroundColor Black "RainbowMiner is between $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])-$MinerComparisons_Range)*100)))% and $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])+$MinerComparisons_Range)*100)))% more profitable than the fastest miner: "
@@ -859,7 +860,6 @@ while ($true) {
     }
 
     #Display benchmarking progress
-    $BenchmarksNeeded = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null}).Count
     if ($BenchmarksNeeded -gt 0) {
         Write-Log -Level Warn "Benchmarking in progress: $($BenchmarksNeeded) miner$(if ($BenchmarksNeeded -gt 1){'s'}) left to benchmark."
     }
