@@ -36,24 +36,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $BlazePool_Coin = ""
     $BlazePool_PoolFee = [Double]$BlazePool_Request.$_.fees
 
-    $Divisor = 1000000
-
-    switch ($BlazePool_Algorithm_Norm) {
-        "blake"     {$Divisor *= 1000}
-        "blake2s"   {$Divisor *= 1000}
-        "blakecoin" {$Divisor *= 1000}
-        "decred"    {$Divisor *= 1000}
-        "equihash"  {$Divisor /= 1000}
-        "keccak"    {$Divisor *= 1000}
-        "keccakc"   {$Divisor *= 1000}
-        "quark"     {$Divisor *= 1000}
-        "qubit"     {$Divisor *= 1000}
-        "scrypt"    {$Divisor *= 1000}
-        "vanilla"   {$Divisor *= 1000}
-        "x11"       {$Divisor *= 1000}
-        "yescrypt"  {$Divisor /= 1000}
-        "yescryptr16"{$Divisor /= 1000}
-    }
+    $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor
     
     $BlazePool_Value = [Double]$BlazePool_Request.$_.actual_last24h
     if ([Double]$BlazePool_Request.$_.estimate_last24h -ne $BlazePool_Value) {$BlazePool_Value /= 1000}

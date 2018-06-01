@@ -36,18 +36,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $AHashPool_Coin = ""
     $AHashPool_PoolFee = [Double]$AHashPool_Request.$_.fees
 
-    $Divisor = 1000000
-
-    switch ($AHashPool_Algorithm_Norm) {
-        "blake2s" {$Divisor *= 1000}
-        "blakecoin" {$Divisor *= 1000}
-        "decred" {$Divisor *= 1000}
-        "equihash" {$Divisor /= 1000}
-        "quark" {$Divisor *= 1000}
-        "qubit" {$Divisor *= 1000}
-        "scrypt" {$Divisor *= 1000}
-        "x11" {$Divisor *= 1000}
-    }
+    $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor
 
     $AHashPool_Value = [Double]$AHashPool_Request.$_.actual_last24h
     if ([Double]$AHashPool_Request.$_.estimate_last24h -ne $AHashPool_Value) {$AHashPool_Value /= 1000}

@@ -12,17 +12,40 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Ravenminer_Request = [PSCustomObject]@{}
 
+
+$Success = $true
 try {
-    $Ravenminer_Request = Invoke-RestMethod "https://eu.ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    if (-not ($Ravenminer_Request = Invoke-RestMethod "https://eu.ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
 }
 catch {
+    $Success = $false
+}
+
+if ( -not $Success ) { 
+    $Success = $true
     try {
-        $Ravenminer_Request = Invoke-RestMethod "https://ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        if (-not ($Ravenminer_Request = Invoke-RestMethod "https://ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
     }
     catch {
-        Write-Log -Level Warn "Pool API ($Name) has failed. "
-        return
+        $Success = $false
     }
+}
+
+if ( -not $Success ) {
+    $Success = $true
+    try {
+        $Ravenminer_Request = Invoke-WebRequest -UseBasicParsing "https://eu.ravenminer.com/site/current_results" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+        if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Ravenminer_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
+        $Ravenminer_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0;name = "x16r"}}
+    }
+    catch {
+        $Success = $false
+    }
+}
+
+if ( -not $Success ) {
+    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    return
 }
 
 if (($Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -lt 1) {
@@ -44,7 +67,7 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
         "x16r" {$Divisor *= 1}
     }
 
-    $Stat = Set-Stat -Name "$($Name)_$($Ravenminer_Currency)_Profit" -Value ([Double]$Ravenminer_Request.$_.actual_last24h / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    $Stat = Set-Stat -Name "$($Name)_$($Ravenminer_Algorithm_Norm)_Profit" -Value ([Double]$Ravenminer_Request.$_.actual_last24h / $Divisor) -Duration $StatSpan -ChangeDetection $false
 
     $Ravenminer_Regions | ForEach-Object {
         $Ravenminer_Region = $_
