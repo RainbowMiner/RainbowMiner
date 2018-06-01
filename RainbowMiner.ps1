@@ -859,7 +859,7 @@ while ($true) {
     if ($Config.ShowPoolBalances) {
         $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$LastBalances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
-        Write-Host "Pool Balances as of $($LastBalances) (next update $($NextBalances)): "
+        Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($LastBalances)) (next update $($NextBalances)): "
         $Balances | Format-Table Name, Total_*
     }
 
