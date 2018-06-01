@@ -1,15 +1,16 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-Xevan\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerxevan/ccminerxevan_1.2.7z"
+$Path = ".\Bin\NVIDIA-Xevan\ccminer_x86.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-ccminerxevan/ccminerxevan_1.3.7z"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
+    "c11" = " -N 1 -i 21" #c11
     #"keccak"    = "" #Keccak
-    #"lyra2v2"   = " -N 1" #Lyra2RE2 (alexis78 is faster)
-    #"skein"     = " -N 1" #Skein
+    "lyra2v2"   = " -N 1" #Lyra2RE2 (alexis78 is faster)
+    "skein"     = " -N 1" #Skein
     "xevan"     = " -N 1" #Xevan
     
     # ASIC - never profitable 12/05/2018

@@ -1,14 +1,46 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-X16s\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccminerx16s-cuda9.2/ccminerx16sa1cuda9.2_v1.0.7z"
+$Path = ".\Bin\NVIDIA-x16s\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5-ccminerx16rx16s/ccminerx16rx16s64-bit.7z"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    #"x16r"  = " -N 10" #X16R RavenCoin
-    "x16s"  = "" #X16S PigeonCoin
+    #"phi" = " -d $SelGPUCC" #Phi
+    #"bitcore" = " -d $SelGPUCC" #Bitcore
+    #"jha" = " -d $SelGPUCC" #Jha
+    "hsr" = " -N 1" #Hsr (Alexis78 is fastest)
+    #"blakecoin" = " -r 0 -d $SelGPUCC" #Blakecoin
+    #"vanilla" = "" #BlakeVanilla
+    #"cryptonight" = " -i 10.5 -l 8x120 --bfactor=8 -d $SelGPUCC --api-remote" #Cryptonight
+    #"decred" = "" #Decred
+    #"equihash" = "" #Equihash
+    #"ethash" = "" #Ethash
+    #"groestl" = " -d $SelGPUCC" #Groestl
+    "hmq1725" = "" #hmq1725
+    #"keccak" = "" #Keccak
+    #"lbry" = " -d $SelGPUCC" #Lbry
+    #"lyra2v2" = "" #Lyra2RE2
+    #"lyra2z" = " -d $SelGPUCC --api-remote --api-allow=0/0 --submit-stale" #Lyra2z
+    #"myr-gr" = "" #MyriadGroestl
+    #"neoscrypt" = " -d $SelGPUCC" #NeoScrypt
+    #"nist5" = "" #Nist5
+    #"pascal" = "" #Pascal
+    #"qubit" = "" #Qubit
+    #"scrypt" = "" #Scrypt
+    #"sia" = "" #Sia
+    #"sib" = "" #Sib
+    #"skein" = "" #Skein
+    #"skunk" = "" #Skunk
+    #"timetravel" = " -d $SelGPUCC" #Timetravel
+    #"tribus" = "" #Tribus
+    #"x11" = "" #X11
+    #"veltor" = "" #Veltor
+    #"x11evo" = " -d $SelGPUCC" #X11evo
+    #"x17" = " -i 21.5 -d $SelGPUCC --api-remote" #X17
+    #"x16r" = " -r 0 -d $SelGPUCC" #X16r(stable, ccminerx16r faster)
+    "x16s" = "" #X16s(stable, fastest open source alongside A1cuda9.2)
 }
 
 $Default_Profile = 2

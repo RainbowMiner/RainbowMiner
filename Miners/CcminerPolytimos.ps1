@@ -1,33 +1,49 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-Polytimos\ccminer.exe"
-#$URI = "https://github.com/punxsutawneyphil/ccminer/releases/download/polytimosv2/ccminer-polytimos_v2.zip"
-#$URI = "https://github.com/nemosminer/ccminerpolytimos/releases/download/Alexis78-1.0/ccminer-polytimos.7z"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccminerpolytimos/ccminerpolytimos_1.0.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerpolytimos/ccminerpolytimos_1.2.zip"
 
 $Type = "NVIDIA"
 if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    #"hsr"       = "" #HSR
-    #"keccak"    = "" #Keccak
-    #"lyra2v2"   = "" #Lyra2RE2 (alexis78 faster)
-    "poly"      = "" #Polytimos
-    #"skein"     = "" #Skein
-    "veltor"    = " -i 23" #Veltor
-    "x11evo"    = "" #X11evo
+    #GPU - profitable 20/04/2018
+    #"blake2s" = "" #Blake2s XVG
+    #"c11" = "" #c11
+    "hsr" = "" #HSR, HShare (fastest)
+    "keccak" = "" #Keccak (Excavator is faster)
+    #"lyra2" = "" #Lyra2RE
+    "lyra2v2" = "" #lyra2v2 (fastest)
+    "polytimos" = "" #Polytimos
+    "skein" = "" #Skein
+    "skein2" = "" #skein2
+    "veltor" = "" #Veltor
+    #"whirlpool" = "" #Whirlpool
+    #"x11evo" = "" #X11evo
+    "x17" = " -i 20.5" #x17 (fastest)
 
-    # ASIC - never profitable 12/05/2018
-    #"blake2s"   = "" #Blake2s
+    # ASIC - never profitable 20/04/2018
+    #"blake2s" = "" #Blake2s
+    #"blake" = "" #blake
     #"blakecoin" = "" #Blakecoin
-    #"decred"   = "" #Decred
-    #"lbry"     = "" #Lbry
-    #"myr-gr"   = "" #MyriadGroestl
-    #"nist5"    = "" #Nist5
-    #"qubit"    = "" #qubit
-    #"quark"    = "" #Quark
-    #"x12"      = "" #X12
-    #"x14"      = "" #X14
+    #"cryptolight" = "" #cryptolight
+    #"cryptonight" = "" #CryptoNight
+    #"decred" = "" #Decred
+    #"lbry" = " -N 1" #Lbry (fastest)
+    #"myr-gr" = " -N 1" #MyriadGroestl (fastest)
+    #"nist5" = " -N 1" #Nist5 (fastest)
+    #"quark" = "" #Quark
+    #"qubit" = "" #Qubit
+    #"scrypt" = "" #Scrypt
+    #"scrypt:N" = "" #scrypt:N
+    #"sha256d" = "" #sha256d
+    #"sia" = "" #SiaCoin
+    #"sib" = "" #Sib
+    #"x11" = "" #X11
+    #"x13" = "" #x13
+    #"x14" = "" #x14
+    #"x15" = "" #x15
+    #"bitcore" = "" #Bitcore
 }
 
 $Default_Profile = 2
