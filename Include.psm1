@@ -911,6 +911,7 @@ class Miner {
     hidden [Array]$Data = @()
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
+    $BenchmarkIntervals = 1
     $DevFee
     $BaseName = $null
     $FaultTolerance = 0.1

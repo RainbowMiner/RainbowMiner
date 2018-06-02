@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.7-claymoredual/claymoredual_11.7.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.8-claymoredual/claymoredual_11.8.zip"
 $Api = "Claymore"
 
 $Type = "NVIDIA"
@@ -19,19 +19,19 @@ $Commands = [PSCustomObject]@{
     #"ethash;decred:40" = ""
     #"ethash;decred:60" = ""
     #"ethash;decred:80" = ""
-    "ethash:keccak:24" = ""
+    #"ethash:keccak:24" = ""
     "ethash;keccak:27" = ""
     "ethash;keccak:30" = ""
     "ethash;keccak:33" = ""
-    "ethash;keccak:36" = ""
+    #"ethash;keccak:36" = ""
     #"ethash;keccak:39" = ""
     #"ethash;lbry:30" = ""
     #"ethash;lbry:40" = ""
     #"ethash;lbry:50" = ""
     #"ethash;lbry:60" = ""
-    #"ethash;pascal:27" = ""
-    #"ethash;pascal:30" = ""
-    #"ethash;pascal:33" = ""
+    "ethash;pascal:27" = ""
+    "ethash;pascal:30" = ""
+    "ethash;pascal:33" = ""
     #"ethash;pascal:36" = ""
     #"ethash;pascal:39" = ""
     #"ethash;pascal:42" = ""
@@ -122,7 +122,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                 URI       = $Uri
                 DevFee    = $DevFee
                 MSIAprofile = if ( $Profile.$MainAlgorithm_Norm ) {$Profile.$MainAlgorithm_Norm} else {$DefaultProfile}
-                BaseName = "EthDcrMiner64"
+                BenchmarkIntervals = 2
             }
         }
         elseif ($_ -match "^.+;.+:\d+$") { # valid dual mining parameter set
@@ -138,7 +138,6 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
             $HashRateSecondaryAlgorithm = ($Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week)
 
             if ($Pools.$SecondaryAlgorithm_Norm -and $SecondaryAlgorithmIntensity -gt 0) { # must have a valid pool to mine and positive intensity
-                # Dual mining mode
                 [PSCustomObject]@{
                     Name      = $Miner_Name
                     Type      = $Type
@@ -153,26 +152,7 @@ $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Obj
                         ($SecondaryAlgorithm_Norm) = 0
                     }
                     MSIAprofile = if ( $Profile.$SecondaryAlgorithm_Norm ) {$Profile.$SecondaryAlgorithm_Norm} else {$DefaultProfile}
-                    BaseName = "EthDcrMiner64"
-                }
-                if ($SecondaryAlgorithm_Norm -eq "Sia" -or $SecondaryAlgorithm_Norm -eq "Decred") {
-                    $SecondaryAlgorithm_Norm = "$($SecondaryAlgorithm_Norm)NiceHash"
-                    [PSCustomObject]@{
-                        Name      = $Miner_Name
-                        Type      = $Type
-                        Path      = $Path
-                        Arguments = ("-mode 0 -mport -$($Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass)$MainAlgorithmCommand$($CommonCommands | Select -Index 1) -esm $EthereumStratumMode -allpools 1 -allcoins 1 -dcoin $SecondaryCoin -dcri $SecondaryAlgorithmIntensity -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$SecondaryAlgorithmCommand$($CommonCommands | Select -Index 1) -platform $($Platform) -di $($DeviceIDs -join '')" -replace "\s+", " ").trim()
-                        HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $HashRateMainAlgorithm; "$SecondaryAlgorithm_Norm" = $HashRateSecondaryAlgorithm}
-                        API       = $Api
-                        Port      = $Port
-                        URI       = $Uri
-                        DevFee = [PSCustomObject]@{
-                            ($MainAlgorithm_Norm) = $DevFeeDual
-                            ($SecondaryAlgorithm_Norm) = 0
-                        }
-                        MSIAprofile = if ( $Profile.$SecondaryAlgorithm_Norm ) {$Profile.$SecondaryAlgorithm_Norm} else {$DefaultProfile}
-                        BaseName = "EthDcrMiner64"
-                    }
+                    BenchmarkIntervals = 2
                 }
             }
         }

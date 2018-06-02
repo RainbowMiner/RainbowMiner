@@ -639,6 +639,7 @@ while ($true) {
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                 MSIAprofile          = $Miner.MSIAprofile
+                BenchmarkIntervals   = if ($Miner.BenchmarkIntervals -eq $null) {1} else {$Miner.BenchmarkIntervals}
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
                 BaseName             = if ($Miner.BaseName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.BaseName}
@@ -881,13 +882,20 @@ while ($true) {
     [GC]::Collect()
 
     #When benchmarking miners/algorithm in ExtendInterval... add 10x $Config.Interval to $StatEnd, extend StatSpan, extend watchdog times
-    $BenchmarkingMiners = $RunningMiners | Where-Object {$_.Speed -eq $null}
-    if ($BenchmarkingMiners | Where-Object {$Config.ExtendInterval -icontains $_.Name -or ($_.Algorithm | Where-Object {$Config.ExtendInterval -icontains $_})}) {
-        $StatEnd = $StatEnd.AddSeconds($Config.Interval * 10)
+    $BenchmarkingMiner_ExtendInterval = 0
+    $RunningMiners | Where-Object {$_.Speed -eq $null -and ($Config.ExtendInterval -icontains $_.Name -or ($_.Algorithm | Where-Object {$Config.ExtendInterval -icontains $_}) -or $_.BenchmarkIntervals -gt 1)}  | Foreach-Object {
+        if ($_.BenchmarkIntervals -gt 1 -and $_.BenchmarkIntervals -ge $BenchmarkingMiner_ExtendInterval) {
+            $BenchmarkingMiner_ExtendInterval = $_.BenchmarkIntervals
+        } else {
+            $BenchmarkingMiner_ExtendInterval = 10
+        }
+    }
+    if ($BenchmarkingMiner_ExtendInterval) {
+        $StatEnd = $StatEnd.AddSeconds($Config.Interval * $BenchmarkingMiner_ExtendInterval)
         $StatSpan = New-TimeSpan $StatStart $StatEnd
         $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
         $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
-        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to 10x interval ($($Config.Interval * 10) seconds). "
+        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($BenchmarkingMiner_ExtendInterval)x interval ($($Config.Interval * $BenchmarkingMiner_ExtendInterval) seconds). "
     }
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
