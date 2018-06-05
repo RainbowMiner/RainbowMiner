@@ -30,9 +30,10 @@
   "Miners": {
   },
   "Interval": "$Interval",
+  "ExtendInterval": "$ExtendInterval",
   "Region": "$Region",
   "SSL": "$SSL",
-  "Type": "$Type",
+  "DeviceName": "$DeviceName",
   "Algorithm": "$Algorithm",
   "MinerName": "$MinerName",
   "PoolName": "$PoolName",
@@ -51,10 +52,8 @@
   "FastestMinerOnly": "$FastestMinerOnly",
   "IgnoreFees": "$IgnoreFees",
   "ShowPoolBalances": "$ShowPoolBalances",
-  "GPUs" : "$GPUs",
   "RebootOnGPUFailure": "$RebootOnGPUFailure",
   "MSIApath": "$MSIApath",
   "MSIAprofile": "$MSIAprofile",
-  "UIstyle": "$UIstyle",
-  "ExtendInterval": "$ExtendInterval"
+  "UIstyle": "$UIstyle"
 }

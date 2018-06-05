@@ -3,6 +3,8 @@
 $Path = ".\Bin\CPU-JayDDee\cpuminer-avx2.exe"
 $Uri = "https://github.com/JayDDee/cpuminer-opt/files/1939225/cpuminer-opt-3.8.8-windows.zip"
 
+$Devices = $Devices.CPU
+
 $Commands = [PSCustomObject]@{
     # CPU Only algos 23/04/2018
     "anime" = "" #Anime 
@@ -88,7 +90,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
     [PSCustomObject]@{
-        Type = "CPU"
+        DeviceName = $Devices.Name
         Path = $Path
         Arguments = "-a $_ -o $($Pools.(Get-Algorithm $_).Protocol)://$($Pools.(Get-Algorithm $_).Host):$($Pools.(Get-Algorithm $_).Port) -u $($Pools.(Get-Algorithm $_).User) -p $($Pools.(Get-Algorithm $_).Pass)$($Commands.$_)"
         HashRates = [PSCustomObject]@{(Get-Algorithm $_) = $Stats."$($Name)_$(Get-Algorithm $_)_HashRate".Week}

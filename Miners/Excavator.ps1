@@ -3,16 +3,18 @@
 $Path = ".\Bin\Excavator\excavator.exe"
 $Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.4a/excavator_v1.5.4a_NVIDIA_Win64.zip"
 
-$Type = "NVIDIA"
-if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+$Devices = $Devices.NVIDIA
+if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     #"daggerhashimoto" = @() #Ethash (Ethminer is fastest)
-    #"daggerhashimoto_decred" = @() #Ethash+Decred (Claymore Dual is fastest)
-    #"daggerhashimoto_pascal" = @() #Ethash+Pascal (Claymore Dual is fastest)
+    #"daggerhashimoto;decred" = @() #Ethash+Decred (Claymore Dual is fastest)
+    #"daggerhashimoto;pascal" = @() #Ethash+Pascal (Claymore Dual is fastest)
     #"equihash" = @() #Equihash (bminer7 is fastest)
+    #"equihash:2" = @() #Equihash (bminer7 is fastest)
     "keccak" = @() #Keccak (fastest, but running on nicehash, only!)
     #"lyra2rev2" = @() #Lyra2RE2 (Alexis78 is fastest)
+    #"lyra2rev2:2" = @() #Lyra2RE2 (Alexis78 is fastest)
     #"lyra2z" = @() #Lyra2z (Tpruvot is fastest)
     "neoscrypt" = @() #NeoScrypt (fastest, but running on nicehash, only)
 
@@ -24,54 +26,37 @@ $Commands = [PSCustomObject]@{
 }
 
 $Dcris = [PSCustomObject]@{
-    "daggerhashimoto_pascal" = "0:0"
-    "daggerhashimoto_decred" = "0:0","16:3","16:4","16:5"
+    "daggerhashimoto;pascal" = "0:0"
+    "daggerhashimoto;decred" = "0:0","16:3","16:4","16:5"
 }
-
-$Threads = [PSCustomObject]@{
-    "blake2s" = 1
-    "cryptonight" = 1
-    "decred" = 1
-    "daggerhashimoto" = 1
-    "equihash" = 1,2
-    "keccak" = 1
-    "lbry" = 1
-    "lyra2rev2" = 1
-    "lyra2z" = 1
-    "neoscrypt" = 1
-    "nist5" = 1
-    "pascal" = 1
-    "daggerhashimoto_decred" = 1
-    "daggerhashimoto_pascal" = 1
-}
-
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $Port = 3456 + (2 * 10000)
+
+$DeviceIDsAll = Get-GPUIDs $Devices
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
     try {
         $nh = ""
 
         $nhAlgorithm = $_
-        $nhAlgorithms = @($_ -split "_")
-        $nhBaseAlgorithm = $nhAlgorithms[0]
+        $nhAlgorithms = @($_ -split ";")
+        $nhBaseAlgorithm = $nhAlgorithms[0] -split ":" | Select-Object -Index 0
+        $nhThreads = $nhAlgorithms[0] -split ":" | Select-Object -Index 1
+        if ( -not $nhThreads ) {$nhThreads=1}
 
         if ((Get-Algorithm $nhBaseAlgorithm) -eq "Decred" -or (Get-Algorithm $nhBaseAlgorithm) -eq "Sia") { $nh = "NiceHash" }
 
         $Threads.$nhAlgorithm | Foreach-Object {
-            $nhThreads = $_
-
             if ( -not (Test-Path (Split-Path $Path)) ) { New-Item (Split-Path $Path) -ItemType "directory" | Out-Null }
 
             if ($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Host -and $Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Name -like "Nicehash") {
-                $gpus = $(Get-GPUlist "NVIDIA")
 
                 if ( $nhAlgorithms.Count -eq 1 ) {
                     $res = @()
                     $res += [PSCustomObject]@{time = 0; commands = @([PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Host -replace '^[^\.]+\.','nhmp.'):3200", "$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".User):$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Pass)")})}
                     $res += [PSCustomObject]@{time = 1; commands = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$nhBaseAlgorithm")})}
-                    foreach( $gpu in $gpus ) { $res += [PSCustomObject]@{time = 3; commands = @([PSCustomObject]@{id = 1; method = "worker.add"; params = @("$nhAlgorithm", "$gpu") + $Commands.$nhAlgorithm}) * $nhThreads}}
+                    foreach( $gpu in $DeviceIDsAll ) { $res += [PSCustomObject]@{time = 3; commands = @([PSCustomObject]@{id = 1; method = "worker.add"; params = @("$nhAlgorithm", "$gpu") + $Commands.$nhAlgorithm}) * $nhThreads}}
                     $res += [PSCustomObject]@{time = 10; loop = 10; commands = @([PSCustomObject]@{id = 1; method = "algorithm.print.speeds"; params = @()})}
                     for( $worker_id=0; $worker_id -lt ($gpus.count * $nhThreads); $worker_id++ ) { $res += [PSCustomObject]@{time = 15; commands = @([PSCustomObject]@{id = 1; method = "worker.reset"; params = @("$worker_id")})}}
 
@@ -82,7 +67,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
                     [PSCustomObject]@{
                         Name = $MinerName
-                        Type = $Type
+                        DeviceName= $Devices.Name
                         Path = $Path
                         Arguments = "-p $Port -c $nhConfig -na"
                         HashRates = [PSCustomObject]@{"$(Get-Algorithm $nhBaseAlgorithm)$nh" = $Stats."$($MinerName)_$(Get-Algorithm $nhBaseAlgorithm)$($nh)_HashRate".Week}
@@ -115,7 +100,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
                         [PSCustomObject]@{
                             Name = $MinerName
-                            Type = $Type
+                            Device = $Devices
                             Path = $Path
                             Arguments = "-p $Port -c $nhConfig -na"
                             HashRates = [PSCustomObject]@{

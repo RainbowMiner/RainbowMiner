@@ -3,9 +3,8 @@
 $Path = ".\Bin\Equihash-DSTM\zm.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-dstm/zm_0.6.1_win.zip"
 
-$Type = "NVIDIA"
-if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
-
+$Devices = $Devices.NVIDIA
+if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore
@@ -47,14 +46,14 @@ $Commands = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$DeviceIDsAll = (Get-GPUlist $Type) -join ' '
+$DeviceIDsAll = Get-GPUIDs $Devices -join ' '
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
     $Algorithm_Norm = Get-Algorithm $_
 
     [PSCustomObject]@{
-        Type = $Type
+        DeviceName = $Devices.Name
         Path = $Path
         Arguments = "--telemetry --dev $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {'ssl://'})$($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) --color$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week)}

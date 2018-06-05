@@ -1,10 +1,10 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
-$Uri = "https://github.com/fireice-uk/xmr-stak/releases/download/2.4.3/xmr-stak-win64.zip"
+$Uri = "https://github.com/fireice-uk/xmr-stak/releases/download/2.4.4/xmr-stak-win64.zip"
 
-$Type = "NVIDIA"
-if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+$Devices = $Devices.NVIDIA
+if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $Port = 3335
@@ -15,6 +15,8 @@ $Commands = [PSCustomObject]@{
     "cryptonight_lite" = "" # CryptoNight-Lite
     "cryptonight_V7" = "" #CryptoNightV7
 }
+
+$DeviceIDsAll = Get-GPUIDs $Devices
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
 
@@ -53,7 +55,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
     ) -replace "^{" -replace "}$" | Set-Content "$(Split-Path $Path)\$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_Nvidia.txt" -Force -ErrorAction SilentlyContinue
 
     [PSCustomObject]@{
-        Type      = $Type
+        DeviceName= $Devices.Name
         Path      = $Path
         Arguments = "-C $($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_Nvidia.txt --noUAC --noAMD --noCPU -i $($Port)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}

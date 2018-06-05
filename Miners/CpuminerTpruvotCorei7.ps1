@@ -3,6 +3,8 @@
 $Path = ".\Bin\CPU-TPruvot\cpuminer-gw64-corei7.exe"
 $Uri = "https://github.com/tpruvot/cpuminer-multi/releases/download/v1.3.1-multi/cpuminer-multi-rel1.3.1-x64.zip"
 
+$Devices = $Devices.CPU
+
 $Commands = [PSCustomObject]@{
     # CPU Only algos 3/27/2018
     "yescrypt" = "" #Yescrypt
@@ -63,7 +65,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
     [PSCustomObject]@{
-        Type = "CPU"
+        DeviceName = $Devices.Name
         Path = $Path
         Arguments = "-a $_ -o $($Pools.(Get-Algorithm $_).Protocol)://$($Pools.(Get-Algorithm $_).Host):$($Pools.(Get-Algorithm $_).Port) -u $($Pools.(Get-Algorithm $_).User) -p $($Pools.(Get-Algorithm $_).Pass)$($Commands.$_)"
         HashRates = [PSCustomObject]@{(Get-Algorithm $_) = $Stats."$($Name)_$(Get-Algorithm $_)_HashRate".Week}

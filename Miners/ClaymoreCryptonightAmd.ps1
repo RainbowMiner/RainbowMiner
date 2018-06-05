@@ -3,9 +3,8 @@
 $Path = ".\Bin\CryptoNight-Claymore\NsGpuCNMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.3-claymorecryptonight/claymore_cryptonight_11.3.zip"
 
-$Type = "AMD"
-if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No AMD present in system
-
+$Devices = $Devices.AMD
+if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject]@{
     #"bitcore" = "" #Bitcore
@@ -48,14 +47,16 @@ $Commands = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$DeviceIDsAll = Get-GPUIDs $Devices -join '' -ToHex
+
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
     $Algorithm_Norm = Get-Algorithm $_
 
     [PSCustomObject]@{
-        Type = "AMD"
+        DeviceName = $Devices.Name
         Path = $Path
-        Arguments = "-r -1 -mport -13333 -xpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -xwal $($Pools.$Algorithm_Norm.User) -xpsw $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
+        Arguments = "-r -1 -mport -13333 -xpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -xwal $($Pools.$Algorithm_Norm.User) -xpsw $($Pools.$Algorithm_Norm.Pass) -di $($DeviceIDsAll)$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week }
         API = "Claymore"
         Port = 13333

@@ -3,8 +3,8 @@
 $Path = ".\Bin\NVIDIA-X16r\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccminerx16r-cuda9.2/ccminerx16r_1.2-cuda9.2.7z"
 
-$Type = "NVIDIA"
-if (-not $Devices.$Type -or $Config.InfoOnly) {return} # No NVIDIA present in system
+$Devices = $Devices.NVIDIA
+if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     "x16r"  = " -N 10" #X16R RavenCoin
@@ -29,7 +29,7 @@ $HashRates_Durations = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$DeviceIDsAll = (Get-GPUlist $Type) -join ','
+$DeviceIDsAll = Get-GPUIDs $Devices -join ','
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
@@ -37,7 +37,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
     $HashRates_Duration = if ( $HashRates_Durations.$_ ) { $HashRates_Durations.$_ } else { $Default_HashRates_Duration }
 
     [PSCustomObject]@{
-        Type = $Type
+        DeviceName = $Devices.Name
         Path = $Path
         Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".$HashRates_Duration}
