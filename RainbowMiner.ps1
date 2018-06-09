@@ -152,11 +152,17 @@ Import-Module .\API.psm1
 Start-APIServer
 $API.Version = $Version
 
-if ($WalletFile -ne "" -and (Test-Path Config\$WalletFile)) {
-    $WalletFileContents = (Get-ChildItemContent -Path Config\$WalletFile).Content
-    if ($WalletFileContents.Wallet -ne "") {$Wallet = [String]$WalletFileContents.Wallet}
-    if ($WalletFileContents.UserName -ne "") {$UserName = [String]$WalletFileContents.UserName}
-    if ($WalletFileContents.WorkerName -ne "") {$WorkerName = [String]$WalletFileContents.WorkerName}
+if (-not (Test-Path Config)) {New-Item -Name "Config" -ItemType "directory" -Force}
+
+if ($WalletFile -ne "") {
+    if (Test-Path Config\$WalletFile) {
+        $WalletFileContents = (Get-ChildItemContent -Path Config\$WalletFile).Content
+        if ($WalletFileContents.Wallet -ne "") {$Wallet = [String]$WalletFileContents.Wallet}
+        if ($WalletFileContents.UserName -ne "") {$UserName = [String]$WalletFileContents.UserName}
+        if ($WalletFileContents.WorkerName -ne "") {$WorkerName = [String]$WalletFileContents.WorkerName}
+    } else {
+        [PSCustomObject]@{Wallet = $Wallet; UserName = $UserName; WorkerName = $WorkerName} | ConvertTo-Json | Out-File Config\Wallet.txt -Force
+    }
 }
 
 if ($Wallet -eq "" -or $WorkerName -eq "") {
@@ -165,10 +171,21 @@ if ($Wallet -eq "" -or $WorkerName -eq "") {
 }
 
 if ( $ConfigFile -eq "" ) { $ConfigFile = "Config.txt" }
+
+#compatibility from versions up to v3.3.0.0
+if (Test-Path $ConfigFile) {
+    if (-not (Test-Path Config\$ConfigFile)) {Move-Item  $ConfigFile Config -Force}
+    else {Remove-Item $ConfigFile -Force}
+}
+if (Test-Path "Config.default.txt") {
+    if (-not (Test-Path "Config\Config.default.txt")) {Move-Item  $ConfigFile Config -Force}
+    else {Remove-Item "Config.default.txt" -Force}
+}
+
 $ConfigFile = @("Config",$ConfigFile) -join "\"
 
 # Create config.txt if it is missing
-if (!(Test-Path $ConfigFile)) {
+if (-not (Test-Path $ConfigFile)) {
     if(Test-Path "Config\Config.default.txt") {
         Copy-Item -Path "Config\Config.default.txt" -Destination $ConfigFile
     } else {
