@@ -7,7 +7,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    "bitcore"  = "" #Bitcore
+    "bitcore"  = " -N 1" #Bitcore
 }
 
 $Default_Profile = 2

@@ -1,34 +1,30 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-Xevan\ccminer_x86.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-ccminerxevan/ccminerxevan_1.3.7z"
+$Path = ".\Bin\NVIDIA-x16r-Ravencoin\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0-ravencoinminer/ccminerRavenx32.zip"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    "c11" = " -N 1" #c11
-    #"keccak"    = "" #Keccak
-    #"lyra2v2"   = " -N 1" #Lyra2RE2 (alexis78 is faster)
-    "skein"     = " -N 1" #Skein
-    "xevan"     = " -N 1" #Xevan
-    
-    # ASIC - never profitable 12/05/2018
-    #"blake2s"   = "" #Blake2s
-    #"blakecoin" = "" #Blakecoin
-    #"decred"   = "" #Decred
-    #"lbry"     = "" #Lbry
-    #"myr-gr"   = "" #MyriadGroestl
-    #"nist5"    = "" #Nist5
-    #"qubit"    = "" #Qubit
-    #"quark"    = "" #Quark
-    #"x12"      = "" #X12
-    #"x14"      = "" #X14
+    "x16r"  = " -N 10 --donate 0" #X16R RavenCoin
+    #"x16s"  = "" #X16S PigeonCoin
 }
 
 $Default_Profile = 2
 $Profiles = [PSCustomObject]@{
-    "lyra2v2" = 4
+    "x16r" = 4
+    "x16s" = 4
+}
+
+$Default_Tolerance = 0.1
+$Tolerances = [PSCustomObject]@{
+    "x16r" = 0.5
+}
+
+$Default_HashRates_Duration = "Week"
+$HashRates_Durations = [PSCustomObject]@{
+    "x16r" = "Day"
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -38,15 +34,18 @@ $DeviceIDsAll = Get-GPUIDs $Devices -join ','
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
     $Algorithm_Norm = Get-Algorithm $_
+    $HashRates_Duration = if ( $HashRates_Durations.$_ ) { $HashRates_Durations.$_ } else { $Default_HashRates_Duration }
 
     [PSCustomObject]@{
         DeviceName = $Devices.Name
         Path = $Path
         Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
-        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
+        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".$HashRates_Duration}
         API = "Ccminer"
         Port = 4068
         URI = $Uri
         MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
+        FaultTolerance = if ( $Tolerances.$_ ) { $Tolerances.$_ } else { $Default_Tolerance }
+        DevFee = 1.0
     }
 }

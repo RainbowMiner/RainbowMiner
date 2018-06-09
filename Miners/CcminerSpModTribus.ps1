@@ -7,11 +7,12 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    "tribus" = " -N 1" #Tribus
+    "tribus" = "" #Tribus
 }
 
 $Default_Profile = 2
 $Profiles = [PSCustomObject]@{
+    #"tribus" = 3
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -30,6 +31,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
         API = "Ccminer"
         Port = 4068
         URI = $Uri
+        DevFee = 0.5
         MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
     }
 }

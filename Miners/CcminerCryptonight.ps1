@@ -13,7 +13,6 @@ $Commands = [PSCustomObject]@{
     #"blake2s" = " -d $SelGPUCC" #Blake2s
     #"blakecoin" = " -d $SelGPUCC" #Blakecoin
     #"vanilla" = "" #BlakeVanilla
-    "cryptonight" = "" #Cryptonight
     "monero" = "" #CryptonightV7
     #"decred" = "" #Decred
     #"equihash" = "" #Equihash
@@ -52,14 +51,16 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
     $Algorithm_Norm = Get-Algorithm $_
 
-    [PSCustomObject]@{
-        DeviceName = $Devices.Name
-        Path = $Path
-        Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
-        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
-        API = "Wrapper"
-        Port = 4068
-        URI = $Uri
-        MSIAprofile = 2
+    if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash") {
+        [PSCustomObject]@{
+            DeviceName = $Devices.Name
+            Path = $Path
+            Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
+            API = "Wrapper"
+            Port = 4068
+            URI = $Uri
+            MSIAprofile = 2
+        }
     }
 }

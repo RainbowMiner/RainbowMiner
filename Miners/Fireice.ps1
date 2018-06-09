@@ -44,7 +44,7 @@ if ($Devices.CPU -and -not $Config.InfoOnly) {
 $Platforms | Foreach-Object {
     $Platform = $_
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
+    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {Get-Member -inputobject $Pools -name (Get-Algorithm $_) -Membertype Properties} | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_
 

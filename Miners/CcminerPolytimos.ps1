@@ -10,17 +10,17 @@ $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
     #"blake2s" = "" #Blake2s XVG
     #"c11" = "" #c11
-    "hsr" = "" #HSR, HShare (fastest)
-    "keccak" = "" #Keccak (Excavator is faster)
+    "hsr" = " -N 1" #HSR, HShare (fastest)
+    "keccak" = " -N 1" #Keccak (Excavator is faster)
     #"lyra2" = "" #Lyra2RE
-    "lyra2v2" = "" #lyra2v2 (fastest)
-    "polytimos" = "" #Polytimos
-    "skein" = "" #Skein
-    "skein2" = "" #skein2
-    "veltor" = "" #Veltor
+    "lyra2v2" = " -N 1" #lyra2v2 (fastest)
+    "polytimos" = " -N 1" #Polytimos
+    "skein" = " -N 1" #Skein
+    "skein2" = " -N 1" #skein2
+    "veltor" = " -N 1" #Veltor
     #"whirlpool" = "" #Whirlpool
     #"x11evo" = "" #X11evo
-    "x17" = " -i 20.5" #x17 (fastest)
+    "x17" = " -N 1" #x17 (fastest)
 
     # ASIC - never profitable 20/04/2018
     #"blake2s" = "" #Blake2s

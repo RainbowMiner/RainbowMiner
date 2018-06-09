@@ -7,15 +7,15 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    "blake2s"   = "" #Blake2s
-    "blakecoin" = "" #Blakecoin
+    "blake2s"   = " -N 1" #Blake2s
+    "blakecoin" = " -N 1" #Blakecoin
     #"c11"       = "" #C11 (alexis78 is fastest)
     #"keccak"    = "" #Keccak (alexis78 is fastest)
     #"lyra2v2"   = "" #Lyra2RE2 (alexis78 is fastest)
     #"neoscrypt" = "" #NeoScrypt (excavator is fastest)
-    "sib"       = "" #Sib
+    "sib"       = " -N 1" #Sib
     #"skein"     = "" #Skein (alexis78 is fastest)
-    "x11evo"    = "" #X11evo
+    "x11evo"    = " -N 1" #X11evo
 
     # ASIC - never profitable 12/05/2018
     #"decred" = "" #Decred

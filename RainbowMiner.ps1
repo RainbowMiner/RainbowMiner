@@ -73,6 +73,8 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config.txt", # Path to config file    
     [Parameter(Mandatory = $false)]
+    [String]$WalletFile = "Wallet.txt", # Path to wallet file    
+    [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
     [Parameter(Mandatory = $false)]
     [String]$MSIApath = "c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", # installation path of MSI Afterburner
@@ -84,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.3.0.0"
+$Version = "3.4.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -124,6 +126,7 @@ $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
 $LastBalances = $Timer
 $MSIAcurrentprofile = -1
+$CustomMinerCommandsTimeStamp = 0
 
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
@@ -149,14 +152,27 @@ Import-Module .\API.psm1
 Start-APIServer
 $API.Version = $Version
 
+if ($WalletFile -ne "" -and (Test-Path Config\$WalletFile)) {
+    $WalletFileContents = (Get-ChildItemContent -Path Config\$WalletFile).Content
+    if ($WalletFileContents.Wallet -ne "") {$Wallet = [String]$WalletFileContents.Wallet}
+    if ($WalletFileContents.UserName -ne "") {$UserName = [String]$WalletFileContents.UserName}
+    if ($WalletFileContents.WorkerName -ne "") {$WorkerName = [String]$WalletFileContents.WorkerName}
+}
+
+if ($Wallet -eq "" -or $WorkerName -eq "") {
+    Write-Log -Level Error "Wallet or WorkerName are missing - please edit Config\Wallet.txt. Cannot continue. "
+    Exit
+}
+
 if ( $ConfigFile -eq "" ) { $ConfigFile = "Config.txt" }
+$ConfigFile = @("Config",$ConfigFile) -join "\"
 
 # Create config.txt if it is missing
 if (!(Test-Path $ConfigFile)) {
-    if(Test-Path "Config.default.txt") {
-        Copy-Item -Path "Config.default.txt" -Destination $ConfigFile
+    if(Test-Path "Config\Config.default.txt") {
+        Copy-Item -Path "Config\Config.default.txt" -Destination $ConfigFile
     } else {
-        Write-Log -Level Error "$($ConfigFile) and Config.default.txt are missing. Cannot continue. "
+        Write-Log -Level Error "$($ConfigFile) and Config\Config.default.txt are missing. Cannot continue. "
         Exit
     }
 }
@@ -218,7 +234,7 @@ while ($true) {
     
      #Error in Config.txt
     if ($Config -isnot [PSCustomObject]) {
-        Write-Log -Level Error "Config.txt is invalid. Cannot continue. "
+        Write-Log -Level Error "$($ConfigFile) is invalid. Cannot continue. "
         Start-Sleep 10
         Exit
     }
@@ -443,6 +459,21 @@ while ($true) {
     #Give API access to the pools information
     $API.Pools = $Pools
 
+    #Load custom miner commands
+    $CustomMinerCommandsFile = "Config\Miners.txt"
+    if ((Test-Path $CustomMinerCommandsFile)) {
+        if ($true -or (Get-ChildItem $CustomMinerCommandsFile).LastWriteTime.ToUniversalTime() -gt $CustomMinerCommandsTimeStamp) {        
+            $CustomMinerCommandsTimeStamp = (Get-ChildItem $CustomMinerCommandsFile).LastWriteTime.ToUniversalTime()
+            $CustomMinerCommands = [PSCustomObject]@{}
+            (Get-ChildItemContent -Path $CustomMinerCommandsFile).Content.PSObject.Properties | Foreach-Object {
+                $CcMinerName = $_.Name                
+                $_.Value | Foreach-Object {                   
+                    $CustomMinerCommands | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
+                }
+            }
+        }
+    }
+
     #Load information about the miners
     #Messy...?
     Write-Log "Getting miner information. "
@@ -451,7 +482,7 @@ while ($true) {
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     $AllMiners = if (Test-Path "Miners") {
         Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | 
-            ForEach-Object {if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}; $_} | #for backward compatibility
+            ForEach-Object {if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}; $_} | #for backward compatibility            
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {($Config.Algorithm.Count -eq 0 -or (Compare-Object $Config.Algorithm $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0) -and ((Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0)} | 
             Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object $Config.ExcludeAlgorithm $_.HashRates.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
@@ -471,6 +502,16 @@ while ($true) {
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
+
+        $Miner_CommonCommands = @($Miner.Name -split '-') + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+        if ($CustomMinerCommands -and (Get-Member -InputObject $CustomMinerCommands -Name $Miner_CommonCommands -MemberType NoteProperty)) {
+            if ($CustomMinerCommands.$Miner_CommonCommands.Params) {
+                $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$CustomMinerCommands.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
+            }
+            if ($CustomMinerCommands.$Miner_CommonCommands.Profile) {
+                $Miner | Add-Member -Name MSIAprofile -Value $CustomMinerCommands.$Miner_CommonCommands.Profile -MemberType NoteProperty -Force
+            }
+        }
 
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
             $Miner_DevFees | Add-Member $_ ([Double]$(if ( -not $Config.IgnoreFees -and $Miner.DevFee ) {[Double]$(if (Get-Member -inputobject $Miner.DevFee -name $_ -Membertype Properties) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
@@ -756,11 +797,11 @@ while ($true) {
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
-    $LimitMiners = if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {50} else {3}
+    $LimitMiners = if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {100} else {3}
 
     #Display mining information
     $Miners | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceName, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $LimitMiners | Format-Table -GroupBy @{Name = "Device"; Expression = "Device_Name"} (
-        @{Label = "Miner"; Expression = {$_.Name}},
+        @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
         @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 
         @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'}, 
         @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
@@ -852,7 +893,7 @@ while ($true) {
     [GC]::Collect()
 
     #When benchmarking miners/algorithm in ExtendInterval... add 10x $Config.Interval to $StatEnd, extend StatSpan, extend watchdog times
-    $BenchmarkingMiner_ExtendInterval = 0
+    $BenchmarkingMiner_ExtendInterval = 1
     $RunningMiners | Where-Object {$_.Speed -eq $null -and ($Config.ExtendInterval -icontains $_.Name -or ($_.Algorithm | Where-Object {$Config.ExtendInterval -icontains $_}) -or $_.BenchmarkIntervals -gt 1)}  | Foreach-Object {
         if ($_.BenchmarkIntervals -gt 1 -and $_.BenchmarkIntervals -ge $BenchmarkingMiner_ExtendInterval) {
             $BenchmarkingMiner_ExtendInterval = $_.BenchmarkIntervals
@@ -860,7 +901,7 @@ while ($true) {
             $BenchmarkingMiner_ExtendInterval = 10
         }
     }
-    if ($BenchmarkingMiner_ExtendInterval) {
+    if ($BenchmarkingMiner_ExtendInterval -gt 1) {
         $StatEnd = $StatEnd.AddSeconds($Config.Interval * $BenchmarkingMiner_ExtendInterval)
         $StatSpan = New-TimeSpan $StatStart $StatEnd
         $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
@@ -991,10 +1032,10 @@ while ($true) {
 
         if ($Miner.GetStatus() -eq "Running" -or $Miner.New) {
             $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_, $Interval, $Miner.New)
+                $Miner_Speed = $Miner.GetHashRate($_, $Interval * $BenchmarkingMiner_ExtendInterval, $Miner.New)
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Interval * $Miner.Benchmarked), ($Miner.Benchmarked -lt $Strikes))}
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Interval * $Miner.Benchmarked * $BenchmarkingMiner_ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
 
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Strikes * $Strikes) -or $Miner.GetActivateCount() -ge $Strikes) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance

@@ -8,8 +8,8 @@ $DevFee = 0.0
 $DevFeeDual = 0.0
 
 $Commands = [PSCustomObject]@{
-    "ethash" = ""
-    "ethash2gb" = ""
+    #"ethash" = ""
+    #"ethash2gb" = ""
     "ethash;decred:30" = ""
     "ethash;decred:40" = ""
     "ethash;decred:50" = ""

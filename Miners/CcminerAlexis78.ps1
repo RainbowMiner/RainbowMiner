@@ -8,10 +8,10 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
-    "c11" = " -N 1 -i 21" #c11
+    "c11" = " -N 1" #c11
     "hsr" = " -N 1" #HSR, HShare
-    "keccak" = " -N 1 -m 2 -i 29" #Keccak
-    "keccakc" = " -N 1 -i 29" #Keccakc
+    "keccak" = " -N 1" #Keccak
+    "keccakc" = " -N 1" #Keccakc
     #"lyra2" = "" #Lyra2
     "lyra2v2" = " -N 1" #lyra2v2
     #"lyra2z" = " -N 1" #lyra2z
@@ -19,12 +19,13 @@ $Commands = [PSCustomObject]@{
     "poly" = " -N 1" #Polytimos
     #"skein" = " -N 1" #Skein
     "skein2" = " -N 1" #skein2
-    "veltor" = " -N 1 -i 23" #Veltor
+    "veltor" = " -N 1" #Veltor
     #"whirlcoin" = "" #WhirlCoin
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
-    "x11evo" = " -N 1 -i 21" #X11evo
-    "x17" = " -N 1 -i 20.5" #X17
+    "x11evo" = " -N 1" #X11evo
+    "x13" = " -N 1" #X13
+    "x17" = " -N 1" #X17
 
     # ASIC - never profitable 20/04/2018
     #"blake2s" = "" #Blake2s

@@ -7,6 +7,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
+    "cryptonightV7" = @()
     #"daggerhashimoto" = @() #Ethash (Ethminer is fastest)
     #"daggerhashimoto;decred" = @() #Ethash+Decred (Claymore Dual is fastest)
     #"daggerhashimoto;pascal" = @() #Ethash+Pascal (Claymore Dual is fastest)
@@ -37,30 +38,28 @@ $DeviceIDsAll = Get-GPUIDs $Devices
 
 $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
     try {
-        $nh = ""
-
         $nhAlgorithm = $_
         $nhAlgorithms = @($_ -split ";")
         $nhBaseAlgorithm = $nhAlgorithms[0] -split ":" | Select-Object -Index 0
         $nhThreads = $nhAlgorithms[0] -split ":" | Select-Object -Index 1
         if ( -not $nhThreads ) {$nhThreads=1}
 
-        if ((Get-Algorithm $nhBaseAlgorithm) -eq "Decred" -or (Get-Algorithm $nhBaseAlgorithm) -eq "Sia") { $nh = "NiceHash" }
+        $nhBaseAlgorithm_Norm = Get-Algorithm $nhBaseAlgorithm
 
         $Threads.$nhAlgorithm | Foreach-Object {
             if ( -not (Test-Path (Split-Path $Path)) ) { New-Item (Split-Path $Path) -ItemType "directory" | Out-Null }
 
-            if ($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Host -and $Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Name -like "Nicehash") {
+            if ($Pools.$nhBaseAlgorithm_Norm.Host -and $Pools.$nhBaseAlgorithm_Norm.Name -like "Nicehash") {
 
                 if ( $nhAlgorithms.Count -eq 1 ) {
                     $res = @()
-                    $res += [PSCustomObject]@{time = 0; commands = @([PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Host -replace '^[^\.]+\.','nhmp.'):3200", "$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".User):$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Pass)")})}
+                    $res += [PSCustomObject]@{time = 0; commands = @([PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$nhBaseAlgorithm_Norm.Host -replace '^[^\.]+\.','nhmp.'):3200", "$($Pools.$nhBaseAlgorithm_Norm.User):$($Pools.$nhBaseAlgorithm_Norm.Pass)")})}
                     $res += [PSCustomObject]@{time = 1; commands = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$nhBaseAlgorithm")})}
                     foreach( $gpu in $DeviceIDsAll ) { $res += [PSCustomObject]@{time = 3; commands = @([PSCustomObject]@{id = 1; method = "worker.add"; params = @("$nhAlgorithm", "$gpu") + $Commands.$nhAlgorithm}) * $nhThreads}}
                     $res += [PSCustomObject]@{time = 10; loop = 10; commands = @([PSCustomObject]@{id = 1; method = "algorithm.print.speeds"; params = @()})}
                     for( $worker_id=0; $worker_id -lt ($gpus.count * $nhThreads); $worker_id++ ) { $res += [PSCustomObject]@{time = 15; commands = @([PSCustomObject]@{id = 1; method = "worker.reset"; params = @("$worker_id")})}}
 
-                    $nhConfig = "$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Name)_$(Get-Algorithm $nhBaseAlgorithm)_$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".User)_$($nhThreads)_Nvidia.json"
+                    $nhConfig = "$($Pools.$nhBaseAlgorithm_Norm.Name)_$($nhBaseAlgorithm_Norm)_$($Pools.$nhBaseAlgorithm_Norm.User)_$($nhThreads)_Nvidia.json"
                     $res | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $Path)\$nhConfig" -Force -ErrorAction Stop
 
                     $MinerName = $Name + $(if($nhThreads -gt 1){$nhThreads})
@@ -70,7 +69,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
                         DeviceName= $Devices.Name
                         Path = $Path
                         Arguments = "-p $Port -c $nhConfig -na"
-                        HashRates = [PSCustomObject]@{"$(Get-Algorithm $nhBaseAlgorithm)$nh" = $Stats."$($MinerName)_$(Get-Algorithm $nhBaseAlgorithm)$($nh)_HashRate".Week}
+                        HashRates = [PSCustomObject]@{$nhBaseAlgorithm_Norm = $Stats."$($MinerName)_$($nhBaseAlgorithm_Norm)_HashRate".Week}
                         API = "Excavator"
                         Port = $Port
                         URI = $Uri
@@ -80,22 +79,23 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
                         ShowMinerWindow = $True
                     }
                 } else {
+
+                    $nhSecondAlgorithm_Norm = Get-Algorithm $nhAlgorithms[1]
+
                     $Dcris.$nhAlgorithm | Foreach-Object {
                         $Dcri = $_
-                        $nh2 = ""
-                        if ((Get-Algorithm $nhAlgorithms[1]) -eq "Decred" -or (Get-Algorithm $nhAlgorithms[1]) -eq "Sia") { $nh2 = "NiceHash" }
-                        $MinerName = $Name + $(if($nhThreads -gt 1){$nhThreads}) + $(Get-Algorithm $nhBaseAlgorithm) + $(Get-Algorithm $nhAlgorithms[1]) + $($Dcri -replace ":","x")
+                        $MinerName = $Name + $(if($nhThreads -gt 1){$nhThreads}) + $nhBaseAlgorithm_Norm + $nhSecondAlgorithm_Norm + $($Dcri -replace ":","x")
 
                         $DcriArray = $Dcri -split ":"
 
                         $res = @()
-                        $res += [PSCustomObject]@{time = 0; commands = @([PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Host -replace '^[^\.]+\.','nhmp.'):3200", "$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".User):$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Pass)")})}
+                        $res += [PSCustomObject]@{time = 0; commands = @([PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$nhBaseAlgorithm_Norm.Host -replace '^[^\.]+\.','nhmp.'):3200", "$($Pools.$nhBaseAlgorithm_Norm.User):$($Pools.$nhBaseAlgorithm_Norm.Pass)")})}
                         $res += [PSCustomObject]@{time = 1; commands = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$nhBaseAlgorithm")}) + @([PSCustomObject]@{id = 2; method = "algorithm.add"; params = @("$($nhAlgorithms[1])")})}
                         foreach( $gpu in $gpus ) { $res += [PSCustomObject]@{time = 3; commands = @([PSCustomObject]@{id = 1; method = "worker.add"; params = @("$nhAlgorithm", "$gpu", "R_0=$($DcriArray[0])", "R_1=$($DcriArray[1])") + $Commands.$nhAlgorithm}) * $nhThreads}}
                         $res += [PSCustomObject]@{time = 10; loop = 10; commands = @([PSCustomObject]@{id = 1; method = "algorithm.print.speeds"; params = @()})}
                         for( $worker_id=0; $worker_id -lt ($gpus.count * $nhThreads); $worker_id++ ) { $res += [PSCustomObject]@{time = 15; commands = @([PSCustomObject]@{id = 1; method = "worker.reset"; params = @("$worker_id")})}}
 
-                        $nhConfig = "$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".Name)_$(Get-Algorithm $nhBaseAlgorithm)$(Get-Algorithm $nhAlgorithms[1])$($Dcri -replace ":","x")_$($Pools."$(Get-Algorithm $nhBaseAlgorithm)$nh".User)_$($nhThreads)_Nvidia.json"
+                        $nhConfig = "$($Pools.$nhBaseAlgorithm_Norm.Name)_$($nhBaseAlgorithm_Norm)$($nhSecondAlgorithm_Norm)$($Dcri -replace ":","x")_$($Pools.$nhBaseAlgorithm_Norm.User)_$($nhThreads)_Nvidia.json"
                         $res | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $Path)\$nhConfig" -Force -ErrorAction Stop
 
                         [PSCustomObject]@{
@@ -104,8 +104,8 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
                             Path = $Path
                             Arguments = "-p $Port -c $nhConfig -na"
                             HashRates = [PSCustomObject]@{
-                                "$(Get-Algorithm $nhBaseAlgorithm)$nh" = $Stats."$($MinerName)_$(Get-Algorithm $nhBaseAlgorithm)$($nh)_HashRate".Week
-                                "$(Get-Algorithm $nhAlgorithms[1])$nh2" = $Stats."$($MinerName)_$(Get-Algorithm $nhAlgorithms[1])$($nh2)_HashRate".Week
+                                $nhBaseAlgorithm_Norm = $Stats."$($MinerName)_$($nhBaseAlgorithm_Norm)_HashRate".Week
+                                $nhSecondAlgorithm_Norm = $Stats."$($MinerName)_$($nhSecondAlgorithm_Norm)_HashRate".Week
                             }
                             API = "Excavator"
                             Port = $Port

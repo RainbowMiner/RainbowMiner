@@ -254,7 +254,7 @@ function Set-Stat {
         }
     }
     catch {
-        if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
+        if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. $($error) "}
 
         $Stat = [PSCustomObject]@{
             Live = $Value
@@ -724,6 +724,7 @@ function Get-Device {
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index.($Device_OpenCL.Type)
                     OpenCL = $Device_OpenCL
+                    Model = [String]$Device_OpenCL.Name
                 }
 
                 if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
@@ -764,10 +765,118 @@ function Get-Device {
             Type = [String]"Cpu"
             Type_Index = [Int]$null
             OpenCL = $null
+            Model = [String]"CPU"
         }
 
         $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
     }
+}
+
+function Get-ComputeData {
+
+#UselessGuru: reads current GPU compute usage and power draw and from device
+#
+# returned values are:
+#         PowerDraw:    0 - max (in watts)
+#         ComputeUsage: 0 - 100 (percent)
+#  Requirements for Nvidia:  nvidia-smi.exe (part of driver package)
+#  Requirements for AMD:     unknown
+
+[CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String[]]$MinerType,
+        [Parameter(Mandatory = $false)]
+        [String]$Index
+    )
+
+    # Write-Log -Level "Debug" -Message "Entering $($MyInvocation.MyCommand): '`$MinerType=$($MinerType)', '`$Index=$($Index)'"
+
+    $ComputerUsageSum = 0
+    $ComputeUsageCount = 0
+
+    $PowerDrawSum = 0
+    $Temperature = [Decimal[]]@()
+    
+    switch ($MinerType) {
+        "NVIDIA" {
+            $NvidiaSMI = "$Env:SystemDrive\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe"
+            if (Test-Path $NvidiaSMI) {
+                if ($Index -notmatch "^[0-9].*") { <# Index must start with a number, otherwise read cumulated power#>
+                    $Index = ((&$NvidiaSMI -L) | ForEach {$_.Split(" ")[1].Split(":")[0]}) -join ","
+                }
+                $Index.Split(",") | ForEach {
+                    $idx = $_
+                    $Loop = 1
+                    do {
+                        $Readout = (&$NvidiaSMI -i $idx --format=csv,noheader,nounits --query-gpu=utilization.gpu)
+                        # Write-Log -Level "Debug" -Message "$($MyInvocation.MyCommand) reading GPU usage [Try $($Loop) of 3]: '`$MinerType=$($MinerType)', '`$Index=$($Index)', '`$Idx=$($Idx)', '`$Readout=$($Readout)'"
+                        Try {
+                            $ComputeUsageSum += [Decimal]$Readout
+                            if ($Readout -gt 0) {$ComputeUsageCount++}
+                        }
+                        catch {}
+                        $Loop++
+                    }
+                    until ($Readout -gt 0 -or $Loop -gt 3)
+                    
+                    if ($Readout -gt 0) {
+                        $Loop = 1
+                        do {
+                            $Readout = (&$NvidiaSMI -i $idx --format=csv,noheader,nounits --query-gpu=power.draw)
+                            # Write-Log -Level "Debug" -Message "$($MyInvocation.MyCommand) reading power draw [Try $($Loop) of 3]: '`$MinerType=$($MinerType)', '`$Index=$($Index)', '`$Idx=$($Idx)', '`$Readout=$($Readout)'"
+                            try {
+                                $PowerDrawSum += [Decimal]$Readout
+                            }
+                            catch {}
+                            $Loop ++
+                        }
+                        until ($Readout -gt 0 -or $Loop -gt 3)
+                    }
+
+                    if ($Readout -gt 0) {
+                        $Loop = 1
+                        do {
+                            $Readout = (&$NvidiaSMI -i $idx --format=csv,noheader,nounits --query-gpu=temperature.gpu)
+                            # Write-Log -Level "Debug" -Message  "$($MyInvocation.MyCommand) reading temperature [Try $($Loop) of 3]: '`$MinerType=$($MinerType)', '`$Index=$($Index)', '`$Idx=$($Idx)', '`$Readout=$($Readout)'"
+                            try {
+                                $Temperature += [Decimal]$Readout
+                            }
+                            catch {
+                                if ($Loop -eq 3) {$Temperature += [Decimal]-1}
+                            }
+                            $Loop ++
+                        }
+                        until ($Readout -gt 0 -or $Loop -gt 3)
+                    }
+                }
+            }
+        }
+#        "AMD" { # To be implemented
+#            for ($i = 0; $i -lt (&$NvidiaSMI -L).Count; $i++) {
+#                $PowerDraw =+ [Double](&$NvidiaSMI -i $i --format=csv,noheader,nounits --query-gpu=power.draw)
+#                $ComputeUsageSum =+ [Double](&$NvidiaSMI -i $i --format=csv,noheader,nounits --query-gpu=utilization.gpu)
+#            }
+#            $ComputeUsageCount += $i
+#        }
+        "CPU"  {
+            $PowerDrawSum += $CPU_PowerDraw
+            $ComputeUsageSum += 100
+            $ComputeUsageCount++
+        }
+    }
+
+    if ($ComputeUsageSum -gt 0 -and $ComputeUsageSum -gt 0) {$ComputeUsage = $ComputeUsageSum / $ComputeUsageCount} else {$ComputeUsage = 0}
+
+    $ComputeData = [PSCustomObject]@{
+        PowerDraw    = [Decimal]$PowerDrawSum
+        ComputeUsage = [Decimal]$ComputeUsage
+        Temperature = [Decimal[]]$Temperature
+    }
+
+    # Write-Log -Level "Debug" -Message "Exiting $($MyInvocation.MyCommand): '`$ComputeData=$($ComputeData)'"
+
+    $ComputeData
 }
 
 function Get-Algorithm {

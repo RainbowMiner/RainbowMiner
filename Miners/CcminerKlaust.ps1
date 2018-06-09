@@ -20,7 +20,7 @@ $Commands = [PSCustomObject]@{
     #"luffa" = "" #Luffa
     #"lyra2v2" = "" #Lyra2RE2
     #"lyra2z" = " -N 1" #lyra2z
-    "neoscrypt" = " -N 1 -i 17.6" #NeoScrypt
+    "neoscrypt" = " -N 1" #NeoScrypt
     #"penta" = "" #Pentablake
     #"skein" = "" #Skein
     #"s3" = "" #S3
@@ -29,10 +29,10 @@ $Commands = [PSCustomObject]@{
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
     #"X17" = "" #X17 Verge
-    "yescrypt" = "" #yescrypt
-    "yescryptR8" = ""
-    "yescryptR16" = "" #YescryptR16 #Yenten
-    "yescryptR16v2" = "" #PPN
+    "yescrypt" = " -N 1" #yescrypt
+    "yescryptR8" = " -N 1"
+    "yescryptR16" = " -N 1" #YescryptR16 #Yenten
+    "yescryptR16v2" = " -N 1" #PPN
 
     # ASIC - never profitable 20/04/2018
     #"blake" = "" #blake
@@ -69,11 +69,12 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
     [PSCustomObject]@{
         DeviceName = $Devices.Name
         Path = $Path
-        Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -b 4068$($Commands.$_)"
+        Arguments = "-r 0 -R 5 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -b 4068$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
         API = "Ccminer"
         Port = 4068
         URI = $Uri
         MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
+        BenchmarkIntervals = 2
     }
 }

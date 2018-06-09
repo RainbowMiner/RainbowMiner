@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0.dev11/ethminer-0.15.0.dev11-Windows.zip"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0rc1/ethminer-0.15.0rc1-Windows.zip"
 
 $Commands = [PSCustomObject]@{
     "ethash" = "" #Ethash
@@ -34,7 +34,7 @@ if ($Devices.NVIDIA -and -not $Config.InfoOnly) {
             }
         }
         [PSCustomObject]@{
-            Name = "$($Name)Nvidia"
+            Name = $Miner_Name
             DeviceName = $Device.Name
             Path = $Path
             Arguments = "--api-port 23333 --cuda-devices $(Get-GPUIDs $Device -join ' ') -P $($proto2g)://$($Pools."$($Algorithm_Norm)2gb".User):$($Pools."$($Algorithm_Norm)2gb".Pass)@$($Pools."$($Algorithm_Norm)2gb".Host):$($Pools."$($Algorithm_Norm)2gb".Port) --cuda$($Commands.$_)"            

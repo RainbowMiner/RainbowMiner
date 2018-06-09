@@ -1,0 +1,5 @@
+﻿{
+  "Wallet": "",
+  "WorkerName": "",
+  "UserName": ""
+}

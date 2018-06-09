@@ -8,7 +8,7 @@ $DevFee = 1.0
 $DevFeeDual = 1.5
 
 $Commands = [PSCustomObject]@{
-    "ethash" = ""
+    #"ethash" = ""
     "ethash2gb" = ""
     "ethash;blake2s:40" = ""
     "ethash;blake2s:60" = ""
@@ -16,10 +16,10 @@ $Commands = [PSCustomObject]@{
     #"ethash;decred:40" = ""
     #"ethash;decred:60" = ""
     #"ethash;decred:80" = ""
-    #"ethash:keccak:24" = ""
+    "ethash;keccak:24" = ""
     "ethash;keccak:27" = ""
     "ethash;keccak:30" = ""
-    "ethash;keccak:33" = ""
+    #"ethash;keccak:33" = ""
     #"ethash;keccak:36" = ""
     #"ethash;keccak:39" = ""
     #"ethash;lbry:30" = ""
@@ -38,9 +38,10 @@ $Commands = [PSCustomObject]@{
     #"ethash2gb;decred:40" = ""
     #"ethash2gb;decred:60" = ""
     #"ethash2gb;decred:80" = ""
+    "ethash2gb;keccak:24" = ""
     "ethash2gb;keccak:27" = ""
     "ethash2gb;keccak:30" = ""
-    "ethash2gb;keccak:33" = ""
+    #"ethash2gb;keccak:33" = ""
     #"ethash2gb;lbry:60" = ""
     #"ethash2gb;lbry:75" = ""
     #"ethash2gb;lbry:90" = ""
@@ -129,9 +130,9 @@ $Platforms | Foreach-Object {
                     API       = $Api
                     Port      = $Platform.Port
                     URI       = $Uri
-                    DevFee    = if (-not ($Device | Where-Object GlobalMemsize -GT 2000000000)){0}else{$DevFee}
+                    DevFee    = if (-not ($Device | Where-Object {$_.OpenCL.GlobalMemsize -GT 2000000000})){0}else{$DevFee}
                     MSIAprofile = if ( $Profile.$MainAlgorithm_Norm ) {$Profile.$MainAlgorithm_Norm} else {$DefaultProfile}
-                    BenchmarkIntervals = 2
+                    BenchmarkIntervals = 1
                 }
             }
             elseif ($_ -match "^.+;.+:\d+$") { # valid dual mining parameter set
@@ -157,11 +158,11 @@ $Platforms | Foreach-Object {
                         Port      = $Platform.Port
                         URI       = $Uri
                         DevFee = [PSCustomObject]@{
-                            ($MainAlgorithm_Norm) = if (-not ($Device | Where-Object GlobalMemsize -GT 2000000000)){0}else{$DevFeeDual}
+                            ($MainAlgorithm_Norm) = if (-not ($Device | Where-Object {$_.OpenCL.GlobalMemsize -GT 2000000000})){0}else{$DevFeeDual}
                             ($SecondaryAlgorithm_Norm) = 0
                         }
                         MSIAprofile = if ( $Profile.$SecondaryAlgorithm_Norm ) {$Profile.$SecondaryAlgorithm_Norm} else {$DefaultProfile}
-                        BenchmarkIntervals = 2
+                        BenchmarkIntervals = 1
                     }
                 }
             }
