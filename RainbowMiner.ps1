@@ -582,7 +582,8 @@ while ($true) {
             }
         }
 
-        $Miner.HashRates = $Miner_HashRates
+        $Miner | Add-Member HashRates $Miner_HashRates -Force
+        $Miner | Add-Member DevFee $Miner_DevFees -Force
 
         $Miner | Add-Member Pools $Miner_Pools
         $Miner | Add-Member Profits $Miner_Profits
@@ -594,7 +595,6 @@ while ($true) {
         $Miner | Add-Member Profit_MarginOfError $Miner_Profit_MarginOfError
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
-        $Miner | Add-Member DevFee $Miner_DevFees -Force
 
         $Miner | Add-Member DeviceName @($Miner.DeviceName | Select-Object -Unique | Sort-Object) -Force
 
@@ -730,7 +730,7 @@ while ($true) {
         [PSCustomObject]@{
             Combination = $Miner_Device_Combo | ForEach-Object {
                 $Miner_Device_Count = $_.DeviceName.Count
-                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join "|") + ")$"
+                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
                 $BestMiners | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
             }
         }
@@ -740,7 +740,7 @@ while ($true) {
         [PSCustomObject]@{
             Combination = $Miner_Device_Combo | ForEach-Object {
                 $Miner_Device_Count = $_.DeviceName.Count
-                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join "|") + ")$"
+                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
                 $BestMiners_Comparison | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
             }
         }
@@ -877,7 +877,7 @@ while ($true) {
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
-        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name)-$($_.Algorithm -join "/")"}}
+        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name)-$($_.Algorithm -join '/')"}}
 
         $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
 
@@ -909,7 +909,7 @@ while ($true) {
     }
 
     #Display exchange rates
-    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {Write-Host "Exchange rates: 1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | ForEach-Object { "$($_) $($NewRates.$_)"})  -join '; ')"}
+    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {Write-Host "Exchange rates: 1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')"}
 
     #Give API access to WatchdogTimers information
     $API.WatchdogTimers = $WatchdogTimers

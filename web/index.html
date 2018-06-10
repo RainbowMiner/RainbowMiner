@@ -71,7 +71,7 @@ function scrollto(div)
         if (typeof speed_live == "object" || typeof speed_live == "array") {
             var rval = new Array();
             $.each(speed_live, function (key, item) { rval.push(speed(item)); })
-            return rval.join(',');
+            return rval.length? rval.join(','):'starting..';
         }
         var unit = "H/s";
         speed_live = parseFloat(speed_live);
