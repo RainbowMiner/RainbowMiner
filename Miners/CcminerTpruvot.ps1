@@ -45,7 +45,6 @@ $Commands = [PSCustomObject]@{
     #"wildkeccak" = "" #wildkeccak
     #"x11evo" = "" #X11evo
     #"x12" = "" #X12
-    "x13" = " -N 1" #X13
     #"x16r" = "" #X16r
     #"X16s" = "" #X16s
     #"x17" = "" #x17

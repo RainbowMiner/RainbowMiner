@@ -24,7 +24,6 @@ $Commands = [PSCustomObject]@{
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
     "x11evo" = " -N 1" #X11evo
-    "x13" = " -N 1" #X13
     "x17" = " -N 1" #X17
 
     # ASIC - never profitable 20/04/2018
