@@ -1,34 +1,9 @@
 ﻿{
-  "Pools": {
-    "MiningPoolHub": {
-      "User": "$UserName",
-      "Worker": "$WorkerName",
-      "API_ID": "$API_ID",
-      "API_Key": "$API_Key"
-    },
-    "MiningPoolHubCoins": {
-      "User": "$UserName",
-      "Worker": "$WorkerName",
-      "API_ID": "$API_ID",
-      "API_Key": "$API_Key"
-    },
-    "MiningPoolHubMini": {
-      "User": "$UserName",
-      "Worker": "$WorkerName",
-      "API_ID": "$API_ID",
-      "API_Key": "$API_Key"
-    },
-    "NiceHash": {
-      "BTC": "$Wallet",
-      "Worker": "$WorkerName"
-    },
-    "Zpool": {
-      "BTC": "$Wallet",
-      "Worker": "$WorkerName"
-    }
-  },
-  "Miners": {
-  },
+  "Wallet": "$Wallet",
+  "WorkerName": "$WorkerName",
+  "UserName": "$UserName",
+  "API_ID": "$API_ID",
+  "API_Key": "$API_Key",
   "Interval": "$Interval",
   "ExtendInterval": "$ExtendInterval",
   "Region": "$Region",
@@ -38,6 +13,7 @@
   "MinerName": "$MinerName",
   "PoolName": "$PoolName",
   "ExcludeAlgorithm": "$ExcludeAlgorithm",
+  "ExcludeFromWatchdog": "$ExcludeFromWatchdog",
   "ExcludeMinerName": "$ExcludeMinerName",
   "ExcludePoolName": "",
   "Currency": "$Currency",
@@ -52,6 +28,7 @@
   "FastestMinerOnly": "$FastestMinerOnly",
   "IgnoreFees": "$IgnoreFees",
   "ShowPoolBalances": "$ShowPoolBalances",
+  "ExtendInterval": "$ExtendInterval",
   "RebootOnGPUFailure": "$RebootOnGPUFailure",
   "MSIApath": "$MSIApath",
   "MSIAprofile": "$MSIAprofile",

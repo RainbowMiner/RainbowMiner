@@ -71,9 +71,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$IgnoreFees = $false,    
     [Parameter(Mandatory = $false)]
-    [String]$ConfigFile = "Config.txt", # Path to config file    
-    [Parameter(Mandatory = $false)]
-    [String]$WalletFile = "Wallet.txt", # Path to wallet file    
+    [String]$ConfigFile = "config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
     [Parameter(Mandatory = $false)]
@@ -86,7 +84,7 @@ param(
 
 Clear-Host
 
-$Version = "3.4.0.0"
+$Version = "3.5.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -119,6 +117,9 @@ $ActiveMiners = @()
 $Rates = [PSCustomObject]@{BTC = [Double]1}
 
 $ConfigTimeStamp = 0
+$PoolsConfigTimeStamp = 0
+$MinersConfigTimeStamp = 0
+
 $SkipSwitchingPrevention = $false
 $StartDownloader = $false
 $PauseMiners = $false
@@ -126,7 +127,6 @@ $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
 $LastBalances = $Timer
 $MSIAcurrentprofile = -1
-$CustomMinerCommandsTimeStamp = 0
 
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
@@ -154,23 +154,8 @@ $API.Version = $Version
 
 if (-not (Test-Path Config)) {New-Item -Name "Config" -ItemType "directory" -Force}
 
-if ($WalletFile -ne "") {
-    if (Test-Path Config\$WalletFile) {
-        $WalletFileContents = (Get-ChildItemContent -Path Config\$WalletFile).Content
-        if ($WalletFileContents.Wallet -ne "") {$Wallet = [String]$WalletFileContents.Wallet}
-        if ($WalletFileContents.UserName -ne "") {$UserName = [String]$WalletFileContents.UserName}
-        if ($WalletFileContents.WorkerName -ne "") {$WorkerName = [String]$WalletFileContents.WorkerName}
-    } else {
-        [PSCustomObject]@{Wallet = $Wallet; UserName = $UserName; WorkerName = $WorkerName} | ConvertTo-Json | Out-File Config\Wallet.txt -Force
-    }
-}
-
-if ($Wallet -eq "" -or $WorkerName -eq "") {
-    Write-Log -Level Error "Wallet or WorkerName are missing - please edit Config\Wallet.txt. Cannot continue. "
-    Exit
-}
-
-if ( $ConfigFile -eq "" ) { $ConfigFile = "Config.txt" }
+if ( $ConfigFile -eq "" ) { $ConfigFile = "config.txt" }$PoolsConfigFile = "Pools.$($ConfigFile)";
+$MinersConfigFile = "Miners.$($ConfigFile)";
 
 #compatibility from versions up to v3.3.0.0
 if (Test-Path $ConfigFile) {
@@ -183,13 +168,33 @@ if (Test-Path "Config.default.txt") {
 }
 
 $ConfigFile = @("Config",$ConfigFile) -join "\"
+$PoolsConfigFile = @("Config",$PoolsConfigFile) -join "\"
+$MinersConfigFile = @("Config",$MinersConfigFile) -join "\"
 
 # Create config.txt if it is missing
 if (-not (Test-Path $ConfigFile)) {
-    if(Test-Path "Config\Config.default.txt") {
-        Copy-Item -Path "Config\Config.default.txt" -Destination $ConfigFile
+    if(Test-Path "Config\config.default.txt") {
+        Copy-Item -Path "Config\config.default.txt" -Destination $ConfigFile
     } else {
-        Write-Log -Level Error "$($ConfigFile) and Config\Config.default.txt are missing. Cannot continue. "
+        Write-Log -Level Error "$($ConfigFile) and Config\config.default.txt are missing. Cannot continue. "
+        Exit
+    }
+}
+# Create pools.config.txt if it is missing
+if (-not (Test-Path $PoolsConfigFile)) {
+    if(Test-Path "Config\pools.config.default.txt") {
+        Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
+    } else {
+        Write-Log -Level Error "$($PoolsConfigFile) and Config\pools.config.default.txt are missing. Cannot continue. "
+        Exit
+    }
+}
+# Create miners.config.txt if it is missing
+if (-not (Test-Path $MinersConfigFile)) {
+    if(Test-Path "Config\miners.config.default.txt") {
+        Copy-Item -Path "Config\miners.config.default.txt" -Destination $MinersConfigFile
+    } else {
+        Write-Log -Level Error "$($MinersConfigFile) and Config\miners.config.default.txt are missing. Cannot continue. "
         Exit
     }
 }
@@ -248,6 +253,30 @@ while ($true) {
             $ConfigCheckFields = $false
         }
     }
+    if (Test-Path $PoolsConfigFile) {
+        if (-not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
+            $PoolsConfigTimeStamp = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
+                Wallet              = $Config.Wallet
+                UserName            = $Config.UserName
+                WorkerName          = $Config.WorkerName
+                API_ID              = $Config.API_ID
+                API_Key             = $Config.API_Key
+            } | Select-Object -ExpandProperty Content) -Force
+        }
+    }    
+    if (Test-Path $MinersConfigFile) {
+        if (-not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
+            $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
+            (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object {
+                $CcMinerName = $_.Name                
+                $_.Value | Foreach-Object {                   
+                    $Config.Miners | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
+                }
+            }
+        }
+    }
     
      #Error in Config.txt
     if ($Config -isnot [PSCustomObject]) {
@@ -280,17 +309,17 @@ while ($true) {
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}            
 
         #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
-        if ($Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Wallet}      
+        if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
     }
 
     Get-ChildItem "Pools" -File | Where-Object {-not $Config.Pools.($_.BaseName)} | ForEach-Object {
         $Config.Pools | Add-Member $_.BaseName (
             [PSCustomObject]@{
-                BTC     = $Wallet
-                User    = $UserName
-                Worker  = $WorkerName
-                API_ID  = $API_ID
-                API_Key = $API_Key
+                BTC     = $Config.Wallet
+                User    = $Config.UserName
+                Worker  = $Config.WorkerName
+                API_ID  = $Config.API_ID
+                API_Key = $Config.API_Key
             }
         )
     }
@@ -314,7 +343,7 @@ while ($true) {
         Get-ChildItem "Pools" -File | ForEach-Object {
             $DonationData1 = if ($DonationData.Wallets.($_.BaseName)) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
             $DonationPools += $_.BaseName
-            if ($DonationData1.User -ne $UserName) {
+            if ($DonationData1.User -ne $Config.UserName) {
                 $Config.Pools | Add-Member $_.BaseName $DonationData1 -Force
                 $DonateNow = $true
             }
@@ -476,21 +505,6 @@ while ($true) {
     #Give API access to the pools information
     $API.Pools = $Pools
 
-    #Load custom miner commands
-    $CustomMinerCommandsFile = "Config\Miners.txt"
-    if ((Test-Path $CustomMinerCommandsFile)) {
-        if ($true -or (Get-ChildItem $CustomMinerCommandsFile).LastWriteTime.ToUniversalTime() -gt $CustomMinerCommandsTimeStamp) {        
-            $CustomMinerCommandsTimeStamp = (Get-ChildItem $CustomMinerCommandsFile).LastWriteTime.ToUniversalTime()
-            $CustomMinerCommands = [PSCustomObject]@{}
-            (Get-ChildItemContent -Path $CustomMinerCommandsFile).Content.PSObject.Properties | Foreach-Object {
-                $CcMinerName = $_.Name                
-                $_.Value | Foreach-Object {                   
-                    $CustomMinerCommands | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
-                }
-            }
-        }
-    }
-
     #Load information about the miners
     #Messy...?
     Write-Log "Getting miner information. "
@@ -521,12 +535,12 @@ while ($true) {
         $Miner_DevFees = [PSCustomObject]@{}
 
         $Miner_CommonCommands = @($Miner.Name -split '-') + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
-        if ($CustomMinerCommands -and (Get-Member -InputObject $CustomMinerCommands -Name $Miner_CommonCommands -MemberType NoteProperty)) {
-            if ($CustomMinerCommands.$Miner_CommonCommands.Params) {
-                $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$CustomMinerCommands.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
+        if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
+            if ($Config.Miners.$Miner_CommonCommands.Params) {
+                $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
             }
-            if ($CustomMinerCommands.$Miner_CommonCommands.Profile) {
-                $Miner | Add-Member -Name MSIAprofile -Value $CustomMinerCommands.$Miner_CommonCommands.Profile -MemberType NoteProperty -Force
+            if ($Config.Miners.$Miner_CommonCommands.Profile) {
+                $Miner | Add-Member -Name MSIAprofile -Value $Config.Miners.$Miner_CommonCommands.Profile -MemberType NoteProperty -Force
             }
         }
 
@@ -807,7 +821,7 @@ while ($true) {
         }
     }
 
-    if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {& .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL}
+    if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {& .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL}
 
     Clear-Host
 
@@ -845,7 +859,7 @@ while ($true) {
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
         @{Label = "Miner"; Expression = {$_.Name}},
-        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($Arguments=$_.Arguments;$DonationData.Wallets.PSObject.Properties.Value | ForEach-Object {if ($_.User -ne $Username) {$Arguments=$Arguments.Replace("$($_.Wallet)","$($Wallet)").Replace("$($_.User)","$($Username)").Replace("$($_.Worker)","$($WorkerName)")}};$Arguments)"}}
+        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($Arguments=$_.Arguments;$DonationData.Wallets.PSObject.Properties.Value | ForEach-Object {if ($_.User -ne $Config.Username) {$Arguments=$Arguments.Replace("$($_.Wallet)","$($Config.Wallet)").Replace("$($_.User)","$($Config.Username)").Replace("$($_.Worker)","$($Config.WorkerName)")}};$Arguments)"}}
     ) | Out-Host
 
     if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {
@@ -902,7 +916,7 @@ while ($true) {
 
     #Update API miner information
     $API.ActiveMiners = $ActiveMiners
-    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
 
     #Reduce Memory

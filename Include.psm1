@@ -1007,6 +1007,17 @@ class Miner {
         }
     }
 
+    [DateTime]GetActiveStart() {
+        $Begin = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+
+        if ($Begin) {
+            return $Begin
+        }
+        else {
+            return [DateTime]::MinValue
+        }
+    }
+
     [DateTime]GetActiveLast() {
         $Begin = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
