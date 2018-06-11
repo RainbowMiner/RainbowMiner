@@ -59,7 +59,7 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
     $Ravenminer_Algorithm_Norm = Get-Algorithm $Ravenminer_Algorithm
     $Ravenminer_Coin = "Ravencoin"
     $Ravenminer_Currency = "RVN"
-    $Ravenminer_PoolFee = [Double]$Ravenminer_Request.$_.fees +8
+    $Ravenminer_PoolFee = [Double]$Ravenminer_Request.$_.fees
 
     $Divisor = 1000000000
 
