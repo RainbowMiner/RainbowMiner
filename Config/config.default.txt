@@ -32,5 +32,6 @@
   "RebootOnGPUFailure": "$RebootOnGPUFailure",
   "MSIApath": "$MSIApath",
   "MSIAprofile": "$MSIAprofile",
-  "UIstyle": "$UIstyle"
+  "UIstyle": "$UIstyle",
+  "LegacyMining": "$LegacyMining"
 }

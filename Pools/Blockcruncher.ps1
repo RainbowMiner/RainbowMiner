@@ -44,7 +44,7 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
         "x16r" {$Divisor *= 1}
     }
 
-    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.actual_last24h / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.actual_last24h / $Divisor) -Duration $StatSpan -ChangeDetection $false
 
     $Blockcruncher_Regions | ForEach-Object {
         $Blockcruncher_Region = $_

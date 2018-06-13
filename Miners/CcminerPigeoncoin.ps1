@@ -1,15 +1,47 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-Ravencoin\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0-ravencoinminer/ccminerRavenx32.zip"
-$Port = "107{0:d2}"
+$Path = ".\Bin\NVIDIA-Pigeoncoin\ccminer.exe"
+$Uri = "https://github.com/Pigeoncoin-Miner/Pigeoncoin/releases/download/v2.6-32bit/Pigeoncoin-Miner.32bit.2.6.zip"
+$Port = "101{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
-    "x16r"  = " -N 10 --donate 0" #X16R RavenCoin
-    #"x16s"  = "" #X16S PigeonCoin
+    #"phi" = " -d $SelGPUCC" #Phi
+    #"bitcore" = " -d $SelGPUCC" #Bitcore
+    #"jha" = " -d $SelGPUCC" #Jha
+    #"hsr" = " -N 1" #Hsr (Alexis78 is fastest)
+    #"blakecoin" = " -r 0 -d $SelGPUCC" #Blakecoin
+    #"vanilla" = "" #BlakeVanilla
+    #"cryptonight" = " -i 10.5 -l 8x120 --bfactor=8 -d $SelGPUCC --api-remote" #Cryptonight
+    #"decred" = "" #Decred
+    #"equihash" = "" #Equihash
+    #"ethash" = "" #Ethash
+    #"groestl" = " -d $SelGPUCC" #Groestl
+    #"hmq1725" = "" #hmq1725
+    #"keccak" = "" #Keccak
+    #"lbry" = " -d $SelGPUCC" #Lbry
+    #"lyra2v2" = "" #Lyra2RE2
+    #"lyra2z" = " -d $SelGPUCC --api-remote --api-allow=0/0 --submit-stale" #Lyra2z
+    #"myr-gr" = "" #MyriadGroestl
+    #"neoscrypt" = " -d $SelGPUCC" #NeoScrypt
+    #"nist5" = "" #Nist5
+    #"pascal" = "" #Pascal
+    #"qubit" = "" #Qubit
+    #"scrypt" = "" #Scrypt
+    #"sia" = "" #Sia
+    #"sib" = "" #Sib
+    #"skein" = "" #Skein
+    #"skunk" = "" #Skunk
+    #"timetravel" = " -d $SelGPUCC" #Timetravel
+    #"tribus" = "" #Tribus
+    #"x11" = "" #X11
+    #"veltor" = "" #Veltor
+    #"x11evo" = " -d $SelGPUCC" #X11evo
+    #"x17" = " -i 21.5 -d $SelGPUCC --api-remote" #X17
+    #"x16r" = " -r 0 -d $SelGPUCC" #X16r(stable, ccminerx16r faster)
+    "x16s" = " --donate 0" #X16s(fastest)
 }
 
 $Default_Tolerance = 0.1
@@ -48,7 +80,6 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             Port = $Miner_Port
             URI = $Uri
             FaultTolerance = if ( $Tolerances.$_ ) { $Tolerances.$_ } else { $Default_Tolerance }
-            DevFee = 0.0
         }
     }
 }

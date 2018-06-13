@@ -1,0 +1,39 @@
+﻿100	CcminerPolytimos
+101	CcminerPigeoncoin
+102	CcminerAlexis78
+103	CcminerAllium
+104	CcminerCool
+105	CcminerCryptonight
+106	CcminerKlaust
+107	CcminerRavencoin
+108	CcminerSib
+109	CcminerSkunk
+110	CcminerSpModBitcore
+111	CcminerSpModPhi
+112	CcminerSpModSkunk
+113
+114	CcminerTpruvot
+115	CcminerTpruvotx64
+116	CcminerX16r
+117	CcminerX16s
+118	CcminerXevan
+119	CcminerXevan75
+
+200	ClaymoreCryptonightAmd
+201	ClaymoreEquihashAmd
+202	ClaymoreNeoscryptAmd
+203	Claymore
+204	Claymore9
+
+300	Bminer7
+301	Ethminer
+302	EnemyZealot
+303	XmrigNvidia
+304	XmrigAmd
+305 Dstm
+306 Cast
+307 Bminer
+
+23456	Excavator
+
+	CcminerSpModTribus

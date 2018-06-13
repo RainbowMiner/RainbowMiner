@@ -49,6 +49,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
             $res | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $Path)\$($Pools."$Algorithm_Norm$nh".Name)_$($Algorithm_Norm)_$($Pools."$Algorithm_Norm$nh".User)_$($Threads)_Nvidia.json" -Force -ErrorAction Stop
 
             [PSCustomObject]@{
+                DeviceModel="NVIDIA"
                 DeviceName= $Devices.Name
                 Path = $Path
                 Arguments = "-p $Port -c $($Pools."$Algorithm_Norm$nh".Name)_$($Algorithm_Norm)_$($Pools."$Algorithm_Norm$nh".User)_$($Threads)_Nvidia.json -na"

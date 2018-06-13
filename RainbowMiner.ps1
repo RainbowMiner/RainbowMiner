@@ -71,9 +71,11 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$IgnoreFees = $false,    
     [Parameter(Mandatory = $false)]
-    [String]$ConfigFile = "config.txt", # Path to config file
+    [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
+    [Parameter(Mandatory = $false)]
+    [Switch]$LegacyMining = $false, # if set to $true, all GPUs will only be separated into NVIDIA and AMD
     [Parameter(Mandatory = $false)]
     [String]$MSIApath = "c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", # installation path of MSI Afterburner
     [Parameter(Mandatory = $false)]
@@ -154,24 +156,7 @@ $API.Version = $Version
 
 if (-not (Test-Path Config)) {New-Item -Name "Config" -ItemType "directory" -Force}
 
-if ( $ConfigFile -eq "" ) { $ConfigFile = "config.txt" }$PoolsConfigFile = "Pools.$($ConfigFile)";
-$MinersConfigFile = "Miners.$($ConfigFile)";
-
-#compatibility from versions up to v3.3.0.0
-if (Test-Path $ConfigFile) {
-    if (-not (Test-Path Config\$ConfigFile)) {Move-Item  $ConfigFile Config -Force}
-    else {Remove-Item $ConfigFile -Force}
-}
-if (Test-Path "Config.default.txt") {
-    if (-not (Test-Path "Config\Config.default.txt")) {Move-Item  $ConfigFile Config -Force}
-    else {Remove-Item "Config.default.txt" -Force}
-}
-
-$ConfigFile = @("Config",$ConfigFile) -join "\"
-$PoolsConfigFile = @("Config",$PoolsConfigFile) -join "\"
-$MinersConfigFile = @("Config",$MinersConfigFile) -join "\"
-
-# Create config.txt if it is missing
+if (-not $ConfigFile) {$ConfigFile = "Config\config.txt"}# Create config.txt if it is missing
 if (-not (Test-Path $ConfigFile)) {
     if(Test-Path "Config\config.default.txt") {
         Copy-Item -Path "Config\config.default.txt" -Destination $ConfigFile
@@ -179,26 +164,31 @@ if (-not (Test-Path $ConfigFile)) {
         Write-Log -Level Error "$($ConfigFile) and Config\config.default.txt are missing. Cannot continue. "
         Exit
     }
-}
-# Create pools.config.txt if it is missing
-if (-not (Test-Path $PoolsConfigFile)) {
-    if(Test-Path "Config\pools.config.default.txt") {
-        Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
-    } else {
-        Write-Log -Level Error "$($PoolsConfigFile) and Config\pools.config.default.txt are missing. Cannot continue. "
-        Exit
-    }
-}
-# Create miners.config.txt if it is missing
-if (-not (Test-Path $MinersConfigFile)) {
-    if(Test-Path "Config\miners.config.default.txt") {
-        Copy-Item -Path "Config\miners.config.default.txt" -Destination $MinersConfigFile
-    } else {
-        Write-Log -Level Error "$($MinersConfigFile) and Config\miners.config.default.txt are missing. Cannot continue. "
-        Exit
-    }
-}
+}$ConfigFile = Get-Item $ConfigFile | Foreach-Object {    $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName    $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name    $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''    $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
 
+    # Create pools.config.txt if it is missing
+    if (-not (Test-Path $PoolsConfigFile)) {
+        if(Test-Path "Config\pools.config.default.txt") {
+            Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
+        } else {
+            Write-Log -Level Error "$($PoolsConfigFile) and Config\pools.config.default.txt are missing. Cannot continue. "
+            Exit
+        }
+    }
+    $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
+
+    # Create miners.config.txt if it is missing
+    if (-not (Test-Path $MinersConfigFile)) {
+        if(Test-Path "Config\miners.config.default.txt") {
+            Copy-Item -Path "Config\miners.config.default.txt" -Destination $MinersConfigFile
+        } else {
+            Write-Log -Level Error "$($MinersConfigFile) and Config\miners.config.default.txt are missing. Cannot continue. "
+            Exit
+        }
+    }
+    $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
+    $_ | Resolve-Path -Relative
+}
 if (Test-Path "data.json") {
     $DonationData = (Get-ChildItemContent -Path "data.json").Content
 }
@@ -248,6 +238,7 @@ while ($true) {
                 MSIApath            = $MSIApath
                 MSIAprofile         = $MSIAprofile
                 UIstyle             = $UIstyle
+                LegacyMining        = $LegacyMining
         } | Select-Object -ExpandProperty Content
         } else {
             $ConfigCheckFields = $false
@@ -391,6 +382,12 @@ while ($true) {
             AMD = @(Select-Device $Devices "AMD")
             CPU = @(Select-Device $Devices "CPU")
         }
+        if ($Config.LegacyMining) {
+            $DevicesByTypes.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
+                $Device_LegacyModel = $_
+                $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $Device_LegacyModel -Force}
+            }
+        }
 
         #Give API access to the device information
         $API.Devices = $Devices
@@ -518,8 +515,12 @@ while ($true) {
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     $AllMiners = if (Test-Path "Miners") {
-        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | 
-            ForEach-Object {if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}; $_} | #for backward compatibility            
+        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {$_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName} -PassThru -Force} | 
+            ForEach-Object {                
+                if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
+                if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
+                $_
+            } | #for backward compatibility            
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {($Config.Algorithm.Count -eq 0 -or (Compare-Object $Config.Algorithm $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0) -and ((Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0)} | 
             Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object $Config.ExcludeAlgorithm $_.HashRates.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
@@ -539,8 +540,8 @@ while ($true) {
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
-
-        $Miner_CommonCommands = @($Miner.Name -split '-') + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+       
+        $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.Name -split '-' | Select-Object -Skip 1) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
             if ($Config.Miners.$Miner_CommonCommands.Params) {
                 $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
@@ -680,6 +681,7 @@ while ($true) {
         }
         if ($ActiveMiner) {
             $ActiveMiner.DeviceName = $Miner.DeviceName
+            $ActiveMiner.DeviceModel = $Miner.DeviceModel
             $ActiveMiner.Profit = $Miner.Profit
             $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
             $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
@@ -697,6 +699,7 @@ while ($true) {
                 Port                 = $Miner.Port
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
                 DeviceName           = $Miner.DeviceName
+                DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
                 Profit_Comparison    = $Miner.Profit_Comparison
                 Profit_MarginOfError = $Miner.Profit_MarginOfError
@@ -713,7 +716,7 @@ while ($true) {
                 BenchmarkIntervals   = if ($Miner.BenchmarkIntervals -eq $null) {1} else {$Miner.BenchmarkIntervals}
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
-                BaseName             = if ($Miner.BaseName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.BaseName}
+                ExecName             = if ($Miner.ExecName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.ExecName}
                 FaultTolerance       = if ($Miner.FaultTolerance -eq $null) {0.1} else {$Miner.FaultTolerance}
             }
         }
@@ -783,7 +786,7 @@ while ($true) {
 
     if ( $ActiveMiners | ForEach-Object {$_.GetProcessNames()} ) {
         $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ( $_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0 ) {$_.GetProcessId()}})
-        Get-Process | Where-Object { @($ActiveMiners | Select-Object -ExpandProperty BaseName) -contains $_.ProcessName } | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExpandProperty BaseName) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object { $Running -notcontains $_.Id } | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+        Get-Process | Where-Object { @($ActiveMiners | Select-Object -ExpandProperty ExecName) -contains $_.ProcessName } | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExpandProperty ExecName) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object { $Running -notcontains $_.Id } | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
     if ($Downloader) {$Downloader | Receive-Job}
     Start-Sleep $Config.Delay #Wait to prevent BSOD
@@ -837,15 +840,19 @@ while ($true) {
     $LimitMiners = if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {100} else {3}
 
     #Display mining information
-    $Miners | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceName, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $LimitMiners | Format-Table -GroupBy @{Name = "Device"; Expression = "Device_Name"} (
-        @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
-        @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 
-        @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'}, 
-        @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
-        @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
-        #@{Label = "$($Config.Currency | Select-Object -Index 0)/GH/Day"; Expression = {$_.Pools.PSObject.Properties.Value.Price | ForEach-Object {ConvertTo-LocalCurrency $($_ * 1000000000) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2}}; Align = "right"}, 
-        @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.Info) {"-$($_.Info)"})"}}}
-    ) | Out-Host
+    $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
+        $Miner_DeviceModel = $_.DeviceModel
+        Write-Host "$($_.DeviceModel): $($_.DeviceName -join ',')"
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table (
+            @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
+            @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 
+            @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'}, 
+            @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
+            @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
+            #@{Label = "$($Config.Currency | Select-Object -Index 0)/GH/Day"; Expression = {$_.Pools.PSObject.Properties.Value.Price | ForEach-Object {ConvertTo-LocalCurrency $($_ * 1000000000) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2}}; Align = "right"}, 
+            @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.Info) {"-$($_.Info)"})"}}}
+        ) | Out-Host
+    }
 
     if ($PauseMiners) {
         Write-Host -NoNewline "Status: "

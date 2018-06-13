@@ -10,11 +10,6 @@ $Commands = [PSCustomObject]@{
     "tribus" = "" #Tribus
 }
 
-$Default_Profile = 2
-$Profiles = [PSCustomObject]@{
-    #"tribus" = 3
-}
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $DeviceIDsAll = Get-GPUIDs $Devices -join ','
@@ -25,6 +20,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
     [PSCustomObject]@{
         DeviceName = $Devices.Name
+        DeviceModel= "NVIDIA"
         Path = $Path
         Arguments = "-r 0 -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
@@ -32,6 +28,5 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
         Port = 4068
         URI = $Uri
         DevFee = 0.5
-        MSIAprofile = if ( $Profiles.$_ ) { $Profiles.$_ } else { $Default_Profile }
     }
 }

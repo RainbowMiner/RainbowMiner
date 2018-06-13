@@ -2,6 +2,7 @@
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.0.0-bminer/bminer-v8.0.0-32928c5-amd64.zip"
+$Port = "307{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -20,72 +21,78 @@ $Commands = [PSCustomObject]@{
     #"ethash;blake14r" = "" #Ethash + Decred
 }
 
-$Profile = [PSCustomObject]@{
-    "ethash;blake2s" = 5
-    "ethash;blake14r" = 5
-}
-$DefaultProfile = 2
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$DeviceIDsAll = Get-GPUIDs $Devices -join ','
+$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+    $Miner_Model = $_.Model
+    $Miner_Model_Norm = Get-DeviceModel $_
+    $Miner_Name = (@($Name) + @($Miner_Model_Norm)) -join '-'
 
-$Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+    $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $MinerAlgorithms = $_.Split(";")
+    $Commands | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
 
-    $MainAlgorithm = $MinerAlgorithms[0]
-    $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
+        $MinerAlgorithms = $_.Split(";")
 
-    if ( $MinerAlgorithms.Count -gt 1 ) {
-        $SecondAlgorithm = $MinerAlgorithms[1]
-        $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
-    } else {
-        $SecondAlgorithm = $false
-    }
+        $MainAlgorithm = $MinerAlgorithms[0]
+        $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
 
-    if ( $MainAlgorithm -eq "equihash" ) {
-        [PSCustomObject]@{
-            DeviceName = $Devices.Name
-            Path = $Path
-            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
-            HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $($Stats."$($Name)_$($MainAlgorithm_Norm)_HashRate".Week)}
-            API = "Bminer"
-            Port = 1880
-            DevFee = $DevFee.$_
-            URI = $Uri
+        if ( $MinerAlgorithms.Count -gt 1 ) {
+            $SecondAlgorithm = $MinerAlgorithms[1]
+            $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
+        } else {
+            $SecondAlgorithm = $false
         }
-    } elseif ( $MainAlgorithm -eq "ethash" ) {        
-        if ( -not $SecondAlgorithm ) {
+
+        if ( $MainAlgorithm -eq "equihash" ) {
             [PSCustomObject]@{
-                DeviceName = $Devices.Name
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
                 HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $($Stats."$($Name)_$($MainAlgorithm_Norm)_HashRate".Week)}
                 API = "Bminer"
-                Port = 1880
+                Port = $Miner_Port
                 DevFee = $DevFee.$_
                 URI = $Uri
             }
-        } else {
-            $MinerName = "$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondAlgorithm_Norm)"
-            [PSCustomObject]@{
-                Name = $MinerName
-                DeviceName = $Devices.Name
-                Path = $Path
-                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:1880 -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -uri2 $($SecondAlgorithm)://$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.Pass))@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
-                HashRates = [PSCustomObject]@{
-                    $MainAlgorithm_Norm = $($Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week)
-                    $SecondAlgorithm_Norm = $($Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week)
+        } elseif ( $MainAlgorithm -eq "ethash" ) {
+            if ( -not $SecondAlgorithm ) {               
+                [PSCustomObject]@{
+                    Name = $Miner_Name
+                    DeviceName = $Miner_Device.Name
+                    DeviceModel = $Miner_Model
+                    Path = $Path
+                    Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+                    HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $($Stats."$($Name)_$($MainAlgorithm_Norm)_HashRate".Week)}
+                    API = "Bminer"
+                    Port = $Miner_Port
+                    DevFee = $DevFee.$_
+                    URI = $Uri
                 }
-                API = "Bminer"
-                Port = 1880
-                DevFee = [PSCustomObject]@{
-                    ($MainAlgorithm_Norm) = $DevFee.$_
-                    ($SecondAlgorithm_Norm) = 0
+            } else {
+                $Miner_Name = (@("$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondAlgorithm_Norm)") + @($Miner_Model_Norm)) -join '-'
+                [PSCustomObject]@{
+                    Name = $Miner_Name
+                    DeviceName = $Miner_Device.Name
+                    DeviceModel = $Miner_Model
+                    Path = $Path
+                    Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $(if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$MainAlgorithm_Norm.Pass))@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -uri2 $($SecondAlgorithm)://$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$SecondAlgorithm_Norm.Pass))@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
+                    HashRates = [PSCustomObject]@{
+                        $MainAlgorithm_Norm = $($Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week)
+                        $SecondAlgorithm_Norm = $($Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week)
+                    }
+                    API = "Bminer"
+                    Port = $Miner_Port
+                    DevFee = [PSCustomObject]@{
+                        ($MainAlgorithm_Norm) = $DevFee.$_
+                        ($SecondAlgorithm_Norm) = 0
+                    }
+                    URI = $Uri
                 }
-                MSIAprofile = if ( $Profile.$_ ) {$Profile.$_} else {$DefaultProfile}
-                URI = $Uri
             }
         }
     }

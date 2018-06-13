@@ -67,6 +67,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
                     [PSCustomObject]@{
                         Name = $MinerName
                         DeviceName= $Devices.Name
+                        DeviceModel="NVIDIA"
                         Path = $Path
                         Arguments = "-p $Port -c $nhConfig -na"
                         HashRates = [PSCustomObject]@{$nhBaseAlgorithm_Norm = $Stats."$($MinerName)_$($nhBaseAlgorithm_Norm)_HashRate".Week}
@@ -100,7 +101,8 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
 
                         [PSCustomObject]@{
                             Name = $MinerName
-                            Device = $Devices
+                            DeviceName = $Devices.Name
+                            DeviceModel="NVIDIA"
                             Path = $Path
                             Arguments = "-p $Port -c $nhConfig -na"
                             HashRates = [PSCustomObject]@{

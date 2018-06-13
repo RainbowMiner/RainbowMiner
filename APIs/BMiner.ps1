@@ -13,7 +13,7 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $ApiURI = if ($this.Name -eq "Bminer7") {"/api/status"}else{"/api/v1/status/solver"}
+            $ApiURI = if ($this.Name -like "Bminer7*") {"/api/status"}else{"/api/v1/status/solver"}
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)$($ApiURI)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
@@ -23,7 +23,7 @@ class BMiner : Miner {
         }
 
 
-        if ($this.Name -eq "Bminer7") {
+        if ($this.Name -like "Bminer7*") {
             # Legacy API for bminer upto version 7.0.0
             $HashRate_Name = [String]$this.Algorithm[0]
             $HashRate_Value = [Double]($Data.miners | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {$Data.miners.$_.solver.solution_rate} | Measure-Object -Sum).Sum

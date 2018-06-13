@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]> <html class="no-js lt-ie10 lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]> <html class="no-js lt-ie10 lt-ie9"> <![endif]-->
+<!--[if IE 9]> <html class="no-js lt-ie10"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>jQuery validity.js plugin demos</title>
+<link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+<style>
+body { background-color: #fafafa; }
+.container { margin-top: 150px; }
+</style>
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div id="jquery-script-menu">
+<div class="jquery-script-center">
+<ul>
+<li><a href="https://www.jqueryscript.net/form/Form-Validation-Plugin-jQuery-Validity.html">Download This Plugin</a></li>
+<li><a href="https://www.jqueryscript.net/">Back To jQueryScript.Net</a></li>
+</ul>
+<div class="jquery-script-ads"><script type="text/javascript"><!--
+google_ad_client = "ca-pub-2783044520727903";
+/* jQuery_demo */
+google_ad_slot = "2780937993";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script></div>
+<div class="jquery-script-clear"></div>
+</div>
+</div>
+    <div class="container">
+        <div class="page-header">
+            <h1>jQuery validity.js plugin demos</h1>
+        </div>
+
+        <h2>Example 1</h2>
+        <p>Required fields</p>
+        <form class="form validity" method="post" action="/">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input id="name" name="name" class="form-control" type="text" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input id="email" name="email" class="form-control" type="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone (999-999-9999)</label>
+                <input id="phone" name="phone" class="form-control" type="tel" pattern="\d{3}[\-]\d{3}[\-]\d{4}" required>
+            </div>
+            <button class="btn btn-block btn-primary" type="submit">Submit</button>
+        </form>
+
+        <hr>
+
+        <h2>Example 2</h2>
+        <p>Custom field messages</p>
+        <form class="form validity" method="post" action="/">
+            <div class="form-group">
+                <label for="name2">Name</label>
+                <input id="name2" name="name" class="form-control" data-missing="This field is required" type="text" required>
+            </div>
+            <div class="form-group">
+                <label for="email2">E-mail</label>
+                <input id="email2" name="email" class="form-control" data-missing="This field is required" data-mismatch="Please include a valid email" type="email" required>
+            </div>
+            <div class="form-group simple">
+                <label for="phone2">Phone (999-999-9999)</label>
+                <input id="phone2" name="phone" class="form-control" pattern="\d{3}[\-]\d{3}[\-]\d{4}" data-mismatch="Please match the requested format: 999-999-9999" type="tel" required>
+            </div>
+            <button class="btn btn-block btn-primary" type="submit">Submit</button>
+        </form>
+
+        <hr>
+
+        <h2>Example 3</h2>
+        <p>Checkbox and radio button</p>
+        <form class="form validity" method="post" action="/">
+            <div class="form-group">
+                <label>Gender</label>
+                <div>
+                    <div class="radio-inline">
+                        <label>
+                            <input name="gender" type="radio" value="M" required>
+                            Male
+                        </label>
+                    </div>
+                    <div class="radio-inline">
+                        <label>
+                            <input name="gender" type="radio" value="F">
+                            Female
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Social media</label>
+                <div>
+                    <div class="checkbox-inline">
+                        <label>
+                            <input name="social[]" type="checkbox" value="Facebook" required>
+                            Facebook
+                        </label>
+                    </div>
+                    <div class="checkbox-inline">
+                        <label>
+                            <input name="social[]" type="checkbox" value="Twitter">
+                            Twitter
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-block btn-primary" type="submit">Submit</button>
+        </form>
+    </div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="js/jquery.validity.js"></script>
+	<script src="js/script.js"></script>
+    <script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36251023-1']);
+  _gaq.push(['_setDomainName', 'jqueryscript.net']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>
+</html>

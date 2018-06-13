@@ -85,6 +85,7 @@ $Platforms | Foreach-Object {
         [PSCustomObject]@{
             Name      = $Miner_Name
             DeviceName= $Devices.($Platform.Devices).Name
+            DeviceModel=$Platform.Devices.ToUpper()
             Path      = $Path
             Arguments = "-C $($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$($Platform.Devices).txt $($Platform.Arguments) -i $($Platform.Port)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}

@@ -1,50 +1,73 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
-$Port = "106{0:d2}"
+$Path = ".\Bin\NVIDIA-TPruvotx64\ccminer-x64.exe"
+$Uri = "https://github.com/tpruvot/ccminer/releases/download/2.2.6-tpruvot/ccminer-x64-2.2.6-phi2-cuda9.7z"
+$Port = "115{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     #GPU - profitable 20/04/2018
+    "allium" = " -N 1" #Allium
+    #"bastion" = "" #bastion
+    #"bitcore" = " -i 21" #Bitcore
+    #"bmw" = "" #bmw
     #"c11" = "" #C11
     #"deep" = "" #deep
     #"dmd-gr" = "" #dmd-gr
+    #"equihash" = "" #Equihash
     #"fresh" = "" #fresh
     #"fugue256" = "" #Fugue256
     #"groestl" = "" #Groestl
-    #"jackpot" = "" #Jackpot
+    "hmq1725" = " -N 1" #HMQ1725
+    #"jackpot" = "" #JackPot
+    "jha" = " -N 1" #JHA
     #"keccak" = "" #Keccak
+    #"keccakc" = "" #keccakc
     #"luffa" = "" #Luffa
+    #"lyra2" = "" #lyra2re
     #"lyra2v2" = "" #Lyra2RE2
-    #"lyra2z" = " -N 1" #lyra2z
-    "neoscrypt" = " -N 1" #NeoScrypt
+    "lyra2z" = " -N 1 --submit-stale" #Lyra2z, ZCoin
+    #"neoscrypt" = "" #NeoScrypt
     #"penta" = "" #Pentablake
+    "phi" = " -N 1" #PHI spmod is faster
+    #"polytimos" = "" #Polytimos
+    #"scryptjane:nf" = "" #scryptjane:nf
+    "sha256t" = " -N 1" #sha256t
     #"skein" = "" #Skein
+    #"skein2" = "" #skein2
+    #"skunk" = "" #Skunk
     #"s3" = "" #S3
-    #"tribus" = "" #Tribus
+    "timetravel" = " -N 1" #Timetravel
+    #"tribus" = "" #Tribus (enemyz 1.10 is faster)
     #"veltor" = "" #Veltor
     #"whirlpool" = "" #Whirlpool
     #"whirlpoolx" = "" #whirlpoolx
-    #"X17" = "" #X17 Verge
-    "yescrypt" = " -N 1" #yescrypt
-    "yescryptR8" = " -N 1"
-    "yescryptR16" = " -N 1" #YescryptR16 #Yenten
-    "yescryptR16v2" = " -N 1" #PPN
+    #"wildkeccak" = "" #wildkeccak
+    #"x11evo" = "" #X11evo
+    #"x12" = "" #X12
+    #"x16r" = "" #X16r
+    #"X16s" = "" #X16s
+    #"x17" = "" #x17
+    #"zr5" = "" #zr5
 
     # ASIC - never profitable 20/04/2018
     #"blake" = "" #blake
     #"blakecoin" = "" #Blakecoin
     #"blake2s" = "" #Blake2s
-    #"myr-gr" = "" #MyriadGroestl
-    #"nist5" = "" #Nist5
+    #"lbry" = "" #Lbry
+    #"decred" = "" #Decred
     #"quark" = "" #Quark
     #"qubit" = "" #Qubit
-    #"vanilla" = "" #BlakeVanilla
+    #"myr-gr" = "" #MyriadGroestl
+    #"nist5" = "" #Nist5
+    #"scrypt" = "" #Scrypt
+    #"scrypt:N" = "" #scrypt:N
     #"sha256d" = "" #sha256d
     #"sia" = "" #SiaCoin
+    #"sib" = "" #Sib
+    #"vanilla" = "" #BlakeVanilla
     #"x11" = "" #X11
     #"x13" = "" #x13
     #"x14" = "" #x14
@@ -70,12 +93,11 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-r 0 -R 5 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
+            Arguments = "-r 0 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Ccminer"
             Port = $Miner_Port
             URI = $Uri
-            BenchmarkIntervals = 2
         }
     }
 }

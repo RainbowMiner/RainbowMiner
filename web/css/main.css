@@ -116,6 +116,7 @@ body {
 	border-bottom:1px solid #eeeeee;
 	border-right:1px solid #eeeeee;
 	line-height:1.8em;
+    vertical-align:middle;
 }
 .column:hover{
 	background:#f9f9f9;
@@ -182,16 +183,15 @@ body {
     text-align:center;
 }
 
-#contact input[type="text"] {
-    width: 250px;
+input[type="text"] {
+    width: 100%;
     height: 35px;
-    padding-left: 10px;
-    float: left;
-    margin-left: 80px;
+    padding-left:10px;
+    font-size:1em;
     border: none;
 }
 
-#contact textarea {
+textarea {
     float: left;
     width: 250px;
     height: 35px;
@@ -201,7 +201,7 @@ body {
     padding-top: 10px;
 }
 
-#contact input[type="submit"] {
+input[type="submit"] {
     float: left;
     margin-left: 20px;
     height: 35px;
@@ -210,3 +210,33 @@ body {
     color: white;
     border: 1px solid white;
 }
+
+label.error-message {
+    color: red;
+    font-size: 11px;
+}
+
+input.error {
+    border-color: red;
+}
+
+input.mismatch {
+    border-color: orange;
+}
+
+input.valid {
+    border-color: green;
+}
+
+label.error {
+    color: red;
+}
+
+label.mismatch {
+    border-color: orange;
+}
+
+label.valid {
+    color: green;
+}
+

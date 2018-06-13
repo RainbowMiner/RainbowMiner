@@ -371,10 +371,10 @@ function Get-ChildItemContent {
         }
         $Content | ForEach-Object {
             if ($_.Name) {
-                [PSCustomObject]@{Name = $_.Name; Content = $_}
+                [PSCustomObject]@{Name = $_.Name; BaseName = $Name; Content = $_}
             }
             else {
-                [PSCustomObject]@{Name = $Name; Content = $_}
+                [PSCustomObject]@{Name = $Name; BaseName = $Name; Content = $_}
             }
         }
         if ( $Force ) {
@@ -496,9 +496,9 @@ function Start-SubProcessInBackground {
         [String]$ProcessName = ""
     )
 
-    $BaseName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
-    if ( $ProcessName -ne "" -and $ProcessName -ne $BaseName ) { $BaseName = $ProcessName }
-    $Running = @(Get-Process | Where-Object { $_.Name -eq $BaseName } | Select-Object -ExpandProperty Id)
+    $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
+    if ( $ProcessName -ne "" -and $ProcessName -ne $ExecName ) { $ExecName = $ProcessName }
+    $Running = @(Get-Process | Where-Object { $_.Name -eq $ExecName } | Select-Object -ExpandProperty Id)
 
 
     $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
@@ -513,7 +513,7 @@ function Start-SubProcessInBackground {
     $wait_count = 0;
     do{
         Start-Sleep 1;
-        $Process = Get-Process | Where-Object { $_.Name -eq $BaseName -and $Running -notcontains $_.Id } | Select-Object -First 1
+        $Process = Get-Process | Where-Object { $_.Name -eq $ExecName -and $Running -notcontains $_.Id } | Select-Object -First 1
         $wait_count++
     } while ($Process -eq $null -and $wait_count -le 5)
 
@@ -542,8 +542,8 @@ function Start-SubProcessInConsole {
         [String]$ProcessName = ""
     )
 
-    $BaseName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
-    if ( $ProcessName -eq $BaseName ) { $ProcessName = "" }
+    $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
+    if ( $ProcessName -eq $ExecName ) { $ProcessName = "" }
 
     $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName {
         param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName)
@@ -928,6 +928,7 @@ class Miner {
     $Port
     [string[]]$Algorithm = @()
     $DeviceName
+    $DeviceModel
     $Profit
     $Profit_Comparison
     $Profit_MarginOfError
@@ -951,6 +952,7 @@ class Miner {
     $BenchmarkIntervals = 1
     $DevFee
     $BaseName = $null
+    $ExecName = $null
     $FaultTolerance = 0.1
 
     [String[]]GetProcessNames() {
@@ -967,7 +969,7 @@ class Miner {
 
         if (-not $this.Process) {
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.Arguments -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.BaseName
+            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.Arguments -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
 
             if ($this.Process | Get-Job -ErrorAction SilentlyContinue) {
                 $this.Status = [MinerStatus]::Running
@@ -1214,7 +1216,7 @@ function Get-GPUtypeslist {
         [Array]$Type = @() #AMD/NVIDIA
     )
     if ( -not $Type.Count ) { $Type = "AMD","NVIDIA" }
-    $Type | Foreach-Object { if ( $_ -like "*AMD*" -or $_ -like "*Advanced Micro*" ) { "AMD","Advanced Micro Devices","Advanced Micro Devices, Inc."} elseif ( $_ -like "*NVIDIA*" ) { "NVIDIA","NVIDIA Corporation" } else { $_ } } | Select-Object -Unique
+    $Type | Foreach-Object {if ($_ -like "*AMD*" -or $_ -like "*Advanced Micro*"){"AMD","Advanced Micro Devices","Advanced Micro Devices, Inc."}elseif($_ -like "*NVIDIA*" ){"NVIDIA","NVIDIA Corporation"}elseif($_ -like "*INTEL*"){"INTEL","Intel(R) Corporation"}else{$_}} | Select-Object -Unique
 }
 
 function Get-GPUplatformID {
@@ -1242,6 +1244,27 @@ function Select-Device {
     )
     $GPUVendors = Get-GPUtypeslist $Type
     $Devices | Where-Object { ($_.Type -eq "CPU" -and $Type -contains "CPU") -or ($_.Type -eq "GPU" -and $_.OpenCL.GlobalMemsize -ge $MinMemSize -and (Compare-Object $_.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent)) }
+}
+
+function Get-DeviceVendor {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [PSCustomObject]$Device
+    )
+    @("AMD","NVIDIA","INTEL") | Foreach-Object {
+        $GPUVendors = Get-GPUtypeslist $_
+        if (Compare-Object $Device.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent){$_}
+    }
+}
+
+function Get-DeviceModel {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [PSCustomObject]$Device
+    )
+    ($Device | Select-Object -Index 0) | Where-Object {"NVIDIA","AMD" -inotcontains $_.Model} | Foreach-Object {$_.Model -replace "[^a-zA-Z0-9]+",""}    
 }
 
 function Get-GPUIDs {
