@@ -23,39 +23,44 @@ function Get-Balance {
 
     $Balances = @()
 
-    if (Test-Path "Balances") {        
-        @($Balances = Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
-            Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
-        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru})
+    try {
+        if (Test-Path "Balances") {        
+            @($Balances = Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
+                Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
+            } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru})
 
-        $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {
-                if ($NewRates.$_) {$Value=$NewRates.$_}
-                else {$Value = [Double]1/(Get-Ticker -Symbol $_ | Select-Object -ExpandProperty BTC | Select-Object -ExpandProperty price)}                
-                $Rates | Add-Member $_ ([Double]$Value) -Force
-        }
+            $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {
+                    if ($NewRates.$_) {$Value=$NewRates.$_}
+                    else {$Value = [Double]1/(Get-Ticker -Symbol $_ | Select-Object -ExpandProperty BTC | Select-Object -ExpandProperty price)}                
+                    $Rates | Add-Member $_ ([Double]$Value) -Force
+            }
 
-        # Add total of totals
-        $Total = ($Balances | ForEach-Object {$_.total/$Rates."$($_.currency)"} | Measure-Object -Sum).Sum
-        $Balances += [PSCustomObject]@{
-            currency = "BTC"
-            total = $Total
-            Name  = "*Total*"
-        }
+            # Add total of totals
+            $Total = ($Balances | ForEach-Object {$_.total/$Rates."$($_.currency)"} | Measure-Object -Sum).Sum
+            $Balances += [PSCustomObject]@{
+                currency = "BTC"
+                total = $Total
+                Name  = "*Total*"
+            }
 
-        # Add local currency values
-        $Balances | Foreach-Object {
-            Foreach($Rate in ($Rates.PSObject.Properties)) {
-                $Value = $Rate.Value
-                if ($_.currency -ne "BTC") {$Value = if ($Rate.Name -eq $_.currency){[Double]1}else{[Double]($Value/$Rates."$($_.currency)")}}
-                # Round BTC to 8 decimals, everything else is based on BTC value
-                if ($Rate.Name -eq "BTC") {
-                    $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
-                } 
-                else {
-                    $_ | Add-Member "Total_$($Rate.Name)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
+            # Add local currency values
+            $Balances | Foreach-Object {
+                Foreach($Rate in ($Rates.PSObject.Properties)) {
+                    $Value = $Rate.Value
+                    if ($_.currency -ne "BTC") {$Value = if ($Rate.Name -eq $_.currency){[Double]1}else{[Double]($Value/$Rates."$($_.currency)")}}
+                    # Round BTC to 8 decimals, everything else is based on BTC value
+                    if ($Rate.Name -eq "BTC") {
+                        $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
+                    } 
+                    else {
+                        $_ | Add-Member "Total_$($Rate.Name)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
+                    }
                 }
             }
         }
+    }
+    catch {
+        Write-Log -Level Warn "Trouble fetching Balances. "
     }
     Return $Balances
 }
@@ -724,10 +729,11 @@ function Get-Device {
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index.($Device_OpenCL.Type)
                     OpenCL = $Device_OpenCL
-                    Model = [String]$Device_OpenCL.Name
+                    Model = [String]$(if ($Device_OpenCL.Type -eq "Cpu"){"CPU"}else{$Device_OpenCL.Name -replace "[^A-Za-z0-9]+","" -replace "GeForce|(R)|Intel",""})
+                    Model_Name = [String]$Device_OpenCL.Name
                 }
 
-                if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
+                if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
                     $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
                 }
 
@@ -1264,7 +1270,7 @@ function Get-DeviceModel {
         [Parameter(Mandatory = $True)]
         [PSCustomObject]$Device
     )
-    ($Device | Select-Object -Index 0) | Where-Object {"NVIDIA","AMD" -inotcontains $_.Model} | Foreach-Object {$_.Model -replace "[^a-zA-Z0-9]+",""}    
+    ($Device | Select-Object -Index 0) | Where-Object {"NVIDIA","AMD","CPU" -inotcontains $_.Model} | Select-Object -ExcludeProperty Model
 }
 
 function Get-GPUIDs {
@@ -1279,7 +1285,7 @@ function Get-GPUIDs {
         [Parameter(Mandatory = $False)]
         [String]$Join
     )
-    $GPUIDs = $Devices | Select -ExpandProperty Type_PlatformId_Index -ErrorAction Ignore | Foreach-Object { if ($ToHex) {[Convert]::ToString($_ + $Offset,16)} else {$_ + $Offset} }
+    $GPUIDs = $Devices | Select -ExpandProperty PlatformId_Index -ErrorAction Ignore | Foreach-Object { if ($ToHex) {[Convert]::ToString($_ + $Offset,16)} else {$_ + $Offset} }
     if ($PSBoundParameters.ContainsKey("Join")) {$GPUIDs -join $Join} else {$GPUIDs}    
 }
 
@@ -1305,7 +1311,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        Write-Log -Level Error "[Test-TimeSync] W32Time Service is not running and could not be started!"
+        Write-Log -Level Warn "[Test-TimeSync] W32Time Service is not running and could not be started!"
         return
     }
 
@@ -1341,7 +1347,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        Write-Log -Level Error "[Test-TimeSync] No configured nameservers found in registry"
+        Write-Log -Level Warn "[Test-TimeSync] No configured nameservers found in registry"
         return
     }
 
@@ -1355,11 +1361,11 @@ function Test-TimeSync {
                 Write-Log "[Test-TimeSync] $($s)"
             }
         } else {
-            Write-Log -Level Error "[Test-TimeSync] Could not read w32tm statistics from $($w32tmSource)"
+            Write-Log -Level Warn "[Test-TimeSync] Could not read w32tm statistics from $($w32tmSource)"
         }
     }
     catch { 
-        Write-Log -Level Error "[Test-TimeSync] Something went wrong"
+        Write-Log -Level Warn "[Test-TimeSync] Something went wrong"
     }
 
 }

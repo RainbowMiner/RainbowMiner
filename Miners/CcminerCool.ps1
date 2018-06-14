@@ -1,6 +1,6 @@
 ﻿using module ..\Include.psm1
 
-$Path = ".\Bin\NVIDIA-CcminerCool\coolMiner-x64.exe"
+$Path = ".\Bin\NVIDIA-Cool\coolMiner-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1-ccminercool/coolMiner-x64-v1-1.7z"
 $Port = "104{0:d2}"
 

@@ -521,6 +521,7 @@ while ($true) {
                 if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
                 $_
             } | #for backward compatibility            
+            Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {($Config.Algorithm.Count -eq 0 -or (Compare-Object $Config.Algorithm $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0) -and ((Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0)} | 
             Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object $Config.ExcludeAlgorithm $_.HashRates.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
@@ -790,12 +791,17 @@ while ($true) {
     }
     if ($Downloader) {$Downloader | Receive-Job}
     Start-Sleep $Config.Delay #Wait to prevent BSOD
+
     $ActiveMiners | Where-Object Best -EQ $true | ForEach-Object {
         if ($_.GetStatus() -ne [MinerStatus]::Running) {
 
             #Set MSI Afterburner profile
             if ( $Config.MSIApath -and (Test-Path $Config.MSIApath) -and $Config.MSIAprofile ) {
-                $MSIAplannedprofile = if ( $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0 ) { $_.MSIAprofile } else { $Config.MSIAprofile }
+                $MSIAplannedprofile = $ActiveMiners | Where-Object Best -eq $true | Foreach-Object {if ($_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0) {$_.MSIAprofile} else {$Config.MSIAprofile}} | Select-Object -Unique
+
+                if ($MSIAplannedprofile.Count -ne 1) {$MSIAplannedprofile=$Config.MSIAprofile}
+                else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
+
                 if ( $MSIAplannedprofile -ne $MSIAcurrentprofile ) {
                     Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"
                     Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
