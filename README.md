@@ -44,12 +44,12 @@ Done!
 
 You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
-    E[**x**]it Miningscript = stop all running miner and exit RainbowMiner
-    [**S**]kip switching prevention = immediately start the most profitable miner, without waiting for the switching prevention
-    start [**D**]ownloader = start the downloader manually (only needed, if you manually updated a miner)
-    [**C**]onfiguration = goto the configuration setup (after setup all miners will be restarted)
-    [**V**]erbose off/on = switch the user interface from lite(=off) to full(=on)
-    [**P**]ause = stop all running miner and wait until user presses P again
+- E[**x**]it Miningscript = stop all running miner and exit RainbowMiner
+- [**S**]kip switching prevention = immediately start the most profitable miner, without waiting for the switching prevention
+- start [**D**]ownloader = start the downloader manually (only needed, if you manually updated a miner)
+- [**C**]onfiguration = goto the configuration setup (after setup all miners will be restarted)
+- [**V**]erbose off/on = switch the user interface from lite(=off) to full(=on)
+- [**P**]ause = stop all running miner and wait until user presses P again
 
 
 ## RECOMMENDATIONS
