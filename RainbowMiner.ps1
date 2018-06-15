@@ -28,13 +28,13 @@ param(
     [Alias("Device", "Type")]
     [Array]$DeviceName = @(), #i.e. CPU, GPU, GPU#02, AMD, NVIDIA, AMD#02, OpenCL#03#02 etc.
     [Parameter(Mandatory = $false)]
-    [Array]$Algorithm = @(), #i.e. Ethash,Equihash,CryptoNight etc.
+    [Array]$Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16"), #i.e. Ethash,Equihash,CryptoNight etc.
     [Parameter(Mandatory = $false)]
     [Alias("Miner")]
     [Array]$MinerName = @(), 
     [Parameter(Mandatory = $false)]
     [Alias("Pool")]
-    [Array]$PoolName = @(), 
+    [Array]$PoolName = @("nicehash","blazepool","miningpoolhub"), 
     [Parameter(Mandatory = $false)]
     [Array]$ExcludeAlgorithm = @(), #i.e. Ethash,Equihash,CryptoNight etc.
     [Parameter(Mandatory = $false)]
@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.5.1.0"
+$Version = "3.5.2.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -129,6 +129,8 @@ $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
 $LastBalances = $Timer
 $MSIAcurrentprofile = -1
+$RunSetup = $false
+$RunMinerSetup = $false
 
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
@@ -160,6 +162,7 @@ if (-not $ConfigFile) {$ConfigFile = "Config\config.txt"}# Create config.txt if
 if (-not (Test-Path $ConfigFile)) {
     if(Test-Path "Config\config.default.txt") {
         Copy-Item -Path "Config\config.default.txt" -Destination $ConfigFile
+        $RunSetup = $true
     } else {
         Write-Log -Level Error "$($ConfigFile) and Config\config.default.txt are missing. Cannot continue. "
         Exit
@@ -203,7 +206,7 @@ while ($true) {
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
     $ConfigCheckFields = $true
     if (Test-Path $ConfigFile) {
-        if ( -not $Config -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
+        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
             $ConfigTimeStamp = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
             $Config = Get-ChildItemContent $ConfigFile -Force -Parameters @{
                 Wallet              = $Wallet
@@ -239,7 +242,82 @@ while ($true) {
                 MSIAprofile         = $MSIAprofile
                 UIstyle             = $UIstyle
                 LegacyMining        = $LegacyMining
-        } | Select-Object -ExpandProperty Content
+            } | Select-Object -ExpandProperty Content
+
+            if ( $RunSetup ) {
+                $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
+                $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+
+                # Start setup procedure
+                do{$Config.Wallet = if (($Result = (Read-Host "Enter your BTC wallet address$(if ($Config.Wallet){" [default=$($Config.Wallet)]"})")).Trim() -eq ''){$Config.Wallet}else{$Result.Trim() -replace "[^a-zA-Z0-9]+",""}} until ($Config.Wallet.Length -eq 34)
+
+                if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
+                    $NicehashWallet = $PoolsActual.Nicehash.BTC
+                    $NicehashWorkerName = $PoolsActual.Nicehash.Worker
+                } else {
+                    $NicehashWallet = '$Wallet'
+                    $NicehashWorkerName = '$WorkerName'
+                }
+                if ($NicehashWallet -eq '$Wallet'){$NicehashWallet=$Config.Wallet}
+                do{$NicehashWallet = if (($Result = (Read-Host "Enter your NiceHash-BTC wallet address$(if ($NicehashWallet){" [default=$($NicehashWallet)]"})")).Trim() -eq ''){$NicehashWallet}else{$Result.Trim() -replace "[^a-zA-Z0-9]+",""}} until ($NicehashWallet.Length -eq 34)
+
+                do{$Config.WorkerName = if (($Result = (Read-Host "Enter your worker name$(if ($Config.WorkerName){" [default=$($Config.WorkerName)]"})")).Trim() -eq ''){$Config.WorkerName}else{$Result.Trim() -replace "[^a-zA-Z0-9]+",""}} until ($Config.WorkerName.Length -gt 0)
+                do{$Config.UserName = if (($Result = (Read-Host "Enter your Miningpoolhub user name$(if ($Config.UserName){" [default=$($Config.UserName)]"})")).Trim() -eq ''){$Config.UserName}else{$Result.Trim() -replace "[^a-zA-Z0-9]+",""}} until ($true)
+                do{$Config.Region = if (($Result = (Read-Host "Enter your region$(if ($Config.Region){" [default=$($Config.Region)]"})")).Trim() -eq ''){$Config.Region}else{$Result.Trim() -replace "[^a-zA-Z]+",""}} until ($Config.Region.Length -gt 0)
+                do{$Config.Currency = if (($Result = (Read-Host "Enter the currencies to be displayed$(if ($Config.Currency){" [default=$($Config.Currency -join ",")]"})")).Trim() -eq ''){$Config.Currency}else{$Result.Trim() -split "[,;\s]+"}} until ($Config.Currency.Length -gt 0)
+                do{$Config.PoolName = if (($Result = (Read-Host "Enter the pools you want to mine$(if ($Config.PoolName){" [default=$($Config.PoolName -join ",")]"})")).Trim() -eq ''){$Config.PoolName}else{$Result.Trim() -split "[,;\s]+"}} until ($Config.PoolName.Length -gt 0)
+                do{$Config.ExcludePoolName = if (($Result = (Read-Host "Enter the pools you do want to exclude from mining$(if ($Config.ExcludePoolName){" [default=$($Config.ExcludePoolName -join ",")]"})")).Trim() -eq ''){$Config.ExcludePoolName}else{$Result.Trim() -split "[,;\s]+"}} until ($true)
+                do{$Config.MinerName = if (($Result = (Read-Host "Enter the miners your want to use (leave empty for all)$(if ($Config.MinerName){" [default=$($Config.MinerName -join ",")]"})")).Trim() -eq ''){$Config.MinerName}else{$Result.Trim() -split "[,;\s]+"}} until ($true)
+                do{$Config.ExcludeMinerName = if (($Result = (Read-Host "Enter the miners you do want to exclude$(if ($Config.ExcludeMinerName){" [default=$($Config.ExcludeMinerName -join ",")]"})")).Trim() -eq ''){$Config.ExcludeMinerName}else{$Result.Trim() -split "[,;\s]+"}} until ($true)
+                do{$Config.Algorithm = if (($Result = (Read-Host "Enter the algorithm you want to mine$(if ($Config.Algorithm){" [default=$($Config.Algorithm -join ",")]"})")).Trim() -eq ''){$Config.Algorithm}else{$Result.Trim() -split "[,;\s]+"}} until ($Config.Algorithm.Length -gt 0)
+                do{$Config.FastestMinerOnly = if (($Result = (Read-Host "Show fastest miner only (yes/no) [default=$(if ($Config.FastestMinerOnly){"yes"}else{"no"})]")).Trim() -eq ''){$Config.FastestMinerOnly}else{"yes","y","1","j","ja" -icontains $Result}} until ($true)
+                do{$Config.UIstyle = if (($Result = (Read-Host "Select style of user interface (full/lite) [default=$($Config.UIstyle)]")).Trim() -eq ''){$Config.UIstyle}else{if ($Result.Trim() -like 'l*'){"lite"}else{"full"}}} until ($true)                
+
+                do{$Config.LegacyMining = if (($Result = (Read-Host "Always use one miner per all nvidia or amd, only (LegacyMining, yes/no) [default=$(if ($Config.LegacyMining){"yes"}else{"no"})]")).Trim() -eq ''){$Config.LegacyMining}else{"yes","y","1","j","ja" -icontains $Result}} until ($true)
+
+                $AvailDeviceName = @()
+                $SetupDevices = Get-Device "nvidia","amd","cpu"
+                if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
+                if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}               
+                if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
+
+                do{$Config.DeviceName = if (($Result = (Read-Host "Enter the devices you want to use for mining ($($AvailDeviceName -join ","))$(if ($Config.DeviceName){" [default=$($Config.DeviceName -join ",")]"})")).Trim() -eq ''){$Config.DeviceName}else{$Result.Trim() -split "[,;\s]+"}} until ($Config.DeviceName.Length -gt 0)                        
+           
+                $ConfigActual | Add-Member Wallet $Config.Wallet -Force
+                $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
+                $ConfigActual | Add-Member UserName $Config.UserName -Force
+                $ConfigActual | Add-Member Regin $Config.Region -Force
+                $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
+                $ConfigActual | Add-Member PoolName $($Config.PoolName -join ",") -Force
+                $ConfigActual | Add-Member ExcludePoolName $($Config.ExcludePoolName -join ",") -Force
+                $ConfigActual | Add-Member MinerName $($Config.MinerName -join ",") -Force
+                $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
+                $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
+                $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
+                $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
+                $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
+                $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force
+                $ConfigActual | ConvertTo-Json | Out-File $ConfigFile
+
+                $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
+                        BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
+                        Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
+                    }) -Force
+                $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile
+
+                $RunSetup = $false
+
+                Write-Host "Your new configuration has been saved. All Miners will be stopped and restarted. Please wait .."
+
+                $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
+                    $Miner = $_
+                    if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
+                        Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
+                        $Miner.StopMining()            
+                    }
+                }
+
+            }
         } else {
             $ConfigCheckFields = $false
         }
@@ -289,9 +367,9 @@ while ($true) {
         $Config | Get-Member -MemberType *Property | Foreach-Object {
             $name = $_.Name;
             $var  = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
-            if ( $var -is [array] -and $Config.$name -is [string] ) { $Config.$name = [regex]::split($Config.$name,"[,;:\s]+") }
-            elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) { $Config.$name = $Config.$name -eq 1 -or $Config.$name -eq "true"}
-            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
+            if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
+            elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = "1","yes","y","ja","j","true" -icontains $Config.$name}
+            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name.Trim() }
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
@@ -966,7 +1044,7 @@ while ($true) {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host -NoNewline "Waiting for next run: [C]ancel Miningscript, [S]kip switching prevention, [D]ownloader"
+    Write-Host -NoNewline "Waiting for next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration"
     if ( $Config.UIstyle -eq "full" ) { Write-Host -NoNewline ", [V]erbose off" } else { Write-Host -NoNewline ", [V]erbose" }
     if ( $PauseMiners ) { Write-Host -NoNewline ", [P]ause off" } else { Write-Host -NoNewline ", [P]ause" }
     Write-Host " "
@@ -1023,18 +1101,18 @@ while ($true) {
         if ( [console]::KeyAvailable ) {
             $x = [System.Console]::ReadKey($true)
             switch ( $x.key ) {
-                "S" { 
+                "K" { 
                     $SkipSwitchingPrevention = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
                     Write-Log "User requests to skip switching prevention. "
-                    Write-Host -NoNewline "[S] pressed - skip switching prevention in next run. "
+                    Write-Host -NoNewline "[K] pressed - skip switching prevention in next run. "
                     $keyPressed = $true
                 }
-                "C" {
+                "X" {
                     $Stopp = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
                     Write-Log "User requests to stop script. "
-                    Write-Host -NoNewline "[C] pressed - stopping script. "
+                    Write-Host -NoNewline "[X] pressed - stopping script. Type 'exit' and press enter to close powershell-window."
                     $keyPressed = $true
                 }
                 "D" {
@@ -1054,7 +1132,15 @@ while ($true) {
                     Write-Host -NoNewline "[P] pressed - miner script will be $(if ($PauseMiners) {"PAUSED"} else {"RESTARTED"})"
                     $keyPressed = $true
                 }
-                "M" {                    
+                "C" {
+                    $RunSetup = $true
+                    Write-Host -NoNewline "[C] pressed - configuration setup will be started"
+                    $keyPressed = $true
+                }
+                "M" {
+                    $RunMinerSetup = $true                    
+                    Write-Host -NoNewline "[M] presse - miner setup will be started"
+                    $keyPressed = $true
                 }
                 "L" {
                 }
