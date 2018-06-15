@@ -8,6 +8,9 @@
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
 - **Web-Interface through localhost (in development)**
 - **Switch MSI Afterburner profiles per miner**
+- **Easy setup - simply click Start.bat (RainbowMiner will ask for your credentials)**
+- **Change configuration during runtime**
+- **Pause mining without exiting the RainbowMiner**
 - **Easy control through command line parameters or config files**
 
 
@@ -24,7 +27,7 @@
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
    - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
    - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
-   - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd
+   - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 5. Let the downloads and benchmarking finish (it will already mine to your wallets)
 
@@ -35,6 +38,18 @@ Done!
 
 - PowerShell 6 is required: [Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.2/PowerShell-6.0.2-win-x64.msi)
 - Microsoft .NET Framework 4.5.1 or later is required: [Web Installer](https://www.microsoft.com/en-us/download/details.aspx?id=40773)
+
+
+## HOTKEYS
+
+You can press the follwing keys, while RainbowMiner is waiting for the next run.
+
+E**[x]**it Miningscript = stop all running miner and exit RainbowMiner
+**[S]**kip switching prevention = immediately start the most profitable miner, without waiting for the switching prevention
+start **[D]**ownloader = start the downloader manually (only needed, if you manually updated a miner)
+**[C]**onfiguration = goto the configuration setup (after setup all miners will be restarted)
+**[V]**erbose off/on = switch the user interface from lite(=off) to full(=on)
+**[P]**ause = stop all running miner and wait until user presses P again
 
 
 ## RECOMMENDATIONS
