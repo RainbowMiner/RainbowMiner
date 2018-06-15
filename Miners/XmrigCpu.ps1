@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\CryptoNight-CPU\xmrig.exe"
-$Uri = "https://github.com/xmrig/xmrig/releases/download/v2.6.2/xmrig-2.6.2-msvc-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig/releases/download/v2.6.3/xmrig-2.6.3-msvc-win64.zip"
 
 $Devices = $Devices.CPU
 
@@ -21,7 +21,7 @@ $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty 
     [PSCustomObject]@{
         DeviceName= $Devices.Name
         Path      = $Path
-        Arguments = "--api-port 3334 -a $($xmrig_algo) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1$($Commands.$_)"
+        Arguments = "-R 1 --api-port 3334 -a $($xmrig_algo) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1$($Commands.$_)"
         HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Name)_$($Algorithm_Norm)_HashRate".Week}
         API       = "XMRig"
         Port      = 3334

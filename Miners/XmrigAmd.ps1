@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\CryptoNight-AMD\xmrig-amd.exe"
-$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.6.1/xmrig-amd-2.6.1-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.0-beta/xmrig-amd-2.7.0-beta-win64.zip"
 $Port = "304{0:d2}"
 
 $Devices = $Devices.AMD
@@ -22,6 +22,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Name = (@($Name) + @(Get-DeviceModel $_)) -join '-'
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
+    $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
     $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
@@ -33,7 +34,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path      = $Path
-            Arguments = "--cuda-devices=$($DeviceIDsAll) --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1$($Commands.$_)"
+            Arguments = "-R 1 --opencl-devices=$($DeviceIDsAll) --opencl-platform=$($Miner_PlatformId) --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1$($Commands.$_)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API       = "XMRig"
             Port      = $Miner_Port

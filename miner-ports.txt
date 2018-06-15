@@ -11,7 +11,7 @@
 110	CcminerSpModBitcore
 111	CcminerSpModPhi
 112	CcminerSpModSkunk
-113
+113 CcminerDelos
 114	CcminerTpruvot
 115	CcminerTpruvotx64
 116	CcminerX16r
@@ -33,6 +33,14 @@
 305 Dstm
 306 Cast
 307 Bminer
+
+400 Sgminer
+401 SgminerBitcore
+402 SgminerKl
+403 SgminerLyra2z
+404 SgminerSkein
+405 SgminerXevan
+
 
 23456	Excavator
 

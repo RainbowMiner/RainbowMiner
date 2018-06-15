@@ -12,7 +12,7 @@ $Commands = [PSCustomObject]@{
     #"bitcore" = " -d $SelGPUCC" #Bitcore
     #"jha" = " -d $SelGPUCC" #Jha
     #"hsr" = " -N 1" #Hsr (Alexis78 is fastest)
-    #"blakecoin" = " -r 0 -d $SelGPUCC" #Blakecoin
+    #"blakecoin" = " -R 1 -d $SelGPUCC" #Blakecoin
     #"vanilla" = "" #BlakeVanilla
     #"cryptonight" = " -i 10.5 -l 8x120 --bfactor=8 -d $SelGPUCC --api-remote" #Cryptonight
     #"decred" = "" #Decred
@@ -40,7 +40,7 @@ $Commands = [PSCustomObject]@{
     #"veltor" = "" #Veltor
     #"x11evo" = " -d $SelGPUCC" #X11evo
     #"x17" = " -i 21.5 -d $SelGPUCC --api-remote" #X17
-    #"x16r" = " -r 0 -d $SelGPUCC" #X16r(stable, ccminerx16r faster)
+    #"x16r" = " -R 1 -d $SelGPUCC" #X16r(stable, ccminerx16r faster)
     "x16s" = " --donate 0" #X16s(fastest)
 }
 
@@ -74,7 +74,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-r 0 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".$HashRates_Duration}
             API = "Ccminer"
             Port = $Miner_Port
