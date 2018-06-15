@@ -320,7 +320,7 @@ while ($true) {
     $UserConfig = $Config.PSObject.Copy()
 
     #Activate or deactivate donation  
-    $Donate = if ($Config.Donate -lt 30) {30} else {$Config.Donate}
+    $Donate = if ($Config.Donate -lt 10) {10} else {$Config.Donate}
     $DonateDelayHours = 24
     if ($Donate -gt 15) {
         $Donate /= 2

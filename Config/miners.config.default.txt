@@ -1,1 +1,814 @@
-﻿{}
+﻿{
+    "Bminer":  [
+                   {
+                       "MainAlgorithm":  "ethash",
+                       "SecondaryAlgorithm":  "blake14r",
+                       "Params":  "",
+                       "Profile":  "5"
+                   },
+                   {
+                       "MainAlgorithm":  "ethash",
+                       "SecondaryAlgorithm":  "blake2s",
+                       "Params":  "",
+                       "Profile":  "5"
+                   }
+               ],
+    "CcminerAlexis78":  [
+                            {
+                                "MainAlgorithm":  "c11",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 21",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "keccak",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-m 2 -i 19,29",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "keccakc",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 19,29",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "lyra2z",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "",
+                                "Profile":  "4"
+                            },
+                            {
+                                "MainAlgorithm":  "lyra2v2",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "",
+                                "Profile":  "4"
+                            },
+                            {
+                                "MainAlgorithm":  "veltor",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 19,23",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "x11evo",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 19,21",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "x13",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 19,20",
+                                "Profile":  ""
+                            },
+                            {
+                                "MainAlgorithm":  "x17",
+                                "SecondaryAlgorithm":  "",
+                                "Params":  "-i 19,20.5",
+                                "Profile":  ""
+                            }
+                        ],
+    "CcminerAlexis78-GTX1050Ti":  [
+                                      {
+                                          "MainAlgorithm":  "c11",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 21",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "keccak",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-m 2 -i 19",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "keccakc",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 19",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "veltor",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 19",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "x11evo",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 19",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "x13",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 19",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "x17",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 19",
+                                          "Profile":  ""
+                                      }
+                                  ],
+    "CcminerAlexis78-GTX1070":  [
+                                    {
+                                        "MainAlgorithm":  "c11",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 21",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "keccak",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-m 2 -i 29",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "keccakc",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 29",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "veltor",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 23",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "x11evo",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 21",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "x13",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 20",
+                                        "Profile":  ""
+                                    },
+                                    {
+                                        "MainAlgorithm":  "x17",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "-i 20.5",
+                                        "Profile":  ""
+                                    }
+                                ],
+    "CcminerCool":  [
+                        {
+                            "MainAlgorithm":  "lyra2z",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i 19,20",
+                            "Profile":  ""
+                        }
+                    ],
+    "CcminerCool-GTX1050Ti":  [
+                                  {
+                                      "MainAlgorithm":  "lyra2z",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i 19",
+                                      "Profile":  ""
+                                  }
+                              ],
+    "CcminerCool-GTX1070":  [
+                                {
+                                    "MainAlgorithm":  "lyra2z",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                }
+                            ],
+    "CcminerKlausT":  [
+                          {
+                              "MainAlgorithm":  "neoscrypt",
+                              "SecondaryAlgorithm":  "",
+                              "Params":  "-i auto,17.6",
+                              "Profile":  "3"
+                          }
+                      ],
+    "CcminerKlausT-GTX1050Ti":  [
+                                    {
+                                        "MainAlgorithm":  "neoscrypt",
+                                        "SecondaryAlgorithm":  "",
+                                        "Params":  "",
+                                        "Profile":  ""
+                                    }
+                                ],
+    "CcminerKlausT-GTX1070":  [
+                                  {
+                                      "MainAlgorithm":  "neoscrypt",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i 17.6",
+                                      "Profile":  ""
+                                  }
+                              ],
+    "CcminerPolytimos":  [
+                             {
+                                 "MainAlgorithm":  "keccak",
+                                 "SecondaryAlgorithm":  "",
+                                 "Params":  "-i 16,auto",
+                                 "Profile":  ""
+                             },
+                             {
+                                 "MainAlgorithm":  "lyra2v2",
+                                 "SecondaryAlgorithm":  "",
+                                 "Params":  "",
+                                 "Profile":  "4"
+                             },
+                             {
+                                 "MainAlgorithm":  "nist5",
+                                 "SecondaryAlgorithm":  "",
+                                 "Params":  "",
+                                 "Profile":  "4"
+                             },
+                             {
+                                 "MainAlgorithm":  "x17",
+                                 "SecondaryAlgorithm":  "",
+                                 "Params":  "-i 19,20.5",
+                                 "Profile":  ""
+                             }
+                         ],
+    "CcminerPolytimos-GTX1050Ti":  [
+                                       {
+                                           "MainAlgorithm":  "keccak",
+                                           "SecondaryAlgorithm":  "",
+                                           "Params":  "-i 16",
+                                           "Profile":  ""
+                                       },
+                                       {
+                                           "MainAlgorithm":  "x17",
+                                           "SecondaryAlgorithm":  "",
+                                           "Params":  "-i 19",
+                                           "Profile":  ""
+                                       }
+                                   ],
+    "CcminerPolytimos-GTX1070":  [
+                                     {
+                                         "MainAlgorithm":  "keccak",
+                                         "SecondaryAlgorithm":  "",
+                                         "Params":  "-i auto",
+                                         "Profile":  ""
+                                     },
+                                     {
+                                         "MainAlgorithm":  "x17",
+                                         "SecondaryAlgorithm":  "",
+                                         "Params":  "-i 20.5",
+                                         "Profile":  ""
+                                     }
+                                 ],
+    "CcminerPigeoncoin":  [
+                              {
+                                  "MainAlgorithm":  "x16s",
+                                  "SecondaryAlgorithm":  "",
+                                  "Params":  "",
+                                  "Profile":  "4"
+                              }
+                          ],
+    "CcminerRavencoin":  [
+                             {
+                                 "MainAlgorithm":  "x16r",
+                                 "SecondaryAlgorithm":  "",
+                                 "Params":  "",
+                                 "Profile":  "4"
+                             }
+                         ],
+    "CcminerSkunk":  [
+                         {
+                             "MainAlgorithm":  "skunk",
+                             "SecondaryAlgorithm":  "",
+                             "Params":  "-i 25",
+                             "Profile":  ""
+                         }
+                     ],
+    "CcminerSkunk-GTX1050Ti":  [
+                                   {
+                                       "MainAlgorithm":  "skunk",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 25",
+                                       "Profile":  ""
+                                   }
+                               ],
+    "CcminerSkunk-GTX1070":  [
+                                 {
+                                     "MainAlgorithm":  "skunk",
+                                     "SecondaryAlgorithm":  "",
+                                     "Params":  "-i 25",
+                                     "Profile":  ""
+                                 }
+                             ],
+    "CcminerSpModSkunk":  [
+                              {
+                                  "MainAlgorithm":  "skunk",
+                                  "SecondaryAlgorithm":  "",
+                                  "Params":  "-i 25",
+                                  "Profile":  ""
+                              }
+                          ],
+    "CcminerSpModSkunk-GTX1050Ti":  [
+                                        {
+                                            "MainAlgorithm":  "skunk",
+                                            "SecondaryAlgorithm":  "",
+                                            "Params":  "-i 25",
+                                            "Profile":  ""
+                                        }
+                                    ],
+    "CcminerSpModSkunk-GTX1070":  [
+                                      {
+                                          "MainAlgorithm":  "skunk",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 25",
+                                          "Profile":  ""
+                                      }
+                                  ],
+    "CcminerSpModTribus":  [
+                               {
+                                   "MainAlgorithm":  "tribus",
+                                   "SecondaryAlgorithm":  "",
+                                   "Params":  "-i 21,auto",
+                                   "Profile":  ""
+                               }
+                           ],
+    "CcminerSpModTribus-GTX1050Ti":  [
+                                         {
+                                             "MainAlgorithm":  "tribus",
+                                             "SecondaryAlgorithm":  "",
+                                             "Params":  "-i 21",
+                                             "Profile":  ""
+                                         }
+                                     ],
+    "CcminerSpModTribus-GTX1070":  [
+                                       {
+                                           "MainAlgorithm":  "tribus",
+                                           "SecondaryAlgorithm":  "",
+                                           "Params":  "-i auto",
+                                           "Profile":  ""
+                                       }
+                                   ],
+    "CcminerTpruvot":  [
+                           {
+                               "MainAlgorithm":  "lyra2z",
+                               "SecondaryAlgorithm":  "",
+                               "Params":  "-i auto,21",
+                               "Profile":  "4"
+                           },
+                           {
+                               "MainAlgorithm":  "x13",
+                               "SecondaryAlgorithm":  "",
+                               "Params":  "-i 20",
+                               "Profile":  ""
+                           }
+                       ],
+    "CcminerTpruvot-GTX1050Ti":  [
+                                     {
+                                         "MainAlgorithm":  "lyra2z",
+                                         "SecondaryAlgorithm":  "",
+                                         "Params":  "-i auto",
+                                         "Profile":  ""
+                                     },
+                                     {
+                                         "MainAlgorithm":  "x13",
+                                         "SecondaryAlgorithm":  "",
+                                         "Params":  "-i 20",
+                                         "Profile":  ""
+                                     }
+                                 ],
+    "CcminerTpruvot-GTX1070":  [
+                                   {
+                                       "MainAlgorithm":  "lyra2z",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 21",
+                                       "Profile":  ""
+                                   },
+                                   {
+                                       "MainAlgorithm":  "x13",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 20",
+                                       "Profile":  ""
+                                   }
+                               ],
+    "CcminerTpruvotx64":  [
+                              {
+                                  "MainAlgorithm":  "lyra2z",
+                                  "SecondaryAlgorithm":  "",
+                                  "Params":  "-i auto,21",
+                                  "Profile":  "4"
+                              },
+                              {
+                                  "MainAlgorithm":  "x13",
+                                  "SecondaryAlgorithm":  "",
+                                  "Params":  "-i 20",
+                                  "Profile":  ""
+                              }
+                          ],
+    "CcminerTpruvotx64-GTX1050Ti":  [
+                                        {
+                                            "MainAlgorithm":  "lyra2z",
+                                            "SecondaryAlgorithm":  "",
+                                            "Params":  "-i auto",
+                                            "Profile":  ""
+                                        },
+                                        {
+                                            "MainAlgorithm":  "x13",
+                                            "SecondaryAlgorithm":  "",
+                                            "Params":  "-i 20",
+                                            "Profile":  ""
+                                        }
+                                    ],
+    "CcminerTpruvotx64-GTX1070":  [
+                                      {
+                                          "MainAlgorithm":  "lyra2z",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 21",
+                                          "Profile":  ""
+                                      },
+                                      {
+                                          "MainAlgorithm":  "x13",
+                                          "SecondaryAlgorithm":  "",
+                                          "Params":  "-i 20",
+                                          "Profile":  ""
+                                      }
+                                  ],
+    "CcminerX16r":  [
+                        {
+                            "MainAlgorithm":  "x16r",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "",
+                            "Profile":  "4"
+                        },
+                        {
+                            "MainAlgorithm":  "x16s",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "",
+                            "Profile":  "4"
+                        }
+                    ],
+    "CcminerX16s":  [
+                        {
+                            "MainAlgorithm":  "x16r",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "",
+                            "Profile":  "4"
+                        },
+                        {
+                            "MainAlgorithm":  "x16s",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "",
+                            "Profile":  "4"
+                        }
+                    ],
+    "CcminerXevan":  [
+                         {
+                             "MainAlgorithm":  "c11",
+                             "SecondaryAlgorithm":  "",
+                             "Params":  "-i 16,21",
+                             "Profile":  ""
+                         },
+                         {
+                             "MainAlgorithm":  "skein",
+                             "SecondaryAlgorithm":  "",
+                             "Params":  "-i 16,auto",
+                             "Profile":  ""
+                         },
+                         {
+                             "MainAlgorithm":  "xevan",
+                             "SecondaryAlgorithm":  "",
+                             "Params":  "-i 19,21",
+                             "Profile":  ""
+                         }
+                     ],
+    "CcminerXevan-GTX1050Ti":  [
+                                   {
+                                       "MainAlgorithm":  "c11",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 16",
+                                       "Profile":  ""
+                                   },
+                                   {
+                                       "MainAlgorithm":  "skein",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 16",
+                                       "Profile":  ""
+                                   },
+                                   {
+                                       "MainAlgorithm":  "xevan",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i 19",
+                                       "Profile":  ""
+                                   }
+                               ],
+    "CcminerXevan-GTX1070":  [
+                                 {
+                                     "MainAlgorithm":  "c11",
+                                     "SecondaryAlgorithm":  "",
+                                     "Params":  "-i 21",
+                                     "Profile":  ""
+                                 },
+                                 {
+                                     "MainAlgorithm":  "skein",
+                                     "SecondaryAlgorithm":  "",
+                                     "Params":  "-i auto",
+                                     "Profile":  ""
+                                 },
+                                 {
+                                     "MainAlgorithm":  "xevan",
+                                     "SecondaryAlgorithm":  "",
+                                     "Params":  "-i 21",
+                                     "Profile":  ""
+                                 }
+                             ],
+    "CcminerXevan75":  [
+                           {
+                               "MainAlgorithm":  "skein",
+                               "SecondaryAlgorithm":  "",
+                               "Params":  "-i 16,auto",
+                               "Profile":  ""
+                           }
+                       ],
+    "CcminerXevan75-GTX1050Ti":  [
+                                     {
+                                         "MainAlgorithm":  "skein",
+                                         "SecondaryAlgorithm":  "",
+                                         "Params":  "-i 16",
+                                         "Profile":  ""
+                                     }
+                                 ],
+    "CcminerXevan75-GTX1070":  [
+                                   {
+                                       "MainAlgorithm":  "skein",
+                                       "SecondaryAlgorithm":  "",
+                                       "Params":  "-i auto",
+                                       "Profile":  ""
+                                   }
+                               ],
+    "Claymore":  [
+                     {
+                         "MainAlgorithm":  "ethash",
+                         "SecondaryAlgorithm":  "pascal",
+                         "Params":  "",
+                         "Profile":  "5"
+                     },
+                     {
+                         "MainAlgorithm":  "ethash",
+                         "SecondaryAlgorithm":  "keccak",
+                         "Params":  "",
+                         "Profile":  "3"
+                     },
+                     {
+                         "MainAlgorithm":  "ethash",
+                         "SecondaryAlgorithm":  "blake2s",
+                         "Params":  "",
+                         "Profile":  "5"
+                     }
+                 ],
+    "Claymore9":  [
+                      {
+                          "MainAlgorithm":  "ethash",
+                          "SecondaryAlgorithm":  "pascal",
+                          "Params":  "",
+                          "Profile":  "5"
+                      }
+                  ],
+    "EnemyZealot":  [
+                        {
+                            "MainAlgorithm":  "aeriumx",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "bitcore",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "c11",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "phi",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "polytimos",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "skunk",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "timetravel",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "tribus",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "xevan",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "x16r",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  "4"
+                        },
+                        {
+                            "MainAlgorithm":  "x16s",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  "4"
+                        },
+                        {
+                            "MainAlgorithm":  "x17",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i 19,20",
+                            "Profile":  ""
+                        },
+                        {
+                            "MainAlgorithm":  "vitalium",
+                            "SecondaryAlgorithm":  "",
+                            "Params":  "-i auto,20",
+                            "Profile":  ""
+                        }
+                    ],
+    "EnemyZealot-GTX1050Ti":  [
+                                  {
+                                      "MainAlgorithm":  "aeriumx",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "bitcore",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "c11",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "phi",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "polytimos",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "skunk",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "timetravel",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "tribus",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "xevan",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "x16r",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "x16s",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "x17",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i 19",
+                                      "Profile":  ""
+                                  },
+                                  {
+                                      "MainAlgorithm":  "vitalium",
+                                      "SecondaryAlgorithm":  "",
+                                      "Params":  "-i auto",
+                                      "Profile":  ""
+                                  }
+                              ],
+    "EnemyZealot-GTX1070":  [
+                                {
+                                    "MainAlgorithm":  "aeriumx",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "bitcore",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "c11",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "phi",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "polytimos",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "skunk",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "timetravel",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "tribus",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "xevan",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "x16r",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "x16s",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "x17",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "vitalium",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 20",
+                                    "Profile":  ""
+                                }
+                            ]
+}
