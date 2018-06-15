@@ -36,6 +36,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             API        = "Xgminer"
             Port       = $Miner_Port
             URI        = $Uri
+            DevFee     = 1.0
         }
     }
 }

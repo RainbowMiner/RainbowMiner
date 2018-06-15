@@ -2,19 +2,27 @@
 
 $Path = ".\Bin\AMD-SgminerKl\sgminer.exe"
 $Uri = "https://github.com/KL0nLutiy/sgminer-kl/releases/download/kl-1.0.5fix/sgminer-kl-1.0.5_fix-windows_x64.zip"
+$ManualUri = "https://github.com/KL0nLutiy"
 $Port = "402{0:d2}"
 
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject]@{
-    "Aergo" = " -X 256 -g 2" #aergo
-	"Phi" = "  -X 256 -g 2 -w 256" #phi
-	"Tribus" = "  -X 256 -g 2" #tribus
-	"x16r" = "  -X 256 -g 2" #x16r
-	"x16s" = "  -X 256 -g 2" #x16s
-	"X17" = "  -X 256 -g 2" #x17
-	"Xevan" = "  -X 256 -g 2" #xevan
+  "aergo"     = " -X 256 -g 2" #Aergo
+  "blake"     = "" #Blake
+  "bmw"       = "" #Bmw
+  "echo"      = "" #Echo
+  "hamsi"     = "" #Hamsi
+  "keccak"    = "" #Keccak
+  "phi"       = " -X 256 -g 2 -w 256" # Phi
+  "skein"     = "" #Skein
+  "tribus"    = " -X 256 -g 2" #Tribus
+  "whirlpool" = "" #Whirlpool
+  "xevan"     = " -X 256 -g 2" #Xevan
+  "x16s"      = " -X 256 -g 2" #X16S Pigeoncoin
+  "x16r"      = " -X 256 -g 2" #X16R Ravencoin
+  "x17"       = " -X 256 -g 2"
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -42,6 +50,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             API        = "Xgminer"
             Port       = $Miner_Port
             URI        = $Uri
+            DevFee     = 1.0
         }
     }
 }
