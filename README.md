@@ -131,36 +131,37 @@ If you want to change it to LTC, for example, you have to change this line like 
 Each miner can be configured by it's own section, in the miners.config.txt
 
 Example:
-{
-    "CcminerAlexis78":  [
-                            {
-                                "MainAlgorithm":  "c11",
-                                "SecondaryAlgorithm":  "",
-                                "Params":  "-i 21",
-                                "Profile":  ""
-                            },
-                            {
-                                "MainAlgorithm":  "keccak",
-                                "SecondaryAlgorithm":  "",
-                                "Params":  "-m 2 -i 19,29",
-                                "Profile":  ""
-                            }
-                        ],
-   "CcminerAlexis78-GTX1070":  [
-                            {
-                                "MainAlgorithm":  "c11",
-                                "SecondaryAlgorithm":  "",
-                                "Params":  "-i 21",
-                                "Profile":  ""
-                            },
-                            {
-                                "MainAlgorithm":  "keccak",
-                                "SecondaryAlgorithm":  "",
-                                "Params":  "-m 2 -i 19,29",
-                                "Profile":  ""
-                            }
-                        ]                        
-}
+
+    {
+        "CcminerAlexis78":  [
+                                {
+                                    "MainAlgorithm":  "c11",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 21",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "keccak",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-m 2 -i 19,29",
+                                    "Profile":  ""
+                                }
+                            ],
+       "CcminerAlexis78-GTX1070":  [
+                                {
+                                    "MainAlgorithm":  "c11",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-i 21",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "keccak",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "-m 2 -i 19,29",
+                                    "Profile":  ""
+                                }
+                            ]                        
+    }
 
 .. this adds extra command line parameters "-i 21" and "-m 2 -i 19,29" to
 - "CcminerAlexis78": miner CcminerAlexis78 in LegacyMining mode (only mine on selected amd,nvidia,cpu together), Algorithms c11 and keccak
