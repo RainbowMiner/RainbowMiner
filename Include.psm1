@@ -763,7 +763,11 @@ function Get-Device {
     try {
         $CPUIndex = 0
         $CPUs = @()
-        Get-CimInstance -ClassName Win32_Processor | Foreach-Object {
+        if (-not (Test-Path Variable:Script:GetDeviceCacheCIM)) {
+            $Script:GetDeviceCacheCIM = Get-CimInstance -ClassName Win32_Processor
+        }
+
+        $Script:GetDeviceCacheCIM | Foreach-Object {
             # Vendor, type and platform are all the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
             $CPUInfo = $_ | ConvertTo-Json | ConvertFrom-Json
             $Device = [PSCustomObject]@{
@@ -1423,6 +1427,7 @@ function Read-HostString {
         [Parameter(Mandatory = $False)]
         [Int]$Length = 0
     )
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters)]+",""}
@@ -1436,7 +1441,15 @@ function Read-HostString {
             if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
             if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($Length) characters";Write-Host " ";$Repeat = $true}
             if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($Length) characters";Write-Host " ";$Repeat = $true}
-            if ($Valid.Count -gt 0 -and $Valid -inotcontains $Result) {Write-Host "Invalid input (type `"list`" to show all valid)";Write-Host " ";$Repeat = $true}
+            if ($Valid.Count -gt 0) {
+                if ($Valid -inotcontains $Result) {
+                    Write-Host "Invalid input (type `"list`" to show all valid)";
+                    Write-Host " ";
+                    $Repeat = $true
+                } else {
+                    [String]$Result = Compare-Object $Valid @($Result) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Index 0
+                }
+            }
         }
     } until (-not $Repeat -and ($Result.Length -gt 0 -or -not $Mandatory))
     $Result
@@ -1448,7 +1461,7 @@ function Read-HostArray {
         [Parameter(Mandatory = $True)]
         [String]$Prompt,
         [Parameter(Mandatory = $False)]
-        $Default = @(),
+        [Array]$Default = @(),
         [Parameter(Mandatory = $False)]
         [Switch]$Mandatory = $False,
         [Parameter(Mandatory = $False)]
@@ -1456,21 +1469,24 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Array]$Valid = @()
     )
-    if ($Default -is [String]) {$Default = $Default.Trim(); $Default = if ($Default -ne ''){[regex]::split($Default,"[,;:\s]+")}else{@()}}
+    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:\s]") {[Array]$Default = [regex]::split($Default[0].Trim(),"[,;:\s]+")}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
     do{
         $Repeat = $false
-        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;\s]+","" -split "[,;\s]+"}
+        [Array]$Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;\s]+","" -split "[,;\s]+"}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=@()}
         if (Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true
         } elseif ($Valid.Count -gt 0) {
-            if ($Invalid = Compare-Object $Result $Valid | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
+            if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
                 Write-Host "The following entries are invalid (type `"list`" to show all valid):"
                 Write-Host $($Invalid -join ",")
                 Write-Host " "
                 $Repeat = $true
+            } else {
+                [Array]$Result = Compare-Object $Valid $Result -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
             }           
         }
     } until (-not $Repeat -and ($Result.Count -gt 0 -or -not $Mandatory))

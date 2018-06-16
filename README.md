@@ -9,7 +9,7 @@
 - **Web-Interface through localhost (in development)**
 - **Switch MSI Afterburner profiles per miner**
 - **Easy setup - simply click Start.bat (RainbowMiner will ask for your credentials)**
-- **Change configuration during runtime**
+- **Change global, miner and pool-configuration during runtime**
 - **Pause mining without exiting the RainbowMiner**
 - **Easy control through command line parameters or config files**
 
@@ -47,7 +47,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - E[**x**]it Miningscript = stop all running miner and exit RainbowMiner
 - [**S**]kip switching prevention = immediately start the most profitable miner, without waiting for the switching prevention
 - start [**D**]ownloader = start the downloader manually (only needed, if you manually updated a miner)
-- [**C**]onfiguration = goto the configuration setup (after setup all miners will be restarted)
+- [**C**]onfiguration = goto the configuration setup (after setup all miner will be restarted)
 - [**V**]erbose off/on = switch the user interface from lite(=off) to full(=on)
 - [**P**]ause = stop all running miner and wait until user presses P again
 
@@ -78,7 +78,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 Config files are found in directory "Config\"
 - config.txt = general settings, wallet, etc.
 - pools.config.txt = pool setup, set a different wallet, workername for each pool and coin
-- miners.config.txt = individually add arguments to miners (selected by name and device names and algorithm)
+- miners.config.txt = individually add arguments to miner (selected by name and device names and algorithm)
 
 **Note: if you have not started the Start.bat yet, there will be no config files! Start it first!**
 **Config files are in JSON format. Look here for to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
@@ -96,10 +96,10 @@ Config files are found in directory "Config\"
 - SSL = set to 1, if only ssl connections wanted
 - DeviceName = list of device descriptors, with which you want to mine [default=nvidia,amd]
 - Algorithm = list of algorithms, you want to mine [default=bitcore,blake2s,c11,cryptonightheavy,cryptonightv7,ethash,equihash,hmq1725,hsr,keccak,keccakc,lyra2re2,lyra2z,neoscrypt,pascal,phi,skein,skunk,timetravel,tribus,x16r,x16s,x17,vit,xevan,yescrypt,yescryptr16]
-- MinerName = list of miners, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
+- MinerName = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
 - PoolName = list of pool names, you want to use for mining [default=nicehash,blazepool,miningpoolhubmini]
 - ExcludeAlgorithm = list of algorithms, you want to exclude from mining
-- ExcludeFromWatchdog = list of algorithms or miners, you want to exclude from the watchdog
+- ExcludeFromWatchdog = list of algorithms or miner, you want to exclude from the watchdog
 - ExcludeMinerName = list of miner names, you want to exclude from mining
 - ExcludePoolName = list of pool names, you want to exclude from mining
 - Currency = currencies, you want to be shown [default=BTC,USD,EUR]
@@ -183,6 +183,17 @@ Example:
 - "CcminerAlexis78-GTX1070": miner CcminerAlexis78 in non-LegacyMining mode on selected GPU devices with model name GTX1070, Algorithms c11 and keccak
 - "MainAlgorithm": alogrithm, for which the extra configuration will be used
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
-- "Params": these are the extra parameters, that will be added to the miners call
+- "Params": these are the extra parameters, that will be added to the miner call
 - "Profile": desired MSI Afterburner profile
+
+## CREDITS
+
+The miner script has initially been forked from https://github.com/MultipoolMiner/MultipoolMiner for my private use, only.
+Since I changed and optimized the script a lot to suit my needs, I decided to make the source code public, so that others can profit from my optimizations.
+
+**
+If you are happy with the script, bitcoin donations are greatly appreciated:
+- The MultipoolMiner author: 1MsrCoAt8qM53HUMsUxvy9gMj3QVbHLazH
+- The RainbowMiner author: 3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx
+**
 
