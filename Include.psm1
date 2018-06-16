@@ -1473,7 +1473,7 @@ function Read-HostArray {
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
     do{
         $Repeat = $false
-        [Array]$Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;\s]+","" -split "[,;\s]+"}
+        [Array]$Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=@()}
         if (Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}

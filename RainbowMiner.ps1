@@ -250,6 +250,7 @@ while ($true) {
                         $RunSetup = $false
                     }
                     elseif ($SetupType -eq "G") {
+
                         $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
 
@@ -309,9 +310,7 @@ while ($true) {
                         $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
-                        $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force
-
-                        $ConfigActual | Select-Object -ExpandProper Name
+                        $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
 
                         $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                 BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -385,7 +384,20 @@ while ($true) {
                         } until ($MinerSetupDone)
                     }
                     elseif ($SetupType -eq "P") {
-                        Write-Host "(not yet implemented)"
+
+                        $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+
+                        Write-Host "*** Pool Configuration ***"
+                        Write-Host "Hints:"
+                        Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
+                        Write-Host "- fields marked with * are mandatory"
+                        Write-Host "- use comma `",`" to separate list entries"
+                        Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
+                        Write-Host "- enter `"delete`" to clear a non-mandatory entry"
+                        Write-Host " "
+                        Write-Host "(under development)"
+                        Write-Host " "
+
                     }
                 } until (-not $RunSetup)
                 $RestartMiners = $true
