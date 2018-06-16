@@ -706,6 +706,7 @@ function Get-Device {
         }
     }
 
+    $Devices = @()
     $PlatformId = 0
     $Index = 0
     $PlatformId_Index = @{}
@@ -729,12 +730,12 @@ function Get-Device {
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index.($Device_OpenCL.Type)
                     OpenCL = $Device_OpenCL
-                    Model = [String]$(if ($Device_OpenCL.Type -eq "Cpu"){"CPU"}else{$Device_OpenCL.Name -replace "[^A-Za-z0-9]+","" -replace "GeForce|(R)|Intel",""})
+                    Model = [String]$($Device_OpenCL.Name -replace "[^A-Za-z0-9]+","" -replace "GeForce|(R)|Intel","")
                     Model_Name = [String]$Device_OpenCL.Name
                 }
 
-                if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
-                    $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+                if ($Device.Type -ne "Cpu" -and ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_}))) {
+                    $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
                 }
 
                 if (-not $Type_PlatformId_Index.($Device_OpenCL.Type)) {
@@ -759,23 +760,41 @@ function Get-Device {
         Write-Log -Level Warn "OpenCL device detection has failed. "
     }
 
-    if (-not $Index) {
-        $Device = [PSCustomObject]@{
-            Index = [Int]$null
-            PlatformId = [Int]$null
-            PlatformId_Index = [Int]$null
-            Type_PlatformId_Index = [Int]$null
-            Vendor = [String]$null
-            Vendor_Index = [Int]$null
-            Type_Vendor_Index = [Int]$null
-            Type = [String]"Cpu"
-            Type_Index = [Int]$null
-            OpenCL = $null
-            Model = [String]"CPU"
-        }
+    try {
+        $CPUIndex = 0
+        $CPUs = @()
+        Get-CimInstance -ClassName Win32_Processor | Foreach-Object {
+            # Vendor, type and platform are all the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
+            $CPUInfo = $_ | ConvertTo-Json | ConvertFrom-Json
+            $Device = [PSCustomObject]@{
+                Index = [Int]$Index
+                PlatformId = [Int]$PlatformId
+                PlatformId_Index = $CPUIndex
+                Type_PlatformId_Index = $CPUIndex
+                Vendor = $CPUInfo.Manufacturer
+                Type_Vendor_Index = $CPUIndex
+                Type = "Cpu"
+                Type_Index = $CPUIndex
+                Info = $CPUInfo
+                Model = [String]$($CPUinfo.Name -replace "[^A-Za-z0-9]+","" -replace "GeForce|(R)|Intel","")
+                Model_Name = $CPUInfo.Name
+            }
 
-        $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+            if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
+                $CPUs += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+            }
+
+            $CPUIndex++
+            $Index++
+        }
+        if (($CPUs | Select-Object -ExpandProperty Model -Unique).Count -eq 1) {$CPUs | Foreach-Object {$_.Model="CPU"}}
+        $Devices += $CPUs
     }
+    catch {
+        Write-Log -Level Warn "CIM CPU detection has failed. "
+    }
+
+    $Devices
 }
 
 function Get-ComputeData {
