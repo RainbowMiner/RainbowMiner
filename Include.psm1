@@ -919,6 +919,20 @@ function Get-Region {
     else {$Region}
 }
 
+function Get-Algorithms {
+    if (-not (Test-Path Variable:Script:Algorithms)) {
+        $Script:Algorithms = Get-Content "Algorithms.txt" | ConvertFrom-Json
+    }
+    $Script:Algorithms.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
+}
+
+function Get-Regions {
+    if (-not (Test-Path Variable:Script:Regions)) {
+        $Script:Regions = Get-Content "Regions.txt" | ConvertFrom-Json
+    }
+    $Script:Regions.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
+}
+
 enum MinerStatus {
     Running
     Idle
@@ -1370,4 +1384,89 @@ function Test-TimeSync {
 
 }
 
+function Read-HostString {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt,
+        [Parameter(Mandatory = $False)]
+        [String]$Default = '',
+        [Parameter(Mandatory = $False)]
+        [Switch]$Mandatory = $False,
+        [Parameter(Mandatory = $False)]
+        [String]$Characters = "A-Z0-9",
+        [Parameter(Mandatory = $False)]
+        [Array]$Valid = @(),
+        [Parameter(Mandatory = $False)]
+        [Int]$MinLength = 0,
+        [Parameter(Mandatory = $False)]
+        [Int]$MaxLength = 0,
+        [Parameter(Mandatory = $False)]
+        [Int]$Length = 0
+    )
+    do{
+        $Repeat = $false
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters)]+",""}
+        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}
+        if (@("help","list") -icontains $Result) {
+            if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",");Write-Host " "}
+            else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
+            $Repeat = $true
+        }
+        elseif ($Mandatory -or $Result.Length -gt 0) {
+            if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
+            if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($Length) characters";Write-Host " ";$Repeat = $true}
+            if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($Length) characters";Write-Host " ";$Repeat = $true}
+            if ($Valid.Count -gt 0 -and $Valid -inotcontains $Result) {Write-Host "Invalid input (type `"list`" to show all valid)";Write-Host " ";$Repeat = $true}
+        }
+    } until (-not $Repeat -and ($Result.Length -gt 0 -or -not $Mandatory))
+    $Result
+}
+
+function Read-HostArray {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt,
+        [Parameter(Mandatory = $False)]
+        $Default = @(),
+        [Parameter(Mandatory = $False)]
+        [Switch]$Mandatory = $False,
+        [Parameter(Mandatory = $False)]
+        [String]$Characters = "A-Z0-9",
+        [Parameter(Mandatory = $False)]
+        [Array]$Valid = @()
+    )
+    if ($Default -is [String]) {$Default = $Default.Trim(); $Default = if ($Default -ne ''){[regex]::split($Default,"[,;:\s]+")}else{@()}}
+    do{
+        $Repeat = $false
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;\s]+","" -split "[,;\s]+"}
+        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=@()}
+        if (Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual) {
+            if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
+            else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
+            $Repeat = $true
+        } elseif ($Valid.Count -gt 0) {
+            if ($Invalid = Compare-Object $Result $Valid | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
+                Write-Host "The following entries are invalid (type `"list`" to show all valid):"
+                Write-Host $($Invalid -join ",")
+                Write-Host " "
+                $Repeat = $true
+            }           
+        }
+    } until (-not $Repeat -and ($Result.Count -gt 0 -or -not $Mandatory))
+    $Result
+}
+
+function Read-HostBool {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt,
+        [Parameter(Mandatory = $False)]
+        $Default = $false
+    )
+    if ($Default -isnot [bool]){$Default = "yes","y","1","j","ja","oui","si","da" -icontains $Default}
+    [Bool]$(if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$(if($Default){"yes"}else{"no"})]").Trim()) -eq ''){$Default}else{"yes","y","1","j","ja","oui","si","da" -icontains $Result})
+}
 
