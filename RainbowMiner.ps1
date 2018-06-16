@@ -125,6 +125,7 @@ $MinersConfigTimeStamp = 0
 $SkipSwitchingPrevention = $false
 $StartDownloader = $false
 $PauseMiners = $false
+$RestartMiners = $false
 $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
 $LastBalances = $Timer
@@ -318,15 +319,7 @@ while ($true) {
                 $RunSetup = $false
 
                 Write-Host "Your new configuration has been saved. All Miners will be stopped and restarted. Please wait .."
-
-                $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
-                    $Miner = $_
-                    if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
-                        Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
-                        $Miner.StopMining()            
-                    }
-                }
-
+                $RestartMiners = $true
             }
         } else {
             $ConfigCheckFields = $false
@@ -845,11 +838,13 @@ while ($true) {
     }
     $BestMiners_Combo = $BestMiners_Combos | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Bias -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
-    $BestMiners_Combo | ForEach-Object {$_.Best = $true}
-    $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
+    if (-not $PauseMiners) {
+        $BestMiners_Combo | ForEach-Object {$_.Best = $true}
+        $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
+    }
 
     #Stop or start miners in the active list depending on if they are the most profitable
-    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0} | Where-Object Best -EQ $false | ForEach-Object {
+    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0} | Where-Object {($_.Best -EQ $false) -or $RestartMiners} | ForEach-Object {
         $Miner = $_
 
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
@@ -862,7 +857,7 @@ while ($true) {
                 $Miner_Algorithm = $_
                 $WatchdogTimer = $WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if ($WatchdogTimer) {
-                    if ($WatchdogTimer.Kicked -lt $Timer.AddSeconds( - $WatchdogInterval)) {
+                    if (($WatchdogTimer.Kicked -lt $Timer.AddSeconds( - $WatchdogInterval)) -and -not $RestartMiners) {
                         $Miner.SetStatus([MinerStatus]::Failed)
                     }
                     else {
@@ -948,6 +943,11 @@ while ($true) {
         ) | Out-Host
     }
 
+    if ($RestartMiners) {
+        Write-Host "Miners have been restarted!" -ForegroundColor Yellow
+        Write-Host " "
+        $RestartMiners = $false
+    }
     if ($PauseMiners) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED" -ForegroundColor Red
@@ -1164,7 +1164,7 @@ while ($true) {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 80)
+    Write-Host (" " * 100)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
