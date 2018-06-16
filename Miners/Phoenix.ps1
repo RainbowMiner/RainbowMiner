@@ -2,6 +2,7 @@
 
 $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0c-phoenixminer/PhoenixMiner_3.0c.zip"
+$ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 
 $Commands = [PSCustomObject]@{
