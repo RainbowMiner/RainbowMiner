@@ -316,7 +316,8 @@ while ($true) {
                                 BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
                                 Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
                         }) -Force
-                 
+
+                        $ConfigActual | ConvertTo-Json | Out-File $ConfigFile                                               
                         $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile                        
                     }
                     elseif ($SetupType -eq "M") {
