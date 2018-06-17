@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.6.0.1"
+$Version = "3.6.0.2"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -192,7 +192,7 @@ if (-not (Test-Path $ConfigFile)) {
     $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
     $_ | Resolve-Path -Relative
 }
-[console]::TreatControlCAsInput = $true
+#[console]::TreatControlCAsInput = $true
 
 while ($true) {
     #Load the config
@@ -200,230 +200,237 @@ while ($true) {
     $ConfigCheckFields = $true
     if (Test-Path $ConfigFile) {
         if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
-            $ConfigTimeStamp = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
-            $Config = Get-ChildItemContent $ConfigFile -Force -Parameters @{
-                Wallet              = $Wallet
-                UserName            = $UserName
-                WorkerName          = $WorkerName
-                API_ID              = $API_ID
-                API_Key             = $API_Key
-                Interval            = $Interval
-                ExtendInterval      = $ExtendInterval
-                Region              = $Region
-                SSL                 = $SSL
-                DeviceName          = $DeviceName
-                Algorithm           = $Algorithm
-                MinerName           = $MinerName
-                PoolName            = $PoolName
-                ExcludeAlgorithm    = $ExcludeAlgorithm
-                ExcludeMinerName    = $ExcludeMinerName
-                ExcludePoolName     = $ExcludePoolName
-                Currency            = $Currency
-                Donate              = $Donate
-                Proxy               = $Proxy
-                Delay               = $Delay
-                Watchdog            = $Watchdog
-                MinerStatusURL      = $MinerStatusURL
-                MinerStatusKey      = $MinerStatusKey
-                SwitchingPrevention = $SwitchingPrevention
-                ShowMinerWindow     = $ShowMinerWindow
-                FastestMinerOnly    = $FastestMinerOnly
-                IgnoreFees          = $IgnoreFees
-                ShowPoolBalances    = $ShowPoolBalances
-                RebootOnGPUFailure  = $RebootOnGPUFailure
-                MSIApath            = $MSIApath
-                MSIAprofile         = $MSIAprofile
-                UIstyle             = $UIstyle
-                LegacyMining        = $LegacyMining
-            } | Select-Object -ExpandProperty Content
 
-            if ($RunSetup) {
+            do {
+                $ConfigTimeStamp = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
+                $Config = Get-ChildItemContent $ConfigFile -Force -Parameters @{
+                    Wallet              = $Wallet
+                    UserName            = $UserName
+                    WorkerName          = $WorkerName
+                    API_ID              = $API_ID
+                    API_Key             = $API_Key
+                    Interval            = $Interval
+                    ExtendInterval      = $ExtendInterval
+                    Region              = $Region
+                    SSL                 = $SSL
+                    DeviceName          = $DeviceName
+                    Algorithm           = $Algorithm
+                    MinerName           = $MinerName
+                    PoolName            = $PoolName
+                    ExcludeAlgorithm    = $ExcludeAlgorithm
+                    ExcludeMinerName    = $ExcludeMinerName
+                    ExcludePoolName     = $ExcludePoolName
+                    Currency            = $Currency
+                    Donate              = $Donate
+                    Proxy               = $Proxy
+                    Delay               = $Delay
+                    Watchdog            = $Watchdog
+                    MinerStatusURL      = $MinerStatusURL
+                    MinerStatusKey      = $MinerStatusKey
+                    SwitchingPrevention = $SwitchingPrevention
+                    ShowMinerWindow     = $ShowMinerWindow
+                    FastestMinerOnly    = $FastestMinerOnly
+                    IgnoreFees          = $IgnoreFees
+                    ShowPoolBalances    = $ShowPoolBalances
+                    RebootOnGPUFailure  = $RebootOnGPUFailure
+                    MSIApath            = $MSIApath
+                    MSIAprofile         = $MSIAprofile
+                    UIstyle             = $UIstyle
+                    LegacyMining        = $LegacyMining
+                } | Select-Object -ExpandProperty Content
 
-                do {
-                    Write-Host " "
-                    Write-Host "*** RainbowMiner Configuration ***"
-                    Write-Host "Please choose, what to configure:"
-                    $SetupType = Read-HostString -Prompt "[G]lobal, [M]iner, [P]ools, E[x]it configuration" -Default "X"  -Mandatory -Characters "GMPX"
-                    Write-Host " "
+                $ReReadConfig = $false
 
-                    if ($SetupType -eq "X") {
-                        $RunSetup = $false
-                    }
-                    elseif ($SetupType -eq "G") {
+                if ($RunSetup) {
 
-                        $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
-                        $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
-
-                        Write-Host "*** Global Configuration ***"
-                        Write-Host "Hints:"
-                        Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
-                        Write-Host "- fields marked with * are mandatory"
-                        Write-Host "- use comma `",`" to separate list entries"
-                        Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
-                        Write-Host "- enter `"delete`" to clear a non-mandatory entry"
+                    do {
+                        Write-Host " "
+                        Write-Host "*** RainbowMiner Configuration ***"
+                        Write-Host "Please choose, what to configure:"
+                        $SetupType = Read-HostString -Prompt "[G]lobal, [M]iner, [P]ools, E[x]it configuration" -Default "X"  -Mandatory -Characters "GMPX"
                         Write-Host " "
 
-                        # Start setup procedure
-                        $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9"               
-
-                        if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
-                            $NicehashWallet = $PoolsActual.Nicehash.BTC
-                            $NicehashWorkerName = $PoolsActual.Nicehash.Worker
-                        } else {
-                            $NicehashWallet = '$Wallet'
-                            $NicehashWorkerName = '$WorkerName'
+                        if ($SetupType -eq "X") {
+                            $RunSetup = $false
                         }
-                        if ($NicehashWallet -eq '$Wallet'){$NicehashWallet=$Config.Wallet}
-                        $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Mandatory -Characters "A-Z0-9"
-                        $Config.WorkerName = Read-HostString -Prompt "Enter your worker name" -Default $Config.WorkerName -Mandatory -Characters "A-Z0-9"
-                        $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9"
-                        $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions)
-                        $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z"
-                        $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_"
-                        $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid @(Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
-                        $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid (Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
-                        $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
-                        $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                
-                        $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms)
-                        $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances
-                        $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow
-                        $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog
-                        $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly
-                        $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z"
-                        if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
-                        $Config.LegacyMining = Read-HostBool "Always use one miner per all nvidia or amd, only" -Default $Config.LegacyMining
+                        elseif ($SetupType -eq "G") {
+
+                            $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
+                            $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+
+                            Write-Host "*** Global Configuration ***"
+                            Write-Host "Hints:"
+                            Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
+                            Write-Host "- fields marked with * are mandatory"
+                            Write-Host "- use comma `",`" to separate list entries"
+                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
+                            Write-Host "- enter `"delete`" to clear a non-mandatory entry"
+                            Write-Host " "
+
+                            # Start setup procedure
+                            $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9"               
+
+                            if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
+                                $NicehashWallet = $PoolsActual.Nicehash.BTC
+                                $NicehashWorkerName = $PoolsActual.Nicehash.Worker
+                            } else {
+                                $NicehashWallet = '$Wallet'
+                                $NicehashWorkerName = '$WorkerName'
+                            }
+                            if ($NicehashWallet -eq '$Wallet'){$NicehashWallet=$Config.Wallet}
+                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Mandatory -Characters "A-Z0-9"
+                            $Config.WorkerName = Read-HostString -Prompt "Enter your worker name" -Default $Config.WorkerName -Mandatory -Characters "A-Z0-9"
+                            $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9"
+                            $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions)
+                            $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z"
+                            $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_"
+                            $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid @(Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
+                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid (Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
+                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
+                            $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                
+                            $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms)
+                            $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances
+                            $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow
+                            $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog
+                            $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly
+                            $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z"
+                            if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
+                            $Config.LegacyMining = Read-HostBool "Always use one miner per all nvidia or amd, only" -Default $Config.LegacyMining
                         
-                        $AvailDeviceName = @()
-                        $SetupDevices = Get-Device "nvidia","amd","cpu"
-                        if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
-                        if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}               
-                        if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
-
-                        $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName
-                        $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30
-                        $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40)
-           
-                        $ConfigActual | Add-Member Wallet $Config.Wallet -Force
-                        $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
-                        $ConfigActual | Add-Member UserName $Config.UserName -Force
-                        $ConfigActual | Add-Member Proxy $Config.Proxy -Force
-                        $ConfigActual | Add-Member Regin $Config.Region -Force
-                        $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
-                        $ConfigActual | Add-Member PoolName $($Config.PoolName -join ",") -Force
-                        $ConfigActual | Add-Member ExcludePoolName $($Config.ExcludePoolName -join ",") -Force
-                        $ConfigActual | Add-Member MinerName $($Config.MinerName -join ",") -Force
-                        $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
-                        $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
-                        $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
-                        $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
-                        $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
-                        $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
-                        $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
-                        $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
-                        $ConfigActual | Add-Member Interval $Config.Interval -Force
-                        $ConfigActual | Add-Member Donate $Config.Donate -Force
-                        $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
-
-                        $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
-                                BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
-                                Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
-                        }) -Force
-
-                        $ConfigActual | ConvertTo-Json | Out-File $ConfigFile                                               
-                        $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile                        
-                    }
-                    elseif ($SetupType -eq "M") {
-
-                        $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
-
-                        Write-Host "*** Miner Configuration ***"
-                        Write-Host "Hints:"
-                        Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
-                        Write-Host "- fields marked with * are mandatory"
-                        Write-Host "- use comma `",`" to separate list entries"
-                        Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
-                        Write-Host "- enter `"delete`" to clear a non-mandatory entry"
-                        Write-Host " "
-
-                        $AvailDeviceName = @()
-                        $SetupDevices = Get-Device "nvidia","amd","cpu"
-                        if ($Config.LegacyMining) {
+                            $AvailDeviceName = @()
+                            $SetupDevices = Get-Device "nvidia","amd","cpu"
                             if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
-                            if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}
-                            if (Select-Device $SetupDevices "cpu") {$AvailDeviceName += "cpu"}
-                        } else {
-                            $SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}
+                            if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}               
+                            if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
+
+                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName
+                            $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30
+                            $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40)
+           
+                            $ConfigActual | Add-Member Wallet $Config.Wallet -Force
+                            $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
+                            $ConfigActual | Add-Member UserName $Config.UserName -Force
+                            $ConfigActual | Add-Member Proxy $Config.Proxy -Force
+                            $ConfigActual | Add-Member Regin $Config.Region -Force
+                            $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
+                            $ConfigActual | Add-Member PoolName $($Config.PoolName -join ",") -Force
+                            $ConfigActual | Add-Member ExcludePoolName $($Config.ExcludePoolName -join ",") -Force
+                            $ConfigActual | Add-Member MinerName $($Config.MinerName -join ",") -Force
+                            $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
+                            $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
+                            $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
+                            $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
+                            $ConfigActual | Add-Member Interval $Config.Interval -Force
+                            $ConfigActual | Add-Member Donate $Config.Donate -Force
+                            $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
+
+                            $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
+                                    BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
+                                    Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
+                            }) -Force
+
+                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFile                                               
+                            $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile                        
                         }
+                        elseif ($SetupType -eq "M") {
 
-                        $MinerSetupDone = $false
-                        do {
-                            try {
-                                $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
-                                if ($EditMinerName -eq '') {throw}
-                                $EditDeviceName = Read-HostString -Prompt ".. running on which device? (leave empty to end miner config)" -Characters "A-Z0-9#" -Valid $AvailDeviceName
-                                if (-not $EditDeviceName.Count) {theow}
-                                $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (leave empty to end miner config)" -Characters "A-Z0-9" -Valid (Get-Algorithms)
-                                if (-not $EditAlgorithm.Count) {theow}
-                                $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms)
-                        
-                                $EditMinerName += "-" + $EditDeviceName
-                                Write-Host "Configuration for $($EditMinerName), calculating $($EditAlgorithm)$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})"
+                            $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
 
-                                $EditMinerConfig = [PSCustomObject]@{
-                                    MainAlgorithm = $EditAlgorithm
-                                    SecondaryAlgorithm = $EditSecondaryAlgorithm
-                                    Params = ""
-                                    Profile = ""
-                                }
+                            Write-Host "*** Miner Configuration ***"
+                            Write-Host "Hints:"
+                            Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
+                            Write-Host "- fields marked with * are mandatory"
+                            Write-Host "- use comma `",`" to separate list entries"
+                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
+                            Write-Host "- enter `"delete`" to clear a non-mandatory entry"
+                            Write-Host " "
+
+                            $AvailDeviceName = @()
+                            $SetupDevices = Get-Device "nvidia","amd","cpu"
+                            if ($Config.LegacyMining) {
+                                if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
+                                if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}
+                                if (Select-Device $SetupDevices "cpu") {$AvailDeviceName += "cpu"}
+                            } else {
+                                $SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}
+                            }
+
+                            $MinerSetupDone = $false
+                            do {
+                                try {
+                                    $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
+                                    if ($EditMinerName -eq '') {throw}
+                                    $EditDeviceName = Read-HostString -Prompt ".. running on which device? (leave empty to end miner config)" -Characters "A-Z0-9#" -Valid $AvailDeviceName
+                                    if (-not $EditDeviceName.Count) {theow}
+                                    $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (leave empty to end miner config)" -Characters "A-Z0-9" -Valid (Get-Algorithms)
+                                    if (-not $EditAlgorithm.Count) {theow}
+                                    $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms)
                         
-                                if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {
-                                    $MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {
-                                        $EditMinerConfig.Params = $_.Params
-                                        $EditMinerConfig.Profile = $_.Profile
+                                    $EditMinerName += "-" + $EditDeviceName
+                                    Write-Host "Configuration for $($EditMinerName), calculating $($EditAlgorithm)$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})"
+
+                                    $EditMinerConfig = [PSCustomObject]@{
+                                        MainAlgorithm = $EditAlgorithm
+                                        SecondaryAlgorithm = $EditSecondaryAlgorithm
+                                        Params = ""
+                                        Profile = ""
                                     }
-                                }
-
-                                $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
-                                $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
-
-                                if (Read-HostBool "Really write Params=`"$($EditMinerConfig.Params)`", Profile=`"$($EditMinerConfig.Profile)`" to $($PoolsConfigFile)?") {
-                                    $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
-                                    $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
-                                }                        
-
-                                if (-not (Read-HostBool "Edit another miner?")){throw}
                         
-                            } catch {$MinerSetupDone = $true}
-                        } until ($MinerSetupDone)
-                    }
-                    elseif ($SetupType -eq "P") {
+                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {
+                                        $MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {
+                                            $EditMinerConfig.Params = $_.Params
+                                            $EditMinerConfig.Profile = $_.Profile
+                                        }
+                                    }
 
-                        $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+                                    $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
+                                    $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
 
-                        Write-Host "*** Pool Configuration ***"
-                        Write-Host "Hints:"
-                        Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
-                        Write-Host "- fields marked with * are mandatory"
-                        Write-Host "- use comma `",`" to separate list entries"
-                        Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
-                        Write-Host "- enter `"delete`" to clear a non-mandatory entry"
-                        Write-Host " "
-                        Write-Host "(under development)"
-                        Write-Host " "
+                                    if (Read-HostBool "Really write Params=`"$($EditMinerConfig.Params)`", Profile=`"$($EditMinerConfig.Profile)`" to $($PoolsConfigFile)?") {
+                                        $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
+                                        $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
+                                    }                        
 
-                    }
-                } until (-not $RunSetup)
-                $RestartMiners = $true
-                Write-Host " "
-                Write-Host "Exiting configuration setup - all miners will be restarted. Please be patient!"
-                Write-Host " "
-            }
+                                    if (-not (Read-HostBool "Edit another miner?")){throw}
+                        
+                                } catch {$MinerSetupDone = $true}
+                            } until ($MinerSetupDone)
+                        }
+                        elseif ($SetupType -eq "P") {
+
+                            $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+
+                            Write-Host "*** Pool Configuration ***"
+                            Write-Host "Hints:"
+                            Write-Host "- the defaults are your current configuration. Press Return to accept the defaults."
+                            Write-Host "- fields marked with * are mandatory"
+                            Write-Host "- use comma `",`" to separate list entries"
+                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries"
+                            Write-Host "- enter `"delete`" to clear a non-mandatory entry"
+                            Write-Host " "
+                            Write-Host "(under development)"
+                            Write-Host " "
+
+                        }
+                    } until (-not $RunSetup)
+                    $RestartMiners = $true
+                    $ReReadConfig = $true
+                    Write-Host " "
+                    Write-Host "Exiting configuration setup - all miners will be restarted. Please be patient!"
+                    Write-Host " "
+                }
+            } until (-not $ReReadConfig)
         } else {
             $ConfigCheckFields = $false
         }
     }
+
     if (Test-Path $PoolsConfigFile) {
-        if (-not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
+        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
             $PoolsConfigTimeStamp = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
             $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
                 Wallet              = $Config.Wallet
@@ -436,7 +443,7 @@ while ($true) {
     }    
 
     if (Test-Path $MinersConfigFile) {
-        if (-not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
+        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
             $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
             $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
             (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object {
@@ -456,7 +463,7 @@ while ($true) {
     }
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
-    if ( $ConfigCheckFields ) {
+    if ($ConfigCheckFields) {
         #for backwards compatibility
         if ($Config.Type -ne $null) {$Config | Add-Member DeviceName $Config.Type -Force}
         if ($Config.GPUs -ne $null -and $Config.GPUs) {
@@ -507,13 +514,9 @@ while ($true) {
         $DonateDelayHours /= 2
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {
-        $LastDonated = $Timer
-        Write-Log ("Donation run finished. Next run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
-    }    
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {$LastDonated = $Timer;Write-Log "Donation run finished. "}    
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
-        $DonationPools = @()
-        if (-not $DonationData -and (Test-Path "data.json")) {$DonationData = (Get-ChildItemContent -Path "data.json").Content}
+        $DonationPools = @()        
         if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"],"Algorithm":["bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","ethash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","vit","x16r","x16s","x17","xevan","yescrypt","yescryptr16"]}' | ConvertFrom-Json}
         Get-ChildItem "Pools" -File | ForEach-Object {
             $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name ($_.BaseName) -MemberType NoteProperty) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
@@ -523,36 +526,35 @@ while ($true) {
         }
         if ( $DonateNow ) {
             $ConfigTimeStamp = 0
-            $DonationPoolsAvail = @(Compare-Object $DonationPools $DonationData.Pools -PassThru -IncludeEqual -ExcludeDifferent)
-            $Config.Algorithm = $DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}
-            if (-not $DonationPoolsAvail) {            
+            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($DonationPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+            $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
+            if (-not $DonationPoolsAvail.Count) {            
                 $Config | Add-Member ExcludePoolName @() -Force
             } else {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
-                $Config | Add-Member ExcludePoolName @(Compare-Object $DonationPools $DonationPoolsAvail -PassThru) -Force
+                $Config | Add-Member ExcludePoolName @(Compare-Object @($DonationPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
-            Write-Log "Donation run startet for $(($LastDonated-($Timer.AddHours($DonateDelayHours))).Minutes +1) minutes. "
+            Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
         }
+    } else {
+        Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
     }
 
     #Give API access to the current running configuration
-    $API.Config = $UserConfig
+    $API.Config = $Config
 
-    #Actions, when config has changes (or initial)
-    # .. for every change
-    if (($ConfigBackup | ConvertTo-Json -Compress) -ne ($Config | ConvertTo-Json -Compress)) {
-        #Clear pool cache if the pool configuration has changed
-        if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {
-            $AllPools = $null
-        }
+    #Clear pool cache if the pool configuration has changed
+    if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {$AllPools = $null}
 
-        if (-not $DonateNow) {
-            Write-Log "Config changed -> Reset "
+    #Clear balances if pool configuration flag has changed
+    if ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {$Balances = $null}
 
-            #Clear balances if pool configuration or flag has changed
-            if (($ConfigBackup.ShowPoolBalances -ne $UserConfig.ShowPoolBalances) -or (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($UserConfig.Pools | ConvertTo-Json -Compress))) {
-                $Balances = $null
-            }
+    if ($ConfigCheckFields) {
+
+        #Actions, when config has changes (or initial)
+        # .. for every change
+        if ($ConfigBackup.LegacyMining -ne $Config.LegacyMining -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName)) {
+            Write-Log "Device configuration changed. Refreshing now. "
 
             #Load information about the devices
             $Devices = @(Get-Device $Config.DeviceName | Select-Object)
@@ -608,7 +610,7 @@ while ($true) {
     }
 
     #Update the pool balances every 10 Minutes
-    if ( $Config.ShowPoolBalances ) {
+    if ($Config.ShowPoolBalances) {
         if ( -not $Balances -or $LastBalances -lt $Timer.AddMinutes(-10) ) {
             Write-Log "Getting pool balances. "
             $Balances = Get-Balance -Config $UserConfig -Rates $Rates -NewRates $NewRates
@@ -1311,7 +1313,7 @@ while ($true) {
 Stop-APIServer
 
 Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
-Write-Log "Gracefully halting MPM"
+Write-Log "Gracefully halting RainbowMiner"
 $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
     $Miner = $_
     if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
