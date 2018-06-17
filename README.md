@@ -1,5 +1,7 @@
 # RainbowMiner
-###### **RELEASES: [https://github.com/RainbowMiner/](https://github.com/RainbowMiner/RainbowMiner/releases)**
+###### **RELEASES: [https://github.com/RainbowMiner/RainbowMiner/releases](https://github.com/RainbowMiner/RainbowMiner/releases)**
+
+###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
 ## FEATURE SUMMARY
 
@@ -17,7 +19,7 @@
 ## INSTALLATION
 
 1. Download and extract to your desktop (find the latest release here https://github.com/RainbowMiner/RainbowMiner/releases)
-2. Check powershell version and pre-requesites
+2. Check powershell version and pre-requesites (see below, very important!)
 3. Right-click "Start.bat", choose "Run as administrator"
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
@@ -38,6 +40,7 @@ Done!
 
 - PowerShell 6 is required: [Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.2/PowerShell-6.0.2-win-x64.msi)
 - Microsoft .NET Framework 4.5.1 or later is required: [Web Installer](https://www.microsoft.com/en-us/download/details.aspx?id=40773)
+- Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 
 
 ## HOTKEYS
@@ -129,7 +132,8 @@ The default pool config look like this:
 
     "Zpool": {
         "BTC": "$Wallet",
-        "Worker": "$WorkerName"
+        "Worker": "$WorkerName",
+        "Penalty": 0
     }
 
 The line "BTC": "$Wallet" defines the payout wallet address. $Wallet uses the value in your config.txt
@@ -137,9 +141,20 @@ If you want to change it to LTC, for example, you have to change this line like 
 
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
-        "Worker": "$WorkerName"
+        "Worker": "$WorkerName",
+        "Penalty": 0
     }
     
+If you feel like a pool tends to exagerate it's results, you can set a penalty in % through the field "Penalty":
+
+    "Ravenminer": {
+        "RVN": "<YOUR_RAVENCOIN_ADDRESS>",
+        "Worker": "$WorkerName",
+        "Penalty": 5
+    }
+
+This would reduce the hashrate-results from the pool Ravenminer by 5%
+
 
 ### Config\miners.config.txt
 
