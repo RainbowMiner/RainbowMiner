@@ -14,7 +14,7 @@ try {
     $Version = ($Request.tag_name -replace '^v')
     $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
 
-    if ($Version -ne $MPMVersion) {
+    if ($Version -gt $MPMVersion) {
         $ProgressPreference = $ProgressPreferenceBackup
         Write-Progress -Activity "Updater" -Status $Name -CurrentOperation "Acquiring Online ($URI)"
         $ProgressPreference = "SilentlyContinue"
