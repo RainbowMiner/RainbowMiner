@@ -12,11 +12,11 @@ param(
     [Alias("Worker")]
     [String]$WorkerName = "rainbowminer", 
     [Parameter(Mandatory = $false)]
+    [Int]$Interval = 60, #seconds before reading hash rate from miners
+    [Parameter(Mandatory = $false)]
     [Int]$API_ID = 0, 
     [Parameter(Mandatory = $false)]
     [String]$API_Key = "", 
-    [Parameter(Mandatory = $false)]
-    [Int]$Interval = 60, #seconds before reading hash rate from miners
     [Parameter(Mandatory = $false)]
     [Array]$ExtendInterval = @("x16r","ravenminer","palginnvidia"), # Extend timing interval for Miners or currencies
     [Parameter(Mandatory = $false)]
@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.5.2.0"
+$Version = "3.6.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -131,6 +131,9 @@ $ShowTimer = $false
 $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
+
+#Cleanup the log
+Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore
 
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
@@ -279,18 +282,20 @@ while ($true) {
                         $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9"
                         $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions)
                         $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z"
+                        $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_"
                         $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid @(Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
                         $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid (Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName)
                         $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
-                        $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                
+                        $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                
                         $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms)
                         $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances
                         $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow
+                        $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog
                         $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly
                         $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z"
                         if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
                         $Config.LegacyMining = Read-HostBool "Always use one miner per all nvidia or amd, only" -Default $Config.LegacyMining
-
+                        
                         $AvailDeviceName = @()
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
                         if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
@@ -298,11 +303,13 @@ while ($true) {
                         if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
 
                         $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName
-                        $Config.Donate = $(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40
+                        $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30
+                        $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40)
            
                         $ConfigActual | Add-Member Wallet $Config.Wallet -Force
                         $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
                         $ConfigActual | Add-Member UserName $Config.UserName -Force
+                        $ConfigActual | Add-Member Proxy $Config.Proxy -Force
                         $ConfigActual | Add-Member Regin $Config.Region -Force
                         $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
                         $ConfigActual | Add-Member PoolName $($Config.PoolName -join ",") -Force
@@ -316,7 +323,9 @@ while ($true) {
                         $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
                         $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
+                        $ConfigActual | Add-Member Interval $Config.Interval -Force
                         $ConfigActual | Add-Member Donate $Config.Donate -Force
+                        $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
 
                         $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                 BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -463,7 +472,7 @@ while ($true) {
             $var  = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
             if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
             elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = "1","yes","y","ja","j","true" -icontains $Config.$name}
-            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name.Trim() }
+            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
@@ -517,7 +526,7 @@ while ($true) {
         if ( $DonateNow ) {
             $ConfigTimeStamp = 0
             $DonationPoolsAvail = @(Compare-Object $DonationPools $DonationData.Pools -PassThru -IncludeEqual -ExcludeDifferent)
-            $Config | Add-Member Algorithm $DonationData.Algorithm -Force
+            $Config.Algorithm = $DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}
             if (-not $DonationPoolsAvail) {            
                 $Config | Add-Member ExcludePoolName @() -Force
             } else {
@@ -715,7 +724,7 @@ while ($true) {
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
        
-        $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.Name -split '-' | Select-Object -Skip 1) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+        $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.DeviceModel) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
             if ($Config.Miners.$Miner_CommonCommands.Params) {
                 $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
@@ -992,12 +1001,14 @@ while ($true) {
             #Add watchdog timer
             if ($Config.Watchdog -and $_.Profit -ne $null) {
                 $Miner_Name = $_.Name
+                $Miner_DeviceName = $_.DeviceName
                 $_.Algorithm | ForEach-Object {
                     $Miner_Algorithm = $_
                     $WatchdogTimer = $WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                     if (-not $WatchdogTimer) {
                         $WatchdogTimers += [PSCustomObject]@{
                             MinerName = $Miner_Name
+                            DeviceModel= $Miner_DeviceModel
                             PoolName  = $Pools.$Miner_Algorithm.Name
                             Algorithm = $Miner_Algorithm
                             Kicked    = $Timer
@@ -1022,8 +1033,12 @@ while ($true) {
 
     #Display mining information
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
+        $Miner_DeviceName = $_.DeviceName
         $Miner_DeviceModel = $_.DeviceModel
-        Write-Host "$(($Devices | Where-Object Model -eq $Miner_DeviceModel | Select-Object -ExpandProperty Model_Name -Unique) -join ', ')"
+        $Miner_DeviceTitle = @($Devices | Where-Object {$Miner_DeviceName -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
+        Write-Host $Miner_DeviceTitle
+        Write-Host $("=" * $Miner_DeviceTitle.Length)
+
         $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table (
             @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
             @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 
@@ -1057,14 +1072,16 @@ while ($true) {
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
-        @{Label = "Miner"; Expression = {$_.Name}},
+        @{Label = "Miner"; Expression = {@($_.Name -split '-') | Select-Object -Index 0}},
+        @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName)) -join ','}}, 
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
     ) | Out-Host
 
     if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogReset) | Format-Table -Wrap (
-            @{Label = "Miner"; Expression = {$_.MinerName}}, 
+            @{Label = "Miner"; Expression = {@($_.MinerName -split '-') | Select-Object -Index 0}},
+            @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName)) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
             @{Label = "Algorithm"; Expression = {$_.Algorithm}}, 
             @{Label = "Watchdog Timer"; Expression = {"{0:n0} Seconds" -f ($Timer - $_.Kicked | Select-Object -ExpandProperty TotalSeconds)}; Align = 'right'}
@@ -1076,7 +1093,7 @@ while ($true) {
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
-        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name)-$($_.Algorithm -join '/')"}}
+        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -split '-' | Select-Object -Index 0)-$($_.Algorithm -join '/')"}}
 
         $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
 

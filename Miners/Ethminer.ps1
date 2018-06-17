@@ -18,7 +18,7 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
-    $Miner_Name = (@($Name) + @($_.Model)) -join '-'
+    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
     switch($Miner_Vendor) {
         "NVIDIA" {$Miner_Deviceparams = "--cuda-devices $(Get-GPUIDs $Miner_Device -join ' ') --cuda"}

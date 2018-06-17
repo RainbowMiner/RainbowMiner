@@ -28,8 +28,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
-    $Miner_Model_Norm = Get-DeviceModel $_
-    $Miner_Name = (@($Name) + @($Miner_Model_Norm)) -join '-'
+    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
@@ -75,7 +74,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     URI = $Uri
                 }
             } else {
-                $Miner_Name = (@("$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondAlgorithm_Norm)") + @($Miner_Model_Norm)) -join '-'
+                $Miner_Name = (@("$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondAlgorithm_Norm)") + @($Miner_Device.Name | Sort-Object)) -join '-'
                 [PSCustomObject]@{
                     Name = $Miner_Name
                     DeviceName = $Miner_Device.Name
