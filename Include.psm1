@@ -1557,3 +1557,18 @@ function Read-HostBool {
     [Bool]$(if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$(if($Default){"yes"}else{"no"})]").Trim()) -eq ''){$Default}else{"yes","y","1","j","ja","oui","si","da" -icontains $Result})
 }
 
+function Get-MinerConfigDefault {
+    $Done = [PSCustomObject]@{}
+    $Devices = Select-Device @(Get-Device "gpu") -Type @("nvidia","amd") | Select-Object Model,Vendor -Unique | Foreach-Object {$_ | Add-Member Vendor $(Get-DeviceVendor $_) -Force;$_}
+    $Setup = Get-ChildItemContent ".\Config\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
+    $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+        $Setup_Name = $_.Name
+        $Setup_Content = [PSCustomObject[]]$_.Value
+        $VendorSet = $false
+        $Devices | Foreach-Object {
+            if (-not $VendorSet) {$Done | Add-Member "$($Setup_Name)-$($_.Vendor)" $Setup_Content;$VendorSet=$true}
+            $Done | Add-Member "$($Setup_Name)-$($_.Model)" $Setup_Content        
+        }
+    }
+    $Done
+}

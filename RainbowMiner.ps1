@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.6.0.0"
+$Version = "3.6.0.1"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -185,12 +185,7 @@ if (-not (Test-Path $ConfigFile)) {
 
     # Create miners.config.txt if it is missing
     if (-not (Test-Path $MinersConfigFile)) {
-        if(Test-Path "Config\miners.config.default.txt") {
-            Copy-Item -Path "Config\miners.config.default.txt" -Destination $MinersConfigFile
-        } else {
-            Write-Log -Level Error "$($MinersConfigFile) and Config\miners.config.default.txt are missing. Cannot continue. "
-            Exit
-        }
+        Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
     }
     $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
     $_ | Resolve-Path -Relative
@@ -437,6 +432,7 @@ while ($true) {
             } | Select-Object -ExpandProperty Content) -Force
         }
     }    
+
     if (Test-Path $MinersConfigFile) {
         if (-not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
             $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
