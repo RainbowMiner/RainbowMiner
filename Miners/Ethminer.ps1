@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0rc1/ethminer-0.15.0rc1-Windows.zip"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0rc2/ethminer-0.15.0rc2-Windows.zip"
 $Port = "301{0:d2}"
 
 $Commands = [PSCustomObject]@{
