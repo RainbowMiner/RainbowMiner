@@ -284,9 +284,11 @@ while ($true) {
                         $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
                         $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                
                         $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms)
+                        $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances
+                        $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow
                         $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly
                         $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z"
-                        if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                
+                        if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
                         $Config.LegacyMining = Read-HostBool "Always use one miner per all nvidia or amd, only" -Default $Config.LegacyMining
 
                         $AvailDeviceName = @()
@@ -296,6 +298,7 @@ while ($true) {
                         if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
 
                         $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName
+                        $Config.Donate = $(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40
            
                         $ConfigActual | Add-Member Wallet $Config.Wallet -Force
                         $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
@@ -308,9 +311,12 @@ while ($true) {
                         $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
                         $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
                         $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
+                        $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
+                        $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
                         $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
+                        $ConfigActual | Add-Member Donate $Config.Donate -Force
 
                         $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                 BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -449,7 +455,7 @@ while ($true) {
         if ($Config.GPUs -ne $null -and $Config.GPUs) {
             if ($Config.GPUs -is [string]) {$Config.GPUs = [regex]::split($Config.GPUs,"[,;:\s]+")}
             $Config | Add-Member DeviceName @() -Force
-            Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.Type_PlatformId_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Index)}
+            Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.PlatformId_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Index)}
         }
 
         $Config | Get-Member -MemberType *Property | Foreach-Object {
@@ -486,21 +492,24 @@ while ($true) {
     $UserConfig = $Config.PSObject.Copy()
 
     #Activate or deactivate donation  
-    $Donate = if ($Config.Donate -lt 10) {10} else {$Config.Donate}
+    $DonateNow = $false
+    $DonateMinutes = if ($Config.Donate -lt 10) {10} else {$Config.Donate}
     $DonateDelayHours = 24
-    if ($Donate -gt 15) {
-        $Donate /= 2
+    if ($DonateMinutes -gt 15) {
+        $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($Donate)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {$LastDonated = $Timer}    
-    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($Donate) -ge $LastDonated) {    
-        $DonateNow = $false
+    if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {
+        $LastDonated = $Timer
+        Write-Log ("Donation run finished. Next run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
+    }    
+    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
         $DonationPools = @()
         if (-not $DonationData -and (Test-Path "data.json")) {$DonationData = (Get-ChildItemContent -Path "data.json").Content}
-        if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"]}' | ConvertFrom-Json}
+        if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"],"Algorithm":["bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","ethash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","vit","x16r","x16s","x17","xevan","yescrypt","yescryptr16"]}' | ConvertFrom-Json}
         Get-ChildItem "Pools" -File | ForEach-Object {
-            $DonationData1 = if ($DonationData.Wallets.($_.BaseName)) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
+            $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name ($_.BaseName) -MemberType NoteProperty) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
             $DonationPools += $_.BaseName
             $Config.Pools | Add-Member $_.BaseName $DonationData1 -Force
             $DonateNow = $true
@@ -508,12 +517,14 @@ while ($true) {
         if ( $DonateNow ) {
             $ConfigTimeStamp = 0
             $DonationPoolsAvail = @(Compare-Object $DonationPools $DonationData.Pools -PassThru -IncludeEqual -ExcludeDifferent)
+            $Config | Add-Member Algorithm $DonationData.Algorithm -Force
             if (-not $DonationPoolsAvail) {            
                 $Config | Add-Member ExcludePoolName @() -Force
             } else {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
                 $Config | Add-Member ExcludePoolName @(Compare-Object $DonationPools $DonationPoolsAvail -PassThru) -Force
             }
+            Write-Log "Donation run startet for $(($LastDonated-($Timer.AddHours($DonateDelayHours))).Minutes +1) minutes. "
         }
     }
 
@@ -527,36 +538,32 @@ while ($true) {
         if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {
             $AllPools = $null
         }
-    }
-    # .. for user changes
-    if (($ConfigBackup | ConvertTo-Json -Compress) -ne ($UserConfig | ConvertTo-Json -Compress)) {
 
-        Write-Log "Config changed -> Reset "
+        if (-not $DonateNow) {
+            Write-Log "Config changed -> Reset "
 
-        #Clear balances if pool configuration or flag has changed
-        if ($ConfigBackup.ShowPoolBalances -ne $UserConfig.ShowPoolBalances) {
-            $Balances = $null
-        }
-        if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($UserConfig.Pools | ConvertTo-Json -Compress)) {
-            $Balances = $null
-        }
-
-        #Load information about the devices
-        $Devices = @(Get-Device $Config.DeviceName | Select-Object)
-        $DevicesByTypes = [PSCustomObject]@{
-            NVIDIA = @(Select-Device $Devices "NVIDIA")
-            AMD = @(Select-Device $Devices "AMD")
-            CPU = @(Select-Device $Devices "CPU")
-        }
-        if ($Config.LegacyMining) {
-            $DevicesByTypes.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
-                $Device_LegacyModel = $_
-                $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $Device_LegacyModel -Force}
+            #Clear balances if pool configuration or flag has changed
+            if (($ConfigBackup.ShowPoolBalances -ne $UserConfig.ShowPoolBalances) -or (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($UserConfig.Pools | ConvertTo-Json -Compress))) {
+                $Balances = $null
             }
-        }
 
-        #Give API access to the device information
-        $API.Devices = $Devices
+            #Load information about the devices
+            $Devices = @(Get-Device $Config.DeviceName | Select-Object)
+            $DevicesByTypes = [PSCustomObject]@{
+                NVIDIA = @(Select-Device $Devices "NVIDIA")
+                AMD = @(Select-Device $Devices "AMD")
+                CPU = @(Select-Device $Devices "CPU")
+            }
+            if ($Config.LegacyMining) {
+                $DevicesByTypes.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
+                    $Device_LegacyModel = $_
+                    $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $Device_LegacyModel -Force}
+                }
+            }
+
+            #Give API access to the device information
+            $API.Devices = $Devices
+        }
     }
 
     #Check for GPU failure and reboot, if needed
@@ -691,8 +698,8 @@ while ($true) {
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {($Config.Algorithm.Count -eq 0 -or (Compare-Object $Config.Algorithm $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0) -and ((Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0)} | 
             Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object $Config.ExcludeAlgorithm $_.HashRates.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
-            Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-            Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
+            Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
+            Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
     }
     Write-Log "Calculating profit for each miner. "
     $AllMiners | ForEach-Object {
@@ -1016,7 +1023,7 @@ while ($true) {
     #Display mining information
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
         $Miner_DeviceModel = $_.DeviceModel
-        Write-Host "$($_.DeviceModel): $($_.DeviceName -join ',')"
+        Write-Host "$(($Devices | Where-Object Model -eq $Miner_DeviceModel | Select-Object -ExpandProperty Model_Name -Unique) -join ', ')"
         $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table (
             @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
             @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}}, 

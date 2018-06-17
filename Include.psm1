@@ -1439,8 +1439,8 @@ function Read-HostString {
         }
         elseif ($Mandatory -or $Result.Length -gt 0) {
             if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
-            if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($Length) characters";Write-Host " ";$Repeat = $true}
-            if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($Length) characters";Write-Host " ";$Repeat = $true}
+            if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($MinLength) characters";Write-Host " ";$Repeat = $true}
+            if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($MaxLength) characters";Write-Host " ";$Repeat = $true}
             if ($Valid.Count -gt 0) {
                 if ($Valid -inotcontains $Result) {
                     Write-Host "Invalid input (type `"list`" to show all valid)";
@@ -1452,6 +1452,56 @@ function Read-HostString {
             }
         }
     } until (-not $Repeat -and ($Result.Length -gt 0 -or -not $Mandatory))
+    $Result
+}
+
+function Read-HostDouble {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt,
+        [Parameter(Mandatory = $False)]
+        $Default = $null,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Mandatory = $False,
+        [Parameter(Mandatory = $False)]
+        $Min = $null,
+        [Parameter(Mandatory = $False)]
+        $Max = $null
+    )        
+    do{
+        $Repeat = $false
+        [Double]$Result = $(if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result}) -replace "[^0-9\.,\-]","" -replace ",","."
+        if ($Mandatory -or $Result) {            
+            if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
+            if ($Max -ne $null -and $Result -gt $Max) {Write-Host "The input is higher than the maximum of $($Max)";Write-Host " ";$Repeat = $true}
+        }
+    } until (-not $Repeat -and ($Result -or -not $Mandatory))
+    $Result
+}
+
+function Read-HostInt {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt,
+        [Parameter(Mandatory = $False)]
+        $Default = $null,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Mandatory = $False,
+        [Parameter(Mandatory = $False)]
+        $Min = $null,
+        [Parameter(Mandatory = $False)]
+        $Max = $null
+    )    
+    do{
+        $Repeat = $false
+        [Int]$Result = $(if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result}) -replace "[^0-9\-]",""
+        if ($Mandatory -or $Result) {            
+            if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
+            if ($Max -ne $null -and $Result -gt $Max) {Write-Host "The input is higher than the maximum of $($Max)";Write-Host " ";$Repeat = $true}
+        }
+    } until (-not $Repeat -and ($Result -or -not $Mandatory))
     $Result
 }
 
