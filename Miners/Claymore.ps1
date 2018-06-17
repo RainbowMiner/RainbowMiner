@@ -66,8 +66,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
-    $Miner_Fee = 0
-    if (Select-Device $Device -MinMemSize 2.1Gb) {$Miner_Fee=$DevFee}
+    $Fee = 0
+    if (Select-Device $Device -MinMemSize 2.1Gb) {$Fee=$DevFee}
 
     switch($Miner_Vendor) {
         "NVIDIA" {$Arguments_Platform = " -platform 2"}
@@ -99,12 +99,13 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     $Miner_Name = (@("$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')$($SecondaryAlgorithm_Norm)$(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity})") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
                     $Arguments_Secondary = " -mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
-                    if ($Miner_Fee -gt 0) {$Miner_Fee = $DevFeeDual}
+                    if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
                 }
                 else {
                     $Miner_Name = (@("$($Name)$($MainAlgorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                     $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
                     $Arguments_Secondary = " -mode 1"
+                    $Miner_Fee = $Fee
                 }
 
                 [PSCustomObject]@{
