@@ -31,7 +31,14 @@ function Get-Balance {
 
             $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {
                     if ($NewRates.$_) {$Value=$NewRates.$_}
-                    else {$Value = [Double]1/(Get-Ticker -Symbol $_ | Select-Object -ExpandProperty BTC | Select-Object -ExpandProperty price)}                
+                    else {
+                        $Ticker = Get-Ticker -Symbol $_ -BTCprice
+                        if ($Ticker) {
+                            $Value = [Double]1/$Value
+                        } else {
+                            $Value = 0
+                        }
+                    }                
                     $Rates | Add-Member $_ ([Double]$Value) -Force
             }
 
@@ -67,7 +74,7 @@ function Get-Balance {
 
 function Get-Ticker {
     [CmdletBinding()]
-    param($Symbol, $Convert)
+    param($Symbol, $Convert, [Switch]$BTCprice)
 
     if (-not $Convert) {$Convert="BTC"}
 
@@ -104,8 +111,16 @@ function Get-Ticker {
         Write-Log -Level Warn "Coinmarketcap API (ticker) returned nothing. "
         return
     }
-
-    $Request | Select -ExpandProperty data | Select -ExpandProperty quotes        
+    if (Get-Member -InputObject $Request -Name data -MemberType Properties) {
+        $Request = $Request | Select -ExpandProperty data
+        if (Get-Member -InputObject $Request -Name quotes -MemberType Properties) {
+            $Request = $Request | Select -ExpandProperty quotes
+            if ($BTCprice -and (Get-Member -InputObject $Request -Name BTC -MemberType Properties)) {
+                $Request = $Request | Select -ExpandProperty BTC
+                if (Get-Member -InputObject $Request -Name price -MemberType Properties) {$Request | Select -ExpandProperty price}
+            } else {$Request}
+        }
+    }
 }
 
 Function Write-Log {
