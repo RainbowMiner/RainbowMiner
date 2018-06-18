@@ -163,7 +163,7 @@ Each miner can be configured by it's own section, in the miners.config.txt
 Example:
 
     {
-        "CcminerAlexis78":  [
+        "CcminerAlexis78-NVIDIA":  [
                                 {
                                     "MainAlgorithm":  "c11",
                                     "SecondaryAlgorithm":  "",
@@ -190,12 +190,27 @@ Example:
                                     "Params":  "-m 2 -i 19,29",
                                     "Profile":  ""
                                 }
-                            ]                        
+                            ],
+        "Sgminer-AMD":  [
+                                {
+                                    "MainAlgorithm":  "lyra2rev2",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "--gpu-threads 2 --worksize 128 --intensity d",
+                                    "Profile":  ""
+                                },
+                                {
+                                    "MainAlgorithm":  "neoscrypt",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "--gpu-threads 1 --worksize 64 --intensity 15",
+                                    "Profile":  ""
+                                }
+                            ]                                                   
     }
 
 .. this adds extra command line parameters "-i 21" and "-m 2 -i 19,29" to
-- "CcminerAlexis78": miner CcminerAlexis78 in LegacyMining mode (only mine on selected amd,nvidia,cpu together), Algorithms c11 and keccak
+- "CcminerAlexis78-NVIDIA": miner CcminerAlexis78 in LegacyMining mode, mine on all selected nvidia GPU, Algorithms c11 and keccak
 - "CcminerAlexis78-GTX1070": miner CcminerAlexis78 in non-LegacyMining mode on selected GPU devices with model name GTX1070, Algorithms c11 and keccak
+- "Sgminer-AMD": miner Sgminer in LegacyMining mode, mine on all selected amd GPU, Algorithms c11 and keccak
 - "MainAlgorithm": alogrithm, for which the extra configuration will be used
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
