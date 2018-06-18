@@ -105,6 +105,7 @@ function scrollto(div)
     <br>
 
     <script>
+    var initdone = false
     function algorithms(algos) {
         var keys = Object.keys(algos).join(',');
         if (keys.match(/^[\d\,]+$/)) keys = algos.join(',');
@@ -241,7 +242,11 @@ function scrollto(div)
         });
     }
 
-    function fastestminers() {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function miners() {
         alldevices = {}
         allmodels = []
         $.getJSON("/devices", function (data) {
@@ -249,19 +254,24 @@ function scrollto(div)
                 if (typeof alldevices[device.Model] === "undefined") { alldevices[device.Model] = []; allmodels.push(device.Model) }
                 if (-1 == $.inArray(device.Model_Name,alldevices[device.Model])) alldevices[device.Model].push(device.Model_Name)                
             })
-            var insobj = $('#runningminers');
+            var insobj = $("#runningminers");
             $.each(alldevices, function (key, val) {
                 alldevices[key].sort()
                 insobj = insobj.after('<div class="minerblock" id="fastestminers-' + key + '"><h1>Fastest Miners on ' + val.join(',') + '</h1><div class="table"></div></div>').next()
                 minertable("fastestminers-" + key);
             });
-        })        
+            minertable("runningminers");
+            initdone = true
+        })
     }
 
     function select(tab) {
         $("div.contentblock").each(function () {
             if ($(this).attr('id') == tab) {
                 if (tab == "setup") loadsetup();
+                else if (tab == "miners") {
+                    if (!initdone) miners();
+                }
                 $(this).show();
             }
             else $(this).hide();
@@ -271,11 +281,9 @@ function scrollto(div)
     $(function () {
         rainbow();
         select("miners");
-        minertable("runningminers");
-        fastestminers();
 
         $(function() {
-            $('#configform').validity()
+            $("#configform").validity()
                 .on('submit', function(e) {
                     var $this = $(this),
                     $btn = $this.find('[type="submit"]');
