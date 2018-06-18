@@ -8,7 +8,7 @@
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch per selected GPUs models or alternative GPU vendor**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
-- **Web-Interface through localhost (in development)**
+- **Web-Interface through http://localhost:3999 (in development)**
 - **Switch MSI Afterburner profiles per miner**
 - **Easy setup - simply click Start.bat (RainbowMiner will ask for your credentials)**
 - **Change global, miner and pool-configuration during runtime**
@@ -200,6 +200,17 @@ Example:
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
 - "Profile": desired MSI Afterburner profile
+
+
+## WEB-INTERFACE
+
+For your convenience, you can monitor and setup RainbowMiner using your web browser. Simply open the URL [localhost:3999](http://localhost:3999) in a new browser tab.
+The web interface is split into three pages:
+
+- Home: the actual running miners plus the fastest miners, sorted by the selected devices.
+- Pools: a list of all available pools. You can change the pool parameters, like currencies and penalty (under development)
+- Setup: general setup of the runtime parameters (under development)
+
 
 ## CREDITS
 
