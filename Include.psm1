@@ -1287,7 +1287,7 @@ function Get-GPUplatformID {
     $Types = Get-GPUtypeslist $Type
     $IxFound = -1
     $Ix = -1
-    [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object { $Ix++; if ( Compare-Object $_.Vendor $Types -IncludeEqual -ExcludeDifferent ) { $IxFound = $Ix } }
+    [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {$Ix++; if ((Compare-Object $_.Vendor $Types -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {$IxFound = $Ix}}
     $IxFound
 }
 
@@ -1302,7 +1302,7 @@ function Select-Device {
         [Long]$MinMemSize = 0
     )
     $GPUVendors = Get-GPUtypeslist $Type
-    $Devices | Where-Object { ($_.Type -eq "CPU" -and $Type -contains "CPU") -or ($_.Type -eq "GPU" -and $_.OpenCL.GlobalMemsize -ge $MinMemSize -and (Compare-Object $_.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent)) }
+    $Devices | Where-Object { ($_.Type -eq "CPU" -and $Type -contains "CPU") -or ($_.Type -eq "GPU" -and $_.OpenCL.GlobalMemsize -ge $MinMemSize -and (Compare-Object $_.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) }
 }
 
 function Get-DeviceVendor {
@@ -1313,7 +1313,7 @@ function Get-DeviceVendor {
     )
     @("AMD","NVIDIA","INTEL") | Foreach-Object {
         $GPUVendors = Get-GPUtypeslist $_
-        if (Compare-Object $Device.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent){$_}
+        if ((Compare-Object $Device.Vendor $GPUVendors -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0){$_}
     }
 }
 
@@ -1323,9 +1323,11 @@ function Get-DeviceModelName {
         [Parameter(Mandatory = $True)]
         [PSCustomObject]$Device,
         [Parameter(Mandatory = $False)]
-        [Array]$Name = @()
+        [Array]$Name = @(),
+        [Parameter(Mandatory = $False)]
+        [Switch]$Short
     )
-    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique
+    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Foreach-Object {if ($Short){($_ -replace "geforce|intel|(r)","").Trim()}else {$_}}
 }
 
 function Get-GPUIDs {
@@ -1543,7 +1545,7 @@ function Read-HostArray {
         $Repeat = $false
         [Array]$Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=@()}
-        if (Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual) {
+        if ((Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual | Measure-Object).Count -gt 0) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true

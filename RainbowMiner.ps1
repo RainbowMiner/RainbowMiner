@@ -553,7 +553,7 @@ while ($true) {
 
         #Actions, when config has changes (or initial)
         # .. for every change
-        if ($ConfigBackup.LegacyMining -ne $Config.LegacyMining -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName)) {
+        if ($ConfigBackup.LegacyMining -ne $Config.LegacyMining -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
             Write-Log "Device configuration changed. Refreshing now. "
 
             #Load information about the devices
@@ -1073,7 +1073,7 @@ while ($true) {
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
         @{Label = "Miner"; Expression = {@($_.Name -split '-') | Select-Object -Index 0}},
-        @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName)) -join ','}}, 
+        @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}}, 
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
     ) | Out-Host
 
@@ -1081,7 +1081,7 @@ while ($true) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogReset) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {@($_.MinerName -split '-') | Select-Object -Index 0}},
-            @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName)) -join ','}}, 
+            @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
             @{Label = "Algorithm"; Expression = {$_.Algorithm}}, 
             @{Label = "Watchdog Timer"; Expression = {"{0:n0} Seconds" -f ($Timer - $_.Kicked | Select-Object -ExpandProperty TotalSeconds)}; Align = 'right'}
