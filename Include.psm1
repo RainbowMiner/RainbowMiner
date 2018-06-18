@@ -26,21 +26,12 @@ function Get-Balance {
 
     try {
         if (Test-Path "Balances") {        
-            @($Balances = Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
+            $Balances = Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
                 Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
-            } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru})
+            } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru}
 
-            $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {
-                    if ($NewRates.$_) {$Value=$NewRates.$_}
-                    else {
-                        $Ticker = Get-Ticker -Symbol $_ -BTCprice
-                        if ($Ticker) {
-                            $Value = [Double]1/$Value
-                        } else {
-                            $Value = 0
-                        }
-                    }                
-                    $Rates | Add-Member $_ ([Double]$Value) -Force
+            $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {                    
+                    $Rates | Add-Member $_ $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -BTCprice;if ($Ticker) {[Double]1/$Ticker} else {0}}) -Force
             }
 
             # Add total of totals

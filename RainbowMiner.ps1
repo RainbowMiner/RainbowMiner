@@ -239,6 +239,9 @@ while ($true) {
                     LegacyMining        = $LegacyMining
                 } | Select-Object -ExpandProperty Content
 
+                $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
+                $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+
                 $ReReadConfig = $false
 
                 if ($RunSetup) {
