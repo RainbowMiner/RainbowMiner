@@ -1441,24 +1441,28 @@ function Read-HostString {
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
     do{
         $Repeat = $false
-        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters)]+",""}
-        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}
-        if (@("help","list") -icontains $Result) {
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
+        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}                
+        if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",");Write-Host " "}
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true
         }
-        elseif ($Mandatory -or $Result.Length -gt 0) {
-            if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
-            if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($MinLength) characters";Write-Host " ";$Repeat = $true}
-            if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($MaxLength) characters";Write-Host " ";$Repeat = $true}
-            if ($Valid.Count -gt 0) {
-                if ($Valid -inotcontains $Result) {
-                    Write-Host "Invalid input (type `"list`" to show all valid)";
-                    Write-Host " ";
-                    $Repeat = $true
-                } else {
-                    [String]$Result = Compare-Object $Valid @($Result) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Index 0
+        else {
+            [String]$Result = $Result -replace "[^$($Characters)]+",""
+            if ($Mandatory -or $Result.Length -gt 0) {
+                if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
+                if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($MinLength) characters";Write-Host " ";$Repeat = $true}
+                if ($MaxLength -gt 0 -and $Result.Length -gt $MaxLength) {Write-Host "The input is longer than the maximum of $($MaxLength) characters";Write-Host " ";$Repeat = $true}
+                if ($Valid.Count -gt 0) {
+                    if ($Valid -inotcontains $Result) {
+                        Write-Host "Invalid input (type `"list`" to show all valid)";
+                        Write-Host " ";
+                        $Repeat = $true
+                    } else {
+                        [String]$Result = Compare-Object $Valid @($Result) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Index 0
+                    }
                 }
             }
         }
@@ -1482,7 +1486,9 @@ function Read-HostDouble {
     )        
     do{
         $Repeat = $false
-        [Double]$Result = $(if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result}) -replace "[^0-9\.,\-]","" -replace ",","."
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
+        if ("exit","cancel" -icontains $Result){$Result;return}
+        [Double]$Result = $Result -replace "[^0-9\.,\-]","" -replace ",","."
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
             if ($Max -ne $null -and $Result -gt $Max) {Write-Host "The input is higher than the maximum of $($Max)";Write-Host " ";$Repeat = $true}
@@ -1507,7 +1513,9 @@ function Read-HostInt {
     )    
     do{
         $Repeat = $false
-        [Int]$Result = $(if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result}) -replace "[^0-9\-]",""
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
+        if ("exit","cancel" -icontains $Result){$Result;return}
+        [Int]$Result = $Result -replace "[^0-9\-]",""
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
             if ($Max -ne $null -and $Result -gt $Max) {Write-Host "The input is higher than the maximum of $($Max)";Write-Host " ";$Repeat = $true}
@@ -1534,21 +1542,25 @@ function Read-HostArray {
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
     do{
         $Repeat = $false
-        [Array]$Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"}
-        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=@()}
-        if ((Compare-Object $Result @("help","list") -ExcludeDifferent -IncludeEqual | Measure-Object).Count -gt 0) {
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
+        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}        
+        if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true
-        } elseif ($Valid.Count -gt 0) {
-            if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
-                Write-Host "The following entries are invalid (type `"list`" to show all valid):"
-                Write-Host $($Invalid -join ",")
-                Write-Host " "
-                $Repeat = $true
-            } else {
-                [Array]$Result = Compare-Object $Valid $Result -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
-            }           
+        } else {
+            [Array]$Result = $Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"
+            if ($Valid.Count -gt 0) {
+                if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
+                    Write-Host "The following entries are invalid (type `"list`" to show all valid):"
+                    Write-Host $($Invalid -join ",")
+                    Write-Host " "
+                    $Repeat = $true
+                } else {
+                    [Array]$Result = Compare-Object $Valid $Result -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+                }           
+            }
         }
     } until (-not $Repeat -and ($Result.Count -gt 0 -or -not $Mandatory))
     $Result
@@ -1563,7 +1575,9 @@ function Read-HostBool {
         $Default = $false
     )
     if ($Default -isnot [bool]){$Default = "yes","y","1","j","ja","oui","si","da" -icontains $Default}
-    [Bool]$(if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$(if($Default){"yes"}else{"no"})]").Trim()) -eq ''){$Default}else{"yes","y","1","j","ja","oui","si","da" -icontains $Result})
+    $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$(if($Default){"yes"}else{"no"})]").Trim()) -eq ''){$Default}else{$Result.Trim()}
+    if ("exit","cancel" -icontains $Result){$Result;return}
+    [Bool]("yes","y","yea","yeah","1","j","ja","oui","si","da" -icontains $Result)
 }
 
 function Get-MinerConfigDefault {
