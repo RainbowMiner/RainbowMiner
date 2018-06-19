@@ -31,11 +31,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 #    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 #    $Miner_Model = $_.Model
 
-$Devices | Select-Object Vendor -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor
+    $Miner_Device = @($Devices | Where-Object Model -notmatch '-')
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-    $Miner_Model = "NVIDIA"
-
+    $Miner_Model = @($Miner_Device | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-'
     $DeviceIDsAll = Get-GPUIDs $Miner_Device
 
     $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
@@ -81,4 +79,4 @@ $Devices | Select-Object Vendor -Unique | ForEach-Object {
         catch {
         }
     }
-}
+#}
