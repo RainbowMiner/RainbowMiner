@@ -33,5 +33,5 @@
   "MSIApath": "$MSIApath",
   "MSIAprofile": "$MSIAprofile",
   "UIstyle": "$UIstyle",
-  "LegacyMining": "$LegacyMining"
+  "MiningMode": "$MiningMode"
 }

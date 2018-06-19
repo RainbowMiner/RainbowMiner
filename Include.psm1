@@ -1595,3 +1595,46 @@ function Get-MinerConfigDefault {
     }
     $Done
 }
+
+function Get-DeviceSubsets($Device) {
+    $Models = @($Device | Select-Object Model,Model_Name -Unique)
+    if ($Models.Count) {
+        $a = @();0..$($Models.Count-1) | Foreach-Object {$a+=$_}
+        @(Get-Subsets $a | Where-Object {$_.Length -gt 1} | Foreach-Object{
+            [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[string]$_/1]}) | Sort-Object -Property Model
+            [PSCustomObject]@{
+                Model = @($x.Model)
+                Model_Name = @($x.Model_Name)
+                Name = @($Device | Where-Object {$x.Model -icontains $_.Model} | Select-Object -ExpandProperty Name -Unique | Sort-Object)
+            }
+        })
+    }
+}
+
+function Get-Subsets($a){
+    #uncomment following to ensure only unique inputs are parsed
+    #e.g. 'B','C','D','E','E' would become 'B','C','D','E'
+    $a = $a | Select-Object -Unique
+    #create an array to store output
+    $l = @()
+    #for any set of length n the maximum number of subsets is 2^n
+    for ($i = 0; $i -lt [Math]::Pow(2,$a.Length); $i++)
+    { 
+        #temporary array to hold output
+        [string[]]$out = New-Object string[] $a.length
+        #iterate through each element
+        for ($j = 0; $j -lt $a.Length; $j++)
+        { 
+            #start at the end of the array take elements, work your way towards the front
+            if (($i -band (1 -shl ($a.Length - $j - 1))) -ne 0)
+            {
+                #store the subset in a temp array
+                $out[$j] = $a[$j]
+            }
+        }
+        #stick subset into an array
+        $l += -join $out
+    }
+    #group the subsets by length, iterate through them and sort
+    $l | Group-Object -Property Length | %{$_.Group | sort}
+}

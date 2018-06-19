@@ -75,7 +75,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
     [Parameter(Mandatory = $false)]
-    [Switch]$LegacyMining = $false, # if set to $true, all GPUs will only be separated into NVIDIA and AMD
+    [String]$MiningMode = "device", # set to "legacy","device","combo"
     [Parameter(Mandatory = $false)]
     [String]$MSIApath = "c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", # installation path of MSI Afterburner
     [Parameter(Mandatory = $false)]
@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.6.0.2"
+$Version = "3.6.1.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -132,6 +132,7 @@ $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
+$ComboMiningMode = $true
 
 #Cleanup the log
 if (Test-Path ".\Logs"){
@@ -237,7 +238,7 @@ while ($true) {
                     MSIApath            = $MSIApath
                     MSIAprofile         = $MSIAprofile
                     UIstyle             = $UIstyle
-                    LegacyMining        = $LegacyMining
+                    MiningMode          = $MiningMode
                 } | Select-Object -ExpandProperty Content
 
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
@@ -306,13 +307,16 @@ while ($true) {
                                 $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
-                                $Config.LegacyMining = Read-HostBool "Always use one miner per all nvidia or amd, only" -Default $Config.LegacyMining | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                $Config.MiningMode = Read-HostBool "Select mining mode (legacy/device/combo)" -Default $Config.MiningMode -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                if ($Config.MiningMode -like "l*") {$Config.MiningMode="legacy"}
+                                elsif ($Config.MiningMode -like "c*") {$Config.MiningMode="combo"}
+                                else {$Config.MiningMode="device"}
                         
                                 $AvailDeviceName = @()
                                 $SetupDevices = Get-Device "nvidia","amd","cpu"
                                 if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
                                 if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}               
-                                if (-not $Config.LegacyMining) {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
+                                if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
 
                                 $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
@@ -329,11 +333,11 @@ while ($true) {
                                 $ConfigActual | Add-Member MinerName $($Config.MinerName -join ",") -Force
                                 $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
                                 $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
-                                $ConfigActual | Add-Member LegacyMining $(if ($Config.LegacyMining){"1"}else{"0"}) -Force
+                                $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
                                 $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
                                 $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
                                 $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
-                                $ConfigActual | Add-Member UIstyle $(if ($Config.UIstyle -eq "lite"){"lite"}else{"full"}) -Force
+                                $ConfigActual | Add-Member UIstyle $Config.UIstyle -Force
                                 $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                 $ConfigActual | Add-Member Interval $Config.Interval -Force
                                 $ConfigActual | Add-Member Donate $Config.Donate -Force
@@ -373,23 +377,33 @@ while ($true) {
 
                             $AvailDeviceName = @()
                             $SetupDevices = Get-Device "nvidia","amd","cpu"
-                            if ($Config.LegacyMining) {
-                                if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
-                                if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}
-                                if (Select-Device $SetupDevices "cpu") {$AvailDeviceName += "cpu"}
-                            } else {
-                                $SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}
-                            }
+                            if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
+                            if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "NVIDIA"}
+                            if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "AMD"}
+                            if (Select-Device $SetupDevices "cpu") {$AvailDeviceName += "CPU"}
+                            $AvailDeviceName = $AvailDeviceName | Select-Object -Unique | Sort-Object
 
                             $MinerSetupDone = $false
                             do {
                                 try {
                                     $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
                                     if ($EditMinerName -eq '') {throw}
-                                    $EditDeviceName = Read-HostString -Prompt ".. running on which device? (leave empty to end miner config)" -Characters "A-Z0-9#" -Valid $AvailDeviceName
-                                    if (-not $EditDeviceName.Count) {theow}
+                                    if ($Config.MiningMode -eq "Legacy") {
+                                        $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (leave empty to end miner config)" -Characters "A-Z" -Valid $AvailDeviceName
+                                        if ($EditDeviceName -eq '') {throw}
+                                    } else {
+                                        [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (leave empty to end miner config)" -Characters "A-Z0-9#" -Valid $AvailDeviceName
+                                        ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
+                                            if ($EditDeviceName_Array -icontains $EditDevice0) {
+                                                $EditDeviceName_Array = @(Select-Device $SetupDevices "nvidia" | Select-Object -ExpandProperty Model -Unique)
+                                                break
+                                            }
+                                        }
+                                        [String]$EditDeviceName = @($EditDeviceName_Array | Sort-Object) -join '-'
+                                        if ($EditDeviceName -eq '') {throw}
+                                    }
                                     $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (leave empty to end miner config)" -Characters "A-Z0-9" -Valid (Get-Algorithms)
-                                    if (-not $EditAlgorithm.Count) {theow}
+                                    if ($EditAlgorithm -eq '') {throw}
                                     $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms)
                         
                                     $EditMinerName += "-" + $EditDeviceName
@@ -575,7 +589,7 @@ while ($true) {
 
         #Actions, when config has changes (or initial)
         # .. for every change
-        if ($ConfigBackup.LegacyMining -ne $Config.LegacyMining -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
+        if ($ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
             Write-Log "Device configuration changed. Refreshing now. "
 
             #Load information about the devices
@@ -584,12 +598,26 @@ while ($true) {
                 NVIDIA = @(Select-Device $Devices "NVIDIA")
                 AMD = @(Select-Device $Devices "AMD")
                 CPU = @(Select-Device $Devices "CPU")
+                Combos = [PSCustomObject]@{}
             }
-            if ($Config.LegacyMining) {
+            if ($Config.MiningMode -eq "legacy") {
                 $DevicesByTypes.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
                     $Device_LegacyModel = $_
                     $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $Device_LegacyModel -Force}
                 }
+            } elseif ($Config.MiningMode -eq "combo") {
+                #Create combos
+                @("NVIDIA","AMD","CPU") | Foreach-Object {
+                    $SubsetType = [String]$_
+                    $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
+                    if ($SubsetType -ne "CPU") {
+                        Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
+                            $SubsetModel= $_
+                            $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+                        }
+                        $DevicesByTypes.$SubsetType += $DevicesByTypes.Combos.$SubSetType
+                    }
+                }     
             }
 
             #Give API access to the device information
@@ -619,7 +647,7 @@ while ($true) {
 
     $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
     $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
-
+    
     #Update the exchange rates
     try {
         Write-Log "Updating exchange rates from Coinbase. "
@@ -732,6 +760,34 @@ while ($true) {
             Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
     }
+    if ($Config.MiningMode -eq "combo") {
+        if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
+            #Benchmarking is still ongoing - remove device combos from miners
+            $AllMiners = $AllMiners | Where-Object {$_.DeviceModel -notmatch '-'}
+        } else {
+            #Remove device combos, where the parameter-preset is different and there does not exist an own definition
+            $AllMiners = $AllMiners | Where-Object {
+                $_.DeviceModel -notmatch '-' -or 
+                (Get-Member -InputObject $Config.Miners -Name $(@($_.BaseName) + @($_.DeviceModel) + @($_.HashRates.PSObject.Properties.Name) -join '-') -MemberType NoteProperty) -or 
+                $($Miner = $_; (@($Miner.DeviceModel -split '-') | Foreach-Object {
+                    $Miner_ConfigName = @($Miner.BaseName) + @($_) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+                    if (Get-Member -InputObject $Config.Miners -Name $Miner_ConfigName -MemberType NoteProperty){$Config.Miners.$Miner_ConfigName.Params}
+                } | Select-Object -Unique | Measure-Object).Count -le 1)
+            }
+
+            #Gather mining statistics for fresh combos
+            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -match '-'} | Foreach-Object {
+                $ComboMiner = $_
+                $ComboAlgos = $ComboMiner.HashRates.PSObject.Properties.Name
+                $AllMiners | 
+                    Where-Object {$_.BaseName -eq $ComboMiner.BaseName -and $_.DeviceModel -notmatch '-' -and $($ComboMiner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($ComboMiner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} | 
+                    Select-Object -ExpandProperty HashRates |
+                    Measure-Object -Sum @($ComboAlgos) |
+                    Foreach-Object {$ComboMiner.HashRates."$($_.Property)" = $_.Sum}
+            }
+        }
+    }
+
     Write-Log "Calculating profit for each miner. "
     $AllMiners | ForEach-Object {
         $Miner = $_
@@ -745,7 +801,7 @@ while ($true) {
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
-       
+
         $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.DeviceModel) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
             if ($Config.Miners.$Miner_CommonCommands.Params) {
@@ -753,6 +809,14 @@ while ($true) {
             }
             if ($Config.Miners.$Miner_CommonCommands.Profile) {
                 $Miner | Add-Member -Name MSIAprofile -Value $Config.Miners.$Miner_CommonCommands.Profile -MemberType NoteProperty -Force
+            }
+        } elseif ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
+            #combo handling - we know that combos always have equal params, because we preselected them, already
+            $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+            if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
+                if ($Config.Miners.$Miner_CommonCommands.Params) {
+                    $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
+                }
             }
         }
 
