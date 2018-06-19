@@ -11,14 +11,14 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 $Commands = [PSCustomObject]@{
     "aeriumx"    = " -N 1" #AeriumX, new in 1.11
     "bitcore"    = " -N 1" #Bitcore
-    "c11"        = " -N 1" # New in 1.11
-    "phi"        = " -N 1" #PHI
+    #"c11"        = " -N 1" # New in 1.11
+    #"phi"        = " -N 1" #PHI
     "polytimos"  = " -N 1" #Polytimos
     "skunk"      = " -N 1" #Skunk, new in 1.11
     "timetravel" = " -N 1" #Timetravel8
     "tribus"     = " -N 1" #Tribus, new in 1.10
     #"x16r"       = " -N 100" #Raven, Ravencoin-Miner 3.0 is faster 
-    "x16s"       = "" #Pigeon
+    #"x16s"       = "" #Pigeon
     "x17"        = " -N 1" #X17
     "xevan"      = " -N 1" #Xevan, new in 1.09a
     "vit"        = " -N 1" #Vitality, new in 1.09a

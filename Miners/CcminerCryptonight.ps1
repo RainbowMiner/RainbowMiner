@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-CryptoNight\ccminer-cryptonight.exe"
-$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.02/ccminer-cryptonight-302-x64.zip"
+$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.04/ccminer-cryptonight-304-x64-cuda92.zip"
 $Port = "105{0:d2}"
 
 $Devices = $Devices.NVIDIA
