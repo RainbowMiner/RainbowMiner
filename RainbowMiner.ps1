@@ -626,6 +626,7 @@ while ($true) {
 
             #Give API access to the device information
             $API.Devices = $Devices
+            $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
         }
     }
 

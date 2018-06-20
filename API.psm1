@@ -120,6 +120,11 @@
                     $Data = $API.Devices | ConvertTo-Json
                     Break
                 }
+                "/devicecombos" {
+                    $Data = $API.DeviceCombos | ConvertTo-Json
+                    if ($Data -notmatch '^\[') {$Data = '['+$Data+']'}                    
+                    Break
+                }
                 "/stats" {
                     $Data = $API.Stats | ConvertTo-Json
                     Break

@@ -149,7 +149,7 @@ function scrollto(div)
     }
 
     function devices(devs) {
-        return alldevices[devs].join(',');
+        return alldevices[devs];
         return devs.join(',').replace(/GPU#/g, '');
     }
 
@@ -159,29 +159,32 @@ function scrollto(div)
 
     function minertable(id) {
         (function p() {
-            $.getJSON("/" + id.split('-')[0], function (data) {
+            $.getJSON("/" + id, function (data) {
                 if (data.Name) data = [data];
-                var rows = [], data_labels = [], data_values = [];
+                var data_labels = [], data_values = {};
 
                 if (id == "runningminers" || id == "activeminers") {
                     data_labels = ["Miner", "Algorithm", "Current Speed", "Runtime", "Devices"];
-                    $.each(data, function (key, item) { data_values.push([item.Name.split('-')[0], algorithms(item.Algorithm), speed(item.Speed_Live), ticks(item.ActiveTime), devices(item.DeviceModel)]); });
+                    data_values[id] = []
+                    $.each(data, function (key, item) { data_values[id].push([item.Name.split('-')[0], algorithms(item.Algorithm), speed(item.Speed_Live), ticks(item.ActiveTime), devices(item.DeviceModel)]); });
                 }
 
-                if (id.split('-')[0] == "fastestminers") {
+                if (id == "fastestminers") {
                     data_labels = ["Miner", "Algorithm", "Average Speed", "BTC/day", "Pool"];
-                    $.each(data, function (key, item) { data_values.push([item.Name.split('-')[0], algorithms(item.HashRates), speed(item.HashRates), profit(item.Profit), pools(item.HashRates, item.Pools), profit(item.Profit_Bias)]); });
-                    data_values.sort(function (a, b) { return b[5] - a[5] });
+                    $.each(data, function (key, item) { var xid = id + "-" + item.DeviceModel; if (typeof data_values[xid] === "undefined") data_values[xid] = []; data_values[xid].push([item.Name.split('-')[0], algorithms(item.HashRates), speed(item.HashRates), profit(item.Profit), pools(item.HashRates, item.Pools), profit(item.Profit_Bias)]); });
+                    $.each(data_values, function (key, item) { data_values[key].sort(function (a, b) { return b[5] - a[5] }); })
                 }
-
-                data_values.unshift(data_labels);
-                var i = 0;
-                $.each(data_values, function (key, row) {
-                    var cols = [];
-                    $.each(row, function (col, val) { if (cols.length < data_labels.length) cols.push('<div class="column" data-label="' + data_labels[col] + '">' + val + '</div>'); });
-                    rows.push('<div class="' + (i++ ? 'row' : 'table-head') + '">' + cols.join('') + '</div>');
-                });
-                $("#" + id + " div.table").html(rows.join(''));
+ 
+                $.each(data_values, function (xid, values) {                    
+                    values.unshift(data_labels);
+                    var i = 0; var rows = [];
+                    $.each(values, function (key, row) {
+                        var cols = [];
+                        $.each(row, function (col, val) { if (cols.length < data_labels.length) cols.push('<div class="column" data-label="' + data_labels[col] + '">' + val + '</div>'); });
+                        rows.push('<div class="' + (i++ ? 'row' : 'table-head') + '">' + cols.join('') + '</div>');
+                    });
+                    $("#" + xid +" div.table").html(rows.join(''));
+                })
                 setTimeout(p, 10000);
             });
         })();
@@ -247,21 +250,25 @@ function scrollto(div)
     }
 
     function miners() {
+        allcombos = []
         alldevices = {}
-        allmodels = []
-        $.getJSON("/devices", function (data) {
-            $.each(data, function (key,device) {                
-                if (typeof alldevices[device.Model] === "undefined") { alldevices[device.Model] = []; allmodels.push(device.Model) }
-                if (-1 == $.inArray(device.Model_Name,alldevices[device.Model])) alldevices[device.Model].push(device.Model_Name)                
+        $.getJSON("/devicecombos", function (datacombos) {
+            $.each(datacombos, function (key, combo) { allcombos.push(combo) })
+            $.getJSON("/devices", function (datadevices) {
+                $.each(datadevices, function (key, device) { alldevices[device.Model] = device.Model_Name.replace(/(geforce|\(r\)|intel)/i, '').trim(); })
+
+                var insobj = $("#runningminers");
+                $.each(allcombos, function (key, combo) {
+                    var devicenames = []
+                    $.each(combo.split('-'),function(key,devicename){devicenames.push(alldevices[devicename])})
+                    devicenames.sort()
+                    alldevices[combo] = devicenames.join(',')
+                    insobj = insobj.after('<div class="minerblock" id="fastestminers-' + combo + '"><h1>Fastest Miners on ' + alldevices[combo] + '</h1><div class="table"></div></div>').next()                    
+                });
+                minertable("runningminers");
+                minertable("fastestminers");
+                initdone = true
             })
-            var insobj = $("#runningminers");
-            $.each(alldevices, function (key, val) {
-                alldevices[key].sort()
-                insobj = insobj.after('<div class="minerblock" id="fastestminers-' + key + '"><h1>Fastest Miners on ' + val.join(',') + '</h1><div class="table"></div></div>').next()
-                minertable("fastestminers-" + key);
-            });
-            minertable("runningminers");
-            initdone = true
         })
     }
 
