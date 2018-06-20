@@ -602,22 +602,22 @@ while ($true) {
             }
 
             #Create combos
-            @("NVIDIA","AMD","CPU") | Foreach-Object {
+            @($DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
                 $SubsetType = [String]$_
                 $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
                 $DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
-                if ($SubsetType -ne "CPU") {
-                    Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
-                        $SubsetModel= $_
-                        $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
-                    }                                        
-                }
+                Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
+                    $SubsetModel= $_
+                    $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+                }                                        
             }     
 
             if ($Config.MiningMode -eq "legacy") {
-                $DevicesByTypes.FullComboModels.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
+                @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {
                     $Device_LegacyModel = $_
-                    $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $DevicesByTypes.FullComboModels.$Device_LegacyModel -Force}
+                    if ($DevicesByTypes.FullComboModels.$Device_LegacyModel -match '-') {
+                        $DevicesByTypes.$Device_LegacyModel = $DevicesByTypes.Combos.$Device_LegacyModel | Where-Object Model -eq $DevicesByTypes.FullComboModels.$Device_LegacyModel
+                    }
                 }
             } elseif ($Config.MiningMode -eq "combo") {
                 #add combos to DevicesbyTypes
@@ -637,7 +637,7 @@ while ($true) {
                 $CcMiner = $_               
                 $CcMinerName_Array = @($CcMiner.Name -split '-')
                 [String[]]$CcMinerNames = @()
-                $DevicesByTypes.FullComboModels.PSObject.Properties.Name | Where-Object {$CcMinerName_Array.Count -eq 1 -or $_ -eq $CcMinerName_Array[1]} | Foreach-Object {$CcMinerNames += $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels.$_}
+                @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | Where-Object {$CcMinerName_Array.Count -eq 1 -or $_ -eq $CcMinerName_Array[1]} | Foreach-Object {$CcMinerNames += $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels.$_}
                 if ($CcMinerNames.Count -eq 0) {$CcMinerNames += $CcMiner.Name}
                 $CcMinerNames | Foreach-Object {
                     $CcMinerName = $_

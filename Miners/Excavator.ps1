@@ -4,8 +4,7 @@ $Path = ".\Bin\Excavator\excavator.exe"
 $Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.4a/excavator_v1.5.4a_NVIDIA_Win64.zip"
 $Port = "311{0:d2}"
 
-$Devices = $Devices.NVIDIA
-if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices.NVIDIA -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject]@{
     "cryptonightV7" = @()
@@ -35,13 +34,11 @@ $Dcris = [PSCustomObject]@{
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 #$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-#    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-#    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-#    $Miner_Model = $_.Model
-
-    $Miner_Device = @($Devices | Where-Object Model -notmatch '-')
+$Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Devices.NVIDIA | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-    $Miner_Model = @($Miner_Device | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-'
+    $Miner_Model = $_.Model
+
     $DeviceIDsAll = Get-GPUIDs $Miner_Device
 
     $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
@@ -134,4 +131,4 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
         catch {
         }
     }
-#}
+}
