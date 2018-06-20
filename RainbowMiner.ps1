@@ -475,32 +475,6 @@ while ($true) {
             $ConfigCheckFields = $false
         }
     }
-
-    if (Test-Path $PoolsConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
-            $PoolsConfigTimeStamp = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
-                Wallet              = $Config.Wallet
-                UserName            = $Config.UserName
-                WorkerName          = $Config.WorkerName
-                API_ID              = $Config.API_ID
-                API_Key             = $Config.API_Key
-            } | Select-Object -ExpandProperty Content) -Force
-        }
-    }    
-
-    if (Test-Path $MinersConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
-            $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
-            (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object {
-                $CcMinerName = $_.Name                
-                $_.Value | Foreach-Object {                   
-                    $Config.Miners | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
-                }
-            }
-        }
-    }
     
      #Error in Config.txt
     if ($Config -isnot [PSCustomObject]) {
@@ -536,6 +510,19 @@ while ($true) {
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
     }
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
+
+    if (Test-Path $PoolsConfigFile) {
+        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
+            $PoolsConfigTimeStamp = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
+                Wallet              = $Config.Wallet
+                UserName            = $Config.UserName
+                WorkerName          = $Config.WorkerName
+                API_ID              = $Config.API_ID
+                API_Key             = $Config.API_Key
+            } | Select-Object -ExpandProperty Content) -Force
+        }
+    }    
 
     Get-ChildItem "Pools" -File | Where-Object {-not $Config.Pools.($_.BaseName)} | ForEach-Object {
         $Config.Pools | Add-Member $_.BaseName (
@@ -611,29 +598,54 @@ while ($true) {
                 AMD = @(Select-Device $Devices "AMD")
                 CPU = @(Select-Device $Devices "CPU")
                 Combos = [PSCustomObject]@{}
+                FullComboModels = [PSCustomObject]@{}
             }
+
+            #Create combos
+            @("NVIDIA","AMD","CPU") | Foreach-Object {
+                $SubsetType = [String]$_
+                $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
+                $DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
+                if ($SubsetType -ne "CPU") {
+                    Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
+                        $SubsetModel= $_
+                        $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+                    }                                        
+                }
+            }     
+
             if ($Config.MiningMode -eq "legacy") {
-                $DevicesByTypes.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
+                $DevicesByTypes.FullComboModels.PSObject.Properties | Select-Object -ExpandProperty Name | ForEach-Object {
                     $Device_LegacyModel = $_
-                    $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $Device_LegacyModel -Force}
+                    $DevicesByTypes.$Device_LegacyModel | Foreach-Object {$_ | Add-Member Model $DevicesByTypes.FullComboModels.$Device_LegacyModel -Force}
                 }
             } elseif ($Config.MiningMode -eq "combo") {
-                #Create combos
-                @("NVIDIA","AMD","CPU") | Foreach-Object {
-                    $SubsetType = [String]$_
-                    $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
-                    if ($SubsetType -ne "CPU") {
-                        Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
-                            $SubsetModel= $_
-                            $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
-                        }
-                        $DevicesByTypes.$SubsetType += $DevicesByTypes.Combos.$SubSetType
-                    }
-                }     
+                #add combos to DevicesbyTypes
+                @("NVIDIA","AMD","CPU") | Foreach-Object {$DevicesByTypes.$_ += $DevicesByTypes.Combos.$_}     
             }
 
             #Give API access to the device information
             $API.Devices = $Devices
+        }
+    }
+
+    if (Test-Path $MinersConfigFile) {
+        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
+            $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
+            (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object { 
+                $CcMiner = $_               
+                $CcMinerName_Array = @($CcMiner.Name -split '-')
+                [String[]]$CcMinerNames = @()
+                $DevicesByTypes.FullComboModels.PSObject.Properties.Name | Where-Object {$CcMinerName_Array.Count -eq 1 -or $_ -eq $CcMinerName_Array[1]} | Foreach-Object {$CcMinerNames += $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels.$_}
+                if ($CcMinerNames.Count -eq 0) {$CcMinerNames += $CcMiner.Name}
+                $CcMinerNames | Foreach-Object {
+                    $CcMinerName = $_
+                    $CcMiner.Value | Foreach-Object {                   
+                        $Config.Miners | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
+                    }
+                }
+            }
         }
     }
 
@@ -763,7 +775,7 @@ while ($true) {
             ForEach-Object {                
                 if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
                 if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
-                if (-not $Config.MiningMode -ne "legacy" -and @($DevicesByTypes.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_ | Add-Member DeviceModel $(@($DevicesByTypes."$($_.DeviceModel)" | Where-Object Model -notmatch '-' | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force}
+                if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_ | Add-Member DeviceModel $($DevicesByTypes.FullComboModels."$($_.DeviceModel)") -Force}
                 $_
             } | #for backward compatibility            
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
