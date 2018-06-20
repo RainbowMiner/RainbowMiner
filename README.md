@@ -76,6 +76,22 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Zpool https://www.zpool.ca/ (auto-exchange and payout in BTC)
 	
 
+## MSIA AFTERBURNER CONFIGURATION
+
+The MSIA Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU.
+RainbowMiner includes automatic switching those profiles, if you wish. To enable MSI Afterburner handling, check or set the path to MSIA and set the MSI default profile to a number from 1 to 5 
+I recommend you stick to the following profile setup. The overclocking values in brackets (core clock/memory clock) are those I use on my GTX 1070 and are only for illustration. The precise setting per GPU can be done by editing the miners.config.txt
+
+- Profile 1: no overclocking (+0/+0)
+- Profile 2: max. core / max. memory oc (+100/+400), recm. as default
+- Profile 3: max. core / half memory oc (+100/+200), recm. for claymore ethash-keccak, neoscrypt
+- Profile 4: max. core / no memory oc (+100/0), recm. for lyra2re2, lyra2z, x16r, x16s
+- Profile 5: max. core / reduced memory oc (+100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
+
+Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
+The profile will only be set to a value other than the defined default, if all GPU selected by RainbowMiner have the same profile configured (in legacy mode, always the case)
+
+
 ## ADVANCED CONFIGURATION
 
 Config files are found in directory "Config\"
@@ -119,7 +135,10 @@ Config files are found in directory "Config\"
 - MSIApath = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - MSIAprofile = default MSI Afterburner profile (1-5) [default=2]
 - UIstyle = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
-- LegacyMining = set to 1, of you do not want RainbowMiner to differentiate between GPU models: it will break down your devices by NVIDIA, AMD and CPU, only.
+- MiningMode = possible values are "legacy", "device" and "combo", see explanation below
+  - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, AMD, CPU are possible to select.
+  - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
+  - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
 
 
 ### Config\pools.config.txt
