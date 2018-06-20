@@ -1450,7 +1450,7 @@ function Read-HostString {
             $Repeat = $true
         }
         else {
-            [String]$Result = $Result -replace "[^$($Characters)]+",""
+            if ($Characters -ne $null -and $Characters -ne $false -and $Characters.Length) {[String]$Result = $Result -replace "[^$($Characters)]+",""}
             if ($Mandatory -or $Result.Length -gt 0) {
                 if ($Length -gt 0 -and $Result.Length -ne $Length) {Write-Host "The input must be exactly $($Length) characters long";Write-Host " ";$Repeat = $true}
                 if ($MinLength -gt 0 -and $Result.Length -lt $MinLength) {Write-Host "The input is shorter than the minimum of $($MinLength) characters";Write-Host " ";$Repeat = $true}
@@ -1550,6 +1550,7 @@ function Read-HostArray {
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true
         } else {
+            if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
             [Array]$Result = $Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"
             if ($Valid.Count -gt 0) {
                 if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {

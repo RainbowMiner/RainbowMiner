@@ -304,6 +304,15 @@ while ($true) {
                                 $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+
+                                do {
+                                    $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable)" -Default $Config.MSIAprofile -Mandatory -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}                             
+                                    if ($Config.MSIAprofile -gt 0) {
+                                        $Config.MSIApath = Read-HostString -Prompt "Enter path to MSI Afterburner" -Default $Config.MSIApath -Characters '' | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                        if (-not (Test-Path $Config.MSIApath)) {Write-Host "MSI Afterburner not found at given path. Please try again or disable."}
+                                    }
+                                } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIAdefault));
+
                                 $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
@@ -341,7 +350,9 @@ while ($true) {
                                 $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                 $ConfigActual | Add-Member Interval $Config.Interval -Force
                                 $ConfigActual | Add-Member Donate $Config.Donate -Force
-                                $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
+                                $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force                                
+                                $ConfigActual | Add-Member MSIAprofile $Config.MSIAprofile -Force
+                                $ConfigActual | Add-Member MSIApath $Config.MSIApath -Force
 
                                 $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                         BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -524,6 +535,7 @@ while ($true) {
         #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
     }
+    $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
     Get-ChildItem "Pools" -File | Where-Object {-not $Config.Pools.($_.BaseName)} | ForEach-Object {
         $Config.Pools | Add-Member $_.BaseName (
@@ -751,6 +763,7 @@ while ($true) {
             ForEach-Object {                
                 if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
                 if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
+                if (-not $Config.MiningMode -ne "legacy" -and @($DevicesByTypes.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_ | Add-Member DeviceModel $(@($DevicesByTypes."$($_.DeviceModel)" | Where-Object Model -notmatch '-' | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force}
                 $_
             } | #for backward compatibility            
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
@@ -783,7 +796,8 @@ while ($true) {
                     Where-Object {$_.BaseName -eq $ComboMiner.BaseName -and $_.DeviceModel -notmatch '-' -and $($ComboMiner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($ComboMiner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} | 
                     Select-Object -ExpandProperty HashRates |
                     Measure-Object -Sum @($ComboAlgos) |
-                    Foreach-Object {$ComboMiner.HashRates."$($_.Property)" = $_.Sum}
+                    Foreach-Object {$ComboMiner.HashRates."$($_.Property)" = $_.Sum * 1.001} 
+                    #we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
             }
         }
     }
@@ -817,6 +831,13 @@ while ($true) {
                 if ($Config.Miners.$Miner_CommonCommands.Params) {
                     $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
                 }
+            }
+            [Int[]]$Miner_MSIAprofile = @($Miner.DeviceModel -split '-') | Foreach-Object {
+                $Miner_CommonCommands = @($Miner.BaseName) + @($_) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+                if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile} else {$Config.MSIAprofile}
+            } | Select-Object -Unique
+            if (($Miner_MSIAprofile | Measure-Object).Count -eq 1 -and $Miner_MSIAprofile[0]) {
+                $Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile[0]) -MemberType NoteProperty -Force
             }
         }
 
@@ -981,7 +1002,7 @@ while ($true) {
                 New                  = $false
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
-                MSIAprofile          = $Miner.MSIAprofile
+                MSIAprofile          = if ($Miner.MSIAprofile -eq $null) {$Config.MSIAprofile} else {$Miner.MSIAprofile}
                 BenchmarkIntervals   = if ($Miner.BenchmarkIntervals -eq $null) {1} else {$Miner.BenchmarkIntervals}
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
@@ -1066,7 +1087,7 @@ while ($true) {
         if ($_.GetStatus() -ne [MinerStatus]::Running) {
 
             #Set MSI Afterburner profile
-            if ( $Config.MSIApath -and (Test-Path $Config.MSIApath) -and $Config.MSIAprofile ) {
+            if ($MSIAenabled) {
                 $MSIAplannedprofile = $ActiveMiners | Where-Object Best -eq $true | Foreach-Object {if ($_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0) {$_.MSIAprofile} else {$Config.MSIAprofile}} | Select-Object -Unique
 
                 if ($MSIAplannedprofile.Count -ne 1) {$MSIAplannedprofile=$Config.MSIAprofile}
