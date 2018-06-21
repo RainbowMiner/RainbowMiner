@@ -979,7 +979,6 @@ class Miner {
     [string[]]$Algorithm = @()
     $DeviceName
     $DeviceModel
-    $ExtendInterval
     $Profit
     $Profit_Comparison
     $Profit_MarginOfError
@@ -1004,6 +1003,7 @@ class Miner {
     $BaseName = $null
     $ExecName = $null
     $FaultTolerance = 0.1
+    $ExtendInterval = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -1418,6 +1418,15 @@ function Test-TimeSync {
 
 }
 
+function Get-Yes {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        $Argument
+    )
+    if ($Argument -is [bool]) {$Argument} else {[Bool](0,$false,"no","n","not","niet","non","nein","never","0" -inotcontains $Argument)}
+}
+
 function Read-HostString {
     [CmdletBinding()]
     param(
@@ -1575,10 +1584,10 @@ function Read-HostBool {
         [Parameter(Mandatory = $False)]
         $Default = $false
     )
-    $Default = if ($true,"yes","y","1","j","ja","oui","si","da" -icontains $Default){"yes"}else{"no"}
+    $Default = if (Get-Yes $Default){"yes"}else{"no"}
     $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$($Default)]").Trim()) -eq ''){$Default}else{$Result.Trim()}
     if ("exit","cancel" -icontains $Result){$Result;return}
-    [Bool]("yes","y","yea","yeah","1","j","ja","oui","si","da" -icontains $Result)
+    Get-Yes $Result
 }
 
 function Get-MinerConfigDefault {

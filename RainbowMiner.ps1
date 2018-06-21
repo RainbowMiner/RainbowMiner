@@ -544,10 +544,11 @@ while ($true) {
 
         $Config | Get-Member -MemberType *Property | Foreach-Object {
             $name = $_.Name;
-            $var  = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
-            if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
-            elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = "1","yes","y","ja","j","true" -icontains $Config.$name}
-            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
+            if ($var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue) {
+                if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
+                elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = "1","yes","y","ja","j","true","oui","da" -icontains $Config.$name}
+                elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
+            }
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
@@ -555,8 +556,10 @@ while ($true) {
         $Config.Currency = $Config.Currency | ForEach-Object {$_.ToUpper()}
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}            
 
-        #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
+        #For backwards compatibility
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
+        if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
+
     }
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
