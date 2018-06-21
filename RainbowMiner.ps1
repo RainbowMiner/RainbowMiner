@@ -1315,7 +1315,7 @@ while ($true) {
     [GC]::Collect()
 
     #Extend benchmarking interval to the maximum from running miners    
-    $ExtendInterval = ($RunningMiners | Where-Object {$_.Speed -eq $null}  | Select-Object -ExpandProperty ExtendInterval -Unique | Measure-Object).Maximum
+    $ExtendInterval = (@(1) + [int[]]@($RunningMiners | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum
     if ($ExtendInterval -gt 1) {
         $StatEnd = $StatEnd.AddSeconds($Config.Interval * $ExtendInterval)
         $StatSpan = New-TimeSpan $StatStart $StatEnd
@@ -1448,10 +1448,10 @@ while ($true) {
 
         if ($Miner.GetStatus() -eq "Running" -or $Miner.New) {
             $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_, $Config.Interval * $BenchmarkingMiner_ExtendInterval, $Miner.New)
+                $Miner_Speed = $Miner.GetHashRate($_, $Config.Interval * $ExtendInterval, $Miner.New)
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Config.Interval * $Miner.Benchmarked * $BenchmarkingMiner_ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Config.Interval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
 
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Strikes * $Strikes) -or $Miner.GetActivateCount() -ge $Strikes) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance
