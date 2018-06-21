@@ -5,7 +5,6 @@
   "API_ID": "$API_ID",
   "API_Key": "$API_Key",
   "Interval": "$Interval",
-  "ExtendInterval": "$ExtendInterval",
   "Region": "$Region",
   "SSL": "$SSL",
   "DeviceName": "$DeviceName",
