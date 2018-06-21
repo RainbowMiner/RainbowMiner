@@ -18,8 +18,6 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$API_Key = "", 
     [Parameter(Mandatory = $false)]
-    [Array]$ExtendInterval = @("x16r","ravenminer","palginnvidia"), # Extend timing interval for Miners or currencies
-    [Parameter(Mandatory = $false)]
     [Alias("Location")]
     [String]$Region = "europe", #europe/us/asia
     [Parameter(Mandatory = $false)]
@@ -28,13 +26,13 @@ param(
     [Alias("Device", "Type")]
     [Array]$DeviceName = @(), #i.e. CPU, GPU, GPU#02, AMD, NVIDIA, AMD#02, OpenCL#03#02 etc.
     [Parameter(Mandatory = $false)]
-    [Array]$Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16"), #i.e. Ethash,Equihash,CryptoNight etc.
+    [Array]$Algorithm = @(), #i.e. Ethash,Equihash,CryptoNight etc.
     [Parameter(Mandatory = $false)]
     [Alias("Miner")]
     [Array]$MinerName = @(), 
     [Parameter(Mandatory = $false)]
     [Alias("Pool")]
-    [Array]$PoolName = @("nicehash","blazepool","miningpoolhub"), 
+    [Array]$PoolName = @(), 
     [Parameter(Mandatory = $false)]
     [Array]$ExcludeAlgorithm = @(), #i.e. Ethash,Equihash,CryptoNight etc.
     [Parameter(Mandatory = $false)]
@@ -86,7 +84,7 @@ param(
 
 Clear-Host
 
-$Version = "3.6.1.0"
+$Version = "3.7.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -132,7 +130,6 @@ $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
-$ComboMiningMode = $true
 
 #Cleanup the log
 if (Test-Path ".\Logs"){
@@ -212,7 +209,6 @@ while ($true) {
                     API_ID              = $API_ID
                     API_Key             = $API_Key
                     Interval            = $Interval
-                    ExtendInterval      = $ExtendInterval
                     Region              = $Region
                     SSL                 = $SSL
                     DeviceName          = $DeviceName
@@ -254,7 +250,13 @@ while ($true) {
                         Write-Host "Please choose, what to configure:"
 
                         if ($IsInitialSetup) {
-                            $SetupType = "G"                           
+                            $SetupType = "G"  
+                            $Config.PoolName = @("nicehash","blazepool","miningpoolhub")
+                            $Config.Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16")
+                            $Config.FastestMinerOnly = $true 
+                            $Config.ShowPoolBalances = $true
+                            $Config.ShowMinerWindow = $false
+                            $Config.Watchdog = $true                                                        
                         } else {
                             $SetupType = Read-HostString -Prompt "[G]lobal, [M]iner, [P]ools, E[x]it configuration" -Default "X"  -Mandatory -Characters "GMPX"
                             Write-Host " "
@@ -267,8 +269,8 @@ while ($true) {
 
                             $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
                             $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
-
-                            Write-Host "*** Global Configuration ***"
+                            
+                            Write-Host "*** Global Configuration ***"                            
                             Write-Host "Hints:"
                             Write-Host "- your current configuration defines the defaults. Press Return to accept the them."
                             Write-Host "- fields marked with * are mandatory"
@@ -279,7 +281,12 @@ while ($true) {
                             Write-Host " "
 
                             try {
+                                $SetupDevices = Get-Device "nvidia","amd","cpu"
+
                                 # Start setup procedure
+                                Write-Host ' '
+                                Write-Host '(1) Basic Setup'
+                                Write-Host ' '
                                 $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
 
                                 if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
@@ -295,39 +302,81 @@ while ($true) {
                                 $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+
+                                Write-Host ' '
+                                Write-Host '(2) Select your pools, miners and algorithm (be sure you read the notes in the README.md)'
+                                Write-Host ' '
+
                                 $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid @(Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid (Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
 
+                                Write-Host ' '
+                                Write-Host '(3) Select the devices to mine on and miningmode'
+                                Write-Host ' '
+
+                                $AvailDeviceName = @()                                
+                                if ((Select-Device $SetupDevices "nvidia" | Measure-Object).Count -gt 0) {$AvailDeviceName += "nvidia"}
+                                if ((Select-Device $SetupDevices "amd" | Measure-Object).Count -gt 0) {$AvailDeviceName += "amd"}               
+
+                                $WizardDeviceNameSet = $false                                                                
+                                if ($IsInitialSetup -and @($Config.DeviceName).Count -eq 0) {
+                                    $Config.DeviceName = @()
+                                    if ($AvailDeviceName.Count -gt 0) { #GPU mining possible
+                                        if ($AvailDeviceName.Count -gt 1) {
+                                            if (Read-HostBool -Prompt "Mine on all available GPU ($(($AvailDeviceName -join '&').ToUpper()), choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}) {
+                                                $Config.DeviceName += $AvailDeviceName                                            
+                                            }
+                                        }
+                                        if ($Config.DeviceName.Count -eq 0) {
+                                            $AvailDeviceName | Foreach-Object {
+                                                if (Read-HostBool -Prompt "Mine on all $($_.ToUpper()) GPU (choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}) {$Config.DeviceName += @($_)}
+                                            }
+                                        }
+                                        $WizardDeviceNameSet = $Config.DeviceName.Count -gt 0
+                                    }
+                                   
+                                    if (Read-HostBool -Prompt "Mine on your CPU" -Default $false | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}) {
+                                        $Config.DeviceName += @("cpu")
+                                    }                                                                        
+                                }                                                             
+
+                                $Config.MiningMode = Read-HostString "Select mining mode (legacy/device/combo)" -Default $Config.MiningMode -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                if ($Config.MiningMode -like "l*") {$Config.MiningMode="legacy"}
+                                elseif ($Config.MiningMode -like "c*") {$Config.MiningMode="combo"}
+                                else {$Config.MiningMode="device"}
+                        
+                                if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
+
+                                if (-not $WizardDeviceNameSet) {
+                                    $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                }
+
+                                Write-Host ' '
+                                Write-Host '(4) Select desired output'
+                                Write-Host ' '
+
+                                $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}   
+                                $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus, not recommended)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+
+                                Write-Host ' '
+                                Write-Host '(5) Setup other / technical'
+                                Write-Host ' '
+                                $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 do {
-                                    $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable)" -Default $Config.MSIAprofile -Mandatory -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}                             
+                                    $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Mandatory -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}                             
                                     if ($Config.MSIAprofile -gt 0) {
                                         $Config.MSIApath = Read-HostString -Prompt "Enter path to MSI Afterburner" -Default $Config.MSIApath -Characters '' | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                         if (-not (Test-Path $Config.MSIApath)) {Write-Host "MSI Afterburner not found at given path. Please try again or disable."}
                                     }
-                                } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIAdefault));
-
-                                $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}                                                                
-                                $Config.MiningMode = Read-HostBool "Select mining mode (legacy/device/combo)" -Default $Config.MiningMode -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
-                                if ($Config.MiningMode -like "l*") {$Config.MiningMode="legacy"}
-                                elsif ($Config.MiningMode -like "c*") {$Config.MiningMode="combo"}
-                                else {$Config.MiningMode="device"}
-                        
-                                $AvailDeviceName = @()
-                                $SetupDevices = Get-Device "nvidia","amd","cpu"
-                                if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "nvidia"}
-                                if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "amd"}               
-                                if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
-
-                                $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
+                                
+                                $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
            
@@ -773,10 +822,10 @@ while ($true) {
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     $AllMiners = if (Test-Path "Miners") {
         Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {$_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName} -PassThru -Force} | 
-            ForEach-Object {                
+            ForEach-Object {              
                 if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
                 if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
-                if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_ | Add-Member DeviceModel $($DevicesByTypes.FullComboModels."$($_.DeviceModel)") -Force}
+                if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.DeviceModel)")}                
                 $_
             } | #for backward compatibility            
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
@@ -911,7 +960,13 @@ while ($true) {
         $Miner.Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.Path)
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
-        if ($Miner.Arguments -isnot [String]) {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Compress}
+        if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
+        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Compress} 
+        
+        if ($Miner.MSIAprofile -eq $null) {$Miner | Add-Member MSIAprofile $Config.MSIAprofile -Force}
+        if ($Miner.ExtendInterval -eq $null) {$Miner | Add-Member ExtendInterval 0 -Force}              
+        if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
+        if ($Miner.FaultTolerance -eq $null) {$Miner | Add-Member FaultTolerance 0.1 -Force}               
 
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
     }
@@ -1015,12 +1070,12 @@ while ($true) {
                 New                  = $false
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
-                MSIAprofile          = if ($Miner.MSIAprofile -eq $null) {$Config.MSIAprofile} else {$Miner.MSIAprofile}
-                BenchmarkIntervals   = if ($Miner.BenchmarkIntervals -eq $null) {1} else {$Miner.BenchmarkIntervals}
+                MSIAprofile          = $Miner.MSIAprofile
+                ExtendInterval       = $Miner.ExtendInterval
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
-                ExecName             = if ($Miner.ExecName -eq $null) {([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName} else {$Miner.ExecName}
-                FaultTolerance       = if ($Miner.FaultTolerance -eq $null) {0.1} else {$Miner.FaultTolerance}
+                ExecName             = $Miner.ExecName
+                FaultTolerance       = $Miner.FaultTolerance
             }
         }
     }
@@ -1259,21 +1314,14 @@ while ($true) {
     Get-Job -State Completed | Remove-Job
     [GC]::Collect()
 
-    #When benchmarking miners/algorithm in ExtendInterval... add 10x $Config.Interval to $StatEnd, extend StatSpan, extend watchdog times
-    $BenchmarkingMiner_ExtendInterval = 1
-    $RunningMiners | Where-Object {$_.Speed -eq $null -and ($Config.ExtendInterval -icontains $_.Name -or ($_.Algorithm | Where-Object {$Config.ExtendInterval -icontains $_}) -or $_.BenchmarkIntervals -gt 1)}  | Foreach-Object {
-        if ($_.BenchmarkIntervals -gt 1 -and $_.BenchmarkIntervals -ge $BenchmarkingMiner_ExtendInterval) {
-            $BenchmarkingMiner_ExtendInterval = $_.BenchmarkIntervals
-        } else {
-            $BenchmarkingMiner_ExtendInterval = 10
-        }
-    }
-    if ($BenchmarkingMiner_ExtendInterval -gt 1) {
-        $StatEnd = $StatEnd.AddSeconds($Config.Interval * $BenchmarkingMiner_ExtendInterval)
+    #Extend benchmarking interval to the maximum from running miners    
+    $ExtendInterval = ($RunningMiners | Where-Object {$_.Speed -eq $null}  | Select-Object -ExpandProperty ExtendInterval -Unique | Measure-Object).Maximum
+    if ($ExtendInterval -gt 1) {
+        $StatEnd = $StatEnd.AddSeconds($Config.Interval * $ExtendInterval)
         $StatSpan = New-TimeSpan $StatStart $StatEnd
         $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
         $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
-        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($BenchmarkingMiner_ExtendInterval)x interval ($($Config.Interval * $BenchmarkingMiner_ExtendInterval) seconds). "
+        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Config.Interval * $ExtendInterval) seconds). "
     }
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
@@ -1400,10 +1448,10 @@ while ($true) {
 
         if ($Miner.GetStatus() -eq "Running" -or $Miner.New) {
             $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_, $Interval * $BenchmarkingMiner_ExtendInterval, $Miner.New)
+                $Miner_Speed = $Miner.GetHashRate($_, $Config.Interval * $BenchmarkingMiner_ExtendInterval, $Miner.New)
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Interval * $Miner.Benchmarked * $BenchmarkingMiner_ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Config.Interval * $Miner.Benchmarked * $BenchmarkingMiner_ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
 
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Strikes * $Strikes) -or $Miner.GetActivateCount() -ge $Strikes) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance

@@ -979,6 +979,7 @@ class Miner {
     [string[]]$Algorithm = @()
     $DeviceName
     $DeviceModel
+    $ExtendInterval
     $Profit
     $Profit_Comparison
     $Profit_MarginOfError
@@ -999,7 +1000,6 @@ class Miner {
     hidden [Array]$Data = @()
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
-    $BenchmarkIntervals = 1
     $DevFee
     $BaseName = $null
     $ExecName = $null
@@ -1575,8 +1575,8 @@ function Read-HostBool {
         [Parameter(Mandatory = $False)]
         $Default = $false
     )
-    if ($Default -isnot [bool]){$Default = "yes","y","1","j","ja","oui","si","da" -icontains $Default}
-    $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$(if($Default){"yes"}else{"no"})]").Trim()) -eq ''){$Default}else{$Result.Trim()}
+    $Default = if ($true,"yes","y","1","j","ja","oui","si","da" -icontains $Default){"yes"}else{"no"}
+    $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$($Default)]").Trim()) -eq ''){$Default}else{$Result.Trim()}
     if ("exit","cancel" -icontains $Result){$Result;return}
     [Bool]("yes","y","yea","yeah","1","j","ja","oui","si","da" -icontains $Result)
 }

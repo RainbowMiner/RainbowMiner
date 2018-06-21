@@ -33,6 +33,10 @@
 305 Dstm
 306 Cast
 307 Bminer
+308 PhoenixMiner
+309 FireIce
+310 Excavator1.4.4
+311 Excavator
 
 400 Sgminer
 401 SgminerBitcore
@@ -41,7 +45,17 @@
 404 SgminerSkein
 405 SgminerXevan
 
+500 CpuminerJayddeeSse2
+501 CpuminerJayddeeAessse42
+502 CpuminerJayddeeAvx2
+503 CpuminerJayddeeAvx2sha
 
-23456	Excavator
+510 CpuminerTpruvotAvx2
+511 CpuminerTpruvotCore2
+512 CpuminerTpruvotCorei7
 
-	CcminerSpModTribus
+520 ClaymoreCpu
+521 XmrigCpu
+
+
+4068    CcminerSpModTribus

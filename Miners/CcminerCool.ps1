@@ -7,9 +7,9 @@ $Port = "104{0:d2}"
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$Commands = [PSCustomObject]@{
-    "lyra2z" = " -N 1" #Lyra2z
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z
+)
 
 $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
 
@@ -21,21 +21,22 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name | ForEach {
+    $Commands | ForEach {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --submit-stale$($Commands.$_)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
             API = "Ccminer"
             Port = $Miner_Port
-            Wrap = $false
             URI = $Uri
+            FaultTolerance = $_.FaultTolerance
+            ExtendInterval = $_.ExtendInterval
             DevFee = 1.0
         }
     }

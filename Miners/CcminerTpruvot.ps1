@@ -7,71 +7,71 @@ $Port = "114{0:d2}"
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$Commands = [PSCustomObject]@{
+$Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    #"bastion" = "" #bastion
-    #"bitcore" = " -i 21" #Bitcore
-    #"bmw" = "" #bmw
-    #"c11" = "" #C11
-    #"deep" = "" #deep
-    #"dmd-gr" = "" #dmd-gr
-    #"equihash" = "" #Equihash
-    #"fresh" = "" #fresh
-    #"fugue256" = "" #Fugue256
-    #"groestl" = "" #Groestl
-    "hmq1725" = " -N 1" #HMQ1725
-    #"jackpot" = "" #JackPot
-    "jha" = " -N 1" #JHA
-    #"keccak" = "" #Keccak
-    #"keccakc" = "" #keccakc
-    #"luffa" = "" #Luffa
-    #"lyra2" = "" #lyra2re
-    #"lyra2v2" = "" #Lyra2RE2
-    "lyra2z" = " -N 1 --submit-stale" #Lyra2z, ZCoin
-    #"neoscrypt" = "" #NeoScrypt
-    #"penta" = "" #Pentablake
-    ###"phi" = " -N 1" #PHI spmod is faster
-    #"polytimos" = "" #Polytimos
-    #"scryptjane:nf" = "" #scryptjane:nf
-    "sha256t" = " -N 1" #sha256t
-    #"skein" = "" #Skein
-    #"skein2" = "" #skein2
-    #"skunk" = "" #Skunk
-    #"s3" = "" #S3
-    "timetravel" = " -N 1" #Timetravel
-    #"tribus" = "" #Tribus (enemyz 1.10 is faster)
-    #"veltor" = "" #Veltor
-    #"whirlpool" = "" #Whirlpool
-    #"whirlpoolx" = "" #whirlpoolx
-    #"wildkeccak" = "" #wildkeccak
-    #"x11evo" = "" #X11evo
-    #"x12" = "" #X12
-    #"x16r" = "" #X16r
-    #"X16s" = "" #X16s
-    #"x17" = "" #x17
-    #"zr5" = "" #zr5
+    #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""}, #bastion
+    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""}, #Bitcore
+    #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""}, #bmw
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""}, #C11
+    #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""}, #deep
+    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""}, #dmd-gr
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""}, #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""}, #fresh
+    #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""}, #Fugue256
+    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""}, #Groestl
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"}, #HMQ1725
+    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""}, #JackPot
+    [PSCustomObject]@{MainAlgorithm = "jha"; Params = " -N 1"}, #JHA
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""}, #keccakc
+    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""}, #Luffa
+    #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""}, #lyra2re
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""}, #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"}, #Lyra2z, ZCoin
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, #NeoScrypt
+    #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""}, #Pentablake
+    ###[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"}, #PHI spmod is faster
+    #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""}, #Polytimos
+    #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""}, #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"}, #sha256t
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""}, #skein2
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""}, #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""}, #S3
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
+    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""}, #Tribus (enemyz 1.10 is faster)
+    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""}, #Veltor
+    #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""}, #Whirlpool
+    #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""}, #whirlpoolx
+    #[PSCustomObject]@{MainAlgorithm = "wildkeccak"; Params = ""}, #wildkeccak
+    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""}, #X11evo
+    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""}, #X12
+    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""}, #X16r
+    #[PSCustomObject]@{MainAlgorithm = "X16s"; Params = ""}, #X16s
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""}, #x17
+    #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""}, #zr5
 
     # ASIC - never profitable 20/04/2018
-    #"blake" = "" #blake
-    #"blakecoin" = "" #Blakecoin
-    #"blake2s" = "" #Blake2s
-    #"lbry" = "" #Lbry
-    #"decred" = "" #Decred
-    #"quark" = "" #Quark
-    #"qubit" = "" #Qubit
-    #"myr-gr" = "" #MyriadGroestl
-    #"nist5" = "" #Nist5
-    #"scrypt" = "" #Scrypt
-    #"scrypt:N" = "" #scrypt:N
-    #"sha256d" = "" #sha256d
-    #"sia" = "" #SiaCoin
-    #"sib" = "" #Sib
-    #"vanilla" = "" #BlakeVanilla
-    #"x11" = "" #X11
-    #"x13" = "" #x13
-    #"x14" = "" #x14
-    #"x15" = "" #x15
-}
+    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""}, #blake
+    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""}, #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""}, #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
+    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""}, #Quark
+    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""}, #Qubit
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "scrypt"; Params = ""}, #Scrypt
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:N"; Params = ""}, #scrypt:N
+    #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""}, #sha256d
+    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""}, #SiaCoin
+    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""}, #Sib
+    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""}, #BlakeVanilla
+    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""}, #X11
+    #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""}, #x13
+    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""}, #x14
+    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -83,20 +83,22 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
             API = "Ccminer"
             Port = $Miner_Port
             URI = $Uri
+            FaultTolerance = $_.FaultTolerance
+            ExtendInterval = $_.ExtendInterval
         }
     }
 }

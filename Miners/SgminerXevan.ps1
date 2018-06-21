@@ -7,9 +7,9 @@ $Port = "405{0:d2}"
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
-$Commands = [PSCustomObject]@{
-    "xevan-mod" = " --intensity 15" #Xevan
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "xevan-mod"; Params = "--intensity 15"}
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -22,16 +22,16 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
     $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_) --text-only --gpu-platform $($Miner_PlatformId)"
+            Arguments = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --text-only --gpu-platform $($Miner_PlatformId)  $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Xgminer"
             Port = $Miner_Port

@@ -8,22 +8,22 @@ $Port = "402{0:d2}"
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
-$Commands = [PSCustomObject]@{
-  "aergo"     = " -X 256 -g 2" #Aergo
-  "blake"     = "" #Blake
-  "bmw"       = "" #Bmw
-  "echo"      = "" #Echo
-  "hamsi"     = "" #Hamsi
-  "keccak"    = "" #Keccak
-  "phi"       = " -X 256 -g 2 -w 256" # Phi
-  "skein"     = "" #Skein
-  "tribus"    = " -X 256 -g 2" #Tribus
-  "whirlpool" = "" #Whirlpool
-  "xevan"     = " -X 256 -g 2" #Xevan
-  "x16s"      = " -X 256 -g 2" #X16S Pigeoncoin
-  "x16r"      = " -X 256 -g 2" #X16R Ravencoin
-  "x17"       = " -X 256 -g 2"
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"}, #Aergo
+    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""}, #Blake
+    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""}, #Bmw
+    [PSCustomObject]@{MainAlgorithm = "echo"; Params = ""}, #Echo
+    [PSCustomObject]@{MainAlgorithm = "hamsi"; Params = ""}, #Hamsi
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-X 256 -g 2 -w 256"}, # Phi
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-X 256 -g 2"}, #Tribus
+    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""}, #Whirlpool
+    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-X 256 -g 2"}, #Xevan
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-X 256 -g 2"}, #X16S Pigeoncoin
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-X 256 -g 2"}, #X16R Ravencoin
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-X 256 -g 2"}
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -36,16 +36,16 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
     $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path       = $Path
-            Arguments  = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_) --text-only --gpu-platform $($Miner_PlatformId)"
+            Arguments  = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --text-only --gpu-platform $($Miner_PlatformId) $($_.Params)"
             HashRates  = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API        = "Xgminer"
             Port       = $Miner_Port

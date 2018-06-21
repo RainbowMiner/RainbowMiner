@@ -4,12 +4,12 @@ $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4.5-fireice/xmr-stak-2.4.5.zip"
 $Port = "308{0:d2}"
 
-$Commands = [PSCustomObject]@{
-    #"cryptonight" = "" #CryptoNight
-    "cryptonight_heavy" = "" # CryptoNight-Heavy
-    "cryptonight_lite" = "" # CryptoNight-Lite
-    "cryptonight_V7" = "" #CryptoNightV7
-}
+$Commands = [PSCustomObject[]]@(
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""}, #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""}, # CryptoNight-Heavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""}, # CryptoNight-Lite
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_V7"; Params = ""} #CryptoNightV7
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -25,7 +25,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
 #    $DeviceIDsAll = Get-GPUIDs $Miner_Device
 
 @($Devices.FullComboModels.PSObject.Properties.Name) | Foreach-Object {
-    $Miner_Vendor = $_    
+    $Miner_Vendor = $_   
     @($Devices.$Miner_Vendor) | Where-Object {$_.Model -eq $Devices.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)        
@@ -38,7 +38,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
             Default {$Miner_Deviceparams = "--noUAC --noAMD --noNVIDIA"}
         }
 
-        $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {Get-Member -inputobject $Pools -name (Get-Algorithm $_) -Membertype Properties} | ForEach-Object {
+        $Commands | Where-Object {Get-Member -inputobject $Pools -name (Get-Algorithm $_.MainAlgorithm) -Membertype Properties} | ForEach-Object {
 
             $Algorithm_Norm = Get-Algorithm $_
             $Miner_ConfigFileName = "$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$(@($Miner_Device.Name | Sort-Object) -join '-').txt"
@@ -55,7 +55,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
                             rig_id = ""
                         }
                     )
-                    currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {"$_"}
+                    currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {"$($_.MainAlgorithm)"}
                     call_timeout    = 10
                     retry_time      = 10
                     giveup_limit    = 0
@@ -80,7 +80,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
                 DeviceName= $Miner_Device.Name
                 DeviceModel=$Miner_Model
                 Path      = $Path
-                Arguments = "-C $($Miner_ConfigFileName) $($Miner_Deviceparams) -i $($Miner_Port)"
+                Arguments = "-C $($Miner_ConfigFileName) $($Miner_Deviceparams) -i $($Miner_Port) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port

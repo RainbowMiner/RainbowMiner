@@ -7,15 +7,10 @@ $Port = "300{0:d2}"
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$DevFee = [PSCustomObject]@{
-    "equihash" = 2.0
-    "ethash" = 0.65
-}
-
-$Commands = [PSCustomObject]@{
-    "equihash" = "" #" -nofee" #Equihash (fastest)
-    #"ethash" = "" #Ethash (ethminer is faster and no dev fee)
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""; DevFee = 2.0} #" -nofee" #Equihash (fastest)
+    #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""; DevFee = 0.65} #Ethash (ethminer is faster and no dev fee)
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -27,36 +22,28 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        if ( $_ -eq "equihash" ) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $(if ($Pools.$Algorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0$($Commands.$_)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API = "Bminer"
-                Port = $Miner_Port
-                DevFee = $DevFee.$_
-                URI = $Uri
-            }
-        } elseif ( $_ -eq "ethash" ) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $(if ($Pools.$Algorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'})://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info$($Commands.$_)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API = "Bminer"
-                Port = $Miner_Port
-                DevFee = $DevFee.$_
-                URI = $Uri
-            }
+        switch ($Algorithm_Norm) {
+            "Equihash" {$Stratum = if ($Pools.$Algorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'}}
+            "Ethash" {$Stratum = if ($Pools.$Algorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'}}
+        }
+
+        [PSCustomObject]@{
+            Name = $Miner_Name
+            DeviceName = $Miner_Device.Name
+            DeviceModel = $Miner_Model
+            Path = $Path
+            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+            API = "Bminer"
+            Port = $Miner_Port
+            URI = $Uri
+            FaultTolerance = $_.FaultTolerance
+            ExtendInterval = $_.ExtendInterval
+            DevFee = $_.DevFee
         }
     }
 }

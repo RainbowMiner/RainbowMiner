@@ -5,9 +5,9 @@ $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0c-p
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 
-$Commands = [PSCustomObject]@{
-    "ethash" = "" #Ethash
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""} #Ethash
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -30,9 +30,9 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
     }
     $Miner_Vendor = (Get-Culture).TextInfo.ToTitleCase($Miner_Vendor.ToLower())
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
+    $Commands | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         $possum    = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "-proto 4 -stales 0" } else { "-proto 1" }
         $proto     = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "stratum+tcp://" } else { "" }
@@ -42,7 +42,7 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -coin auto -gpus $($DeviceIDsAll) -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) $($Miner_Deviceparams)$($Commands.$_)"
+            Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -coin auto -gpus $($DeviceIDsAll) -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) $($Miner_Deviceparams) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
             API = "Claymore"
             Port = $Miner_Port

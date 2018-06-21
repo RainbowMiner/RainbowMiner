@@ -7,61 +7,61 @@ $Port = "512{0:d2}"
 $Devices = $Devices.CPU
 if (-not $Devices -or $Config.InfoOnly) {return} # No CPU present in system
 
-$Commands = [PSCustomObject]@{
+$Commands = [PSCustomObject[]]@(
     # CPU Only algos 3/27/2018
-    "yescrypt" = "" #Yescrypt
-    #"axiom" = "" #axiom
-    
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""}, #Yescrypt
+    #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""}, #axiom
+
     # CPU & GPU - still profitable 27/03/2018
-    "cryptonight" = "" #CryptoNight
-    "hmq1725" = "" #HMQ1725
-    "shavite3" = "" #shavite3
+    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""}, #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""}, #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
 
     #GPU - never profitable 27/03/2018
-    #"bastion" = "" #bastion
-    #"bitcore" = "" #Bitcore
-    #"blake" = "" #blake
-    #"blake2s" = "" #Blake2s
-    #"blakecoin" = "" #Blakecoin
-    #"bmw" = "" #bmw
-    #"c11" = "" #C11
-    #"cryptolight" = "" #cryptolight
-    #"decred" = "" #Decred
-    #"dmd-gr" = "" #dmd-gr
-    #"equihash" = "" #Equihash
-    #"ethash" = "" #Ethash
-    #"groestl" = "" #Groestl
-    #"jha" = "" #JHA
-    #"keccak" = "" #Keccak
-    #"keccakc" = "" #keccakc
-    #"lbry" = "" #Lbry
-    #"lyra2re" = "" #lyra2re
-    #"lyra2v2" = "" #Lyra2RE2
-    #"myr-gr" = "" #MyriadGroestl
-    #"neoscrypt" = "" #NeoScrypt
-    #"nist5" = "" #Nist5
-    #"pascal" = "" #Pascal
-    #"pentablake" = "" #pentablake
-    #"pluck" = "" #pluck
-    #"scrypt:N" = "" #scrypt:N
-    #"scryptjane:nf" = "" #scryptjane:nf
-    #"sha256d" = "" #sha256d
-    #"sib" = "" #Sib
-    #"skein" = "" #Skein
-    #"skein2" = "" #skein2
-    #"skunk" = "" #Skunk
-    #"timetravel" = "" #Timetravel
-    #"tribus" = "" #Tribus
-    #"vanilla" = "" #BlakeVanilla
-    #"veltor" = "" #Veltor
-    #"x11" = "" #X11
-    #"x11evo" = "" #X11evo
-    #"x13" = "" #x13
-    #"x14" = "" #x14
-    #"x15" = "" #x15
-    #"x16r" = "" #x16r
-    #"zr5" = "" #zr5
-}
+    #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""}, #bastion
+    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""}, #Bitcore
+    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""}, #blake
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""}, #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""}, #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""}, #bmw
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""}, #C11
+    #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""}, #cryptolight
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
+    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""}, #dmd-gr
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""}, #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""}, #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""}, #Groestl
+    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""}, #JHA
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""}, #keccakc
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""}, #lyra2re
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""}, #Lyra2RE2
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, #NeoScrypt
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""}, #Pascal
+    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""}, #pentablake
+    #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""}, #pluck
+    #[PSCustomObject]@{MainAlgorithm = "scrypt:N"; Params = ""}, #scrypt:N
+    #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""}, #scryptjane:nf
+    #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""}, #sha256d
+    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""}, #Sib
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""}, #skein2
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""}, #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""}, #Timetravel
+    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""}, #Tribus
+    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""}, #BlakeVanilla
+    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""}, #Veltor
+    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""}, #X11
+    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""}, #X11evo
+    #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""}, #x13
+    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""}, #x14
+    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""}, #x15
+    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""}, #x16r
+    #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #zr5
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
@@ -72,14 +72,17 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-b $($Miner_Port) -a $_ -o $($Pools.(Get-Algorithm $_).Protocol)://$($Pools.(Get-Algorithm $_).Host):$($Pools.(Get-Algorithm $_).Port) -u $($Pools.(Get-Algorithm $_).User) -p $($Pools.(Get-Algorithm $_).Pass)$($Commands.$_)"
-            HashRates = [PSCustomObject]@{(Get-Algorithm $_) = $Stats."$($Miner_Name)_$(Get-Algorithm $_)_HashRate".Week}
+            Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Ccminer"
             Port = $Miner_Port
             URI = $Uri

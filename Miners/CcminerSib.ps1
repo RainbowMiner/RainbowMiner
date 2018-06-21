@@ -7,24 +7,24 @@ $Port = "108{0:d2}"
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$Commands = [PSCustomObject]@{
-    "blake2s"   = " -N 1" #Blake2s
-    "blakecoin" = " -N 1" #Blakecoin
-    #"c11"       = "" #C11 (alexis78 is fastest)
-    #"keccak"    = "" #Keccak (alexis78 is fastest)
-    #"lyra2v2"   = "" #Lyra2RE2 (alexis78 is fastest)
-    #"neoscrypt" = "" #NeoScrypt (excavator is fastest)
-    "sib"       = " -N 1" #Sib
-    #"skein"     = "" #Skein (alexis78 is fastest)
-    "x11evo"    = " -N 1" #X11evo
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-N 1"}, #Blake2s
+    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = "-N 1"}, #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""}, #C11 (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""}, #Lyra2RE2 (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, #NeoScrypt (excavator is fastest)
+    [PSCustomObject]@{MainAlgorithm = "sib"; Params = "-N 1"}, #Sib
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein (alexis78 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
 
     # ASIC - never profitable 12/05/2018
-    #"decred" = "" #Decred
-    #"lbry" = "" #Lbry
-    #"myr-gr" = "" #MyriadGroestl
-    #"nist5" = "" #Nist5
-    #"sib" = "" #Sib
-}
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""} #Sib
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -36,20 +36,22 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $_ -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Commands.$_)"
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Ccminer"
             Port = $Miner_Port
             URI = $Uri
+            FaultTolerance = $_.FaultTolerance
+            ExtendInterval = $_.ExtendInterval
             PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
             PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
         }

@@ -7,10 +7,10 @@ $Port = "520{0:d2}"
 $Devices = $Devices.CPU
 if (-not $Devices -or $Config.InfoOnly) {return} # No CPU present in system
 
-$Commands = [PSCustomObject]@{
-    "cryptonight" = "" #CryptoNight
-    "cryptonightv7" = "" #CryptoNightV7
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = "-pow7 0"}, #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = "-pow7 1"} #CryptoNightV7
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -22,31 +22,20 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
-        if ( $_ -eq "cryptonight" ) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-r -1 -mport $($Miner_Port) -pow7 0 -o $($Pools.(Get-Algorithm $_).Protocol)://$($Pools.(Get-Algorithm $_).Host):$($Pools.(Get-Algorithm $_).Port) -u $($Pools.(Get-Algorithm $_).User) -p $($Pools.(Get-Algorithm $_).Pass)$($Commands.$_)"            
-                HashRates = [PSCustomObject]@{(Get-Algorithm $_) = $($Stats."$($Miner_Name)_$(Get-Algorithm $_)_HashRate".Week)}
-                API = "Claymore"
-                Port = $Miner_Port
-                URI = $Uri
-            }
-        } elseif ( $_ -eq "cryptonightv7" ) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-r -1 -mport $($Miner_Port) -pow7 1 -o $($Pools.(Get-Algorithm $_).Protocol)://$($Pools.(Get-Algorithm $_).Host):$($Pools.(Get-Algorithm $_).Port) -u $($Pools.(Get-Algorithm $_).User) -p $($Pools.(Get-Algorithm $_).Pass)$($Commands.$_)"            
-                HashRates = [PSCustomObject]@{(Get-Algorithm $_) = $($Stats."$($Miner_Name)_$(Get-Algorithm $_)_HashRate".Week)}
-                API = "Claymore"
-                Port = $Miner_Port
-                URI = $Uri
-            }
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+
+        [PSCustomObject]@{
+            Name = $Miner_Name
+            DeviceName = $Miner_Device.Name
+            DeviceModel = $Miner_Model
+            Path = $Path
+            Arguments = "-r -1 -mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"            
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
+            API = "Claymore"
+            Port = $Miner_Port
+            URI = $Uri
         }
     }
 }

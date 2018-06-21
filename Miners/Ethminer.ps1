@@ -4,9 +4,9 @@ $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
 $URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0rc2/ethminer-0.15.0rc2-Windows.zip"
 $Port = "301{0:d2}"
 
-$Commands = [PSCustomObject]@{
-    "ethash" = "" #Ethash
-}
+$Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""} #Ethash
+)
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -27,8 +27,8 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
     }
     $Miner_Vendor = (Get-Culture).TextInfo.ToTitleCase($Miner_Vendor.ToLower())
 
-    $Commands | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | Where-Object {$Pools.(Get-Algorithm $_).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
-        $Algorithm_Norm = Get-Algorithm $_
+    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         $Miner_Protocol = $Pools.$Algorithm_Norm.Protocol -replace "stratum","stratum$(if ($Pools.$Algorithm_Norm.Name -eq 'NiceHash'){2})"       
         
@@ -37,7 +37,7 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) -P $($Miner_Protocol)://$($Pools.$Algorithm_Norm.User):$($Pools.$Algorithm_Norm.Pass)@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$($Commands.$_)"
+            Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) -P $($Miner_Protocol)://$($Pools.$Algorithm_Norm.User):$($Pools.$Algorithm_Norm.Pass)@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Claymore"
             Port = $Miner_Port
