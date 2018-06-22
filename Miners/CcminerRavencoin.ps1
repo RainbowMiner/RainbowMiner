@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-Ravencoin\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0-ravencoinminer/ccminerRavenx32.zip"
+$Uri = "https://github.com/RavencoinProject/RavencoinMiner/releases/download/v3.1-cu92/Ravencoin.Miner.v3.1.win32.cu92.zip"
 $Port = "107{0:d2}"
 
 $Devices = $Devices.NVIDIA

@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""}, # ZeroCoin (3rd impl)
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, # FeatherCoin, Phoenix, UFO...
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""}, # Pentablake hash (5x Blake 512), untested
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""}, # BHCoin
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""; ExtendInterval = 3}, # BHCoin
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""}, # Politimos, untested
     #[PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""}, # SHA256 x3
     #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""}, # Sibcoin (X11+Streebog)
@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "whirlcoin"; Params = ""}, # Old Whirlcoin (Whirlpool algo), untested
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""}, # Whirlpool algo, untested
     #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""}, # Permuted x11 (Revolver)
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""}, # X16R (Raven)
+    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "" ;ExtendInterval = 10}, # X16R (Raven)
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""}, # X16S
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} # X17
     #[PSCustomObject]@{MainAlgorithm = "wildkeccak"; Params = ""}, # Boolberry, untested

@@ -12,12 +12,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeriumx"; Params = "-N 1"}, #AeriumX, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"}, #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"}, # New in 1.11
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"}, #PHI
+    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 3}, #PHI
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-N 1"}, #Polytimos
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"}, #Skunk, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"}, #Timetravel8
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"}, #Tribus, new in 1.10
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 100"; ExtendInterval = 10; FaultTolerance = 0.5; HashrateDuration = "Day"}, #Raven, Ravencoin-Miner 3.0 is faster
+    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 10; FaultTolerance = 0.5; HashrateDuration = "Day"}, #Raven, Ravencoin-Miner 3.0 is faster
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""}, #Pigeon
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"}, #X17
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"}, #Xevan, new in 1.09a

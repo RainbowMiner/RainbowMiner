@@ -25,7 +25,6 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
-        $HashRates_Duration = if ( $HashRates_Durations.$_ ) { $HashRates_Durations.$_ } else { $Default_HashRates_Duration }
 
         [PSCustomObject]@{
             Name = $Miner_Name

@@ -84,7 +84,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.0.0"
+$Version = "3.7.0.1"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -544,11 +544,11 @@ while ($true) {
 
         $Config | Get-Member -MemberType *Property | Foreach-Object {
             $name = $_.Name;
-            if ($var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue) {
-                if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
-                elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = "1","yes","y","ja","j","true","oui","da" -icontains $Config.$name}
-                elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
-            }
+            $var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
+            if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
+            elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = Get-Yes $Config.$name}
+            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
+            
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
@@ -1092,8 +1092,8 @@ while ($true) {
     }
 
     #Get most profitable miner combination i.e. AMD+NVIDIA+CPU
-    $BestMiners = $ActiveMiners | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1)}
-    $BestMiners_Comparison = $ActiveMiners | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1)}
+    $BestMiners = $ActiveMiners | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count}, {$_.Benchmarked} | Select-Object -First 1)}
+    $BestMiners_Comparison = $ActiveMiners | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count}, {$_.Benchmarked} | Select-Object -First 1)}
     $Miners_Device_Combos = (Get-Combination ($ActiveMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName -Unique) ($_.Combination | Select-Object -ExpandProperty DeviceName) | Measure-Object).Count -eq 0})
     $BestMiners_Combos = $Miners_Device_Combos | ForEach-Object {
         $Miner_Device_Combo = $_.Combination
