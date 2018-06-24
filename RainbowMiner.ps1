@@ -84,7 +84,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.0.1"
+$Version = "3.7.0.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
