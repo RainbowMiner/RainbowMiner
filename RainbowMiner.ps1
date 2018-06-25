@@ -611,7 +611,7 @@ while ($true) {
             $Config.Pools | Add-Member $_.BaseName $DonationData1 -Force
             $DonateNow = $true
         }
-        if ( $DonateNow ) {
+        if ($DonateNow) {
             $ConfigTimeStamp = 0
             $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($DonationPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
             $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
@@ -637,9 +637,10 @@ while ($true) {
     if ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {$Balances = $null}
 
     if ($ConfigCheckFields) {
-
         #Actions, when config has changes (or initial)
         # .. for every change
+
+        #load device(s) informatino and device combos
         if ($ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
             Write-Log "Device configuration changed. Refreshing now. "
 
@@ -772,6 +773,12 @@ while ($true) {
         }        
     }
 
+    #Remove stats from pools & miners not longer in use
+    if (-not $DonateNow -and (Test-Path "Stats")) {
+        Compare-Object @($NewPools | Foreach-Object {"$($_.Name)_$($_.Algorithm)_Profit"} | Select-Object -Unique) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Select-Object -Unique -ExpandProperty Name) | Where-Object {$_.SideIndicator -eq "=>" -and (Test-Path "Stats\$($_.InputObject).txt")} | Foreach-Object {Remove-Item "Stats\$($_.InputObject).txt"}
+        Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty BaseName) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split '-')[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
+    }
+
     #Give API access to the current running configuration
     $API.NewPools = $NewPools
 
@@ -838,6 +845,7 @@ while ($true) {
             Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
     }
+
     if ($Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
             #Benchmarking is still ongoing - remove device combos from miners

@@ -31,7 +31,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"} #PHI spmod is faster
+    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"; ExtendInterval = 3} #PHI spmod is faster
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 1"; ExtendInterval = 3}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t

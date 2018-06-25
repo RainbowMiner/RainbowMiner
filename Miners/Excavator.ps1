@@ -98,7 +98,7 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
                         $nhConfig = "$($Pools.$nhBaseAlgorithm_Norm.Name)_$($nhBaseAlgorithm_Norm)$($nhSecondAlgorithm_Norm)$($Dcri -replace ":","x")_$($Pools.$nhBaseAlgorithm_Norm.User)_$($nhThreads)_$(@($Miner_Device.Name | Sort-Object) -join '_').json"
                         $res | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $Path)\$($nhConfig)" -Force -ErrorAction Stop
 
-                        $Miner_Name = (@("$($Name)$($nhBaseAlgorithm_Norm)$($nhSecondAlgorithmNorm)$($Dcri -replace ":","x")") + @($nhThreads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Miner_Name = (@($Name) + @($nhBaseAlgorithm_Norm) + @($nhSecondAlgorithmNorm) + @($Dcri -replace ":","x") + @($nhThreads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
                         [PSCustomObject]@{
                             Name = $Miner_Name

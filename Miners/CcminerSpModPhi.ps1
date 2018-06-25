@@ -8,7 +8,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 3"} #PHI
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 3} #PHI
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
