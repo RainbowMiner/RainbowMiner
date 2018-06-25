@@ -102,7 +102,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     API         = "Claymore"
                     Port        = $Miner_Port
                     URI         = $Uri
-                    DevFee      = $Miner_Fee              
+                    DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
                     ExecName    = "EthDcrMiner64"
                 }             
             }
