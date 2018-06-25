@@ -25,6 +25,7 @@
     "blakevanilla":  "BlakeVanilla",
     "bmw":  "BMW",
     "bmw256":  "BMW",
+    "bytom": "Bytom",
     "c11":  "C11",
     "chaincoin":  "C11",
     "cn":  "CryptoNightV7",
