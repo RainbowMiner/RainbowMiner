@@ -8,26 +8,26 @@ $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "groestlcoin"; Params = "--gpu-threads 2 --worksize 128 --intensity d"}, #Groestl
-    [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = "--gpu-threads 2 --worksize 128 --intensity d"}, #Lyra2RE2
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "--gpu-threads 1 --worksize 64 --intensity 15"}, #NeoScrypt
-    [PSCustomObject]@{MainAlgorithm = "sibcoin-mod"; Params = ""}, #Sib
-    [PSCustomObject]@{MainAlgorithm = "skeincoin"; Params = "--gpu-threads 2 --worksize 256 --intensity d"}, #Skein
+    [PSCustomObject]@{MainAlgorithm = "groestlcoin"; Params = "--gpu-threads 2 --worksize 128 --intensity d"} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = "--gpu-threads 2 --worksize 128 --intensity d"} #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "--gpu-threads 1 --worksize 64 --intensity 15"} #NeoScrypt
+    [PSCustomObject]@{MainAlgorithm = "sibcoin-mod"; Params = ""} #Sib
+    [PSCustomObject]@{MainAlgorithm = "skeincoin"; Params = "--gpu-threads 2 --worksize 256 --intensity d"} #Skein
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "--worksize 4 --rawintensity 256"} #Yescrypt
 
     # ASIC - never profitable 23/05/2018
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""}, #Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""}, #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " --gpu-threads 1 --worksize 8 --rawintensity 896"}, #CryptoNight
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "maxcoin"; Params = ""}, #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "myriadcoin-groestl"; Params = " --gpu-threads 2 --worksize 64 --intensity d"}, #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
-    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""}, #Pascal
-    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = " --intensity d"}, #BlakeVanilla
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""}, #Bitcore
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " --gpu-threads 1 --worksize 8 --rawintensity 896"} #CryptoNight
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Decred
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "maxcoin"; Params = ""} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "myriadcoin-groestl"; Params = " --gpu-threads 2 --worksize 64 --intensity d"} #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""} #Pascal
+    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = " --intensity d"} #BlakeVanilla
+    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
 )
 

@@ -8,21 +8,21 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-N 1"}, #Blake2s
-    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = "-N 1"}, #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""}, #C11 (alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak (alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""}, #Lyra2RE2 (alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, #NeoScrypt (excavator is fastest)
-    [PSCustomObject]@{MainAlgorithm = "sib"; Params = "-N 1"}, #Sib
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein (alexis78 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-N 1"} #Blake2s
+    [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = "-N 1"} #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11 (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2 (alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt (excavator is fastest)
+    [PSCustomObject]@{MainAlgorithm = "sib"; Params = "-N 1"} #Sib
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein (alexis78 is fastest)
     [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
 
     # ASIC - never profitable 12/05/2018
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Decred
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
     #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""} #Sib
 )
 

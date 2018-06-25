@@ -8,8 +8,8 @@ $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptolite"; Params = " -lite 1 0"}, #Cryptolite
-    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " -pow7 0"}, #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "cryptolite"; Params = " -lite 1 0"} #Cryptolite
+    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " -pow7 0"} #CryptoNight
     [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = " -pow7 1"} #CryptoNightV7
 )
 

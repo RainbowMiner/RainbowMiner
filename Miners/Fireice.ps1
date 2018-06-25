@@ -5,9 +5,9 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4.5-
 $Port = "308{0:d2}"
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""}, #CryptoNight
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""}, # CryptoNight-Heavy
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""}, # CryptoNight-Lite
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""} # CryptoNight-Heavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""} # CryptoNight-Lite
     [PSCustomObject]@{MainAlgorithm = "cryptonight_V7"; Params = ""} #CryptoNightV7
 )
 

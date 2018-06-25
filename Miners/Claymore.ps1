@@ -16,6 +16,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 40; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 60; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 80; Params = ""} #Ethash/Decred
+    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 21; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 24; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 27; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 30; Params = ""} #Ethash/Keccak

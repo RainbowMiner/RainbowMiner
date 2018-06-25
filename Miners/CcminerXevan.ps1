@@ -8,23 +8,23 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"}, #c11
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"}, #Lyra2RE2 (alexis78 is faster)
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"}, #Skein
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #Lyra2RE2 (alexis78 is faster)
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan
 
     # ASIC - never profitable 12/05/2018
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""}, #Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""}, #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
-    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""}, #Qubit
-    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""}, #Quark
-    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""}, #X12
-    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""}, #X14
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Decred
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
+    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
+    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
+    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #X14
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

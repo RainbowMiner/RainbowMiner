@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://www.bminercontent.com/releases/bminer-v9.0.0-199ca8c-amd64.zip"
+$URI = "https://www.bminercontent.com/releases/bminer-lite-v9.0.0-199ca8c-amd64.zip"
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
 

@@ -9,19 +9,19 @@ $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"}, #Aergo
-    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""}, #Blake
-    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""}, #Bmw
-    [PSCustomObject]@{MainAlgorithm = "echo"; Params = ""}, #Echo
-    [PSCustomObject]@{MainAlgorithm = "hamsi"; Params = ""}, #Hamsi
-    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-X 256 -g 2 -w 256"}, # Phi
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-X 256 -g 2"}, #Tribus
-    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""}, #Whirlpool
-    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-X 256 -g 2"}, #Xevan
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-X 256 -g 2"}, #X16S Pigeoncoin
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-X 256 -g 2"}, #X16R Ravencoin
+    [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"} #Aergo
+    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #Blake
+    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #Bmw
+    [PSCustomObject]@{MainAlgorithm = "echo"; Params = ""} #Echo
+    [PSCustomObject]@{MainAlgorithm = "hamsi"; Params = ""} #Hamsi
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-X 256 -g 2 -w 256"} # Phi
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-X 256 -g 2"} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
+    [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-X 256 -g 2"} #Xevan
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-X 256 -g 2"} #X16S Pigeoncoin
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-X 256 -g 2"} #X16R Ravencoin
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-X 256 -g 2"}
 )
 

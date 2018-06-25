@@ -8,8 +8,8 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""},
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""},
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
 )
 

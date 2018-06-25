@@ -8,39 +8,39 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = ""}, #Phi
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""}, #Bitcore
-    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""}, #Jha
-    #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"}, #Hsr (Alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""}, #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""}, #BlakeVanilla
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""}, #Cryptonight
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""}, #Decred
-    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""}, #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""}, #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""}, #Groestl
+    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #Phi
+    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
+    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #Jha
+    #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #Hsr (Alexis78 is fastest)
+    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""} #BlakeVanilla
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #Cryptonight
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Decred
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #hmq1725
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""}, #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""}, #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""}, #Lyra2RE2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--submit-stale"}, #Lyra2z
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""}, #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""}, #NeoScrypt
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""}, #Nist5
-    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""}, #Pascal
-    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""}, #Qubit
-    #[PSCustomObject]@{MainAlgorithm = "scrypt"; Params = ""}, #Scrypt
-    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""}, #Sia
-    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""}, #Sib
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""}, #Skein
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""}, #Skunk
-    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""}, #Timetravel
-    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""}, #Tribus
-    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""}, #X11
-    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""}, #Veltor
-    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""}, #X11evo
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""}, #X17
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 10; FaultTolerance = 0.5; HashrateDuration = "Day"}, #X16r(stable, ccminerx16r faster)
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--submit-stale"} #Lyra2z
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = ""} #Pascal
+    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
+    #[PSCustomObject]@{MainAlgorithm = "scrypt"; Params = ""} #Scrypt
+    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""} #Sia
+    #[PSCustomObject]@{MainAlgorithm = "sib"; Params = ""} #Sib
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
+    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
+    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #X11
+    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
+    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""} #X11evo
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
+    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 10; FaultTolerance = 0.5; HashrateDuration = "Day"} #X16r(stable, ccminerx16r faster)
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""} #X16s(CcminerPigencoin is faster)
 )
 

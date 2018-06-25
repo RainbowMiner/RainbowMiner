@@ -7,19 +7,19 @@ $Port = "310{0:d2}"
 if (-not $Devices.NVIDIA -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Params = @(); Threads = 1}, #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = @(); Threads = 1}, #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = @(); Threads = 2}, #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = @(); Threads = 1}, #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = @(); Threads = 1}, #Lyra2RE2
+    #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Params = @(); Threads = 1} #Ethash
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = @(); Threads = 1} #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = @(); Threads = 2} #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = @(); Threads = 1} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = @(); Threads = 1} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = @(); Threads = 1} #NeoScrypt (fastest for all pools)
 
     # ASIC - never profitable 20/04/2018
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = @(); Threads = 1}, #Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = @(); Threads = 1}, #Cryptonight
-    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = @(); Threads = 1}, #Decred
-    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = @(); Threads = 1}, #Lbry
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = @(); Threads = 1}, #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = @(); Threads = 1} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = @(); Threads = 1} #Cryptonight
+    #[PSCustomObject]@{MainAlgorithm = "decred"; Params = @(); Threads = 1} #Decred
+    #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = @(); Threads = 1} #Lbry
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = @(); Threads = 1} #Nist5
     #[PSCustomObject]@{MainAlgorithm = "pascal"; Params = @(); Threads = 1} #Pascal
 )
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

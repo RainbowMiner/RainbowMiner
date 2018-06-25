@@ -8,8 +8,8 @@ $Devices = $Devices.CPU
 if (-not $Devices -or $Config.InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""},
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""},
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
 )
 
