@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
-$Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_092.zip"
+$Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_110.zip"
 $Port = "306{0:2d}"
 
 $Devices = $Devices.AMD

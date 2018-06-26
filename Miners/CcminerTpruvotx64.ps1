@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-TPruvotx64\ccminer-x64.exe"
-$Uri = "https://github.com/tpruvot/ccminer/releases/download/2.2.6-tpruvot/ccminer-x64-2.2.6-phi2-cuda9.7z"
+$Uri = "https://github.com/tpruvot/ccminer/releases/download/2.3-tpruvot/ccminer-2.3-cuda9.7z"
 $Port = "115{0:d2}"
 
 $Devices = $Devices.NVIDIA
@@ -10,6 +10,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
+    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = " -i 21"} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
@@ -19,16 +20,18 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
+    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JackPot
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #keccakc
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #keccakc
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z, ZCoin        
+    [PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"; ExtendInterval = 3} #PHI spmod is faster
@@ -39,6 +42,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #SonoA
+    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
     #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus (enemyz 1.10 is faster)
@@ -89,18 +94,20 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        [PSCustomObject]@{
-            Name = $Miner_Name
-            DeviceName = $Miner_Device.Name
-            DeviceModel = $Miner_Model
-            Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
-            API = "Ccminer"
-            Port = $Miner_Port
-            URI = $Uri
-            FaultTolerance = $_.FaultTolerance
-            ExtendInterval = $_.ExtendInterval
+        if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash" -or $_.MainAlgorithm -ne "monero") {
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path = $Path
+                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q --submit-stale -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+                API = "Ccminer"
+                Port = $Miner_Port
+                URI = $Uri
+                FaultTolerance = $_.FaultTolerance
+                ExtendInterval = $_.ExtendInterval
+            }
         }
     }
 }

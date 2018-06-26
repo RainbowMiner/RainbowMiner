@@ -23,7 +23,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--submit-stale"} #Lyra2z
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
@@ -63,7 +63,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q --submit-stale -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
             API = "Ccminer"
             Port = $Miner_Port

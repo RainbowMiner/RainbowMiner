@@ -8,7 +8,9 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV8
     [PSCustomObject]@{MainAlgorithm = "monero"; Params = ""} #CryptonightV7
+    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -31,7 +33,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Wrapper"
                 Port = $Miner_Port
