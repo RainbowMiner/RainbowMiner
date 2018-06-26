@@ -33,6 +33,8 @@
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
         )
         "CcminerTpruvotx64" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "allium"; SecondaryAlgorithm = ""; Params = "-i 22.125"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "keccakc"; SecondaryAlgorithm = ""; Params = "-i 29"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 21"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
         )
