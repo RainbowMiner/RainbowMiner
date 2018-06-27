@@ -6,7 +6,7 @@
 ## FEATURE SUMMARY
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
-- **Profit auto-switch between miners for GPUs & CPUs (optimized one for each vendor vs. different miner per device)**
+- **Profit auto-switch between miners for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
 - **Web-Interface through http://localhost:3999 (in development)**
 - **Switch MSI Afterburner profiles per miner**
