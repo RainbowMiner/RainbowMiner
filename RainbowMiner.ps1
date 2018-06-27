@@ -168,23 +168,18 @@ try {
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
 
         # Create pools.config.txt if it is missing
-
         if (-not (Test-Path $PoolsConfigFile)) {
-
-                if(Test-Path "Config\pools.config.default.txt") {
-
-                        Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
-
-                } else {
-
-                        throw "$($PoolsConfigFile) and Config\pools.config.default.txt are missing."
-                }
+            if(Test-Path "Config\pools.config.default.txt") {
+                Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
+            } else {
+                throw "$($PoolsConfigFile) and Config\pools.config.default.txt are missing."
+            }
         }
         $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
 
         # Create miners.config.txt if it is missing
         if (-not (Test-Path $MinersConfigFile)) {
-                Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
+            Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
         }
         $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
         $_ | Resolve-Path -Relative
