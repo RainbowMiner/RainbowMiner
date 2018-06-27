@@ -973,7 +973,6 @@ class Miner {
     $Name
     $Path
     $Arguments
-    $Wrap
     $API
     $Port
     [string[]]$Algorithm = @()
@@ -1909,4 +1908,22 @@ function Test-Port{
         #Generate Report   
         $report  
     } 
+}
+
+function Get-MD5Hash {
+[cmdletbinding(   
+    DefaultParameterSetName = '',   
+    ConfirmImpact = 'low'   
+)]   
+Param(   
+    [Parameter(   
+        Mandatory = $True,   
+        Position = 0,   
+        ParameterSetName = '',   
+        ValueFromPipeline = $True)]   
+        [string]$value
+)
+    $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
+    $utf8 = new-object -TypeName System.Text.UTF8Encoding
+    [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }

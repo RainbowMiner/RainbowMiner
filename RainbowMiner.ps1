@@ -130,6 +130,7 @@ $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
+$MinersUriHash = $null
 
 #Cleanup the log
 if (Test-Path ".\Logs"){
@@ -533,7 +534,7 @@ while ($true) {
         }
     }
     
-     #Error in Config.txt
+    #Error in Config.txt
     if ($Config -isnot [PSCustomObject]) {
         Write-Log -Level Error "$($ConfigFile) is invalid. Cannot continue. "
         Start-Sleep 10
@@ -989,15 +990,18 @@ while ($true) {
 
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
     }
+    $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
+    if ($MinersUriHash -eq $null) {$MinersUriHash = $AllMinersUriHash}
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath))}
-    if ( ($StartDownloader -or $Miners.Count -ne $AllMiners.Count) -and $Downloader.State -ne "Running") {
-        if ( $StartDownloader ) {
+    if ( ($StartDownloader -or $Miners.Count -ne $AllMiners.Count -or $MinersUriHash -ne $AllMinersUriHash) -and $Downloader.State -ne "Running") {
+        if ($StartDownloader) {
             Write-Log -Level Warn "User requested to start downloader. "
         } else {
-            Write-Log -Level Warn "Some miners binaries are missing, starting downloader. "
+            Write-Log -Level Warn "Some miners binaries are missing or are out of date, starting downloader. "
         }
         $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
         $StartDownloader = $false
+        $MinersUriHash = $AllMinersUriHash
     }
     # Open firewall ports for all miners
     if (Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) {
@@ -1054,26 +1058,26 @@ while ($true) {
             $_.Wrap -eq $Miner.Wrap -and 
             $_.API -eq $Miner.API -and 
             $_.Port -eq $Miner.Port -and
-            $_.MSIAprofile -eq $Miner.MSIAprofile -and
-            $_.FaultTolerance -eq $Miner.FaultTolerance -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
         if ($ActiveMiner) {
-            $ActiveMiner.DeviceName = $Miner.DeviceName
-            $ActiveMiner.DeviceModel = $Miner.DeviceModel
             $ActiveMiner.Profit = $Miner.Profit
             $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
             $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
             $ActiveMiner.Profit_Bias = $Miner.Profit_Bias
             $ActiveMiner.Profit_Unbias = $Miner.Profit_Unbias
             $ActiveMiner.Speed = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
+            $ActiveMiner.DeviceName = $Miner.DeviceName
+            $ActiveMiner.DeviceModel = $Miner.DeviceModel
+            $ActiveMiner.DevFee = $Miner.DevFee
+            $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
+            $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
         }
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 Path                 = $Miner.Path
                 Arguments            = $Miner.Arguments
-                Wrap                 = $Miner.Wrap
                 API                  = $Miner.API
                 Port                 = $Miner.Port
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
