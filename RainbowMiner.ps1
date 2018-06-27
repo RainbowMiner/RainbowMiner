@@ -160,39 +160,51 @@ Import-Module .\API.psm1
 Start-APIServer
 $API.Version = $Version
 
-if (-not (Test-Path ".\Config")) {New-Item -Name "Config" -ItemType "directory" -Force | Out-Null}
+try {
+    $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
+        $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
+        $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
+        $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
+        $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
 
-if (-not $ConfigFile) {$ConfigFile = "Config\config.txt"}# Create config.txt if it is missing
-if (-not (Test-Path $ConfigFile)) {
-    if(Test-Path "Config\config.default.txt") {
-        Copy-Item -Path "Config\config.default.txt" -Destination $ConfigFile
-        $RunSetup = $IsInitialSetup = $true
-    } else {
-        Write-Log -Level Error "$($ConfigFile) and Config\config.default.txt are missing. Cannot continue. "
-        Exit
+        # Create pools.config.txt if it is missing
+
+        if (-not (Test-Path $PoolsConfigFile)) {
+
+                if(Test-Path "Config\pools.config.default.txt") {
+
+                        Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
+
+                } else {
+
+                        throw "$($PoolsConfigFile) and Config\pools.config.default.txt are missing."
+                }
+        }
+        $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
+
+        # Create miners.config.txt if it is missing
+        if (-not (Test-Path $MinersConfigFile)) {
+                Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
+        }
+        $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
+        $_ | Resolve-Path -Relative
     }
-}$ConfigFile = Get-Item $ConfigFile | Foreach-Object {    $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName    $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name    $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''    $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
 
-    # Create pools.config.txt if it is missing
-    if (-not (Test-Path $PoolsConfigFile)) {
-        if(Test-Path "Config\pools.config.default.txt") {
-            Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
-        } else {
-            Write-Log -Level Error "$($PoolsConfigFile) and Config\pools.config.default.txt are missing. Cannot continue. "
-            Exit
+    #cleanup legacy data
+    if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force | Out-Null}
+    @("Algorithms","Devices","Regions") | Where-Object {-not (Test-Path "Data\$($_.ToLower()).json")} | Foreach-Object {
+        if (Test-Path "$($_).txt") {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force | Out-Null}
+        else {
+            throw "Data\$($_.ToLower()).json is missing."
         }
     }
-    $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
+}
+catch {
+    Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
+    Exit
+}
 
-    # Create miners.config.txt if it is missing
-    if (-not (Test-Path $MinersConfigFile)) {
-        Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
-    }
-    $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
-    $_ | Resolve-Path -Relative
-}#cleanup legacy data
-if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force | Out-Null}
-@("Algorithms","Devices","Regions") | Where-Object {-not (Test-Path "Data\$($_.ToLower()).json") -and (Test-Path "$($_).txt")} | Foreach-Object {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force | Out-Null}#[console]::TreatControlCAsInput = $true
+#[console]::TreatControlCAsInput = $true
 
 while ($true) {
     #Load the config
