@@ -16,7 +16,7 @@
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
         )
         "CcminerCool" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
         )
         "CcminerKlausT" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "-i 17.6"; Profile = "3"}
