@@ -160,7 +160,7 @@ Import-Module .\API.psm1
 Start-APIServer
 $API.Version = $Version
 
-if (-not (Test-Path Config)) {New-Item -Name "Config" -ItemType "directory" -Force}
+if (-not (Test-Path ".\Config")) {New-Item -Name "Config" -ItemType "directory" -Force | Out-Null}
 
 if (-not $ConfigFile) {$ConfigFile = "Config\config.txt"}# Create config.txt if it is missing
 if (-not (Test-Path $ConfigFile)) {
@@ -190,8 +190,9 @@ if (-not (Test-Path $ConfigFile)) {
     }
     $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
     $_ | Resolve-Path -Relative
-}
-#[console]::TreatControlCAsInput = $true
+}#cleanup legacy data
+if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force | Out-Null}
+@("Algorithms","Devices","Regions") | Where-Object {-not (Test-Path "Data\$($_.ToLower()).json") -and (Test-Path "$($_).txt")} | Foreach-Object {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force | Out-Null}#[console]::TreatControlCAsInput = $true
 
 while ($true) {
     #Load the config

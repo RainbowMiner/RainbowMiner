@@ -698,7 +698,7 @@ function Get-Device {
         [String[]]$Name = @()
     )
 
-    $Devices = Get-Content "Devices.txt" | ConvertFrom-Json
+    $Devices = Get-Content "Data\devices.json" | ConvertFrom-Json
 
     if ($Name) {
         $Name_Devices = $Name | ForEach-Object {
@@ -923,7 +923,7 @@ function Get-Algorithm {
     )
 
     if (-not (Test-Path Variable:Script:Algorithms)) {
-        $Script:Algorithms = Get-Content "Algorithms.txt" | ConvertFrom-Json
+        $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
     }
 
     $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "-", " " -replace "_", " ")) -replace " "
@@ -940,7 +940,7 @@ function Get-Region {
     )
 
     if (-not (Test-Path Variable:Script:Regions)) {
-        $Script:Regions = Get-Content "Regions.txt" | ConvertFrom-Json
+        $Script:Regions = Get-Content "Data\regions.json" | ConvertFrom-Json
     }
     
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
@@ -951,14 +951,14 @@ function Get-Region {
 
 function Get-Algorithms {
     if (-not (Test-Path Variable:Script:Algorithms)) {
-        $Script:Algorithms = Get-Content "Algorithms.txt" | ConvertFrom-Json
+        $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
     }
     $Script:Algorithms.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
 }
 
 function Get-Regions {
     if (-not (Test-Path Variable:Script:Regions)) {
-        $Script:Regions = Get-Content "Regions.txt" | ConvertFrom-Json
+        $Script:Regions = Get-Content "Data\regions.json" | ConvertFrom-Json
     }
     $Script:Regions.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
 }

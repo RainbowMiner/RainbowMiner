@@ -11,13 +11,14 @@
 110	CcminerSpModBitcore
 111	CcminerSpModPhi
 112	CcminerSpModSkunk
-113 CcminerDelos
+113	CcminerDelos
 114	CcminerTpruvot
 115	CcminerTpruvotx64
 116	CcminerX16r
 117	CcminerX16s
 118	CcminerXevan
 119	CcminerXevan75
+120	CcminerDumax
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -30,32 +31,30 @@
 302	EnemyZealot
 303	XmrigNvidia
 304	XmrigAmd
-305 Dstm
-306 Cast
-307 Bminer
-308 PhoenixMiner
-309 FireIce
-310 Excavator1.4.4
-311 Excavator
+305	Dstm
+306	Cast
+307	Bminer
+308	PhoenixMiner
+309	FireIce
+310	Excavator1.4.4
+311	Excavator
+312	Ewbf
 
-400 Sgminer
-401 SgminerBitcore
-402 SgminerKl
-403 SgminerLyra2z
-404 SgminerSkein
-405 SgminerXevan
+400	Sgminer
+401	SgminerBitcore
+402	SgminerKl
+403	SgminerLyra2z
+404	SgminerSkein
+405	SgminerXevan
 
-500 CpuminerJayddeeSse2
-501 CpuminerJayddeeAessse42
-502 CpuminerJayddeeAvx2
-503 CpuminerJayddeeAvx2sha
-
-510 CpuminerTpruvotAvx2
-511 CpuminerTpruvotCore2
-512 CpuminerTpruvotCorei7
-
-520 ClaymoreCpu
-521 XmrigCpu
-
+500	CpuminerJayddeeSse2
+501	CpuminerJayddeeAessse42
+502	CpuminerJayddeeAvx2
+503	CpuminerJayddeeAvx2sha
+510	CpuminerTpruvotAvx2
+511	CpuminerTpruvotCore2
+512	CpuminerTpruvotCorei7
+520	ClaymoreCpu
+521	XmrigCpu
 
 4068    CcminerSpModTribus
