@@ -6,7 +6,7 @@
 ## FEATURE SUMMARY
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
-- **Profit auto-switch per selected GPUs models or alternative GPU vendor**
+- **Profit auto-switch between miners for GPUs & CPUs (optimized one for each vendor vs. different miner per device)**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
 - **Web-Interface through http://localhost:3999 (in development)**
 - **Switch MSI Afterburner profiles per miner**
@@ -28,7 +28,7 @@
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
    - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
-   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
+   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 5. Let the downloads and benchmarking finish (it will already mine to your wallets)
@@ -110,7 +110,6 @@ Config files are found in directory "Config\"
 - WorkerName = your desired worker name
 - UserName = your MiningPoolHub user name
 - Interval = timing interval in seconds of RainbowMiner [default=60]
-- ExtendInterval = list of alogrithms and miner names, for benchmarking instable alogrithms (escpecially X16r) the Interval will be multiplied by 10 [default=X16r,Ravenminer]
 - Region = your region, [default=US]
 - SSL = set to 1, if only ssl connections wanted
 - DeviceName = list of device descriptors, with which you want to mine [default=nvidia,amd]
