@@ -161,7 +161,7 @@ Start-APIServer
 $API.Version = $Version
 
 try {
-    $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
+    $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
         $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
         $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
         $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
