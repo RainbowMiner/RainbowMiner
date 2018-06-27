@@ -1045,7 +1045,9 @@ while ($true) {
             $_.Arguments -eq $Miner.Arguments -and 
             $_.Wrap -eq $Miner.Wrap -and 
             $_.API -eq $Miner.API -and 
-            $_.Port -eq $Miner.Port -and 
+            $_.Port -eq $Miner.Port -and
+            $_.MSIAprofile -eq $Miner.MSIAprofile -and
+            $_.FaultTolerance -eq $Miner.FaultTolerance -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
         if ($ActiveMiner) {
