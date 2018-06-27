@@ -16,10 +16,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 40; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 60; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 80; Params = ""} #Ethash/Decred
+    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 17; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 21; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 24; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 27; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 30; Params = ""} #Ethash/Keccak
+    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 33; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "lbry"; SecondaryIntensity = 30; Params = ""} #Ethash/Lbry
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "lbry"; SecondaryIntensity = 40; Params = ""} #Ethash/Lbry
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "lbry"; SecondaryIntensity = 50; Params = ""} #Ethash/Lbry
@@ -33,6 +35,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 40; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 60; Params = ""} #Ethash/Decred
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "decred"; SecondaryIntensity = 80; Params = ""} #Ethash/Decred
+    [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 17; Params = ""} #Ethash/Keccak
+    [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 21; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 24; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 27; Params = ""} #Ethash/Keccak
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; SecondaryAlgorithm = "keccak"; SecondaryIntensity = 30; Params = ""} #Ethash/Keccak

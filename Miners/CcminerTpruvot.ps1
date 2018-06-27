@@ -10,7 +10,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
+    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z, ZCoin
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    ###[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"} #PHI spmod is faster
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"} #PHI spmod is faster
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
-    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus (enemyz 1.10 is faster)
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus (enemyz 1.10 is faster)
     #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx

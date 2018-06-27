@@ -25,17 +25,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JackPot
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
-    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #keccakc
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #keccakc
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z, ZCoin        
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin        
     [PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"; ExtendInterval = 3} #PHI spmod is faster
-    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 1"; ExtendInterval = 3}
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 3"} #PHI spmod is faster
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
@@ -100,7 +100,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q --submit-stale -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                 API = "Ccminer"
                 Port = $Miner_Port

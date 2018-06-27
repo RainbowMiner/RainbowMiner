@@ -8,10 +8,10 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 3"} #PHI
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 3"} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 3"} #PHI2
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"} #X16s
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -33,7 +33,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q --submit-stale -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API = "Ccminer"
             Port = $Miner_Port
