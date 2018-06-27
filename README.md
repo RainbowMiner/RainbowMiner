@@ -20,7 +20,7 @@
 
 1. Download and extract to your desktop (find the latest release here https://github.com/RainbowMiner/RainbowMiner/releases)
 2. Check powershell version and pre-requesites (see below, very important!)
-3. Right-click "Start.bat", choose "Run as administrator"
+3. Right-click "Start.bat", choose "Run as administrator": there will start two windows, one contains RainbowMiner and the other will show the output of the running miners.
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
    - your desired workername (or accept the default)
@@ -55,9 +55,16 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - [**P**]ause = stop all running miner and wait until user presses P again
 
 
-## RECOMMENDATIONS
+## RECOMMENDATIONS & HELPERS
 - Set your Windows virtual memory size to a fixed size of at least 16GB, or better to the sum of your GPU memories x 1.5, e.g. if you have 6x GTX1070 8GB installed, use at least 72GB (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
+- the root directory of RainbowMiner contains the follwing, additional batch files:
+  - ListGPUs.bat: if clicked, a window will popup and list all available GPUs
+  - MinerLog.bat: it reopens the window to show the output of the miners. Useful, if you unintentionally closed this log window.
+  - RemoveLogs.bat: delete all log files to save some disk space
+  - ResetBenchmark.bat: reset all benchmarks
+  - ResetProfit.bat: reset RainbowMiner's profit calculation
+  - Stopp.bat: halt RainbowMiner at once
 	
 
 ## POOLS
