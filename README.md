@@ -88,9 +88,9 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Zpool https://www.zpool.ca/ (auto-exchange and payout in BTC)
 	
 
-## MSIA AFTERBURNER CONFIGURATION
+## MSI AFTERBURNER CONFIGURATION
 
-The MSIA Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU.
+The MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU.
 RainbowMiner includes automatic switching those profiles, if you wish. To enable MSI Afterburner handling, check or set the path to MSIA and set the MSI default profile to a number from 1 to 5 
 I recommend you stick to the following profile setup. The overclocking values in brackets (core clock/memory clock) are those I use on my GTX 1070 and are only for illustration. The precise setting per GPU can be done by editing the miners.config.txt
 
