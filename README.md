@@ -3,18 +3,23 @@
 
 ###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
+## INTRODUCTION
+
+GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU).
+Features: easy setup wizard with adhoc working default (no editing of files needed), webinterface, selection of devices to be used.
+
 ## FEATURE SUMMARY
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
-- **Profit auto-switch between miners for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
+- **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
-- **Web-Interface through http://localhost:3999 (in development)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Sgminer and many more)**
+- **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
+- **Mining devices freely selectable**
+- **Finetune miner- and pool-configuration during runtime**
 - **Switch MSI Afterburner profiles per miner**
-- **Easy setup - simply click Start.bat (RainbowMiner will ask for your credentials)**
-- **Change global, miner and pool-configuration during runtime**
 - **Pause mining without exiting the RainbowMiner**
-- **Easy control through command line parameters or config files**
-
+- **Web-Interface through http://localhost:3999 (in development)**
 
 ## INSTALLATION
 
