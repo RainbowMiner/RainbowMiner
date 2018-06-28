@@ -1179,31 +1179,33 @@ class Miner {
                         }
                     }
 
-                    if (($HashRates | Measure-Object -Sum).Sum -gt 0 -and $Line_Simple -match "\b(gpu|cpu|device)([^s]|\b)") {
-                        $Words = $Line_Simple -replace "#", "" -replace ":", "" -split " "
+                    if (($HashRates | Measure-Object -Sum).Sum -gt 0) {
+                        if ($Line_Simple -match "\b(gpu|cpu|device)([^s]|\b)") {
+                            $Words = $Line_Simple -replace "#", "" -replace ":", "" -split " "
 
-                        $Words -match "^(gpu|cpu|device)([^s]|$)" | ForEach-Object {
-                            if (($Words | Select-Object -Index $Words.IndexOf($_)) -match "^(.*)((?:\d*\.)?\d+)$") {
-                                $Device = ($matches | Select-Object -Index 2) -as [Int]
-                                $Device_Type = ($matches | Select-Object -Index 1)
-                            }
-                            else {
-                                $Device = ($Words | Select-Object -Index ($Words.IndexOf($_) + 1)) -as [Int]
-                                $Device_Type = ($Words | Select-Object -Index $Words.IndexOf($_))
-                            }
+                            $Words -match "^(gpu|cpu|device)([^s]|$)" | ForEach-Object {
+                                if (($Words | Select-Object -Index $Words.IndexOf($_)) -match "^(.*)((?:\d*\.)?\d+)$") {
+                                    $Device = ($matches | Select-Object -Index 2) -as [Int]
+                                    $Device_Type = ($matches | Select-Object -Index 1)
+                                }
+                                else {
+                                    $Device = ($Words | Select-Object -Index ($Words.IndexOf($_) + 1)) -as [Int]
+                                    $Device_Type = ($Words | Select-Object -Index $Words.IndexOf($_))
+                                }
 
-                            $Devices += "{0}#{1:d2}" -f $Device_Type, $Device
+                                $Devices += "{0}#{1:d2}" -f $Device_Type, $Device
+                            }
+                        }
+
+                        $this.Data += [PSCustomObject]@{
+                            Date = $Date
+                            Raw = $Line_Simple
+                            HashRate = [PSCustomObject]@{[String]$this.Algorithm = $HashRates}                            
+                            Device = $Devices
                         }
                     }
 
                     $Lines += $Line
-
-                    $this.Data += [PSCustomObject]@{
-                        Date = $Date
-                        Raw = $Line_Simple
-                        HashRate = [PSCustomObject]@{[String]$this.Algorithm = $HashRates}
-                        Device = $Devices
-                    }
                 }
             }
 
