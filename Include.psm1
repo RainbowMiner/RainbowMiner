@@ -1168,21 +1168,21 @@ class Miner {
                             }
 
                             switch -wildcard ($HashRate_Unit) {
-                                "kh/s*" {$HashRate *= [Math]::Pow(1000, 1)}
-                                "mh/s*" {$HashRate *= [Math]::Pow(1000, 2)}
-                                "gh/s*" {$HashRate *= [Math]::Pow(1000, 3)}
-                                "th/s*" {$HashRate *= [Math]::Pow(1000, 4)}
-                                "ph/s*" {$HashRate *= [Math]::Pow(1000, 5)}
+                                "kh/s*" {$HashRate *= 1E+3}
+                                "mh/s*" {$HashRate *= 1E+6}
+                                "gh/s*" {$HashRate *= 1E+9}
+                                "th/s*" {$HashRate *= 1E+12}
+                                "ph/s*" {$HashRate *= 1E+15}
                             }
 
                             $HashRates += $HashRate
                         }
                     }
 
-                    if ($Line_Simple -match "gpu|cpu|device") {
+                    if (($HashRates | Measure-Object -Sum).Sum -gt 0 -and $Line_Simple -match "\b(gpu|cpu|device)([^s]|\b)") {
                         $Words = $Line_Simple -replace "#", "" -replace ":", "" -split " "
 
-                        $Words -match "^gpu|^cpu|^device" | ForEach-Object {
+                        $Words -match "^(gpu|cpu|device)([^s]|$)" | ForEach-Object {
                             if (($Words | Select-Object -Index $Words.IndexOf($_)) -match "^(.*)((?:\d*\.)?\d+)$") {
                                 $Device = ($matches | Select-Object -Index 2) -as [Int]
                                 $Device_Type = ($matches | Select-Object -Index 1)
