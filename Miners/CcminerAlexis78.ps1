@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlcoin"; Params = ""} #WhirlCoin
