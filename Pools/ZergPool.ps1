@@ -26,16 +26,16 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
     return
 }
 
-$ZergPool_Regions = "us", "europe"
+$ZergPool_Regions = "us"#, "europe"
 $ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 $ZergPool_MiningCurrencies = ($ZergPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($ZergPoolCoins_Request.$_.Symbol) {$ZergPoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique # filter ...-algo
-$ZergPool_PoolFee = 1.75
+$ZergPool_PoolFee = 0.5
 
 $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$ZergPool_Request.$_.hashrate -gt 0} |ForEach-Object {
-    $ZergPool_Host = "mine.zergpool.com"
     $ZergPool_Port = $ZergPool_Request.$_.port
     $ZergPool_Algorithm = $ZergPool_Request.$_.name
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
+    $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
     $ZergPool_Coin = ""
     $ZergPool_PoolFee = [Double]$ZergPool_Request.$_.fees
 
@@ -71,10 +71,10 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
 }
 
 $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
-    $ZergPool_Host = "mine.zergpool.com"
     $ZergPool_Port = $ZergPoolCoins_Request.$_.port
     $ZergPool_Algorithm = $ZergPoolCoins_Request.$_.algo
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
+    $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
     $ZergPool_Coin = $ZergPoolCoins_Request.$_.name
     $ZergPool_Currency = $_
 
