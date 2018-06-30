@@ -211,41 +211,11 @@ while ($true) {
 
             do {
                 $ConfigTimeStamp = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
-                $Config = Get-ChildItemContent $ConfigFile -Force -Parameters @{
-                    Wallet              = $Wallet
-                    UserName            = $UserName
-                    WorkerName          = $WorkerName
-                    API_ID              = $API_ID
-                    API_Key             = $API_Key
-                    Interval            = $Interval
-                    Region              = $Region
-                    SSL                 = $SSL
-                    DeviceName          = $DeviceName
-                    Algorithm           = $Algorithm
-                    MinerName           = $MinerName
-                    PoolName            = $PoolName
-                    ExcludeAlgorithm    = $ExcludeAlgorithm
-                    ExcludeMinerName    = $ExcludeMinerName
-                    ExcludePoolName     = $ExcludePoolName
-                    Currency            = $Currency
-                    Donate              = $Donate
-                    Proxy               = $Proxy
-                    Delay               = $Delay
-                    Watchdog            = $Watchdog
-                    MinerStatusURL      = $MinerStatusURL
-                    MinerStatusKey      = $MinerStatusKey
-                    SwitchingPrevention = $SwitchingPrevention
-                    ShowMinerWindow     = $ShowMinerWindow
-                    FastestMinerOnly    = $FastestMinerOnly
-                    IgnoreFees          = $IgnoreFees
-                    ShowPoolBalances    = $ShowPoolBalances
-                    RebootOnGPUFailure  = $RebootOnGPUFailure
-                    MSIApath            = $MSIApath
-                    MSIAprofile         = $MSIAprofile
-                    UIstyle             = $UIstyle
-                    MiningMode          = $MiningMode
-                } | Select-Object -ExpandProperty Content
-
+                $Parameters = @{}
+                $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile"} | ForEach-Object {
+                    $Parameters.Add($_ , (Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue))
+                }
+                $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
 
