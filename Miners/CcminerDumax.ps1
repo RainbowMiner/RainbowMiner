@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-ccminerDumax\ccminer.exe"
-$Uri = "https://github.com/DumaxFr/ccminer/releases/download/dumax-0.9.2/ccminer-dumax-0.9.2-win64.zip"
+$Uri = "https://github.com/DumaxFr/ccminer/releases/download/dumax-0.9.3/ccminer-dumax-0.9.3-win64.zip"
 $Port = "120{0:d2}"
 
 $Devices = $Devices.NVIDIA
