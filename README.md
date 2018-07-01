@@ -84,9 +84,13 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC)
 - Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in "Config\pools.config.txt")
 - YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in "Config\pools.config.txt")
-- ZergPool https://zergpool.eu/ (auto-exchange and payout in BTC)
+- ZergPool / ZergPoolCoins https://zergpool.eu/ (auto-exchange and payout in BTC)
+  - 'zergpool' mine most profitable algorithm. Pool chooses coin or merged mining benefits
+  - 'zergpoolcoins' mine most profitable coin. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 - Zpool https://www.zpool.ca/ (auto-exchange and payout in BTC)
 	
+Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:
+The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The YiiMP pool is an exception, as it does not have auto-exchange to BTC. Please be careful, what you choose to mine.
 
 ## MSI AFTERBURNER CONFIGURATION
 
