@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.4a/excavator_v1.5.4a_NVIDIA_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.5a/excavator_v1.5.5a_NVIDIA_Win64.zip"
 $Port = "311{0:d2}"
 
 if (-not $Devices.NVIDIA -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -11,12 +11,12 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Ethash (Ethminer is fastest)
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "decred"; Params = @(); Threads = 1; Intensity = @("0:0","16:3","16:4","16:5")} #Ethash+Decred (Claymore Dual is fastest)
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "pascal"; Params = @(); Threads = 1; Intensity = @("0:0")} #Ethash+Pascal (Claymore Dual is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "equihash"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Equihash (bminer7 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "equihash";  SecondaryAlgorithm = ""; Params = @(); Threads = 2} #Equihash (bminer7 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "equihash"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Equihash (bminer7 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "equihash";  SecondaryAlgorithm = ""; Params = @(); Threads = 2} #Equihash (bminer7 is fastest)
     [PSCustomObject]@{MainAlgorithm = "keccak";  SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Keccak (fastest, but running on nicehash, only!)
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2RE2 (Alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2:2";  SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2RE2 (Alexis78 is fastest)
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2z (Tpruvot is fastest)
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2RE2 (Alexis78 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2";  SecondaryAlgorithm = ""; Params = @(); Threads = 2} #Lyra2RE2 (Alexis78 is fastest)
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2z (Tpruvot is fastest)
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #NeoScrypt (fastest, but running on nicehash, only)
 
     # ASIC - never profitable 20/04/2018

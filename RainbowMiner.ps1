@@ -84,7 +84,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.0.1"
+$Version = "3.7.1.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -99,6 +99,7 @@ Write-Host "Starting up v$($Version)! Please wait.."
 Write-Host " "
 
 Set-Location (Split-Path $MyInvocation.MyCommand.Path)
+
 Import-Module NetSecurity -ErrorAction Ignore
 Import-Module Defender -ErrorAction Ignore
 Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
@@ -162,27 +163,29 @@ Start-APIServer
 $API.Version = $Version
 
 try {
+    $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
+    if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
+    if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" -Force | Out-Null}
+    if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}   
+    if (-not (Test-Path $ConfigFile)) {
+        $Parameters = @{VersionCompatibility=$Version}
+        $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)} | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
+        $Parameters | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8
+    }
     $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
         $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
         $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
         $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
-
+        
         # Create pools.config.txt if it is missing
-        if (-not (Test-Path $PoolsConfigFile)) {
-            if(Test-Path "Config\pools.config.default.txt") {
-                Copy-Item -Path "Config\pools.config.default.txt" -Destination $PoolsConfigFile
-            } else {
-                throw "$($PoolsConfigFile) and Config\pools.config.default.txt are missing."
-            }
-        }
+        if (-not (Test-Path $PoolsConfigFile)) {Set-PoolsConfigDefault -PathToFile $PoolsConfigFile}
         $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
 
         # Create miners.config.txt if it is missing
-        if (-not (Test-Path $MinersConfigFile)) {
-            Get-MinerConfigDefault | ConvertTo-Json | Out-File $MinersConfigFile
-        }
+        if (-not (Test-Path $MinersConfigFile)) {Set-MinersConfigDefault -PathToFile $MinersConfigFile}
         $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
+
         $_ | Resolve-Path -Relative
     }
 
@@ -219,6 +222,11 @@ while ($true) {
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
 
+                if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName -or -not $Config.Algorithm) {
+                    $IsInitialSetup = $true
+                    $RunSetup = $true
+                }
+
                 $ReReadConfig = $false
 
                 if ($RunSetup) {
@@ -229,9 +237,9 @@ while ($true) {
                         Write-Host "Please choose, what to configure:"
 
                         if ($IsInitialSetup) {
-                            $SetupType = "G"  
-                            $Config.PoolName = @("nicehash","blazepool","miningpoolhub")
-                            $Config.Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16")
+                            $SetupType = "G" 
+                            if (-not $Config.PoolName) {$Config.PoolName = @("nicehash","blazepool","miningpoolhub")}
+                            if (-not $Config.Algorithm) {$Config.Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16")}
                             $Config.FastestMinerOnly = $true 
                             $Config.ShowPoolBalances = $true
                             $Config.ShowMinerWindow = $false

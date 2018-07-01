@@ -1591,20 +1591,56 @@ function Read-HostBool {
     Get-Yes $Result
 }
 
-function Get-MinerConfigDefault {
-    $Done = [PSCustomObject]@{}
-    $Devices = Select-Device @(Get-Device "gpu") -Type @("nvidia","amd") | Select-Object Model,Vendor -Unique | Foreach-Object {$_ | Add-Member Vendor $(Get-DeviceVendor $_) -Force;$_}
-    $Setup = Get-ChildItemContent ".\Config\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
-    $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-        $Setup_Name = $_.Name
-        $Setup_Content = [PSCustomObject[]]$_.Value
-        $VendorSet = $false
-        $Devices | Foreach-Object {
-            if (-not $VendorSet) {$Done | Add-Member "$($Setup_Name)-$($_.Vendor)" $Setup_Content;$VendorSet=$true}
-            $Done | Add-Member "$($Setup_Name)-$($_.Model)" $Setup_Content        
+function Set-MinersConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile
+    )
+    try {
+        $Done = [PSCustomObject]@{}
+        $Devices = Select-Device @(Get-Device "gpu") -Type @("nvidia","amd") | Select-Object Model,Vendor -Unique | Foreach-Object {$_ | Add-Member Vendor $(Get-DeviceVendor $_) -Force;$_}
+        $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
+        $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+            $Setup_Name = $_.Name
+            $Setup_Content = [PSCustomObject[]]$_.Value
+            $VendorSet = $false
+            $Devices | Foreach-Object {
+                if (-not $VendorSet) {$Done | Add-Member "$($Setup_Name)-$($_.Vendor)" $Setup_Content;$VendorSet=$true}
+                $Done | Add-Member "$($Setup_Name)-$($_.Model)" $Setup_Content        
+            }
         }
+        $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
     }
-    $Done
+    catch{
+        Write-Log -Level Error "Could not create $($PathToFile) "
+    }
+}
+
+function Set-PoolsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile
+    )
+    try {
+        $Done = [PSCustomObject]@{}
+        $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+        Get-ChildItem ".\Pools\*.ps1" | Select-Object -ExpandProperty BaseName | Foreach-Object {        
+            $Setup_Content = [PSCustomObject]@{Worker = "`$WorkerName"}
+            $Setup_Currencies = @("BTC")
+            if ($Setup.$_) {
+                if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
+                $Setup_Currencies = @($Setup.$_.Currencies)            
+            }
+            $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
+            $Done | Add-Member $_ $Setup_Content
+        }
+        $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+    }
+    catch{
+        Write-Log -Level Error "Could not create $($PathToFile) "
+    }
 }
 
 function Get-DeviceSubsets($Device) {
