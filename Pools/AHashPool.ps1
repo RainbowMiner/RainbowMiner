@@ -43,7 +43,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $AHashPool_Value = [Math]::min($AHashPool_Value,[Double]$AHashPool_Request.$_.estimate_current)
 
     if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_current / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $AHashPool_Regions | ForEach-Object {
         $AHashPool_Region = $_
