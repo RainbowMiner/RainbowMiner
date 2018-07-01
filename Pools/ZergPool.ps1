@@ -39,8 +39,12 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
 
     $Divisor = 1000000 * [Double]$ZergPool_Request.$_.mbtc_mh_factor
 
+    $ZergPool_Value = [Double]$ZergPool_Request.$_.actual_last24h
+    if ([Double]$ZergPool_Request.$_.estimate_last24h -ne $ZergPool_Value) {$ZergPool_Value /= 1000}
+    $ZergPool_Value = [Math]::min($ZergPool_Value,[Double]$ZergPool_Request.$_.estimate_current)
+
     if ((Get-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Request.$_.estimate_current / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    else {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $ZergPool_Regions | ForEach-Object {
         $ZergPool_Region = $_
@@ -51,7 +55,7 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
             [PSCustomObject]@{
                 Algorithm     = $ZergPool_Algorithm_Norm
                 Info          = $ZergPool_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
