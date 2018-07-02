@@ -38,9 +38,14 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
     $Zpool_PoolFee = [Double]$Zpool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$Zpool_Request.$_.mbtc_mh_factor
-
+    
     if ((Get-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_current / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    else {
+        if ($DataWindow -and ($Zpool_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Zpool_Value = [Double]$Zpool_Request.$_.$DataWindow}
+        else {$Zpool_Value = [Double]$Zpool_Request.$_.estimate_current}
+        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
+        $Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ($Zpool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    }
 
     $Zpool_Regions | ForEach-Object {
         $Zpool_Region = $_
@@ -50,7 +55,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
             [PSCustomObject]@{
                 Algorithm     = $Zpool_Algorithm_Norm
                 Info          = $Zpool_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"

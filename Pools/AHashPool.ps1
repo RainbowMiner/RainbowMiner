@@ -38,12 +38,13 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor
 
-    $AHashPool_Value = [Double]$AHashPool_Request.$_.actual_last24h
-    if ([Double]$AHashPool_Request.$_.estimate_last24h -ne $AHashPool_Value) {$AHashPool_Value /= 1000}
-    $AHashPool_Value = [Math]::min($AHashPool_Value,[Double]$AHashPool_Request.$_.estimate_current)
-
-    if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+    else {
+        if ($DataWindow -and ($AHashPool_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$AHashPool_Value = [Double]$AHashPool_Request.$_.$DataWindow}
+        else {$AHashPool_Value = [Double]$AHashPool_Request.$_.estimate_current}
+        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
+        $Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    }
 
     $AHashPool_Regions | ForEach-Object {
         $AHashPool_Region = $_

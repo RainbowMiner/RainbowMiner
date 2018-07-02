@@ -40,7 +40,12 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
     $Divisor = 1000000 * [Double]$BlockMasters_Request.$_.mbtc_mh_factor
 
     if ((Get-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ([Double]$BlockMasters_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ([Double]$BlockMasters_Request.$_.estimate_current / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    else {
+        if ($DataWindow -and ($BlockMasters_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$BlockMasters_Value = [Double]$BlockMasters_Request.$_.$DataWindow}
+        else {$BlockMasters_Value = [Double]$BlockMasters_Request.$_.estimate_current}
+        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
+        $Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ($BlockMasters_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    }
 
     $BlockMasters_Regions | ForEach-Object {
         $BlockMasters_Region = $_
@@ -50,7 +55,7 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
             [PSCustomObject]@{
                 Algorithm     = $BlockMasters_Algorithm_Norm
                 Info          = $BlockMasters_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"

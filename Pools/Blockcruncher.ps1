@@ -36,15 +36,11 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
     $Blockcruncher_Currency = $_
     $Blockcruncher_PoolFee = [Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.fees
 
-    #$Divisor = 1000000000 * [Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.mbtc_mh_factor
+    #$Divisor = 1000000 * [Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.mbtc_mh_factor
 
     $Divisor = 1000000000
 
-    switch ($Blockcruncher_Algorithm_Norm) {
-        "x16r" {$Divisor *= 1}
-    }
-
-    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.actual_last24h / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BlockcruncherCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
 
     $Blockcruncher_Regions | ForEach-Object {
         $Blockcruncher_Region = $_
@@ -53,7 +49,7 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
         [PSCustomObject]@{
             Algorithm     = $Blockcruncher_Algorithm_Norm
             Info          = $Blockcruncher_Coin
-            Price         = $Stat.Live
+            Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"

@@ -238,12 +238,12 @@ while ($true) {
 
                         if ($IsInitialSetup) {
                             $SetupType = "G" 
-                            if (-not $Config.PoolName) {$Config.PoolName = @("nicehash","blazepool","miningpoolhub")}
-                            if (-not $Config.Algorithm) {$Config.Algorithm = @("bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","ethash","equihash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","x16r","x16s","x17","vit","xevan","yescrypt","yescryptr16")}
-                            $Config.FastestMinerOnly = $true 
-                            $Config.ShowPoolBalances = $true
-                            $Config.ShowMinerWindow = $false
-                            $Config.Watchdog = $true                                                        
+                            $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                            $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+                                $ConfigSetup_Name = $_.Name
+                                if ($_.Value -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $($_.Value) -Force}
+                            }
+
                         } else {
                             $SetupType = Read-HostString -Prompt "[G]lobal, [M]iner, [P]ools, E[x]it configuration" -Default "X"  -Mandatory -Characters "GMPX"
                             Write-Host " "
@@ -750,7 +750,7 @@ while ($true) {
             $Pool_Parameters = @{StatSpan = $StatSpan}
             $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
             $Pool_Config = @{}
-            Compare-Object @("Penalty","PoolFee") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
+            Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
             Get-ChildItemContent "Pools\$($_.Name)" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
         } | ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Content.Penalty + $(if (-not $Config.IgnoreFees){$_.Content.PoolFee}))/100

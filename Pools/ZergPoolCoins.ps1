@@ -31,13 +31,14 @@ $ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {G
 $ZergPool_MiningCurrencies = ($ZergPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($ZergPoolCoins_Request.$_.Symbol) {$ZergPoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique # filter ...-algo
 $ZergPool_PoolFee = 0.5
 
-$ZergPool_MiningCurrencies | Where-Object {$false -and $ZergPoolCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
+$ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
     $ZergPool_Port = $ZergPoolCoins_Request.$_.port
     $ZergPool_Algorithm = $ZergPoolCoins_Request.$_.algo
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
     $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
     $ZergPool_Coin = $ZergPoolCoins_Request.$_.name
     $ZergPool_Currency = $_
+    $ZergPool_PoolFee = $ZergPool_Request.$ZergPool_Algorithm.fees
 
     $Divisor = 1000000000 * [Double]$ZergPool_Request.$ZergPool_Algorithm.mbtc_mh_factor
     if ($Divisor -eq 0) {
@@ -57,7 +58,7 @@ $ZergPool_MiningCurrencies | Where-Object {$false -and $ZergPoolCoins_Request.$_
                 [PSCustomObject]@{
                     Algorithm     = $ZergPool_Algorithm_Norm
                     Info          = $ZergPool_Coin
-                    Price         = $Stat.Live
+                    Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"

@@ -35,6 +35,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
     $YiiMP_Algorithm_Norm = Get-Algorithm $YiiMP_Algorithm
     $YiiMP_Coin = $YiiMPCoins_Request.$_.name
     $YiiMP_Currency = $_
+    $YiiMP_PoolFee = [Double]$YiiMP_Request.$YiiMP_Algorithm.fees
 
     $Divisor = 1000000000 * [Double]$YiiMP_Request.$YiiMP_Algorithm.mbtc_mh_factor
 
@@ -47,7 +48,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
         [PSCustomObject]@{
             Algorithm     = $YiiMP_Algorithm_Norm
             Info          = $YiiMP_Coin
-            Price         = $Stat.Live
+            Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
