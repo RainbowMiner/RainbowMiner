@@ -666,11 +666,13 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $true)]
         [String]$Request, 
         [Parameter(Mandatory = $true)]
-        [Int]$Timeout = 10 #seconds
+        [Int]$Timeout = 10, #seconds,
+        [Parameter(Mandatory = $false)]
+        [Switch]$DoNotSendNewline
     )
-
+    try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Client = New-Object System.Net.Sockets.TcpClient $ipaddress, $Port
         $Stream = $Client.GetStream()
         $Writer = New-Object System.IO.StreamWriter $Stream
         $Reader = New-Object System.IO.StreamReader $Stream
@@ -678,7 +680,7 @@ function Invoke-TcpRequest {
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
-        $Writer.WriteLine($Request)
+        if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}
         $Response = $Reader.ReadLine()
     }
     finally {
