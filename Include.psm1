@@ -670,9 +670,10 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline
     )
-    try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
+    if ($Server -eq "localhost") {$Server = "127.0.0.1"}
+    #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
-        $Client = New-Object System.Net.Sockets.TcpClient $ipaddress, $Port
+        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
         $Stream = $Client.GetStream()
         $Writer = New-Object System.IO.StreamWriter $Stream
         $Reader = New-Object System.IO.StreamReader $Stream
