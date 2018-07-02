@@ -5,7 +5,8 @@ param(
     [String]$BTC, 
     [alias("WorkerName")]
     [String]$Worker, 
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -39,12 +40,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor
 
     if ((Get-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ([Double]$BlazePool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {
-        if ($DataWindow -and ($BlazePool_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$BlazePool_Value = [Double]$BlazePool_Request.$_.$DataWindow}
-        else {$BlazePool_Value = [Double]$BlazePool_Request.$_.estimate_current}
-        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
-        $Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ($BlazePool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
-    }
+    else {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlazePool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $BlazePool_Regions | ForEach-Object {
         $BlazePool_Region = $_

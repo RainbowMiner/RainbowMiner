@@ -5,7 +5,8 @@ param(
     [String]$BTC, 
     [alias("WorkerName")]
     [String]$Worker, 
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -40,12 +41,7 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
     $Divisor = 1000000 * [Double]$BlockMasters_Request.$_.mbtc_mh_factor
 
     if ((Get-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ([Double]$BlockMasters_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {
-        if ($DataWindow -and ($BlockMasters_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$BlockMasters_Value = [Double]$BlockMasters_Request.$_.$DataWindow}
-        else {$BlockMasters_Value = [Double]$BlockMasters_Request.$_.estimate_current}
-        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
-        $Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ($BlockMasters_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
-    }
+    else {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlockMasters_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $BlockMasters_Regions | ForEach-Object {
         $BlockMasters_Region = $_

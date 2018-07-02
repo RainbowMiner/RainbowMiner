@@ -5,7 +5,8 @@ param(
     [String]$BTC, 
     [alias("WorkerName")]
     [String]$Worker, 
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -39,12 +40,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor
 
     if ((Get-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {
-        if ($DataWindow -and ($AHashPool_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$AHashPool_Value = [Double]$AHashPool_Request.$_.$DataWindow}
-        else {$AHashPool_Value = [Double]$AHashPool_Request.$_.estimate_current}
-        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
-        $Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ($AHashPool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
-    }
+    else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $AHashPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $AHashPool_Regions | ForEach-Object {
         $AHashPool_Region = $_

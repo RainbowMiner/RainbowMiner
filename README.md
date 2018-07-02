@@ -189,6 +189,23 @@ If you feel like a pool tends to exagerate it's results, you can set a penalty i
 
 This would reduce the hashrate-results from the pool Ravenminer by 5%
 
+To override the default data window of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashrefinery,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
+Possible values are:
+- estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
+- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)
+- actual_last24h: the actual profitability over the past 24 hours (less switching)
+- mininum: the minimum value of the above three values will be used
+- maximum: the maximum value of the above three values will be used
+
+Example:
+    "Zpool": {
+        "LTC": "<YOUR_LITECOIN_ADDRESS>",
+        "Worker": "$WorkerName",
+        "Penalty": 0
+        "DataWindow": "minimum"
+    }
+
+
 
 ### Config\miners.config.txt
 

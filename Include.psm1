@@ -1630,11 +1630,12 @@ function Set-PoolsConfigDefault {
         $Done = [PSCustomObject]@{}
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
         Get-ChildItem ".\Pools\*.ps1" | Select-Object -ExpandProperty BaseName | Foreach-Object {        
-            $Setup_Content = [PSCustomObject]@{Worker = "`$WorkerName"}
-            $Setup_Currencies = @("BTC")
             if ($Setup.$_) {
                 if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
                 $Setup_Currencies = @($Setup.$_.Currencies)            
+            } else {
+                $Setup_Content = [PSCustomObject]@{Worker = "`$WorkerName";Penalty=0}
+                $Setup_Currencies = @("BTC")
             }
             $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
             $Done | Add-Member $_ $Setup_Content
@@ -1644,6 +1645,42 @@ function Set-PoolsConfigDefault {
     catch{
         Write-Log -Level Error "Could not create $($PathToFile) "
     }
+}
+
+function Get-YiiMPDataWindow {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$DataWindow = ''
+    )
+    Switch ($DataWindow -replace "[^A-Za-z0-9_]+","") {
+        {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current"}
+        {"2","e2","e24","e24h","last24","estimate24h","24h","estimatelast24h" -icontains $_} {"estimate_last24h"}
+        {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h"}                
+        {"4","min","minimum" -icontains $_} {"minimum"}
+        {"5","max","maximum" -icontains $_} {"maximum"}
+        default {"estimate_current"}
+    }
+}
+
+function Get-YiiMPValue {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [PSCustomObject]$Request,
+        [Parameter(Mandatory = $False)]
+        [String]$DataWindow = ''
+    )
+
+    $DataWindow = Get-YiiMPDataWindow $DataWindow
+    if ("minimum","maximum" -icontains $DataWindow) {
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Minimum -Maximum).$DataWindow
+    } else {
+        if ($DataWindow -and ($Request | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Value = [Double]$Request.$DataWindow}
+        else {$Value = [Double]$Request.estimate_current}
+        if ($DataWindow -eq "actual_last24h") {$Value /= 1000}
+    }
+    $Value
 }
 
 function Get-DeviceSubsets($Device) {

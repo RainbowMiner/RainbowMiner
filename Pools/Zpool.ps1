@@ -5,7 +5,8 @@ param(
     [String]$BTC, 
     [alias("WorkerName")]
     [String]$Worker, 
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -40,12 +41,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
     $Divisor = 1000000 * [Double]$Zpool_Request.$_.mbtc_mh_factor
     
     if ((Get-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit") -eq $null) {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {
-        if ($DataWindow -and ($Zpool_Request.$_ | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Zpool_Value = [Double]$Zpool_Request.$_.$DataWindow}
-        else {$Zpool_Value = [Double]$Zpool_Request.$_.estimate_current}
-        if ($DataWindow -eq "actual_24h") {$Divisor *= 1000}
-        $Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ($Zpool_Value / $Divisor) -Duration $StatSpan -ChangeDetection $true
-    }
+    else {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
 
     $Zpool_Regions | ForEach-Object {
         $Zpool_Region = $_
