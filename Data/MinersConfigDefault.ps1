@@ -78,6 +78,10 @@
         "ClaymoreEthash9" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "pascal"; Params = ""; Profile = "5"}
         )
+        "CryptoDredge" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+        )
         "EnemyZealot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "aeriumx"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "bitcore"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}

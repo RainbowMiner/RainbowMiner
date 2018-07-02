@@ -39,7 +39,8 @@
 310	Excavator1.4.4
 311	Excavator
 312	Ewbf
-313 CryptoDredge
+313	CryptoDredge
+314	CuBalloon
 
 400	Sgminer
 401	SgminerBitcore
