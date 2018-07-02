@@ -196,6 +196,7 @@ Possible values are:
 - actual_last24h: the actual profitability over the past 24 hours (less switching)
 - mininum: the minimum value of the above three values will be used
 - maximum: the maximum value of the above three values will be used
+- average: the calculated average of the above three values will be used
 
 Example:
     "Zpool": {

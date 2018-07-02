@@ -1659,6 +1659,7 @@ function Get-YiiMPDataWindow {
         {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h"}                
         {"4","min","minimum" -icontains $_} {"minimum"}
         {"5","max","maximum" -icontains $_} {"maximum"}
+        {"6","avg","average" -icontains $_} {"average"}
         default {"estimate_current"}
     }
 }
@@ -1673,8 +1674,8 @@ function Get-YiiMPValue {
     )
 
     $DataWindow = Get-YiiMPDataWindow $DataWindow
-    if ("minimum","maximum" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Minimum -Maximum).$DataWindow
+    if ("average","minimum","maximum" -icontains $DataWindow) {
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum).$DataWindow
     } else {
         if ($DataWindow -and ($Request | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Value = [Double]$Request.$DataWindow}
         else {$Value = [Double]$Request.estimate_current}
