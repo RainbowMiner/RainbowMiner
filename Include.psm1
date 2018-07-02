@@ -1657,9 +1657,12 @@ function Get-YiiMPDataWindow {
         {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current"}
         {"2","e2","e24","e24h","last24","estimate24h","24h","estimatelast24h" -icontains $_} {"estimate_last24h"}
         {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h"}                
-        {"4","min","minimum" -icontains $_} {"minimum"}
-        {"5","max","maximum" -icontains $_} {"maximum"}
-        {"6","avg","average" -icontains $_} {"average"}
+        {"4","min","min2","minimum","minimum2" -icontains $_} {"minimum-2"}
+        {"5","max","max2","maximum","maximum2" -icontains $_} {"maximum-2"}
+        {"6","avg","avg2","average","average2" -icontains $_} {"average-2"}
+        {"7","min3","minimum3","minall","minimumall" -icontains $_} {"minimum-3"}
+        {"8","max3","maximum3","maxall","maximumall" -icontains $_} {"maximum-3"}
+        {"9","avg3","average3","avgall","averageall" -icontains $_} {"average-3"}
         default {"estimate_current"}
     }
 }
@@ -1674,8 +1677,10 @@ function Get-YiiMPValue {
     )
 
     $DataWindow = Get-YiiMPDataWindow $DataWindow
-    if ("average","minimum","maximum" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum).$DataWindow
+    if ("average-2","minimum-2","maximum-2" -icontains $DataWindow) {
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -split '-' | Select-Object -First 1)"
+    } elseif ("average-3","minimum-3","maximum-3" -icontains $DataWindow) {
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -split '-' | Select-Object -First 1)"
     } else {
         if ($DataWindow -and ($Request | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Value = [Double]$Request.$DataWindow}
         else {$Value = [Double]$Request.estimate_current}

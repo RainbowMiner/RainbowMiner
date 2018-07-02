@@ -194,9 +194,13 @@ Possible values are:
 - estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
 - estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)
 - actual_last24h: the actual profitability over the past 24 hours (less switching)
-- mininum: the minimum value of the above three values will be used
-- maximum: the maximum value of the above three values will be used
-- average: the calculated average of the above three values will be used
+- mininum: the minimum value of estimate_current and actual_last24h will be used
+- maximum: the maximum value of estimate_current and actual_last24h will be used
+- average: the calculated average of estimate_current and actual_last24h will be used
+- mininumall: the minimum value of the above three values will be used
+- maximumall: the maximum value of the above three values will be used
+- averageall: the calculated average of the above three values will be used
+
 
 Example:
     "Zpool": {
