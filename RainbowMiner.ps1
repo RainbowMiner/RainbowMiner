@@ -1161,9 +1161,9 @@ while ($true) {
                 if ($MSIAplannedprofile.Count -ne 1) {$MSIAplannedprofile=$Config.MSIAprofile}
                 else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
 
+                Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
                 if ( $MSIAplannedprofile -ne $MSIAcurrentprofile ) {
-                    Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"
-                    Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
+                    Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
                     $MSIAcurrentprofile = $MSIAplannedprofile
                     Start-Sleep 1
                 }
