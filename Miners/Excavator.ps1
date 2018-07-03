@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.5a/excavator_v1.5.5a_NVIDIA_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.6a/excavator_v1.5.6a_NVIDIA_Win64.zip"
 $Port = "311{0:d2}"
 
 if (-not $Devices.NVIDIA -or $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -18,6 +18,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev2";  SecondaryAlgorithm = ""; Params = @(); Threads = 2} #Lyra2RE2 (Alexis78 is fastest)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Lyra2z (Tpruvot is fastest)
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #NeoScrypt (fastest, but running on nicehash, only)
+    [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = @(); Threads = 1; ExtendInterval = 10; FaultTolerance = 0.5; HashrateDuration = "Day"} #X16r
 
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; SecondaryAlgorithm = ""; Params = @(); Threads = 1} #Blake2s
@@ -72,13 +73,15 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
                         DeviceModel = $Miner_Model
                         Path = $Path
                         Arguments = "-p $($Miner_Port) -c $($nhConfig) -na"
-                        HashRates = [PSCustomObject]@{$nhBaseAlgorithm_Norm = $Stats."$($Miner_Name)_$($nhBaseAlgorithm_Norm)_HashRate".Week}
+                        HashRates = [PSCustomObject]@{$nhBaseAlgorithm_Norm = $Stats."$($Miner_Name)_$($nhBaseAlgorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                         API = "Excavator"
                         Port = $Miner_Port
                         URI = $Uri
                         PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
                         PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"                        
                         ShowMinerWindow = $True
+                        FaultTolerance = $_.FaultTolerance
+                        ExtendInterval = $_.ExtendInterval
                     }
                 } else {
 
@@ -107,7 +110,7 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
                             Path = $Path
                             Arguments = "-p $($Miner_Port) -c $($nhConfig) -na"
                             HashRates = [PSCustomObject]@{
-                                $nhBaseAlgorithm_Norm = $Stats."$($Miner_Name)_$($nhBaseAlgorithm_Norm)_HashRate".Week
+                                $nhBaseAlgorithm_Norm = $Stats."$($Miner_Name)_$($nhBaseAlgorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"
                                 $nhSecondAlgorithm_Norm = $Stats."$($Miner_Name)_$($nhSecondAlgorithm_Norm)_HashRate".Week
                             }
                             API = "Excavator"
@@ -116,6 +119,8 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
                             PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
                             PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"                            
                             ShowMinerWindow = $True
+                            FaultTolerance = $_.FaultTolerance
+                            ExtendInterval = $_.ExtendInterval
                         }
                     }
                 }
