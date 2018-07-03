@@ -4,7 +4,7 @@
             Currencies=@("BTC")
         }
         "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
+            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="average"}
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
@@ -36,7 +36,7 @@
             Currencies=@("BTC")
         }
         "Ravenminer" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
+            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="actual_last24h"}
             Currencies=@("RVN")
         }
         "YiiMP" = [PSCustomObject]@{
@@ -44,7 +44,7 @@
             Currencies=@()
         }
         "ZergPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
+            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="minimum"}
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{

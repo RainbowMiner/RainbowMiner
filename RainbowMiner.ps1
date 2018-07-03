@@ -1204,7 +1204,7 @@ while ($true) {
     Clear-Host
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
-    $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Select-Object Name -Unique)
+    $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
     $LimitMiners = if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {100} else {3}
 
