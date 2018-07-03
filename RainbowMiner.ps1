@@ -971,11 +971,9 @@ while ($true) {
     $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
     if ($MinersUriHash -eq $null) {$MinersUriHash = $AllMinersUriHash}
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath))}
-    if ( ($StartDownloader -or $Miners.Count -ne $AllMiners.Count -or $MinersUriHash -ne $AllMinersUriHash) -and $Downloader.State -ne "Running") {
+    if ( ($StartDownloader -or $MinersUriHash -ne $AllMinersUriHash) -and $Downloader.State -ne "Running") {
         if ($StartDownloader) {
             Write-Log -Level Warn "User requested to start downloader. "
-        } else {
-            Write-Log -Level Warn "Some miners binaries are missing or are out of date, starting downloader. "
         }
         $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
         $StartDownloader = $false
