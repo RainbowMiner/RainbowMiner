@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.6a/excavator_v1.5.6a_NVIDIA_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.7a/excavator_v1.5.7a_NVIDIA_Win64.zip"
 $Port = "311{0:d2}"
 
 if (-not $Devices.NVIDIA -or $Config.InfoOnly) {return} # No NVIDIA present in system
