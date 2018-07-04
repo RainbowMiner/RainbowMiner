@@ -632,6 +632,7 @@ while ($true) {
             Write-Log "Device configuration changed. Refreshing now. "
 
             #Load information about the devices
+            $API.AllDevices = @(Get-Device | Select-Object)
             $Devices = @(Get-Device $Config.DeviceName | Select-Object)
             $DevicesByTypes = [PSCustomObject]@{
                 NVIDIA = @(Select-Device $Devices "NVIDIA")

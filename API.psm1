@@ -116,6 +116,10 @@
                     $Data = $API | ConvertTo-Json
                     Break
                 }
+                "/alldevices" {
+                    $Data = ConvertTo-Json @($API.AllDevices)
+                    Break
+                }
                 "/devices" {
                     $Data = ConvertTo-Json @($API.Devices)
                     Break
