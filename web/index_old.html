@@ -1,0 +1,307 @@
+﻿<html>
+<head>
+<title>RainbowMiner</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+
+<link rel="stylesheet" type="text/css" href="css/main.css">
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.validity.min.js"></script>
+<script type="text/javascript">
+function scrollto(div)
+{
+	$('html,body').animate(
+	{
+		scrollTop: $("#"+div).offset().top
+	},'slow');
+}
+</script>
+</head>
+<body>
+
+    <div id="header">
+        <h1>RainbowMiner</h1>
+        <div id="menu">
+            <ul>
+                <li onclick="select('miners');return false">HOME</li>
+                <li onclick="select('pools');return false">POOLS</li>
+                <li onclick="select('setup');return false">SETUP</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="miners" class="contentblock">
+        <div class="minerblock" id="runningminers">
+            <h1>Running Miners</h1>
+            <div class="table"></div>
+        </div>
+    </div>
+
+    <div id="pools" class="contentblock">
+        <div class="minerblock" id="poolstable">
+            <h1>Pools</h1>
+            <div class="table"></div>
+        </div>
+    </div>
+
+    <div id="setup" class="contentblock">
+        <div class="minerblock" id="configtable">
+            <h1>Setup</h1>
+            <form class="configform" id="configform" method="get" action="">
+                <div class="table">
+                    <div class="row">
+                        <div class="column">
+                            Global BTC-Wallet
+                        </div>
+                        <div class="column">
+                            <input type="text" name="Wallet" id="input--Wallet" value="" minlength="34" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="column">
+                            Global Workername
+                        </div>
+                        <div class="column">
+                            <input type="text" name="WorkerName" id="input--WorkerName" value="" minlength="2" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="column">
+                            Global Username
+                        </div>
+                        <div class="column">
+                            <input type="text" name="UserName" id="input--UserName" value="" minlength="2" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="column">
+                            Region (US,EU,JP,..)
+                        </div>
+                        <div class="column">
+                            <input type="text" name="Region" id="input--Region" value="" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="column">
+                            Currencies (comma separated list)
+                        </div>
+                        <div class="column">
+                            <input type="text" name="Currency" id="input--Currency" value="" />
+                        </div>
+                    </div>
+                    <!--var config = ["Wallet", "WorkerName", "UserName", "API_ID", "API_Key", "Interval", "Region", "Currency", "Donate", "Delay", "SwitchingPrevention", "ExtendInterval", "FastestMinerOnly", "ShowMinerWindow", "ShowPoolBalances", "MSIApath", "MSIAprofile", "UIstyle"]-->
+
+                </div>
+                <button name="submit" />Save Config</button>
+            </form>
+        </div>
+    </div>
+
+    <br>
+    <br>
+
+    <script>
+    var initdone = false
+    function algorithms(algos) {
+        var keys = Object.keys(algos).join(',');
+        if (keys.match(/^[\d\,]+$/)) keys = algos.join(',');
+        return keys;
+    }
+
+    function pools(algos, data) {
+        var keys = Object.keys(algos);
+        var rval = [];
+        $.each(keys, function (key, algo) {
+            rval.push(data[algo].match(/Name=(.+?);/)[1]);
+        });
+        return rval.join(',');
+    }
+
+    function profit(val) {
+        return Math.round(val*1e6)/1e6;
+    }
+
+    function speed(speed_live) {
+        if (typeof speed_live == "object" || typeof speed_live == "array") {
+            var rval = new Array();
+            $.each(speed_live, function (key, item) { rval.push(speed(item)); })
+            return rval.length? rval.join(','):'starting..';
+        }
+        var unit = "H/s";
+        speed_live = parseFloat(speed_live);
+        if (speed_live >= 1e12) { speed_live /= 1e12; unit = "TH/s" }
+        else if (speed_live >= 1e9) { speed_live /= 1e9; unit = "GH/s" }
+        else if (speed_live >= 1e6) { speed_live /= 1e6; unit = "MH/s" }
+        else if (speed_live >= 1e3) { speed_live /= 1e3; unit = "kH/s" }
+        return (Math.round(speed_live * 100) / 100) + " " + unit;
+    }
+
+    function ticks(active) {
+        var d = active.Days;
+        var h = active.Hours; if (h < 10) h = '0' + h;
+        var m = active.Minutes; if (m < 10) m = '0' + m;
+        var s = active.Seconds; if (s < 10) s = '0' + s;
+        return d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
+    }
+
+    function devices(devs) {
+        return alldevices[devs];
+        return devs.join(',').replace(/GPU#/g, '');
+    }
+
+    function clock() {
+        setTimeout(clock, 1000);
+    }
+
+    function minertable(id) {
+        (function p() {
+            $.getJSON("/" + id, function (data) {
+                if (data.Name) data = [data];
+                var data_labels = [], data_values = {};
+
+                if (id == "runningminers" || id == "activeminers") {
+                    data_labels = ["Miner", "Algorithm", "Current Speed", "Runtime", "Devices"];
+                    data_values[id] = []
+                    $.each(data, function (key, item) { data_values[id].push([item.Name.split('-')[0], algorithms(item.Algorithm), speed(item.Speed_Live), ticks(item.ActiveTime), devices(item.DeviceModel)]); });
+                }
+
+                if (id == "fastestminers") {
+                    data_labels = ["Miner", "Algorithm", "Average Speed", "BTC/day", "Pool"];
+                    $.each(data, function (key, item) { var xid = id + "-" + item.DeviceModel; if (typeof data_values[xid] === "undefined") data_values[xid] = []; data_values[xid].push([item.Name.split('-')[0], algorithms(item.HashRates), speed(item.HashRates), profit(item.Profit), pools(item.HashRates, item.Pools), profit(item.Profit_Bias)]); });
+                    $.each(data_values, function (key, item) { data_values[key].sort(function (a, b) { return b[5] - a[5] }); })
+                }
+ 
+                $.each(data_values, function (xid, values) {                    
+                    values.unshift(data_labels);
+                    var i = 0; var rows = [];
+                    $.each(values, function (key, row) {
+                        var cols = [];
+                        $.each(row, function (col, val) { if (cols.length < data_labels.length) cols.push('<div class="column" data-label="' + data_labels[col] + '">' + val + '</div>'); });
+                        rows.push('<div class="' + (i++ ? 'row' : 'table-head') + '">' + cols.join('') + '</div>');
+                    });
+                    $("#" + xid +" div.table").html(rows.join(''));
+                })
+                setTimeout(p, 10000);
+            });
+        })();
+    }
+
+    function loadsetup() {
+        (function p() {
+            
+            $.getJSON("/config", function (data) {
+
+                var config = ["Wallet", "WorkerName", "UserName", "API_ID", "API_Key", "Interval", "Region", "Currency", "Donate", "Delay", "SwitchingPrevention", "ExtendInterval", "FastestMinerOnly", "ShowMinerWindow", "ShowPoolBalances", "MSIApath", "MSIAprofile", "UIstyle"]
+                $.each(config, function (key, val) {
+                    var item = $('#input--' + val);
+                    if (item && item.length) {
+                        console.log(val);
+                        var tagName = item.prop("tagName").toLowerCase();
+                        var type = item.prop("type").toLowerCase();
+                        if (tagName == 'input') {
+                            if (type == 'text') {
+                                if (typeof data[val] == "object") item.val(data[val].join(','))
+                                else item.val(data[val]);
+                            }
+                        }
+                    }
+                });
+                var rows = [], data_labels = [], data_values = [];
+
+
+                //data_labels = ["x", "Poolname", "Currency", "Wallet", "Worker","API-ID","API-Key"];
+                //$.each(data.Pools, function (key, item) { data_values.push(['<input type, algorithms(item.HashRates), speed(item.HashRates), profit(item.Profit), pools(item.HashRates, item.Pools), profit(item.Profit_Bias)]); });
+                //data_values.sort(function (a, b) { return b[5] - a[5] });
+
+                /*
+                data_values.unshift(data_labels);
+                var i = 0;
+                $.each(data_values, function (key, row) {
+                    var cols = [];
+                    $.each(row, function (col, val) { if (cols.length < data_labels.length) cols.push('<div class="column" data-label="' + data_labels[col] + '">' + val + '</div>'); });
+                    rows.push('<div class="' + (i++ ? 'row' : 'table-head') + '">' + cols.join('') + '</div>');
+                });
+                $("#" + id + " div.table").html(rows.join(''));
+                */
+                //setTimeout(p, 60000);
+            });
+        })();
+    }
+
+    function rainbow() {
+        $.getJSON("/version", function (data) {
+            var text = $('#header h1').text();
+            var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
+            var out = [];
+            for (var i = 0; i < text.length; i++) {
+                out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
+            }
+            out.push(' <span id="version">v' + data + '</span>')
+            $('#header h1').html(out.join(''));
+        });
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function miners() {
+        allcombos = []
+        alldevices = {}
+        $.getJSON("/devicecombos", function (datacombos) {
+            $.each(datacombos, function (key, combo) { allcombos.push(combo) })
+            $.getJSON("/devices", function (datadevices) {
+                $.each(datadevices, function (key, device) { alldevices[device.Model] = device.Model_Name.replace(/(geforce|\(r\)|intel)/i, '').trim(); })
+
+                var insobj = $("#runningminers");
+                $.each(allcombos, function (key, combo) {
+                    var devicenames = []
+                    $.each(combo.split('-'),function(key,devicename){devicenames.push(alldevices[devicename])})
+                    devicenames.sort()
+                    alldevices[combo] = devicenames.join(',')
+                    insobj = insobj.after('<div class="minerblock" id="fastestminers-' + combo + '"><h1>Fastest Miners on ' + alldevices[combo] + '</h1><div class="table"></div></div>').next()                    
+                });
+                minertable("runningminers");
+                minertable("fastestminers");
+                initdone = true
+            })
+        })
+    }
+
+    function select(tab) {
+        $("div.contentblock").each(function () {
+            if ($(this).attr('id') == tab) {
+                if (tab == "setup") loadsetup();
+                else if (tab == "miners") {
+                    if (!initdone) miners();
+                }
+                $(this).show();
+            }
+            else $(this).hide();
+        });
+    }
+
+    $(function () {
+        rainbow();
+        select("miners");
+
+        $(function() {
+            $("#configform").validity()
+                .on('submit', function(e) {
+                    var $this = $(this),
+                    $btn = $this.find('[type="submit"]');
+                    $btn.button('loading');
+                    if (!$this.valid()) {
+                        e.preventDefault();
+                        $btn.button('reset');
+                    }
+                });
+        });
+    })
+    </script>
+</body>
+</html>
