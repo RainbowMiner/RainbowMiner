@@ -742,6 +742,9 @@ while ($true) {
         }
     }
 
+    #Give API access to the current rates
+    $API.Rates = $Rates
+
     #Load the stats
     Write-Log "Loading saved statistics. "
     $Stats = Get-Stat
@@ -1399,17 +1402,14 @@ while ($true) {
             $Timer = (Get-Date).ToUniversalTime()
         }
         $WaitTimer = $Timer
+        $keyPressedValue = $false
 
-        if ((Test-Path ".\stopp.txt") -or $API.Stop) {
-            $Stopp = $true
-            $host.UI.RawUI.CursorPosition = $CursorPosition
-            Write-Log "API request to stop script "
-            Write-Host -NoNewline "[API] stopping script "
-            $keyPressed = $true
-        }
-        if ( [console]::KeyAvailable ) {
-            $x = [System.Console]::ReadKey($true)
-            switch ( $x.key ) {
+        if ((Test-Path ".\stopp.txt") -or $API.Stop) {$keyPressedValue = "X"}
+        elseif ($API.Pause -ne $PauseMiners) {$keyPressedValue = "P"}
+        elseif ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+
+        if ($keyPressedValue) {
+            switch ($keyPressedValue) {
                 "K" { 
                     $SkipSwitchingPrevention = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
@@ -1438,6 +1438,7 @@ while ($true) {
                 }
                 "P" {
                     $PauseMiners = -not $PauseMiners
+                    $API.Pause = $PauseMiners
                     Write-Host -NoNewline "[P] pressed - miner script will be $(if ($PauseMiners) {"PAUSED"} else {"RESTARTED"})"
                     $keyPressed = $true
                 }
@@ -1450,7 +1451,7 @@ while ($true) {
         }
     }
 
-    if ( -not $keyPressed ) {
+    if (-not $keyPressed) {
         $host.UI.RawUI.CursorPosition = $CursorPosition
         Write-Log "Finish waiting before next run. "
         Write-Host -NoNewline "Finished waiting - starting next run "

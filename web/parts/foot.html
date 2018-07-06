@@ -13,11 +13,16 @@
       rainbow();
       (function p() {
           $.ajax({url: '/currentprofit', success: function(result) {
-              $("#profit").empty();
-              $("#profit").append("<h6>Current profit: " + formatBTC(result) + " BTC/Day</h6>");
+              $("#profit").html("<h6>Current profit: " + formatBTC(result.ProfitBTC) + " BTC/Day</h6>");
+              var xchange = new Array();
+              xchange.push("1 BTC");
+              $.each(result.Rates, function (key, itm) {
+                  if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
+              });
+              $("#exchangerates").html(xchange.join(" = "));
               setTimeout(p, 10000);
           }});
-      })();  
+      })();
   });
   
 </script>

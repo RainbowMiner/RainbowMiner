@@ -140,14 +140,27 @@
                     $Data = ConvertTo-Json @($API.Balances)
                     Break
                 }
+                "/rates" {
+                    $Data = ConvertTo-Json @($API.Rates)
+                    Break
+                }
                 "/currentprofit" {
-                    $Data = ($API.RunningMiners | Measure-Object -Sum -Property Profit).Sum | ConvertTo-Json
+                    $Data = [PSCustomObject]@{ProfitBTC=($API.RunningMiners | Measure-Object -Sum -Property Profit).Sum;Rates=$API.Rates} | ConvertTo-Json
                     Break
                 }
                 "/stop" {
                     $API.Stop = $true
                     $Data = "Stopping"
-                    break
+                    Break
+                }
+                "/pause" {
+                    $API.Pause = -not $API.Pause
+                    $Data = $API.Pause | ConvertTo-Json
+                    Break
+                }
+                "/status" {
+                    $Data = [PSCustomObject]@{Pause=$API.Pause} | ConvertTo-Json
+                    Break
                 }
                 default {
                     # Set index page

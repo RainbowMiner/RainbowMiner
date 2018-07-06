@@ -108,6 +108,8 @@
   border-radius: 0;
 }
 
+.navbar div {padding-right: 0.5em}
+
 .form-control-dark {
   color: #fff;
   background-color: rgba(255, 255, 255, .1);
