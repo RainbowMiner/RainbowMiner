@@ -145,6 +145,7 @@ Config files are found in directory "Config\"
 - ShowMinerWindow = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
 - FastestMinerOnly = set to 1 to reduce list by only showing the fastest miner [default=1]
 - IgnoreFees = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
+- DisableDualMining = set to 1, if you want to disable all dual mining [default=0]
 - ShowPoolBalances = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - RebootOnGPUFailure = (currently disabled)
 - MSIApath = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
