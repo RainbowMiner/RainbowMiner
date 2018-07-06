@@ -33,13 +33,21 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-  function formatPrices(data) {
-    return (data * 1000000000).toFixed(10);
-  }
+    $(function () {
+        function refreshTable() {
+            $("table.table").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTable, 10000);
+        }
+        window.setTimeout(refreshTable, 10000);
+    });
+
+    function formatPrices(data) {
+        return (data * 1000000000).toFixed(10);
+    }
   
-  function formatDate(data) {
-    return timeSince(new Date(data));
-    return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
-  }
+    function formatDate(data) {
+        return timeSince(new Date(data));
+        return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
+    }
 </script>
 <!--#include file="/parts/foot.html" -->

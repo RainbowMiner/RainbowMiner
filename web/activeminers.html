@@ -34,27 +34,35 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
-  function formatActiveMiners(data) {
-    // This function can alter the returned data before building the table, formatting it in a way
-    // that is easier to display and manipulate in a table
-    $.each(data, function(index, item) {
-      // Format the algorithm(s)
-      item.tPrimaryAlgorithm = item.Algorithm[0];
-      item.tSecondaryAlgorithm = item.Algorithm[1];
-
-      // Format the speed(s)
-      if (Array.isArray(item.Speed)) {
-        item.tPrimarySpeed = item.Speed[0];
-        item.tSecondarySpeed = item.Speed[1];
-      } else {
-        item.tPrimarySpeed = item.Speed;
-      }
-
-      // Format the device(s)
-      item.tDevices = item.DeviceModel.toString();
-      item.Name = item.Name.split(/\-/)[0];
+    $(function () {
+        function refreshTable() {
+            $("table.table").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTable, 10000);
+        }
+        window.setTimeout(refreshTable, 10000);
     });
-    return data;
-  }
+
+    function formatActiveMiners(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+            // Format the algorithm(s)
+            item.tPrimaryAlgorithm = item.Algorithm[0];
+            item.tSecondaryAlgorithm = item.Algorithm[1];
+
+            // Format the speed(s)
+            if (Array.isArray(item.Speed)) {
+                item.tPrimarySpeed = item.Speed[0];
+                item.tSecondarySpeed = item.Speed[1];
+            } else {
+                item.tPrimarySpeed = item.Speed;
+            }
+
+            // Format the device(s)
+            item.tDevices = item.DeviceModel.toString();
+            item.Name = item.Name.split(/\-/)[0];
+        });
+        return data;
+    }
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -56,65 +56,70 @@
 
 <script type="text/javascript">
   $(function() {
-    function updatePoolBalances() {
-      $.ajax({url: '/balances', success: function(result) {
-        console.log(result);
-        $("#balanceboxes").empty();
-        var template = Handlebars.compile($("#poolbalance_template").html());
-        $.each(result, function(index, item) {
-          var properties = Object.keys(item);
-          var currencies = properties.filter((properties) => properties.startsWith("Total_"));
+      (function updatePoolBalances() {
+          $.ajax({
+              url: '/balances', success: function (result) {
+                  console.log(result);
+                  $("#balanceboxes").empty();
+                  var template = Handlebars.compile($("#poolbalance_template").html());
+                  $.each(result, function (index, item) {
+                      var properties = Object.keys(item);
+                      var currencies = properties.filter((properties) => properties.startsWith("Total_"));
 
-          if (item.Name == "*Total*") { 
-            var data = {name: "Total Balance From All Pools", balances: {}, total: true};
-          } else {
-            var data = {name: item.Name, balances: {}};
-          }
-          $.each(currencies, function(cindex, currency) {
-            var name = currency.replace("Total_","");
-              data["balances"][name] = item[currency];
+                      if (item.Name == "*Total*") {
+                          var data = { name: "Total Balance From All Pools", balances: {}, total: true };
+                      } else {
+                          var data = { name: item.Name, balances: {} };
+                      }
+                      $.each(currencies, function (cindex, currency) {
+                          var name = currency.replace("Total_", "");
+                          data["balances"][name] = item[currency];
+                      });
+                      $("#balanceboxes").append(template(data));
+                  });
+                  window.setTimeout(updatePoolBalances, 60000);
+              }
           });
-          $("#balanceboxes").append(template(data));
-        });
-      }});
-    }
-
-    updatePoolBalances();
-    window.setInterval(function() { updatePoolBalances();}, 60000);
+      })();
+      function refreshTable() {
+          $("table.table").bootstrapTable("refresh", { silent: true });
+          window.setTimeout(refreshTable, 10000);
+      }
+      window.setTimeout(refreshTable, 10000);
   });
   
   function formatRunningMiners(data) {
-    // This function can alter the returned data before building the table, formatting it in a way
-    // that is easier to display and manipulate in a table
-    $.each(data, function(index, item) {
-      // Format the type(s)
-      console.log(data);
-      console.log(item);
-      item.tDevices = item.DeviceModel.toString();
-      item.Name = item.Name.split(/\-/)[0];
+      // This function can alter the returned data before building the table, formatting it in a way
+      // that is easier to display and manipulate in a table
+      $.each(data, function (index, item) {
+          // Format the type(s)
+          console.log(data);
+          console.log(item);
+          item.tDevices = item.DeviceModel.toString();
+          item.Name = item.Name.split(/\-/)[0];
 
-      // Format the algorithms and hashrates
-      
-      // Algorithm is always an array, sometimes has 2 elements
-      item.tPrimaryAlgorithm = item.Algorithm[0];
-      try { item.tSecondaryAlgorithm = item.Algorithm[1]; } catch (error) { /* ignore */ }
-      
-      // Speed is an array if there are multiple algorithms, or a single number otherwise
-      if (Array.isArray(item.Speed)) {
-        item.tPrimaryHashRate = item.Speed[0];
-        item.tSecondaryHashRate = item.Speed[1];
-      } else {
-        item.tPrimaryHashRate = item.Speed;
-      }
-      
-      if (Array.isArray(item.Speed_Live)) {
-        item.tPrimaryHashRateLive = item.Speed_Live[0];
-        item.tSecondaryHashRateLive = item.Speed_Live[1];
-      } else {
-        item.tPrimaryHashRateLive = item.Speed_Live;
-      }
-    });
-    return data;
+          // Format the algorithms and hashrates
+
+          // Algorithm is always an array, sometimes has 2 elements
+          item.tPrimaryAlgorithm = item.Algorithm[0];
+          try { item.tSecondaryAlgorithm = item.Algorithm[1]; } catch (error) { /* ignore */ }
+
+          // Speed is an array if there are multiple algorithms, or a single number otherwise
+          if (Array.isArray(item.Speed)) {
+              item.tPrimaryHashRate = item.Speed[0];
+              item.tSecondaryHashRate = item.Speed[1];
+          } else {
+              item.tPrimaryHashRate = item.Speed;
+          }
+
+          if (Array.isArray(item.Speed_Live)) {
+              item.tPrimaryHashRateLive = item.Speed_Live[0];
+              item.tSecondaryHashRateLive = item.Speed_Live[1];
+          } else {
+              item.tPrimaryHashRateLive = item.Speed_Live;
+          }
+      });
+      return data;
   }
 </script>
 <!--#include file="/parts/foot.html" -->

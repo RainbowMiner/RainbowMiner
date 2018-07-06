@@ -10,12 +10,14 @@
   
   // set the values in the header
   $(function() {
-    rainbow();
-    $.ajax({url: '/currentprofit', success: function(result) {
-        $("#profit").empty();
-        $("#profit").append("<h6>Current profit: " + formatBTC(result) + " BTC/Day</h6>");
-      }});
-  
+      rainbow();
+      (function p() {
+          $.ajax({url: '/currentprofit', success: function(result) {
+              $("#profit").empty();
+              $("#profit").append("<h6>Current profit: " + formatBTC(result) + " BTC/Day</h6>");
+              setTimeout(p, 10000);
+          }});
+      })();  
   });
   
 </script>
