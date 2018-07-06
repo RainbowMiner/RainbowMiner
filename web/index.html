@@ -3,7 +3,7 @@
   <h1 id="title" data-navbaractive="navdashboard" class="h2">Dashboard</h1>
 </div>
 
-<h3>Running Miners</h3>
+<h3>Running Miners <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a></h3>
 <table id="miners" class="table mb-4"
   data-toggle="table"
   data-url="/runningminers"
@@ -55,38 +55,53 @@
 </script>
 
 <script type="text/javascript">
-  $(function() {
-      (function updatePoolBalances() {
-          $.ajax({
-              url: '/balances', success: function (result) {
-                  console.log(result);
-                  $("#balanceboxes").empty();
-                  var template = Handlebars.compile($("#poolbalance_template").html());
-                  $.each(result, function (index, item) {
-                      var properties = Object.keys(item);
-                      var currencies = properties.filter((properties) => properties.startsWith("Total_"));
+    $(function () {
+        $("#pauseminers").click(function () {
+            $.ajax({
+                url: '/pause', success: function (result) {
+                    $("#pauseminers").html(result ? "Restart" : "Pause");
+                }
+            })
+        });
+        (function updatePoolBalances() {
+            $.ajax({
+                url: '/balances', success: function (result) {
+                    console.log(result);
+                    $("#balanceboxes").empty();
+                    var template = Handlebars.compile($("#poolbalance_template").html());
+                    $.each(result, function (index, item) {
+                        var properties = Object.keys(item);
+                        var currencies = properties.filter((properties) => properties.startsWith("Total_"));
 
-                      if (item.Name == "*Total*") {
-                          var data = { name: "Total Balance From All Pools", balances: {}, total: true };
-                      } else {
-                          var data = { name: item.Name, balances: {} };
-                      }
-                      $.each(currencies, function (cindex, currency) {
-                          var name = currency.replace("Total_", "");
-                          data["balances"][name] = item[currency];
-                      });
-                      $("#balanceboxes").append(template(data));
-                  });
-                  window.setTimeout(updatePoolBalances, 60000);
-              }
-          });
-      })();
-      function refreshTable() {
-          $("table.table").bootstrapTable("refresh", { silent: true });
-          window.setTimeout(refreshTable, 10000);
-      }
-      window.setTimeout(refreshTable, 10000);
-  });
+                        if (item.Name == "*Total*") {
+                            var data = { name: "Total Balance From All Pools", balances: {}, total: true };
+                        } else {
+                            var data = { name: item.Name, balances: {} };
+                        }
+                        $.each(currencies, function (cindex, currency) {
+                            var name = currency.replace("Total_", "");
+                            data["balances"][name] = item[currency];
+                        });
+                        $("#balanceboxes").append(template(data));
+                    });
+                    window.setTimeout(updatePoolBalances, 60000);
+                }
+            });
+        })();
+        (function updateStatus() {
+            $.ajax({
+                url: '/status', success: function (result) {
+                    $("#pauseminers").html(result.Pause? "Restart" : "Pause");
+                    window.setTimeout(updateStatus, 10000);
+                }
+            });
+        })();
+        function refreshTable() {
+            $("table.table").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTable, 10000);
+        }
+        window.setTimeout(refreshTable, 10000);
+    });
   
   function formatRunningMiners(data) {
       // This function can alter the returned data before building the table, formatting it in a way

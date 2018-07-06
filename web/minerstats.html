@@ -29,14 +29,14 @@
 
 <!-- End of page scripts -->
 <script>
-$('#resetallbenchmarks').on('click',function(){
+$('#resetallbenchmarks').click(function(){
     $('.modal-body').load('scripts/resetallbenchmarks.ps1',function(){
         $('.modal-title').text('Reset All Benchmarks');
         $('#myModal').modal({show:true});
     });
 });
 
-$('#resetzerohashrateminers').on('click',function(){
+$('#resetzerohashrateminers').click(function(){
     $('.modal-body').load('scripts/resetzerohashrateminers.ps1',function(){
         $('.modal-title').text('Reset 0H/s Miners');
         $('#myModal').modal({show:true});
