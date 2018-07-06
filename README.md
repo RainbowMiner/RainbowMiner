@@ -3,10 +3,12 @@
 
 ###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
+
 ## INTRODUCTION
 
 GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU).
 Features: easy setup wizard with adhoc working default (no editing of files needed), webinterface, selection of devices to be used.
+
 
 ## FEATURE SUMMARY
 
@@ -19,7 +21,8 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Finetune miner- and pool-configuration during runtime**
 - **Switch MSI Afterburner profiles per miner**
 - **Pause mining without exiting the RainbowMiner**
-- **Web-Interface through http://localhost:3999 (in development)**
+- **Web-Interface through http://localhost:3999**
+
 
 ## INSTALLATION
 
@@ -91,6 +94,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 	
 Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The YiiMP pool is an exception, as it does not have auto-exchange to BTC. Please be careful, what you choose to mine.
+
 
 ## MSI AFTERBURNER CONFIGURATION
 
@@ -277,11 +281,14 @@ Example:
 ## WEB-INTERFACE
 
 For your convenience, you can monitor and setup RainbowMiner using your web browser. Simply open the URL [localhost:3999](http://localhost:3999) in a new browser tab.
-The web interface is split into three pages:
-
-- Home: the actual running miners plus the fastest miners, sorted by the selected devices.
-- Pools: a list of all available pools. You can change the pool parameters, like currencies and penalty (under development)
-- Setup: general setup of the runtime parameters (under development)
+- Dashboard: shows the live running miners & pool balances
+- Selected Devices: lists the preselected devices (through command line parameter or configuration)
+- All Devices: lists all available devices in your rig
+- Best Pools: lists the best possible pool for every algorithm
+- All Pools: lists all pools available vs. all algorithm
+- Miners: lists all miners vs. all algorithm
+- Active Miners: lists the best possible miners for each algorithm
+- Manage Stats: reset stats of failed miners & reset all benchmarks
 
 
 ## CREDITS
