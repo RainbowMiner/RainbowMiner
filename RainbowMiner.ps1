@@ -67,7 +67,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalances = $false,
     [Parameter(Mandatory = $false)]
-    [Switch]$IgnoreFees = $false,    
+    [Switch]$IgnoreFees = $false, 
+    [Parameter(Mandatory = $false)]
+    [Switch]$DisableDualMining = $false,        
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
@@ -299,6 +301,7 @@ while ($true) {
                                 $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
 
                                 Write-Host ' '
                                 Write-Host '(3) Select the devices to mine on and miningmode'
@@ -354,6 +357,8 @@ while ($true) {
                                 Write-Host ' '
                                 Write-Host '(5) Setup other / technical'
                                 Write-Host ' '
+
+                                $Config.IgnoreFees = Read-HostBool -Prompt "Ignore Pool/Miner developer fees" -Default $Config.IgnoreFees | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 do {
                                     $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Mandatory -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}                             
@@ -386,7 +391,9 @@ while ($true) {
                                 $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                 $ConfigActual | Add-Member Interval $Config.Interval -Force
                                 $ConfigActual | Add-Member Donate $Config.Donate -Force
-                                $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force                                
+                                $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
+                                $ConfigActual | Add-Member IgnoreFees $(if ($Config.IgnoreFees){"1"}else{"0"}) -Force
+                                $ConfigActual | Add-Member DisableDualMining $(if ($Config.DisableDualMining){"1"}else{"0"}) -Force
                                 $ConfigActual | Add-Member MSIAprofile $Config.MSIAprofile -Force
                                 $ConfigActual | Add-Member MSIApath $Config.MSIApath -Force
 
@@ -827,6 +834,7 @@ while ($true) {
                 $_
             } | #for backward compatibility            
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
+            Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {($Config.Algorithm.Count -eq 0 -or (Compare-Object $Config.Algorithm $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0) -and ((Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0)} | 
             Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object $Config.ExcludeAlgorithm $_.HashRates.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
