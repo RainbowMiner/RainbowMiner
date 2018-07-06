@@ -1059,6 +1059,7 @@ while ($true) {
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
+                BaseName             = $Miner.BaseName
                 Path                 = $Miner.Path
                 Arguments            = $Miner.Arguments
                 API                  = $Miner.API
