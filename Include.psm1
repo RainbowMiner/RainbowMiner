@@ -921,18 +921,25 @@ function Get-ComputeData {
 function Get-Algorithm {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Position = 0,   
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
         [String]$Algorithm = ""
     )
 
-    if (-not (Test-Path Variable:Script:Algorithms)) {
-        $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
+    if ($Algorithm -match "[,;\s]") {@($Algorithm -split "[,;\s]+") | Foreach-Object {Get-Algorithm $_}}
+    else {
+        if (-not (Test-Path Variable:Script:Algorithms)) {
+            $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
+        }
+
+        $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "-", " " -replace "_", " ")) -replace " "
+
+        if ($Script:Algorithms.$Algorithm) {$Script:Algorithms.$Algorithm}
+        else {$Algorithm}
     }
-
-    $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "-", " " -replace "_", " ")) -replace " "
-
-    if ($Script:Algorithms.$Algorithm) {$Script:Algorithms.$Algorithm}
-    else {$Algorithm}
 }
 
 function Get-Region {
@@ -1630,13 +1637,16 @@ function Set-PoolsConfigDefault {
         $Done = [PSCustomObject]@{}
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
         Get-ChildItem ".\Pools\*.ps1" | Select-Object -ExpandProperty BaseName | Foreach-Object {        
+            $Setup_Content = [PSCustomObject]@{}
+            $Setup_Currencies = @("BTC")
             if ($Setup.$_) {
                 if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
                 $Setup_Currencies = @($Setup.$_.Currencies)            
-            } else {
-                $Setup_Content = [PSCustomObject]@{Worker = "`$WorkerName";Penalty=0}
-                $Setup_Currencies = @("BTC")
             }
+            if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
+            if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
+            if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
+            if ($Setup_Content.PSObject.Properties.Keys -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
             $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
             $Done | Add-Member $_ $Setup_Content
         }

@@ -26,7 +26,7 @@ if (($MiningPoolHubCoins_Request.return | Measure-Object).Count -le 1) {
 }
 
 $MiningPoolHubCoins_Regions = "europe", "us-east", "asia"
-$MiningPoolHubCoins_Fee = 0.9
+$MiningPoolHubCoins_Fee = 0.9 + 0.2
 
 $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach-Object {
     $MiningPoolHubCoins_Host = $_.host

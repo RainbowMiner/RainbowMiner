@@ -50,7 +50,7 @@ $MiningPoolHub_Request.return | ForEach-Object {
     $MiningPoolHub_Algorithm = $_.algo
     $MiningPoolHub_Algorithm_Norm = Get-Algorithm $MiningPoolHub_Algorithm
     $MiningPoolHub_Coin = (Get-Culture).TextInfo.ToTitleCase(($_.current_mining_coin -replace "-", " " -replace "_", " ")) -replace " "
-    $MiningPoolHub_Fee = 0.9
+    $MiningPoolHub_Fee = 0.9 + 0.2
     
     if ($MiningPoolHub_Algorithm_Norm -eq "Ethash" -and (get-date -Format "yyyyMMdd") -le "20180630") {$MiningPoolHub_Fee = 0.0}
     if ($MiningPoolHub_Algorithm_Norm -eq "Sia") {$MiningPoolHub_Algorithm_Norm = "SiaClaymore"} #temp fix

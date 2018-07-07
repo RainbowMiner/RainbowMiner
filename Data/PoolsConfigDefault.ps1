@@ -1,58 +1,50 @@
 ﻿[PSCustomObject]@{
         "AHashPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
         "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="average"}
+            Fields=[PSCustomObject]@{DataWindow="average"}
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("PGN")            
         }
         "Blockmasters" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
         "Hashrefinery" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
         "MiningPoolHub" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";Worker="`$WorkerName";API_ID="`$API_ID";API_Key="`$API_Key"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
             Currencies=@()
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";Worker="`$WorkerName";API_ID="`$API_ID";API_Key="`$API_Key"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
             Currencies=@()
         }
         "MiningPoolHubMini" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";Worker="`$WorkerName";API_ID="`$API_ID";API_Key="`$API_Key"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
             Currencies=@()
         }
         "NiceHash" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
         "Ravenminer" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="actual_last24h"}
+            Fields=[PSCustomObject]@{DataWindow="actual_last24h"}
             Currencies=@("RVN")
         }
         "YiiMP" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@()
         }
         "ZergPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName";DataWindow="minimum"}
+            Fields=[PSCustomObject]@{DataWindow="minimum"}
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
         "Zpool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Worker="`$WorkerName"}
             Currencies=@("BTC")
         }
 }

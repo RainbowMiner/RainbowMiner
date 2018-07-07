@@ -15,7 +15,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Sgminer and many more)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
@@ -36,7 +36,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
    - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
-   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
+   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash-BTG, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 5. Let the downloads and benchmarking finish (it will already mine to your wallets)
@@ -64,6 +64,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 
 ## RECOMMENDATIONS & HELPERS
+
 - Set your Windows virtual memory size to a fixed size of at least 16GB, or better to the sum of your GPU memories x 1.5, e.g. if you have 6x GTX1070 8GB installed, use at least 72GB (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
 - the root directory of RainbowMiner contains the follwing, additional batch files:
@@ -76,6 +77,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 	
 
 ## POOLS
+
 - AHashPool / AHashPoolCoins https://www.ahashpool.com/ (auto-exchange and payout in BTC)
 - BlazePool https://www.blazepool.com/ (auto-exchange and payout in BTC)
 - BlockCruncher https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in "Config\pools.config.txt")
@@ -83,6 +85,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - HashRefinery https://pool.hashrefinery.com (auto-exchange and payout in BTC)
 - MiningPoolHub / MiningPooHubCoins / MiningPoolHubMini https://miningpoolhub.com/ (auto-exchange and paymout in BTC, username required)
   - 'miningpoolhub' and 'miningpoolhubmini' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
+  - 'miningpoolhubmini' is setup to mine lyra2z, skein, myriadgroestl, groestl, neoscrypt and equihash-btg, only.
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports). 
 - Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC)
 - Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in "Config\pools.config.txt")
@@ -165,7 +168,7 @@ Config files are found in directory "Config\"
 
 Each pool has it's own section, in the pools.config.txt
 
-#### To change payout currency of a pool (e.g. Ravenminer uses RVN)
+#### Change payout currency of a pool (e.g. Ravenminer uses RVN)
 
 The default pool config look like this:
 
@@ -183,6 +186,8 @@ If you want to change it to LTC, for example, you have to change this line like 
         "Worker": "$WorkerName",
         "Penalty": 0
     }
+
+#### Change a pool's penalty
     
 If you feel like a pool tends to exagerate it's results, you can set a penalty in % through the field "Penalty":
 
@@ -193,6 +198,8 @@ If you feel like a pool tends to exagerate it's results, you can set a penalty i
     }
 
 This would reduce the hashrate-results from the pool Ravenminer by 5%
+
+#### Change a pool's time frame (data window)
 
 To override the default data window of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashrefinery,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
 Possible values are:
@@ -206,8 +213,8 @@ Possible values are:
 - maximumall: the maximum value of the above three values will be used
 - averageall: the calculated average of the above three values will be used
 
-
 Example:
+
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
@@ -215,6 +222,23 @@ Example:
         "DataWindow": "minimum"
     }
 
+
+#### Define the algorithms of a pool
+    
+Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
+- Algorithm: a comma separated list of all pool's algorithm, you want RainbowMiner to use (leave empty for all)
+- ExcludeAlgorithm: a comma separated list of all pool's algorithm, you explicitly do not want RainbowMiner to use (leave empty for no exception)
+
+Example:
+
+    "MiningPoolHub": {
+        "User": "$UserName",
+        "Worker": "$WorkerName",
+        "API_ID": "$API_ID",
+        "API_Key": "$API_Key",
+        "Algorithm": "lyra2z,skein,myriadgroestl,groestl,neoscrypt,equihash-btg",
+        "ExcludeAlgorithm": ""
+    }
 
 
 ### Config\miners.config.txt

@@ -582,6 +582,12 @@ while ($true) {
         )
     }
 
+    $Config.Pools.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object -ExpandProperty Name | Foreach-Object {
+        $ConfigPoolName = $_
+        $Config.Pools.$ConfigPoolName | Add-Member Algorithm @(@($Config.Pools.$ConfigPoolName.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+        $Config.Pools.$ConfigPoolName | Add-Member ExcludeAlgorithm @(@($Config.Pools.$ConfigPoolName.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+    }
+    
     # Copy the user's config before changing anything for donation runs
     # This is used when getting pool balances so it doesn't get pool balances of the donation address instead
     $UserConfig = $Config.PSObject.Copy()
@@ -763,7 +769,10 @@ while ($true) {
             $Pool_Config = @{}
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
             Get-ChildItemContent "Pools\$($_.Name)" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
-        } | ForEach-Object {
+        } |
+        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
+        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
+        ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Content.Penalty + $(if (-not $Config.IgnoreFees){$_.Content.PoolFee}))/100
             $_.Content.Price *= $Pool_Factor
             $_.Content.StablePrice *= $Pool_Factor                
