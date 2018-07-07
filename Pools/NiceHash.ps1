@@ -46,40 +46,42 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
         $NiceHash_Region = $_
         $NiceHash_Region_Norm = Get-Region $NiceHash_Region
 
-        if ($BTC) {
-            [PSCustomObject]@{
-                Algorithm     = $NiceHash_Algorithm_Norm
-                Info          = $NiceHash_Coin
-                Price         = $Stat.Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
-                Port          = $NiceHash_Port
-                User          = "$BTC.$Worker"
-                Pass          = "x"
-                Region        = $NiceHash_Region_Norm
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $NiceHash_PoolFee
-            }
-
-            if ($NiceHash_Algorithm_Norm -like "Cryptonight*" -or $NiceHash_Algorithm_Norm -eq "Equihash") {
+        if ($BTC -or $InfoOnly) {
+            @($NiceHash_Algorithm_Norm,"$($NiceHash_Algorithm_Norm)-NHMP") | Foreach-Object {
                 [PSCustomObject]@{
-                    Algorithm     = $NiceHash_Algorithm_Norm
+                    Algorithm     = $_
                     Info          = $NiceHash_Coin
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+ssl"
+                    Protocol      = "stratum+tcp"
                     Host          = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
-                    Port          = $NiceHash_Port + 30000
+                    Port          = $NiceHash_Port
                     User          = "$BTC.$Worker"
                     Pass          = "x"
                     Region        = $NiceHash_Region_Norm
-                    SSL           = $true
+                    SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $NiceHash_PoolFee
+                }
+
+                if ($_ -like "Cryptonight*" -or $_ -eq "Equihash") {
+                    [PSCustomObject]@{
+                        Algorithm     = $_
+                        Info          = $NiceHash_Coin
+                        Price         = $Stat.Live
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+ssl"
+                        Host          = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
+                        Port          = $NiceHash_Port + 30000
+                        User          = "$BTC.$Worker"
+                        Pass          = "x"
+                        Region        = $NiceHash_Region_Norm
+                        SSL           = $true
+                        Updated       = $Stat.Updated
+                        PoolFee       = $NiceHash_PoolFee
+                    }
                 }
             }
         }

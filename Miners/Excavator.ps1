@@ -47,11 +47,11 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
 
             $nhParams = $_.Params
 
-            $nhBaseAlgorithm_Norm = Get-Algorithm $nhBaseAlgorithm
+            $nhBaseAlgorithm_Norm = @(Get-Algorithm $nhBaseAlgorithm | Select-Object) + @("NHMP") -join "-"
 
             if (-not (Test-Path (Split-Path $Path))) {New-Item (Split-Path $Path) -ItemType "directory" | Out-Null}
 
-            if ($Pools.$nhBaseAlgorithm_Norm.Host -and $Pools.$nhBaseAlgorithm_Norm.Name -like "Nicehash") {
+            if ($Pools.$nhBaseAlgorithm_Norm.Host) {
 
                 if ($nhSecondAlgorithm -eq '') {
                     $res = @()
@@ -85,7 +85,7 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
                     }
                 } else {
 
-                    $nhSecondAlgorithm_Norm = Get-Algorithm $nhSecondAlgorithm
+                    $nhSecondAlgorithm_Norm = @(Get-Algorithm $nhSecondAlgorithm_Norm | Select-Object) + @("NHMP") -join "-"
 
                     $_.Intensity | Foreach-Object {
                         $Dcri = $_
