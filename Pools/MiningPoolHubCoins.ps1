@@ -37,6 +37,9 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
     $MiningPoolHubCoins_Coin = (Get-Culture).TextInfo.ToTitleCase(($_.coin_name -replace "-", " " -replace "_", " ")) -replace " "
 
     if ($MiningPoolHubCoins_Algorithm_Norm -eq "Sia") {$MiningPoolHubCoins_Algorithm_Norm = "SiaClaymore"} #temp fix
+    if ($MiningPoolHubCoins_Algorithm_Norm -eq "Equihash-BTG") { #temp fix for wrong host url in API
+        $MiningPoolHubCoins_Hosts = $MiningPoolHubCoins_Hosts | Foreach-Object {if ($_ -match "(^hub|\.hub)") {$_ -replace "^hub\.","equihash-hub." -replace "\.hub\.",".equihash-hub."} else {$_}}    
+    }
 
     $Divisor = 1000000000
 
@@ -83,7 +86,7 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
                 }
             }
 
-            if ($MiningPoolHubCoins_Algorithm_Norm -eq "CryptonightV7" -or $MiningPoolHubCoins_Algorithm_Norm -eq "Equihash") {
+            if ($MiningPoolHubCoins_Algorithm_Norm -eq "CryptonightV7" -or $MiningPoolHubCoins_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
                     Algorithm     = $MiningPoolHubCoins_Algorithm_Norm
                     Info          = $MiningPoolHubCoins_Coin

@@ -11,9 +11,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $MiningPoolHub_Request = [PSCustomObject]@{}
+$MiningPoolHubCoins_Request = [PSCustomObject]@{}
 
 try {
     $MiningPoolHub_Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&$(Get-Date -Format "yyyy-MM-dd_HH-mm")" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $MiningPoolHubCoins_Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&$(Get-Date -Format "yyyy-MM-dd_HH-mm")" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -25,10 +27,25 @@ if (($MiningPoolHub_Request.return | Measure-Object).Count -le 1) {
     return
 }
 
+#temp fix: use additional mining currencies
+$MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0 -and @("equihash-btg") -contains (Get-Algorithm $_.algo) } | ForEach-Object {
+    $MiningPoolHubCoins_Hosts = $_.host_list.split(";")
+    if ($_.algo -eq "equihash-btg") { #temp fix for wrong host url in API
+        $MiningPoolHubCoins_Hosts = $MiningPoolHubCoins_Hosts | Foreach-Object {if ($_ -match "(^hub|\.hub)") {$_ -replace "^hub\.","equihash-hub." -replace "\.hub\.",".equihash-hub."} else {$_}}    
+    }
+    $MiningPoolHub_Request.return += [PSCustomObject]@{
+        all_host_list = $MiningPoolHubCoins_Hosts -join ";"
+        algo_switch_port = $_.port
+        algo = $_.algo
+        current_mining_coin = $_.coin_name
+        profit = $_.profit
+    }
+}
+
 $MiningPoolHub_Regions = "europe", "us-east", "asia"
 $MiningPoolHub_Fee = 0.9
 
-$MiningPoolHub_Request.return | Where-Object { "lyra2z","skein","myriadgroestl","groestl","neoscrypt" -contains (Get-Algorithm $_.algo) } | ForEach-Object {
+$MiningPoolHub_Request.return | Where-Object { "lyra2z","skein","myriadgroestl","groestl","neoscrypt","equihash-btg" -contains (Get-Algorithm $_.algo) } | ForEach-Object {
     $MiningPoolHub_Hosts = $_.all_host_list.split(";")
     $MiningPoolHub_Port = $_.algo_switch_port
     $MiningPoolHub_Algorithm = $_.algo
