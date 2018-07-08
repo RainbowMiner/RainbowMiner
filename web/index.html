@@ -56,6 +56,7 @@
 
 <script type="text/javascript">
     $(function () {
+        var template = Handlebars.compile($("#poolbalance_template").html());
         $("#pauseminers").click(function () {
             $.ajax({
                 url: '/pause', success: function (result) {
@@ -67,8 +68,7 @@
             $.ajax({
                 url: '/balances', success: function (result) {
                     console.log(result);
-                    $("#balanceboxes").empty();
-                    var template = Handlebars.compile($("#poolbalance_template").html());
+                    $("#balanceboxes").empty();                    
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Total_"));
