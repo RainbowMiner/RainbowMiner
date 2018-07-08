@@ -12,11 +12,11 @@ param(
     [Alias("Worker")]
     [String]$WorkerName = "rainbowminer", 
     [Parameter(Mandatory = $false)]
-    [Int]$Interval = 60, #seconds before reading hash rate from miners
-    [Parameter(Mandatory = $false)]
     [Int]$API_ID = 0, 
     [Parameter(Mandatory = $false)]
     [String]$API_Key = "", 
+    [Parameter(Mandatory = $false)]
+    [Int]$Interval = 60, #seconds before reading hash rate from miners
     [Parameter(Mandatory = $false)]
     [Alias("Location")]
     [String]$Region = "europe", #europe/us/asia
@@ -26,7 +26,7 @@ param(
     [Alias("Device", "Type")]
     [Array]$DeviceName = @(), #i.e. CPU, GPU, GPU#02, AMD, NVIDIA, AMD#02, OpenCL#03#02 etc.
     [Parameter(Mandatory = $false)]
-    [Array]$Algorithm = @(), #i.e. Ethash,Equihash,CryptoNight etc.
+    [Array]$Algorithm = @(), #i.e. Ethash,Equihash,CryptoNightV7 etc.
     [Parameter(Mandatory = $false)]
     [Alias("Miner")]
     [Array]$MinerName = @(), 
@@ -55,21 +55,21 @@ param(
     [Alias("Uri", "Url")]
     [String]$MinerStatusUrl = "", #i.e https://multipoolminer.io/monitor/miner.php
     [Parameter(Mandatory = $false)]
-    [String]$MinerStatusKey = "",
+    [String]$MinerStatusKey = $Wallet, #For backwards compatibility, set the MinerStatusKey to $Wallet if it's not specified
     [Parameter(Mandatory = $false)]
     [Double]$SwitchingPrevention = 2, #zero does not prevent miners switching
+    [Parameter(Mandatory = $false)]
+    [Switch]$DisableAutoUpdate = $false,
     [Parameter(Mandatory = $false)]
     [Switch]$ShowMinerWindow = $false, #if true all miner windows will be visible (they can steal focus)
     [Parameter(Mandatory = $false)]
     [Switch]$FastestMinerOnly = $false, #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     [Parameter(Mandatory = $false)]
-    [Switch]$DisableAutoUpdate = $false,
+    [Switch]$IgnoreFees = $false,
     [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalances = $false,
     [Parameter(Mandatory = $false)]
-    [Switch]$IgnoreFees = $false, 
-    [Parameter(Mandatory = $false)]
-    [Switch]$DisableDualMining = $false,        
+    [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.3.0"
+$Version = "3.7.3.1"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -119,6 +119,7 @@ $WatchdogTimers = @()
 $ActiveMiners = @()
 $Rates = [PSCustomObject]@{BTC = [Double]1}
 
+$LastDonated = 0
 $ConfigTimeStamp = 0
 $PoolsConfigTimeStamp = 0
 $MinersConfigTimeStamp = 0
@@ -147,19 +148,6 @@ Write-Log "Starting RainbowMiner v$Version"
 
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
 (Get-Process -Id $PID).PriorityClass = "BelowNormal"
-
-if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
-if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
-    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
-}
-
-#Set donation parameters
-$LastDonated = 0
-
-#Initialize the API
-Import-Module .\API.psm1
-Start-APIServer
-$API.Version = $Version
 
 try {
     $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
@@ -201,6 +189,16 @@ catch {
     Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
     Exit
 }
+
+if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
+if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
+    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
+}
+
+#Initialize the API
+Import-Module .\API.psm1
+Start-APIServer
+$API.Version = $Version
 
 #[console]::TreatControlCAsInput = $true
 
