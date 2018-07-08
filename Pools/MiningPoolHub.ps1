@@ -28,7 +28,7 @@ if (($MiningPoolHub_Request.return | Measure-Object).Count -le 1) {
 }
 
 #temp fix: use additional mining currencies
-$MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0 -and @("equihash-btg") -contains (Get-Algorithm $_.algo) } | ForEach-Object {
+$MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0 -and @("equihash-btg") -contains $_.algo} | ForEach-Object {
     $MiningPoolHubCoins_Hosts = $_.host_list.split(";")
     if ($_.algo -eq "equihash-btg") { #temp fix for wrong host url in API
         $MiningPoolHubCoins_Hosts = $MiningPoolHubCoins_Hosts | Foreach-Object {if ($_ -match "(^hub|\.hub)") {$_ -replace "^hub\.","equihash-hub." -replace "\.hub\.",".equihash-hub."} else {$_}}    
