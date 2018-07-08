@@ -25,12 +25,12 @@
       <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
       <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
       <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
-      <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
-      <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Actual Speed</th>      
-      <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benchmarked</th>
-      <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algorithm</th>
-      <th data-field="tSecondaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">2nd Actual Speed</th>
-      <th data-field="tSecondaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">2nd Benchmarked</th>
+      <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+      <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>      
+      <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+      <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th>
+      <th data-field="tSecondaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
+      <th data-field="tSecondaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">2nd Benched</th>
     </tr>
   </thead>
 </table>
@@ -40,7 +40,7 @@
 
 <!-- End of page scripts -->
 <script id="poolbalance_template" type="text/x-handlebars-template">
-  <div class="mb-2 card {{#if total}}text-white bg-primary {{else}}text-dark bg-light{{/if}}" style="min-width: {{#if total}}100%{{else}}200px{{/if}}";>
+  <div class="mb-2 card {{#if total}}text-white bg-primary {{else}}text-dark bg-light{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}";>
     <div class="card-header text-center">
       <h5>{{name}}</h5>
     </div>
