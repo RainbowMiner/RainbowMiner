@@ -832,8 +832,8 @@ while ($true) {
 
     #Remove stats from pools & miners not longer in use
     if (-not $DonateNow -and (Test-Path "Stats")) {
-        Compare-Object @($NewPools | Foreach-Object {"$($_.Name)_$($_.Algorithm)_Profit"} | Select-Object -Unique) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Select-Object -Unique -ExpandProperty Name) | Where-Object {$_.SideIndicator -eq "=>" -and (Test-Path "Stats\$($_.InputObject).txt")} | Foreach-Object {Remove-Item "Stats\$($_.InputObject).txt"}
-        Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty BaseName) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split '-')[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
+        Compare-Object @($NewPools | Select-Object -Unique -ExpandProperty Name) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Foreach-Object {($_.Name -split "_")[0]} |Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)_*_Profit.txt" | Remove-Item}
+        Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty BaseName) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split "-")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
     }
 
     #Give API access to the current running configuration
