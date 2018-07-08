@@ -153,9 +153,6 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
 }
 
-#Check for software updates
-if (-not $DisableAutoUpdate -and (Test-Path .\Updater.ps1)) {$Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Version, $PSVersionTable.PSVersion, "") -FilePath .\Updater.ps1}
-
 #Set donation parameters
 $LastDonated = 0
 
@@ -301,6 +298,7 @@ while ($true) {
                                 $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)                 | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
                                 $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
 
                                 Write-Host ' '
@@ -383,6 +381,7 @@ while ($true) {
                                 $ConfigActual | Add-Member MinerName $($Config.MinerName -join ",") -Force
                                 $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
                                 $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
+                                $ConfigActual | Add-Member ExcludeAlgorithm $($Config.ExcludeAlgorithm -join ",") -Force
                                 $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
                                 $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
                                 $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
@@ -505,6 +504,57 @@ while ($true) {
                             Write-Host "(under development)"
                             Write-Host " "
 
+                            $AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+
+                            $PoolSetupDone = $false
+                            do {
+                                try {
+                                    $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $AvailPools
+                                    if ($Pool_Name -eq '') {throw}
+
+                                    if (-not $PoolsActual.$Pool_Name) {
+                                    }
+
+                                    $Pool_Parameters = @{StatSpan = [TimeSpan]::FromSeconds(0);InfoOnly = $true}
+                                    $Pool_Config = @{}
+                                    if ($Config.Pools.$Pool_Name) {
+                                        $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
+                                        Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
+                                    }
+                                    $Pool = Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
+
+                                    $Pool_Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                    $Pool_ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw};$_}
+                                                                        
+
+                                    if ($false) {
+                                    $EditMinerConfig = [PSCustomObject]@{
+                                        MainAlgorithm = $EditAlgorithm
+                                        SecondaryAlgorithm = $EditSecondaryAlgorithm
+                                        Params = ""
+                                        Profile = ""
+                                    }
+                        
+                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {
+                                        $MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {
+                                            $EditMinerConfig.Params = $_.Params
+                                            $EditMinerConfig.Profile = $_.Profile
+                                        }
+                                    }
+
+                                    $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
+                                    $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
+
+                                    if (Read-HostBool "Really write Params=`"$($EditMinerConfig.Params)`", Profile=`"$($EditMinerConfig.Profile)`" to $($PoolsConfigFile)?") {
+                                        $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
+                                        $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
+                                    }                        
+                                    }
+
+                                    if (-not (Read-HostBool "Edit another pool?")){throw}
+                        
+                                } catch {$PoolSetupDone = $true}
+                            } until ($PoolSetupDone)
                         }
                     } until (-not $RunSetup)
                     $RestartMiners = $true
@@ -554,6 +604,8 @@ while ($true) {
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
         if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
 
+        #Check for software updates
+        if (-not $Config.DisableAutoUpdate -and (Test-Path .\Updater.ps1) -and $Downloader.State -ne "Running") {$Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Version, $PSVersionTable.PSVersion, "") -FilePath .\Updater.ps1}
     }
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
@@ -843,12 +895,13 @@ while ($true) {
                 if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
                 if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
                 if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.DeviceModel)")}                
+                $_ | Add-Member Algorithm @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)
                 $_
             } | #for backward compatibility            
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
-            Where-Object {(Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
+            Where-Object {(Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
     }
@@ -861,9 +914,9 @@ while ($true) {
             #Remove device combos, where the parameter-preset is different and there does not exist an own definition
             $AllMiners = $AllMiners | Where-Object {
                 $_.DeviceModel -notmatch '-' -or 
-                (Get-Member -InputObject $Config.Miners -Name $(@($_.BaseName) + @($_.DeviceModel) + @($_.HashRates.PSObject.Properties.Name) -join '-') -MemberType NoteProperty) -or 
+                (Get-Member -InputObject $Config.Miners -Name $(@($_.BaseName | Select-Object) + @($_.DeviceModel | Select-Object) + @($_.Algorithm | Select-Object) -join '-') -MemberType NoteProperty) -or 
                 $($Miner = $_; (@($Miner.DeviceModel -split '-') | Foreach-Object {
-                    $Miner_ConfigName = @($Miner.BaseName) + @($_) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+                    $Miner_ConfigName = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
                     if (Get-Member -InputObject $Config.Miners -Name $Miner_ConfigName -MemberType NoteProperty){$Config.Miners.$Miner_ConfigName.Params}
                 } | Select-Object -Unique | Measure-Object).Count -le 1)
             }
@@ -896,7 +949,7 @@ while ($true) {
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
 
-        $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.DeviceModel) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+        $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
             if ($Config.Miners.$Miner_CommonCommands.Params) {
                 $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
@@ -906,14 +959,14 @@ while ($true) {
             }
         } elseif ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
             #combo handling - we know that combos always have equal params, because we preselected them, already
-            $Miner_CommonCommands = @($Miner.BaseName) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+            $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.Algorithm | Select-Object) -join '-'
             if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
                 if ($Config.Miners.$Miner_CommonCommands.Params) {
                     $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
                 }
             }
             [Int[]]$Miner_MSIAprofile = @($Miner.DeviceModel -split '-') | Foreach-Object {
-                $Miner_CommonCommands = @($Miner.BaseName) + @($_) + @($Miner.HashRates.PSObject.Properties.Name) -join '-'
+                $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
                 if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile} else {$Config.MSIAprofile}
             } | Select-Object -Unique
             if (($Miner_MSIAprofile | Measure-Object).Count -eq 1 -and $Miner_MSIAprofile[0]) {

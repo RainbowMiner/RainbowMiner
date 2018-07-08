@@ -1,7 +1,4 @@
 {
-    "1445": "Equihash-BTG",
-    "1927": "Zerocurrency",
-    "955": "Minexcoin",
     "allium":  "Allium",
     "anime":  "Anime",
     "animecoin":  "Anime",
@@ -67,7 +64,7 @@
     "dropcoin":  "Drop",
     "dynamic":  "Argon2dDYN",
     "equihash":  "Equihash",
-    "equihashbtg": "Equihash-BTG",
+    "equihashbtg": "EquihashBTG",
     "Espers":  "HMQ1725",
     "eth":  "Ethash",
     "ethash":  "Ethash",

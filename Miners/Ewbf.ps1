@@ -9,7 +9,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash-BTG"; Params = "--algo 144_5 --pers BgoldPoW"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "EquihashBTG"; Params = "--algo 144_5 --pers BgoldPoW"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Minexcoin"; Params = "--algo 95_5"} #Equihash 95,5
     [PSCustomObject]@{MainAlgorithm = "Zerocoin"; Params = "--algo 192_7 --pers ZERO_PoW"} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Zhash"; Params = "--algo zhash"} #Zhash

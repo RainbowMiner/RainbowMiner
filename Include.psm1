@@ -288,23 +288,25 @@ function Set-Stat {
     }
 
     if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" | Out-Null}
-    [PSCustomObject]@{
-        Live = [Decimal]$Stat.Live
-        Minute = [Decimal]$Stat.Minute
-        Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
-        Minute_5 = [Decimal]$Stat.Minute_5
-        Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
-        Minute_10 = [Decimal]$Stat.Minute_10
-        Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
-        Hour = [Decimal]$Stat.Hour
-        Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
-        Day = [Decimal]$Stat.Day
-        Day_Fluctuation = [Double]$Stat.Day_Fluctuation
-        Week = [Decimal]$Stat.Week
-        Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-        Duration = [String]$Stat.Duration
-        Updated = [DateTime]$Stat.Updated
-    } | ConvertTo-Json | Set-Content $Path
+    if ($Stat.Duration -ne 0) {
+        [PSCustomObject]@{
+            Live = [Decimal]$Stat.Live
+            Minute = [Decimal]$Stat.Minute
+            Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
+            Minute_5 = [Decimal]$Stat.Minute_5
+            Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
+            Minute_10 = [Decimal]$Stat.Minute_10
+            Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
+            Hour = [Decimal]$Stat.Hour
+            Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
+            Day = [Decimal]$Stat.Day
+            Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+            Week = [Decimal]$Stat.Week
+            Week_Fluctuation = [Double]$Stat.Week_Fluctuation
+            Duration = [String]$Stat.Duration
+            Updated = [DateTime]$Stat.Updated
+        } | ConvertTo-Json | Set-Content $Path
+    }
 
     $Stat
 }
@@ -931,8 +933,9 @@ function Get-Algorithm {
 
     if ($Algorithm -match "[,;\s]") {@($Algorithm -split "[,;\s]+") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Script:Algorithms)) {
+        if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {
             $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
+            $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
         }
 
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "-", " " -replace "_", " ")) -replace " "
