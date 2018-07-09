@@ -403,7 +403,7 @@ while ($true) {
                                 $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile
 
                                 Write-Host "Changes written to configuration"
-                                Write-Host" "
+                                Write-Host " "
 
                                 $IsInitialSetup = $false
                             }
