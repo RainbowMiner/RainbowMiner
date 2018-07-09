@@ -195,6 +195,9 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
 }
 
+#Check for software updates
+if (-not $DisableAutoUpdate -and (Test-Path .\Updater.ps1)) {$Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Version, $PSVersionTable.PSVersion, "") -FilePath .\Updater.ps1}
+
 #Initialize the API
 Import-Module .\API.psm1
 Start-APIServer
@@ -601,9 +604,6 @@ while ($true) {
         #For backwards compatibility
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
         if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
-
-        #Check for software updates
-        if (-not $Config.DisableAutoUpdate -and (Test-Path .\Updater.ps1) -and $Downloader.State -ne "Running") {$Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Version, $PSVersionTable.PSVersion, "") -FilePath .\Updater.ps1}
     }
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
@@ -1044,7 +1044,7 @@ while ($true) {
     $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
     if ($MinersUriHash -eq $null) {$MinersUriHash = $AllMinersUriHash}
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath))}
-    if ( ($StartDownloader -or $MinersUriHash -ne $AllMinersUriHash) -and $Downloader.State -ne "Running") {
+    if ( ($StartDownloader -or $MinersUriHash -ne $AllMinersUriHash -or $Miners.Count -ne $AllMiners.Count) -and $Downloader.State -ne "Running") {
         if ($StartDownloader) {
             Write-Log -Level Warn "User requested to start downloader. "
         }
