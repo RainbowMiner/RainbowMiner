@@ -30,7 +30,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 ## INSTALLATION
 
 1. Download and extract to your desktop (find the latest release here https://github.com/RainbowMiner/RainbowMiner/releases)
-2. Check powershell version and pre-requesites (see below, very important!)
+2. Check powershell version and pre-requesites (see below, **very important!**)
 3. Right-click "Start.bat", choose "Run as administrator": there will start two windows, one contains RainbowMiner and the other will show the output of the running miners.
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
@@ -48,6 +48,8 @@ Done!
 
 
 ## REQUIRED PRE-REQUESITES
+
+**Make sure, that there is no other PowerShell version installed, before you start the installation of the version 6.0.2. If there is any old version, uninstall it and reboot your pc.**
 
 - PowerShell 6 is required: [Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.2/PowerShell-6.0.2-win-x64.msi)
 - Microsoft .NET Framework 4.5.1 or later is required: [Web Installer](https://www.microsoft.com/en-us/download/details.aspx?id=40773)
