@@ -811,9 +811,11 @@ while ($true) {
     #Load information about the pools
     Write-Log "Loading pool information. "
     $NewPools = @()
+    $SelectedPoolNames = @()
     if (Test-Path "Pools") {
         $NewPools = Get-ChildItem "Pools" -File | Where-Object {$Config.Pools.$($_.BaseName) -and $Config.ExcludePoolName -inotcontains $_.BaseName} | ForEach-Object {
             $Pool_Name = $_.BaseName
+            $SelectedPoolNames += $Pool_Name
             $Pool_Parameters = @{StatSpan = $StatSpan}
             $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
             $Pool_Config = @{}
@@ -832,7 +834,7 @@ while ($true) {
 
     #Remove stats from pools & miners not longer in use
     if (-not $DonateNow -and (Test-Path "Stats")) {
-        Compare-Object @($NewPools | Select-Object -Unique -ExpandProperty Name) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Foreach-Object {($_.Name -split "_")[0]} |Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)_*_Profit.txt" | Remove-Item}
+        Compare-Object @($SelectedPoolNames | Select-Object -Unique) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Foreach-Object {($_.Name -split "_")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)_*_Profit.txt" | Remove-Item}
         Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty BaseName) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split "-")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
     }
 
