@@ -92,7 +92,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - 'miningpoolhub' and 'miningpoolhubmini' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
   - 'miningpoolhubmini' is setup to mine lyra2z, skein, myriadgroestl, groestl, neoscrypt and equihash-btg, only.
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports). 
-- Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC)
+- Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below)
 - Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in "Config\pools.config.txt")
 - YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in "Config\pools.config.txt")
 - ZergPool / ZergPoolCoins https://zergpool.eu/ (auto-exchange and payout in BTC)
@@ -100,7 +100,11 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - 'zergpoolcoins' mine most profitable coin. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 - Zpool https://www.zpool.ca/ (auto-exchange and payout in BTC)
 	
-Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:
+**Note for Nicehash:**  
+If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, Nicehash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
+This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the Nicehash wallet to your Coinbase account is free of charge.
+
+**Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:**  
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The YiiMP pool is an exception, as it does not have auto-exchange to BTC. Please be careful, what you choose to mine.
 
 
