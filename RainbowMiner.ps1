@@ -86,7 +86,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.3.3"
+$Version = "3.7.3.2"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -311,7 +311,7 @@ while ($true) {
                                 if ((Select-Device $SetupDevices "amd" | Measure-Object).Count -gt 0) {$AvailDeviceName += "amd"}               
 
                                 $WizardDeviceNameSet = $false                                                                
-                                if ($IsInitialSetup -and @($Config.DeviceName).Count -eq 0) {
+                                if ($IsInitialSetup -and -not $Config.DeviceName) {
                                     $Config.DeviceName = @()
                                     if ($AvailDeviceName.Count -gt 0) { #GPU mining possible
                                         if ($AvailDeviceName.Count -gt 1) {
