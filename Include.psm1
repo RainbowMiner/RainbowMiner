@@ -1465,7 +1465,7 @@ function Read-HostString {
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}                
         if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",");Write-Host " "}
@@ -1510,7 +1510,7 @@ function Read-HostDouble {
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
         [Double]$Result = $Result -replace "[^0-9\.,\-]","" -replace ",","."
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
@@ -1537,7 +1537,7 @@ function Read-HostInt {
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
         [Int]$Result = $Result -replace "[^0-9\-]",""
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
@@ -1566,15 +1566,24 @@ function Read-HostArray {
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
-        if ("exit","cancel" -icontains $Result){$Result;return}
+        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}        
         if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
             else {Write-Host "Every input will be valid. So, take care :)";Write-Host " "}
             $Repeat = $true
         } else {
+            $Mode = "v";
+            if ($Result -match "^([\-\+])(.+)$") {
+                $Mode = $Matches[1]
+                $Result = $Matches[2]
+            }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
             [Array]$Result = $Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"
+            Switch ($Mode) {
+                "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object) | Select-Object -Unique; break}
+                "-" {$Result = $Default | Where-Object {$Result -inotcontains $_} | Select-Object -Unique; break}
+            }
             if ($Valid.Count -gt 0) {
                 if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
                     Write-Host "The following entries are invalid (type `"list`" to show all valid):"
@@ -1600,7 +1609,7 @@ function Read-HostBool {
     )
     $Default = if (Get-Yes $Default){"yes"}else{"no"}
     $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$($Default)]").Trim()) -eq ''){$Default}else{$Result.Trim()}
-    if ("exit","cancel" -icontains $Result){$Result;return}
+    if ("exit","cancel","back","<" -icontains $Result){$Result;return}
     Get-Yes $Result
 }
 

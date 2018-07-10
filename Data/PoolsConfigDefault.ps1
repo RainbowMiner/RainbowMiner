@@ -30,6 +30,9 @@
         "NiceHash" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "PhiPhiPool" = [PSCustomObject]@{
+            Currencies=@("BTC")
+        }
         "Ravenminer" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{DataWindow="actual_last24h"}
             Currencies=@("RVN")
