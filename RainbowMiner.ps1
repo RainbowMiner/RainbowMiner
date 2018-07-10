@@ -75,7 +75,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
     [Parameter(Mandatory = $false)]
-    [String]$MiningMode = "device", # set to "legacy","device","combo"
+    [String]$MiningMode = "combo", # set to "legacy","device","combo"
     [Parameter(Mandatory = $false)]
     [String]$MSIApath = "c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", # installation path of MSI Afterburner
     [Parameter(Mandatory = $false)]
