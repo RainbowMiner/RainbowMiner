@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/technobyl/CryptoDredge/releases/download/v0.6.0/CryptoDredge_0.6.0.zip"
+$Uri = "https://github.com/CryptoDredge/beta/releases/download/v0.6.1-beta/CryptoDredge_0.6.1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4129696.0"
 $Port = "313{0:d2}"
 
