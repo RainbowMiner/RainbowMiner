@@ -66,7 +66,7 @@ $MiningPoolHub_Request.return | ForEach-Object {
         if ($User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $MiningPoolHub_Algorithm_Norm
-                Info          = $MiningPoolHub_Coin
+                CoinName      = $MiningPoolHub_Coin
                 Price         = $Stat.Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
@@ -84,7 +84,7 @@ $MiningPoolHub_Request.return | ForEach-Object {
             if ($MiningPoolHub_Algorithm_Norm -eq "CryptonightV7" -or $MiningPoolHub_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
                     Algorithm     = $MiningPoolHub_Algorithm_Norm
-                    Info          = $MiningPoolHub_Coin
+                    CoinName      = $MiningPoolHub_Coin
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation

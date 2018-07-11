@@ -50,7 +50,7 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
             @($NiceHash_Algorithm_Norm,"$($NiceHash_Algorithm_Norm)-NHMP") | Foreach-Object {
                 [PSCustomObject]@{
                     Algorithm     = $_
-                    Info          = $NiceHash_Coin
+                    CoinName      = $NiceHash_Coin
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
@@ -68,7 +68,7 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                 if ($_ -like "Cryptonight*" -or $_ -eq "Equihash") {
                     [PSCustomObject]@{
                         Algorithm     = $_
-                        Info          = $NiceHash_Coin
+                        CoinName      = $NiceHash_Coin
                         Price         = $Stat.Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation

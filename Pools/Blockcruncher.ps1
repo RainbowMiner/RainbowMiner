@@ -48,7 +48,7 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
 
         [PSCustomObject]@{
             Algorithm     = $Blockcruncher_Algorithm_Norm
-            Info          = $Blockcruncher_Coin
+            CoinName      = $Blockcruncher_Coin
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation

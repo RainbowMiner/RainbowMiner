@@ -57,7 +57,7 @@ $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -g
                 #Option 2
                 [PSCustomObject]@{
                     Algorithm     = $ZergPool_Algorithm_Norm
-                    Info          = $ZergPool_Coin
+                    CoinName      = $ZergPool_Coin
                     Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
@@ -78,7 +78,7 @@ $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -g
                 #Option 3
                 [PSCustomObject]@{
                     Algorithm     = $ZergPool_Algorithm_Norm
-                    Info          = $ZergPool_Coin
+                    CoinName      = $ZergPool_Coin
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation

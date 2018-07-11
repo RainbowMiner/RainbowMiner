@@ -49,7 +49,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         $BlazePool_Currencies | Where-Object {Get-Variable $_ -ValueOnly} | ForEach-Object {
             [PSCustomObject]@{
                 Algorithm     = $BlazePool_Algorithm_Norm
-                Info          = $BlazePool_Coin
+                CoinName      = $BlazePool_Coin
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

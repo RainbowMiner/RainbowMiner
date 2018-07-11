@@ -1461,7 +1461,7 @@ while ($true) {
             @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
             @{Label = "Fee"; Expression = {$_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {($_/100).ToString("P0")}else {"-"}}}; Align = 'right'}, 
-            @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.Info) {"-$($_.Info)"})"}}}
+            @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
         ) | Out-Host
     }
 
