@@ -4,7 +4,7 @@ param(
     [PSCustomObject]$Pools,
     [PSCustomObject]$Stats,
     [PSCustomObject]$Config,
-    [PSCustomObject[]]$Devices
+    [PSCustomObject]$Devices
 )
 
 $Path = ".\Bin\NVIDIA-Xevan75\ccminer.exe"
