@@ -71,6 +71,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$RemoteAPI = $false,
+    [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
     [Switch]$RebootOnGPUFailure = $false, # if set to $true, and a GPU fails, the mining rig will be restarted
@@ -137,7 +139,7 @@ $IsInitialSetup = $false
 $MinersUriHash = $null
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ShowPoolBalances","DisableDualMining","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
 }
@@ -204,17 +206,16 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
 #Check for software updates
 if (-not $DisableAutoUpdate -and (Test-Path .\Updater.ps1)) {$Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Version, $PSVersionTable.PSVersion, "") -FilePath .\Updater.ps1}
 
-#Initialize the API
-Import-Module .\API.psm1
-Start-APIServer
-$API.Version = $Version
-
 #[console]::TreatControlCAsInput = $true
 
 while ($true) {
     #Load the config
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
     $ConfigCheckFields = $true
+    
+    $AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+    $AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+
     if (Test-Path $ConfigFile) {
         if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
 
@@ -242,8 +243,6 @@ while ($true) {
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
-                        $AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
-                        $AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
                         Write-Host " "
                         Write-Host "*** RainbowMiner Configuration ***" -ForegroundColor Green
@@ -386,7 +385,7 @@ while ($true) {
                                             throw "Goto 9"
                                         }
                                         8 {
-                                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid (Get-ChildItem "Pools\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         9 {
                                             if ($IsInitialSetup) {
@@ -396,10 +395,10 @@ while ($true) {
 
                                                 if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto 14"}
                                             }
-                                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         10 {
-                                            $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         11 {
                                             $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -594,7 +593,7 @@ while ($true) {
                             $MinerSetupDone = $false
                             do {
                                 try {
-                                    $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid (Get-ChildItem "Miners\*.ps1" | Select-Object -ExpandProperty BaseName)
+                                    $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $AvailMiners
                                     if ($EditMinerName -eq '') {throw}
                                     if ($Config.MiningMode -eq "Legacy") {
                                         $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (leave empty to end miner config)" -Characters "A-Z" -Valid $AvailDeviceName
@@ -730,6 +729,13 @@ while ($true) {
         Exit
     }
 
+    #Initialize the API only once
+    if(!(Test-Path Variable:API)) {
+        Import-Module .\API.psm1
+        Start-APIServer -RemoteAPI:$Config.RemoteAPI
+        $API.Version = $Version
+    }
+
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($ConfigCheckFields) {
         #for backwards compatibility
@@ -740,13 +746,12 @@ while ($true) {
             Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.PlatformId_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Index)}
         }
 
-        $Config | Get-Member -MemberType *Property | Foreach-Object {
+        $Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty"} | Select-Object Name,Value | Foreach-Object {
             $name = $_.Name;
             $var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
             if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
             elseif ( ($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool] ) {$Config.$name = Get-Yes $Config.$name}
-            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }
-            
+            elseif ( $var -is [int] -and $Config.$name -isnot [int] ) { $Config.$name = [int]$Config.$name }            
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
@@ -773,8 +778,8 @@ while ($true) {
         }
     }    
 
-    Get-ChildItem "Pools" -File | Where-Object {-not $Config.Pools.($_.BaseName)} | ForEach-Object {
-        $Config.Pools | Add-Member $_.BaseName (
+    $AvailPools | Where-Object {-not $Config.Pools.$_} | ForEach-Object {
+        $Config.Pools | Add-Member $_ (
             [PSCustomObject]@{
                 BTC     = $Config.Wallet
                 User    = $Config.UserName
@@ -808,10 +813,10 @@ while ($true) {
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
         $DonationPools = @()        
         if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"],"Algorithm":["bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","ethash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","vit","x16r","x16s","x17","xevan","yescrypt","yescryptr16"]}' | ConvertFrom-Json}
-        Get-ChildItem "Pools" -File | ForEach-Object {
-            $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name ($_.BaseName) -MemberType NoteProperty) {$DonationData.Wallets.($_.BaseName)} else {$DonationData.Wallets.Default};
-            $DonationPools += $_.BaseName
-            $Config.Pools | Add-Member $_.BaseName $DonationData1 -Force
+        $AvailPools | ForEach-Object {
+            $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
+            $DonationPools += $_
+            $Config.Pools | Add-Member $_ $DonationData1 -Force
             $DonateNow = $true
         }
         if ($DonateNow) {
@@ -966,29 +971,32 @@ while ($true) {
     $NewPools = @()
     $SelectedPoolNames = @()
     if (Test-Path "Pools") {
-        $NewPools = Get-ChildItem "Pools" -File | Where-Object {$Config.Pools.$($_.BaseName) -and $Config.ExcludePoolName -inotcontains $_.BaseName} | ForEach-Object {
-            $Pool_Name = $_.BaseName
+        $NewPools = $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
+            $Pool_Name = $_
             $SelectedPoolNames += $Pool_Name
             $Pool_Parameters = @{StatSpan = $StatSpan}
             $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
             $Pool_Config = @{}
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
-            Get-ChildItemContent "Pools\$($_.Name)" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
+            Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
+                if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force}
+                $_.Content | Add-Member AlgorithmList @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique) -Force
+                $_}
         } |
-        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
+        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.Content.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
+        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.Content.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
         ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Content.Penalty + $(if (-not $Config.IgnoreFees){$_.Content.PoolFee}))/100
             $_.Content.Price *= $Pool_Factor
             $_.Content.StablePrice *= $Pool_Factor                
             $_.Content | Add-Member Name $_.Name -PassThru
-        }        
+        }       
     }
 
     #Remove stats from pools & miners not longer in use
     if (-not $DonateNow -and (Test-Path "Stats")) {
         Compare-Object @($SelectedPoolNames | Select-Object -Unique) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Foreach-Object {($_.Name -split "_")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)_*_Profit.txt" | Remove-Item}
-        Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty BaseName) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split "-")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
+        Compare-Object @($AvailMiners | Select-Object) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split "-")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
     }
 
     #Give API access to the current running configuration
@@ -997,8 +1005,8 @@ while ($true) {
     # This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     # since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     $AllPools = @($NewPools) + @(Compare-Object @($NewPools | Select-Object -ExpandProperty Name -Unique) @($AllPools | Select-Object -ExpandProperty Name -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) | 
-        Where-Object {$Config.Algorithm.Count -eq 0 -or (Compare-Object @($Config.Algorithm | Select-Object) @((Get-Algorithm $_.Algorithm), ($_.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-        Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @((Get-Algorithm $_.Algorithm), ($_.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
+        Where-Object {$Config.Algorithm.Count -eq 0 -or (Compare-Object @($Config.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
+        Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
         Where-Object {$Config.ExcludePoolName.Count -eq 0 -or (Compare-Object $Config.ExcludePoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
 
     #Give API access to the current running configuration
@@ -1308,7 +1316,7 @@ while ($true) {
     }
 
     #Don't penalize active miners
-    if ( $SkipSwitchingPrevention ) {
+    if ($SkipSwitchingPrevention) {
         $SkipSwitchingPrevention = $false
         $ActiveMiners | ForEach-Object {$_.Profit_Bias = $_.Profit_Unbias}
     } else {

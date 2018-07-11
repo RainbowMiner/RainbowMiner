@@ -1,10 +1,29 @@
 ﻿Function Start-APIServer {
+    Param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$RemoteAPI = $false
+    )
+
     # Create a global synchronized hashtable that all threads can access to pass data between the main script and API
     $Global:API = [hashtable]::Synchronized(@{})
   
     # Setup flags for controlling script execution
     $API.Stop = $false
     $API.Pause = $false
+    $API.RemoteAPI = $RemoteAPI
+
+    # Starting the API for remote access requires that a reservation be set to give permission for non-admin users.
+    # If switching back to local only, the reservation needs to be removed first.
+    # Check the reservations before trying to create them to avoid unnecessary UAC prompts.
+    $urlACLs = & netsh http show urlacl | Out-String
+
+    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:3999/'))) {
+        # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:3999/ sddl=D:(A;;GX;;;S-1-5-32-545)'
+    }
+    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:3999/'))) {
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:3999/'
+    }
 
     # Setup runspace to launch the API webserver in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
@@ -32,8 +51,13 @@
 
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
-        # Listening on anything other than localhost requires admin privileges
-        $Server.Prefixes.Add("http://localhost:3999/")
+        if ($API.RemoteAPI) {
+            $Server.Prefixes.Add("http://+:3999/")
+            # Require authentication when listening remotely
+            $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
+        } else {
+            $Server.Prefixes.Add("http://localhost:3999/")
+        }
         $Server.Start()
 
         While ($Server.IsListening -and -not $API.Stop) {
@@ -56,32 +80,42 @@
                 }
             }
 
+            if($Request.HasEntityBody) {
+                $Reader = New-Object System.IO.StreamReader($Request.InputStream)
+                $NewParameters = $Reader.ReadToEnd()
+            }
+
             # Create a new response and the defaults for associated settings
             $Response = $Context.Response
             $ContentType = "application/json"
             $StatusCode = 200
             $Data = ""
             
-            # Set the proper content type, status code and data for each resource
-            Switch($Path) {
+            if($API.RemoteAPI -and (!$Request.IsAuthenticated)) {
+                $Data = "Unauthorized"
+                $StatusCode = 403
+                $ContentType = "text/html"
+            } else {
+                # Set the proper content type, status code and data for each resource
+                Switch($Path) {
                 "/version" {
                     $Data = $API.Version | ConvertTo-Json
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @($API.ActiveMiners)
+                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object)
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @($API.RunningMiners)
+                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object)
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @($API.FailedMiners)
+                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object)
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = ConvertTo-Json @($API.MinersNeedingBenchmark)
+                    $Data = ConvertTo-Json @($API.MinersNeedingBenchmark | Select-Object)
                     Break
                 }
                 "/pools" {
@@ -89,11 +123,11 @@
                     Break
                 }
                 "/newpools" {
-                    $Data = ConvertTo-Json @($API.NewPools)
+                    $Data = ConvertTo-Json @($API.NewPools | Select-Object)
                     Break
                 }
                 "/allpools" {
-                    $Data = ConvertTo-Json @($API.AllPools)
+                    $Data = ConvertTo-Json @($API.AllPools | Select-Object)
                     Break
                 }
                 "/algorithms" {
@@ -101,11 +135,11 @@
                     Break
                 }
                 "/miners" {
-                    $Data = ConvertTo-Json @($API.Miners)
+                    $Data = ConvertTo-Json @($API.Miners | Select-Object)
                     Break
                 }
                 "/fastestminers" {
-                    $Data = ConvertTo-Json @($API.FastestMiners)
+                    $Data = ConvertTo-Json @($API.FastestMiners | Select-Object)
                     Break
                 }
                 "/config" {
@@ -117,31 +151,31 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = ConvertTo-Json @($API.AllDevices)
+                    $Data = ConvertTo-Json @($API.AllDevices | Select-Object)
                     Break
                 }
                 "/devices" {
-                    $Data = ConvertTo-Json @($API.Devices)
+                    $Data = ConvertTo-Json @($API.Devices | Select-Object)
                     Break
                 }
                 "/devicecombos" {
-                    $Data = ConvertTo-Json @($API.DeviceCombos)
+                    $Data = ConvertTo-Json @($API.DeviceCombos | Select-Object)
                     Break
                 }
                 "/stats" {
-                    $Data = ConvertTo-Json @($API.Stats)
+                    $Data = ConvertTo-Json @($API.Stats | Select-Object)
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = ConvertTo-Json @($API.WatchdogTimers)
+                    $Data = ConvertTo-Json @($API.WatchdogTimers | Select-Object)
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @($API.Balances)
+                    $Data = ConvertTo-Json @($API.Balances | Select-Object)
                     Break
                 }
                 "/rates" {
-                    $Data = ConvertTo-Json @($API.Rates)
+                    $Data = ConvertTo-Json @($API.Rates | Select-Object)
                     Break
                 }
                 "/currentprofit" {
@@ -207,6 +241,7 @@
                         $Data = "URI '$Path' is not a valid resource."
                     }
                 }
+            }
             }
 
             # If $Data is null, the API will just return whatever data was in the previous request.  Instead, show an error

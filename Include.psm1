@@ -325,14 +325,16 @@ function Get-Stat {
         Get-ChildItem "Stats" -File | Where-Object BaseName -EQ $Name | Get-Content | ConvertFrom-Json
     } else {
         # Return all stats
-        $Stats = [PSCustomObject]@{}
-        Get-ChildItem "Stats" | ForEach-Object {
+        if (-not (Test-Path Variable:Script:Stats)) {$Script:Stats = [PSCustomObject]@{}}
+
+        Get-ChildItem "Stats" | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $Script:StatsTimeStamp} | ForEach-Object {
             $BaseName = $_.BaseName
             $_ | Get-Content | ConvertFrom-Json -ErrorAction SilentlyContinue | ForEach-Object {
-                $Stats | Add-Member $BaseName $_
+                $Script:Stats | Add-Member $BaseName $_ -Force
             }
         }
-        Return $Stats
+        $Script:StatsTimeStamp = (Get-Date).ToUniversalTime()
+        Return $Script:Stats
     }
 }
 
@@ -393,7 +395,7 @@ function Get-ChildItemContent {
         }
         if ( $Force ) {
             $Parameters.Keys | ForEach-Object {
-                if ( -not (Get-Member -InputObject $Content -Name $_ -Membertype Properties) ) {
+                if (-not (Get-Member -InputObject $Content -Name $_ -Membertype Properties)) {
                     $Content | Add-Member $_ $Parameters.$_ -Force 
                 }
             }
@@ -2032,4 +2034,44 @@ Param(
     $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
     $utf8 = new-object -TypeName System.Text.UTF8Encoding
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+}
+
+function Start-AsyncLoader {
+    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
+
+    $AsyncLoader.Stop = $false
+
+     # Setup runspace to launch the AsyncLoader in a separate thread
+    $newRunspace = [runspacefactory]::CreateRunspace()
+    $newRunspace.Open()
+    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
+    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
+
+    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
+        #wait for Config to arrive
+        while($AsyncLoader.Config -eq $null) { Sleep 1 }
+
+        $StatEnd = (Get-Date).ToUniversalTime()
+
+        while (-not $AsyncLoader.Stop) {
+            $Timer = (Get-Date).ToUniversalTime()
+
+            $StatStart = $StatEnd
+            $StatEnd = $Timer.AddSeconds($AsyncLoader.Config.Interval)
+            $StatSpan = New-TimeSpan $StatStart $StatEnd
+
+            while ($Timer -lt $StatEnd) {
+                Sleep 2
+                $Timer = (Get-Date).ToUniversalTime()
+            }
+        }
+    });
+
+    $AsyncLoader.Loader.Runspace = $newRunspace
+    $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
+}
+
+function Stop-AsyncLoader {
+    $Global:AsyncLoader.Stop = $true
+    $Global:AsyncLoader.Loader.dispose()
 }
