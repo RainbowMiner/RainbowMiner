@@ -762,8 +762,8 @@ while ($true) {
         Import-Module .\API.psm1
         Start-APIServer -RemoteAPI:$Config.RemoteAPI
         $API.Version = $Version
-        $API.AllDevices = @(Get-Device -Refresh | Select-Object)
     }
+    if ($API.AllDevices -eq $null) {$API.AllDevices = @(Get-Device -Refresh | Select-Object)}
 
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
