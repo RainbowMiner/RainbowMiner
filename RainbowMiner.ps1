@@ -729,13 +729,6 @@ while ($true) {
         Exit
     }
 
-    #Initialize the API only once
-    if(!(Test-Path Variable:API)) {
-        Import-Module .\API.psm1
-        Start-APIServer -RemoteAPI:$Config.RemoteAPI
-        $API.Version = $Version
-    }
-
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($ConfigCheckFields) {
         #for backwards compatibility
@@ -763,6 +756,15 @@ while ($true) {
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
         if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
     }
+
+    #Initialize the API and Get-Device
+    if(!(Test-Path Variable:API)) {
+        Import-Module .\API.psm1
+        Start-APIServer -RemoteAPI:$Config.RemoteAPI
+        $API.Version = $Version
+        $API.AllDevices = @(Get-Device -Refresh | Select-Object)
+    }
+
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
     if (Test-Path $PoolsConfigFile) {
@@ -853,7 +855,6 @@ while ($true) {
             Write-Log "Device configuration changed. Refreshing now. "
 
             #Load information about the devices
-            $API.AllDevices = @(Get-Device | Select-Object)
             $Devices = @(Get-Device $Config.DeviceName | Select-Object)
             $DevicesByTypes = [PSCustomObject]@{
                 NVIDIA = @(Select-Device $Devices "NVIDIA")
