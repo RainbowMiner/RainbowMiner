@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\CryptoNight-NVIDIA\xmrig-nvidia.exe"
 $Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.6.1/xmrig-nvidia-2.6.1-cuda9-win64.zip"
 $Port = "303{0:d2}"

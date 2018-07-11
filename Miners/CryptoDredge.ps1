@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
 $Uri = "https://github.com/CryptoDredge/beta/releases/download/v0.6.1-beta/CryptoDredge_0.6.1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4129696.0"

@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\CPU-JayDDee\cpuminer-sse2.exe"
 $Uri = "https://github.com/JayDDee/cpuminer-opt/files/1996977/cpuminer-opt-3.8.8.1-windows.zip"
 $Port = "500{0:d2}"

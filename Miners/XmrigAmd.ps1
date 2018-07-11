@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\CryptoNight-AMD\xmrig-amd.exe"
 $Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.0-beta/xmrig-amd-2.7.0-beta-win64.zip"
 $Port = "304{0:d2}"

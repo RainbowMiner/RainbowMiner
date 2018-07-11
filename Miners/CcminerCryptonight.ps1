@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\NVIDIA-CryptoNight\ccminer-cryptonight.exe"
 $Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.04/ccminer-cryptonight-304-x64-cuda92.zip"
 $Port = "105{0:d2}"

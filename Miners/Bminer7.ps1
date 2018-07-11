@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\Equihash-BMiner7\bminer.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v7.0.0-bminer/bminer-v7.0.0-9c7291b-amd64.zip"
 $Port = "300{0:d2}"

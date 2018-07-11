@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\CryptoNight-Claymore\NsGpuCNMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.3-claymorecryptonight/claymore_cryptonight_11.3.zip"
 $Port = "200{0:d2}"

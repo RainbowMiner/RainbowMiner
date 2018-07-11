@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\Equihash-DSTM\zm.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-dstm/zm_0.6.1_win.zip"
 $Port = "305{0:d2}"

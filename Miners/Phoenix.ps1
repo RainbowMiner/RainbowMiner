@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0c-phoenixminer/PhoenixMiner_3.0c.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"

@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\Equihash-EWBF\miner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3-ewbf/EWBF.Equihash.miner.v0.3.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"

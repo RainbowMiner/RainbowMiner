@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\NVIDIA-Sib\ccminer_x11gost.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccminersib/ccminer_x11gost_1.0.7z"
 $Port = "108{0:d2}"

@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\NVIDIA-Ravencoin\ccminer.exe"
 $Uri = "https://github.com/RavencoinProject/RavencoinMiner/releases/download/v3.1-cu92/Ravencoin.Miner.v3.1.win32.cu92.zip"
 $Port = "107{0:d2}"

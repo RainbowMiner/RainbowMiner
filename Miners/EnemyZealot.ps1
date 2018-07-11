@@ -1,5 +1,12 @@
 ﻿using module ..\Include.psm1
 
+param(
+    [PSCustomObject]$Pools,
+    [PSCustomObject]$Stats,
+    [PSCustomObject]$Config,
+    [PSCustomObject[]]$Devices
+)
+
 $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.12a-enemyzealot/z-enemy.1-12a-cuda9.2.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
