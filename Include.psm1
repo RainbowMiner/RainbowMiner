@@ -789,7 +789,7 @@ function Get-Device {
     try {
         $CPUIndex = 0
         if (-not (Test-Path Variable:Script:GetDeviceCacheCIM)) {
-            $Script:GetDeviceCacheCIM = Get-CimInstance -ClassName Win32_Processor
+            $Script:GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
         }
         $Script:GetDeviceCacheCIM | Foreach-Object {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
