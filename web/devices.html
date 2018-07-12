@@ -1,8 +1,8 @@
 ﻿<!--#include file="/parts/head.html" -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-  <h1 id="title" data-navbaractive="navdevices" class="h2">Selected Devices</h1>
+  <h1 id="title" data-navbaractive="navdevices" class="h2">Devices</h1>
 </div>
-<p>These are the selected devices (GPUs and CPUs) detected by RainbowMiner.</p>
+<p>These are the devices (GPUs and CPUs) detected by MultiPoolMiner.</p>
 <table id="devices" class="table"
   data-toggle="table"
   data-url="/devices"
@@ -44,8 +44,8 @@
     
     if (item.OpenCL) {
       item.tClockSpeed = item.OpenCL.MaxClockFrequency
-    } else if (item.Info) {
-      item.tClockSpeed = item.Info.MaxClockSpeed
+    } else if (item.CIM) {
+      item.tClockSpeed = item.CIM.MaxClockSpeed
     } else {
       item.tClockSpeed = "N/A"
     }
@@ -58,8 +58,8 @@
     
     if (item.OpenCL) {
       item.tCores = item.OpenCL.MaxComputeUnits
-    } else if (item.Info) {
-      item.tCores = item.Info.NumberOfLogicalProcessors
+    } else if (item.CIM) {
+      item.tCores = item.CIM.NumberOfLogicalProcessors
     } else {
       item.tCores = "N/A"
     }
