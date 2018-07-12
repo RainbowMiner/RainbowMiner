@@ -327,14 +327,15 @@ function Get-Stat {
         # Return all stats
         if (-not (Test-Path Variable:Script:Stats)) {$Script:Stats = [PSCustomObject]@{}}
 
-        Get-ChildItem "Stats" | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $Script:StatsTimeStamp} | ForEach-Object {
+        $StatsTimeStampCompare = $Script:StatsTimeStamp
+        $Script:StatsTimeStamp = (Get-Date).ToUniversalTime()
+        Get-ChildItem "Stats" | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $StatsTimeStampCompare} | ForEach-Object {
             $BaseName = $_.BaseName
             $_ | Get-Content | ConvertFrom-Json -ErrorAction SilentlyContinue | ForEach-Object {
                 $Script:Stats | Add-Member $BaseName $_ -Force
             }
         }
-        $Script:StatsTimeStamp = (Get-Date).ToUniversalTime()
-        Return $Script:Stats
+        $Script:Stats
     }
 }
 
@@ -402,6 +403,49 @@ function Get-ChildItemContent {
         }
     }
 }
+
+function Get-MinersContent {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Pools,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Config,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$DevicesByTypes,
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Stats       
+    )
+
+    $MinerStats = [hashtable]@{}
+    $Stats.PSObject.Properties.Name | Where-Object {$_ -match "^(.+?)-"} | Foreach-Object {
+        if (-not $MinerStats[$matches[1]]) {$MinerStats[$matches[1]] = [PSCustomObject]@{}}
+        $MinerStats[$matches[1]] | Add-Member $_ ($Stats.$_)
+    }
+ 
+    $Parameters = @{
+        Config = $Config
+        Devices = $DevicesByTypes
+        Pools = $Pools
+    }
+    
+    Get-ChildItem "Miners" -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $Miner = $_
+        $Name = $Miner.BaseName
+ 
+        $Parameters.Stats = $MinerStats[$Name]
+                
+        & $Miner.FullName @Parameters | ForEach-Object {
+            $_ | Add-Member -NotePropertyMembers @{
+                Name = if ($_.Name) {$_.Name} else {$Name}
+                BaseName = $Name
+                Algorithm = @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)
+                DeviceModel = if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$DevicesByTypes.FullComboModels."$($_.DeviceModel)"} else {$_.DeviceModel}
+            } -Force -PassThru
+        }
+    }
+}
+
 
 filter ConvertTo-Hash { 
     [CmdletBinding()]

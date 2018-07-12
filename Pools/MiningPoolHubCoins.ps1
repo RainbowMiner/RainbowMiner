@@ -53,7 +53,7 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
             [PSCustomObject]@{
                 Algorithm     = $MiningPoolHubCoins_Algorithm_Norm
                 CoinName      = $MiningPoolHubCoins_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
@@ -71,7 +71,7 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
                 [PSCustomObject]@{
                     Algorithm     = "$($MiningPoolHubCoins_Algorithm_Norm)2gb"
                     CoinName      = $MiningPoolHubCoins_Coin
-                    Price         = $Stat.Live
+                    Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"

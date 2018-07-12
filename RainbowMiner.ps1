@@ -962,6 +962,7 @@ while ($true) {
 
     #Load the stats
     Write-Log "Loading saved statistics. "
+
     $Stats = Get-Stat
 
     #Give API access to the current stats
@@ -1030,7 +1031,7 @@ while ($true) {
     $Pools = [PSCustomObject]@{}
 
     Write-Log "Selecting best pool for each algorithm. "
-    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.StablePrice * (1 - $_.MarginOfError)}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
+    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.Price * (1 - $_.MarginOfError)}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
     if (($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes) -gt $SyncWindow) {
         Write-Log -Level Warn "Pool prices are out of sync ($([Int]($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_} | Measure-Object Updated -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)) minutes). "
         $PoolsPrice = "StablePrice"
@@ -1044,22 +1045,13 @@ while ($true) {
 
     #Give API access to the pools information
     $API.Pools = $Pools
-
+ 
     #Load information about the miners
-    #Messy...?
     Write-Log "Getting miner information. "
-    # Get all the miners, get just the .Content property and add the name, select only the ones that match our $Config.Type (CPU, AMD, NVIDIA) or all of them if type is unset,
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     $AllMiners = if (Test-Path "Miners") {
-        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {$_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName} -PassThru -Force} | 
-            ForEach-Object {              
-                if (-not $_.DeviceName) {$_ | Add-Member DeviceName (Get-Device $_.Type).Name -Force}
-                if (-not $_.DeviceModel) {$_ | Add-Member DeviceModel ($_.Type) -Force}
-                if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$_.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.DeviceModel)")}                
-                $_ | Add-Member Algorithm @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)
-                $_
-            } | #for backward compatibility            
+        Get-MinersContent -Pools $Pools -Config $Config -DevicesByTypes $DevicesByTypes -Stats $Stats |
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
@@ -1096,7 +1088,7 @@ while ($true) {
             }
         }
     }
-
+    
     Write-Log "Calculating profit for each miner. "
     $AllMiners | ForEach-Object {
         $Miner = $_

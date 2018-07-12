@@ -51,7 +51,7 @@ $PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
             [PSCustomObject]@{
                 Algorithm     = $PhiPhiPool_Algorithm_Norm
                 CoinName      = $PhiPhiPool_Coin
-                Price         = $Stat.Live
+                Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
