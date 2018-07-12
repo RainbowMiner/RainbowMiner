@@ -325,17 +325,15 @@ function Get-Stat {
         Get-ChildItem "Stats" -File | Where-Object BaseName -EQ $Name | Get-Content | ConvertFrom-Json
     } else {
         # Return all stats
-        if (-not (Test-Path Variable:Script:Stats)) {$Script:Stats = [PSCustomObject]@{}}
+        $Stats = [PSCustomObject]@{}
 
-        $StatsTimeStampCompare = $Script:StatsTimeStamp
-        $Script:StatsTimeStamp = (Get-Date).ToUniversalTime()
-        Get-ChildItem "Stats" | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $StatsTimeStampCompare} | ForEach-Object {
+        Get-ChildItem "Stats" -File | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $StatsTimeStampCompare} | ForEach-Object {
             $BaseName = $_.BaseName
             $_ | Get-Content | ConvertFrom-Json -ErrorAction SilentlyContinue | ForEach-Object {
-                $Script:Stats | Add-Member $BaseName $_ -Force
+                $Stats | Add-Member $BaseName $_
             }
         }
-        $Script:Stats
+        Return $Stats
     }
 }
 
