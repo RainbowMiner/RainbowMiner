@@ -8,16 +8,21 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
-$Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_110.zip"
+$Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_130.zip"
 $Port = "306{0:2d}"
 
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; Params = "--algo=8 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; Params = "--algo=2 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightlite"; Params = "--algo=3 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonighttubeheavy"; Params = "--algo=5 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = "--algo=1 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7lite"; Params = "--algo=4 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7stellitev4"; Params = "--algo=6 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightxhvheavy"; Params = "--algo=7 --intensity=8"}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
