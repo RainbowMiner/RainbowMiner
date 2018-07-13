@@ -327,7 +327,7 @@ function Get-Stat {
         # Return all stats
         $Stats = [PSCustomObject]@{}
 
-        Get-ChildItem "Stats" -File | Where-Object {$Script:Stats.($_.BaseName) -eq $null -or $_.LastWriteTime.ToUniversalTime() -gt $StatsTimeStampCompare} | ForEach-Object {
+        Get-ChildItem "Stats" -File | ForEach-Object {
             $BaseName = $_.BaseName
             $_ | Get-Content | ConvertFrom-Json -ErrorAction SilentlyContinue | ForEach-Object {
                 $Stats | Add-Member $BaseName $_
@@ -988,7 +988,7 @@ function Get-Algorithm {
             $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
         }
 
-        $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "-", " " -replace "_", " ")) -replace " "
+        $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
 
         if ($Script:Algorithms.$Algorithm) {$Script:Algorithms.$Algorithm}
         else {$Algorithm}
@@ -1039,6 +1039,7 @@ class Miner {
     $API
     $Port
     [string[]]$Algorithm = @()
+    [string[]]$BaseAlgorithm = @()
     $DeviceName
     $DeviceModel
     $Profit
