@@ -9,7 +9,7 @@ param(
 
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
 $Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_130.zip"
-$Port = "306{0:2d}"
+$Port = "306{0:d2}"
 
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
