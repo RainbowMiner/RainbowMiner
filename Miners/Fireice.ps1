@@ -13,9 +13,14 @@ $Port = "308{0:d2}"
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""} # CryptoNight-Heavy
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""} # CryptoNight-Lite
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_V7"; Params = ""} #CryptoNightV7
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_haven"; Params = ""} # CryptoNightHaven
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""} # CryptoNightHeavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""} # CryptoNightLite
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7"; Params = ""} # CryptoNightLiteV7
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7_xor"; Params = ""} # CryptoNightLiteV7Xor
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_masari"; Params = ""} # CryptoNightMasari
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_v7"; Params = ""} #CryptoNightV7
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_v7_stellite"; Params = ""} #CryptoNightV7Stellite
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
