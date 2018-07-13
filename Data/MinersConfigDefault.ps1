@@ -15,6 +15,9 @@
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
         )
+        "CcminerBalloon" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = "-i 19"; Profile = "4"}
+        )
         "CcminerCool" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
         )

@@ -41,6 +41,7 @@
 312	Ewbf
 313	CryptoDredge
 314	CuBalloon
+315	SRBMiner
 
 400	Sgminer
 401	SgminerBitcore
