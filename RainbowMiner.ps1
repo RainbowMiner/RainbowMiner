@@ -1053,12 +1053,12 @@ while ($true) {
     $AllMiners = if (Test-Path "Miners") {
         Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {
             if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.Content.DeviceModel) {$_.Content.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.Content.DeviceModel)")}
-            $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;Algorithm=@($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)} -PassThru -Force
+            $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=@($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)} -PassThru -Force
         } | 
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
-            Where-Object {(Compare-Object $Pools.PSObject.Properties.Name $_.HashRates.PSObject.Properties.Name | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
+            Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
     }
@@ -1071,9 +1071,9 @@ while ($true) {
             #Remove device combos, where the parameter-preset is different and there does not exist an own definition
             $AllMiners = $AllMiners | Where-Object {
                 $_.DeviceModel -notmatch '-' -or 
-                (Get-Member -InputObject $Config.Miners -Name $(@($_.BaseName | Select-Object) + @($_.DeviceModel | Select-Object) + @($_.Algorithm | Select-Object) -join '-') -MemberType NoteProperty) -or 
+                (Get-Member -InputObject $Config.Miners -Name $(@($_.BaseName | Select-Object) + @($_.DeviceModel | Select-Object) + @($_.BaseAlgorithm | Select-Object) -join '-') -MemberType NoteProperty) -or 
                 $($Miner = $_; (@($Miner.DeviceModel -split '-') | Foreach-Object {
-                    $Miner_ConfigName = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
+                    $Miner_ConfigName = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
                     if (Get-Member -InputObject $Config.Miners -Name $Miner_ConfigName -MemberType NoteProperty){$Config.Miners.$Miner_ConfigName.Params}
                 } | Select-Object -Unique | Measure-Object).Count -le 1)
             }
@@ -1106,7 +1106,7 @@ while ($true) {
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
 
-        $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
+        $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
             if ($Config.Miners.$Miner_CommonCommands.Params) {
                 $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
@@ -1116,14 +1116,14 @@ while ($true) {
             }
         } elseif ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
             #combo handling - we know that combos always have equal params, because we preselected them, already
-            $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.Algorithm | Select-Object) -join '-'
+            $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
             if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
                 if ($Config.Miners.$Miner_CommonCommands.Params) {
                     $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
                 }
             }
             [Int[]]$Miner_MSIAprofile = @($Miner.DeviceModel -split '-') | Foreach-Object {
-                $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.Algorithm | Select-Object) -join '-'
+                $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
                 if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile} else {$Config.MSIAprofile}
             } | Select-Object -Unique
             if (($Miner_MSIAprofile | Measure-Object).Count -eq 1 -and $Miner_MSIAprofile[0]) {
@@ -1233,7 +1233,7 @@ while ($true) {
     $API.Miners = $Miners
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
-    if ($Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$(($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split "-" | Select-Object -Index 0}) -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$(($_.HashRates.PSObject.Properties.Name | ForEach-Object {$_ -split "-" | Select-Object -Index 0}) -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
+    if ($Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners
@@ -1287,6 +1287,7 @@ while ($true) {
                 API                  = $Miner.API
                 Port                 = $Miner.Port
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
+                BaseAlgorithm        = $Miner.BaseAlgorithm
                 DeviceName           = $Miner.DeviceName
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
@@ -1375,7 +1376,7 @@ while ($true) {
         }
     }
 
-    if ( $ActiveMiners | ForEach-Object {$_.GetProcessNames()} ) {
+    if (($ActiveMiners | ForEach-Object {$_.GetProcessNames()} | Measure-Object).Count -gt 0) {
         $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ( $_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0 ) {$_.GetProcessId()}})
         Get-Process | Where-Object { @($ActiveMiners | Select-Object -ExpandProperty ExecName) -contains $_.ProcessName } | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExpandProperty ExecName) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object { $Running -notcontains $_.Id } | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
@@ -1411,7 +1412,7 @@ while ($true) {
             #Add watchdog timer
             if ($Config.Watchdog -and $_.Profit -ne $null) {
                 $Miner_Name = $_.Name
-                $Miner_DeviceName = $_.DeviceName
+                $Miner_DeviceModel = $_.DeviceModel
                 $_.Algorithm | ForEach-Object {
                     $Miner_Algorithm = $_
                     $WatchdogTimer = $WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
