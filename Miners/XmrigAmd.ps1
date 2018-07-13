@@ -8,16 +8,25 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-AMD\xmrig-amd.exe"
-$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.0-beta/xmrig-amd-2.7.0-beta-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.1-beta/xmrig-amd-2.7.1-beta-win64.zip"
 $Port = "304{0:d2}"
 
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv"; Params = ""}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -35,13 +44,12 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        $xmrig_algo = if ($_.MainAlgorithm -eq "cryptonightv7") {"cryptonight"} else {$_.MainAlgorithm}
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path      = $Path
-            Arguments = "-R 1 --opencl-devices=$($DeviceIDsAll) --opencl-platform=$($Miner_PlatformId) --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1 $($_.Params)"
+            Arguments = "-R 1 --opencl-devices=$($DeviceIDsAll) --opencl-platform=$($Miner_PlatformId) --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1 $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
             API       = "XMRig"
             Port      = $Miner_Port
