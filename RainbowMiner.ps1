@@ -88,7 +88,7 @@ param(
 
 Clear-Host
 
-$Version = "3.7.3.3"
+$Version = "3.7.4.0"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -1110,7 +1110,7 @@ while ($true) {
 
         $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
         if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
-            if ($Config.Miners.$Miner_CommonCommands.Params) {
+            if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner.Arguments -is [string]) {
                 $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
             }
             if ($Config.Miners.$Miner_CommonCommands.Profile) {
@@ -1120,7 +1120,7 @@ while ($true) {
             #combo handling - we know that combos always have equal params, because we preselected them, already
             $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
             if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
-                if ($Config.Miners.$Miner_CommonCommands.Params) {
+                if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner.Arguments -is [string]) {
                     $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
                 }
             }
