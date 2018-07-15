@@ -12,9 +12,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $ZergPool_Request = [PSCustomObject]@{}
+$ZergPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $ZergPool_Request = Invoke-RestMethod "http://api.zergpool.com:8080/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status"
+    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -28,14 +30,17 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
 
 $ZergPool_Regions = "us"#, "europe"
 $ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+
+$ZergPool_Coins = @($ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+
 $ZergPool_PoolFee = 0.5
 
 $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$ZergPool_Request.$_.hashrate -gt 0} |ForEach-Object {
     $ZergPool_Port = $ZergPool_Request.$_.port
     $ZergPool_Algorithm = $ZergPool_Request.$_.name
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
+    $ZergPool_Coin = Get-CoinName ($ZergPool_Coins | Where-Object Algorithm -eq $ZergPool_Algorithm).Name
     $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
-    $ZergPool_Coin = ""
     $ZergPool_PoolFee = [Double]$ZergPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$ZergPool_Request.$_.mbtc_mh_factor
@@ -46,7 +51,6 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
     $ZergPool_Regions | ForEach-Object {
         $ZergPool_Region = $_
         $ZergPool_Region_Norm = Get-Region $ZergPool_Region
-
         $ZergPool_Currencies | ForEach-Object {
             #Option 1
             [PSCustomObject]@{

@@ -12,10 +12,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Zpool_Request = [PSCustomObject]@{}
+$ZpoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Zpool_Request = Invoke-RestMethod "http://www.zpool.ca/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $ZpoolCoins_Request = Invoke-RestMethod "http://www.zpool.ca/api/currencies" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Zpool_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/status"
+    $ZpoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -28,14 +29,16 @@ if (($Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
 }
 
 $Zpool_Regions = "us"
-$Zpool_Currencies = @("BTC") + ($ZpoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$Zpool_Currencies = @("BTC") + @($ZpoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+
+$ZPool_Coins = @($ZPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
 
 $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Zpool_Request.$_.hashrate -gt 0} |ForEach-Object {
     $Zpool_Host = "mine.zpool.ca"
     $Zpool_Port = $Zpool_Request.$_.port
     $Zpool_Algorithm = $Zpool_Request.$_.name
     $Zpool_Algorithm_Norm = Get-Algorithm $Zpool_Algorithm
-    $Zpool_Coin = ""
+    $ZPool_Coin = Get-CoinName ($ZPool_Coins | Where-Object Algorithm -eq $ZPool_Algorithm).Name
     $Zpool_PoolFee = [Double]$Zpool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$Zpool_Request.$_.mbtc_mh_factor
@@ -46,7 +49,6 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
     $Zpool_Regions | ForEach-Object {
         $Zpool_Region = $_
         $Zpool_Region_Norm = Get-Region $Zpool_Region
-
         $Zpool_Currencies | ForEach-Object {
             [PSCustomObject]@{
                 Algorithm     = $Zpool_Algorithm_Norm

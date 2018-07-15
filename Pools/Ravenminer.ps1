@@ -16,7 +16,7 @@ $Ravenminer_Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    if (-not ($Ravenminer_Request = Invoke-RestMethod "https://eu.ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
+    if (-not ($Ravenminer_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status")){throw}
 }
 catch {
     $Success = $false
@@ -25,7 +25,7 @@ catch {
 if ( -not $Success ) { 
     $Success = $true
     try {
-        if (-not ($Ravenminer_Request = Invoke-RestMethod "https://ravenminer.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
+        if (-not ($Ravenminer_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status")){throw}
     }
     catch {
         $Success = $false
@@ -35,7 +35,7 @@ if ( -not $Success ) {
 if ( -not $Success ) {
     $Success = $true
     try {
-        $Ravenminer_Request = Invoke-WebRequest -UseBasicParsing "https://eu.ravenminer.com/site/current_results" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+        $Ravenminer_Request = Invoke-WebRequestAsync "https://eu.ravenminer.com/site/current_results"
         if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Ravenminer_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
         $Ravenminer_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0;name = "x16r"}}
     }
@@ -58,7 +58,7 @@ if (($Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Ravenminer_Request.$_.actual_last24h -gt 0} | ForEach-Object {
     $Ravenminer_Algorithm = $Ravenminer_Request.$_.name
     $Ravenminer_Algorithm_Norm = Get-Algorithm $Ravenminer_Algorithm
-    $Ravenminer_Coin = "Ravencoin"
+    $Ravenminer_Coin = Get-CoinName "Ravencoin"
     $Ravenminer_Currency = "RVN"
     $Ravenminer_PoolFee = [Double]$Ravenminer_Request.$_.fees
 

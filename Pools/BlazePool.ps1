@@ -12,9 +12,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $BlazePool_Request = [PSCustomObject]@{}
+$BlazePoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $BlazePool_Request = Invoke-RestMethod "http://api.blazepool.com/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $BlazePool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status"
+    #$BlazePoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -29,12 +31,14 @@ if (($BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $BlazePool_Regions = "us"
 $BlazePool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
+$BlazePool_Coins = @($BlazePoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+
 $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$BlazePool_Request.$_.hashrate -gt 0 -and [Double]$BlazePool_Request.$_.estimate_current  -gt 0} | ForEach-Object {
     $BlazePool_Host = "$_.mine.blazepool.com"
     $BlazePool_Port = $BlazePool_Request.$_.port
     $BlazePool_Algorithm = $BlazePool_Request.$_.name
     $BlazePool_Algorithm_Norm = Get-Algorithm $BlazePool_Algorithm
-    $BlazePool_Coin = ""
+    $BlazePool_Coin = Get-CoinName ($BlazePool_Coins | Where-Object Algorithm -eq $BlazePool_Algorithm).Name
     $BlazePool_PoolFee = [Double]$BlazePool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor

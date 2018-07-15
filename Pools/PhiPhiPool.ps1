@@ -11,10 +11,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $PhiPhiPool_Request = [PSCustomObject]@{}
+$PhiPhiPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PhiPhiPool_Request = Invoke-RestMethod "http://www.phi-phi-pool.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $PhiPhiPoolCoins_Request = Invoke-RestMethod "http://www.phi-phi-pool.com/api/currencies" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $PhiPhiPool_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/status"
+    $PhiPhiPoolCoins_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -27,16 +28,18 @@ if (($PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 }
 
 $PhiPhiPool_Regions = "us"
-$PhiPhiPool_Currencies = @("BTC") + ($PhiPhiPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$PhiPhiPool_Currencies = @("BTC") + @($PhiPhiPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+
+$PhiPhiPool_Coins = @($PhiPhiPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
 
 $PhiPhiPool_Host = "pool.phi-phi-pool.com"
-$PhiPhiPool_Coin = ""
 
 $PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PhiPhiPool_Request.$_.hashrate -gt 0} | ForEach-Object {
     $PhiPhiPool_Port = $PhiPhiPool_Request.$_.port
     $PhiPhiPool_Algorithm = $_
     $PhiPhiPool_Algorithm_Norm = Get-Algorithm $PhiPhiPool_Algorithm
-    $PhiPhiPool_PoolFee = [Double]$AHashPool_Request.$_.fees
+    $PhiPhiPool_Coin = Get-CoinName ($PhiPhiPool_Coins | Where-Object Algorithm -eq $PhiPhiPool_Algorithm).Name
+    $PhiPhiPool_PoolFee = [Double]$PhiPhiPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$PhiPhiPool_Request.$_.mbtc_mh_factor
 

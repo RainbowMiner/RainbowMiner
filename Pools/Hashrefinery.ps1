@@ -14,8 +14,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $HashRefinery_Request = [PSCustomObject]@{}
 
 try {
-    $HashRefinery_Request = Invoke-RestMethod "http://pool.hashrefinery.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $HashRefineryCoins_Request = Invoke-RestMethod "http://pool.hashrefinery.com/api/currencies" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $HashRefinery_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/status"
+    $HashRefineryCoins_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -30,12 +30,14 @@ if (($HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ig
 $HashRefinery_Regions = "us"
 $HashRefinery_Currencies = @("BTC") + ($HashRefineryCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
+$HashRefinery_Coins = @($HashRefineryCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+
 $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Hashrefinery_Request.$_.hashrate -gt 0} | ForEach-Object {
     $HashRefinery_Host = "hashrefinery.com"
     $HashRefinery_Port = $HashRefinery_Request.$_.port
     $HashRefinery_Algorithm = $HashRefinery_Request.$_.name
     $HashRefinery_Algorithm_Norm = Get-Algorithm $HashRefinery_Algorithm
-    $HashRefinery_Coin = ""
+    $HashRefinery_Coin = Get-CoinName ($HashRefinery_Coins | Where-Object Algorithm -eq $HashRefinery_Algorithm).Name
     $HashRefinery_PoolFee = [Double]$HashRefinery_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$HashRefinery_Request.$HashRefinery_Algorithm.mbtc_mh_factor

@@ -11,10 +11,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $ZergPool_Request = [PSCustomObject]@{}
+$ZergPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $ZergPool_Request = Invoke-RestMethod "http://api.zergpool.com:8080/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $ZergPoolCoins_Request = Invoke-RestMethod "http://api.zergpool.com:8080/api/currencies" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status"
+    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -36,7 +37,7 @@ $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -g
     $ZergPool_Algorithm = $ZergPoolCoins_Request.$_.algo
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
     $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
-    $ZergPool_Coin = $ZergPoolCoins_Request.$_.name
+    $ZergPool_Coin = Get-CoinName $ZergPoolCoins_Request.$_.name
     $ZergPool_Currency = $_
     $ZergPool_PoolFee = $ZergPool_Request.$ZergPool_Algorithm.fees
 

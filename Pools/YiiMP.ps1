@@ -8,11 +8,12 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$YiiMP_Request = [PSCustomObject]@{}
 $YiiMPCoins_Request = [PSCustomObject]@{}
 
 try {
-    $YiiMP_Request = Invoke-RestMethod "http://api.yiimp.eu/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $YiiMPCoins_Request = Invoke-RestMethod "http://api.yiimp.eu/api/currencies" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $YiiMP_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
+    $YiiMPCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -33,7 +34,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
     $YiiMP_Port = $YiiMPCoins_Request.$_.port
     $YiiMP_Algorithm = $YiiMPCoins_Request.$_.algo
     $YiiMP_Algorithm_Norm = Get-Algorithm $YiiMP_Algorithm
-    $YiiMP_Coin = $YiiMPCoins_Request.$_.name
+    $YiiMP_Coin = Get-CoinName $YiiMPCoins_Request.$_.name
     $YiiMP_Currency = $_
     $YiiMP_PoolFee = [Double]$YiiMP_Request.$YiiMP_Algorithm.fees
 

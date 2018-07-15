@@ -12,9 +12,11 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $AHashPool_Request = [PSCustomObject]@{}
+$AHashPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $AHashPool_Request = Invoke-RestMethod "http://www.ahashpool.com/api/status" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $AHashPool_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/status"
+    $AHashPoolCoins_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -29,12 +31,14 @@ if (($AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $AHashPool_Regions = "us"
 $AHashPool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
+$AHashPool_Coins = @($AHashPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+
 $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$AHashPool_Request.$_.hashrate -gt 0} | ForEach-Object {
     $AHashPool_Host = "mine.ahashpool.com"
     $AHashPool_Port = $AHashPool_Request.$_.port
     $AHashPool_Algorithm = $AHashPool_Request.$_.name
     $AHashPool_Algorithm_Norm = Get-Algorithm $AHashPool_Algorithm
-    $AHashPool_Coin = ""
+    $AHashPool_Coin = Get-CoinName ($AHashPool_Coins | Where-Object Algorithm -eq $AHashPool_Algorithm).Name
     $AHashPool_PoolFee = [Double]$AHashPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor

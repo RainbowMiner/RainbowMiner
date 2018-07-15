@@ -14,8 +14,8 @@ $MiningPoolHub_Request = [PSCustomObject]@{}
 $MiningPoolHubCoins_Request = [PSCustomObject]@{}
 
 try {
-    $MiningPoolHub_Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&$(Get-Date -Format "yyyy-MM-dd_HH-mm")" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $MiningPoolHubCoins_Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&$(Get-Date -Format "yyyy-MM-dd_HH-mm")" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $MiningPoolHub_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&{timestamp}"
+    $MiningPoolHubCoins_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -49,7 +49,7 @@ $MiningPoolHub_Request.return | ForEach-Object {
     $MiningPoolHub_Port = $_.algo_switch_port
     $MiningPoolHub_Algorithm = $_.algo
     $MiningPoolHub_Algorithm_Norm = Get-Algorithm $MiningPoolHub_Algorithm
-    $MiningPoolHub_Coin = (Get-Culture).TextInfo.ToTitleCase(($_.current_mining_coin -replace "-", " " -replace "_", " ")) -replace " "
+    $MiningPoolHub_Coin = Get-CoinName $_.current_mining_coin
     $MiningPoolHub_Fee = 0.9 + 0.2
     
     if ($MiningPoolHub_Algorithm_Norm -eq "Ethash" -and (get-date -Format "yyyyMMdd") -le "20180630") {$MiningPoolHub_Fee = 0.0}
