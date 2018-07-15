@@ -16,11 +16,18 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "EquihashBTG"; Params = "--algo 144_5 --pers BgoldPoW"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Minexcoin"; Params = "--algo 96_5"} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "EquihashZero"; Params = "--algo 192_7 --pers ZERO_PoW"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "EquihashZ"; Params = "--algo zhash"} #Equihash 144,5 Zhash/BitcoinZ
+    [PSCustomObject]@{MainAlgorithm = "Equihash144"; Params = "--algo 144_5"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash192"; Params = "--algo 192_7"} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash96"; Params = "--algo 96_5"} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Zhash"; Params = "--algo zhash"} #Equihash 144,5 Zhash/BitcoinZ
 )
+
+$Coins = [PSCustomObject]@{
+    BitcoinGold = "--pers BgoldPoW"
+    BTG = "--pers BgoldPow"
+    Snowgem = "--pers sngemPoW"
+    Zero = "--pers ZERO_PoW"
+}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -42,7 +49,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+            Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($Coins."$($Pools.$Algorithm_Norm.CoinName)") $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
             API = "DSTM"
             Port = $Miner_Port
