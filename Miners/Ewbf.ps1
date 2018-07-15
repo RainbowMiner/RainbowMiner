@@ -39,17 +39,17 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ' '
 
     $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
-
-        $Miner_Name = (@($Name) + @($_.MainAlgorithm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"
 
         [PSCustomObject]@{
             Name = $Miner_Name
             DeviceName = $Miner_Device.Name
             DeviceModel = $Miner_Model
             Path = $Path
-            Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($Coins."$($Pools.$Algorithm_Norm.CoinName)") $($_.Params)"
+            Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($MinerCoin_Params) $($_.Params)"
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
             API = "DSTM"
             Port = $Miner_Port
