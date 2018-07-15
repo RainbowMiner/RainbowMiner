@@ -30,7 +30,8 @@ if (($PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 $PhiPhiPool_Regions = "us"
 $PhiPhiPool_Currencies = @("BTC") + @($PhiPhiPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$PhiPhiPool_Coins = @($PhiPhiPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+$PhiPhiPool_Coins = [PSCustomObject]@{}
+$PhiPhiPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$PhiPhiPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $PhiPhiPool_Host = "pool.phi-phi-pool.com"
 
@@ -38,7 +39,7 @@ $PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
     $PhiPhiPool_Port = $PhiPhiPool_Request.$_.port
     $PhiPhiPool_Algorithm = $_
     $PhiPhiPool_Algorithm_Norm = Get-Algorithm $PhiPhiPool_Algorithm
-    $PhiPhiPool_Coin = Get-CoinName ($PhiPhiPool_Coins | Where-Object Algorithm -eq $PhiPhiPool_Algorithm).Name
+    $PhiPhiPool_Coin = $PhiPhiPool_Coins.$PhiPhiPool_Algorithm
     $PhiPhiPool_PoolFee = [Double]$PhiPhiPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$PhiPhiPool_Request.$_.mbtc_mh_factor

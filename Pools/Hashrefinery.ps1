@@ -30,14 +30,15 @@ if (($HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ig
 $HashRefinery_Regions = "us"
 $HashRefinery_Currencies = @("BTC") + ($HashRefineryCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$HashRefinery_Coins = @($HashRefineryCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+$HashRefinery_Coins = [PSCustomObject]@{}
+$HashRefineryCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$HashRefinery_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Hashrefinery_Request.$_.hashrate -gt 0} | ForEach-Object {
     $HashRefinery_Host = "hashrefinery.com"
     $HashRefinery_Port = $HashRefinery_Request.$_.port
     $HashRefinery_Algorithm = $HashRefinery_Request.$_.name
     $HashRefinery_Algorithm_Norm = Get-Algorithm $HashRefinery_Algorithm
-    $HashRefinery_Coin = Get-CoinName ($HashRefinery_Coins | Where-Object Algorithm -eq $HashRefinery_Algorithm).Name
+    $HashRefinery_Coin = $HashRefinery_Coins.$HashRefinery_Algorithm
     $HashRefinery_PoolFee = [Double]$HashRefinery_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$HashRefinery_Request.$HashRefinery_Algorithm.mbtc_mh_factor

@@ -31,14 +31,15 @@ if (($BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $BlazePool_Regions = "us"
 $BlazePool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$BlazePool_Coins = @($BlazePoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+$BlazePool_Coins = [PSCustomObject]@{}
+$BlazePoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$BlazePool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$BlazePool_Request.$_.hashrate -gt 0 -and [Double]$BlazePool_Request.$_.estimate_current  -gt 0} | ForEach-Object {
     $BlazePool_Host = "$_.mine.blazepool.com"
     $BlazePool_Port = $BlazePool_Request.$_.port
     $BlazePool_Algorithm = $BlazePool_Request.$_.name
     $BlazePool_Algorithm_Norm = Get-Algorithm $BlazePool_Algorithm
-    $BlazePool_Coin = Get-CoinName ($BlazePool_Coins | Where-Object Algorithm -eq $BlazePool_Algorithm).Name
+    $BlazePool_Coin = $BlazePool_Coins.$BlazePool_Algorithm
     $BlazePool_PoolFee = [Double]$BlazePool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor

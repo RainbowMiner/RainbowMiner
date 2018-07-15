@@ -31,14 +31,15 @@ if (($AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $AHashPool_Regions = "us"
 $AHashPool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$AHashPool_Coins = @($AHashPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+$AHashPool_Coins = [PSCustomObject]@{}
+$AHashPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$AHashPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$AHashPool_Request.$_.hashrate -gt 0} | ForEach-Object {
     $AHashPool_Host = "mine.ahashpool.com"
     $AHashPool_Port = $AHashPool_Request.$_.port
     $AHashPool_Algorithm = $AHashPool_Request.$_.name
     $AHashPool_Algorithm_Norm = Get-Algorithm $AHashPool_Algorithm
-    $AHashPool_Coin = Get-CoinName ($AHashPool_Coins | Where-Object Algorithm -eq $AHashPool_Algorithm).Name
+    $AHashPool_Coin = $AHashPool_Coins.$AHashPool_Algorithm
     $AHashPool_PoolFee = [Double]$AHashPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor

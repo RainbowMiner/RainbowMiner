@@ -26,7 +26,6 @@ if (($BlockcruncherCoins_Request | Get-Member -MemberType NoteProperty -ErrorAct
 }
 
 $Blockcruncher_Regions = "us"
-$Blockcruncher_Coins = @($BlockcruncherCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
 
 $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
     $Blockcruncher_Host = "blockcruncher.com"

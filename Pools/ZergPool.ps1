@@ -31,7 +31,8 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
 $ZergPool_Regions = "us"#, "europe"
 $ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$ZergPool_Coins = @($ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {[PSCustomObject]@{Name=$_.Group.name;Algorithm=$_.Group.algo}})
+$ZergPool_Coins = [PSCustomObject]@{}
+$ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$ZergPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $ZergPool_PoolFee = 0.5
 
@@ -39,7 +40,7 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
     $ZergPool_Port = $ZergPool_Request.$_.port
     $ZergPool_Algorithm = $ZergPool_Request.$_.name
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
-    $ZergPool_Coin = Get-CoinName ($ZergPool_Coins | Where-Object Algorithm -eq $ZergPool_Algorithm).Name
+    $ZergPool_Coin = $ZergPool_Coins.$ZergPool_Algorithm
     $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
     $ZergPool_PoolFee = [Double]$ZergPool_Request.$_.fees
 
