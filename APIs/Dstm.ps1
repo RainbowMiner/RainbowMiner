@@ -24,14 +24,16 @@ class Dstm : Miner {
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.result.sol_ps | Measure-Object -Sum).Sum
         if (-not $HashRate_Value) {$HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum} #ewbf fix
-
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
-
-        $this.Data += [PSCustomObject]@{
-            Date     = (Get-Date).ToUniversalTime()
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
+        
+        $HashRate_Value = [Int64]$HashRate_Value
+        if ($HashRate_Value -gt 0) {
+            $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.Data += [PSCustomObject]@{
+                Date     = (Get-Date).ToUniversalTime()
+                Raw      = $Response
+                HashRate = $HashRate
+                Device   = @()
+            }
         }
 
         $this.Data = @($this.Data | Select-Object -Last 10000)
