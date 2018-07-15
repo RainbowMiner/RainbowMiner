@@ -31,10 +31,10 @@ if (($MiningPoolHub_Request.return | Measure-Object).Count -le 1) {
 $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0 -and @("equihash-btg") -contains $_.algo} | ForEach-Object {
     $MiningPoolHubCoins_Hosts = $_.host_list.split(";")
     if ($_.algo -eq "equihash-btg") { #temp fix for wrong host url in API
-        $MiningPoolHubCoins_Hosts = $MiningPoolHubCoins_Hosts | Foreach-Object {if ($_ -match "(^hub|\.hub)") {$_ -replace "^hub\.","equihash-hub." -replace "\.hub\.",".equihash-hub."} else {$_}}    
+        $MiningPoolHubCoins_Hosts = $_.host_list -replace ".hub.miningpoolhub", ".equihash-hub.miningpoolhub"
     }
     $MiningPoolHub_Request.return += [PSCustomObject]@{
-        all_host_list = $MiningPoolHubCoins_Hosts -join ";"
+        all_host_list = $MiningPoolHubCoins_Hosts
         algo_switch_port = $_.port
         algo = $_.algo
         current_mining_coin = $_.coin_name
@@ -52,7 +52,6 @@ $MiningPoolHub_Request.return | ForEach-Object {
     $MiningPoolHub_Coin = Get-CoinName $_.current_mining_coin
     $MiningPoolHub_Fee = 0.9 + 0.2
     
-    if ($MiningPoolHub_Algorithm_Norm -eq "Ethash" -and (get-date -Format "yyyyMMdd") -le "20180630") {$MiningPoolHub_Fee = 0.0}
     if ($MiningPoolHub_Algorithm_Norm -eq "Sia") {$MiningPoolHub_Algorithm_Norm = "SiaClaymore"} #temp fix
 
     $Divisor = 1000000000
