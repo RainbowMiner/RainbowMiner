@@ -29,6 +29,7 @@
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("API", $API)
+    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $API.Server = [PowerShell]::Create().AddScript({
@@ -176,6 +177,10 @@
                 }
                 "/rates" {
                     $Data = ConvertTo-Json @($API.Rates | Select-Object)
+                    Break
+                }
+                "/asyncjobs" {
+                    $Data = ConvertTo-Json @($AsyncLoader.Jobs | Select-Object)
                     Break
                 }
                 "/currentprofit" {
