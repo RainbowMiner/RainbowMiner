@@ -27,9 +27,9 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
+    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ','
 
-    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
@@ -38,19 +38,21 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             "Ethash" {$Stratum = if ($Pools.$Algorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'}}
         }
 
-        [PSCustomObject]@{
-            Name = $Miner_Name
-            DeviceName = $Miner_Device.Name
-            DeviceModel = $Miner_Model
-            Path = $Path
-            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
-            API = "Bminer"
-            Port = $Miner_Port
-            URI = $Uri
-            FaultTolerance = $_.FaultTolerance
-            ExtendInterval = $_.ExtendInterval
-            DevFee = $_.DevFee
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path = $Path
+                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+                API = "Bminer"
+                Port = $Miner_Port
+                URI = $Uri
+                FaultTolerance = $_.FaultTolerance
+                ExtendInterval = $_.ExtendInterval
+                DevFee = $_.DevFee
+            }
         }
     }
 }

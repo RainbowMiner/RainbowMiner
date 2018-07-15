@@ -87,7 +87,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                         double_threads   = $false
                         timeout          = 10
                         retry_time       = 10
-                        gpu_conf         = @(Get-GPUIDs $Miner_Device | Foreach-Object {
+                        gpu_conf         = @($Miner_Device.Type_PlatformId_Index | Foreach-Object {
                             [PSCustomObject]@{
                                 "id"        = $_  
                                 "intensity" = 0

@@ -26,26 +26,28 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
+    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ','
     $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+    $Commands | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        [PSCustomObject]@{
-            Name = $Miner_Name
-            DeviceName = $Miner_Device.Name
-            DeviceModel = $Miner_Model
-            Path = $Path
-            Arguments = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --text-only --gpu-platform $($Miner_PlatformId) $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-            API = "Xgminer"
-            Port = $Miner_Port
-            URI = $Uri
-            PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
-            PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
-            DevFee = 1.0
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path = $Path
+                Arguments = "--device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -k $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --text-only --gpu-platform $($Miner_PlatformId) $($_.Params)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                API = "Xgminer"
+                Port = $Miner_Port
+                URI = $Uri
+                PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
+                PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
+                DevFee = 1.0
+            }
         }
     }
 }

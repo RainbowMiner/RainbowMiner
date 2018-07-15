@@ -28,7 +28,7 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = Get-GPUIDs $Miner_Device -join '' -Offset 1
+    $DeviceIDsAll = ($Miner_Device | % {$_.Type_PlatformId_Index+1}) -join ''
 
     switch($Miner_Vendor) {
         "NVIDIA" {$Miner_Deviceparams = "-nvidia"}
@@ -44,17 +44,19 @@ Select-Device $Devices -MinMemSize 3GB | Select-Object Vendor, Model -Unique | F
         $possum    = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "-proto 4 -stales 0" } else { "-proto 1" }
         $proto     = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "stratum+tcp://" } else { "" }
 
-        [PSCustomObject]@{
-            Name = $Miner_Name
-            DeviceName = $Miner_Device.Name
-            DeviceModel = $Miner_Model
-            Path = $Path
-            Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -coin auto -gpus $($DeviceIDsAll) -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) $($Miner_Deviceparams) $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-            API = "Claymore"
-            Port = $Miner_Port
-            URI = $Uri
-            DevFee = 0.65
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path = $Path
+                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -coin auto -gpus $($DeviceIDsAll) -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) $($Miner_Deviceparams) $($_.Params)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
+                API = "Claymore"
+                Port = $Miner_Port
+                URI = $Uri
+                DevFee = 0.65
+            }
         }
     }
 }

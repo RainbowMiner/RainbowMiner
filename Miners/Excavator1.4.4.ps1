@@ -37,7 +37,7 @@ $Devices.NVIDIA | Where-Object {$_.Model -eq $Devices.FullComboModels.NVIDIA} | 
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
 
-    $DeviceIDsAll = Get-GPUIDs $Miner_Device
+    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index
 
     $Commands | ForEach-Object {
         try {        

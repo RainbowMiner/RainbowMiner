@@ -114,9 +114,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         #$Miner_Device = Select-Device $Device -MinMemSize ($_.MinMemGB*1gb)
         $MinMemGB = $_.MinMemGB
         $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
+        
+        if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
-        if ($Miner_Device) {
-            $DeviceIDsAll = Get-GPUIDs $Miner_Device -join '' -ToHex
+            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_PlatformId_Index} ) -join ''
 
             if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
 
