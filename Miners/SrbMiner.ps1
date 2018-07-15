@@ -15,10 +15,35 @@ $Port = "315{0:d2}"
 $Devices = $Devices.AMD
 if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
 
-$Commands = [PSCustomObject[]]@()
-@("alloy","artocash","b2n","bittubev2","fast","lite","haven","heavy","italo","litev7","marketcash","normalv7","stellitev4") | Foreach-Object {
-    $Commands += [PSCustomObject]@{MainAlgorithm = "cryptonight$($_)"; Params = ""; Type = "$_"}
-}
+$Commands = [PSCustomObject[]]@(
+    # Note: For fine tuning directly edit Config_[MinerName]-[Algorithm]-[Port].txt in the miner binary directory
+    [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 1 thread
+    [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 1 thread
+    [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-B2N 1 thread
+    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-BittypeV2 1 thread
+    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 1 thread
+    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Lite 1 thread
+    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-LiteV7 2 threads
+    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Haven 1 thread
+    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Heavy 1 thread
+    [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Italo 1 thread
+    [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
+    [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV7 1 thread
+    [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 1 thread
+    [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 2 threads
+    [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 2 threads
+    [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-B2N 2 threads
+    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-BittypeV2 2 thread
+    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads
+    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Lite 2 threads
+    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-LiteV7 2 threads
+    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Heavy 2 threads
+    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Haven 2 threads
+    [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
+    [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
+    [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
+    [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 2 threads
+)
 #- Cryptonight Lite [lite]
 #- Cryptonight V7 [normalv7]
 #- Cryptonight Lite V7 [litev7]
@@ -36,43 +61,66 @@ $Commands = [PSCustomObject[]]@()
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
-    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDs = Get-GPUIDs $Miner_Device
+    $Commands | ForEach-Object {
+        $Algorithm = $_.MainAlgorithm
+        $Algorithm_Norm = Get-Algorithm "cryptonight-$($Algorithm)"
+        $Threads = $_.Threads
+        $MinMemGb = $_.MinMemGb
+        $Params = $_.Params
+        
+        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)})
 
-    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {        
+            $Miner_Name = (@($Name) + @($Threads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
-        $Miner_ConfigFileName = "$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$(@($Miner_Device.Name | Sort-Object) -join '-').txt"
-        $Miner_WorkerName = [string]($Pools.$Algorithm_Norm.User -split '\.' | Select-Object -Index 1)
-        if (-not $Miner_WorkerName) {$Miner_WorkerName="rainbowminer"}
+            $Arguments = [PSCustomObject]@{
+                    Config = [PSCustomObject]@{
+                        api_enabled      = $true
+                        api_port         = [Int]$Miner_Port
+                        api_rig_name     = "$($Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker)"
+                        cryptonight_type = $Algorithm
+                        intensity        = 0
+                        double_threads   = $false
+                        timeout          = 10
+                        retry_time       = 10
+                        gpu_conf         = @(Get-GPUIDs $Miner_Device | Foreach-Object {
+                            [PSCustomObject]@{
+                                "id"        = $_  
+                                "intensity" = 0
+                                "threads"   = [Int]$Threads
+                                "platform"  = "OpenCL"
+                                #"worksize"  = [Int]8
+                            }
+                        })
+                    }
+                    Pools = [PSCustomObject]@{
+                        pools = @([PSCustomObject]@{
+                            pool = "$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
+                            wallet = $($Pools.$Algorithm_Norm.User)
+                            password = $($Pools.$Algorithm_Norm.Pass)
+                            pool_use_tls = $($Pools.$Algorithm_Norm.SSL)
+                            nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
+                        })
+                    }
+                    Params = "--disablegpuwatchdog --sendallstales $($Params)".Trim()
+            }
 
-        ([PSCustomObject]@{
-            cryptonight_type = $_.Type
-            intensity = 0
-            double_threads = $true
-            timeout = 10
-            retry_time = 10
-            api_enabled = $true
-            api_port = $Miner_Port
-            api_rig_name = $Miner_WorkerName
-            gpu_conf = [PSCustomObject[]]@($DeviceIDs | Foreach-Object {[PSCustomObject]@{id=$_;intensity=0;worksize=8;threads=2}})
-        } | ConvertTo-Json -Depth 10) | Set-Content "$(Split-Path $Path)\$($Miner_ConfigFileName)" -Force -ErrorAction SilentlyContinue
-
-        [PSCustomObject]@{
-            Name = $Miner_Name
-            DeviceName = $Miner_Device.Name
-            DeviceModel = $Miner_Model
-            Path      = $Path
-            Arguments = "--config $($Miner_ConfigFileName) --cpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) --cwallet $($Pools.$Algorithm_Norm.User) --password $($Pools.$Algorithm_Norm.Pass) --disablegpuwatchdog --sendallstales $(if ($Pools.$Algorithm_Norm.SSL){'--ctls true'}) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash"){'--cnicehash true'}) $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-            API       = "SrbMiner"
-            Port      = $Miner_Port
-            URI       = $Uri
-            DevFee    = 0.85
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path      = $Path
+                Arguments = $Arguments
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                API       = "SrbMiner"
+                Port      = $Miner_Port
+                URI       = $Uri
+                DevFee    = 0.85
+            }
         }
     }
 }
