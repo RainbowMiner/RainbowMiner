@@ -16,23 +16,25 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash144"; Params = "--algo 144_5"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash192"; Params = "--algo 192_7"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash96"; Params = "--algo 96_5"} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Zhash"; Params = "--algo zhash"} #Equihash 144,5 Zhash/BitcoinZ
+    [PSCustomObject]@{MainAlgorithm = "Equihash96";  MinMemGB = 2; Params = "--algo 96_5"}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash144"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash192"; MinMemGB = 3; Params = "--algo 192_7"} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Zhash";       MinMemGB = 2; Params = "--algo zhash"} #Equihash 144,5 Zhash/BitcoinZ
 )
 
 $Coins = [PSCustomObject]@{
     BitcoinGold = "--pers BgoldPoW"
-    BTG = "--pers BgoldPow"
-    Snowgem = "--pers sngemPoW"
-    Zero = "--pers ZERO_PoW"
+    BitcoinZ    = "--pers BitcoinZ"
+    BTG         = "--pers BgoldPow"
+    Snowgem     = "--pers sngemPoW"
+    Zero        = "--pers ZERO_PoW"
+    ZeroCoin    = "--pers ZERO_PoW"
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model    
 
@@ -40,9 +42,11 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $Commands | ForEach-Object {
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"
+        $MinMemGB = $_.MinMemGB
+
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
@@ -56,6 +60,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 Port = $Miner_Port
                 DevFee = 0
                 URI = $URI
+                ExtendInterval = 2
             }
         }
     }
