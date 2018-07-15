@@ -37,11 +37,11 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model    
+    $Miner_Name = (@($Name) + @($Device.Name | Sort-Object) | Select-Object) -join '-'
 
     $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ' '
 
     $Commands | ForEach-Object {
-        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"
         $MinMemGB = $_.MinMemGB
