@@ -3,7 +3,7 @@
             Currencies=@("BTC")
         }
         "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{DataWindow="average"}
+            Fields=[PSCustomObject]@{DataWindow="average";ExcludeAlgorithm="keccak"}
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
@@ -20,10 +20,6 @@
             Currencies=@()
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
-            Currencies=@()
-        }
-        "MiningPoolHubMini" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
             Currencies=@()
         }
