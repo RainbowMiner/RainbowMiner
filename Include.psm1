@@ -13,7 +13,7 @@ function Get-Balance {
     if ($NewRates -eq $Null) {
         try {
             Write-Log "Updating exchange rates from Coinbase. "
-            $NewRates = Invoke-RestMethod "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
+            $NewRates = Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
             $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
             $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates | Add-Member $_ $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
         }
@@ -72,7 +72,7 @@ function Get-Ticker {
 
     if (-not (Test-Path Variable:Script:CoinmarketCapList)) {
         try {
-            $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/listings/"
         }
         catch {
             Write-Log -Level Warn "Coinmarketcap API (listings) has failed. "
@@ -93,7 +93,7 @@ function Get-Ticker {
 
 
     try {
-        $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)"
     }
     catch {
         Write-Log -Level Warn "Coinmarketcap API (ticker) has failed. "
@@ -968,6 +968,19 @@ function Get-ComputeData {
     # Write-Log -Level "Debug" -Message "Exiting $($MyInvocation.MyCommand): '`$ComputeData=$($ComputeData)'"
 
     $ComputeData
+}
+
+function Get-CoinName {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Position = 0,   
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
+        [String]$CoinName = ""
+    )
+    (Get-Culture).TextInfo.ToTitleCase(($CoinName -replace "[^`$a-z0-9]+", " ")) -replace " "
 }
 
 function Get-Algorithm {
@@ -2085,10 +2098,95 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
+function Invoke-RestMethodAsync {
+[cmdletbinding(   
+    DefaultParameterSetName = '',   
+    ConfirmImpact = 'low'   
+)]   
+Param(   
+    [Parameter(   
+        Mandatory = $True,   
+        Position = 0,   
+        ParameterSetName = '',   
+        ValueFromPipeline = $True)]   
+        [string]$url,
+    [Parameter(Mandatory = $False)]   
+        [int]$cycletime = 60
+)
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime
+}
+
+function Invoke-WebRequestAsync {
+[cmdletbinding(   
+    DefaultParameterSetName = '',   
+    ConfirmImpact = 'low'   
+)]   
+Param(   
+    [Parameter(   
+        Mandatory = $True,   
+        Position = 0,   
+        ParameterSetName = '',   
+        ValueFromPipeline = $True)]   
+        [string]$url,
+    [Parameter(Mandatory = $False)]   
+        [int]$cycletime = 60
+)
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime
+}
+
+function Invoke-GetUrlAsync {
+[cmdletbinding(   
+    DefaultParameterSetName = '',   
+    ConfirmImpact = 'low'   
+)]   
+Param(   
+    [Parameter(   
+        Mandatory = $True,   
+        Position = 0,   
+        ParameterSetName = '',   
+        ValueFromPipeline = $True)]   
+        [string]$url,
+    [Parameter(Mandatory = $False)]   
+        [string]$method = "REST",
+    [Parameter(Mandatory = $False)]   
+        [switch]$force = $false,
+    [Parameter(Mandatory = $False)]   
+        [switch]$quiet = $false,
+    [Parameter(Mandatory = $False)]   
+        [int]$cycletime = 60
+)
+    $Jobkey = Get-MD5Hash $url
+
+    if (-not $AsyncLoader.Jobs.$Jobkey -or $force) {
+        if (-not $AsyncLoader.Jobs.$Jobkey) {
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime}
+        } else {
+            $AsyncLoader.Jobs.$Jobkey.Running=$true
+            $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
+            $AsyncLoader.Jobs.$Jobkey.CycleTime = $cycletime
+        }        
+        try {
+            $url = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm")
+            if ($method -eq "REST") {
+                $AsyncLoader.Jobs.$Jobkey.Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            } else {
+                $AsyncLoader.Jobs.$Jobkey.Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+            }
+            $AsyncLoader.Jobs.$Jobkey.Error = $null
+        }
+        catch {
+            $AsyncLoader.Jobs.$Jobkey.Error = $_.Exception    
+        }
+        $AsyncLoader.Jobs.$Jobkey.Running = $false
+    }
+    if (-not $quiet) {
+        if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        $AsyncLoader.Jobs.$Jobkey.Request
+    }
+}
+
 function Start-AsyncLoader {
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
-
-    $AsyncLoader.Stop = $false
 
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
@@ -2097,22 +2195,26 @@ function Start-AsyncLoader {
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
-        #wait for Config to arrive
-        while($AsyncLoader.Config -eq $null) { Sleep 1 }
+        
+        Import-Module ".\Include.psm1"
 
-        $StatEnd = (Get-Date).ToUniversalTime()
+        $AsyncLoader.Stop = $false
+        $AsyncLoader.Cycle = -1
+        $AsyncLoader.Jobs = @{}
+        $AsyncLoader.Result = [string[]]@()
+        $AsyncLoader.CycleTime = 10
 
         while (-not $AsyncLoader.Stop) {
-            $Timer = (Get-Date).ToUniversalTime()
-
-            $StatStart = $StatEnd
-            $StatEnd = $Timer.AddSeconds($AsyncLoader.Config.Interval)
-            $StatSpan = New-TimeSpan $StatStart $StatEnd
-
-            while ($Timer -lt $StatEnd) {
-                Sleep 2
-                $Timer = (Get-Date).ToUniversalTime()
+            $Start = (Get-Date).ToUniversalTime()
+            $AsyncLoader.Cycle++
+            try {
+                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -force -quiet}
             }
+            catch {
+                $AsyncLoader.Result += $_.Exception.Message
+            }
+            $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
+            if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
         }
     });
 
@@ -2123,4 +2225,5 @@ function Start-AsyncLoader {
 function Stop-AsyncLoader {
     $Global:AsyncLoader.Stop = $true
     $Global:AsyncLoader.Loader.dispose()
+    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 }

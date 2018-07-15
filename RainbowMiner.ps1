@@ -208,6 +208,8 @@ if (-not $DisableAutoUpdate -and (Test-Path .\Updater.ps1)) {$Downloader = Start
 
 #[console]::TreatControlCAsInput = $true
 
+Start-AsyncLoader
+
 while ($true) {
     #Load the config
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
@@ -939,7 +941,7 @@ while ($true) {
     #Update the exchange rates
     try {
         Write-Log "Updating exchange rates from Coinbase. "
-        $NewRates = Invoke-RestMethod "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
+        $NewRates = Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
         $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
         $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates | Add-Member $_ $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
     }
@@ -1722,6 +1724,7 @@ while ($true) {
 
 #Stop the API, if still running
 Stop-APIServer
+Stop-AsyncLoader
 
 Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
 Write-Log "Gracefully halting RainbowMiner"
