@@ -980,20 +980,20 @@ while ($true) {
             $SelectedPoolNames += $Pool_Name
             $Pool_Parameters = @{StatSpan = $StatSpan}
             $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
-            $Pool_Config = @{}
+            $Pool_Config = @{Name = $Pool_Name}
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
             Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
-                if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force}
-                $_.Content | Add-Member AlgorithmList @((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique) -Force
-                $_}
+                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
+                $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
+                }
         } |
-        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.Content.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.Content.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
+        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
+        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
         ForEach-Object {
-            $Pool_Factor = 1-[Double]($_.Content.Penalty + $(if (-not $Config.IgnoreFees){$_.Content.PoolFee}))/100
-            $_.Content.Price *= $Pool_Factor
-            $_.Content.StablePrice *= $Pool_Factor                
-            $_.Content | Add-Member Name $_.Name -PassThru
+            $Pool_Factor = 1-[Double]($_.Penalty + $(if (-not $Config.IgnoreFees){$_.PoolFee}))/100
+            $_.Price *= $Pool_Factor
+            $_.StablePrice *= $Pool_Factor                
+            $_
         }       
     }
 
@@ -1093,7 +1093,7 @@ while ($true) {
             }
         }
     }
-
+    
     Write-Log "Calculating profit for each miner. "
     $AllMiners | ForEach-Object {
         $Miner = $_

@@ -322,7 +322,7 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        Get-ChildItem "Stats" -File | Where-Object BaseName -EQ $Name | Get-Content | ConvertFrom-Json
+        Get-ChildItem "Stats\$($Name).txt" -File -ErrorAction Ignore | Get-Content | ConvertFrom-Json
     } else {
         # Return all stats
         $Stats = [PSCustomObject]@{}
@@ -2172,10 +2172,11 @@ Param(
         try {
             $url = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm")
             if ($method -eq "REST") {
-                $AsyncLoader.Jobs.$Jobkey.Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                $Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             } else {
-                $AsyncLoader.Jobs.$Jobkey.Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+                $Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
             }
+            $AsyncLoader.Jobs.$Jobkey.Request = $Request
             $AsyncLoader.Jobs.$Jobkey.Error = $null
         }
         catch {
