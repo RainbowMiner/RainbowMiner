@@ -100,21 +100,25 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
     $Fee = 0
-    if (Select-Device $Device -MinMemSize 2.1Gb) {$Fee=$DevFee}
+    if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
 
     switch($Miner_Vendor) {
         "NVIDIA" {$Arguments_Platform = " -platform 2"}
         "AMD" {$Arguments_Platform = " -platform 1 -y 1"}
         Default {$Arguments_Platform = ""}
     }
-
+    [hashtable]$Miner_Device_hash = @{}
+    $Commands.MinMemGB | Select-Object -Unique | Foreach-Object {
+        $MinMemGB = $_
+        $Miner_Device_hash[$MinMemGB] = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
+    }
+ 
     $Commands | ForEach-Object {
         $MainAlgorithm = $_.MainAlgorithm
-        $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
-        #$Miner_Device = Select-Device $Device -MinMemSize ($_.MinMemGB*1gb)
+        $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm        
         $MinMemGB = $_.MinMemGB
-        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
-        
+        $Miner_Device = $Miner_Device_hash[$MinMemGB]
+
         if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_PlatformId_Index} ) -join ''
@@ -154,3 +158,4 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         }
     }
 }
+
