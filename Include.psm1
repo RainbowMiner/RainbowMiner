@@ -8,14 +8,15 @@ function Get-Balance {
 
     # If rates weren't specified, just use 1 BTC = 1 BTC
     if ($Rates -eq $Null) {
-        $Rates = [PSCustomObject]@{BTC = [Double]1}
+        [hashtable]$Rates = @{BTC = [Double]1}
     }
     if ($NewRates -eq $Null) {
         try {
             Write-Log "Updating exchange rates from Coinbase. "
-            $NewRates = Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
-            $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
-            $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates | Add-Member $_ $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
+            [hashtable]$NewRates = @{}
+            Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}   
+            $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
+            $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
         }
         catch {
             Write-Log -Level Warn "Coinbase is down. "
@@ -31,11 +32,11 @@ function Get-Balance {
             } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru}
 
             $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {                    
-                    $Rates | Add-Member $_ $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -BTCprice;if ($Ticker) {[Double]1/$Ticker} else {0}}) -Force
+                    $Rates[$_] = $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -BTCprice;if ($Ticker) {[Double]1/$Ticker} else {0}})
             }
 
             # Add total of totals
-            $Total = ($Balances | ForEach-Object {$_.total/$Rates."$($_.currency)"} | Measure-Object -Sum).Sum
+            $Total = ($Balances | ForEach-Object {$_.total/$Rates[$_.currency]} | Measure-Object -Sum).Sum
             $Balances += [PSCustomObject]@{
                 currency = "BTC"
                 total = $Total
@@ -44,15 +45,15 @@ function Get-Balance {
 
             # Add local currency values
             $Balances | Foreach-Object {
-                Foreach($Rate in ($Rates.PSObject.Properties)) {
-                    $Value = $Rate.Value
-                    if ($_.currency -ne "BTC") {$Value = if ($Rate.Name -eq $_.currency){[Double]1}else{[Double]($Value/$Rates."$($_.currency)")}}
+                Foreach($RateSymbol in $Rates.Keys) {
+                    $Value = $Rates[$RateSymbol]
+                    if ($_.currency -ne "BTC") {$Value = if ($RateSymbol -eq $_.currency){[Double]1}else{[Double]($Value/$Rates[$_.currency])}}
                     # Round BTC to 8 decimals, everything else is based on BTC value
-                    if ($Rate.Name -eq "BTC") {
+                    if ($RateSymbol -eq "BTC") {
                         $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
                     } 
                     else {
-                        $_ | Add-Member "Total_$($Rate.Name)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
+                        $_ | Add-Member "Total_$($RateSymbol)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
                     }
                 }
             }
@@ -198,7 +199,7 @@ function Set-Stat {
     $SmallestValue = 1E-20
 
     try {
-        $Stat = Get-Content $Path -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $Stat = ConvertFrom-Json (Get-Content $Path -ErrorAction Stop -Raw) -ErrorAction Stop
 
         $Stat = [PSCustomObject]@{
             Live = [Double]$Stat.Live
@@ -322,16 +323,14 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        Get-ChildItem "Stats\$($Name).txt" -File -ErrorAction Ignore | Get-Content | ConvertFrom-Json
+        if (Test-Path "Stats\$($Name).txt") {ConvertFrom-Json (Get-Content "Stats\$($Name).txt" -Raw)}
     } else {
         # Return all stats
-        $Stats = [PSCustomObject]@{}
+        $Stats = [hashtable]@{}
 
-        Get-ChildItem "Stats" -File | ForEach-Object {
-            $BaseName = $_.BaseName
-            $_ | Get-Content | ConvertFrom-Json -ErrorAction SilentlyContinue | ForEach-Object {
-                $Stats | Add-Member $BaseName $_
-            }
+        foreach($p in (Get-ChildItem "Stats" -File)) {
+            $BaseName = $p.BaseName
+            $Stats[$BaseName] = ConvertFrom-Json (Get-Content $p.FullName -Raw) -ErrorAction SilentlyContinue
         }
         Return $Stats
     }

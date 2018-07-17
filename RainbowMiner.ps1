@@ -117,14 +117,11 @@ $DecayStart = $Timer
 $DecayPeriod = 60 #seconds
 $DecayBase = 1 - 0.1 #decimal percentage
 
-$WatchdogTimers = @()
-$ActiveMiners = @()
-$Rates = [PSCustomObject]@{BTC = [Double]1}
+[System.Collections.ArrayList]$WatchdogTimers = @()
+[System.Collections.ArrayList]$ActiveMiners = @()
+[hashtable]$Rates = @{BTC = [Double]1}
 
 $LastDonated = 0
-$ConfigTimeStamp = 0
-$PoolsConfigTimeStamp = 0
-$MinersConfigTimeStamp = 0
 
 $SkipSwitchingPrevention = $false
 $StartDownloader = $false
@@ -137,6 +134,11 @@ $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
 $MinersUriHash = $null
+
+[hashtable]$Updatetracker = @{
+    Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
+    APIs = [hashtable]@{}
+}
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
     $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
@@ -215,14 +217,14 @@ while ($true) {
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
     $ConfigCheckFields = $true
     
-    $AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
-    $AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+    [string[]]$AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+    [string[]]$AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
     if (Test-Path $ConfigFile) {
-        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $ConfigTimeStamp) {        
+        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {        
 
             do {
-                $ConfigTimeStamp = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
+                $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $MyCommandParameters | Where-Object {$_ -ne "ConfigFile"} | ForEach-Object {
                     $Parameters.Add($_ , (Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue))
@@ -770,8 +772,8 @@ while ($true) {
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
     if (Test-Path $PoolsConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $PoolsConfigTimeStamp) {        
-            $PoolsConfigTimeStamp = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
+        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["PoolsConfigFile"]) {        
+            $Updatetracker["Config"]["PoolsConfigFile"] = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
             $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
                 Wallet              = $Config.Wallet
                 UserName            = $Config.UserName
@@ -779,6 +781,10 @@ while ($true) {
                 API_ID              = $Config.API_ID
                 API_Key             = $Config.API_Key
             } | Select-Object -ExpandProperty Content) -Force
+            foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
+                $Config.Pools.$p | Add-Member Algorithm @(($Config.Pools.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+            }
         }
     }    
 
@@ -792,12 +798,6 @@ while ($true) {
                 API_Key = $Config.API_Key
             }
         )
-    }
-
-    $Config.Pools.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object -ExpandProperty Name | Foreach-Object {
-        $ConfigPoolName = $_
-        $Config.Pools.$ConfigPoolName | Add-Member Algorithm @(@($Config.Pools.$ConfigPoolName.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-        $Config.Pools.$ConfigPoolName | Add-Member ExcludeAlgorithm @(@($Config.Pools.$ConfigPoolName.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
     }
     
     # Copy the user's config before changing anything for donation runs
@@ -824,7 +824,7 @@ while ($true) {
             $DonateNow = $true
         }
         if ($DonateNow) {
-            $ConfigTimeStamp = 0
+            $Updatetracker["Config"]["ConfigFile"] = 0
             $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($DonationPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
             $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
             if (-not $DonationPoolsAvail.Count) {            
@@ -896,8 +896,8 @@ while ($true) {
     }
 
     if (Test-Path $MinersConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $MinersConfigTimeStamp) {        
-            $MinersConfigTimeStamp = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
+        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
+            $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
             $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
             (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object { 
                 $CcMiner = $_               
@@ -924,7 +924,13 @@ while ($true) {
     if ($Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Config.Proxy}
     else {$PSDefaultParameterValues.Remove("*:Proxy")}
 
-    Get-ChildItem "APIs" -File | ForEach-Object {. $_.FullName}
+    foreach ($APIfile in (Get-ChildItem "APIs" -File)) {
+        $APIfilelastwritetime = $APIfile.LastWriteTime.ToUniversalTime()
+        if ($APIfilelastwritetime -gt $Updatetracker["APIs"][$APIfile.BaseName]) {
+            . $APIfile.FullName
+            $Updatetracker["APIs"][$APIfile.BaseName] = $APIfilelastwritetime
+        }
+    }
 
     Test-TimeSync
     $Timer = (Get-Date).ToUniversalTime()
@@ -941,9 +947,10 @@ while ($true) {
     #Update the exchange rates
     try {
         Write-Log "Updating exchange rates from Coinbase. "
-        $NewRates = Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates
-        $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates | Add-Member $_ ([Double]$NewRates.$_) -Force}
-        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates | Add-Member $_ $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
+        [hashtable]$NewRates = @{}
+        Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
+        $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
+        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
     }
     catch {
         Write-Log -Level Warn "Coinbase is down. "
@@ -965,23 +972,23 @@ while ($true) {
     #Load the stats
     Write-Log "Loading saved statistics. "
 
-    $Stats = Get-Stat
+    [hashtable]$Stats = Get-Stat
 
     #Give API access to the current stats
     $API.Stats = $Stats
 
     #Load information about the pools
     Write-Log "Loading pool information. "
-    $NewPools = @()
-    $SelectedPoolNames = @()
+    [System.Collections.ArrayList]$NewPools = @()
+    [System.Collections.ArrayList]$SelectedPoolNames = @()
     if (Test-Path "Pools") {
         $NewPools = $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
             $Pool_Name = $_
-            $SelectedPoolNames += $Pool_Name
-            $Pool_Parameters = @{StatSpan = $StatSpan}
-            $Config.Pools.$Pool_Name | Get-Member -MemberType NoteProperty | ForEach-Object {$Pool_Parameters.($_.Name) = $Config.Pools.$Pool_Name.($_.Name)}                      
-            $Pool_Config = @{Name = $Pool_Name}
-            Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config.$_ = $Pool_Parameters.$_}
+            $SelectedPoolNames.Add($Pool_Name) | Out-Null
+            [hashtable]$Pool_Config = @{Name = $Pool_Name}
+            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan}
+            foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
+            Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
             Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
                 $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
                 $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
@@ -994,13 +1001,13 @@ while ($true) {
             $_.Price *= $Pool_Factor
             $_.StablePrice *= $Pool_Factor                
             $_
-        }       
+        }      
     }
 
     #Remove stats from pools & miners not longer in use
     if (-not $DonateNow -and (Test-Path "Stats")) {
-        Compare-Object @($SelectedPoolNames | Select-Object -Unique) @($Stats.PSObject.Properties | Where-Object Name -like '*_Profit' | Foreach-Object {($_.Name -split "_")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)_*_Profit.txt" | Remove-Item}
-        Compare-Object @($AvailMiners | Select-Object) @($Stats.PSObject.Properties | Where-Object Name -like '*_Hashrate' | Foreach-Object {($_.Name -split "-")[0]} | Select-Object -Unique) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {Get-ChildItem "Stats\$($_.InputObject)-*_Hashrate.txt" | Remove-Item}
+        Compare-Object @($SelectedPoolNames | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)_*_Profit.txt"}
+        Compare-Object @($AvailMiners | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)-*_Hashrate.txt"}
     }
 
     #Give API access to the current running configuration
@@ -1008,20 +1015,31 @@ while ($true) {
 
     # This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     # since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    $AllPools = @($NewPools) + @(Compare-Object @($NewPools | Select-Object -ExpandProperty Name -Unique) @($AllPools | Select-Object -ExpandProperty Name -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) | 
-        Where-Object {$Config.Algorithm.Count -eq 0 -or (Compare-Object @($Config.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-        Where-Object {$Config.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
-        Where-Object {$Config.ExcludePoolName.Count -eq 0 -or (Compare-Object $Config.ExcludePoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
+    [System.Collections.ArrayList]$AllPools = @($NewPools)
+    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPools.Add($Pool)}
+    $i=0
+    [System.Collections.ArrayList]$AllPoolsRemove = @()
+    foreach ($Pool in $AllPools) {    
+        if (
+            ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
+            ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count)
+            ) {$AllPoolsRemove.Add($Pool) | out-null}           
+        $i++
+    }
+    foreach($Pool in $AllPoolsRemove) {$AllPools.Remove($Pool)}
+    $AllPoolsRemove.Clear()
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
 
     #Apply watchdog to pools
-    $AllPools = $AllPools | Where-Object {
-        $Pool = $_
+    foreach ($Pool in $AllPools) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
-        ($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2
+        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsRemove.Add($Pool)}
     }
+    foreach($Pool in $AllPoolsRemove) {$AllPools.Remove($Pool)}
+    $AllPoolsRemove.Clear()
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
@@ -1030,6 +1048,7 @@ while ($true) {
         Start-Sleep $Config.Interval
         continue
     }
+
     $Pools = [PSCustomObject]@{}
 
     Write-Log "Selecting best pool for each algorithm. "
