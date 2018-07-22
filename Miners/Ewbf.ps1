@@ -39,14 +39,14 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model    
     $Miner_Name = (@($Name) + @($Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ' '
-
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"
         $MinMemGB = $_.MinMemGB
 
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
+
+        $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ' '
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
