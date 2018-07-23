@@ -35,9 +35,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model    
-    $Miner_Name = (@($Name) + @($Device.Name | Sort-Object) | Select-Object) -join '-'
 
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
@@ -45,6 +43,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $MinMemGB = $_.MinMemGB
 
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
+        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
         $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ' '
 
