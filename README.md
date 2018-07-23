@@ -17,7 +17,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, Bsod, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Mining devices freely selectable**
@@ -87,6 +87,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - BlazePool https://www.blazepool.com/ (auto-exchange and payout in BTC)
 - BlockCruncher https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in "Config\pools.config.txt")
 - BlockMasters / BlockMastersCoins https://www.blockmasters.co/ (auto-exchange and payout in BTC)
+- Bsod https://bsod.pw/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in "Config\pools.config.txt")
 - HashRefinery https://pool.hashrefinery.com (auto-exchange and payout in BTC)
 - MiningPoolHub / MiningPooHubCoins / MiningPoolHubMini https://miningpoolhub.com/ (auto-exchange and paymout in BTC, username required)
   - 'miningpoolhub' and 'miningpoolhubmini' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
