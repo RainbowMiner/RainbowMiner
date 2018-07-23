@@ -19,7 +19,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash96";  MinMemGB = 2; Params = "--algo 96_5"}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash144"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash192"; MinMemGB = 3; Params = "--algo 192_7"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Zhash";       MinMemGB = 2; Params = "--algo zhash"} #Equihash 144,5 Zhash/BitcoinZ
 )
 
 $Coins = [PSCustomObject]@{
@@ -27,8 +26,9 @@ $Coins = [PSCustomObject]@{
     BitcoinZ    = "--pers BitcoinZ"
     BTG         = "--pers BgoldPow"
     Snowgem     = "--pers sngemPoW"
+    ZelCash     = "--pers ZelProof"
     Zero        = "--pers ZERO_PoW"
-    ZeroCoin    = "--pers ZERO_PoW"
+    ZeroCoin    = "--pers ZERO_PoW" 
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
