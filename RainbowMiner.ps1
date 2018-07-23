@@ -176,11 +176,11 @@ try {
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
         
         # Create pools.config.txt if it is missing
-        if (-not (Test-Path $PoolsConfigFile)) {Set-PoolsConfigDefault -PathToFile $PoolsConfigFile}
+        Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
         $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
 
         # Create miners.config.txt if it is missing
-        if (-not (Test-Path $MinersConfigFile)) {Set-MinersConfigDefault -PathToFile $MinersConfigFile}
+        Set-MinersConfigDefault -PathToFile $MinersConfigFile -Force
         $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
 
         $_ | Resolve-Path -Relative
@@ -771,6 +771,8 @@ while ($true) {
 
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
+    #Check for pool config
+    Set-PoolsConfigDefault $PoolsConfigFile
     if (Test-Path $PoolsConfigFile) {
         if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["PoolsConfigFile"]) {        
             $Updatetracker["Config"]["PoolsConfigFile"] = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
@@ -895,6 +897,8 @@ while ($true) {
         }
     }
 
+    #Check for miner config
+    Set-MinersConfigDefault -PathToFile $MinersConfigFile
     if (Test-Path $MinersConfigFile) {
         if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
             $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
