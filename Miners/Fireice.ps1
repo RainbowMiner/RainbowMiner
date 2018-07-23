@@ -8,11 +8,12 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4.5-fireice/xmr-stak-2.4.5.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4.7-fireice/xmr-stak-win64.zip"
 $Port = "308{0:d2}"
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2"; Params = ""} # CryptoNightBittube2
     [PSCustomObject]@{MainAlgorithm = "cryptonight_haven"; Params = ""} # CryptoNightHaven
     [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""} # CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""} # CryptoNightLite

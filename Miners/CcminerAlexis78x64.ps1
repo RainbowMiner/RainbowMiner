@@ -7,8 +7,8 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\NVIDIA-Alexis78\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccmineralexis78/ccmineralexis78_1.2.7z"
+$Path = ".\Bin\NVIDIA-Alexis78x64\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-ccmineralexis78/ccminerAlexis78v1.3x64.7z"
 $Port = "102{0:d2}"
 
 $Devices = $Devices.NVIDIA
@@ -16,23 +16,23 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
-    [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR, HShare
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11 v1.2 faster
+    #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR, HShare v1.2 faster
+    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
+    [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
-    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
-    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
+    [PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlcoin"; Params = ""} #WhirlCoin
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
-    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
+    [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 v1.2 faster
 
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s

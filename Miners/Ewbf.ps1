@@ -19,6 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash96";  MinMemGB = 2; Params = "--algo 96_5"}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash144"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash192"; MinMemGB = 3; Params = "--algo 192_7"} #Equihash 192,7
+#    [PSCustomObject]@{MainAlgorithm = "Equihash210"; MinMemGB = 3; Params = "--algo aion"} #Equihash 210,9 (beta)
 )
 
 $Coins = [PSCustomObject]@{
