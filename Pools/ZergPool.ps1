@@ -36,7 +36,7 @@ $ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Obj
 
 $ZergPool_PoolFee = 0.5
 
-$ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$ZergPool_Request.$_.hashrate -gt 0} |ForEach-Object {
+$ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$ZergPool_Request.$_.hashrate -gt 0 -and [Double]$ZergPool_Request.$_.estimate_current  -gt 0} |ForEach-Object {
     $ZergPool_Port = $ZergPool_Request.$_.port
     $ZergPool_Algorithm = $ZergPool_Request.$_.name
     $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
