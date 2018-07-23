@@ -12,6 +12,10 @@
         "Blockmasters" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "Bsod" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{DataWindow="actual_last24h"}
+            Currencies=@("RVN","PGN")
+        }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
@@ -41,6 +45,7 @@
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{DataWindow="minimum"}
             Currencies=@("BTC")
         }
         "Zpool" = [PSCustomObject]@{
