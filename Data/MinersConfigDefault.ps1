@@ -15,6 +15,17 @@
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
         )
+        "CcminerAlexis78x64" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = "-i 21"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "keccak"; SecondaryAlgorithm = ""; Params = "-m 2 -i 29"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "keccakc"; SecondaryAlgorithm = ""; Params = "-i 29"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "veltor"; SecondaryAlgorithm = ""; Params = "-i 23"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x11evo"; SecondaryAlgorithm = ""; Params = "-i 21"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
+        )
         "CcminerBalloon" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = "-i 19"; Profile = "4"}
         )
