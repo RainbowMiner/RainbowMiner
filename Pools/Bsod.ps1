@@ -28,7 +28,7 @@ if (($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $Bsod_Regions = "eu","us","asia"
 $Bsod_Currencies = ($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
-$Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
+$Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Double]$BsodCoins_Request.$_.estimate -gt 0} | ForEach-Object {
     $Bsod_Host = "bsod.pw"
     $Bsod_Port = $BsodCoins_Request.$_.port
     $Bsod_Algorithm = $BsodCoins_Request.$_.algo
