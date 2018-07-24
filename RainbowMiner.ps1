@@ -67,6 +67,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$IgnoreFees = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$ExcludeMinersWithFee = $false,
+    [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalances = $false,
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
@@ -141,7 +143,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
 }
@@ -397,7 +399,7 @@ while ($true) {
                                                 Write-Host "You are almost done :) Our defaults for miners and algorithms give you a good start. If you want, you can skip the settings for now " -ForegroundColor Cyan
                                                 Write-Host " "
 
-                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto 14"}
+                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto 15"}
                                             }
                                             $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
@@ -414,6 +416,9 @@ while ($true) {
                                             $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         14 {
+                                            $Config.ExcludeMinersWithFee = Read-HostBool -Prompt "Exclude all miners with developer fee" -Default $Config.ExcludeMinersWithFee | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+                                        15 {
                                             Write-Host ' '
                                             Write-Host '(3) Select the devices to mine on and miningmode' -ForegroundColor Green
                                             Write-Host ' '
@@ -460,7 +465,7 @@ while ($true) {
                                             if ($IsInitialSetup) {throw "Goto 999"}
                                         }
 
-                                        15 {
+                                        16 {
                                             Write-Host ' '
                                             Write-Host '(4) Select desired output' -ForegroundColor Green
                                             Write-Host ' '
@@ -468,26 +473,26 @@ while ($true) {
                                             $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}   
                                         }
-                                        16 {
+                                        17 {
                                             $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        17 {
+                                        18 {
                                             $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        18 {
+                                        19 {
                                             $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus, not recommended)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        19 {
+                                        20 {
                                             Write-Host ' '
                                             Write-Host '(5) Setup other / technical' -ForegroundColor Green
                                             Write-Host ' '
 
                                             $Config.IgnoreFees = Read-HostBool -Prompt "Ignore Pool/Miner developer fees" -Default $Config.IgnoreFees | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        20 {
+                                        21 {
                                             $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        21 {
+                                        22 {
                                             do {
                                                 $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Mandatory -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}                             
                                                 if ($Config.MSIAprofile -gt 0) {
@@ -496,13 +501,13 @@ while ($true) {
                                                 }
                                             } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
                                         }
-                                        22 {
+                                        23 {
                                             $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        23 {
+                                        24 {
                                             $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        24 {
+                                        25 {
                                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         default {
@@ -920,7 +925,7 @@ while ($true) {
     }
 
     #Check for GPU failure and reboot, if needed
-    if ( $Config.RebootOnGPUFailure ) { 
+    if ($Config.RebootOnGPUFailure) { 
         Write-Log "Testing for GPU failure. "
         Test-GPU
     }
@@ -1246,6 +1251,9 @@ while ($true) {
             }
         }
     }
+
+    #Remove miners with developer fee
+    if ($Config.ExcludeMinersWithFee) {$Miners = $Miners | Where-Object {($_.DevFee.PSObject.Properties.Value | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum -eq 0}}
 
     #Apply watchdog to miners
     $Miners = $Miners | Where-Object {
