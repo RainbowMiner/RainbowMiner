@@ -2,6 +2,43 @@
 
 Add-Type -Path .\OpenCL\*.cs
 
+function Get-Version {
+    [CmdletBinding()]
+    param($Version)
+    # System.Version objects can be compared with -gt and -lt properly
+    # This strips out anything that doens't belong in a version, eg. v at the beginning, or -preview1 at the end, and returns a version object
+    Return [System.Version]($Version -Split "-" -Replace "[^0-9.]")[0]
+}
+
+function Confirm-Version {
+    [CmdletBinding()]
+    param($RBMVersion)
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    $RBMVersion = Get-Version($RBMVersion)
+
+    $Name = "RainbowMiner"
+    try {
+        $Request = Invoke-RestMethodAsync "https://api.github.com/repos/rainbowminer/$Name/releases/latest" -cycletime 3600
+        $Version = ($Request.tag_name -replace '^v')
+        $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
+
+        $Version = Get-Version($Version)
+
+        if ($Version -gt $RBMVersion) {
+            Write-Log -Level Warn "$Name is out of date: lastest release version $Version is available at $URI "
+        }
+
+        if ($Version -lt $RBMVersion) {
+            Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
+        }
+    }
+    catch {
+        Write-Log -Level Warn "Github could not be reached. "
+    }
+}
+
 function Get-Balance {
     [CmdletBinding()]
     param($Config, $Rates, $NewRates)

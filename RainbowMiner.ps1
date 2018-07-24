@@ -156,6 +156,9 @@ if (Test-Path ".\Logs"){
 #Start the log
 Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
 
+#Start the async loader
+Start-AsyncLoader
+
 Write-Log "Starting RainbowMiner v$Version"
 
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
@@ -209,7 +212,7 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
 
 #[console]::TreatControlCAsInput = $true
 
-Start-AsyncLoader
+Confirm-Version $Version
 
 while ($true) {
     #Load the config
@@ -1507,6 +1510,9 @@ while ($true) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left to benchmark."
         }
     }
+
+    #Check for updated RainbowMiner
+    Confirm-Version $Version
 
     #Display active miners list
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} (
