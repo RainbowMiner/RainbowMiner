@@ -47,6 +47,9 @@
             ".css" = "text/css"
             ".txt" = "text/plain"
             ".ico" = "image/x-icon"
+            ".png" = "image/png"
+            ".jpg" = "image/jpeg"
+            ".gif" = "image/gif"
             ".ps1" = "text/html" # ps1 files get executed, assume their response is html
         }
 
