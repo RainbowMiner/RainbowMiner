@@ -85,17 +85,17 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 - AHashPool / AHashPoolCoins https://www.ahashpool.com/ (auto-exchange and payout in BTC)
 - BlazePool https://www.blazepool.com/ (auto-exchange and payout in BTC)
-- BlockCruncher https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in "Config\pools.config.txt")
+- BlockCruncher https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in ["Config\pools.config.txt"](#config-pools-config-txt))
 - BlockMasters / BlockMastersCoins https://www.blockmasters.co/ (auto-exchange and payout in BTC)
-- Bsod https://bsod.pw/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in "Config\pools.config.txt")
+- Bsod https://bsod.pw/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
 - HashRefinery https://pool.hashrefinery.com (auto-exchange and payout in BTC)
 - MiningPoolHub / MiningPooHubCoins / MiningPoolHubMini https://miningpoolhub.com/ (auto-exchange and paymout in BTC, username required)
   - 'miningpoolhub' and 'miningpoolhubmini' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
   - 'miningpoolhubmini' is setup to mine lyra2z, skein, myriadgroestl, groestl, neoscrypt and equihash-btg, only.
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports). 
 - Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below)
-- Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in "Config\pools.config.txt")
-- YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in "Config\pools.config.txt")
+- Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in ["Config\pools.config.txt"](#config-pools-config-txt))
+- YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
 - ZergPool / ZergPoolCoins https://zergpool.eu/ (auto-exchange and payout in BTC)
   - 'zergpool' mine most profitable algorithm. Pool chooses coin or merged mining benefits
   - 'zergpoolcoins' mine most profitable coin. If you setup RainbowMiner with many algorithm, expect a lot of switching.
@@ -108,6 +108,14 @@ This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very l
 **Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:**  
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The YiiMP pool is an exception, as it does not have auto-exchange to BTC. Please be careful, what you choose to mine.
 
+
+## MINERS
+
+- The RainbowMiner contains a list of well approved miners in the directory "Miners"
+- In the directory "OptionalMiners" we put miners, that we consider as potential instable or possibly the cause of other problems (eg. T-Rex, CuBalloon). If you want to absolutely try these miners, simply copy them over into the "Miners" directory.
+- The miner Excavator mines on NiceHash pool, only
+- Miners Excavator & Excavator1.4.4 run in their own miner window. Since these two miners are each being controlled through an own API, the miner windows will stay open idle, even after the mining has stopped. This does no harm nor does it cost CPU - the miner will wait until it is being called again. You may close these windows, if you want. RainbowMiner will restart them, if Excavator is needed again.
+- Each miner's algorithm can be fine tuned for each device in your mining rig (see section [ADVANCED CONFIGURATION->Config\miners.config.txt](#config-miners-config-txt))
 
 ## MSI AFTERBURNER CONFIGURATION
 
