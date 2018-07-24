@@ -330,7 +330,15 @@ function Get-Stat {
 
         foreach($p in (Get-ChildItem "Stats" -File)) {
             $BaseName = $p.BaseName
-            $Stats[$BaseName] = ConvertFrom-Json (Get-Content $p.FullName -Raw) -ErrorAction SilentlyContinue
+            $FullName = $p.FullName
+            try {
+                $Stats[$BaseName] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
+            }
+            catch {
+                #Remove broken stat file
+                Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
+                Remove-Item -Path  $FullName -Force -Confirm:$false
+            }
         }
         Return $Stats
     }
