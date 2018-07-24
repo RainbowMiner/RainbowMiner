@@ -1402,8 +1402,8 @@ while ($true) {
     }
 
     if (($ActiveMiners | ForEach-Object {$_.GetProcessNames()} | Measure-Object).Count -gt 0) {
-        $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ( $_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0 ) {$_.GetProcessId()}})
-        Get-Process | Where-Object { @($ActiveMiners | Select-Object -ExpandProperty ExecName) -contains $_.ProcessName } | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExpandProperty ExecName) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object { $Running -notcontains $_.Id } | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+        $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ($_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0) {$_.GetProcessId()}})
+        Get-Process | Where-Object {@($ActiveMiners | Foreach-Object {$_.GetExecNames()}) -contains $_.ProcessName} | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {$_.GetExecNames()}) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object {$Running -notcontains $_.Id} | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
     if ($Downloader) {$Downloader | Receive-Job}
     Start-Sleep $Config.Delay #Wait to prevent BSOD

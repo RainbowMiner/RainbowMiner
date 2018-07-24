@@ -1094,6 +1094,10 @@ class Miner {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
     }
 
+    [String[]]GetExecNames() {
+        return @($this.ExecName)
+    }
+
     [String]GetArguments() {
         return $this.Arguments
     }
@@ -1122,7 +1126,7 @@ class Miner {
         $this.Data = @()
 
         if ($this.Process) {
-            if ( $this.ShowMinerWindow -and $this.Process.MiningProcess ) {
+            if ($this.ShowMinerWindow -and $this.Process.MiningProcess) {
                 $this.Process.MiningProcess.CloseMainWindow() | Out-Null
                 # Wait up to 10 seconds for the miner to close gracefully
                 $closedgracefully = $this.Process.MiningProcess.WaitForExit(10000)
@@ -1149,7 +1153,7 @@ class Miner {
     }
 
     [DateTime]GetActiveStart() {
-        $Begin = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
 
         if ($Begin) {
             return $Begin
@@ -1160,8 +1164,8 @@ class Miner {
     }
 
     [DateTime]GetActiveLast() {
-        $Begin = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
-        $End   = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
 
         if ($Begin -and $End) {
             return $End
@@ -1175,8 +1179,8 @@ class Miner {
     }
 
     [TimeSpan]GetActiveTime() {
-        $Begin = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
-        $End   = if ( $this.Process.MiningProcess ) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         
         if ($Begin -and $End) {
             return $this.Active + ($End - $Begin)

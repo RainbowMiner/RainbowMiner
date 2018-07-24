@@ -48,6 +48,13 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
 
         if ($BTC -or $InfoOnly) {
             @($NiceHash_Algorithm_Norm,"$($NiceHash_Algorithm_Norm)-NHMP") | Foreach-Object {
+                if ($_ -match "-NHMP") {
+                    $This_Port = 3200
+                    $This_Host = "nhmp.$NiceHash_Region.$NiceHash_Host"
+                } else {
+                    $This_Port = $NiceHash_Port
+                    $This_Host = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
+                }
                 [PSCustomObject]@{
                     Algorithm     = $_
                     CoinName      = $NiceHash_Coin
@@ -55,8 +62,8 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
-                    Port          = $NiceHash_Port
+                    Host          = $This_Host
+                    Port          = $This_Port
                     User          = "$BTC.$Worker"
                     Pass          = "x"
                     Region        = $NiceHash_Region_Norm
@@ -73,8 +80,8 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"
-                        Host          = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
-                        Port          = $NiceHash_Port + 30000
+                        Host          = $This_Host
+                        Port          = $This_Port + 30000
                         User          = "$BTC.$Worker"
                         Pass          = "x"
                         Region        = $NiceHash_Region_Norm
