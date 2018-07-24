@@ -42,6 +42,7 @@
 313	CryptoDredge
 314	CuBalloon
 315	SRBMiner
+316	T-Rex
 
 400	Sgminer
 401	SgminerBitcore
