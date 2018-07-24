@@ -15,8 +15,8 @@ $ZergPool_Request = [PSCustomObject]@{}
 $ZergPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status"
-    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies"
+    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status" -retry 3
+    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -retry 3
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -32,7 +32,7 @@ $ZergPool_Regions = "us"#, "europe"
 $ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 $ZergPool_Coins = [PSCustomObject]@{}
-$ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$ZergPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
+$ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object {$_.Count -eq 1 -and $_.Group.algo} | Foreach-Object {$ZergPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
 
 $ZergPool_PoolFee = 0.5
 

@@ -2144,9 +2144,13 @@ Param(
         ValueFromPipeline = $True)]   
         [string]$url,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60
+        [int]$cycletime = 60,
+    [Parameter(Mandatory = $False)]
+        [int]$retry = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$retrywait = 250
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait
 }
 
 function Invoke-WebRequestAsync {
@@ -2162,9 +2166,13 @@ Param(
         ValueFromPipeline = $True)]   
         [string]$url,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60
+        [int]$cycletime = 60,
+    [Parameter(Mandatory = $False)]
+        [int]$retry = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$retrywait = 250
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait
 }
 
 function Invoke-GetUrlAsync {
@@ -2186,25 +2194,39 @@ Param(
     [Parameter(Mandatory = $False)]   
         [switch]$quiet = $false,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60
+        [int]$cycletime = 60,
+    [Parameter(Mandatory = $False)]
+        [int]$retry = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$retrywait = 250
 )
     $Jobkey = Get-MD5Hash $url
 
     if (-not $AsyncLoader.Jobs.$Jobkey -or $force) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
             $AsyncLoader.Jobs.$Jobkey.CycleTime = $cycletime
+            $AsyncLoader.Jobs.$Jobkey.Retry = $retry
+            $AsyncLoader.Jobs.$Jobkey.RetryWait = $retrywait
         }        
         try {
             $url = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm")
-            if ($method -eq "REST") {
-                $Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-            } else {
-                $Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
-            }
+            $retry++
+            do {
+                if ($method -eq "REST") {
+                    $Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                } else {
+                    $Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+                }                
+                $retry--
+                if ($retry) {
+                    if ($Request -and ($Request -isnot [string] -or $Request.trim().Length)) {$retry = 0}
+                    else {Sleep -Milliseconds $retrywait}
+                }
+            } until ($retry -le 0)
             $AsyncLoader.Jobs.$Jobkey.Request = $Request
             $AsyncLoader.Jobs.$Jobkey.Error = $null
         }
@@ -2242,7 +2264,7 @@ function Start-AsyncLoader {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
             try {
-                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -force -quiet}
+                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
             }
             catch {
                 $AsyncLoader.Result += $_.Exception.Message
