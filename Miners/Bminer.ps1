@@ -33,11 +33,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ','
 
     $Commands | ForEach-Object {
-
         $MainAlgorithm = $_.MainAlgorithm
         $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
 
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+        if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
             $SecondAlgorithm = $_.SecondaryAlgorithm
             if ($SecondAlgorithm -ne '') {
