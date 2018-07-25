@@ -1022,12 +1022,17 @@ while ($true) {
     #Give API access to the current running configuration
     $API.NewPools = $NewPools
 
-    # This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
-    # since mining is probably still working.  Then it filters out any algorithms that aren't being used.
+    #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
+    #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
+    [System.Collections.ArrayList]$AllPoolsAdd = @()    
+    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAdd.Add($Pool) | Out-Null}    
     [System.Collections.ArrayList]$AllPools = @($NewPools)
-    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPools.Add($Pool) | Out-Null}
-    $i=0
+    if ($AllPoolsAdd.Count) {$AllPools.Add($AllPoolsAdd)}
+    $AllPoolsAdd.Clear()
+
+    #Now remove all deselected pool/algorithm from AllPools
     [System.Collections.ArrayList]$AllPoolsRemove = @()
+    $i=0
     foreach ($Pool in $AllPools) {    
         if (
             ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
