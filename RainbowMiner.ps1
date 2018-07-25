@@ -1027,7 +1027,7 @@ while ($true) {
     [System.Collections.ArrayList]$AllPoolsAdd = @()    
     foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAdd.Add($Pool) | Out-Null}    
     [System.Collections.ArrayList]$AllPools = @($NewPools)
-    if ($AllPoolsAdd.Count) {$AllPools.Add($AllPoolsAdd)}
+    if ($AllPoolsAdd.Count) {$AllPools.Add($AllPoolsAdd) | Out-Null}
     $AllPoolsAdd.Clear()
 
     #Now remove all deselected pool/algorithm from AllPools
