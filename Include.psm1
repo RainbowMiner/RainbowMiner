@@ -1753,7 +1753,7 @@ function Set-MinersConfigDefault {
                     if (-not $VendorSet) {"$($Setup_Name)-$($_.Vendor)";$VendorSet=$true}
                     "$($Setup_Name)-$($_.Model)"
                 } | Foreach-Object {
-                    $Done | Add-Member $_ $(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_){$Preset.$_}else{$Setup_Content})
+                    $Done | Add-Member $_ @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_){$Preset.$_}else{$Setup_Content})
                 }
             }
             $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
