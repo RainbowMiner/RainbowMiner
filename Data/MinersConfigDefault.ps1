@@ -95,6 +95,7 @@
         "CryptoDredge" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
         )
         "EnemyZealot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "aeriumx"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
