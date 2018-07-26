@@ -20,17 +20,19 @@ class Eminer : Miner {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
-
+        
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.hashrate_1m | Measure-Object -Sum).Sum
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
-
-        $this.Data += [PSCustomObject]@{
-            Date     = (Get-Date).ToUniversalTime()
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
+        $HashRate_Value = [Int64]$HashRate_Value
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.Data += [PSCustomObject]@{
+                Date     = (Get-Date).ToUniversalTime()
+                Raw      = $Response
+                HashRate = $HashRate
+                Device   = @()
+            }
         }
 
         $this.Data = @($this.Data | Select-Object -Last 10000)
