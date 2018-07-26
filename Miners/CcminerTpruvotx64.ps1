@@ -17,11 +17,11 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
-    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = " -i 21"} #Bitcore
+    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
+    #[PSCustomObject]@{MainAlgorithm = "c11/flax"; Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
     #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
-    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JackPot
+    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
     [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
     [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #keccakc
@@ -41,10 +41,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 3"} #PHI spmod is faster
+    [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = " -N 3"} #PHI spmod is faster
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
-    #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
+    #[PSCustomObject]@{MainAlgorithm = "scrypt-jane"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
