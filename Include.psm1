@@ -1752,10 +1752,8 @@ function Set-MinersConfigDefault {
                 Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') | Out-Null}
 
                 $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-                    $Setup_Name = $_.Name
-                    $Setup_Content = [PSCustomObject[]]$_.Value
                     foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($Setup_Name)-$($SetupDevice)" @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_){$Preset.$_}else{$Setup_Content})
+                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $SetupDevice){$Preset.$SetupDevice}else{$_.Value})
                     }
                 }
             }
