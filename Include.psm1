@@ -1743,17 +1743,20 @@ function Set-MinersConfigDefault {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
             $Done = [PSCustomObject]@{}
-            $Devices = Select-Device @(Get-Device "gpu") -Type @("nvidia","amd") | Select-Object Model,Vendor -Unique | Foreach-Object {$_ | Add-Member Vendor $(Get-DeviceVendor $_) -Force;$_}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-                $Setup_Name = $_.Name
-                $Setup_Content = [PSCustomObject[]]$_.Value
-                $VendorSet = $false
-                $Devices | Foreach-Object {
-                    if (-not $VendorSet) {"$($Setup_Name)-$($_.Vendor)";$VendorSet=$true}
-                    "$($Setup_Name)-$($_.Model)"
-                } | Foreach-Object {
-                    $Done | Add-Member $_ @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_){$Preset.$_}else{$Setup_Content})
+            $AllDevices = Get-Device "gpu"
+            foreach ($a in @("NVIDIA","AMD")) {               
+                [System.Collections.ArrayList]$SetupDevices = @()
+                $Devices = @($AllDevices | Where-Object Vendor -eq $a | Select-Object Model,Model_Name,Name)
+                $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) | Out-Null}
+                Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') | Out-Null}
+
+                $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+                    $Setup_Name = $_.Name
+                    $Setup_Content = [PSCustomObject[]]$_.Value
+                    foreach ($SetupDevice in $SetupDevices) {
+                        $Done | Add-Member "$($Setup_Name)-$($SetupDevice)" @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_){$Preset.$_}else{$Setup_Content})
+                    }
                 }
             }
             $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
