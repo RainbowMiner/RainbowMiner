@@ -80,7 +80,7 @@ $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -g
                 [PSCustomObject]@{
                     Algorithm     = $ZergPool_Algorithm_Norm
                     CoinName      = $ZergPool_Coin
-                    Price         = $Stat.Live
+                    Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
