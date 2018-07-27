@@ -1742,15 +1742,15 @@ function Set-MinersConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "gpu"
             foreach ($a in @("NVIDIA","AMD")) {               
                 [System.Collections.ArrayList]$SetupDevices = @()
-                $Devices = @($AllDevices | Where-Object Vendor -eq $a | Select-Object Model,Model_Name,Name)
+                $Devices = @(Select-Device $AllDevices -Type $a | Select-Object Model,Model_Name,Name)
                 $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) | Out-Null}
                 Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') | Out-Null}
-
                 $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                     foreach ($SetupDevice in $SetupDevices) {
                         $Done | Add-Member "$($_.Name)-$($SetupDevice)" @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $SetupDevice){$Preset.$SetupDevice}else{$_.Value})
