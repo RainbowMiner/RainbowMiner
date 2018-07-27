@@ -45,6 +45,10 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
     $ZergPool_PoolFee = [Double]$ZergPool_Request.$_.fees
 
     $Divisor = 1000000 * [Double]$ZergPool_Request.$_.mbtc_mh_factor
+    if ($Divisor -eq 0) {
+        Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $ZergPool_Algorithm. "
+        return
+    }
 
     if (-not (Test-Path "Stats\$($Name)_$($ZergPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
     else {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZergPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
