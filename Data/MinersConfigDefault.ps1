@@ -95,6 +95,7 @@
         "CryptoDredge" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
         )
         "EnemyZealot" = [PSCustomObject[]]@(
@@ -122,5 +123,6 @@
         "Trex" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
     }
