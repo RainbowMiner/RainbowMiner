@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0/CryptoDredge_0.7.0_win_x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-cryptodredge/CryptoDredge_0.8.0_win_x64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4129696.0"
 $Port = "313{0:d2}"
 
@@ -17,6 +17,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Allium
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #Neoscrypt
@@ -24,6 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
