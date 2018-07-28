@@ -1224,7 +1224,7 @@ while ($true) {
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
-        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Compress} 
+        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress} 
         
         if ($Miner.MSIAprofile -eq $null) {$Miner | Add-Member MSIAprofile $Config.MSIAprofile -Force}
         if ($Miner.ExtendInterval -eq $null) {$Miner | Add-Member ExtendInterval 0 -Force}              
