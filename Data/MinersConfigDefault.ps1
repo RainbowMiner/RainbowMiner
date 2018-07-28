@@ -114,6 +114,7 @@
             [PSCustomObject]@{MainAlgorithm = "vitalium"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
         )
         "Excavator" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
             [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
