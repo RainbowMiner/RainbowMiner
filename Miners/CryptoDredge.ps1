@@ -25,7 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""; ExtendInterval = 2} #Tribus
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
