@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.9a/excavator_v1.5.9a_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.10a/excavator_v1.5.10a_Win64.zip"
 $ManualUri = "https://github.com/nicehash/excavator/releases"
 $Port = "31100"
 
