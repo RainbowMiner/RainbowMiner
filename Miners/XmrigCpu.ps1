@@ -7,7 +7,7 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\CryptoNight-CPU\xmrig.exe"
+$Path = ".\Bin\CPU-Xmrig\xmrig.exe"
 $Uri = "https://github.com/xmrig/xmrig/releases/download/v2.6.4/xmrig-2.6.4-msvc-win64.zip"
 $Port = "521{0:d2}"
 

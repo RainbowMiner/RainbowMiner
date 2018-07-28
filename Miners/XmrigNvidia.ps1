@@ -7,8 +7,8 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\CryptoNight-NVIDIA\xmrig-nvidia.exe"
-$Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.6.1/xmrig-nvidia-2.6.1-cuda9-win64.zip"
+$Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
+$Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.7.0-beta/xmrig-nvidia-2.7.0-beta-cuda9-win64.zip"
 $Port = "303{0:d2}"
 
 $Devices = $Devices.NVIDIA
