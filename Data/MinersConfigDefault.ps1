@@ -44,6 +44,9 @@
             [PSCustomObject]@{MainAlgorithm = "nist5"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
         )
+        "CcminerRaven" = [PSCustomObject[]]@(        
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
+        )
         "CcminerRavencoin" = [PSCustomObject[]]@(        
             [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
