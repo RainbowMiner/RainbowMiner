@@ -1753,8 +1753,11 @@ function Set-MinersConfigDefault {
                 Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') | Out-Null}
                 $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                     foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @(if ($Preset -and $Preset.PSObject.Properties.Name -icontains $SetupDevice){$Preset.$SetupDevice}else{$_.Value})
+                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @($_.Value)
                     }
+                }
+                $Preset.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+                    $Done | Add-Member $_.Name @($_.Value) -Force
                 }
             }
             $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
