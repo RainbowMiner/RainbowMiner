@@ -179,6 +179,7 @@ try {
         $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
         $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
+        $DevicesConfigFile = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
         
         # Create pools.config.txt if it is missing
         Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
@@ -187,6 +188,10 @@ try {
         # Create miners.config.txt if it is missing
         Set-MinersConfigDefault -PathToFile $MinersConfigFile -Force
         $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
+
+        # Create devices.config.txt if it is missing
+        Set-DevicesConfigDefault -PathToFile $DevicesConfigFile -Force
+        $DevicesConfigFile = $DevicesConfigFile | Resolve-Path -Relative
 
         $_ | Resolve-Path -Relative
     }
@@ -776,6 +781,22 @@ while ($true) {
 
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
+    #Check for devices config
+    Set-DevicesConfigDefault $DevicesConfigFile
+    if (Test-Path $DevicesConfigFile) {
+        if ($ConfigCheckFields -or -not $Config.Devices -or (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["DevicesConfigFile"]) {        
+            $Updatetracker["Config"]["DevicesConfigFile"] = (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Devices (Get-ChildItemContent $DevicesConfigFile).Content -Force
+            foreach ($p in @($Config.Devices.PSObject.Properties.Name)) {
+                $Config.Devices.$p | Add-Member Algorithm @(($Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                $Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
+                    if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"[,;:\s]+")}}
+                }
+            }
+        }
+    }   
+
     #Check for pool config
     Set-PoolsConfigDefault $PoolsConfigFile
     if (Test-Path $PoolsConfigFile) {
@@ -1095,8 +1116,23 @@ while ($true) {
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {$Config.MinerName.Count -eq 0 -or (Compare-Object $Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-            Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0}
+            Where-Object {$Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} |
+            Foreach-Object {
+                $MinerOk = $true
+                foreach ($p in @($_.DeviceModel -split '-')) {
+                    if ($Config.Devices.$p -and
+                        (
+                            ($Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Config.Devices.$p.Algorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
+                            ($Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Config.Devices.$p.ExcludeAlgorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
+                            ($Config.Devices.$p.MinerName.Count -gt 0 -and ($Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
+                            ($Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
+                        )
+                    ) {$MinerOk=$false;break}
+                }
+                if ($MinerOk) {$_}
+            }
     }
+
 
     if ($Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
@@ -1233,7 +1269,12 @@ while ($true) {
 
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
     }
-    $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
+
+    if ($AllMiners.Count -gt 0) {
+        $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
+    } else {
+        $AllMinersUriHash = $null
+    }
     if ($MinersUriHash -eq $null) {$MinersUriHash = $AllMinersUriHash}
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath))}
     if ( ($StartDownloader -or $MinersUriHash -ne $AllMinersUriHash -or $Miners.Count -ne $AllMiners.Count) -and $Downloader.State -ne "Running") {

@@ -1768,6 +1768,41 @@ function Set-MinersConfigDefault {
     }
 }
 
+function Set-DevicesConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        try {
+            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
+            $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName")
+            $Done = [PSCustomObject]@{}
+            $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $AllDevices = Get-Device | Select-Object -ExpandProperty Model -Unique
+            foreach ($DeviceModel in $AllDevices) {
+                if ($Preset.$DeviceModel) {
+                    $Done | Add-Member $DeviceModel $Preset.$DeviceModel
+                } elseif ($Setup.$DeviceModel) {
+                    $Done | Add-Member $DeviceModel $Setup.$DeviceModel
+                } else {
+                    $Done | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName=""})
+                }
+                foreach($SetupName in $SetupNames) {if ($Done.$DeviceModel.$SetupName -eq $null){$Done.$DeviceModel | Add-Member $SetupName ""}}
+            }
+            $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+        }
+        catch{
+            Write-Log -Level Error "Could not create $($PathToFile) "
+        }
+    }
+}
+
+
 function Set-PoolsConfigDefault {
     [CmdletBinding()]
     param(
