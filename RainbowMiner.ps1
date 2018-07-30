@@ -793,6 +793,7 @@ while ($true) {
                 foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
                     if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"[,;:\s]+")}}
                 }
+                $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
             }
         }
     }   
@@ -1122,6 +1123,7 @@ while ($true) {
                 foreach ($p in @($_.DeviceModel -split '-')) {
                     if ($Config.Devices.$p -and
                         (
+                            ($Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
                             ($Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Config.Devices.$p.Algorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
                             ($Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Config.Devices.$p.ExcludeAlgorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
                             ($Config.Devices.$p.MinerName.Count -gt 0 -and ($Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or

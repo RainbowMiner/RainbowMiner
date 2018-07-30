@@ -1780,7 +1780,7 @@ function Set-DevicesConfigDefault {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
-            $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName")
+            $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining")
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device | Select-Object -ExpandProperty Model -Unique
@@ -1790,7 +1790,7 @@ function Set-DevicesConfigDefault {
                 } elseif ($Setup.$DeviceModel) {
                     $Done | Add-Member $DeviceModel $Setup.$DeviceModel
                 } else {
-                    $Done | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName=""})
+                    $Done | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""})
                 }
                 foreach($SetupName in $SetupNames) {if ($Done.$DeviceModel.$SetupName -eq $null){$Done.$DeviceModel | Add-Member $SetupName ""}}
             }
