@@ -22,6 +22,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
+- **Bind/exclude devices to/from specific algorithm and miners**
 - **Switch MSI Afterburner profiles per miner**
 - **Pause mining without exiting the RainbowMiner**
 - **Live monitoring web-interface at [localhost:3999](http://localhost:3999)**
@@ -319,6 +320,27 @@ Example:
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
 - "Profile": desired MSI Afterburner profile
+
+
+### Config\devices.config.txt
+
+Each device group can be bound to/excluded from specific algorithm and miners by editing this config file.
+
+Example:
+
+    {
+      "GTX1050Ti": [
+        {
+          "Algorithm": "Ethash,x16r",
+          "ExcludeAlgorithm": "",
+          "MinerName": "",
+          "ExcludeMinerName": "ClaymoreEthash",
+          "DisableDualMining": "1"
+        }
+      ]
+    }
+
+This configuration would bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner. Setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
 
 
 ## WEB-INTERFACE
