@@ -1,0 +1,102 @@
+###############################################
+###       NVIDIA INSPECTOR - CHANGELOG      ###
+###############################################
+
+NVIDIA Inspector - Version 1.9.7.8 (.NET Framework 2 or above)
+
+- added "dpiAware" flag to support win8+ dpi scaling
+- avoid interupting status requests on optimus cards
+- show power usage in watts on main page if supported and nvml is available
+- added encoder usage to monitoring if supported and nvml is available
+- added decoder usage to monitoring if supported and nvml is available
+- added power limit status to monitoring
+- added thermal limit status to monitoring 
+- added reliability voltage limit status to monitoring 
+- added sli sync boost limit to monitoring
+- added CLI param "setVoltagePoints"
+- added CLI param "dumpVoltagePoints"  
+- changed CLI param "lockVoltagePoint" to also use uV instead of mV
+- fixed calling CLI made voltage points reset  
+- added max boost clock estimation for pascal with voltage point support
+
+
+
+NVIDIA Inspector - Version 1.9.7.7 (.NET Framework 2 or above)
+
+- fixed GDDR5X detection
+- fixed voltage reading for pascal
+- disabled max boost clock detection for pascal (quick fix for 3rd party curve reset on inspector start)
+- readded button and jumplist entry for profile inspector if exists
+- added CLI param "-lockVoltagePoint"
+
+
+NVIDIA Profile Inspector - Version 2.1.3.0 (.NET Framework 4 or above)
+
+- added 'export current profile including predefined settings' to menu
+- fixed empty profile export if no setting is set but only application(s)
+- fixed crash if nvd3dumx file is not present (WDDM2.1 driver)
+- updated setting constants to R367
+- added setting decryptor for encrypted 3dvision settings
+- improved import error handling
+- show nvidia icon for predefined profiles in modified profile list
+- added CLI param "-silent"
+- added CLI param "-silentImport"
+- added some 3d vision settings to CSN file (by DarkStarSword) 
+- added OpenGL version override to CSN file
+- added FastSync to CSN file
+- added FrameRateLimiterV2 values to CSN file
+
+
+
+NVIDIA Inspector - Version 1.9.7.6 (.NET Framework 2 or above)
+
+- fixed image upload
+
+NVIDIA Profile Inspector - Version 2.1.2.0 (.NET Framework 4 or above)
+
+- nvidiaProfileInspector is now open source and licensed under MIT license.
+  (https://github.com/Orbmu2k/nvidiaProfileInspector)
+
+- there are also continues builds available outside of the update cycle of nvidiaInspector
+  (https://ci.appveyor.com/project/Orbmu2k/nvidiaprofileinspector/build/artifacts)
+
+- added option to include predefined settings to the exported nip file
+- fixed when all string fields got persisted on apply changes even if no changes was made to them
+- fixed when the import removes the predefined settings of a profile if they are not included in the nip file
+- fixed clicking the refresh button may crash the application for some users
+
+-------------------------------------------------
+
+NVIDIA Inspector - Version 1.9.7.5 (.NET Framework 2 or above)
+
+- removed obsoltete profile settings jump list entry
+- fixed cuda lib error 
+
+NVIDIA Profile Inspector - Version 2.1.1.1 (.NET Framework 4 or above)
+
+- reverted back to default font
+- fixed layout problems (hopefully)
+
+
+-------------------------------------------------
+
+NVIDIA Inspector - Version 1.9.7.4 (.NET Framework 2 or above)
+
+- replaced old ROP calculation with new API call, this should fix ROP count for Maxwell 2 cards with reduced L2 Cache
+- increased unlocked UI clock limit for non boost states to fix error with memory clocks beyond 4000MHz
+- improved max boost clock estimation for maxwell
+- completely removed settings profile editor from main application, it is now deployed as standalone application
+
+NVIDIA Profile Inspector - Version 2.1.1.0 (.NET Framework 4 or above)
+
+- completely reworked settings engine backend
+- removed update detection / autoupdate
+- updated to latest available settings api R352
+- added stereo setting name detection from driver lib (thx to DarkStarSword)
+- default custom setting names are now embedded to the exe file, and can be extracted with command line switch "-createCSN"
+- added some GSYNC settings to CSN
+- profile export now exports only customized settings without the nvidia predefined settings
+- profile import now resets the profile to current driver defaults before import
+- changed framerate limiter value selection to predicted fps instead of the raw api value
+- you can drag'n drop nip files or application shortcuts now
+
