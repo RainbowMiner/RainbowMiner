@@ -1159,7 +1159,7 @@ while ($true) {
             }
             [Int[]]$Miner_MSIAprofile = @($Miner.DeviceModel -split '-') | Foreach-Object {
                 $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
-                if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile} else {$Config.MSIAprofile}
+                if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile}
             } | Select-Object -Unique
             if (($Miner_MSIAprofile | Measure-Object).Count -eq 1 -and $Miner_MSIAprofile[0]) {
                 $Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile[0]) -MemberType NoteProperty -Force
@@ -1226,7 +1226,7 @@ while ($true) {
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
         else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress} 
         
-        if ($Miner.MSIAprofile -eq $null) {$Miner | Add-Member MSIAprofile $Config.MSIAprofile -Force}
+        #if ($Miner.MSIAprofile -eq $null) {$Miner | Add-Member MSIAprofile $Config.MSIAprofile -Force}
         if ($Miner.ExtendInterval -eq $null) {$Miner | Add-Member ExtendInterval 0 -Force}              
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if ($Miner.FaultTolerance -eq $null) {$Miner | Add-Member FaultTolerance 0.1 -Force}               
@@ -1426,11 +1426,9 @@ while ($true) {
 
             #Set MSI Afterburner profile
             if ($MSIAenabled) {
-                $MSIAplannedprofile = $ActiveMiners | Where-Object Best -eq $true | Foreach-Object {if ($_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0) {$_.MSIAprofile} else {$Config.MSIAprofile}} | Select-Object -Unique
-
-                if ($MSIAplannedprofile.Count -ne 1) {$MSIAplannedprofile=$Config.MSIAprofile}
+                $MSIAplannedprofile = $ActiveMiners | Where-Object {$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0} | Select-Object -ExpandProperty MSIAprofile -Unique
+                if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Config.MSIAprofile}                
                 else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
-
                 Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
                 if ( $MSIAplannedprofile -ne $MSIAcurrentprofile ) {
                     Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
