@@ -21,7 +21,6 @@ $Commands = [PSCustomObject[]]@(
 
     # CPU & GPU - still profitable 27/03/2018
     [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
 
     #GPU - never profitable 27/03/2018
