@@ -32,6 +32,9 @@
         "CcminerCool" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
         )
+        "CcminerDumax" = [PSCustomObject[]]@(        
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+        )
         "CcminerKlausT" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "-i 17.6"; Profile = "3"}
         )
@@ -129,5 +132,7 @@
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
     }
