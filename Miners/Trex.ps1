@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.1-trex/t-rex-0.5.1-win-cuda9.1.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.6-trex/t-rex-0.5.6-win-cuda9.1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 
@@ -21,7 +21,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 10; FaultTolerance = 0.5} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
 )
 
