@@ -29,7 +29,7 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
 }
 
 $ZergPool_Regions = "us"#, "europe"
-$ZergPool_Currencies = @("BTC", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$ZergPool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 $ZergPool_Coins = [PSCustomObject]@{}
 $ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object {$_.Count -eq 1 -and $_.Group.algo} | Foreach-Object {$ZergPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
