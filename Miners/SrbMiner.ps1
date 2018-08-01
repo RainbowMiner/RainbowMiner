@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "http://www.srbminer.com/downloads/SRBMiner-CN-V1-6-4.zip"
+$Uri = "http://www.srbminer.com/downloads/SRBMiner-CN-V1-6-5.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 
@@ -28,6 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Heavy 1 thread
     [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Italo 1 thread
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
+    [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 1 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV7 1 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 1 thread
     [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 2 threads
@@ -41,6 +42,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Haven 2 threads
     [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
+    [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 2 threads
 )
@@ -57,6 +59,7 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight B2N [b2n]
 #- Cryptonight MarketCash [marketcash]
 #- Cryptonight Italo [italo]
+#- Cryptonight Red [mox]
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
