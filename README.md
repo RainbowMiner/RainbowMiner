@@ -26,7 +26,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Define pool's algorithms and coins**
 - **Switch MSI Afterburner profiles per miner**
 - **Pause mining without exiting the RainbowMiner**
-- **Live monitoring web-interface at [localhost:3999](http://localhost:3999)**
+- **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 
 
 ## INSTALLATION
@@ -349,7 +349,7 @@ This configuration would bind all GTX1050Ti in the system to Ethash and X16R min
 
 ## WEB-INTERFACE
 
-For your convenience, you can monitor and setup RainbowMiner using your web browser. The web interface very prominently shows RainbowMiner's live profitability and the current BTC exchange rates. To start the web interface, simply open the URL [localhost:3999](http://localhost:3999) in a new browser tab.
+For your convenience, you can monitor and setup RainbowMiner using your web browser. The web interface very prominently shows RainbowMiner's live profitability and the current BTC exchange rates. To start the web interface, simply open the URL [localhost:4000](http://localhost:4000) in a new browser tab.
 - Dashboard: shows the live running miners & pool balances, click the Pause/Restart button to halt and restart RainbowMiner. It will take up to 20 seconds, until the miner script finalize the pause/restart procedure, so give it some time.
 - Selected Devices: lists the preselected devices (through command line parameter or configuration)
 - All Devices: lists all available devices in your rig

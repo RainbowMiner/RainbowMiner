@@ -17,12 +17,12 @@
     # Check the reservations before trying to create them to avoid unnecessary UAC prompts.
     $urlACLs = & netsh http show urlacl | Out-String
 
-    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:3999/'))) {
+    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:4000/'))) {
         # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:3999/ sddl=D:(A;;GX;;;S-1-5-32-545)'
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:4000/ sddl=D:(A;;GX;;;S-1-5-32-545)'
     }
-    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:3999/'))) {
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:3999/'
+    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:4000/'))) {
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:4000/'
     }
 
     # Setup runspace to launch the API webserver in a separate thread
@@ -56,11 +56,11 @@
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
         if ($API.RemoteAPI) {
-            $Server.Prefixes.Add("http://+:3999/")
+            $Server.Prefixes.Add("http://+:4000/")
             # Require authentication when listening remotely
             $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
         } else {
-            $Server.Prefixes.Add("http://localhost:3999/")
+            $Server.Prefixes.Add("http://localhost:4000/")
         }
         $Server.Start()
 
@@ -278,7 +278,7 @@
 
 Function Stop-APIServer {
     if ( -not $Global:API.Stop ) {
-        try { $result = Invoke-WebRequest -Uri "http://localhost:3999/stop" } catch { Write-Host "Listener ended" }
+        try { $result = Invoke-WebRequest -Uri "http://localhost:4000/stop" } catch { Write-Host "Listener ended" }
     }
     $Global:API.Server.dispose()
 }
