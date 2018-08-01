@@ -56,6 +56,7 @@ $Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Doub
         [PSCustomObject]@{
             Algorithm     = $Bsod_Algorithm_Norm
             CoinName      = $Bsod_Coin
+            Currency      = $Bsod_Currency
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation

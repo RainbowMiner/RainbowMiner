@@ -51,6 +51,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
         [PSCustomObject]@{
             Algorithm     = $YiiMP_Algorithm_Norm
             CoinName      = $YiiMP_Coin
+            Currency      = $YiiMP_Currency
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation

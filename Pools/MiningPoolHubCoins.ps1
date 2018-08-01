@@ -63,6 +63,7 @@ $MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0} | ForEach
             [PSCustomObject]@{
                 Algorithm     = "$($MiningPoolHubCoins_Algorithm_Norm)$(if ($MiningPoolHubCoins_Algorithm_Norm -EQ "Ethash"){$MinMem.$MiningPoolHubCoins_Coin})"
                 CoinName      = $MiningPoolHubCoins_Coin
+                Currency      = ""
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

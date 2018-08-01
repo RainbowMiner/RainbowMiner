@@ -82,6 +82,7 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
         [PSCustomObject]@{
             Algorithm     = $Ravenminer_Algorithm_Norm
             CoinName      = $Ravenminer_Coin
+            Currency      = $Ravenminer_Currency
             Price         = $Stat.Hour # instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation

@@ -56,6 +56,7 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
             [PSCustomObject]@{
                 Algorithm     = $HashRefinery_Algorithm_Norm
                 CoinName      = $HashRefinery_Coin
+                Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

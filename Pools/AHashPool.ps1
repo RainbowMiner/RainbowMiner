@@ -57,6 +57,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             [PSCustomObject]@{
                 Algorithm     = $AHashPool_Algorithm_Norm
                 CoinName      = $AHashPool_Coin
+                Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

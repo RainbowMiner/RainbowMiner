@@ -68,6 +68,7 @@ $MiningPoolHub_Request.return | ForEach-Object {
             [PSCustomObject]@{
                 Algorithm     = $MiningPoolHub_Algorithm_Norm
                 CoinName      = $MiningPoolHub_Coin
+                Currency      = ""
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

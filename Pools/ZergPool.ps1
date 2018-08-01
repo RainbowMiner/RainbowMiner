@@ -63,6 +63,7 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
             [PSCustomObject]@{
                 Algorithm     = $ZergPool_Algorithm_Norm
                 CoinName      = $ZergPool_Coin
+                Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

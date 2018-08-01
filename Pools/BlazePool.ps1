@@ -57,6 +57,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             [PSCustomObject]@{
                 Algorithm     = $BlazePool_Algorithm_Norm
                 CoinName      = $BlazePool_Coin
+                Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation

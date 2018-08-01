@@ -60,6 +60,7 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                 [PSCustomObject]@{
                     Algorithm     = $_
                     CoinName      = $NiceHash_Coin
+                    Currency      = "BTC"
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Day #instead of .Week
                     MarginOfError = $Stat.Week_Fluctuation
