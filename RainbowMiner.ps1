@@ -40,7 +40,9 @@ param(
     [Array]$ExcludeMinerName = @(), 
     [Parameter(Mandatory = $false)]
     [Alias("ExcludePool")]
-    [Array]$ExcludePoolName = @(), 
+    [Array]$ExcludePoolName = @(),
+    [Parameter(Mandatory = $false)]
+    [Array]$ExcludeCoin = @(),     
     [Parameter(Mandatory = $false)]
     [Array]$Currency = ("BTC", "USD"), #i.e. GBP,EUR,ZEC,ETH etc.
     [Parameter(Mandatory = $false)]
