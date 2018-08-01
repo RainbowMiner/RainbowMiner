@@ -6,7 +6,8 @@ param(
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
-    [String]$DataWindow = "estimate_current"
+    [String]$DataWindow = "estimate_current",
+    [Bool]$InfoOnly = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

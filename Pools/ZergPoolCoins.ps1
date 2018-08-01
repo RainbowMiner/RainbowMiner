@@ -5,7 +5,8 @@ param(
     [String]$BTC, 
     [alias("WorkerName")]
     [String]$Worker, 
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [Bool]$InfoOnly = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -29,7 +30,7 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
 
 $ZergPool_Regions = "us"#, "europe"
 $ZergPool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
-$ZergPool_MiningCurrencies = ($ZergPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($ZergPoolCoins_Request.$_.Symbol) {$ZergPoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$ZergPool_MiningCurrencies = ($ZergPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($ZergPoolCoins_Request.$_.Symbol) {$ZergPoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $ZergPool_PoolFee = 0.5
 
 $ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -gt 0} | ForEach-Object {

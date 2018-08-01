@@ -4,7 +4,8 @@ param(
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
-    [String]$DataWindow = "avg"
+    [String]$DataWindow = "avg",
+    [Bool]$InfoOnly = $false
 )
 
 $Ravenminer_Regions = "eu", "us"
