@@ -17,12 +17,13 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, Bsod, HashRefinery, MiningPoolHub, Nicehash, Ravenminer, YiiMP, ZergPool and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, Bsod, HashRefinery, MiningPoolHub, Nicehash, PhiPhiPool, Ravenminer, YiiMP, ZergPool and Zpool)**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
 - **Bind/exclude devices to/from specific algorithm and miners**
+- **Define pool's algorithms and coins**
 - **Switch MSI Afterburner profiles per miner**
 - **Pause mining without exiting the RainbowMiner**
 - **Live monitoring web-interface at [localhost:3999](http://localhost:3999)**
@@ -39,8 +40,8 @@ Features: easy setup wizard with adhoc working default (no editing of files need
    - your MiningPoolHub username, if you plan to use this pool
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
-   - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
-   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash-BTG, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt
+   - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
+   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash-BTG, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 5. Let the downloads and benchmarking finish (it will already mine to your wallets)
@@ -162,6 +163,7 @@ Config files are found in directory "Config\"
 - ExcludeFromWatchdog = list of algorithms or miner, you want to exclude from the watchdog
 - ExcludeMinerName = list of miner names, you want to exclude from mining
 - ExcludePoolName = list of pool names, you want to exclude from mining
+- ExcludeCoin = list of coins, you want to exclude from mining
 - Currency = currencies, you want to be shown [default=BTC,USD,EUR]
 - Donate = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 - Proxy = set your proxy address here, if you are using one
@@ -243,11 +245,12 @@ Example:
     }
 
 
-#### Define the algorithms of a pool
+#### Define the algorithms and coins of a pool
     
 Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
 - Algorithm: a comma separated list of all pool's algorithm, you want RainbowMiner to use (leave empty for all)
 - ExcludeAlgorithm: a comma separated list of all pool's algorithm, you explicitly do not want RainbowMiner to use (leave empty for no exception)
+- ExcludeCoin: a comma separated list of coins, you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
 
 Example:
 
@@ -257,7 +260,8 @@ Example:
         "API_ID": "$API_ID",
         "API_Key": "$API_Key",
         "Algorithm": "lyra2z,skein,myriadgroestl,groestl,neoscrypt,equihash-btg",
-        "ExcludeAlgorithm": ""
+        "ExcludeAlgorithm": "",
+        "ExcludeCoin": "BitcoinGold,MaxCoin"
     }
 
 
