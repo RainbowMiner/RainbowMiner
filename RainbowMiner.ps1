@@ -520,7 +520,7 @@ while ($true) {
                                             $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
                                             $ConfigActual | Add-Member UserName $Config.UserName -Force
                                             $ConfigActual | Add-Member Proxy $Config.Proxy -Force
-                                            $ConfigActual | Add-Member Regin $Config.Region -Force
+                                            $ConfigActual | Add-Member Region $Config.Region -Force
                                             $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
                                             $ConfigActual | Add-Member PoolName $($Config.PoolName -join ",") -Force
                                             $ConfigActual | Add-Member ExcludePoolName $($Config.ExcludePoolName -join ",") -Force
