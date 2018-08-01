@@ -68,7 +68,9 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
         "x16r" {$Divisor *= 1}
     }
 
-    $Stat = Set-Stat -Name "$($Name)_$($Ravenminer_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Ravenminer_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($Ravenminer_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Ravenminer_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    }
 
     $Ravenminer_Regions | ForEach-Object {
         $Ravenminer_Region = $_
@@ -86,7 +88,7 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
             Protocol      = "stratum+tcp"
             Host          = $Ravenminer_Host
             Port          = $Ravenminer_Port
-            User          = Get-Variable $Ravenminer_Currency -ValueOnly
+            User          = Get-Variable $Ravenminer_Currency -ValueOnly -ErrorAction SilentlyContinue
             Pass          = "$Worker,c=$Ravenminer_Currency"
             Region        = $Ravenminer_Region_Norm
             SSL           = $false

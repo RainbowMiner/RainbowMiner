@@ -26,7 +26,7 @@ if (($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 $Bsod_Regions = "eu","us","asia"
-$Bsod_Currencies = ($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$Bsod_Currencies = ($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Double]$BsodCoins_Request.$_.estimate -gt 0} | ForEach-Object {
     $Bsod_Host = "bsod.pw"
@@ -45,7 +45,9 @@ $Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Doub
         "sha256d" {$Divisor *= 1000}
     }
 
-    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BsodCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BsodCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    }
 
     $Bsod_Regions | ForEach-Object {
         $Bsod_Region = $_
@@ -60,7 +62,7 @@ $Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Doub
             Protocol      = "stratum+tcp"
             Host          = "$($Bsod_Region).bsod.pw"
             Port          = $Bsod_Port
-            User          = "$(Get-Variable $Bsod_Currency -ValueOnly).$($Worker)"
+            User          = "$(Get-Variable $Bsod_Currency -ValueOnly -ErrorAction SilentlyContinue).$($Worker)"
             Pass          = "c=$Bsod_Currency"
             Region        = $Bsod_Region_Norm
             SSL           = $false

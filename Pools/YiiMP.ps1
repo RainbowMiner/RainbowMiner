@@ -26,7 +26,7 @@ if (($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 }
 
 $YiiMP_Regions = "us"
-$YiiMP_Currencies = ($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$YiiMP_Currencies = ($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 $YiiMP_PoolFee = 2.0
 
 $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
@@ -40,7 +40,9 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
 
     $Divisor = 1000000000 * [Double]$YiiMP_Request.$YiiMP_Algorithm.mbtc_mh_factor
 
-    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$YiiMPCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$YiiMPCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+    }
 
     $YiiMP_Regions | ForEach-Object {
         $YiiMP_Region = $_
@@ -55,7 +57,7 @@ $YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEa
             Protocol      = "stratum+tcp"
             Host          = $YiiMP_Host
             Port          = $YiiMP_Port
-            User          = Get-Variable $YiiMP_Currency -ValueOnly
+            User          = Get-Variable $YiiMP_Currency -ValueOnly -ErrorAction SilentlyContinue
             Pass          = "$Worker,c=$YiiMP_Currency"
             Region        = $YiiMP_Region_Norm
             SSL           = $false

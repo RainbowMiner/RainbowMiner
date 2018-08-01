@@ -27,6 +27,8 @@ if (($BlockcruncherCoins_Request | Get-Member -MemberType NoteProperty -ErrorAct
 
 $Blockcruncher_Regions = "us"
 
+$Blockcruncher_Currencies = ($BlockcruncherCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($BlockcruncherCoins_Request.$_.Symbol) {$BlockcruncherCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique  | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+
 $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
     $Blockcruncher_Host = "blockcruncher.com"
     $Blockcruncher_Port = $BlockcruncherCoins_Request.$_.port
@@ -40,12 +42,14 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
 
     $Divisor = 1000000000
 
-    $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BlockcruncherCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BlockcruncherCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
+    }
 
     $Blockcruncher_Regions | ForEach-Object {
         $Blockcruncher_Region = $_
         $Blockcruncher_Region_Norm = Get-Region $Blockcruncher_Region
-
+        
         [PSCustomObject]@{
             Algorithm     = $Blockcruncher_Algorithm_Norm
             CoinName      = $Blockcruncher_Coin
@@ -55,7 +59,7 @@ $Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrat
             Protocol      = "stratum+tcp"
             Host          = $Blockcruncher_Host
             Port          = $Blockcruncher_Port
-            User          = Get-Variable $Blockcruncher_Currency -ValueOnly
+            User          = Get-Variable $Blockcruncher_Currency -ValueOnly -ErrorAction SilentlyContinue
             Pass          = "$Worker,c=$Blockcruncher_Currency"
             Region        = $Blockcruncher_Region_Norm
             SSL           = $false

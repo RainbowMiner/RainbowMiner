@@ -28,7 +28,7 @@ if (($HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ig
 }
 
 $HashRefinery_Regions = "us"
-$HashRefinery_Currencies = @("BTC") + ($HashRefineryCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$HashRefinery_Currencies = @("BTC") + ($HashRefineryCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $HashRefinery_Coins = [PSCustomObject]@{}
 $HashRefineryCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$HashRefinery_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -43,8 +43,10 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
 
     $Divisor = 1000000 * [Double]$HashRefinery_Request.$HashRefinery_Algorithm.mbtc_mh_factor
 
-    if (-not (Test-Path "Stats\$($Name)_$($HashRefinery_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($HashRefinery_Algorithm_Norm)_Profit" -Value ([Double]$HashRefinery_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($HashRefinery_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $HashRefinery_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($HashRefinery_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($HashRefinery_Algorithm_Norm)_Profit" -Value ([Double]$HashRefinery_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($HashRefinery_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $HashRefinery_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $HashRefinery_Regions | ForEach-Object {
         $HashRefinery_Region = $_
@@ -60,7 +62,7 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 Protocol      = "stratum+tcp"
                 Host          = "$HashRefinery_Algorithm.$HashRefinery_Region.$HashRefinery_Host"
                 Port          = $HashRefinery_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $HashRefinery_Region_Norm
                 SSL           = $false

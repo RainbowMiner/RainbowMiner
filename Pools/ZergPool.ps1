@@ -29,7 +29,7 @@ if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore
 }
 
 $ZergPool_Regions = "us"#, "europe"
-$ZergPool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$ZergPool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $ZergPool_Coins = [PSCustomObject]@{}
 $ZergPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object {$_.Count -eq 1 -and $_.Group.algo} | Foreach-Object {$ZergPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -50,8 +50,10 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
         return
     }
 
-    if (-not (Test-Path "Stats\$($Name)_$($ZergPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZergPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($ZergPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ([Double]$ZergPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($ZergPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZergPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $ZergPool_Regions | ForEach-Object {
         $ZergPool_Region = $_
@@ -67,7 +69,7 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
                 Protocol      = "stratum+tcp"
                 Host          = if ($ZergPool_Region -eq "us") {$ZergPool_Host}else {"$ZergPool_Region.$ZergPool_Host"}
                 Port          = $ZergPool_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $ZergPool_Region_Norm
                 SSL           = $false

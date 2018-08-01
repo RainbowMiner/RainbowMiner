@@ -29,7 +29,7 @@ if (($BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 $BlazePool_Regions = "us"
-$BlazePool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$BlazePool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $BlazePool_Coins = [PSCustomObject]@{}
 $BlazePoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$BlazePool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -44,14 +44,16 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor
 
-    if (-not (Test-Path "Stats\$($Name)_$($BlazePool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ([Double]$BlazePool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlazePool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($BlazePool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ([Double]$BlazePool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlazePool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $BlazePool_Regions | ForEach-Object {
         $BlazePool_Region = $_
         $BlazePool_Region_Norm = Get-Region $BlazePool_Region
 
-        $BlazePool_Currencies | Where-Object {Get-Variable $_ -ValueOnly} | ForEach-Object {
+        $BlazePool_Currencies | ForEach-Object {
             [PSCustomObject]@{
                 Algorithm     = $BlazePool_Algorithm_Norm
                 CoinName      = $BlazePool_Coin
@@ -61,7 +63,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Protocol      = "stratum+tcp"
                 Host          = $BlazePool_Host
                 Port          = $BlazePool_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "ID=$Worker,c=$_"
                 Region        = $BlazePool_Region_Norm
                 SSL           = $false

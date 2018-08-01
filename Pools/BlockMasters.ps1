@@ -29,7 +29,7 @@ if (($BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ig
 }
 
 $BlockMasters_Regions = "us"
-$BlockMasters_Currencies = @("BTC") + ($BlockMastersCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$BlockMasters_Currencies = @("BTC") + ($BlockMastersCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $BlockMasters_Coins = [PSCustomObject]@{}
 $BlockMastersCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$BlockMasters_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -44,8 +44,10 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
 
     $Divisor = 1000000 * [Double]$BlockMasters_Request.$_.mbtc_mh_factor
 
-    if (-not (Test-Path "Stats\$($Name)_$($BlockMasters_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ([Double]$BlockMasters_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlockMasters_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($BlockMasters_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ([Double]$BlockMasters_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($BlockMasters_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlockMasters_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $BlockMasters_Regions | ForEach-Object {
         $BlockMasters_Region = $_
@@ -61,7 +63,7 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 Protocol      = "stratum+tcp"
                 Host          = $BlockMasters_Host
                 Port          = $BlockMasters_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $BlockMasters_Region_Norm
                 SSL           = $false

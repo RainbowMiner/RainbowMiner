@@ -29,7 +29,7 @@ if (($AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 $AHashPool_Regions = "us"
-$AHashPool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$AHashPool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $AHashPool_Coins = [PSCustomObject]@{}
 $AHashPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$AHashPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -44,8 +44,10 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor
 
-    if (-not (Test-Path "Stats\$($Name)_$($AHashPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $AHashPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($AHashPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $AHashPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $AHashPool_Regions | ForEach-Object {
         $AHashPool_Region = $_
@@ -61,7 +63,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Protocol      = "stratum+tcp"
                 Host          = "$AHashPool_Algorithm.$AHashPool_Host"
                 Port          = $AHashPool_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $AHashPool_Region_Norm
                 SSL           = $false

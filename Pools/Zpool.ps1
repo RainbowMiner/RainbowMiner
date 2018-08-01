@@ -29,7 +29,7 @@ if (($Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
 }
 
 $Zpool_Regions = "us"
-$Zpool_Currencies = @("BTC") + @($ZpoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$Zpool_Currencies = @("BTC") + @($ZpoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $ZPool_Coins = [PSCustomObject]@{}
 $ZPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$ZPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -44,8 +44,10 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
 
     $Divisor = 1000000 * [Double]$Zpool_Request.$_.mbtc_mh_factor
     
-    if (-not (Test-Path "Stats\$($Name)_$($ZPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-    else {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    if (-not $InfoOnly) {
+        if (-not (Test-Path "Stats\$($Name)_$($ZPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+    }
 
     $Zpool_Regions | ForEach-Object {
         $Zpool_Region = $_
@@ -60,7 +62,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
                 Protocol      = "stratum+tcp"
                 Host          = "$Zpool_Algorithm.$Zpool_Host"
                 Port          = $Zpool_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $Zpool_Region_Norm
                 SSL           = $false

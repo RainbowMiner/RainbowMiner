@@ -28,7 +28,7 @@ if (($PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Igno
 }
 
 $PhiPhiPool_Regions = "us"
-$PhiPhiPool_Currencies = @("BTC") + @($PhiPhiPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
+$PhiPhiPool_Currencies = @("BTC") + @($PhiPhiPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
 $PhiPhiPool_Coins = [PSCustomObject]@{}
 $PhiPhiPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$PhiPhiPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
@@ -61,7 +61,7 @@ $PhiPhiPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
                 Protocol      = "stratum+tcp"
                 Host          = "$PhiPhiPool_Host"
                 Port          = $PhiPhiPool_Port
-                User          = Get-Variable $_ -ValueOnly
+                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
                 Region        = $PhiPhiPool_Region_Norm
                 SSL           = $false
