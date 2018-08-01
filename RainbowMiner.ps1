@@ -143,7 +143,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
 }
@@ -762,6 +762,7 @@ while ($true) {
         }
         $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
         $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
+        $Config.ExcludeCoin = $Config.ExcludeCoin | ForEach-Object {Get-CoinName $_}
         $Config.Region = $Config.Region | ForEach-Object {Get-Region $_}
         $Config.Currency = $Config.Currency | ForEach-Object {$_.ToUpper()}
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}            
@@ -813,6 +814,7 @@ while ($true) {
             foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
                 $Config.Pools.$p | Add-Member Algorithm @(($Config.Pools.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_} | Foreach-Object {Get-CoinName $_}) -Force
             }
         }
     }    
@@ -1017,22 +1019,24 @@ while ($true) {
             $Pool_Name = $_
             $SelectedPoolNames.Add($Pool_Name) | Out-Null
             [hashtable]$Pool_Config = @{Name = $Pool_Name}
-            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan}
+            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
             foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
             Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
                 $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
+                if ($Pool_Config.CoinName) {$Pool_Config.CoinName = Get-CoinName $_.Content.CoinName}
                 $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
                 }
         } |
         Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
         Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
+        Where-Object {-not $_.CoinName -or ($Pool_Parameters.ExcludeCoin.Count + $Config.ExcludeCoin.Count) -eq 0 -or (@($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName -and @($Config.ExcludeCoin) -inotcontains $_.CoinName)} |
         ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Penalty + $(if (-not $Config.IgnoreFees){$_.PoolFee}))/100
             $_.Price *= $Pool_Factor
             $_.StablePrice *= $Pool_Factor     
             $_
-        }      
+        }  
     }
 
     #Remove stats from pools & miners not longer in use
