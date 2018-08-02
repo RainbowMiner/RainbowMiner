@@ -1045,47 +1045,52 @@ function Get-Algorithm {
 
     if ($Algorithm -match "[,;\s]") {@($Algorithm -split "[,;\s]+") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {
-            $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
-            $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
-        }
-
+        if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-
-        if ($Script:Algorithms.$Algorithm) {$Script:Algorithms.$Algorithm}
-        else {$Algorithm}
+        if ($Script:Algorithms.ContainsKey($Algorithm)) {$Script:Algorithms[$Algorithm]} else {$Algorithm}
     }
 }
 
 function Get-Region {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $false)]
+        [Parameter(
+            Position = 0,   
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
         [String]$Region = ""
     )
-
-    if (-not (Test-Path Variable:Script:Regions)) {
-        $Script:Regions = Get-Content "Data\regions.json" | ConvertFrom-Json
-    }
-    
+    if (-not (Test-Path Variable:Script:Regions)) {Get-Regions -Silent}    
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-
-    if ($Script:Regions.$Region) {$Script:Regions.$Region}
-    else {$Region}
+    if ($Script:Regions.ContainsKey($Region)) {$Script:Regions[$Region]} else {$Region}
 }
 
 function Get-Algorithms {
-    if (-not (Test-Path Variable:Script:Algorithms)) {
-        $Script:Algorithms = Get-Content "Data\algorithms.json" | ConvertFrom-Json
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {
+        [hashtable]$Script:Algorithms = @{}
+        (Get-Content "Data\algorithms.json" | ConvertFrom-Json).PSObject.Properties | %{$Script:Algorithms[$_.Name]=$_.Value}
+        $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
-    $Script:Algorithms.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
+    if (-not $Silent) {$Script:Algorithms.Keys}
 }
 
 function Get-Regions {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
     if (-not (Test-Path Variable:Script:Regions)) {
-        $Script:Regions = Get-Content "Data\regions.json" | ConvertFrom-Json
+        [hashtable]$Script:Regions = @{}
+        (Get-Content "Data\regions.json" | ConvertFrom-Json).PSObject.Properties | %{$Script:Regions[$_.Name]=$_.Value}
     }
-    $Script:Regions.PSObject.Properties | Where-Object MemberType -eq NoteProperty | Select-Object -ExpandProperty Name
+    if (-not $Silent) {$Script:Regions.Keys}
 }
 
 enum MinerStatus {
