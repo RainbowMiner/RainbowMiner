@@ -9,14 +9,14 @@ $Progress = 0
 $RunningMiners_Paths = @()
 
 try {
-    $RunningMiners_Request = Invoke-RestMethod "http://localhost:3999/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $RunningMiners_Request = Invoke-RestMethod "http://localhost:4000/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
     if ( $RunningMiners_Request -isnot [array] ) { $RunningMiners_Paths += $RunningMiners_Request.Path }
     else {
         $RunningMiners_Request | Foreach-Object { $RunningMiners_Paths += $_.Path }        
     }
 }
 catch {
-    Write-Log -Level Warn "MPM API is down!"
+    Write-Log -Level Warn "RainbowMiner API is down!"
 }
 
 $DownloadList | Where-Object { $RunningMiners_Paths -notcontains $_.Path } | ForEach-Object {
