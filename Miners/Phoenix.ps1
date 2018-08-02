@@ -41,19 +41,18 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $MinMemGB = $_.MinMemGB
 
         if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {
-
-            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+            $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f ($_.Type_Vendor_Index + 1)}) -join ''
 
-            $possum    = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "-proto 4 -stales 0" } else { "-proto 1" }
-            $proto     = if ( $Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp" <#temp fix#> ) { "stratum+tcp://" } else { "" }
+            $Miner_Protocol_Params = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"-proto 4 -stales 0"} else {"-proto 1"}
+            $Miner_Protocol        = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"stratum+tcp://"} else { "" }
 
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -coin auto -gpus $($DeviceIDsAll) -pool $($proto)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($possum) $($Miner_Deviceparams) $($_.Params)"
+                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -coin auto -gpus $($DeviceIDsAll) -pool $($Miner_Protocol)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port
