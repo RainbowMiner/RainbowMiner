@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.6-trex/t-rex-0.5.6-win-cuda9.1.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.7-trex/t-rex-0.5.7-win-cuda9.1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 
