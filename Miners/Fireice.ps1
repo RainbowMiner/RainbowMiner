@@ -13,7 +13,7 @@ $Port = "308{0:d2}"
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2"; Params = ""} # CryptoNightBittube2
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2"; Params = ""} # CryptoNightBittube2
     [PSCustomObject]@{MainAlgorithm = "cryptonight_haven"; Params = ""} # CryptoNightHaven
     [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy"; Params = ""} # CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite"; Params = ""} # CryptoNightLite
@@ -38,9 +38,9 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
 #    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index
 
 @($Devices.FullComboModels.PSObject.Properties.Name) | Foreach-Object {
-    $Miner_Vendor = $_   
+    $Miner_Vendor = $_  
     @($Devices.$Miner_Vendor) | Where-Object {$_.Model -eq $Devices.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+        $Miner_Device = $Devices.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)        
         $Miner_Model = $_.Model
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -51,9 +51,9 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
             Default {$Miner_Deviceparams = "--noUAC --noAMD --noNVIDIA"}
         }
 
-        $Commands | Where-Object {Get-Member -inputobject $Pools -name (Get-Algorithm $_.MainAlgorithm) -Membertype Properties} | ForEach-Object {
+        $Commands | ForEach-Object {
 
-            $Algorithm_Norm = Get-Algorithm $_
+            $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 $Miner_ConfigFileName = "$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$($Miner_Port).txt"
