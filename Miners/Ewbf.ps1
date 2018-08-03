@@ -16,13 +16,14 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash96";  MinMemGB = 2; Params = "--algo 96_5"}  #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash144"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash192"; MinMemGB = 3; Params = "--algo 192_7"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash210"; MinMemGB = 3; Params = "--algo aion"} #Equihash 210,9 (beta)
+    [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2.5; Params = "--algo 96_5"}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 2.5; Params = "--algo 192_7"} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9"} #Equihash 210,9 (beta)
 )
 
 $Coins = [PSCustomObject]@{
+    Aion        = "--pers AION0PoW"
     BitcoinGold = "--pers BgoldPoW"
     BitcoinZ    = "--pers BitcoinZ"
     BTG         = "--pers BgoldPow"
@@ -48,7 +49,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-        $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ' '
+        #ZergPool introduces auto switching for Equihash144: https://bitcointalk.org/index.php?topic=2759935.msg43324268#msg43324268
+        if ([datetime]::Today -gt '2018-08-06' -and $Algorithm_Norm -eq "Equihash24x5" -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
+
+        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
