@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-EWBF\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4-ewbf/EWBF.Equihash.miner.v0.4.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5-ewbf/EWBF.Equihash.miner.v0.5.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"
 $Port = "311{0:d2}"
 
@@ -19,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash96";  MinMemGB = 2; Params = "--algo 96_5"}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash144"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash192"; MinMemGB = 3; Params = "--algo 192_7"} #Equihash 192,7
-#    [PSCustomObject]@{MainAlgorithm = "Equihash210"; MinMemGB = 3; Params = "--algo aion"} #Equihash 210,9 (beta)
+    [PSCustomObject]@{MainAlgorithm = "Equihash210"; MinMemGB = 3; Params = "--algo aion"} #Equihash 210,9 (beta)
 )
 
 $Coins = [PSCustomObject]@{
