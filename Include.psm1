@@ -1836,11 +1836,11 @@ function Set-PoolsConfigDefault {
                     }
                     $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
                 }
-                if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
-                if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
-                if ($Setup_Content.PSObject.Properties.Keys -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
-                if ($Setup_Content.PSObject.Properties.Keys -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
-                if ($Setup_Content.PSObject.Properties.Keys -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}                                
+                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
+                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
+                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
+                if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
+                if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}                                
                 $Done | Add-Member $_ $Setup_Content
             }
             $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
