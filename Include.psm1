@@ -2297,6 +2297,8 @@ Param(
             $AsyncLoader.Jobs.$Jobkey.Retry = $retry
             $AsyncLoader.Jobs.$Jobkey.RetryWait = $retrywait
         }        
+        $OldEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Stop"
         try {
             $url = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm")
             $retry++
@@ -2305,7 +2307,7 @@ Param(
                     $Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
                 } else {
                     $Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
-                }                
+                }
                 $retry--
                 if ($retry) {
                     if ($Request -and ($Request -isnot [string] -or $Request.trim().Length)) {$retry = 0}
@@ -2318,6 +2320,7 @@ Param(
         catch {
             $AsyncLoader.Jobs.$Jobkey.Error = $_.Exception    
         }
+        $ErrorActionPreference = $OldEAP
         $AsyncLoader.Jobs.$Jobkey.Running = $false
     }
     if (-not $quiet) {
