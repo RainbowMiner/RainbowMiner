@@ -53,7 +53,7 @@ function Get-Balance {
             [hashtable]$NewRates = @{}
             Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}   
             $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-            $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
+            $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})}
         }
         catch {
             Write-Log -Level Warn "Coinbase is down. "
@@ -69,7 +69,7 @@ function Get-Balance {
             } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru}
 
             $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {                    
-                    $Rates[$_] = $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -BTCprice;if ($Ticker) {[Double]1/$Ticker} else {0}})
+                    $Rates[$_] = $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -PriceOnly;if ($Ticker) {[Double]1/$Ticker} else {0}})
             }
 
             # Add total of totals
@@ -104,7 +104,7 @@ function Get-Balance {
 
 function Get-Ticker {
     [CmdletBinding()]
-    param($Symbol, $Convert, [Switch]$BTCprice)
+    param($Symbol, $Convert, [Switch]$PriceOnly)
 
     if (-not $Convert) {$Convert="BTC"}
 
@@ -146,7 +146,7 @@ function Get-Ticker {
         Write-Log -Level Warn "Coinmarketcap API (ticker) returned nothing. "
         return
     }
-    if ($BTCprice -and $Request.BTC -ne $null) {$Request.BTC.price} else {$Request}
+    if ($PriceOnly -and $Request.$Convert -ne $null) {$Request.$Convert.price} else {$Request}
 }
 
 Function Write-Log {

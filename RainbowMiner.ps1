@@ -985,7 +985,7 @@ while ($true) {
         [hashtable]$NewRates = @{}
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -BTCprice;if($Ticker){[Double]1/$Ticker}else{0})}
+        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})}
     }
     catch {
         Write-Log -Level Warn "Coinbase is down. "
@@ -1032,7 +1032,7 @@ while ($true) {
         } |
         Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
         Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
-        Where-Object {-not $_.CoinName -or ($Pool_Parameters.ExcludeCoin.Count + $Config.ExcludeCoin.Count) -eq 0 -or (@($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName -and @($Config.ExcludeCoin) -inotcontains $_.CoinName)} |
+        Where-Object {-not $_.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName} |
         ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Penalty + $(if (-not $Config.IgnoreFees){$_.PoolFee}))/100
             $_.Price *= $Pool_Factor
@@ -1058,14 +1058,15 @@ while ($true) {
     if ($AllPoolsAdd.Count) {$AllPools.Add($AllPoolsAdd) | Out-Null}
     $AllPoolsAdd.Clear()
 
-    #Now remove all deselected pool/algorithm from AllPools
+    #Now remove all deselected pool/algorithm/coin from AllPools
     [System.Collections.ArrayList]$AllPoolsRemove = @()
     $i=0
     foreach ($Pool in $AllPools) {    
         if (
             ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
             ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
-            ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count)
+            ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName)
             ) {$AllPoolsRemove.Add($Pool) | Out-Null}           
         $i++
     }
@@ -1525,7 +1526,7 @@ while ($true) {
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
-    $LimitMiners = if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {100} else {3}
+    $LimitMiners = if ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0) {100} else {3}
 
     #Display mining information
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
