@@ -10,7 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-enemyzx64\z-enemy.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14-enemyzealot/z-enemy.1-14-cuda9.2_x64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
-$Port = "555{0:d2}"
+$Port = "317{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
