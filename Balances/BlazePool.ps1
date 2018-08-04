@@ -14,12 +14,15 @@ if (!$PoolConfig.BTC) {
     return
 }
 
+$OldEAP = $ErrorActionPreference
+$ErrorActionPreference = "Stop"
 try {
     $Request = Invoke-RestMethod "http://api.blazepool.com/wallet/$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
 }
+$ErrorActionPreference = $OldEAP
 
 if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool Balance API ($Name) returned nothing. "

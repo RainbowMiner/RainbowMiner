@@ -21,6 +21,8 @@ $Ravenminer_Regions | ForEach-Object {
     else { $Ravenminer_Host = "ravenminer.com" }
 
     $Success = $true
+    $OldEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Stop"
     try {
         if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
     }
@@ -40,6 +42,7 @@ $Ravenminer_Regions | ForEach-Object {
         }
         catch {$Success=$false}
     }
+    $ErrorActionPreference = $OldEAP
 
     if (-not $Success) {
         Write-Log -Level Warn "Pool Balance API ($Name) for Region $($_) has failed. "

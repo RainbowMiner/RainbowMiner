@@ -12,12 +12,15 @@ if(!$MyConfig.API_Key) {
 }
 
 # Get user balances
+$OldEAP = $ErrorActionPreference
+$ErrorActionPreference = "Stop"
 try {
     $Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($MyConfig.API_Key)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Warning "Pool Balance API ($Name) has failed. "
 }
+$ErrorActionPreference = $OldEAP
 
 if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool Balance API ($Name) returned nothing. "
@@ -25,14 +28,19 @@ if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -Err
 }
 
 # Get exchange rates
+$OldEAP = $ErrorActionPreference
+$ErrorActionPreference = "Stop"
+$Success = $true
 try {
     $ExchangeRates = (Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&$(Get-Date -Format "yyyy-MM-dd_HH-mm")" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop).Return
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
-    return
+    $Success = $false
 }
+$ErrorActionPreference = $OldEAP
 
+if (-not $Success) {return}
 
 # MiningPoolHub does balances a little differently from everyone else, returning the altcoin values directly
 # until they are exchanged. Convert them to pending BTC values

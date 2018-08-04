@@ -14,18 +14,18 @@ if (!$PoolConfig.BTC) {
     return
 }
 
+$OldEAP = $ErrorActionPreference
+$ErrorActionPreference = "Stop"
 try {
-    
     #NH API does not total all of your balances for each algo up, so you have to do it with another call then total them manually.
     $UnpaidRequest = Invoke-RestMethod "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)"  -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-
     $sum = 0
     $UnpaidRequest.result.stats.balance | Foreach { $sum += $_}
-
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
 }
+$ErrorActionPreference = $OldEAP
 
 [PSCustomObject]@{
     "currency" = 'BTC'
