@@ -108,49 +108,45 @@ function Get-Ticker {
 
     if (-not $Convert) {$Convert="BTC"}
 
-    if (-not (Test-Path Variable:Script:CoinmarketCapList)) {
+    if (-not (Test-Path Variable:Script:CoinmarketCapList) -or -not $Script:CoinmarketCapList.Count) {
+        $OldEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Stop"
         try {
-            $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/listings/"
+            $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
         catch {
             Write-Log -Level Warn "Coinmarketcap API (listings) has failed. "
         }
+        $ErrorActionPreference = $OldEAP
 
-        if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+        if ($Request.data -eq $null -or $Request.data.Count -le 100) {
             Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
             return
         }
-        $Script:CoinmarketCapList = $Request
+        [hashtable]$Script:CoinmarketCapList = @{}
+        foreach ($data in $Request.data) {$Script:CoinmarketCapList[$data.symbol] = $data}
     }
 
-    $Symbol_ID = $Script:CoinmarketCapList.PSObject.Properties.Value | Where-Object {$_.symbol -eq $Symbol} | Select -ExpandProperty id
-    if ( -not $Symbol_ID ) {
+    if (-not $Script:CoinmarketCapList.ContainsKey($Symbol)) {
         Write-Log -Level Warn "$($Symbol) not found on Coinmarketcap "
         return
     }
-
+    $Symbol_ID = $Script:CoinmarketCapList[$Symbol].id
 
     try {
         $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)"
     }
     catch {
         Write-Log -Level Warn "Coinmarketcap API (ticker) has failed. "
+        return
     }
 
-    if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+    $Request = $Request.data.quotes
+    if ($Request -eq $null) {
         Write-Log -Level Warn "Coinmarketcap API (ticker) returned nothing. "
         return
     }
-    if (Get-Member -InputObject $Request -Name data -MemberType Properties) {
-        $Request = $Request | Select -ExpandProperty data
-        if (Get-Member -InputObject $Request -Name quotes -MemberType Properties) {
-            $Request = $Request | Select -ExpandProperty quotes
-            if ($BTCprice -and (Get-Member -InputObject $Request -Name BTC -MemberType Properties)) {
-                $Request = $Request | Select -ExpandProperty BTC
-                if (Get-Member -InputObject $Request -Name price -MemberType Properties) {$Request | Select -ExpandProperty price}
-            } else {$Request}
-        }
-    }
+    if ($BTCprice -and $Request.BTC -ne $null) {$Request.BTC.price} else {$Request}
 }
 
 Function Write-Log {
@@ -1822,6 +1818,7 @@ function Set-PoolsConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             Get-ChildItem ".\Pools\*.ps1" | Select-Object -ExpandProperty BaseName | Foreach-Object {        
