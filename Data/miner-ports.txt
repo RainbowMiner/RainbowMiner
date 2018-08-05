@@ -62,5 +62,6 @@
 512	CpuminerTpruvotCorei7
 520	ClaymoreCpu
 521	XmrigCpu
+530	CpuminerYespower
 
 4068    CcminerSpModTribus
