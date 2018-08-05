@@ -848,23 +848,23 @@ while ($true) {
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
     if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {$LastDonated = $Timer;Write-Log "Donation run finished. "}    
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
-        $DonationPools = @()        
-        if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx"}},"Pools":["nicehash","blazepool","ravenminer"],"Algorithm":["bitcore","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","ethash","hmq1725","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","skein","skunk","timetravel","tribus","vit","x16r","x16s","x17","xevan","yescrypt","yescryptr16"]}' | ConvertFrom-Json}
+        if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","PGN":"PAH9NZow4ut9ewGCdv548V832EMU5PWKJL","Worker":"mpx","User":"rbm"}},"Pools":["Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["allium","balloon","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","equihash21x9","equihash24x5","equihash24x7","ethash","hmq1725","hodl","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","phi2","poly","skein","skunk","timetravel","tribus","x16r","x16s","x17","xevan","yescrypt","yescryptr16","yespower"]}' | ConvertFrom-Json}                                                                                                                                                                                                                                                                                                                                                                     
         $AvailPools | ForEach-Object {
             $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
-            $DonationPools += $_
             $Config.Pools | Add-Member $_ $DonationData1 -Force
             $DonateNow = $true
         }
         if ($DonateNow) {
             $Updatetracker["Config"]["ConfigFile"] = 0
-            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($DonationPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+            $DonationAlgorithmAvail = $AllPools.Algorithm | Foreach-Object {$_ -split '-' | Select-Object -First 1} | Select-Object -Unique
+            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
             $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
+            if ($DonationAlgorithmAvail -inotcontains "x16r") {$Config.Algorithm = $Config.Algorithm | Where-Object {$_ -ne "x16r"}}
             if (-not $DonationPoolsAvail.Count) {            
                 $Config | Add-Member ExcludePoolName @() -Force
             } else {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
-                $Config | Add-Member ExcludePoolName @(Compare-Object @($DonationPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
+                $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
             Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
         }
