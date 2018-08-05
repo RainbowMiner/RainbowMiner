@@ -95,6 +95,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API = "Ccminer"
                 Port = $Miner_Port
                 URI = $Uri
+                FaultTolerance = 0.5 #$_.FaultTolerance
+                ExtendInterval = $_.ExtendInterval
             }
         }
     }
