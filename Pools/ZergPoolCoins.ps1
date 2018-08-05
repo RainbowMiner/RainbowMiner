@@ -15,8 +15,8 @@ $ZergPool_Request = [PSCustomObject]@{}
 $ZergPoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status"
-    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies"
+    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status" -retry 3 -retrywait 500
+    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -retry 3 -retrywait 500
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

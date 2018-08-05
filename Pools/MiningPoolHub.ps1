@@ -14,7 +14,7 @@ $MiningPoolHub_Request = [PSCustomObject]@{}
 $MiningPoolHubCoins_Request = [PSCustomObject]@{}
 
 try {
-    $MiningPoolHub_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&{timestamp}"
+    $MiningPoolHub_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&{timestamp}" -retry 3 -retrywait 500
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
