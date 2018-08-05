@@ -56,7 +56,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-                $Miner_ConfigFileName = "$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$($Miner_Port).txt"
+                $Miner_ConfigFileName = "$($Pools.$Algorithm_Norm.Name)_$($Algorithm_Norm)_$($Pools.$Algorithm_Norm.User)_$(if ($Pools.$Algorithm_Norm.SSL){"ssl_"})$($Miner_Port).txt"
 
                 ([PSCustomObject]@{
                         pool_list       = @([PSCustomObject]@{

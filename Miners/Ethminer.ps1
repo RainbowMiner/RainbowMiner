@@ -24,7 +24,6 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in syste
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
 
@@ -41,6 +40,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {
             $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
+            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
             $DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f ($_.Type_Vendor_Index)}) -join ' '
 
             $Miner_Protocol = $Pools.$Algorithm_Norm.Protocol
