@@ -15,7 +15,6 @@ $MiningPoolHubCoins_Request = [PSCustomObject]@{}
 
 try {
     $MiningPoolHub_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getautoswitchingandprofitsstatistics&{timestamp}"
-    $MiningPoolHubCoins_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -25,21 +24,6 @@ catch {
 if (($MiningPoolHub_Request.return | Measure-Object).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
-}
-
-#temp fix: use additional mining currencies
-$MiningPoolHubCoins_Request.return | Where-Object {$_.pool_hash -gt 0 -and @("equihash-btg") -contains $_.algo} | ForEach-Object {
-    $MiningPoolHubCoins_Hosts = $_.host_list
-    #if ($_.algo -eq "equihash-btg") { #temp fix for wrong host url in API
-    #    $MiningPoolHubCoins_Hosts = $_.host_list -replace ".hub.miningpoolhub", ".equihash-hub.miningpoolhub"
-    #}
-    $MiningPoolHub_Request.return += [PSCustomObject]@{
-        all_host_list = $MiningPoolHubCoins_Hosts
-        algo_switch_port = $_.port
-        algo = $_.algo
-        current_mining_coin = $_.coin_name
-        profit = $_.profit
-    }
 }
 
 $MiningPoolHub_Regions = "europe", "us-east", "asia"
