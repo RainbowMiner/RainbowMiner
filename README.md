@@ -7,7 +7,7 @@
 ## INTRODUCTION
 
 GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU).
-Features: easy setup wizard with adhoc working default (no editing of files needed), GUI-webinterface, selection of devices to be used.
+Features: easy setup wizard with adhoc working default (no editing of files needed), GUI-webinterface, selection of devices to be used, very low CPU usage.
 
 
 ![alt text](https://raw.githubusercontent.com/RainbowMiner/miner-binaries/master/rainbowminerhome.png "RainbowMiner Web GUI")
@@ -25,6 +25,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Bind/exclude devices to/from specific algorithm and miners**
 - **Define pool's algorithms and coins**
 - **Switch MSI Afterburner profiles per miner**
+- **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 
