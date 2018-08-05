@@ -1454,7 +1454,7 @@ function Get-DeviceModelName {
         [Parameter(Mandatory = $False)]
         [Switch]$Short
     )
-    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Foreach-Object {if ($Short){($_ -replace "geforce|intel|(r)","").Trim()}else {$_}}
+    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Foreach-Object {if ($Short){($_ -replace "geforce|intel|\(r\)","").Trim()}else {$_}}
 }
 
 function Get-GPUIDs {
