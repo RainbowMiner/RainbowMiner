@@ -2284,7 +2284,15 @@ Param(
 )
     $Jobkey = Get-MD5Hash $url
 
-    if (-not $AsyncLoader.Jobs.$Jobkey -or $force) {
+    if ($force -or
+        -not $AsyncLoader.Jobs.$Jobkey -or (
+            -not $AsyncLoader.Jobs.$Jobkey.Running -and (
+                $AsyncLoader.Jobs.$Jobkey.CycleTime -ne $cycletime -or
+                $AsyncLoader.Jobs.$Jobkey.Retry -ne $retry -or
+                $AsyncLoader.Jobs.$Jobkey.RetryWait -ne $retrywait
+            )
+        )
+    ) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait}
         } else {
@@ -2294,30 +2302,35 @@ Param(
             $AsyncLoader.Jobs.$Jobkey.Retry = $retry
             $AsyncLoader.Jobs.$Jobkey.RetryWait = $retrywait
         }        
+                
+        $retry++
+
         $OldEAP = $ErrorActionPreference
         $ErrorActionPreference = "Stop"
-        try {
-            $url = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm")
-            $retry++
-            do {
+        do {
+            $Request = $RequestError = $null
+            $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+            try {    
                 if ($method -eq "REST") {
-                    $Request = Invoke-RestMethod $url -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
                 } else {
-                    $Request = Invoke-WebRequest -UseBasicParsing $url -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+                    $Request = Invoke-WebRequest -UseBasicParsing $RequestUrl -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
                 }
-                $retry--
-                if ($retry) {
-                    if ($Request -and ($Request -isnot [string] -or $Request.trim().Length)) {$retry = 0}
-                    else {Sleep -Milliseconds $retrywait}
-                }
-            } until ($retry -le 0)
-            $AsyncLoader.Jobs.$Jobkey.Request = $Request
-            $AsyncLoader.Jobs.$Jobkey.Error = $null
-        }
-        catch {
-            $AsyncLoader.Jobs.$Jobkey.Error = $_.Exception    
-        }
+            }
+            catch {
+                $RequestError = $_.Exception    
+            }
+
+            $retry--
+            if ($retry) {
+                if (-not $RequestError -and $Request -and ($Request -isnot [string] -or $Request.trim().Length)) {$retry = 0}
+                else {Sleep -Milliseconds $retrywait}
+            }
+        } until ($retry -le 0)
         $ErrorActionPreference = $OldEAP
+
+        $AsyncLoader.Jobs.$Jobkey.Request = $Request
+        $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
     }
     if (-not $quiet) {
