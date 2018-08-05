@@ -16,12 +16,14 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "aeriumx"; Params = "-N 1"} #AeriumX, new in 1.11
+    [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"} #AeriumX, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
+    [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
-    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-N 1"} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "-N 1"} #Renesis
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
@@ -30,7 +32,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 3"; ExtendInterval = 2; FaultTolerance = 0.5} #X16S
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan, new in 1.09a
-    [PSCustomObject]@{MainAlgorithm = "vit"; Params = "-N 1"} #Vitality, new in 1.09a
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
