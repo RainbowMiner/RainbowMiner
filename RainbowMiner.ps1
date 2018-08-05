@@ -132,7 +132,7 @@ $StartDownloader = $false
 $PauseMiners = $false
 $RestartMiners = $false
 $Readers = [PSCustomObject]@{}
-$ShowTimer = $false
+$ShowTimer = $true
 $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
@@ -1542,7 +1542,7 @@ while ($true) {
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'}, 
             @{Label = "$($Config.Currency | Select-Object -Index 0)/Day"; Expression = {if ($_.Profit) {ConvertTo-LocalCurrency $($_.Profit) $($Rates.$($Config.Currency | Select-Object -Index 0)) -Offset 2} else {"Unknown"}}; Align = "right"},
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
-            @{Label = "Fee"; Expression = {$_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {($_/100).ToString("P0")}else {"-"}}}; Align = 'right'}, 
+            @{Label = "Fee"; Expression = {$_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {'{0:p2}' -f ($_/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}, 
             @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
         ) | Out-Host
     }
@@ -1656,11 +1656,8 @@ while ($true) {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host -NoNewline "Waiting for next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration"
-    if ( $Config.UIstyle -eq "full" ) { Write-Host -NoNewline ", [V]erbose off" } else { Write-Host -NoNewline ", [V]erbose" }
-    if ( $PauseMiners ) { Write-Host -NoNewline ", [P]ause off" } else { Write-Host -NoNewline ", [P]ause" }
-    Write-Host " "
-    if ( $ShowTimer ) { $cursorPosition = $host.UI.RawUI.CursorPosition }
+    Write-Host ("Waiting for next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false
     $TimerBackup = $Timer
@@ -1668,27 +1665,24 @@ while ($true) {
     $WaitTotalSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
     $WaitMaxI = $Strikes*5
     for ($i = $WaitMaxI; -not $keyPressed -and -not $SkipSwitchingPrevention -and -not $StartDownloader -and -not $Stopp -and (($i -ge 0) -or ($Timer -lt $StatEnd)); $i--) {
-
-        if ( $ShowTimer ) {
-            $host.UI.RawUI.CursorPosition = $CursorPosition
-    
-            if ( $WaitTotalSeconds -gt $WaitMaxI ) {
+        if ($ShowTimer) {
+            $host.UI.RawUI.CursorPosition = $CursorPosition    
+            if ($WaitTotalSeconds -gt $WaitMaxI) {
                 $WaitRmgSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
                 if ( $WaitRmgSeconds -gt $WaitTotalSeconds ) {$WaitRmgSeconds = $WaitTotalSeconds}
-                Write-Host -NoNewline "[$("*" * ($WaitTotalSeconds - $WaitRmgSeconds))$("." * $WaitRmgSeconds)]"
+                Write-Host -Verbose -NoNewline "[$("*" * ($WaitTotalSeconds - $WaitRmgSeconds))$("." * $WaitRmgSeconds)]"
             } else {
-                Write-Host -NoNewline "[$("*" * ($WaitMaxI - $i))$("." * $i)]"
+                Write-Host -Verbose -NoNewline "[$("*" * ($WaitMaxI - $i))$("." * $i)]"
             }
-        }
-
-        if ( ($WaitMaxI-$i) % 5 -eq 0 ) {
+        }        
+        if (($WaitMaxI-$i) % 5 -eq 0) {
             #get data from downloader every ten seconds, starting at once
             if ($Downloader) {$Downloader | Receive-Job}
         }
 
         Start-Sleep 2
 
-        if ( ($WaitMaxI-$i+1) % 5 -eq 0 ) {
+        if (($WaitMaxI-$i+1) % 5 -eq 0) {
             #pick up a sample every ten seconds, starting after ten seconds
             $ActiveMiners | ForEach-Object {
                 $Miner = $_
@@ -1719,11 +1713,11 @@ while ($true) {
 
         if ($keyPressedValue) {
             switch ($keyPressedValue) {
-                "K" { 
+                "S" { 
                     $SkipSwitchingPrevention = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
                     Write-Log "User requests to skip switching prevention. "
-                    Write-Host -NoNewline "[K] pressed - skip switching prevention in next run. "
+                    Write-Host -NoNewline "[S] pressed - skip switching prevention in next run. "
                     $keyPressed = $true
                 }
                 "X" {
