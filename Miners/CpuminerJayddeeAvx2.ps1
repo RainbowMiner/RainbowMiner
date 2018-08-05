@@ -20,6 +20,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Garlicoin
     [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptoNightV7XMR
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #HODL
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z, ZCoin
     [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
