@@ -81,7 +81,7 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                         Algorithm     = $_
                         CoinName      = $NiceHash_Coin
                         Price         = $Stat.Live
-                        StablePrice   = $Stat.Week
+                        StablePrice   = $Stat.Day #instead of .Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"
                         Host          = $This_Host
