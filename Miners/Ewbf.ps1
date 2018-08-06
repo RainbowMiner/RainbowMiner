@@ -50,7 +50,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
         #ZergPool introduces auto switching for Equihash144: https://bitcointalk.org/index.php?topic=2759935.msg43324268#msg43324268
-        if ([datetime]::Today -gt '2018-08-06' -and $Algorithm_Norm -eq "Equihash24x5" -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
+        if (@("Equihash24x5","Equihash24x7") -icontains $Algorithm_Norm -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
