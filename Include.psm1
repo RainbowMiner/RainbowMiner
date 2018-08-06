@@ -1130,6 +1130,7 @@ class Miner {
     $ExecName = $null
     $FaultTolerance = 0.1
     $ExtendInterval = 0
+    $Penalty = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)

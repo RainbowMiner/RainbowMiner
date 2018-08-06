@@ -258,7 +258,7 @@ while ($true) {
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
 
                         Write-Host " "
-                        Write-Host "*** RainbowMiner Configuration ***" -ForegroundColor Green
+                        Write-Host "*** RainbowMiner Configuration ***" -BackgroundColor Green -ForegroundColor Black
                         Write-Host " "
 
                         if ($IsInitialSetup) {
@@ -280,7 +280,7 @@ while ($true) {
                         }
                         elseif ($SetupType -eq "G") {                            
                             
-                            Write-Host "*** Global Configuration ***" -ForegroundColor Green
+                            Write-Host "*** Global Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-Host " "
                             Write-Host "Hints:" -ForegroundColor Yellow
                             Write-Host "- your current configuration defines the defaults. Press Return to accept the them." -ForegroundColor Yellow
@@ -587,7 +587,7 @@ while ($true) {
                         }
                         elseif ($SetupType -eq "M") {
 
-                            Write-Host "*** Miner Configuration ***" -ForegroundColor Green
+                            Write-Host "*** Miner Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-Host " "
                             Write-Host "Hints:" -ForegroundColor Yellow
                             Write-Host "- the defaults are your current configuration. Press Return to accept the defaults." -ForegroundColor Yellow
@@ -599,7 +599,7 @@ while ($true) {
                             Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor Yellow
                             Write-Host " "
 
-                            $AvailDeviceName = @()
+                            $AvailDeviceName = @("*")
                             if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
                             if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "NVIDIA"}
                             if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "AMD"}
@@ -612,10 +612,10 @@ while ($true) {
                                     $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $AvailMiners
                                     if ($EditMinerName -eq '') {throw}
                                     if ($Config.MiningMode -eq "Legacy") {
-                                        $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (leave empty to end miner config)" -Characters "A-Z" -Valid $AvailDeviceName
+                                        $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z\*" -Valid $AvailDeviceName
                                         if ($EditDeviceName -eq '') {throw}
                                     } else {
-                                        [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (leave empty to end miner config)" -Characters "A-Z0-9#" -Valid $AvailDeviceName
+                                        [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9#\*" -Valid $AvailDeviceName
                                         ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
                                             if ($EditDeviceName_Array -icontains $EditDevice0) {
                                                 $EditDeviceName_Array = @(Select-Device $SetupDevices "nvidia" | Select-Object -ExpandProperty Model -Unique)
@@ -625,31 +625,34 @@ while ($true) {
                                         [String]$EditDeviceName = @($EditDeviceName_Array | Sort-Object) -join '-'
                                         if ($EditDeviceName -eq '') {throw}
                                     }
-                                    $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (leave empty to end miner config)" -Characters "A-Z0-9" -Valid (Get-Algorithms)
+                                    $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9\*" -Valid (@('*')+@(Get-Algorithms | Sort-Object))
                                     if ($EditAlgorithm -eq '') {throw}
-                                    $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms)
+                                    $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms | Sort-Object)
                         
-                                    $EditMinerName += "-" + $EditDeviceName
-                                    Write-Host "Configuration for $($EditMinerName), calculating $($EditAlgorithm)$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})"
+                                    if ($EditDeviceName -ne '*') {$EditMinerName += "-" + $EditDeviceName}
+                                    Write-Host " "
+                                    Write-Host "Configuration for $($EditMinerName), $(if ($EditAlgorithm -eq '*'){"all algorithms"}else{$EditAlgorithm})$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})" -BackgroundColor Yellow -ForegroundColor Black
 
                                     $EditMinerConfig = [PSCustomObject]@{
                                         MainAlgorithm = $EditAlgorithm
                                         SecondaryAlgorithm = $EditSecondaryAlgorithm
                                         Params = ""
                                         Profile = ""
+                                        ExtendInterval = ""
+                                        FaultTolerance = ""
+                                        Penalty = ""
                                     }
                         
-                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {
-                                        $MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {
-                                            $EditMinerConfig.Params = $_.Params
-                                            $EditMinerConfig.Profile = $_.Profile
-                                        }
-                                    }
+                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
 
                                     $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
                                     $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
+                                    $EditMinerConfig.ExtendInterval = Read-HostInt -Prompt "Extend interval for X times" -Default ([int]$EditMinerConfig.ExtendInterval) -Min 0 -Max 10
+                                    $EditMinerConfig.FaultTolerance = Read-HostDouble -Prompt "Use fault tolerance in %" -Default ([double]$EditMinerConfig.FaultTolerance) -Min 0 -Max 100
+                                    $EditMinerConfig.Penalty = Read-HostDouble -Prompt "Use a penalty in % (enter -1 to not change penalty)" -Default $(if ($EditMinerConfig.Penalty -eq ''){-1}else{$EditMinerConfig.Penalty}) -Min -1 -Max 100
+                                    if ($EditMinerConfig.Penalty -lt 0) {$EditMinerConfig.Penalty=""}
 
-                                    if (Read-HostBool "Really write Params=`"$($EditMinerConfig.Params)`", Profile=`"$($EditMinerConfig.Profile)`" to $($PoolsConfigFile)?") {
+                                    if (Read-HostBool "Really write entered values to $($PoolsConfigFile)?") {
                                         $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
                                         $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
                                     }                        
@@ -661,7 +664,7 @@ while ($true) {
                         }
                         elseif ($SetupType -eq "P") {
 
-                            Write-Host "*** Pool Configuration ***" -ForegroundColor Green
+                            Write-Host "*** Pool Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-Host " "
                             Write-Host "Hints:" -ForegroundColor Yellow
                             Write-Host "- the defaults are your current configuration. Press Return to accept the defaults." -ForegroundColor Yellow
@@ -933,18 +936,17 @@ while ($true) {
     if (Test-Path $MinersConfigFile) {
         if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
             $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
-            (Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties | Foreach-Object { 
-                $CcMiner = $_               
-                $CcMinerName_Array = @($CcMiner.Name -split '-')
-                [String[]]$CcMinerNames = @()
-                @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | Where-Object {$CcMinerName_Array.Count -eq 1 -or $_ -eq $CcMinerName_Array[1]} | Foreach-Object {$CcMinerNames += $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels.$_}
-                if ($CcMinerNames.Count -eq 0) {$CcMinerNames += $CcMiner.Name}
-                $CcMinerNames | Foreach-Object {
-                    $CcMinerName = $_
-                    $CcMiner.Value | Foreach-Object {                   
-                        $Config.Miners | Add-Member -Name (@($CcMinerName,(Get-Algorithm $_.MainAlgorithm)) + @(if($_.SecondaryAlgorithm){Get-Algorithm $_.SecondaryAlgorithm}) -join '-') -Value ([PSCustomObject]@{Params=$_.Params;Profile=$_.Profile}) -MemberType NoteProperty -Force
+            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+            foreach ($CcMiner in @((Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties)) {
+                [String[]]$CcMinerName_Array = @($CcMiner.Name -split '-')
+                if ($CcMinerName_Array.Count -gt 1 -and $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])") {$CcMiner.Name = $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])"}
+                foreach($p in $CcMiner.Value) {
+                    $CcMinerName = $CcMiner.Name
+                    if ($p.MainAlgorithm -ne '*') {
+                        $CcMinerName += "-$(Get-Algorithm $p.MainAlgorithm)"
+                        if ($p.SecondaryAlgorithm) {$CcMinerName += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
                     }
+                    $Config.Miners | Add-Member -Name $CcMinerName -Value $p -MemberType NoteProperty -Force
                 }
             }
         }
@@ -1186,34 +1188,46 @@ while ($true) {
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}        
 
-        $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
-        if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
-            if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner.Arguments -is [string]) {
-                $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
-            }
-            if ($Config.Miners.$Miner_CommonCommands.Profile) {
-                $Miner | Add-Member -Name MSIAprofile -Value $Config.Miners.$Miner_CommonCommands.Profile -MemberType NoteProperty -Force
-            }
-        } elseif ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
-            #combo handling - we know that combos always have equal params, because we preselected them, already
-            $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($Miner.DeviceModel -split '-' | Select-Object -First 1) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
-            if ($Config.Miners -and (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty)) {
-                if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner.Arguments -is [string]) {
-                    $Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Config.Miners.$Miner_CommonCommands.Params) -join ' ') -MemberType NoteProperty -Force
+        if ($Config.Miners) {
+            $Miner_CommonCommands = $Miner_Arguments = ''
+            $Miner_MSIAprofile = 0
+            $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
+            $Miner_CommonCommands_found = $false
+            $Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)+@($Miner.BaseAlgorithm | Select-Object)
+            for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
+                $Miner_CommonCommands = ($Miner_CommonCommands_array | Select-Object -First $i) -join '-'
+                if (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
+                    if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
+                    if ($Config.Miners.$Miner_CommonCommands.Profile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Config.Miners.$Miner_CommonCommands.Profile}
+                    if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
+                    if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
+                    if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
+                    $Miner_CommonCommands_found = $true
                 }
             }
-            [Int[]]$Miner_MSIAprofile = @($Miner.DeviceModel -split '-') | Foreach-Object {
-                $Miner_CommonCommands = @($Miner.BaseName | Select-Object) + @($_ | Select-Object) + @($Miner.BaseAlgorithm | Select-Object) -join '-'
-                if ($Config.Miners.$Miner_CommonCommands.Profile) {$Config.Miners.$Miner_CommonCommands.Profile}
-            } | Select-Object -Unique
-            if (($Miner_MSIAprofile | Measure-Object).Count -eq 1 -and $Miner_MSIAprofile[0]) {
-                $Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile[0]) -MemberType NoteProperty -Force
+            if (-not $Miner_CommonCommands_found -and $Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {
+                #combo handling - we know that combos always have equal params, because we preselected them, already
+                foreach($p in @($Miner.DeviceModel -split '-')) {
+                    $Miner_CommonCommands_array[1] = $p
+                    $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
+                    if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
+                    if ($Config.Miners.$Miner_CommonCommands.Profile -and $Miner_MSIAprofile -ge 0 -and $Config.Miners.$Miner_CommonCommands.Profile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Config.Miners.$Miner_CommonCommands.Profile}else{-1}}
+                    if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
+                    if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
+                    if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance -gt $Miner_FaultTolerance) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
+                }
             }
+            if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force}
+            if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
+            if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
+            if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
+            if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}
         }
 
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
             $Miner_DevFees | Add-Member $_ ([Double]$(if (-not $Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
             $Miner_DevFeeFactor = (1-$Miner_DevFees.$_/100)
+            if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
             $Miner_HashRates | Add-Member $_ ([Double]$Miner.HashRates.$_)
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Pools_Comparison | Add-Member $_ ([PSCustomObject]$Pools.$_)
@@ -1269,13 +1283,13 @@ while ($true) {
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
-        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress} 
+        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress}
         
-        #if ($Miner.MSIAprofile -eq $null) {$Miner | Add-Member MSIAprofile $Config.MSIAprofile -Force}
-        if ($Miner.ExtendInterval -eq $null) {$Miner | Add-Member ExtendInterval 0 -Force}              
+        
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
-        if ($Miner.FaultTolerance -eq $null) {$Miner | Add-Member FaultTolerance 0.1 -Force}               
-
+        if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 0 -Force}
+        if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
+        if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
     }
 
@@ -1365,6 +1379,7 @@ while ($true) {
             $ActiveMiner.DevFee = $Miner.DevFee
             $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
+            $ActiveMiner.Penalty = $Miner.Penalty
         }
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
@@ -1396,6 +1411,7 @@ while ($true) {
                 DevFee               = $Miner.DevFee
                 ExecName             = $Miner.ExecName
                 FaultTolerance       = $Miner.FaultTolerance
+                Penalty              = $Miner.Penalty
             }
         }
     }
