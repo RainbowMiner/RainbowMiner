@@ -336,7 +336,16 @@ Example:
                                     "Params":  "--gpu-threads 1 --worksize 64 --intensity 15",
                                     "Profile":  ""
                                 }
-                            ]                                                   
+                            ],
+        "Trex":  [
+                                {
+                                    "MainAlgorithm":  "\*",
+                                    "SecondaryAlgorithm":  "",
+                                    "Params":  "",
+                                    "Profile":  "",
+                                    "Penalty": "12.5"
+                                }
+                            ]                                                                
     }
 
 .. this adds extra command line parameters "-i 21" and "-m 2 -i 19,29" to
@@ -347,6 +356,8 @@ Example:
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
 - "Profile": desired MSI Afterburner profile
+
+.. this adds a Penalty of 12.5% to all algorithms used by Trex
 
 
 ### Config\devices.config.txt
