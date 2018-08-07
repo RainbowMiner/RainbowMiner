@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-cryptodredge/CryptoDredge_0.8.2_win_x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-cryptodredge/CryptoDredge_0.8.3_win_x64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4129696.0"
 $Port = "313{0:d2}"
 
@@ -23,8 +23,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
-    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""; ExtendInterval = 2} #Tribus
 )
 
