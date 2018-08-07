@@ -15,7 +15,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #Lyra2RE2 (alexis78 is faster)
     [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein

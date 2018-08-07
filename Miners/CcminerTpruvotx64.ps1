@@ -32,8 +32,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
-    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
-    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #keccakc
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #keccakc
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
@@ -41,14 +41,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    [PSCustomObject]@{MainAlgorithm = "phi1612"; Params = " -N 3"} #PHI spmod is faster
-    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
+    #[PSCustomObject]@{MainAlgorithm = "phi1612"; Params = " -N 3"} #PHI spmod is faster
+    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scrypt-jane"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
-    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #SonoA
     [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3

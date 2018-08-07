@@ -15,7 +15,7 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
+#    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

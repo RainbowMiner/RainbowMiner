@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11 v1.2 faster
     #[PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR, HShare v1.2 faster
-    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
     [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2

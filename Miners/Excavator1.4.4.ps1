@@ -23,7 +23,7 @@ $Commands = [PSCustomObject[]]@(
 #    [PSCustomObject]@{Algorithm = "equihash"; Threads = 2; Params = @()} #Equihash
 #    [PSCustomObject]@{Algorithm = "lbry"; Threads = 2; Params = @()} #Lbry
 #    [PSCustomObject]@{Algorithm = "lyra2rev2"; Threads = 2; Params = @()} #Lyra2RE2
-    [PSCustomObject]@{Algorithm = "neoscrypt"; Threads = 2; Params = @()} #NeoScrypt
+#    [PSCustomObject]@{Algorithm = "neoscrypt"; Threads = 2; Params = @()} #NeoScrypt
 #    [PSCustomObject]@{Algorithm = "daggerhashimoto_decred"; Threads = 1; Params = @()} #Dual mining 1 thread
 #    [PSCustomObject]@{Algorithm = "daggerhashimoto_pascal"; Threads = 1; Params = @()} #Dual mining 1 thread
 #    [PSCustomObject]@{Algorithm = "daggerhashimoto_sia"; Threads = 1; Params = @()} #Dual mining 1 thread

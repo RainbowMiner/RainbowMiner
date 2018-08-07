@@ -24,7 +24,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "-N 1"} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus, new in 1.10
