@@ -186,6 +186,42 @@
                     $Data = ConvertTo-Json @($AsyncLoader.Jobs | Select-Object)
                     Break
                 }
+                "/minerstats" {
+                    [hashtable]$JsonUri_Dates = @{}
+                    [hashtable]$Miners_List = @{}
+                    [System.Collections.ArrayList]$Out = @()
+                    $API.Miners | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {                                
+                        
+                        if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
+                            $JsonUri = (Split-Path $_.Path) + "\_uri.json"
+                            $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri).LastWriteTime.ToUniversalTime()} else {$null}
+                        }
+                        [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
+                        [String]$SecondAlgo = ''
+                        if (($_.HashRates.PSObject.Properties.Name | Measure-Object).Count -gt 1) {
+                            $SecondAlgo = $_.HashRates.PSObject.Properties.Name | Select -Index 1
+                        }
+                            
+                        $Miners_Key = "$($_.Name)-$($Algo)"
+                        if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
+                            $Miners_List[$Miners_Key] = $true                            
+                            $Miners_Path = ".\Stats\$($_.Name)_$($Algo)_HashRate.txt"
+
+                            $Miners_NeedsBenchmark = (Test-Path $Miners_Path) -and (Get-ChildItem $Miners_Path).LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
+                            $Out.Add([PSCustomObject]@{
+                                BaseName = $_.BaseName
+                                Name = $_.Name
+                                Algorithm = $Algo
+                                SecondaryAlgorithm = $SecondAlgo                                
+                                DeviceModel = $_.DeviceModel
+                                Benchmarking = -not (Test-Path $Miners_Path)
+                                NeedsBenchmark = $Miners_NeedsBenchmark
+                            }) | Out-Null
+                        }
+                    }
+                    $Data = ConvertTo-Json @($Out)
+                    Break
+                }
                 "/currentprofit" {
                     $Data = [PSCustomObject]@{ProfitBTC=($API.RunningMiners | Measure-Object -Sum -Property Profit).Sum;Rates=$API.Rates} | ConvertTo-Json
                     Break
