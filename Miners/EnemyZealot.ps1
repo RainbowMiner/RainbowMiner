@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.14-enemyzealot/z-enemy.1-14-cuda9.2_x32.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.15a-enemyzealot/z-enemy.1-15a-cuda9.2_x32.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
 $Port = "302{0:d2}"
 
@@ -19,6 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"} #AeriumX, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5} #HEX/XDNA, new in 1.15a
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
