@@ -63,6 +63,10 @@
         "CcminerSpModTribus" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "tribus"; SecondaryAlgorithm = ""; Params = "-i auto"; Profile = ""}
         )
+        "CcminerSupr" = [PSCustomObject[]]@(        
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+        )
         "CcminerTpruvot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 21"; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
