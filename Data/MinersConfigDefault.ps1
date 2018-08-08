@@ -106,19 +106,20 @@
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
         )
         "EnemyZealot" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "aeriumx"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "bitcore"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "phi"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "polytimos"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "skunk"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "timetravel"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "tribus"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "xevan"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
-            [PSCustomObject]@{MainAlgorithm = "vitalium"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "aeriumx"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "bitcore"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "hex"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "phi"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "polytimos"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "skunk"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "timetravel"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "tribus"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "xevan"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "vitalium"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
         )
         "Excavator" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
