@@ -9,6 +9,7 @@ param(
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
 $URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0/ethminer-0.15.0-Windows.zip"
+$ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 
 $Commands = [PSCustomObject[]]@(
@@ -56,6 +57,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API = "Claymore"
                 Port = $Miner_Port
                 URI = $Uri
+                ManualUri = $ManualUri
             }
         }
     }

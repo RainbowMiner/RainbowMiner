@@ -44,6 +44,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API = "Claymore"
                 Port = $Miner_Port
                 URI = $Uri
+                ManualUri = $ManualUri
             }
         }
     }

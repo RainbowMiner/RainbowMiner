@@ -45,6 +45,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 Port       = $Miner_Port
                 URI        = $Uri
                 DevFee     = 1.0
+                ManualUri = $ManualUri
             }
         }
     }

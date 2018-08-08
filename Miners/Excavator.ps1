@@ -90,6 +90,7 @@ $Devices | Select-Object Model -Unique | ForEach-Object {
                     ExtendInterval       = $ExtendInterval
                     PrerequisitePath     = "$env:SystemRoot\System32\msvcr120.dll"
                     PrerequisiteURI      = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
+                    ManualUri            = $ManualUri
                 }
             }
             else {
@@ -116,6 +117,7 @@ $Devices | Select-Object Model -Unique | ForEach-Object {
                         ExtendInterval       = $ExtendInterval
                         PrerequisitePath     = "$env:SystemRoot\System32\msvcr120.dll"
                         PrerequisiteURI      = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
+                        ManualUri            = $ManualUri
                     }
                 }
             }

@@ -46,6 +46,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
                 DevFee = 1.0
+                ManualUri = $ManualUri
             }
         }
     }

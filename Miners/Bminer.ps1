@@ -62,6 +62,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     Port = $Miner_Port
                     URI = $Uri
                     DevFee = $_.DevFee
+                    ManualUri = $ManualUri
                 }
             } else {
                 $Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -82,6 +83,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                         ($MainAlgorithm_Norm) = $_.DevFee
                         ($SecondAlgorithm_Norm) = 0
                     }
+                    ManualUri = $ManualUri
                 }
             }
         }

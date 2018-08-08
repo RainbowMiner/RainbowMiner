@@ -67,6 +67,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DevFee = 0
                 URI = $URI
                 ExtendInterval = 2
+                ManualUri = $ManualUri
             }
         }
     }

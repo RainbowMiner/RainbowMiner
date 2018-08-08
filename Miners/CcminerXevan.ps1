@@ -59,6 +59,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API = "Ccminer"
                 Port = $Miner_Port
                 URI = $Uri
+                ManualUri = $ManualUri
             }
         }
     }

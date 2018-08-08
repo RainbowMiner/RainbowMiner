@@ -101,6 +101,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
                     Port      = $Miner_Port
                     URI       = $Uri
                     DevFee    = 0.0
+                    ManualUri = $ManualUri
                 }
             }
         }
