@@ -248,17 +248,20 @@ function Set-Stat {
             Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
             Day = [Double]$Stat.Day
             Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+            ThreeDay = [Double]$Stat.ThreeDay
+            ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
             Week = [Double]$Stat.Week
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
             Duration = [TimeSpan]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
         }
+        if ($Stat.Day -and -not $Stat.ThreeDay) {$Stat.ThreeDay=($Stat.Day+$Stat.Week)/2;$Stat.ThreeDay_Fluctuation=($Stat.Day_Fluctuation+$Stat.Week_Fluctuation)/2} #backward compatibility
 
         $ToleranceMin = $Value
         $ToleranceMax = $Value
 
         if ($FaultDetection) {
-            if ( $FaultTolerance -eq $null ) { $FaultTolerance = 0.1 }
+            if ( $FaultTolerance -eq $null ) {$FaultTolerance = 0.1}
             $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
             $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
         }
@@ -274,6 +277,7 @@ function Set-Stat {
             $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
             $Span_Hour = [Math]::Min($Duration.TotalHours / [Math]::Min($Stat.Duration.TotalHours, 1), 1)
             $Span_Day = [Math]::Min($Duration.TotalDays / [Math]::Min($Stat.Duration.TotalDays, 1), 1)
+            $Span_ThreeDay = [Math]::Min(($Duration.TotalDays / 3) / [Math]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
             $Span_Week = [Math]::Min(($Duration.TotalDays / 7) / [Math]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
 
             $Stat = [PSCustomObject]@{
@@ -293,6 +297,9 @@ function Set-Stat {
                 Day = ((1 - $Span_Day) * $Stat.Day) + ($Span_Day * $Value)
                 Day_Fluctuation = ((1 - $Span_Day) * $Stat.Day_Fluctuation) + 
                 ($Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue)))
+                ThreeDay = ((1 - $Span_ThreeDay) * $Stat.ThreeDay) + ($Span_ThreeDay * $Value)
+                ThreeDay_Fluctuation = ((1 - $Span_ThreeDay) * $Stat.ThreeDay_Fluctuation) + 
+                ($Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue)))
                 Week = ((1 - $Span_Week) * $Stat.Week) + ($Span_Week * $Value)
                 Week_Fluctuation = ((1 - $Span_Week) * $Stat.Week_Fluctuation) + 
                 ($Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue)))
@@ -316,6 +323,8 @@ function Set-Stat {
             Hour_Fluctuation = 0
             Day = $Value
             Day_Fluctuation = 0
+            ThreeDay = $Value
+            ThreeDay_Fluctuation = 0
             Week = $Value
             Week_Fluctuation = 0
             Duration = $Duration
@@ -337,6 +346,8 @@ function Set-Stat {
             Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
             Day = [Decimal]$Stat.Day
             Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+            ThreeDay = [Decimal]$Stat.ThreeDay
+            ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
             Week = [Decimal]$Stat.Week
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
             Duration = [String]$Stat.Duration
