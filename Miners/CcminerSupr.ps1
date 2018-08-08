@@ -8,15 +8,15 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerSupr\ccminer.exe"
-$Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git5/raven_spmodgit5.7z"
+$Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git6/raven_spmodgit6.7z"
 $Port = "116{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.5} #X16R RavenCoin
-    #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16S PigeonCoin
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 10; FaultTolerance = 0.5} #X16R RavenCoin
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16S PigeonCoin
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -46,6 +46,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 URI = $Uri
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
+                ManualUri = $ManualUri
             }
         }
     }
