@@ -153,6 +153,8 @@ if ($MyInvocation.MyCommand.Parameters -eq $null) {
 #Cleanup the log
 if (Test-Path ".\Logs"){
     Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore
+} else {
+    New-Item ".\Logs" -ItemType "directory" -Force | Out-Null
 }
 
 #Start the log
