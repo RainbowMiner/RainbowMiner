@@ -1433,8 +1433,8 @@ function Get-GPUplatformID {
 function Select-Device {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [PSCustomObject[]]$Devices,
+        [Parameter(Mandatory = $False)]
+        [Array]$Devices = @(),
         [Parameter(Mandatory = $False)]
         [Array]$Type = @(), #CPU/AMD/NVIDIA
         [Parameter(Mandatory = $False)]

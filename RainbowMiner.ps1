@@ -745,7 +745,7 @@ while ($true) {
     if ($Config -isnot [PSCustomObject]) {
         Write-Log -Level Error "$($ConfigFile) is invalid. Cannot continue. "
         Start-Sleep 10
-        Exit
+        Break
     }
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
@@ -929,6 +929,12 @@ while ($true) {
             $API.Devices = $Devices
             $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
         }
+    }
+
+    if (-not $Devices) {
+        Write-Log -Level Warn "No devices available. Please check your configuration. "
+        Start-Sleep $Config.Interval
+        continue
     }
 
     #Check for miner config
@@ -1810,7 +1816,7 @@ while ($true) {
         }
     }
 
-    if ( $Stopp ) {
+    if ($Stopp) {
         break
     } else {
         Write-Log "Starting next run..."
