@@ -36,7 +36,7 @@
 <script type="text/javascript">
     $(function () {
         function refreshTable() {
-            $("table.table").bootstrapTable("refresh", { silent: true });
+            if (!$("table#miners tr.detail-view").length) $("table#miners").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 10000);
         }
         window.setTimeout(refreshTable, 10000);
@@ -61,6 +61,9 @@
             // Format the device(s)
             item.tDevices = item.DeviceModel.toString();
             item.Name = item.Name.split(/\-/)[0];
+            if (item.ManualUri && item.ManualUri.toString() != '') {
+                item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
+            }
         });
         return data;
     }

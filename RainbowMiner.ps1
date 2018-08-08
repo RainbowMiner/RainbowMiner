@@ -1299,6 +1299,7 @@ while ($true) {
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
+        if (-not $Miner.ManualUri) {if ($Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}}
     }
 
     if ($AllMiners.Count -gt 0) {
@@ -1388,6 +1389,7 @@ while ($true) {
             $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
             $ActiveMiner.Penalty = $Miner.Penalty
+            $ActiveMiner.ManualUri = $Miner.ManualUri
         }
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
@@ -1420,6 +1422,7 @@ while ($true) {
                 ExecName             = $Miner.ExecName
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
+                ManualUri            = $Miner.ManualUri
             }
         }
     }
@@ -1504,7 +1507,7 @@ while ($true) {
                 if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Config.MSIAprofile}                
                 else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
                 Start-Process -FilePath "$($Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
-                if ( $MSIAplannedprofile -ne $MSIAcurrentprofile ) {
+                if ($MSIAplannedprofile -ne $MSIAcurrentprofile) {
                     Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
                     $MSIAcurrentprofile = $MSIAplannedprofile
                     Start-Sleep 1

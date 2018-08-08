@@ -60,7 +60,7 @@
                  data-detail-formatter="detailFormatter">
               <thead>
                   <tr>
-                      <th data-field="tName" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+                      <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                       <th data-field="Algorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="DeviceModel" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
@@ -101,7 +101,10 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             // Format the device(s)
-            item.tName = item.Name.replace(/-GPU.+$/,'');
+            item.Name = item.Name.replace(/-GPU.+$/,'');
+            if (item.ManualUri && item.ManualUri.toString() != '') {
+                item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
+            }
             item.tStatus = item.Benchmarking ? 'Benchmarking' : (item.NeedsBenchmark ? 'Needs Benchmark' : 'Ok');
         });
         return data;

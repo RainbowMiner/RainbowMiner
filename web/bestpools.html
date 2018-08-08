@@ -35,7 +35,7 @@
 <script type="text/javascript">
     $(function () {
         function refreshTable() {
-            $("table.table").bootstrapTable("refresh", { silent: true });
+            if (!$("table#pools tr.detail-view").length) $("table#pools").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 10000);
         }
         window.setTimeout(refreshTable, 10000);
