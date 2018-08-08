@@ -20,6 +20,7 @@
 119	CcminerXevan75
 120	CcminerDumax
 121	CcminerRaven
+122	CcminerSupr
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
