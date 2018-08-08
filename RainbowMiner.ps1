@@ -1299,7 +1299,7 @@ while ($true) {
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
-        if (-not $Miner.ManualUri) {if ($Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}}
+        if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
     }
 
     if ($AllMiners.Count -gt 0) {
