@@ -221,8 +221,6 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
 
 #[console]::TreatControlCAsInput = $true
 
-Confirm-Version $Version
-
 while ($true) {
     #Load the config
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
@@ -783,7 +781,7 @@ while ($true) {
     if(!(Test-Path Variable:API)) {
         Import-Module .\API.psm1
         Start-APIServer -RemoteAPI:$Config.RemoteAPI
-        $API.Version = $Version
+        $API.Version = Confirm-Version $Version
     }
     if ($API.AllDevices -eq $null) {$API.AllDevices = @(Get-Device -Refresh | Select-Object)}
 
@@ -1592,7 +1590,7 @@ while ($true) {
     }
 
     #Check for updated RainbowMiner
-    Confirm-Version $Version
+    $API.Version = Confirm-Version $Version
 
     #Display active miners list
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (

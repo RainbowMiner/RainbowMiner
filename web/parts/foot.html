@@ -9,19 +9,49 @@
   });
   
   // set the values in the header
-  $(function() {
-      rainbow();
+  $(function () {
+      var text = $('a.navbar-brand').text();
+      var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
+      var out = [];
+      for (var i = 0; i < text.length; i++) {
+          out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
+      }
+      out.push(' <span id="version"></span>')
+      $('a.navbar-brand').html(out.join(''));
+      $('#updatemsg').hide();
+
       (function p() {
-          $.ajax({url: '/currentprofit', success: function(result) {
-              $("#profit").html("<h6>Current profit: " + formatBTC(result.ProfitBTC) + " BTC/Day</h6>");
-              var xchange = new Array();
-              xchange.push("1 BTC");
-              $.each(result.Rates, function (key, itm) {
-                  if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
-              });
-              $("#exchangerates").html(xchange.join(" = "));
-              setTimeout(p, 10000);
-          }});
+          $.ajax({
+              url: '/currentprofit', success: function (result) {
+                  $("#profit").html("<h6>Current profit: " + formatBTC(result.ProfitBTC) + " BTC/Day</h6>");
+                  var xchange = new Array();
+                  xchange.push("1 BTC");
+                  $.each(result.Rates, function (key, itm) {
+                      if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
+                  });
+                  $("#exchangerates").html(xchange.join(" = "));
+                  setTimeout(p, 10000);
+              }
+          })
+      })();
+
+      (function q() {
+          $.getJSON("/version", function (data) {
+              var version = formatVersion(data.Version)
+              var remoteversion = formatVersion(data.RemoteVersion)
+              $('#version').text('v' + version)
+              if (version < remoteversion) {
+                  $('#updatemsg').html('New Version <a href="'+data.ManualURI+'" title="Show info about release v'+remoteversion+'" target="_blank">v' + remoteversion + '</a> available: <a href="' + data.DownloadURI + '" title="Download now!">Download</a>')
+                  $('#updatemsg').show()
+              } else if (version > remoteersion) {
+                  $('#updatemsg').html('beta version')
+                  $('#updatemsg').show()
+              } else {
+                  $('#updatemsg').html('')
+                  $('#updatemsg').hide()
+              }
+              setTimeout(q, 600000);
+          })
       })();
   });
   

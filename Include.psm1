@@ -16,7 +16,8 @@ function Confirm-Version {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $RBMVersion = Get-Version($RBMVersion)
+    $RBMVersion = $Version = Get-Version($RBMVersion)
+    $Uri = ""
 
     $Name = "RainbowMiner"
     try {
@@ -36,6 +37,12 @@ function Confirm-Version {
     }
     catch {
         Write-Log -Level Warn "Github could not be reached. "
+    }
+    [PSCustomObject]@{
+        Version = $RBMVersion
+        RemoteVersion = $Version
+        DownloadURI = $Uri
+        ManualURI = "https://github.com/RainbowMiner/$Name/releases"
     }
 }
 

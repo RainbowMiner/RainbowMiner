@@ -84,16 +84,8 @@ function formatBytes(bytes) {
     i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
-  
-function rainbow() {
-    $.getJSON("/version", function (data) {
-        var text = $('a.navbar-brand').text();
-        var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
-        var out = [];
-        for (var i = 0; i < text.length; i++) {
-            out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
-        }
-        out.push(' <span id="version">v' + data + '</span>')
-        $('a.navbar-brand').html(out.join(''));
-    });
+
+function formatVersion(version) {
+    return version.Major + '.' + version.Minor + '.' + version.Build + '.' +version.Revision
 }
+  
