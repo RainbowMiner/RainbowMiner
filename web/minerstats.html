@@ -64,12 +64,16 @@
                       <th data-field="Algorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="DeviceModel" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
+                      <th data-field="tButton" data-align="center">Bench</th>
                   </tr>
               </thead>
           </table>
       </div>
   </div>
 </div>
+<style>
+    table#minerstats tbody .svg-inline--fa {margin-right:0}
+</style>
 
 <!-- End of page scripts -->
 <script>
@@ -95,11 +99,27 @@
             });
         });
 
+        $('#minerstats').on("post-body.bs.table", function () {
+            $('#minerstats button[name=benchmark]').click(function () {
+                var params = {
+                    name: $(this).attr('data-name').toString(),
+                    algorithm: $(this).attr('data-algorithm'),
+                    devicemodel: $(this).attr('data-devicemodel')
+                };
+                $('.modal-body').load('scripts/resetonebenchmark.ps1?' + jQuery.param(params), function () {
+                    $('.modal-title').text('Reset miner '+params.name.replace(/-GPU.+$/,'')+params.devicemodel+'-'+params.algorithm);
+                    $('#myModal').modal({ show: true });
+                });
+            });
+        });
+
     });
     function formatMinerstats(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
+            item.tButton = '<button class="btn btn-default" type="button" name="benchmark" title="Start Benchmark" data-name="' + item.Name + '" data-algorithm="' + item.Algorithm + '" data-devicemodel="' + item.DeviceModel + '"><i class="fa fa-sync"></i></button>';
+
             // Format the device(s)
             item.Name = item.Name.replace(/-GPU.+$/,'');
             if (item.ManualUri && item.ManualUri.toString() != '') {
