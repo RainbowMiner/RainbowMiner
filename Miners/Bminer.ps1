@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://www.bminercontent.com/releases/bminer-lite-v9.1.0-9f41d5c-amd64.zip"
+$URI = "https://www.bminercontent.com/releases/bminer-lite-v10.0.0-3f14a52-amd64.zip"
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
 
@@ -16,9 +16,10 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "tensority"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0} #" -nofee" #Bytom
     [PSCustomObject]@{MainAlgorithm = "equihash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0} #" -nofee" #Equihash
     [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 0.65} #Ethash (ethminer is faster and no dev fee)
+    [PSCustomObject]@{MainAlgorithm = "tensority"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0} #" -nofee" #Bytom
+    [PSCustomObject]@{MainAlgorithm = "zhash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0} #" -nofee" #Bytom
     #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; DevFee = 1.3} #Ethash + Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; DevFee = 1.3} #Ethash + Decred
 )
@@ -43,10 +44,11 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
             }
 
-            switch ($MainAlgorithm_Norm) {
-                "Tensority" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'tensority+ssl'}else {'tensority'}}
-                "Equihash" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'}}
-                "Ethash" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'}}
+            switch ($MainAlgorithm) {
+                "equihash" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'stratum+ssl'}else {'stratum'}}
+                "ethash" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'ethash+ssl'}else {'ethstratum'}}
+                "tensority" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'tensority+ssl'}else {'tensority'}}
+                "zhash" {$Stratum = if ($Pools.$MainAlgorithm_Norm.SSL) {'zhash+ssl'}else {'zhash'}}
             }
 
             if ($SecondAlgorithm -eq '') {
