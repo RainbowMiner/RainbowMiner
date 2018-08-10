@@ -22,7 +22,6 @@ class BMiner : Miner {
             return @($Request, $Response)
         }
 
-
         if ($this.Name -like "Bminer7*") {
             # Legacy API for bminer upto version 7.0.0
             $HashRate_Name = [String]$this.Algorithm[0]
@@ -31,14 +30,12 @@ class BMiner : Miner {
         } else {
             # API for bminer starting version 8.0.0
             $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
-                $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_.algorithm))
-                if ( $HashRate_Name ) {
-                    $HashRate_Value = if ($_.speed_info.solution_rate) {[Double]$_.speed_info.solution_rate} else {[Double]$_.speed_info.hash_rate}
-                    if (Get-Member -inputobject $HashRate -name $HashRate_Name) {
-                        $HashRate.$HashRate_Name += [Int64]$HashRate_Value
-                    } else {
-                        $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
-                    }
+                $Algorithm_Norm = Get-Algorithm $_.algorithm
+                $HashRate_Value = if ($_.speed_info.solution_rate) {[Double]$_.speed_info.solution_rate} else {[Double]$_.speed_info.hash_rate}
+                if (Get-Member -inputobject $HashRate -name $Algorithm_Norm) {
+                    $HashRate.$Algorithm_Norm += [Int64]$HashRate_Value
+                } else {
+                    $HashRate | Add-Member @{$Algorithm_Norm = [Int64]$HashRate_Value}
                 }
             }
         }
