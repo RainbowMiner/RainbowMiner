@@ -32,10 +32,9 @@ class BMiner : Miner {
             # API for bminer starting version 8.0.0
             $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
                 $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_.algorithm))
-                if ( $HashRate_Name ) {                    
-                    if ( $_.algorithm -eq "equihash" ) {$HashRate_Value = [Double]$_.speed_info.solution_rate}
-                    else {$HashRate_Value = [Double]$_.speed_info.hash_rate}
-                    if ( Get-Member -inputobject $HashRate -name $HashRate_Name ) {
+                if ( $HashRate_Name ) {
+                    $HashRate_Value = if ($_.speed_info.solution_rate) {[Double]$_.speed_info.solution_rate} else {[Double]$_.speed_info.hash_rate}
+                    if (Get-Member -inputobject $HashRate -name $HashRate_Name) {
                         $HashRate.$HashRate_Name += [Int64]$HashRate_Value
                     } else {
                         $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
