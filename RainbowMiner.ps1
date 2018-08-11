@@ -87,7 +87,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Int]$MSIAprofile = 2, # default MSI Afterburner profile to be set
     [Parameter(Mandatory = $false)]
-    [String]$UIstyle = "full" # ui style: full=show all, lite=show only active miner
+    [String]$UIstyle = "full", # ui style: full=show all, lite=show only active miner
+    [Parameter(Mandatory = $false)]
+    [Switch]$UseTimeSync = $false # if set to $true, the windows time service will be used to synchronize the PC time with world time (needs admin rights)
 )
 
 Clear-Host
@@ -145,7 +147,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
 }
@@ -515,6 +517,9 @@ while ($true) {
                                             $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         25 {
+                                            $Config.UseTimeSync = Read-HostBool -Prompt "Enable automatic time/NTP synchronization (needs admin rights)" -Default $Config.UseTimeSync | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+                                        26 {
                                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         default {
@@ -543,6 +548,7 @@ while ($true) {
                                             $ConfigActual | Add-Member DisableDualMining $(if ($Config.DisableDualMining){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member MSIAprofile $Config.MSIAprofile -Force
                                             $ConfigActual | Add-Member MSIApath $Config.MSIApath -Force
+                                            $ConfigActual | Add-Member UseTimeSync $(if ($Config.UseTimeSync){"1"}else{"0"}) -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -975,7 +981,7 @@ while ($true) {
         }
     }
 
-    Test-TimeSync
+    if ($UseTimeSync) {Test-TimeSync}
     $Timer = (Get-Date).ToUniversalTime()
 
     $StatStart = $StatEnd
@@ -1726,7 +1732,7 @@ while ($true) {
 
         $Timer = (Get-Date).ToUniversalTime()
         if ( $Timer -le $TimerBackup ) {
-            Test-TimeSync
+            if ($UseTimeSync) {Test-TimeSync}
             $Timer = (Get-Date).ToUniversalTime()
         }
         $WaitTimer = $Timer

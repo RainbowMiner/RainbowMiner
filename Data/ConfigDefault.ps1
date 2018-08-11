@@ -5,4 +5,5 @@
     ShowPoolBalances = $true
     ShowMinerWindow = $false
     Watchdog = $true 
+    UseTimeSync = $false
 }
