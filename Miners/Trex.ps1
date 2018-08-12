@@ -23,7 +23,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 10; FaultTolerance = 0.5} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 5; FaultTolerance = 0.5} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
 )
