@@ -8,14 +8,14 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerSupr\ccminer.exe"
-$Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git6/raven_spmodgit6.7z"
+$Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git7/raven_spmodgit7.7z"
 $Port = "116{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 10; FaultTolerance = 0.5} #X16R RavenCoin
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 5; FaultTolerance = 0.5} #X16R RavenCoin
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16S PigeonCoin
 )
 
