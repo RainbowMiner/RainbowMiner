@@ -25,15 +25,13 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in syste
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
 
-    switch($Miner_Vendor) {
+    switch($_.Vendor) {
         "NVIDIA" {$Miner_Deviceparams = "--cuda --cuda-devices"}
         "AMD" {$Miner_Deviceparams = "--opencl --opencl-platform $($Device | Select-Object -First 1 -ExpandProperty PlatformId) --opencl-devices"}
         Default {$Miner_Deviceparams = ""}
     }
-    $Miner_Vendor = (Get-Culture).TextInfo.ToTitleCase($Miner_Vendor.ToLower())
 
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm

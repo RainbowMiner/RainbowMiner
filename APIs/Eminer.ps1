@@ -31,6 +31,7 @@ class Eminer : Miner {
                 Date     = (Get-Date).ToUniversalTime()
                 Raw      = $Response
                 HashRate = $HashRate
+                PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
                 Device   = @()
             }
         }

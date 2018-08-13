@@ -31,7 +31,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
 #$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 #    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
 #    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-#    $Miner_Vendor = Get-DeviceVendor $_
+#    $Miner_Vendor = $_.Vendor
 #    $Miner_Model = $_.Model
 #    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 

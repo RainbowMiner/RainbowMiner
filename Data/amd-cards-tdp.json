@@ -1,0 +1,17 @@
+﻿{
+    "Radeon R9 380": 190,
+    "Radeon R9 380X": 190,
+    "Radeon R9 390": 275,
+    "Radeon R9 390X": 275,
+    "Radeon R9 Fury": 275,
+    "Radeon RX 450": 65,
+    "Radeon RX 460": 75,
+    "Radeon RX 470": 120,
+    "Radeon RX 480": 150,
+    "Radeon RX 550": 50,
+    "Radeon RX 560": 80,
+    "Radeon RX 570": 150,
+    "Radeon RX 580": 185,
+    "Radeon Vega 56": 210,
+    "Radeon Vega 64": 295
+}

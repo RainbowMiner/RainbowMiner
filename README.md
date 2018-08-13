@@ -6,7 +6,7 @@
 
 ## INTRODUCTION
 
-GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU).
+GPU/CPU Mining script with intelligent auto-switching between different miningpools, algorithm, miner programs using all possible combinations of devices (NVIDIA, AMD and CPU), optionally including cost of electricity into profit calculations.
 Features: easy setup wizard with adhoc working default (no editing of files needed), GUI-webinterface, selection of devices to be used, very low CPU usage.
 
 
@@ -18,6 +18,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (AHashPool, BlazePool, BlockMasters, Bsod, HashRefinery, MiningPoolHub, Nicehash, PhiPhiPool, Ravenminer, YiiMP, ZergPool and Zpool)**
+- **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Mining devices freely selectable**
@@ -188,6 +189,10 @@ Config files are found in directory "Config\"
 - ExcludePoolName = list of pool names, you want to exclude from mining
 - ExcludeCoin = list of coins, you want to exclude from mining
 - Currency = currencies, you want to be shown [default=BTC,USD,EUR]
+- PowerPrice = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
+- PowerPriceCurrency = currency of your PowerPrice [default=USD]
+- UsePowerPrice = set to (1), if electricity cost should be substracted from profits [default=0]
+- ExcludeNegativeProfit = set to (1), if miners with negativ profit should be excluded [default=0]
 - Donate = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 - Proxy = set your proxy address here, if you are using one
 - Delay = extra delay in secondes, between switching to avoid blue screen [default=2]
@@ -392,6 +397,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 - Miners: lists all miners vs. all algorithm
 - Active Miners: lists the best possible miners for each algorithm
 - Manage Stats: reset stats of failed miners & reset all benchmarks
+- Restart benchmarks for updated miners
 
 
 ## CREDITS

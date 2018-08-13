@@ -89,12 +89,11 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in syste
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
-    $Miner_Vendor = Get-DeviceVendor $_
     $Miner_Model = $_.Model
     $Fee = 0
     if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
 
-    switch($Miner_Vendor) {
+    switch($_.Vendor) {
         "NVIDIA" {$Arguments_Platform = " -platform 2"}
         "AMD" {$Arguments_Platform = " -platform 1 -y 1"}
         Default {$Arguments_Platform = ""}
