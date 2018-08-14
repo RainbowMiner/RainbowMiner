@@ -192,7 +192,7 @@ Config files are found in directory "Config\"
 - PowerPrice = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
 - PowerPriceCurrency = currency of your PowerPrice [default=USD]
 - UsePowerPrice = set to (1), if electricity cost should be substracted from profits [default=0]
-- ExcludeNegativeProfit = set to (1), if miners with negativ profit should be excluded [default=0]
+- CheckProfitability = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
 - Donate = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 - Proxy = set your proxy address here, if you are using one
 - Delay = extra delay in secondes, between switching to avoid blue screen [default=2]

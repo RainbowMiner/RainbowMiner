@@ -97,7 +97,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$UsePowerPrice = $false, # if set to $true, the price for power will be taken into account in profit calculation
     [Parameter(Mandatory = $false)]
-    [Switch]$ExcludeNegativeProfit = $false # if set to $true, miners with negative profit will be excluded
+    [Switch]$CheckProfitability = $false # if set to $true, miners with negative profit will be excluded
 )
 
 Clear-Host
@@ -155,7 +155,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","ExcludeNegativeProfit")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
 }
@@ -545,7 +545,7 @@ while ($true) {
                                             $Config.UsePowerPrice = Read-HostBool -Prompt "Include cost of electricity into profit calculations" -Default $Config.UsePowerPrice | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         29 {
-                                            $Config.ExcludeNegativeProfit = Read-HostBool -Prompt "Exclude miner/algorithm with negative profit" -Default $Config.ExcludeNegativeProfit | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.CheckProfitability = Read-HostBool -Prompt "Check for profitability and stop mining, if no longer profitable." -Default $Config.CheckProfitability | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         30 {
                                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -580,7 +580,7 @@ while ($true) {
                                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
                                             $ConfigActual | Add-Member UsePowerPrice $(if ($Config.UsePowerPrice){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member ExcludeNegativeProfit $(if ($Config.ExcludeNegativeProfit){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member CheckProfitability $(if ($Config.CheckProfitability){"1"}else{"0"}) -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -1534,8 +1534,8 @@ while ($true) {
 
     $BestMiners_Profitable = $true
     if ($Config.UsePowerPrice -and ($ActiveMiners | Where-Object Profit -gt 0 | Measure-Object -Sum).Sum -eq 0) {
-        Write-Log -Level Warn "No more miners are profitable. $(if ($Config.ExcludeNegativeProfit) {" Waiting for profitability."})"
-        if ($Config.ExcludeNegativeProfit) {$BestMiners_Profitable = $false}
+        Write-Log -Level Warn "No more miners are profitable. $(if ($Config.CheckProfitability) {" Waiting for profitability."})"
+        if ($Config.CheckProfitability) {$BestMiners_Profitable = $false}
     }
 
     if (-not $PauseMiners -and $BestMiners_Profitable) {
