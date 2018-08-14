@@ -102,7 +102,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.0.1"
+$Version = "3.8.0.2"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -157,7 +157,7 @@ $MinersUriHash = $null
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
     $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability")
 } else {
-    $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys
+    $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
 
 #Cleanup the log
@@ -185,14 +185,14 @@ try {
     if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}   
     if (-not (Test-Path $ConfigFile)) {
         $Parameters = @{VersionCompatibility=$Version}
-        $MyCommandParameters | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)} | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
+        $MyCommandParameters | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
         $Parameters | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8
     } else {
         $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
         $ConfigForUpdate_changed = $false
         Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($MyCommandParameters) | Foreach-Object {
             if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
-            #elseif ($_.SideIndicator -eq "<=") {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+            elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
         }
         if ($ConfigForUpdate_changed) {$ConfigForUpdate | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8}
     }
@@ -253,7 +253,7 @@ while ($true) {
             do {
                 $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
-                $MyCommandParameters | Where-Object {$_ -ne "ConfigFile"} | ForEach-Object {
+                $MyCommandParameters | ForEach-Object {
                     $Parameters.Add($_ , (Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue))
                 }
                 $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
