@@ -102,7 +102,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.0.3"
+$Version = "3.8.0.4"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -236,6 +236,8 @@ if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -
 if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
 }
+
+Start-Afterburner
 
 #[console]::TreatControlCAsInput = $true
 
@@ -1343,7 +1345,7 @@ while ($true) {
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
 
-        if ($Config.UsePowerPrice) {
+        if ($Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             $Miner.Profit -= $Miner.Profit_Cost
             $Miner.Profit_Comparison -= $Miner.Profit_Cost
             $Miner.Profit_Bias -= $Miner.Profit_Cost
