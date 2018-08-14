@@ -102,7 +102,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.0.0"
+$Version = "3.8.0.1"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -187,6 +187,14 @@ try {
         $Parameters = @{VersionCompatibility=$Version}
         $MyCommandParameters | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)} | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
         $Parameters | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8
+    } else {
+        $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
+        $ConfigForUpdate_changed = $false
+        Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($MyCommandParameters) | Foreach-Object {
+            if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
+            #elseif ($_.SideIndicator -eq "<=") {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+        }
+        if ($ConfigForUpdate_changed) {$ConfigForUpdate | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8}
     }
     $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
         $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
