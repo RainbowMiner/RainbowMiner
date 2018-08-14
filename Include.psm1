@@ -972,6 +972,102 @@ function Get-DevicePowerDraw {
     (($Script:CachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
+function Start-Afterburner {
+        $Script:abMonitor = $false
+        $Script:abControl = $false
+    return
+
+    try {
+        Add-Type -Path ".\Includes\MSIAfterburner.NET.dll"
+    } catch {
+        Write-Log -Level Warn "Failed to load Afterburner interface library"
+        $Script:abMonitor = $false
+        $Script:abControl = $false
+        return
+    }
+
+    try {
+        $Script:abMonitor = New-Object MSI.Afterburner.HardwareMonitor
+    } catch {
+        Write-Log -Level Warn "Failed to create MSI Afterburner Monitor object. Falling back to standard monitoring."
+        $Script:abMonitor = $false
+    }
+
+    try {
+        $Script:abControl = New-Object MSI.Afterburner.ControlMemory
+    } catch {
+        Write-Log -Level Warn "Failed to create MSI Afterburner Control object. PowerLimits will not be available"
+        $Script:abControl = $false
+    }
+}
+
+function Set-AfterburnerPowerLimit ([int]$PowerLimitPercent, $DeviceGroup) {
+    try {
+        $abMonitor.ReloadAll()
+        $abControl.ReloadAll()
+    } catch {
+        Write-Host $_.Exception.Message -ForegroundColor Yellow
+        throw "Failed to communicate with MSI Afterburner"
+    }
+
+    if ($DeviceGroup.DevicesArray.Length -gt 0) {
+
+        $PowerLimit = $PowerLimitPercent
+
+        $Pattern = @{
+            AMD    = '*Radeon*'
+            NVIDIA = '*GeForce*'
+            Intel  = '*Intel*'
+        }
+
+        $Devices = @($abMonitor.GpuEntries | Where-Object Device -like $Pattern.$($DeviceGroup.Type) | Select-Object -ExpandProperty Index)[$DeviceGroup.DevicesArray]
+
+        foreach ($device in $Devices) {
+            if ($abControl.GpuEntries[$device].PowerLimitCur -ne $PowerLimit) {
+
+                # Stay within HW limitations
+                if ($PowerLimit -gt $abControl.GpuEntries[$device].PowerLimitMax) {$PowerLimit = $abControl.GpuEntries[$device].PowerLimitMax}
+                if ($PowerLimit -lt $abControl.GpuEntries[$device].PowerLimitMin) {$PowerLimit = $abControl.GpuEntries[$device].PowerLimitMin}
+
+                $abControl.GpuEntries[$device].PowerLimitCur = $PowerLimit
+            }
+        }
+        $abControl.CommitChanges()
+    }
+}
+
+function Get-AfterburnerDevices ($Type) {
+    try {
+        $abControl.ReloadAll()
+    } catch {
+        Log-Message $_.Exception.Message -Severity Warn
+        Log-Message "Failed to communicate with MSI Afterburner" -Severity Error
+        Exit
+    }
+
+    if ($Type -in @('AMD', 'NVIDIA', 'INTEL')) {
+        $Pattern = @{
+            AMD    = "*Radeon*"
+            NVIDIA = "*GeForce*"
+            Intel  = "*Intel*"
+        }
+        @($abMonitor.GpuEntries) | Where-Object Device -like $Pattern.$Type | ForEach-Object {
+            $abIndex = $_.Index
+            $abMonitor.Entries | Where-Object {
+                $_.GPU -eq $abIndex -and
+                $_.SrcName -match "(GPU\d+ )?" -and
+                $_.SrcName -notmatch "CPU"
+            } | Format-Table
+            @($abControl.GpuEntries)[$abIndex]
+        }
+    } elseif ($Type -eq 'CPU') {
+        $abMonitor.Entries | Where-Object {
+            $_.GPU -eq [uint32]"0xffffffff" -and
+            $_.SrcName -match "CPU"
+        } | Format-Table
+    }
+}
+
 function Update-DeviceInformation {
     [cmdletbinding()]
     param(
@@ -979,37 +1075,71 @@ function Update-DeviceInformation {
         [String[]]$DeviceName = @()
     )
 
+    if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+    if ($Script:abControl) {$Script:abControl.ReloadAll()}
+
     $Script:CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
-        if ($Vendor -eq 'AMD') {
-            #AMD
+        if ($abMonitor -and $Vendor -eq "AMD") {
             $DeviceId = 0
-            $Command = ".\Includes\OverdriveN.exe"
-            $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed"}
-            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content .\Data\amd-cards-tdp.json | ConvertFrom-Json}
+            $Pattern = @{
+                AMD    = '*Radeon*'
+                NVIDIA = '*GeForce*'
+                Intel  = '*Intel*'
+            }
+            @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
 
-            if ($null -ne $AdlResult) {
-                $AdlResult | ForEach-Object {
+                $Devices | Where-Object Vendor -eq $Vendor -and Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
+                    $_ | Add-Member Data ([PSCustomObject]@{
+                            AdapterId         = [int]$_.Index
+                            Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
+                            UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
+                            Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
+                            ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
+                            FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
+                            Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
+                            PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
+                            PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
+                            PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
+                        }) -Force
+                }
+                $DeviceId++
+            }
+        } else {
 
-                    $AdlResultSplit = $_ -split (",")
-                    $Devices | Where-Object Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
-                        $_ | Add-Member Data ([PSCustomObject]@{
-                                AdapterId         = [int]$AdlResultSplit[0]
-                                FanSpeed          = [int]([int]$AdlResultSplit[1] / [int]$AdlResultSplit[2] * 100)
-                                Clock             = [int]([int]($AdlResultSplit[3] / 100))
-                                ClockMem          = [int]([int]($AdlResultSplit[4] / 100))
-                                Utilization       = [int]$AdlResultSplit[5]
-                                Temperature       = [int]$AdlResultSplit[6] / 1000
-                                PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                PowerDraw         = $AmdCardsTDP.$Device_Name * ((100 + [double]$AdlResultSplit[7]) / 100) * ([double]$AdlResultSplit[5] / 100)                                
-                            }) -Force
+            if ($Vendor -eq 'AMD') {
+                #AMD
+                $DeviceId = 0
+                $Command = ".\Includes\OverdriveN.exe"
+                $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed"}
+                if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content .\Data\amd-cards-tdp.json | ConvertFrom-Json}
+
+                if ($null -ne $AdlResult) {
+                    $AdlResult | ForEach-Object {
+
+                        $AdlResultSplit = $_ -split (",")
+                        $Devices | Where-Object Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
+                            $_ | Add-Member Data ([PSCustomObject]@{
+                                    AdapterId         = [int]$AdlResultSplit[0]
+                                    FanSpeed          = [int]([int]$AdlResultSplit[1] / [int]$AdlResultSplit[2] * 100)
+                                    Clock             = [int]([int]($AdlResultSplit[3] / 100))
+                                    ClockMem          = [int]([int]($AdlResultSplit[4] / 100))
+                                    Utilization       = [int]$AdlResultSplit[5]
+                                    Temperature       = [int]$AdlResultSplit[6] / 1000
+                                    PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
+                                    PowerDraw         = $AmdCardsTDP.$Device_Name * ((100 + [double]$AdlResultSplit[7]) / 100) * ([double]$AdlResultSplit[5] / 100)                                
+                                }) -Force
+                        }
+                        $DeviceId++
                     }
-                    $DeviceId++
                 }
             }
-        } elseif ($Vendor -eq 'NVIDIA') {
+        }
+        
+        if ($Vendor -eq 'NVIDIA') {
             #NVIDIA
             $DeviceId = 0
             $Command = '.\includes\nvidia-smi.exe'
@@ -1054,7 +1184,18 @@ function Update-DeviceInformation {
             }
 
             $Script:GetDeviceCacheCIM | Where-Object {[convert]::ToInt32($_.DeviceId -replace '[^0-9]+',10) -eq $DeviceId} | ForEach-Object {
-                $CpuData = @{}
+
+                if ($Script:abMonitor) {
+                    $CpuData = @{
+                        Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
+                        Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
+                        PowerDraw   = $($Script:abMonitor.Entries | Where-Object SrcName -eq 'CPU power').Data
+                        Temperature = $($Script:abMonitor.Entries | Where-Object SrcName -match "^(CPU\d* )temperature" | Measure-Object -Property Data -Maximum).Maximum
+                    }
+                } else {
+                    $CpuData = @{}
+                }
+                
                 if (-not $CpuData.Utilization) {
                     $CpuData.Utilization = $_.LoadPercentage
                 }
