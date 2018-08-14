@@ -62,23 +62,13 @@
         item.tCores = "N/A"
     }
 
-    if (item.OpenCL || item.CIM) {
-        item.tPowerDraw = Math.round(parseFloat(item.Data.PowerDraw)) + ' W'
-        item.tFanSpeed = item.Data.FanSpeed + ' rpm'
-        item.tClock = item.Data.Clock + ' MHz'
-        item.tClockMem = item.Data.ClockMem + ' MHz'
-        item.tPowerLimitPercent = item.Data.PowerLimitPercent + ' %'
-        item.tTemperature = item.Data.Temperature + ' °C'
-        item.tUtilization = item.Data.Utilization + ' %'
-    } else {
-        item.tPowerDraw = Math.round(parseFloat(item.Data.PowerDraw)) + ' W'
-        item.tFanSpeed = "N/A"
-        item.tClock = item.Data.Clock + ' MHz'
-        item.tClockMem = "N/A"
-        item.tPowerLimitPercent = "N/A"
-        item.tTemperature = item.Data.Temperature + ' °C'
-        item.tUtilization = item.Data.Utilization + ' %'
-    }
+    item.tPowerDraw = typeof(item.Data.PowerDraw) !== "undefined"? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
+    item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' rpm' : "N/A"
+    item.tClock = typeof(item.Data.Clock) !== "undefined"? item.Data.Clock + ' MHz' : "N/A"
+    item.tClockMem = typeof(item.Data.ClockMem) !== "undefined"? item.Data.ClockMem + ' MHz' : "N/A"
+    item.tPowerLimitPercent = typeof(item.Data.PowerLimitPercent) !== "undefined"? item.Data.PowerLimitPercent + ' %' : "N/A"
+    item.tTemperature = typeof(item.Data.Temperature) !== "undefined"? item.Data.Temperature + ' °C' : "N/A"
+    item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
 
   });
   return data;
