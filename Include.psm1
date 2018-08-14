@@ -1162,8 +1162,8 @@ function Update-DeviceInformation {
                             PowerMaxLimit     = if ($SMIresultSplit[10] -like "*Supported*") {$null} else {[int]($SMIresultSplit[10] -replace 'W', '')}
                             PowerDefaultLimit = if ($SMIresultSplit[11] -like "*Supported*") {$null} else {[int]($SMIresultSplit[11] -replace 'W', '')}
                         }
-                        if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimit / 100) * ([double]$Data.Utilization / 100)}
                         if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
+                        if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
                         $_ | Add-Member Data $Data -Force
                     }
                     $DeviceId++
