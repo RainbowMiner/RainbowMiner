@@ -20,18 +20,19 @@
   data-detail-formatter="detailFormatter"
 >
   <thead>
-    <tr>
-      <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
-      <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
-      <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-      <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
-      <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
-      <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>      
-      <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
-      <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th>
-      <th data-field="tSecondaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
-      <th data-field="tSecondaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">2nd Benched</th>
-    </tr>
+      <tr>
+          <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+          <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+          <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+          <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+          <th data-field="tPowerDraw" data-sortable="true">Power</th>
+          <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+          <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+          <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+          <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th>
+          <th data-field="tSecondaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
+          <th data-field="tSecondaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">2nd Benched</th>
+      </tr>
   </thead>
 </table>
 
@@ -133,6 +134,7 @@
           } else {
               item.tPrimaryHashRateLive = item.Speed_Live;
           }
+          item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
       });
       return data;
   }

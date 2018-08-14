@@ -20,15 +20,16 @@
   data-detail-formatter="detailFormatter"
 >
   <thead>
-    <tr>
-      <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
-      <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-      <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
-      <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
-      <th data-field="tPrimarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
-      <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select">2nd Algorithm</th>
-      <th data-field="tSecondarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
-    </tr>
+      <tr>
+          <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+          <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+          <th data-field="tPowerDraw" data-sortable="true">Power</th>
+          <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
+          <th data-field="tPrimarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+          <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select">2nd Algo</th>
+          <th data-field="tSecondarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
+      </tr>
   </thead>
 </table>
 
@@ -64,6 +65,8 @@
             if (item.ManualUri && item.ManualUri.toString() != '') {
                 item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
             }
+
+            item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
         });
         return data;
     }

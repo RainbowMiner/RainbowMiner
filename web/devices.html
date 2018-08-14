@@ -17,15 +17,21 @@
   data-detail-formatter="detailFormatter"
 >
   <thead>
-    <tr>
-      <th data-field="Name" data-sortable="true">Name</th>
-      <th data-field="Vendor" data-sortable="true">Vendor</th>
-      <th data-field="Model" data-sortable="true">Model</th>
-      <th data-field="tMemory" data-sortable="true">Memory</th>
-      <th data-field="tCores" data-sortable="true">Cores/Stream Processors</th>
-      <th data-field="tClockSpeed" data-sortable="true">Clock Speed</th>
-      <th data-field="tDriverVersion">Driver Version</th>
-    </tr>
+      <tr>
+          <th data-field="Name" data-sortable="true">Name</th>
+          <th data-field="Vendor" data-sortable="true">Vendor</th>
+          <th data-field="Model" data-sortable="true">Model</th>
+          <th data-field="tMemory" data-sortable="true">Mem</th>
+          <th data-field="tCores" data-sortable="true">Cores</th>
+          <th data-field="tDriverVersion">Driver</th>
+          <th data-field="tUtilization" data-sortable="true">Load</th>
+          <th data-field="tPowerDraw" data-sortable="true">Power</th>
+          <th data-field="tFanSpeed" data-sortable="true">Fan</th>
+          <th data-field="tTemperature" data-sortable="true">°C</th>
+          <th data-field="tClock" data-sortable="true">Clock</th>
+          <th data-field="tClockMem" data-sortable="true">Memclk</th>
+          <th data-field="tPowerLimitPercent" data-sortable="true">PL</th>
+      </tr>
   </thead>
 </table>
 
@@ -37,33 +43,43 @@
   $.each(data, function(index, item) {
     // Format the device(s)
     if (item.OpenCL) {
-      item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+        item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+        item.tDriverVersion = item.OpenCL.DriverVersion
     } else {
-      item.tMemory = "N/A"
+        item.tMemory = "N/A"
+        item.tDriverVersion = "N/A"
     }
     
     if (item.OpenCL) {
-      item.tClockSpeed = item.OpenCL.MaxClockFrequency
+        item.tClockSpeed = item.OpenCL.MaxClockFrequency
+        item.tCores = item.OpenCL.MaxComputeUnits
     } else if (item.CIM) {
-      item.tClockSpeed = item.CIM.MaxClockSpeed
+        item.tClockSpeed = item.CIM.MaxClockSpeed
+        item.tCores = item.CIM.NumberOfLogicalProcessors
+        item.tPowerDraw = item.Data.PowerDraw
     } else {
-      item.tClockSpeed = "N/A"
+        item.tClockSpeed = "N/A"
+        item.tCores = "N/A"
     }
-    
-    if (item.OpenCL) {
-      item.tDriverVersion = item.OpenCL.DriverVersion
+
+    if (item.OpenCL || item.CIM) {
+        item.tPowerDraw = Math.round(parseFloat(item.Data.PowerDraw)) + ' W'
+        item.tFanSpeed = item.Data.FanSpeed + ' rpm'
+        item.tClock = item.Data.Clock + ' MHz'
+        item.tClockMem = item.Data.ClockMem + ' MHz'
+        item.tPowerLimitPercent = item.Data.PowerLimitPercent + ' %'
+        item.tTemperature = item.Data.Temperature + ' °C'
+        item.tUtilization = item.Data.Utilization + ' %'
     } else {
-      item.tDriverVersion = "N/A"
+        item.tPowerDraw = Math.round(parseFloat(item.Data.PowerDraw)) + ' W'
+        item.tFanSpeed = "N/A"
+        item.tClock = item.Data.Clock + ' MHz'
+        item.tClockMem = "N/A"
+        item.tPowerLimitPercent = "N/A"
+        item.tTemperature = item.Data.Temperature + ' °C'
+        item.tUtilization = item.Data.Utilization + ' %'
     }
-    
-    if (item.OpenCL) {
-      item.tCores = item.OpenCL.MaxComputeUnits
-    } else if (item.CIM) {
-      item.tCores = item.CIM.NumberOfLogicalProcessors
-    } else {
-      item.tCores = "N/A"
-    }
-    
+
   });
   return data;
 }
