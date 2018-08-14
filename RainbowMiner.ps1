@@ -102,7 +102,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.0.2"
+$Version = "3.8.0.3"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -1533,7 +1533,7 @@ while ($true) {
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
 
     $BestMiners_Profitable = $true
-    if ($Config.UsePowerPrice -and ($ActiveMiners | Where-Object Profit -gt 0 | Measure-Object -Sum).Sum -eq 0) {
+    if ($Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0 -and ($ActiveMiners | Where-Object Profit -gt 0 | Measure-Object).Count -eq 0) {
         Write-Log -Level Warn "No more miners are profitable. $(if ($Config.CheckProfitability) {" Waiting for profitability."})"
         if ($Config.CheckProfitability) {$BestMiners_Profitable = $false}
     }
