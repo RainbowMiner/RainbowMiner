@@ -53,10 +53,10 @@ Done!
 
 ## REQUIRED PRE-REQUESITES
 
-**Make sure, that there is no other PowerShell version installed, before you start the installation of the version 6.0.2. If there is any old version, uninstall it and reboot your pc.**
-
-- PowerShell 6 is required: [Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.2/PowerShell-6.0.2-win-x64.msi)
+- Install PowerShell 6, download actual release: [Powershell 6.0.4 for Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.4/PowerShell-6.0.4-win-x64.msi)
+- Check, if Powershell 6 is in your PATH. **RainbowMiner will not run correctly, if the path to powershell is missing.** Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 - Microsoft .NET Framework 4.5.1 or later is required: [Web Installer](https://www.microsoft.com/en-us/download/details.aspx?id=40773)
+- Check, if you are running up-to-date GPU driver: [Nvidia 398.82](https://www.nvidia.com/Download/index.aspx) [AMD Adrenaline 18.5.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 - Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 
 
