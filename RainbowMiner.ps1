@@ -1697,6 +1697,23 @@ while ($true) {
         #Display benchmarking progres
         if ($MinersNeedingBenchmark.Count -gt 0) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left to benchmark."
+            $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
+            if ($MinersNeedingBenchmarkWithEI -gt 0) {
+                Write-Host " "
+                Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
+                Write-Host "RainbowMiner will benchmark the following $($MinersNeedingBenchmarkWithEI) miner$(if ($MinersNeedingBenchmarkWithEI -gt 1){'s'}) with extended intervals at first!" -ForegroundColor Yellow
+                Write-Host "These algorithm need a longer time to reach an accurate average hashrate." -ForegroundColor Yellow
+                Write-Host "After that, benchmarking will be much faster (1-2 minutes per miner)." -ForegroundColor Yellow
+                Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt" -ForegroundColor Yellow
+                $OldForegroundColor = [console]::ForegroundColor
+                [console]::ForegroundColor = "Yellow"
+                $MinersNeedingBenchmark | Select-Object BaseName,BaseAlgorithm,ExtendInterval | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Sort-Object -Property @{Expression = {$_.ExtendInterval}; Descending = $True},@{Expression = {$_.BaseName + $_.BaseAlgorithm -join '-'}; Descending = $False} | Format-Table (
+                    @{Label = "Miner"; Expression = {$_.BaseName}},
+                    @{Label = "Algorithms"; Expression = {$_.BaseAlgorithm -join '-'}},
+                    @{Label = "Aprox. Time"; Expression = {"$($_.ExtendInterval)-$($_.ExtendInterval*2) minutes"}}
+                )
+                [console]::ForegroundColor = $OldForegroundColor
+            }
         }
     }
 
