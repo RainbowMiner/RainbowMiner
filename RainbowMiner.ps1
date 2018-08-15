@@ -795,7 +795,7 @@ while ($true) {
         if ($Config.GPUs -ne $null -and $Config.GPUs) {
             if ($Config.GPUs -is [string]) {$Config.GPUs = [regex]::split($Config.GPUs,"[,;:\s]+")}
             $Config | Add-Member DeviceName @() -Force
-            Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.Type_PlatformId_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Platform_Index)}
+            Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Vendor_Index)}
         }
 
         $Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty"} | Select-Object Name,Value | Foreach-Object {
@@ -1767,14 +1767,27 @@ while ($true) {
     }
 
     #Display exchange rates
+    $CurrentProfitTotal = $($RunningMiners | Measure-Object -Sum -Property Profit).Sum
     [System.Collections.ArrayList]$StatusLine = @()
+    foreach($Miner_Currency in @($Config.Currency | Sort-Object)) {
+            $Miner_Currency_Out = $Miner_Currency
+            $CurrentProfitTotal_Out = $CurrentProfitTotal
+            if ($Miner_Currency -eq "BTC" -and $CurrentProfitTotal -gt 0) {
+                switch ([math]::truncate([math]::log($CurrentProfitTotal, 1000))) {
+                    -1 {$Miner_Currency_Out = "mBTC";$CurrentProfitTotal_Out*=1e3}
+                    -2 {$Miner_Currency_Out = "µBTC";$CurrentProfitTotal_Out*=1e6}
+                    -3 {$Miner_Currency_Out = "sat";$CurrentProfitTotal_Out*=1e8}
+                }
+            }
+            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2) $Miner_Currency_Out/Day") | Out-Null
+    }
     if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") | Out-Null}
-    $StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") | Out-Null
-    $StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") | Out-Null
-    $StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") | Out-Null
-    $StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") | Out-Null
+    #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") | Out-Null
+    #$StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") | Out-Null
+    #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") | Out-Null
+    #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") | Out-Null
 
-    Write-Host " $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
+    Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
 
     #Reduce Memory
