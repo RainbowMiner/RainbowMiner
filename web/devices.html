@@ -18,19 +18,19 @@
 >
   <thead>
       <tr>
-          <th data-field="Name" data-sortable="true">Name</th>
-          <th data-field="Vendor" data-sortable="true">Vendor</th>
-          <th data-field="Model" data-sortable="true">Model</th>
-          <th data-field="tMemory" data-sortable="true">Mem</th>
-          <th data-field="tCores" data-sortable="true">Cores</th>
-          <th data-field="tDriverVersion">Driver</th>
-          <th data-field="tUtilization" data-sortable="true">Load</th>
-          <th data-field="tPowerDraw" data-sortable="true">Power</th>
-          <th data-field="tFanSpeed" data-sortable="true">Fan</th>
-          <th data-field="tTemperature" data-sortable="true">°C</th>
-          <th data-field="tClock" data-sortable="true">Clock</th>
-          <th data-field="tClockMem" data-sortable="true">Memclk</th>
-          <th data-field="tPowerLimitPercent" data-sortable="true">PL</th>
+          <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
+          <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
+          <th data-field="Model" data-sortable="true" data-title-tooltip="Modelname of the device">Model</th>
+          <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB">Mem</th>
+          <th data-field="tCores" data-sortable="true" data-title-tooltip="Number if cores on the device">Cores</th>
+          <th data-field="tDriverVersion" data-title-tooltip="Driver version number">Driver</th>
+          <th data-field="tUtilization" data-sortable="true" data-title-tooltip="Current load in %">Load</th>
+          <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
+          <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
+          <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
+          <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
+          <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
+          <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
       </tr>
   </thead>
 </table>
@@ -63,7 +63,7 @@
     }
 
     item.tPowerDraw = typeof(item.Data.PowerDraw) !== "undefined"? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
-    item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' rpm' : "N/A"
+    item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' %' : "N/A"
     item.tClock = typeof(item.Data.Clock) !== "undefined"? item.Data.Clock + ' MHz' : "N/A"
     item.tClockMem = typeof(item.Data.ClockMem) !== "undefined"? item.Data.ClockMem + ' MHz' : "N/A"
     item.tPowerLimitPercent = typeof(item.Data.PowerLimitPercent) !== "undefined"? item.Data.PowerLimitPercent + ' %' : "N/A"
