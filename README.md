@@ -30,11 +30,19 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Pause mining without exiting the RainbowMiner**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 
+## REQUIRED PRE-REQUESITES
+
+1. Install PowerShell 6: [Download Installer for version 6.0.4](https://github.com/PowerShell/PowerShell/releases/download/v6.0.4/PowerShell-6.0.4-win-x64.msi)
+2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
+3. Update GPU drivers: [Nvidia 398.82](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.5.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+
+Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+
 
 ## INSTALLATION
 
 1. Download and extract to your desktop (find the latest release here https://github.com/RainbowMiner/RainbowMiner/releases)
-2. Check powershell version and pre-requesites (see below, **very important!**)
+2. Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 3. Right-click "Start.bat", choose "Run as administrator": there will start two windows, one contains RainbowMiner and the other will show the output of the running miners.
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
@@ -49,15 +57,6 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 5. Let the downloads and benchmarking finish (it will already mine to your wallets)
 
 Done!
-
-
-## REQUIRED PRE-REQUESITES
-
-- Install PowerShell 6, download actual release: [Powershell 6.0.4 for Windows 64bit](https://github.com/PowerShell/PowerShell/releases/download/v6.0.4/PowerShell-6.0.4-win-x64.msi)
-- Check, if Powershell 6 is in your PATH. **RainbowMiner will not run correctly, if the path to powershell is missing.** Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
-- Microsoft .NET Framework 4.5.1 or later is required: [Web Installer](https://www.microsoft.com/en-us/download/details.aspx?id=40773)
-- Check, if you are running up-to-date GPU driver: [Nvidia 398.82](https://www.nvidia.com/Download/index.aspx) [AMD Adrenaline 18.5.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
-- Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 
 
 ## HOTKEYS
