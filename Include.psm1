@@ -828,13 +828,13 @@ function Get-Device {
     )
 
     if ($Name) {
-        $DeviceList = Get-Content "Data\devices.json" | ConvertFrom-Json
+        if (-not (Test-Path Variable:Script:DataDeviceList)) {$Script:DataDeviceList = Get-Content "Data\devices.json" | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
             $Name_Split += @("*") * (100 - $Name_Split.Count)
 
-            $Name_Device = $DeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Script:DataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
 
             $Name_Device
