@@ -35,7 +35,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
 #    $Miner_Model = $_.Model
 #    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-#    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index
+#    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index
 
 @($Devices.FullComboModels.PSObject.Properties.Name) | Foreach-Object {
     $Miner_Vendor = $_  

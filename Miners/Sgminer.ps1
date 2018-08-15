@@ -46,7 +46,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ','
+    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
     $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
     $Commands | ForEach-Object {

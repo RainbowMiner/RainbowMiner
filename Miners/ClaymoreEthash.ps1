@@ -112,7 +112,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
-            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_PlatformId_Index} ) -join ''
+            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
             if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
 

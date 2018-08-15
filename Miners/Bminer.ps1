@@ -31,7 +31,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
 
-    $DeviceIDsAll = $Miner_Device.Type_PlatformId_Index -join ','
+    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
     $Commands | ForEach-Object {
         $MainAlgorithm = $_.MainAlgorithm
