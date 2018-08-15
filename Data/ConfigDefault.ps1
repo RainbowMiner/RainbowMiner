@@ -6,4 +6,5 @@
     ShowMinerWindow = $false
     Watchdog = $true 
     UseTimeSync = $false
+    MSIAprofile = 0
 }

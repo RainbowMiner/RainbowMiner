@@ -85,7 +85,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$MSIApath = "c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe", # installation path of MSI Afterburner
     [Parameter(Mandatory = $false)]
-    [Int]$MSIAprofile = 2, # default MSI Afterburner profile to be set
+    [Int]$MSIAprofile = 0, # default MSI Afterburner profile to be set
     [Parameter(Mandatory = $false)]
     [String]$UIstyle = "full", # ui style: full=show all, lite=show only active miner
     [Parameter(Mandatory = $false)]
