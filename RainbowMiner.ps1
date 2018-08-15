@@ -1627,11 +1627,23 @@ while ($true) {
 
     if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {& .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL}
 
-    Clear-Host
-
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
+
+    #Give API access to WatchdogTimers information
+    $API.WatchdogTimers = $WatchdogTimers
+
+    #Update API miner information
+    $API.ActiveMiners = $ActiveMiners
+    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
+    $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
+
+    #
+    #Start output to host
+    #
+    Clear-Host
+
     $LimitMiners = if ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0) {100} else {3}
 
     #Display mining information
@@ -1677,6 +1689,17 @@ while ($true) {
         }
     }
 
+    #Extend benchmarking interval to the maximum from running miners
+    $WatchdogResetOld = $WatchdogReset
+    $ExtendInterval = (@(1) + [int[]]@($RunningMiners | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum
+    if ($ExtendInterval -gt 1) {
+        $StatEnd = $StatEnd.AddSeconds($Config.Interval * $ExtendInterval)
+        $StatSpan = New-TimeSpan $StatStart $StatEnd
+        $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
+        $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
+        Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Config.Interval * $ExtendInterval) seconds). "
+    }
+
     #Check for updated RainbowMiner
     $API.Version = Confirm-Version $Version
 
@@ -1693,7 +1716,7 @@ while ($true) {
 
     if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {
         #Display watchdog timers
-        $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogReset) | Format-Table -Wrap (
+        $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogResetOld) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {@($_.MinerName -split '-') | Select-Object -Index 0}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
@@ -1741,54 +1764,39 @@ while ($true) {
     #Display exchange rates
     if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {Write-Host "Exchange rates: 1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')"}
 
-    #Give API access to WatchdogTimers information
-    $API.WatchdogTimers = $WatchdogTimers
-
-    #Update API miner information
-    $API.ActiveMiners = $ActiveMiners
-    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
-
     #Reduce Memory
     Get-Job -State Completed | Remove-Job
     [GC]::Collect()
-
-    #Extend benchmarking interval to the maximum from running miners    
-    $ExtendInterval = (@(1) + [int[]]@($RunningMiners | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum
-    if ($ExtendInterval -gt 1) {
-        $StatEnd = $StatEnd.AddSeconds($Config.Interval * $ExtendInterval)
-        $StatSpan = New-TimeSpan $StatStart $StatEnd
-        $WatchdogInterval = ($WatchdogInterval / $Strikes * ($Strikes - 1)) + $StatSpan.TotalSeconds
-        $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
-        Write-Log "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Config.Interval * $ExtendInterval) seconds). "
-    }
+    $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
+    $WaitTimer = (Get-Date).ToUniversalTime()
+    $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
+
     $Stopp = $false
-    Write-Log "Start waiting before next run. "
+    Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting for next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
     if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false
     $TimerBackup = $Timer
-    $WaitTimer = (Get-Date).ToUniversalTime()
-    $WaitTotalSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
     $WaitMaxI = $Strikes*5
+    $WaitTotalSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
     for ($i = $WaitMaxI; -not $keyPressed -and -not $SkipSwitchingPrevention -and -not $StartDownloader -and -not $Stopp -and (($i -ge 0) -or ($Timer -lt $StatEnd)); $i--) {
         if ($ShowTimer) {
             $host.UI.RawUI.CursorPosition = $CursorPosition    
             if ($WaitTotalSeconds -gt $WaitMaxI) {
                 $WaitRmgSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
-                if ( $WaitRmgSeconds -gt $WaitTotalSeconds ) {$WaitRmgSeconds = $WaitTotalSeconds}
+                if ($WaitRmgSeconds -gt $WaitTotalSeconds) {$WaitRmgSeconds = $WaitTotalSeconds}
                 Write-Host -Verbose -NoNewline "[$("*" * ($WaitTotalSeconds - $WaitRmgSeconds))$("." * $WaitRmgSeconds)]"
             } else {
                 Write-Host -Verbose -NoNewline "[$("*" * ($WaitMaxI - $i))$("." * $i)]"
             }
-        }        
+        }
         if (($WaitMaxI-$i) % 5 -eq 0) {
             #get data from downloader every ten seconds, starting at once
             if ($Downloader) {$Downloader | Receive-Job}
