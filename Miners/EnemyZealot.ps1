@@ -19,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"} #AeriumX, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
-    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5} #HEX/XDNA, new in 1.15a
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 2; FaultTolerance = 0.5} #HEX/XDNA, new in 1.15a
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
@@ -29,8 +29,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus, new in 1.10
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 5; FaultTolerance = 0.5; HashrateDuration = "Day"} #X16R
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 3"; ExtendInterval = 2; FaultTolerance = 0.5} #X16S
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 4; FaultTolerance = 0.5; HashrateDuration = "Day"} #X16R
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 3"; FaultTolerance = 0.5} #X16S
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan, new in 1.09a
 )

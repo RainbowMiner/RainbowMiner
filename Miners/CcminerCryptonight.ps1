@@ -15,9 +15,9 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExtendInterval = 3} #CryptoNightV8
-    [PSCustomObject]@{MainAlgorithm = "monero"; Params = ""; ExtendInterval = 3} #CryptonightV7
-    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""; ExtendInterval = 3} # CryptoNightV3
+    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExtendInterval = 2} #CryptoNightV8
+    [PSCustomObject]@{MainAlgorithm = "monero"; Params = ""; ExtendInterval = 2} #CryptonightV7
+    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""; ExtendInterval = 2} # CryptoNightV3
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
