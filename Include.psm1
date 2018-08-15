@@ -973,14 +973,10 @@ function Get-DevicePowerDraw {
 }
 
 function Start-Afterburner {
-    $Script:abMonitor = $false
-    $Script:abControl = $false
-    return
-
     try {
         Add-Type -Path ".\Includes\MSIAfterburner.NET.dll"
     } catch {
-        Write-Log -Level Warn "Failed to load Afterburner interface library"
+        Write-Log "Failed to load Afterburner interface library"
         $Script:abMonitor = $false
         $Script:abControl = $false
         return
@@ -989,13 +985,13 @@ function Start-Afterburner {
     try {
         $Script:abMonitor = New-Object MSI.Afterburner.HardwareMonitor
     } catch {
-        Write-Log -Level Warn "Failed to create MSI Afterburner Monitor object. Falling back to standard monitoring."
+        Write-Log "Failed to create MSI Afterburner Monitor object. Falling back to standard monitoring."
         $Script:abMonitor = $false
     }
     try {
         $Script:abControl = New-Object MSI.Afterburner.ControlMemory
     } catch {
-        Write-Log -Level Warn "Failed to create MSI Afterburner Control object. PowerLimits will not be available"
+        Write-Log "Failed to create MSI Afterburner Control object. PowerLimits will not be available"
         $Script:abControl = $false
     }
 }
@@ -1072,15 +1068,19 @@ function Update-DeviceInformation {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-
-    if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-    if ($Script:abControl) {$Script:abControl.ReloadAll()}
+    
+    $abReload = $true
 
     $Script:CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
-
+        
         if ($Script:abMonitor -and $Vendor -eq "AMD") {
+            if ($abReload) {
+                if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+                if ($Script:abControl) {$Script:abControl.ReloadAll()}
+                $abReload = $false
+            }
             $DeviceId = 0
             $Pattern = @{
                 AMD    = '*Radeon*'
@@ -1090,7 +1090,7 @@ function Update-DeviceInformation {
             @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
                 $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
 
-                $Devices | Where-Object Vendor -eq $Vendor -and Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
+                $Devices | Where-Object Vendor -eq $Vendor -and Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                     $_ | Add-Member Data ([PSCustomObject]@{
                             AdapterId         = [int]$_.Index
                             Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
@@ -1118,7 +1118,7 @@ function Update-DeviceInformation {
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
                         $AdlResultSplit = $_ -split (",")
-                        $Devices | Where-Object Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
+                        $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                             $_ | Add-Member Data ([PSCustomObject]@{
                                     AdapterId         = [int]$AdlResultSplit[0]
                                     FanSpeed          = [int]([int]$AdlResultSplit[1] / [int]$AdlResultSplit[2] * 100)
@@ -1148,7 +1148,7 @@ function Update-DeviceInformation {
             & $Command $Arguments  | ForEach-Object {
                 $SMIresultSplit = $_ -split (",")
                 if ($SMIresultSplit.count -gt 10) {
-                    $Devices | Where-Object Type_PlatformId_Index -eq $DeviceId | Foreach-Object {
+                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $Data = [PSCustomObject]@{
                             Utilization       = if ($SMIresultSplit[1] -like "*Supported*") {100} else {[int]($SMIresultSplit[1] -replace '%', '')} #If we dont have real Utilization, at least make the watchdog happy
                             UtilizationMem    = if ($SMIresultSplit[2] -like "*Supported*") {$null} else {[int]($SMIresultSplit[2] -replace '%', '')}
