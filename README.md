@@ -41,7 +41,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 ## INSTALLATION
 
-1. Download and extract to your desktop (find the latest release here https://github.com/RainbowMiner/RainbowMiner/releases)
+1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 2. Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 3. Right-click "Start.bat", choose "Run as administrator": there will start two windows, one contains RainbowMiner and the other will show the output of the running miners.
 4. Enter your credentials:
@@ -54,7 +54,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
    - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash-BTG, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
-5. Let the downloads and benchmarking finish (it will already mine to your wallets)
+5. Let the downloads and benchmarking finish (be patient! This might take a while. Anyway: it will already mine to your wallets)
 
 Done!
 
