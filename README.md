@@ -122,19 +122,32 @@ The miner can be setup to mine any coin or currency, that is listed at the respe
 
 ## MSI AFTERBURNER CONFIGURATION
 
-The MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU.
-RainbowMiner includes automatic switching those profiles, if you wish. To enable MSI Afterburner handling, check or set the path to MSIA and set the MSI default profile to a number from 1 to 5 
-I recommend you stick to the following profile setup. The overclocking values in brackets (core clock/memory clock) are those I use on my GTX 1070 and are only for illustration. The precise setting per GPU can be done by editing the miners.config.txt
+### Introduction
 
-- Profile 1: no overclocking (+0/+0)
-- Profile 2: max. core / max. memory oc (+100/+400), recm. as default
-- Profile 3: max. core / half memory oc (+100/+200), recm. for claymore ethash-keccak, neoscrypt
-- Profile 4: max. core / no memory oc (+100/0), recm. for lyra2re2, lyra2z, x16r, x16s
-- Profile 5: max. core / reduced memory oc (+100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
+MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during minining (miners.config.txt, fields "Profile"). RainbowMiner comes with some miner/algorithm presets, already.
+
+### Enable Profile Switching
+
+By default, the profile switching is disabled. To enable MSI Afterburner profile switching:
+- check or set the path to MSIA (config.txt, field "MSIApath")
+- set the profile number, you want to be used as default (config.txt, field "MSIAprofile") 
+
+### Explanation of operation
+
+RainbowMiner's default setup has already preset some Profile fields for the following algorithms (miners.config.txt, fields "Profile"):
+- ClaymoreEthash-Keccak, NeoScrypt => Profile 3
+- Lyra2Re2, Lyra2z, X16r, X16s => Profile 4
+- ClaymoreEthash-Blake2s, ClaymoreEthash-Pascal => Profile 5
+
+Remember: __no overclocking values will be changed by RainbowMiner!__ It will switch your preset profiles, only.
+
+I recommend you set the following profile setup in MSI Afterburner, so that you can use the default setup of RainbowMiner. The overclocking values in brackets (core clock/memory clock) are those I use for my GTX 1070 and are only for illustration.
+
+- Profile 3: max. core / half memory oc (e.g. +100/+200), recm. for claymore ethash-keccak, neoscrypt
+- Profile 4: max. core / no memory oc (e.g. +100/0), recm. for lyra2re2, lyra2z, x16r, x16s
+- Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
-The profile will only be set to a value other than the defined default, if all GPU selected by RainbowMiner have the same profile configured (in legacy mode, always the case)
-
 
 ## ALGORITHMS
 
