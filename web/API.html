@@ -1,35 +1,35 @@
 ﻿<html>
-  <body>
+<body>
     <h1>RainbowMiner API</h1>
-    
+
     API data is available at http://localhost:4000/&lt;resource&gt;
 
     <h2>Resources</h2>
-    
+
     <h3>Version</h3>
     <a href="http://localhost:4000/version">/version</a>
     <p>Returns the version number of RainbowMiner.</p>
-    
+
     <h3>Miners</h3>
     <a href="http://localhost:4000/miners">/miners</a>
     <p>Dump of the $Miners variable</p>
-    
+
     <h3>Running Miners</h3>
     <a href="http://localhost:4000/runningminers">/runningminers</a>
     <p>Shows data about the miners that are currently running.</p>
-    
+
     <h3>Active Miners</h3>
     <a href="http://localhost:4000/activeminers">/activeminers</a>
     <p>Shows data about all miners that are enabled.</p>
 
     <h3>Fastest Miners</h3>
     <a href="http://localhost:4000/fastestminers">/fastestminers</a>
-    <p>Shows data about the fastest miners (requires 'UseFastestMinerPerAlgoOnly = $true', otherwise will be identical to 'Miners'; see readme).</p>    
-    
+    <p>Shows data about the fastest miners (requires 'UseFastestMinerPerAlgoOnly = $true', otherwise will be identical to 'Miners'; see readme).</p>
+
     <h3>Failed Miners</h3>
     <a href="http://localhost:4000/failedminers">/failedminers</a>
     <p>Shows data about all miners that are failed.</p>
-    
+
     <h3>Pools</h3>
     <a href="http://localhost:4000/pools">/pools</a>
     <p>Dump of the $Pools variable</p>
@@ -37,11 +37,11 @@
     <h3>Pool Balances</h3>
     <a href="http://localhost:4000/balances">/balances</a>
     <p>Shows the balances at the pools</p>
-    
+
     <h3>NewPools</h3>
     <a href="http://localhost:4000/newpools">/newpools</a>
     <p>Dump of the $NewPools variable</p>
-    
+
     <h3>AllPools</h3>
     <a href="http://localhost:4000/allpools">/allpools</a>
     <p>Dump of the $AllPools variable</p>
@@ -49,15 +49,15 @@
     <h3>Algorithms</h3>
     <a href="http://localhost:4000/algorithms">/algorithms</a>
     <p>Shows all algorithms that can be mined with at least one pool</p>
-    
+
     <h3>Config</h3>
     <a href="http://localhost:4000/config">/config</a>
     <p>Shows the full configuration for the running script, after all variable substitution and pool entries are added</p>
-    
+
     <h3>Debug</h3>
     <a href="http://localhost:4000/debug">/debug</a>
     <p>Shows all data added to the $API hashtable, used only for debugging.</p>
-    
+
     <h3>Selected Devices</h3>
     <a href="http://localhost:4000/devices">/devices</a>
     <p>Dump of the $Devices variable, used only for debugging. Shows information about selected mining devices, used only for debugging.</p>
@@ -65,18 +65,26 @@
     <h3>All Devices</h3>
     <a href="http://localhost:4000/alldevices">/devices</a>
     <p>Dump of the $AllDevices variable, used only for debugging. Shows information about all found mining devices, used only for debugging.</p>
-    
+
     <h3>Stats</h3>
     <a href="http://localhost:4000/stats">/stats</a>
-    <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal MPM calculations.</p>
+    <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal RainbowMiner calculations.</p>
+
+    <h3>Computer Stats</h3>
+    <a href="http://localhost:4000/computerstats">/computerstats</a>
+    <p>Shows current computer stats</p>
+
+    <h3>Miner Benchmark Stats</h3>
+    <a href="http://localhost:4000/minerstats">/minerstats</a>
+    <p>Shows the benchmark status of all miners</p>
 
     <h3>WatchdogTimers</h3>
     <a href="http://localhost:4000/watchdogtimers">/watchdogtimers</a>
-    <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal MPM calculations.</p>
+    <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal RainbowMiner calculations.</p>
 
     <h3>Stop</h3>
     <a href="http://localhost:4000/stop">/stop</a>
     <p>Tells the script to stop running.</p>
-    
-  </body>
+
+</body>
 </html>

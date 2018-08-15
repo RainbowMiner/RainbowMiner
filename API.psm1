@@ -205,21 +205,26 @@
                         $Miners_Key = "$($_.Name)-$($Algo)"
                         if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
                             $Miners_List[$Miners_Key] = $true                            
-                            $Miners_Path = ".\Stats\$($_.Name)_$($Algo)_HashRate.txt"
-
-                            $Miners_NeedsBenchmark = (Test-Path $Miners_Path) -and (Get-ChildItem $Miners_Path).LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
+                            $Miner_Path = ".\Stats\$($_.Name)_$($Algo)_HashRate.txt"
+                            $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains $null
+                            $Miner_NeedsBenchmark = (Test-Path $Miner_Path) -and (Get-ChildItem $Miner_Path).LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
                             $Out.Add([PSCustomObject]@{
                                 BaseName = $_.BaseName
                                 Name = $_.Name
                                 Algorithm = $Algo
                                 SecondaryAlgorithm = $SecondAlgo                                
                                 DeviceModel = $_.DeviceModel
-                                Benchmarking = -not (Test-Path $Miners_Path)
-                                NeedsBenchmark = $Miners_NeedsBenchmark
+                                Benchmarking = -not (Test-Path $Miner_Path)
+                                NeedsBenchmark = $Miner_NeedsBenchmark
+                                BenchmarkFailed = $Miner_Failed
                             }) | Out-Null
                         }
                     }
                     $Data = ConvertTo-Json @($Out)
+                    Break
+                }
+                "/computerstats" {
+                    $Data = $API.ComputerStats | ConvertTo-Json
                     Break
                 }
                 "/currentprofit" {

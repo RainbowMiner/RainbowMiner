@@ -2397,6 +2397,17 @@ function Test-Port{
     } 
 }
 
+function Get-ComputerStats {
+    [PSCustomObject]@{
+        CpuLoad = Get-CimInstance win32_processor | Measure-Object -property LoadPercentage -Average | ForEach-Object {$_.Average}
+        MemoryUsage = Get-CimInstance win32_operatingsystem | ForEach-Object {"{0:N2}" -f ((($_.TotalVisibleMemorySize - $_.FreePhysicalMemory) * 100) / $_.TotalVisibleMemorySize)}
+        VirtualMemoryUsage = Get-CimInstance win32_operatingsystem | ForEach-Object {"{0:N2}" -f ((($_.TotalVirtualMemorySize - $_.FreeVirtualMemory) * 100) / $_.TotalVirtualMemorySize)}
+        DriveFree = Get-CimInstance Win32_Volume -Filter "DriveLetter = '$($PWD.Drive.Name):'" | ForEach-Object {"{0:N2}" -f (($_.FreeSpace / $_.Capacity) * 100)}
+        Processes = (Get-Process).count
+        Connections = if (Get-Command "Get-NetTCPConnection" -ErrorAction SilentlyContinue) {(Get-NetTCPConnection).count}
+    }
+}
+
 function Get-MD5Hash {
 [cmdletbinding(   
     DefaultParameterSetName = '',   
@@ -2563,6 +2574,7 @@ function Start-AsyncLoader {
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
+            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats}
             try {
                 $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
             }

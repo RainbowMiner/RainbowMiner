@@ -824,6 +824,11 @@ while ($true) {
         Start-APIServer -RemoteAPI:$Config.RemoteAPI
         $API.Version = Confirm-Version $Version
     }
+
+    #Give API access to computerstats
+    $API.ComputerStats = $AsyncLoader.ComputerStats
+
+    #Give API access to all possible devices
     if ($API.AllDevices -eq $null) {$API.AllDevices = @(Get-Device -Refresh | Select-Object)}
 
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
@@ -1762,7 +1767,15 @@ while ($true) {
     }
 
     #Display exchange rates
-    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {Write-Host "Exchange rates: 1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')"}
+    [System.Collections.ArrayList]$StatusLine = @()
+    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") | Out-Null}
+    $StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") | Out-Null
+    $StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") | Out-Null
+    $StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") | Out-Null
+    $StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") | Out-Null
+
+    Write-Host " $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
+    Write-Host " "
 
     #Reduce Memory
     Get-Job -State Completed | Remove-Job
@@ -1800,6 +1813,8 @@ while ($true) {
         if (($WaitMaxI-$i) % 5 -eq 0) {
             #get data from downloader every ten seconds, starting at once
             if ($Downloader) {$Downloader | Receive-Job}
+            #Give API access to computerstats
+            $API.ComputerStats = $AsyncLoader.ComputerStats
         }
 
         Start-Sleep 2

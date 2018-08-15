@@ -125,7 +125,10 @@
             if (item.ManualUri && item.ManualUri.toString() != '') {
                 item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
             }
-            item.tStatus = item.Benchmarking ? 'Benchmarking' : (item.NeedsBenchmark ? 'Needs Benchmark' : 'Ok');
+            item.tStatus = 'Ok';
+            if (item.Benchmarking) item.tStatus = 'Benchmarking';
+            else if (item.NeedsBenchmark) item.tStatus = 'Needs Benchmark'
+            else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'            
         });
         return data;
     }
