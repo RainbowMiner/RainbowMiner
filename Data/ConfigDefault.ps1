@@ -6,5 +6,4 @@
     ShowMinerWindow = $false
     Watchdog = $true 
     UseTimeSync = $false
-    DisableExtendInterval = $true
 }
