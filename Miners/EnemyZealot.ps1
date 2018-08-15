@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.15a-enemyzealot/z-enemy.1-15a-cuda9.2_x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.16-enemyzealot/z-enemy.1-16-cuda9.2_x64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
 $Port = "302{0:d2}"
 
