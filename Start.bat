@@ -7,17 +7,28 @@
 @if not "%GPU_SINGLE_ALLOC_PERCENT%"=="100" (setx GPU_SINGLE_ALLOC_PERCENT 100) > nul
 @if not "%CUDA_DEVICE_ORDER%"=="PCI_BUS_ID" (setx CUDA_DEVICE_ORDER PCI_BUS_ID) > nul
 
-@set "command=& .\rainbowminer.ps1 -configfile .\Config\config.txt -disableautoupdate -remoteapi"
+@set "command=& {.\rainbowminer.ps1 -configfile .\Config\config.txt; exit $lastexitcode}"
+@set "updater=& .\updater.ps1"
 
 @echo off
 
 start pwsh -noexit -executionpolicy bypass -command "& .\reader.ps1 -log '^(.+)?-\d+_\d\d\d\d-\d\d-\d\d_\d\d-\d\d-\d\d.txt' -sort '^[^_]*_' -quickstart"
 
+:restart
 where pwsh.exe >nul 2>nul
 if %errorlevel%==1 (
-    powershell -version 5.0 -noexit -executionpolicy bypass -windowstyle maximized -command "%command%"
+    powershell -version 5.0 -executionpolicy bypass -windowstyle maximized -command "%command%"
+    if %errorlevel%==999 (
+        powershell -version 5.0 -executionpolicy bypass -windowstyle maximized -command "%updater%"
+        goto restart
+    )
     goto end
 )
-pwsh -noexit -executionpolicy bypass -windowstyle maximized -command "%command%"
+
+pwsh -executionpolicy bypass -windowstyle maximized -command "%command%"
+if %errorlevel%==999 (
+    pwsh -executionpolicy bypass -command "%updater%"
+    goto restart
+)
 
 :end
