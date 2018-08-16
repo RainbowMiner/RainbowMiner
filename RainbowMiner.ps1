@@ -1814,7 +1814,7 @@ while ($true) {
     #Check for updated RainbowMiner
     $API.Version = $ConfirmedVersion = Confirm-Version $Version
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
-        Write-Host "To start auto-update, press key `"U`"" -BackgroundColor Yellow
+        Write-Host "To start auto-update, press key `"U`"" -ForegroundColor Yellow
         Write-Host " "
     }
 
@@ -1833,7 +1833,7 @@ while ($true) {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner to v$($ConfirmedVersion.RemoteVersion), "})E[x]it RainbowMiner, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it RainbowMiner, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
     if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false
