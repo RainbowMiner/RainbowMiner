@@ -4,8 +4,6 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 [Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
 
-$ProgressPreferenceBackup = $ProgressPreference
-
 # Support SSL connection
 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 
@@ -14,27 +12,18 @@ if (-not (Test-Path ".\Data\Version.json")) {
     exit
 }
 
-$RBMVersion = (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version
-$PSVersion = $PSVersionTable.PSVersion
+$RBMVersion = Confirm-Version (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version -Force
 
 $Name = "RainbowMiner"
 try {
-    $ProgressPreference = "SilentlyContinue"
-    $Request = Invoke-RestMethod -Uri "https://api.github.com/repos/rainbowminer/$Name/releases/latest" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    $Version = ($Request.tag_name -replace '^v')
-    $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
-
-    if ( (Get-Version($Version)) -gt (Get-Version($RBMVersion)) ) {
-        Write-Host "$Name is out of date. Updating from v$(Get-Version($RBMVersion)) to v$(Get-Version($Version))" -ForegroundColor Yellow
-        $ProgressPreference = $ProgressPreferenceBackup
-        Write-Host " (1/3) Downloading $URI .. "
+    if ($RBMVersion.RemoteVersion -gt $RBMVersion.Version -and $RBMVersion.DownloadURI) {
+        Write-Host "Updating from v$($RBMVersion.Version) to v$($RBMVersion.RemoteVersion)" -ForegroundColor Yellow
+        Write-Host " (1/3) Downloading $($RBMVersion.DownloadURI) .. "
         
-        $ProgressPreference = "SilentlyContinue"
-
         if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
-        $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
+        $FileName = Join-Path ".\Downloads" (Split-Path $RBMVersion.DownloadURI -Leaf)
         if (Test-Path $FileName) {Remove-Item $FileName}
-        Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
+        Invoke-WebRequest $RBMVersion.DownloadURI -OutFile $FileName -UseBasicParsing
 
         Write-Host " (2/3) Deleting old files .."
 
@@ -45,10 +34,12 @@ try {
         Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath("."))`" -y -spe" -Wait
 
         Write-Host "Update finished. Restarting $Name .." -ForegroundColor Green
+    } else {
+        Write-Host "RainbowMiner is already uptodate. Restarting .." -ForegroundColor Green
     }
 }
 catch {
-    Write-Host "$Name failed to update. Please download manually at https://github.com/rainbowminer/$Name/releases/latest" -ForegroundColor Yellow
+    Write-Host "$Name failed to update. Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
     $message = "Press any key to return to $name"
     if ($psISE)
     {
