@@ -12,7 +12,7 @@ function Get-Version {
 
 function Confirm-Version {
     [CmdletBinding()]
-    param($RBMVersion)
+    param($RBMVersion, [Switch]$Force = $false)
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -21,14 +21,19 @@ function Confirm-Version {
 
     $Name = "RainbowMiner"
     try {
-        $Request = Invoke-RestMethodAsync "https://api.github.com/repos/rainbowminer/$Name/releases/latest" -cycletime 3600
+        $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
+        if ($Force) {
+            $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        } else {
+            $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600
+        }
         $Version = ($Request.tag_name -replace '^v')
         $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
 
         $Version = Get-Version($Version)
 
         if ($Version -gt $RBMVersion) {
-            Write-Log -Level Warn "$Name is out of date: lastest release version $Version is available at $URI "
+            Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
         }
 
         if ($Version -lt $RBMVersion) {
