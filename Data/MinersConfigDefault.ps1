@@ -28,7 +28,7 @@
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-i 20.5"; Profile = ""}
         )
         "CcminerBalloon" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = "-i 19"; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
         "CcminerCool" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; Profile = "4"}
@@ -108,6 +108,9 @@
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "1"}
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
+        )
+        "CuBalloon" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
         "EnemyZealot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "aeriumx"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}

@@ -7,15 +7,15 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\NVIDIA-Balloon\ccminer.exe"
-$Uri = "https://github.com/nemosminer/ccminer--v2balloon/releases/download/v2.3-9.2/ccminer.balloon.v2.3.monkins9.2.zip"
+$Path = ".\Bin\NVIDIA-CcminerBalloon\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-ccminerballoon/ccminer.balloon.v2.3.monkins9.2.zip"
 $Port = "104{0:d2}"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "balloon"; Params = ""} #Balloon
+    [PSCustomObject]@{MainAlgorithm = "balloon"; Params = "--cuda_threads 256 --cuda_blocks 100"} #Balloon
 )
 
 $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
@@ -26,7 +26,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-    $DeviceIDsAll = Get-GPUIDs $Miner_Device -join ','
+    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
     $Commands | ForEach {
 
@@ -45,6 +45,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             FaultTolerance = $_.FaultTolerance
             ExtendInterval = $_.ExtendInterval
             DevFee = 0.0
+            Penalty = 38
         }
     }
 }
