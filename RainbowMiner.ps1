@@ -61,8 +61,6 @@ param(
     [Parameter(Mandatory = $false)]
     [Double]$SwitchingPrevention = 2, #zero does not prevent miners switching
     [Parameter(Mandatory = $false)]
-    [Switch]$DisableAutoUpdate = $false,
-    [Parameter(Mandatory = $false)]
     [Switch]$ShowMinerWindow = $false, #if true all miner windows will be visible (they can steal focus)
     [Parameter(Mandatory = $false)]
     [Switch]$FastestMinerOnly = $false, #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
@@ -104,7 +102,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.1.0"
+$Version = "3.8.1.1"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -157,7 +155,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","DisableAutoUpdate","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
@@ -228,6 +226,9 @@ try {
             throw "Data\$($_.ToLower()).json is missing."
         }
     }
+
+    #write version to data
+    [PSCustomObject]@{Version=$Version} | ConvertTo-Json | Set-Content ".\Data\Version.json" -Encoding utf8
 }
 catch {
     Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
@@ -1728,9 +1729,6 @@ while ($true) {
         Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Config.Interval * $ExtendInterval) seconds). "
     }
 
-    #Check for updated RainbowMiner
-    $API.Version = Confirm-Version $Version
-
     #Display active miners list
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
@@ -1813,6 +1811,13 @@ while ($true) {
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
 
+    #Check for updated RainbowMiner
+    $API.Version = $ConfirmedVersion = Confirm-Version $Version
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
+        Write-Host "To start auto-update, press key `"U`"" -BackgroundColor Yellow
+        Write-Host " "
+    }
+
     #Reduce Memory
     Get-Job -State Completed | Remove-Job
     [GC]::Collect()
@@ -1822,13 +1827,13 @@ while ($true) {
     $WaitTimer = (Get-Date).ToUniversalTime()
     $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
 
-    $Stopp = $false
+    $AutoUpdate = $Stopp = $false
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: E[x]it Miningscript, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner to v$($ConfirmedVersion.RemoteVersion), "})E[x]it RainbowMiner, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
     if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false
@@ -1900,7 +1905,7 @@ while ($true) {
                     $Stopp = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
                     Write-Log "User requests to stop script. "
-                    Write-Host -NoNewline "[X] pressed - stopping script. Type 'exit' and press enter to close powershell-window."
+                    Write-Host -NoNewline "[X] pressed - stopping script."
                     $keyPressed = $true
                 }
                 "D" {
@@ -1925,6 +1930,14 @@ while ($true) {
                     $RunSetup = $true
                     Write-Host -NoNewline "[C] pressed - configuration setup will be started"
                     $keyPressed = $true
+                }
+                "U" {
+                    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
+                        $AutoUpdate = $Stopp = $true
+                        Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
+                        Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
+                        $keyPressed = $true
+                    }
                 }
             }
         }
@@ -1993,7 +2006,12 @@ $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
         Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
         $Miner.StopMining()            
     }
+    if ($Miner.BaseName -like "Excavator*") {
+        $Miner.SetStatus([MinerStatus]::Failed)
+    }
 }
  
 #Stop the log
 Stop-Transcript
+
+if ($AutoUpdate -and -not $psISE) {Exit 999}
