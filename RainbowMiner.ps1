@@ -279,6 +279,8 @@ while ($true) {
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
+
+                        Clear-Host
               
                         Write-Host " "
                         Write-Host "*** RainbowMiner Configuration ***" -BackgroundColor Green -ForegroundColor Black
@@ -618,25 +620,25 @@ while ($true) {
                                             $ConfigActual | Add-Member ExcludeAlgorithm $($Config.ExcludeAlgorithm -join ",") -Force
                                             $ConfigActual | Add-Member ExcludeCoin $($Config.ExcludeCoin -join ",") -Force
                                             $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
-                                            $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member FastestMinerOnly $(if ($Config.FastestMinerOnly){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member ShowPoolBalances $(if ([int]$Config.ShowPoolBalances){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member ShowMinerWindow $(if ([int]$Config.ShowMinerWindow){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member FastestMinerOnly $(if ([int]$Config.FastestMinerOnly){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member UIstyle $Config.UIstyle -Force
                                             $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                             $ConfigActual | Add-Member Interval $Config.Interval -Force
-                                            $ConfigActual | Add-Member DisableExtendInterval $(if ($Config.DisableExtendInterval){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member DisableExtendInterval $(if ([int]$Config.DisableExtendInterval){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member SwitchingPrevention $Config.SwitchingPrevention -Force                                            
                                             $ConfigActual | Add-Member Donate $Config.Donate -Force
-                                            $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member IgnoreFees $(if ($Config.IgnoreFees){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member DisableDualMining $(if ($Config.DisableDualMining){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member Watchdog $(if ([int]$Config.Watchdog){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member IgnoreFees $(if ([int]$Config.IgnoreFees){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member DisableDualMining $(if ([int]$Config.DisableDualMining){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member MSIAprofile $Config.MSIAprofile -Force
                                             $ConfigActual | Add-Member MSIApath $Config.MSIApath -Force
-                                            $ConfigActual | Add-Member UseTimeSync $(if ($Config.UseTimeSync){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member UseTimeSync $(if ([int]$Config.UseTimeSync){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
-                                            $ConfigActual | Add-Member UsePowerPrice $(if ($Config.UsePowerPrice){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member CheckProfitability $(if ($Config.CheckProfitability){"1"}else{"0"}) -Force                                            
+                                            $ConfigActual | Add-Member UsePowerPrice $(if ([int]$Config.UsePowerPrice){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member CheckProfitability $(if ([int]$Config.CheckProfitability){"1"}else{"0"}) -Force                                            
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -1505,6 +1507,7 @@ while ($true) {
             $ActiveMiner.Speed = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
             $ActiveMiner.DeviceName = $Miner.DeviceName
             $ActiveMiner.DeviceModel = $Miner.DeviceModel
+            $ActiveMiner.ShowMinerWindow = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
             $ActiveMiner.DevFee = $Miner.DevFee
             $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
