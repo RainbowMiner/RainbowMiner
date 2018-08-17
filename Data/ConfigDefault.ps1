@@ -7,4 +7,5 @@
     Watchdog = $true 
     UseTimeSync = $false
     MSIAprofile = 0
+    EthPillEnable = "disable"
 }

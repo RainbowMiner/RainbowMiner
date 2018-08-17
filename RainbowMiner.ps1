@@ -97,7 +97,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$CheckProfitability = $false, # if set to $true, miners with negative profit will be excluded
     [Parameter(Mandatory = $false)]
-    [Switch]$DisableExtendInterval = $false # if set to $true, benchmark intervals will never be extended
+    [Switch]$DisableExtendInterval = $false, # if set to $true, benchmark intervals will never be extended
+    [Parameter(Mandatory = $false)]
+    [String]$EthPillEnable = "disable" # set to RevA or RevB to enable the OhGodAnETHlargementPill
 )
 
 Clear-Host
@@ -155,7 +157,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
@@ -319,10 +321,10 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) | Out-Null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("currency","uistyle","disabledualmining","excludeminerswithfee","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia")) | Out-Null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("currency","uistyle","disabledualmining","excludeminerswithfee","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) | Out-Null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) | Out-Null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin")) | Out-Null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) | Out-Null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) | Out-Null}
                             }
                             $GlobalSetupSteps.Add("save") | Out-Null
                             $GlobalSetupStep = $GlobalSetupStepBack = 0
@@ -568,6 +570,11 @@ while ($true) {
                                                 }
                                             } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
                                         }
+                                        "ethpillenable" {
+                                            if (@($SetupDevices.Model | Select-Object -Unique) -like 'GTX1080*') {
+                                                $Config.EthPillEnable = Read-HostString -Prompt "Enable OhGodAnETHlargementPill https://bitcointalk.org/index.php?topic=3370685.0 (only when mining Ethash)" -Default $Config.EthPillEnable -Valid @('disable','RevA','RevB') | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            }
+                                        }
                                         "proxy" {
                                             $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
@@ -638,7 +645,8 @@ while ($true) {
                                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
                                             $ConfigActual | Add-Member UsePowerPrice $(if ([int]$Config.UsePowerPrice){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member CheckProfitability $(if ([int]$Config.CheckProfitability){"1"}else{"0"}) -Force                                            
+                                            $ConfigActual | Add-Member CheckProfitability $(if ([int]$Config.CheckProfitability){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member EthPillEnable $Config.EthPillEnable -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -1496,6 +1504,7 @@ while ($true) {
             $_.Port -eq $Miner.Port -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
+        $Miner_EthPillEnable = @("RevA","RevB") -icontains $Config.EthPillEnable -and @($Miner.HashRates.PSObject.Properties.Name) -icontains "Ethash"
         if ($ActiveMiner) {
             $ActiveMiner.Profit = $Miner.Profit
             $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
@@ -1513,6 +1522,7 @@ while ($true) {
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
             $ActiveMiner.Penalty = $Miner.Penalty
             $ActiveMiner.ManualUri = $Miner.ManualUri
+            $ActiveMiner.EthPillEnable = $Miner_EthPillEnable
         }
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
@@ -1548,6 +1558,7 @@ while ($true) {
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri
+                EthPillEnable        = $Miner_EthPillEnable
             }
         }
     }
@@ -2052,7 +2063,7 @@ $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
         $Miner.SetStatus([MinerStatus]::Failed)
     }
 }
- 
+
 #Stop the log
 Stop-Transcript
 

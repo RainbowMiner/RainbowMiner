@@ -1340,12 +1340,14 @@ class Miner {
     $ExtendInterval = 0
     $Penalty = 0
     $ManualUri
+    [String]$EthPillEnable = "disable"
     hidden [System.Management.Automation.Job]$Process = $null
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false
+    hidden $EthPill = $null
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -1368,6 +1370,12 @@ class Miner {
         $this.Activated++
 
         if (-not $this.Process) {
+            if (@('RevA','RevB') -icontains $this.EthPillEnable) {
+                Write-Log "Starting OhGodAnETHlargementPill $($this.EthPillEnable)"
+                $this.EthPill = Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "-$($this.EthPillEnable)"
+                Sleep -Milliseconds 250 #wait 1/4 second
+            }
+
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
             $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -1406,6 +1414,11 @@ class Miner {
                 $this.Active = $this.GetActiveTime();
                 $this.Process = $null
                 $this.Status = [MinerStatus]::Idle
+            }
+            if ($this.EthPill -ne $null) {
+                Write-Log "Stopping OhGodAnETHlargementPill"
+                Stop-Process -Id $this.EthPill.Id
+                $this.EthPill = $null
             }
         }
     }
