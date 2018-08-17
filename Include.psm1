@@ -1327,15 +1327,10 @@ class Miner {
     $Speed_Live
     $Best
     $Best_Comparison
-    hidden [System.Management.Automation.Job]$Process = $null
     $New
-    hidden [TimeSpan]$Active = [TimeSpan]::Zero
-    hidden [Int]$Activated = 0
-    hidden [MinerStatus]$Status = [MinerStatus]::Idle
     $Benchmarked
     $LogFile
     $Pool
-    hidden [Array]$Data = @()
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
     $DevFee
@@ -1345,6 +1340,12 @@ class Miner {
     $ExtendInterval = 0
     $Penalty = 0
     $ManualUri
+    hidden [System.Management.Automation.Job]$Process = $null
+    hidden [TimeSpan]$Active = [TimeSpan]::Zero
+    hidden [Int]$Activated = 0
+    hidden [MinerStatus]$Status = [MinerStatus]::Idle
+    hidden [Array]$Data = @()
+    hidden [Bool]$HasOwnMinerWindow = $false
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -1369,6 +1370,7 @@ class Miner {
         if (-not $this.Process) {
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
             $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
             if ($this.Process | Get-Job -ErrorAction SilentlyContinue) {
                 $this.Status = [MinerStatus]::Running
@@ -1382,7 +1384,7 @@ class Miner {
         $this.Data = @()
 
         if ($this.Process) {
-            if ($this.ShowMinerWindow -and $this.Process.MiningProcess) {
+            if ($this.HasOwnMinerWindow -and $this.Process.MiningProcess) {
                 $this.Process.MiningProcess.CloseMainWindow() | Out-Null
                 # Wait up to 10 seconds for the miner to close gracefully
                 $closedgracefully = $this.Process.MiningProcess.WaitForExit(10000)
