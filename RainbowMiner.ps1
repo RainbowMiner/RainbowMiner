@@ -155,7 +155,7 @@ $MinersUriHash = $null
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","ConfigFile","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
@@ -192,7 +192,7 @@ try {
         $ConfigForUpdate_changed = $false
         Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($MyCommandParameters) | Foreach-Object {
             if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
-            elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+            elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
         }
         if ($ConfigForUpdate_changed) {$ConfigForUpdate | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8}
     }
