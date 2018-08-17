@@ -21,7 +21,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
     [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2
-    [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos

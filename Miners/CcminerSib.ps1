@@ -14,8 +14,7 @@ $Port = "108{0:d2}"
 $Devices = $Devices.NVIDIA
 if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
-$Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-N 1"} #Blake2s
+$Commands = [PSCustomObject[]]@(    
     [PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = "-N 1"} #Blakecoin
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11 (alexis78 is fastest)
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak (alexis78 is fastest)
@@ -26,6 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
 
     # ASIC - never profitable 12/05/2018
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = "-N 1"} #Blake2s
     #[PSCustomObject]@{MainAlgorithm = "decred"; Params = ""} #Decred
     #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
     #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl

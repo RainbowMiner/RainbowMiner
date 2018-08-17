@@ -17,7 +17,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Allium
-    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s, ASIC domain. no longer profitable
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #Neoscrypt

@@ -26,7 +26,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
+    #[PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JackPot
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = " -N 1"} #JHA
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
@@ -34,7 +34,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
     #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"} #PHI spmod is faster
@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
     #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
-    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
+    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus (enemyz 1.10 is faster)
     #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool

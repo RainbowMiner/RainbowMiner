@@ -23,12 +23,12 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2RE
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2 (fastest)
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-N 1"} #Polytimos
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""} #X11evo
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #x17 (fastest)
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #x17 (fastest)
 
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
