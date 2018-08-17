@@ -2610,7 +2610,7 @@ Param(
 
     Write-Host " "
     Write-Host "Hints:" -ForegroundColor $Color
-    Write-Host "- your current configuration defines the defaults. Press Return to accept the them." -ForegroundColor $Color
+    Write-Host "- press Return to accept the defaults" -ForegroundColor $Color
     Write-Host "- fields marked with * are mandatory" -ForegroundColor $Color
     Write-Host "- use comma `",`" to separate list entries" -ForegroundColor $Color
     Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor $Color
