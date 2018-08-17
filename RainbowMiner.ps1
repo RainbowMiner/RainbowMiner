@@ -104,7 +104,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.1.2"
+$Version = "3.8.1.3"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -374,13 +374,15 @@ while ($true) {
                                                     $NiceHashWallet = ''
                                                 }
                                             }
-
+                                            
+                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"[,;:\s]+")}else{@()}
                                             if (-not $NicehashWallet) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "NiceHash"}
                                                 $NicehashWallet = '$Wallet'
                                             } elseif ($Config.PoolName -inotcontains "NiceHash") {
                                                 $Config.PoolName = @($Config.PoolName | Select-Object) + @("NiceHash") | Select-Object -Unique
                                             }
+                                            $Config.PoolName = $Config.PoolName -join ','
                                         }
 
                                         "workername" {
@@ -399,12 +401,15 @@ while ($true) {
                                                 Write-Host " "
                                             }
                                             $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+
+                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"[,;:\s]+")}else{@()}
                                             if (-not $Config.UserName) {
-                                                $Config.PoolName = $Config.PoolName | Where-Object {$_ -notlike "MiningPoolHub*"}
-                                                throw "Goto region"
-                                            } else {
+                                                $Config.PoolName = $Config.PoolName | Where-Object {$_ -notlike "MiningPoolHub*"}                                                
+                                            } elseif ($Config.PoolName -inotcontains "MiningPoolHub") {
                                                 $Config.PoolName = @($Config.PoolName | Select-Object) + @("MiningPoolHub") | Select-Object -Unique
-                                            }                                            
+                                            }
+                                            $Config.PoolName = $Config.PoolName -join ','
+                                            if (-not $Config.UserName) {throw "Goto region"}                                        
                                         }
 
                                         "apiid" {
@@ -1165,8 +1170,8 @@ while ($true) {
 
     #Remove stats from pools & miners not longer in use
     if (-not $DonateNow -and (Test-Path "Stats")) {
-        Compare-Object @($SelectedPoolNames | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)_*_Profit.txt"}
-        Compare-Object @($AvailMiners | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)-*_Hashrate.txt"}
+        if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)_*_Profit.txt"}}
+        if ($AvailMiners -and $AvailMiners.Count -gt 0) {Compare-Object @($AvailMiners | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Remove-Item "Stats\$($_.InputObject)-*_Hashrate.txt"}}
     }
 
     #Give API access to the current running configuration
@@ -1752,7 +1757,7 @@ while ($true) {
         if ($MinersNeedingBenchmark.Count -gt 0) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left to benchmark."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
-            if ($MinersNeedingBenchmarkWithEI -gt 0) {
+            if (-not $Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
                 Write-Host " "
                 Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
                 Write-Host "RainbowMiner will benchmark the following $($MinersNeedingBenchmarkWithEI) miner$(if ($MinersNeedingBenchmarkWithEI -gt 1){'s'}) with extended intervals at first!" -ForegroundColor Yellow
