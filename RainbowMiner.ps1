@@ -279,13 +279,13 @@ while ($true) {
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
-
+              
                         Write-Host " "
                         Write-Host "*** RainbowMiner Configuration ***" -BackgroundColor Green -ForegroundColor Black
                         Write-Host " "
 
                         if ($IsInitialSetup) {
-                            $SetupType = "G" 
+                            $SetupType = "A" 
                             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
                             $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                                 $ConfigSetup_Name = $_.Name
@@ -294,39 +294,57 @@ while ($true) {
 
                         } else {
                             Write-Host "Please choose, what to configure:" -ForegroundColor Yellow
-                            $SetupType = Read-HostString -Prompt "[G]lobal, [M]iner, [P]ools, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "GMPX"
                             Write-Host " "
+                            Write-Host "- Wallet: setup wallet addresses, worker- and username, API-keys" -ForegroundColor Yellow
+                            Write-Host "- Common: setup the most common RainbowMiner settings and flags" -ForegroundColor Yellow
+                            Write-Host "- Energycosts: setup energy consumtion values" -ForegroundColor Yellow
+                            Write-Host "- Selection: select which pools, miners, algorithm to use" -ForegroundColor Yellow
+                            Write-Host "- All: step through the full setup, configuring all" -ForegroundColor Yellow
+                            Write-Host "- Miner: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
+                            Write-Host "- Pool: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
+                            Write-Host " "
+                            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]election, [A]ll, [M]iner, [P]ools, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPX"
+
                         }
 
                         if ($SetupType -eq "X") {
                             $RunSetup = $false
                         }
-                        elseif ($SetupType -eq "G") {                            
+                        elseif (@("W","C","E","S","A") -contains $SetupType) {
                             
-                            Write-Host "*** Global Configuration ***" -BackgroundColor Green -ForegroundColor Black
-                            Write-Host " "
-                            Write-Host "Hints:" -ForegroundColor Yellow
-                            Write-Host "- your current configuration defines the defaults. Press Return to accept the them." -ForegroundColor Yellow
-                            Write-Host "- fields marked with * are mandatory" -ForegroundColor Yellow
-                            Write-Host "- use comma `",`" to separate list entries" -ForegroundColor Yellow
-                            Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor Yellow
-                            Write-Host "- enter `"back`" or `"<`" to repeat the last input" -ForegroundColor Yellow
-                            Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor Yellow
-                            Write-Host "- enter `"exit`" or `"cancel`" to abort without any changes to the configuration" -ForegroundColor Yellow
-                            Write-Host " "
-
                             $GlobalSetupDone = $false
-                            $GlobalSetupStep = $GlobalSetupStepBack = 1
+                            [System.Collections.ArrayList]$GlobalSetupSteps = @()
+
+                            Switch ($SetupType) {
+                                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) | Out-Null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("currency","uistyle","disabledualmining","excludeminerswithfee","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia")) | Out-Null}
+                                "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) | Out-Null}
+                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin")) | Out-Null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) | Out-Null}
+                            }
+                            $GlobalSetupSteps.Add("save") | Out-Null
+                            $GlobalSetupStep = $GlobalSetupStepBack = 0
+
+                            Write-Host "*** $GlobalSetupName Configuration ***" -BackgroundColor Green -ForegroundColor Black
+                            Write-HostSetupHints
+
                             do {
+                                if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
+                                    $NicehashWallet = $PoolsActual.Nicehash.BTC
+                                    $NicehashWorkerName = $PoolsActual.Nicehash.Worker
+                                } else {
+                                    $NicehashWallet = '$Wallet'
+                                    $NicehashWorkerName = '$WorkerName'
+                                }
                                 try {
-                                   Switch ($GlobalSetupStep) {
-                                        1 {                       
-                                            # Start setup procedure
-                                            Write-Host ' '
-                                            Write-Host '(1) Basic Setup' -ForegroundColor Green
-                                            Write-Host ' '
+                                   Switch ($GlobalSetupSteps[$GlobalSetupStep]) {
+                                        "wallet" {                
+                                            if ($SetupType -eq "A") {
+                                                # Start setup procedure
+                                                Write-Host ' '
+                                                Write-Host '(1) Basic Setup' -ForegroundColor Green
+                                                Write-Host ' '
+                                            }
                                                                              
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
@@ -336,7 +354,7 @@ while ($true) {
                                             $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
-                                        2 {
+                                        "nicehash" {
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
                                                 Write-Host "If you plan to mine using the Nicehash-pool, I recommend you register an account with them, to get a NiceHash wallet address (please read the Pools section of our readme!). I would not mine to your standard wallet ($($Config.Wallet)), since Nicehash has a minimum payout amount of 0.1BTC (compared to 0.001BTC, when using their wallet). " -ForegroundColor Cyan
@@ -344,13 +362,6 @@ while ($true) {
                                                 Write-Host " "
                                             }
 
-                                            if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
-                                                $NicehashWallet = $PoolsActual.Nicehash.BTC
-                                                $NicehashWorkerName = $PoolsActual.Nicehash.Worker
-                                            } else {
-                                                $NicehashWallet = '$Wallet'
-                                                $NicehashWorkerName = '$WorkerName'
-                                            }
                                             if ($NicehashWallet -eq '$Wallet'){$NicehashWallet=$Config.Wallet}
                                             $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
 
@@ -361,14 +372,14 @@ while ($true) {
                                             }
 
                                             if (-not $NicehashWallet) {
-                                                $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "Nicehash"}
+                                                $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "NiceHash"}
                                                 $NicehashWallet = '$Wallet'
-                                            } else {
-                                                $Config.PoolName = @($Config.PoolName | Select-Object) + @("Nicehash") | Select-Object -Unique
+                                            } elseif ($Config.PoolName -inotcontains "NiceHash") {
+                                                $Config.PoolName = @($Config.PoolName | Select-Object) + @("NiceHash") | Select-Object -Unique
                                             }
                                         }
 
-                                        3 {
+                                        "workername" {
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
                                                 Write-Host "Every pool (except the MiningPoolHub) wants the miner to send a worker's name. You can change the name later. Please enter only letters and numbers. " -ForegroundColor Cyan
@@ -377,7 +388,7 @@ while ($true) {
                                             $Config.WorkerName = Read-HostString -Prompt "Enter your worker name" -Default $Config.WorkerName -Mandatory -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
-                                        4 {
+                                        "username" {
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
                                                 Write-Host "If you plan to use MiningPoolHub for mining, you will have to register an account with them and choose a username. Enter this username now, or leave empty to disable MiningPoolHub (can be activated, later) " -ForegroundColor Cyan
@@ -386,12 +397,26 @@ while ($true) {
                                             $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             if (-not $Config.UserName) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -notlike "MiningPoolHub*"}
+                                                throw "Goto region"
                                             } else {
                                                 $Config.PoolName = @($Config.PoolName | Select-Object) + @("MiningPoolHub") | Select-Object -Unique
-                                            }
+                                            }                                            
                                         }
 
-                                        5 {
+                                        "apiid" {
+                                            if ($IsInitialSetup) {
+                                                Write-Host " "
+                                                Write-Host "You will mine on MiningPoolHub as $($Config.UserName). If you want to see your balance in RainbowMiner, you can now enter your USER ID (a number) and the API KEY. You find these two values on MiningPoolHub's `"Edit account`" page. " -ForegroundColor Cyan
+                                                Write-Host " "
+                                            }
+                                            $Config.API_ID = Read-HostString -Prompt "Enter your Miningpoolhub USER ID (found on `"Edit account`" page)" -Default $Config.API_ID -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+
+                                        "apikey" {
+                                            $Config.API_Key = Read-HostString -Prompt "Enter your Miningpoolhub API KEY (found on `"Edit account`" page)" -Default $Config.API_Key -Characters "0-9a-f" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+
+                                        "region" {
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
                                                 Write-Host "Choose the region, you live in, from this list (remember: you can always simply accept the default by pressing return): " -ForegroundColor Cyan
@@ -401,14 +426,16 @@ while ($true) {
                                             $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
-                                        6 {
+                                        "currency" {
                                             $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
-                                        7 {
-                                            Write-Host ' '
-                                            Write-Host '(2) Select your pools, miners and algorithm (be sure you read the notes in the README.md)' -ForegroundColor Green
-                                            Write-Host ' '
+                                        "poolname" {
+                                            if ($SetupType -eq "A") {
+                                                Write-Host ' '
+                                                Write-Host '(2) Select your pools, miners and algorithm (be sure you read the notes in the README.md)' -ForegroundColor Green
+                                                Write-Host ' '
+                                            }
 
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
@@ -417,41 +444,45 @@ while ($true) {
                                                 Write-Host " "
                                             }
                                             $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                            $Config.ExcludePoolName = $AvailPools | Where-Object {$Config.PoolName -inotcontains $_}
-                                            throw "Goto 9"
+                                            $Config.ExcludePoolName = $AvailPools | Where-Object {$Config.PoolName -inotcontains $_}                                            
                                         }
-                                        8 {
+                                        "excludepoolname" {
                                             $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        9 {
+                                        "minername" {
                                             if ($IsInitialSetup) {
                                                 Write-Host " "
                                                 Write-Host "You are almost done :) Our defaults for miners and algorithms give you a good start. If you want, you can skip the settings for now " -ForegroundColor Cyan
                                                 Write-Host " "
 
-                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto 15"}
+                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto devicename"}
                                             }
                                             $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        10 {
+                                        "excludeminername" {
                                             $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        11 {
+                                        "algorithm" {
                                             $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        12 {
+                                        "excludealgorithm" {
                                             $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        13 {
+                                        "excludecoin" {
+                                            $Config.ExcludeCoin = Read-HostArray -Prompt "Enter the name of coins, you want to exclude (leave empty for none)" -Default $Config.ExcludeCoin -Characters "\`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+                                        "disabledualmining" {
                                             $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        14 {
+                                        "excludeminerswithfee" {
                                             $Config.ExcludeMinersWithFee = Read-HostBool -Prompt "Exclude all miners with developer fee" -Default $Config.ExcludeMinersWithFee | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        15 {
-                                            Write-Host ' '
-                                            Write-Host '(3) Select the devices to mine on and miningmode' -ForegroundColor Green
-                                            Write-Host ' '
+                                        "devicename" {
+                                            if ($SetupType -eq "A") {
+                                                Write-Host ' '
+                                                Write-Host '(3) Select the devices to mine on and miningmode' -ForegroundColor Green
+                                                Write-Host ' '
+                                            }
 
                                             $AvailDeviceName = @()                                
                                             if ((Select-Device $SetupDevices "nvidia" | Measure-Object).Count -gt 0) {$AvailDeviceName += "nvidia"}
@@ -492,37 +523,41 @@ while ($true) {
                                                 $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             }
 
-                                            if ($IsInitialSetup) {throw "Goto 999"}
+                                            if ($IsInitialSetup) {throw "Goto save"}
                                         }
 
-                                        16 {
-                                            Write-Host ' '
-                                            Write-Host '(4) Select desired output' -ForegroundColor Green
-                                            Write-Host ' '
+                                        "uistyle" {
+                                            if ($SetupType -eq "A") {
+                                                Write-Host ' '
+                                                Write-Host '(4) Select desired output' -ForegroundColor Green
+                                                Write-Host ' '
+                                            }
 
                                             $Config.UIstyle = Read-HostString -Prompt "Select style of user interface (full/lite)" -Default $Config.UIstyle -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             if ($Config.UIstyle -like "l*"){$Config.UIstyle="lite"}else{$Config.UIstyle="full"}   
                                         }
-                                        17 {
+                                        "fastestmineronly" {
                                             $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        18 {
+                                        "showpoolbalances" {
                                             $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        19 {
+                                        "showminerwindow" {
                                             $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus, not recommended)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        20 {
-                                            Write-Host ' '
-                                            Write-Host '(5) Setup other / technical' -ForegroundColor Green
-                                            Write-Host ' '
+                                        "ignorefees" {
+                                            if ($SetupType -eq "A") {
+                                                Write-Host ' '
+                                                Write-Host '(5) Setup other / technical' -ForegroundColor Green
+                                                Write-Host ' '
+                                            }
 
                                             $Config.IgnoreFees = Read-HostBool -Prompt "Ignore Pool/Miner developer fees" -Default $Config.IgnoreFees | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        21 {
+                                        "watchdog" {
                                             $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        22 {
+                                        "msia" {
                                             do {
                                                 $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}                             
                                                 if ($Config.MSIAprofile -gt 0) {
@@ -531,37 +566,47 @@ while ($true) {
                                                 }
                                             } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
                                         }
-                                        23 {
+                                        "proxy" {
                                             $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        24 {
+                                        "interval" {
                                             $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        25 {
+                                        "disableextendinterval" {
                                             $Config.DisableExtendInterval = Read-HostBool -Prompt "Disable interval extension during benchmark (speeds benchmark up, but will be less accurate for some algorithm)" -Default $Config.DisableExtendInterval | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        26 {
+                                        "switchingprevention" {
+                                            $Config.SwitchingPrevention = Read-HostInt -Prompt "Adjust switching prevention: the higher, the less switching of miners will happen (0 to disable)" -Default $Config.SwitchingPrevention -Min 0 -Max 10 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+                                        "usetimesync" {
                                             $Config.UseTimeSync = Read-HostBool -Prompt "Enable automatic time/NTP synchronization (needs admin rights)" -Default $Config.UseTimeSync | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        27 {
+                                        "powerpricecurrency" {
                                             $Config.PowerPriceCurrency = Read-HostString -Prompt "Enter currency of power price (e.g. USD,EUR,CYN)" -Default $Config.PowerPriceCurrency -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        28 {
+                                        "powerprice" {
                                             $Config.PowerPrice = Read-HostDouble -Prompt "Enter the power price per kW/h (kilowatt per hour), you pay to your electricity supplier" -Default $Config.PowerPrice | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        29 {
+                                        "usepowerprice" {
                                             $Config.UsePowerPrice = Read-HostBool -Prompt "Include cost of electricity into profit calculations" -Default $Config.UsePowerPrice | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        30 {
+                                        "checkprofitability" {
                                             $Config.CheckProfitability = Read-HostBool -Prompt "Check for profitability and stop mining, if no longer profitable." -Default $Config.CheckProfitability | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        31 {
+                                        "donate" {
                                             $Config.Donate = [int]($(Read-HostDouble -Prompt "Enter the developer donation fee in %" -Default ([Math]::Round($Config.Donate/0.1440)/100) -Mandatory -Min 0.69 -Max 100)*14.40) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        default {
+                                        "save" {
+                                            Write-Host " "
+                                            $ConfigSave = Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+
+                                            if (-not $ConfigSave) {throw "cancel"}
+
                                             $ConfigActual | Add-Member Wallet $Config.Wallet -Force
                                             $ConfigActual | Add-Member WorkerName $Config.WorkerName -Force
                                             $ConfigActual | Add-Member UserName $Config.UserName -Force
+                                            $ConfigActual | Add-Member API_ID $Config.API_ID -Force
+                                            $ConfigActual | Add-Member API_Key $Config.API_Key -Force
                                             $ConfigActual | Add-Member Proxy $Config.Proxy -Force
                                             $ConfigActual | Add-Member Region $Config.Region -Force
                                             $ConfigActual | Add-Member Currency $($Config.Currency -join ",") -Force
@@ -571,6 +616,7 @@ while ($true) {
                                             $ConfigActual | Add-Member ExcludeMinerName $($Config.ExcludeMinerName -join ",") -Force
                                             $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
                                             $ConfigActual | Add-Member ExcludeAlgorithm $($Config.ExcludeAlgorithm -join ",") -Force
+                                            $ConfigActual | Add-Member ExcludeCoin $($Config.ExcludeCoin -join ",") -Force
                                             $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
                                             $ConfigActual | Add-Member ShowPoolBalances $(if ($Config.ShowPoolBalances){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member ShowMinerWindow $(if ($Config.ShowMinerWindow){"1"}else{"0"}) -Force
@@ -578,6 +624,8 @@ while ($true) {
                                             $ConfigActual | Add-Member UIstyle $Config.UIstyle -Force
                                             $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                             $ConfigActual | Add-Member Interval $Config.Interval -Force
+                                            $ConfigActual | Add-Member DisableExtendInterval $(if ($Config.DisableExtendInterval){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member SwitchingPrevention $Config.SwitchingPrevention -Force                                            
                                             $ConfigActual | Add-Member Donate $Config.Donate -Force
                                             $ConfigActual | Add-Member Watchdog $(if ($Config.Watchdog){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member IgnoreFees $(if ($Config.IgnoreFees){"1"}else{"0"}) -Force
@@ -588,8 +636,7 @@ while ($true) {
                                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
                                             $ConfigActual | Add-Member UsePowerPrice $(if ($Config.UsePowerPrice){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member CheckProfitability $(if ($Config.CheckProfitability){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member DisableExtendInterval $(if ($Config.DisableExtendInterval){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member CheckProfitability $(if ($Config.CheckProfitability){"1"}else{"0"}) -Force                                            
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
@@ -611,6 +658,9 @@ while ($true) {
                                             $IsInitialSetup = $false
                                             $GlobalSetupDone = $true
                                         }
+                                        default {
+                                            Write-Log -Level Error "Unknown setup command `"$($GlobalSetupSteps[$GlobalSetupStep])`". You should never reach here. Please open an issue on github.com"
+                                        }
                                     }
                                     $GlobalSetupStepBack = $GlobalSetupStep
                                     $GlobalSetupStep++
@@ -620,8 +670,14 @@ while ($true) {
                                         $GlobalSetupStep = $GlobalSetupStepBack
                                     }
                                     elseif ($_.Exception.Message -like "Goto*") {
+                                        $OldGlobalSetupStepBack = $GlobalSetupStepBack
                                         $GlobalSetupStepBack = $GlobalSetupStep
-                                        $GlobalSetupStep = [int]($_.Exception.Message -split "\s+")[1]
+                                        $GlobalSetupStep = $GlobalSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                        if ($GlobalSetupStep -lt 0) {
+                                            Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                            $GlobalSetupStep = $GlobalSetupStepBack
+                                            $GlobalSetupStepBack = $OldGlobalSetupStepBack
+                                        }
                                     }
                                     else {
                                         Write-Host " "
@@ -635,16 +691,7 @@ while ($true) {
                         elseif ($SetupType -eq "M") {
 
                             Write-Host "*** Miner Configuration ***" -BackgroundColor Green -ForegroundColor Black
-                            Write-Host " "
-                            Write-Host "Hints:" -ForegroundColor Yellow
-                            Write-Host "- the defaults are your current configuration. Press Return to accept the defaults." -ForegroundColor Yellow
-                            Write-Host "- fields marked with * are mandatory" -ForegroundColor Yellow
-                            Write-Host "- use comma `",`" to separate list entries" -ForegroundColor Yellow
-                            Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor Yellow
-                            Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor Yellow
-                            Write-Host " "
+                            Write-HostSetupHints
 
                             $AvailDeviceName = @("*")
                             if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
@@ -712,16 +759,7 @@ while ($true) {
                         elseif ($SetupType -eq "P") {
 
                             Write-Host "*** Pool Configuration ***" -BackgroundColor Green -ForegroundColor Black
-                            Write-Host " "
-                            Write-Host "Hints:" -ForegroundColor Yellow
-                            Write-Host "- the defaults are your current configuration. Press Return to accept the defaults." -ForegroundColor Yellow
-                            Write-Host "- fields marked with * are mandatory" -ForegroundColor Yellow
-                            Write-Host "- use comma `",`" to separate list entries" -ForegroundColor Yellow
-                            Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor Yellow
-                            Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor Yellow
-                            Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor Yellow
-                            Write-Host " "
+                            Write-HostSetupHints
                             Write-Host "(under development)" -ForegroundColor Red
                             Write-Host " "                           
 
