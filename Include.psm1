@@ -833,7 +833,7 @@ function Get-Device {
     )
 
     if ($Name) {
-        if (-not (Test-Path Variable:Script:DataDeviceList)) {$Script:DataDeviceList = Get-Content "Data\devices.json" | ConvertFrom-Json}        
+        if (-not (Test-Path Variable:Script:DataDeviceList) -or -not $Script:DataDeviceList) {$Script:DataDeviceList = Get-Content "Data\devices.json" | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
@@ -2599,4 +2599,25 @@ function Stop-AsyncLoader {
     $Global:AsyncLoader.Stop = $true
     $Global:AsyncLoader.Loader.dispose()
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
+}
+
+function Write-HostSetupHints {
+[cmdletbinding()]   
+Param(   
+    [Parameter(Mandatory = $False)]   
+    [string]$Color = "Yellow"
+)
+
+    Write-Host " "
+    Write-Host "Hints:" -ForegroundColor $Color
+    Write-Host "- your current configuration defines the defaults. Press Return to accept the them." -ForegroundColor $Color
+    Write-Host "- fields marked with * are mandatory" -ForegroundColor $Color
+    Write-Host "- use comma `",`" to separate list entries" -ForegroundColor $Color
+    Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor $Color
+    Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor $Color
+    Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor $Color
+    Write-Host "- enter `"back`" or `"<`" to repeat the last input" -ForegroundColor $Color
+    Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor $Color
+    Write-Host "- enter `"exit`" or `"cancel`" to abort without any changes to the configuration" -ForegroundColor $Color
+    Write-Host " "
 }
