@@ -70,6 +70,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - [**C**]onfiguration = goto the configuration setup (after setup all miner will be restarted)
 - [**V**]erbose off/on = switch the user interface from lite(=off) to full(=on)
 - [**P**]ause = stop all running miner and wait until user presses P again
+- [**U**]pdate = if a new release of RainbowMiner is available, this option will show up. Pressing this key will start the automatic update.
 
 
 ## RECOMMENDATIONS & HELPERS
@@ -83,6 +84,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - ResetBenchmark.bat: reset all benchmarks
   - ResetProfit.bat: reset RainbowMiner's profit calculation
   - Stopp.bat: halt RainbowMiner at once
+  - Updater.bat: update to newest release of RainbowMiner manually. Make sure, you stop RainbowMiner before running this helper
 	
 
 ## POOLS
