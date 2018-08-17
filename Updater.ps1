@@ -27,7 +27,7 @@ try {
 
         Write-Host " (2/3) Deleting old files .."
 
-        @("Miners","APIs","Benchmarks","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force}}
+        @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force}}
 
         Write-Host " (3/3) Extracting new files .."
 
