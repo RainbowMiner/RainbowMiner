@@ -1957,6 +1957,24 @@ function Read-HostBool {
     Get-Yes $Result
 }
 
+function Read-HostKey {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$Prompt
+    )    
+    if ($psISE)
+    {
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.MessageBox]::Show("$Prompt")
+    }
+    else
+    {
+        Write-Host "$Prompt" -ForegroundColor Yellow
+        [void]($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown'))
+    }
+}
+
 function Set-MinersConfigDefault {
     [CmdletBinding()]
     param(

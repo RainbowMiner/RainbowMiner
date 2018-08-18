@@ -104,7 +104,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.1.3"
+$Version = "3.8.1.4"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -276,6 +276,8 @@ while ($true) {
 
                 if ($RunSetup) {
 
+                    [System.Collections.ArrayList]$SetupMessage = @()
+
                     do {
                         $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
@@ -284,6 +286,15 @@ while ($true) {
 
                         Clear-Host
               
+                        if ($SetupMessage.Count -gt 0) {
+                            Write-Host " "
+                            foreach($m in $SetupMessage) {
+                                Write-Host $m -ForegroundColor Cyan
+                            }
+                            Write-Host " "
+                            $SetupMessage.Clear()
+                        }
+
                         Write-Host " "
                         Write-Host "*** RainbowMiner Configuration ***" -BackgroundColor Green -ForegroundColor Black
                         Write-Host " "
@@ -329,7 +340,9 @@ while ($true) {
                             $GlobalSetupSteps.Add("save") | Out-Null
                             $GlobalSetupStep = $GlobalSetupStepBack = 0
 
-                            Write-Host "*** $GlobalSetupName Configuration ***" -BackgroundColor Green -ForegroundColor Black
+                            if (-not $IsInitialSetup) {
+                                Write-Host "*** $GlobalSetupName Configuration ***" -BackgroundColor Green -ForegroundColor Black
+                            }
                             Write-HostSetupHints
 
                             do {
@@ -632,25 +645,25 @@ while ($true) {
                                             $ConfigActual | Add-Member ExcludeAlgorithm $($Config.ExcludeAlgorithm -join ",") -Force
                                             $ConfigActual | Add-Member ExcludeCoin $($Config.ExcludeCoin -join ",") -Force
                                             $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
-                                            $ConfigActual | Add-Member ShowPoolBalances $(if ([int]$Config.ShowPoolBalances){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member ShowMinerWindow $(if ([int]$Config.ShowMinerWindow){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member FastestMinerOnly $(if ([int]$Config.FastestMinerOnly){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member ShowPoolBalances $(if (Get-Yes $Config.ShowPoolBalances){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member ShowMinerWindow $(if (Get-Yes $Config.ShowMinerWindow){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member FastestMinerOnly $(if (Get-Yes $Config.FastestMinerOnly){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member UIstyle $Config.UIstyle -Force
                                             $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force                      
                                             $ConfigActual | Add-Member Interval $Config.Interval -Force
-                                            $ConfigActual | Add-Member DisableExtendInterval $(if ([int]$Config.DisableExtendInterval){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member DisableExtendInterval $(if (Get-Yes $Config.DisableExtendInterval){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member SwitchingPrevention $Config.SwitchingPrevention -Force                                            
                                             $ConfigActual | Add-Member Donate $Config.Donate -Force
-                                            $ConfigActual | Add-Member Watchdog $(if ([int]$Config.Watchdog){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member IgnoreFees $(if ([int]$Config.IgnoreFees){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member DisableDualMining $(if ([int]$Config.DisableDualMining){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member Watchdog $(if (Get-Yes $Config.Watchdog){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member IgnoreFees $(if (Get-Yes $Config.IgnoreFees){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member DisableDualMining $(if (Get-Yes $Config.DisableDualMining){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member MSIAprofile $Config.MSIAprofile -Force
                                             $ConfigActual | Add-Member MSIApath $Config.MSIApath -Force
-                                            $ConfigActual | Add-Member UseTimeSync $(if ([int]$Config.UseTimeSync){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member UseTimeSync $(if (Get-Yes $Config.UseTimeSync){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
-                                            $ConfigActual | Add-Member UsePowerPrice $(if ([int]$Config.UsePowerPrice){"1"}else{"0"}) -Force
-                                            $ConfigActual | Add-Member CheckProfitability $(if ([int]$Config.CheckProfitability){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member UsePowerPrice $(if (Get-Yes $Config.UsePowerPrice){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member CheckProfitability $(if (Get-Yes $Config.CheckProfitability){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member EthPillEnable $Config.EthPillEnable -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
@@ -661,17 +674,14 @@ while ($true) {
                                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFile                                               
                                             $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile
 
-                                            Write-Host " "
-                                            Write-Host "Changes written to configuration. " -ForegroundColor Yellow
-                                            Write-Host " "
-
                                             if ($IsInitialSetup) {
-                                                Write-Host "Well done! You made it through the setup wizard - an initial configuration has been created " -ForegroundColor Yellow
-                                                Write-Host "If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation" -ForegroundColor Yellow
-                                                Write-Host " "
+                                                $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") | Out-Null
+                                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") | Out-Null                                                
+                                            } else {
+                                                $SetupMessage.Add("Changes written to configuration. ") | Out-Null
                                             }
                                             $IsInitialSetup = $false
-                                            $GlobalSetupDone = $true
+                                            $GlobalSetupDone = $true                                            
                                         }
                                         default {
                                             Write-Log -Level Error "Unknown setup command `"$($GlobalSetupSteps[$GlobalSetupStep])`". You should never reach here. Please open an issue on github.com"
@@ -694,11 +704,14 @@ while ($true) {
                                             $GlobalSetupStepBack = $OldGlobalSetupStepBack
                                         }
                                     }
-                                    else {
+                                    elseif ($_.Exception.Message -like "Cancel") {
                                         Write-Host " "
                                         Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
                                         Write-Host " "
                                         $ReReadConfig = $GlobalSetupDone = $true
+                                    }
+                                    else {
+                                        Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
                                     }
                                 }
                             } until ($GlobalSetupDone)
