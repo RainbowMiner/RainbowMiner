@@ -71,6 +71,7 @@ $AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $AHashPool_PoolFee
+                UsesDataWindow = $True
             }
         }
     }

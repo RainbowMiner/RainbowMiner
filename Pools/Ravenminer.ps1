@@ -96,6 +96,7 @@ $Ravenminer_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | 
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Ravenminer_PoolFee
+            UsesDataWindow = $True
         }
     }
 }

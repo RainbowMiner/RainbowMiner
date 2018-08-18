@@ -71,6 +71,7 @@ $BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $BlazePool_PoolFee
+                UsesDataWindow = $True
             }
         }
     }

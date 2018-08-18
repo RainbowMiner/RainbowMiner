@@ -71,6 +71,7 @@ $BlockMasters_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $BlockMasters_PoolFee
+                UsesDataWindow = $True
             }
         }
     }

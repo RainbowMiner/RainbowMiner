@@ -70,6 +70,7 @@ $Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Selec
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Zpool_PoolFee
+                UsesDataWindow = $True
             }
         }
     }

@@ -70,6 +70,7 @@ $HashRefinery_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore 
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $HashRefinery_PoolFee
+                UsesDataWindow = $True
             }
         }
     }

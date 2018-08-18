@@ -77,6 +77,7 @@ $ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Se
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $ZergPool_PoolFee
+                UsesDataWindow = $True
             }
         }
     }
