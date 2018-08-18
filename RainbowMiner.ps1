@@ -938,12 +938,12 @@ while ($true) {
                                                         Write-Host "- estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor Cyan
                                                         Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor Cyan
                                                         Write-Host "- actual_last24h: the actual profitability over the past 24 hours (less switching)" -ForegroundColor Cyan
-                                                        Write-Host "- mininum: the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                                        Write-Host "- maximum: the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                                        Write-Host "- average: the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                                        Write-Host "- mininumall: the minimum value of the above three values will be used" -ForegroundColor Cyan
-                                                        Write-Host "- maximumall: the maximum value of the above three values will be used" -ForegroundColor Cyan
-                                                        Write-Host "- averageall: the calculated average of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host "- mininum (or minimum-2): the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- maximum (or maximum-2): the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- average (or average-2): the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- mininumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host "- maximumall (or maximum-3): the maximum value of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host "- averageall (or average-3): the calculated average of the above three values will be used" -ForegroundColor Cyan
                                                         Write-Host " "
                                                         $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool" -Default (Get-YiiMPDataWindow $PoolConfig.DataWindow) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                                         $PoolConfig.DataWindow = Get-YiiMPDataWindow $PoolConfig.DataWindow
