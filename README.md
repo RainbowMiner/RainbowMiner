@@ -101,6 +101,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - 'miningpoolhubmini' is setup to mine lyra2z, skein, myriadgroestl, groestl, neoscrypt and equihash-btg, only.
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports). 
 - Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below)
+- PhiPhiPool https://www.phi-phi-pool.com (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
 - Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in ["Config\pools.config.txt"](#config-pools-config-txt))
 - YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
 - ZergPool / ZergPoolCoins https://zergpool.eu/ (auto-exchange and payout in BTC)
