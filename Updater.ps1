@@ -12,7 +12,7 @@ if (-not (Test-Path ".\Data\Version.json")) {
     exit
 }
 
-$RBMVersion = Confirm-Version (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version -Force
+$RBMVersion = Confirm-Version (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version -Force -Silent
 
 $Name = "RainbowMiner"
 try {
@@ -23,7 +23,12 @@ try {
         if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
         $FileName = Join-Path ".\Downloads" (Split-Path $RBMVersion.DownloadURI -Leaf)
         if (Test-Path $FileName) {Remove-Item $FileName}
+
+        if ($RBMVersion.DownloadURI -eq "") {throw}
+
         Invoke-WebRequest $RBMVersion.DownloadURI -OutFile $FileName -UseBasicParsing
+
+        if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 
         Write-Host " (2/3) Deleting old files .."
 

@@ -12,7 +12,7 @@ function Get-Version {
 
 function Confirm-Version {
     [CmdletBinding()]
-    param($RBMVersion, [Switch]$Force = $false)
+    param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -32,12 +32,12 @@ function Confirm-Version {
 
         $Version = Get-Version($Version)
 
-        if ($Version -gt $RBMVersion) {
-            Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
-        }
-
-        if ($Version -lt $RBMVersion) {
-            Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
+        if (-not $Silent) {
+            if ($Version -gt $RBMVersion) {
+                Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
+            } elseif ($Version -lt $RBMVersion) {
+                Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
+            }
         }
     }
     catch {
