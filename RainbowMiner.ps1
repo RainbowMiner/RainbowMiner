@@ -671,8 +671,8 @@ while ($true) {
                                                     Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
                                             }) -Force
 
-                                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFile                                               
-                                            $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile
+                                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFile -Encoding utf8                                             
+                                            $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile -Encoding utf8
 
                                             if ($IsInitialSetup) {
                                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") | Out-Null
@@ -704,7 +704,7 @@ while ($true) {
                                             $GlobalSetupStepBack = $OldGlobalSetupStepBack
                                         }
                                     }
-                                    elseif ($_.Exception.Message -like "Cancel") {
+                                    elseif (@("exit","cancel") -icontains $_.Exception.Message) {
                                         Write-Host " "
                                         Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
                                         Write-Host " "
@@ -788,16 +788,27 @@ while ($true) {
 
                             Write-Host "*** Pool Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-HostSetupHints
-                            Write-Host "(under development)" -ForegroundColor Red
-                            Write-Host " "                           
+                            Write-Host " "
+
+                            $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"[,;:\s]+")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
 
                             $PoolSetupDone = $false
                             do {
                                 try {
-                                    $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $AvailPools
+                                    $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     if ($Pool_Name -eq '') {throw}
 
                                     if (-not $PoolsActual.$Pool_Name) {
+                                       $PoolsActual | Add-Member $Pool_Name (
+                                            [PSCustomObject]@{
+                                                BTC     = "`Wallet"
+                                                User    = "`$UserName"
+                                                Worker  = "`$WorkerName"
+                                                API_ID  = "`$API_ID"
+                                                API_Key = "`$API_Key"
+                                            }
+                                        ) -Force
+                                        $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8 
                                     }
 
                                     $Pool_Parameters = @{StatSpan = [TimeSpan]::FromSeconds(0);InfoOnly = $true}
@@ -808,34 +819,181 @@ while ($true) {
                                     }
                                     $Pool = Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
 
-                                    $Pool_Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                    $Pool_ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                                                        
+                                    if ($Pool) {
+                                        [System.Collections.ArrayList]$PoolSetupSteps = @()
 
-                                    if ($false) {
-                                    $EditMinerConfig = [PSCustomObject]@{
-                                        MainAlgorithm = $EditAlgorithm
-                                        SecondaryAlgorithm = $EditSecondaryAlgorithm
-                                        Params = ""
-                                        Profile = ""
+                                        $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
+
+                                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") | Out-Null}
+                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","excludecoin")) | Out-Null
+                                        if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") | Out-Null} 
+                                        $PoolSetupSteps.Add("save") | Out-Null
+                                        $PoolSetupStep = $PoolSetupStepBack = 0
+                                        $PoolSetupStepsDone = $false
+                                                                                
+                                        $Pool_Avail_Currency = @($Pool.Content.Currency | Select-Object -Unique | Sort-Object)                                        
+
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_Key") {$PoolConfig | Add-Member API_Key "`$API_Key" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Worker") {$PoolConfig | Add-Member Worker "`$WorkerName" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Penalty") {$PoolConfig | Add-Member Penalty 0 -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Algorithm") {$PoolConfig | Add-Member Algorithm "" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$PoolConfig | Add-Member ExcludeAlgorithm "" -Force}            
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$PoolConfig | Add-Member ExcludeCoin "" -Force}
+                                        if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
+                                        
+                                        do { 
+                                            try {
+                                                Switch ($PoolSetupSteps[$PoolSetupStep]) {
+                                                    "basictitle" {
+                                                        Write-Host " "
+                                                        Write-Host "*** Edit pool's basic settings ***" -ForegroundColor Green
+                                                        Write-Host " "
+                                                    }
+                                                    "algorithmtitle" {
+                                                        Write-Host " "
+                                                        Write-Host "*** Edit pool's algorithms and coins ***" -ForegroundColor Green
+                                                        Write-Host " "
+                                                    }
+                                                    "worker" {
+                                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name (leave empty to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                                        if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
+                                                    }
+                                                    "user" {
+                                                        $PoolConfig.User = Read-HostString -Prompt "Enter the pool's user name, if applicable (leave empty to use config.txt default)" -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = "`$UserName"}
+                                                    }
+                                                    "apiid" {
+                                                        $PoolConfig.API_ID = Read-HostString -Prompt "Enter the pool's API-ID, if applicable (for MPH this is the USER ID, leave empty to use config.txt default)" -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                                        if ($PoolConfig.API_ID.Trim() -eq '') {$PoolConfig.API_ID = "`$API_ID"}
+                                                    }
+                                                    "apikey" {
+                                                        $PoolConfig.API_Key = Read-HostString -Prompt "Enter the pool's API-Key, if applicable (for MPH this is the API Key, leave empty to use config.txt default)" -Default ($PoolConfig.API_Key -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                                        if ($PoolConfig.API_Key.Trim() -eq '') {$PoolConfig.API_Key = "`$API_Key"}
+                                                    }
+                                                    "algorithm" {
+                                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine (leave empty for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "excludealgorithm" {
+                                                        $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "excludecoin" {
+                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "penalty" {                                                    
+                                                        $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "currency" {
+                                                        $PoolEditCurrencyDone = $false
+                                                        Write-Host " "
+                                                        Write-Host "*** Define your wallets for this pool ***" -ForegroundColor Green
+                                                        do {
+                                                            $Pool_Actual_Currency = @(Compare-Object @($Pool_Avail_Currency) @($PoolConfig.PSObject.Properties.Name) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Sort-Object)
+                                                            Write-Host " "
+                                                            if ($Pool_Actual_Currency.Count -gt 0) {
+                                                                Write-Host "Currently defined wallets:" -ForegroundColor Cyan
+                                                                foreach ($p in $Pool_Actual_Currency) {
+                                                                    $v = $PoolConfig.$p
+                                                                    if ($v -eq "`$Wallet") {$v = "default (wallet $($Config.Wallet) from your config.txt)"}
+                                                                    Write-Host "$p = $v" -ForegroundColor Cyan
+                                                                }
+                                                            } else {
+                                                                Write-Host "No wallets defined!" -ForegroundColor Yellow
+                                                            }
+                                                            Write-Host " "
+                                                            $PoolEditCurrency = Read-HostString -Prompt "Enter the currency you want to edit, add or remove (leave empty to end wallet configuration)" -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                            $PoolEditCurrency = $PoolEditCurrency.Trim()
+                                                            if ($PoolEditCurrency -ne "") {
+                                                                $v = $PoolConfig.$PoolEditCurrency
+                                                                if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC")) {$v = "default"}
+                                                                $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                                $v = $v.Trim()
+                                                                if (@("back","<") -inotcontains $v) {
+                                                                    if (@("del","delete","remove","clear","rem") -icontains $v) {
+                                                                        if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)} 
+                                                                    } else {
+                                                                        if (@("def","default","wallet","standard") -icontains $v) {$v = "`$Wallet"}
+                                                                        $PoolConfig | Add-Member $PoolEditCurrency $v -Force
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                $PoolEditCurrencyDone = $true
+                                                            }
+
+                                                        } until ($PoolEditCurrencyDone)                                                                                                          
+                                                    }
+                                                    "datawindow" {
+                                                        Write-Host " "
+                                                        Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
+                                                        Write-Host " "
+                                                        Write-Host "- estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor Cyan
+                                                        Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor Cyan
+                                                        Write-Host "- actual_last24h: the actual profitability over the past 24 hours (less switching)" -ForegroundColor Cyan
+                                                        Write-Host "- mininum: the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- maximum: the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- average: the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
+                                                        Write-Host "- mininumall: the minimum value of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host "- maximumall: the maximum value of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host "- averageall: the calculated average of the above three values will be used" -ForegroundColor Cyan
+                                                        Write-Host " "
+                                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool" -Default (Get-YiiMPDataWindow $PoolConfig.DataWindow) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.DataWindow = Get-YiiMPDataWindow $PoolConfig.DataWindow
+                                                    }
+                                                    "save" {
+                                                        Write-Host " "
+                                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+
+                                                        $Pool_Name
+                                                        $PoolConfig | Add-Member Algorithm $($PoolConfig.Algorithm -join ",") -Force
+                                                        $PoolConfig | Add-Member ExcludeAlgorithm $($PoolConfig.ExcludeAlgorithm -join ",") -Force
+                                                        $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
+                                                        $PoolConfig
+
+                                                        #$PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
+                                                        #$PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
+
+                                                        Write-Host " "
+                                                        Write-Host "Changes written to pool configuration. " -ForegroundColor Cyan
+                                                    
+                                                        $PoolSetupStepsDone = $true                                                  
+                                                    }
+                                                }
+                                                $PoolSetupStepBack = $PoolSetupStep
+                                                $PoolSetupStep++
+                                            }
+                                            catch {
+                                                if (@("back","<") -icontains $_.Exception.Message) {
+                                                    $PoolSetupStep = $PoolSetupStepBack
+                                                }
+                                                elseif ($_.Exception.Message -like "Goto*") {
+                                                    $OldPoolSetupStepBack = $PoolSetupStepBack
+                                                    $PoolSetupStepBack = $PoolSetupStep
+                                                    $PoolSetupStep = $PoolSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                                    if ($PoolSetupStep -lt 0) {
+                                                        Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                                        $PoolSetupStep = $PoolSetupStepBack
+                                                        $PoolSetupStepBack = $OldPoolSetupStepBack
+                                                    }
+                                                }
+                                                elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                                    Write-Host " "
+                                                    Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                                    Write-Host " "
+                                                    $PoolSetupStepsDone = $true                                               
+                                                }
+                                                else {
+                                                    Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                                    $PoolSetupStepsDone = $true
+                                                }
+                                            }
+                                        } until ($PoolSetupStepsDone)                                                                        
+
+                                    } else {
+                                        Write-Host "Please try again later" -ForegroundColor Yellow
                                     }
-                        
-                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {
-                                        $MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {
-                                            $EditMinerConfig.Params = $_.Params
-                                            $EditMinerConfig.Profile = $_.Profile
-                                        }
-                                    }
 
-                                    $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
-                                    $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
-
-                                    if (Read-HostBool "Really write Params=`"$($EditMinerConfig.Params)`", Profile=`"$($EditMinerConfig.Profile)`" to $($PoolsConfigFile)?") {
-                                        $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
-                                        $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
-                                    }                        
-                                    }
-
+                                    Write-Host " "
                                     if (-not (Read-HostBool "Edit another pool?")){throw}
                         
                                 } catch {$PoolSetupDone = $true}
