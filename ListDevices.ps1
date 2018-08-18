@@ -105,8 +105,7 @@ function Get-DeviceDebug {
         }
     }
     catch {
-        Write-Host "OpenCL device detection has failed. " -ForegroundColor Yellow
-        Write-Host $_.Exception.Message -ForegroundColor Yellow
+        Write-Host "OpenCL device detection has failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 
     try {
@@ -147,5 +146,5 @@ function Get-DeviceDebug {
     $Devices
 }
 
-@(Get-DeviceDebug "gpu" | Select-Object -Property Name,Vendor,Model,@{Name="Memory"; Expression={"$([math]::round($_.OpenCL.GlobalMemSize/1gb,3))GB"}})
+@(Get-DeviceDebug @("cpu","gpu") | Select-Object -Property Name,Vendor,Model,@{Name="Memory"; Expression={"$([math]::round($_.OpenCL.GlobalMemSize/1gb,3))GB"}})
 

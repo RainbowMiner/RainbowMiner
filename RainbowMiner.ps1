@@ -332,9 +332,9 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) | Out-Null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("currency","uistyle","disabledualmining","excludeminerswithfee","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) | Out-Null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) | Out-Null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) | Out-Null}
-                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin")) | Out-Null}
+                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoin")) | Out-Null}
                                 "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) | Out-Null}
                             }
                             $GlobalSetupSteps.Add("save") | Out-Null

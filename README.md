@@ -79,7 +79,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Set your Windows virtual memory size to a fixed size of at least 16GB, or better to the sum of your GPU memories x 1.5, e.g. if you have 6x GTX1070 8GB installed, use at least 72GB (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
 - the root directory of RainbowMiner contains the follwing, additional batch files:
-  - ListGPUs.bat: if clicked, a window will popup and list all available GPUs
+  - ListDevices.bat: if clicked, a window will popup and list all available devices
   - MinerLog.bat: it reopens the window to show the output of the miners. Useful, if you unintentionally closed this log window.
   - RemoveLogs.bat: delete all log files to save some disk space
   - ResetBenchmark.bat: reset all benchmarks
@@ -189,46 +189,98 @@ Config files are found in directory "Config\"
 
 ### Config\config.txt
 
-- Wallet = your general BTC wallet address
-- WorkerName = your desired worker name
-- UserName = your MiningPoolHub user name
-- Interval = timing interval in seconds of RainbowMiner [default=60]
-- Region = your region, [default=US]
-- SSL = set to 1, if only ssl connections wanted
-- DeviceName = list of device descriptors, with which you want to mine [default=nvidia,amd]
-- Algorithm = list of algorithms, you want to mine [default=bitcore,blake2s,c11,cryptonightheavy,cryptonightv7,ethash,equihash,hmq1725,hsr,keccak,keccakc,lyra2re2,lyra2z,neoscrypt,pascal,phi,skein,skunk,timetravel,tribus,x16r,x16s,x17,vit,xevan,yescrypt,yescryptr16]
-- MinerName = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
-- PoolName = list of pool names, you want to use for mining [default=nicehash,blazepool,miningpoolhubmini]
-- ExcludeAlgorithm = list of algorithms, you want to exclude from mining
-- ExcludeFromWatchdog = list of algorithms or miner, you want to exclude from the watchdog
-- ExcludeMinerName = list of miner names, you want to exclude from mining
-- ExcludePoolName = list of pool names, you want to exclude from mining
-- ExcludeCoin = list of coins, you want to exclude from mining
-- Currency = currencies, you want to be shown [default=BTC,USD,EUR]
-- PowerPrice = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
-- PowerPriceCurrency = currency of your PowerPrice [default=USD]
-- UsePowerPrice = set to (1), if electricity cost should be substracted from profits [default=0]
-- CheckProfitability = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
-- Donate = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
-- Proxy = set your proxy address here, if you are using one
-- Delay = extra delay in secondes, between switching to avoid blue screen [default=2]
-- Watchdog = use (1) or do not use (0) watchdog [default=1]
-- SwitchingPrevention = finetune the switching prevention algorithm. Set to zero to disable [default=2]
-- ShowMinerWindow = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
-- FastestMinerOnly = set to 1 to reduce list by only showing the fastest miner [default=1]
-- IgnoreFees = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
-- ExcludeMinersWithFee = exclude all miners, that have a developer fee build-in [default=0]
-- DisableDualMining = set to 1, if you want to disable all dual mining [default=0]
-- ShowPoolBalances = set to 1 to let RainbowMiner show your current pool balances [default=1]
-- RebootOnGPUFailure = (currently disabled)
-- MSIApath = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
-- MSIAprofile = default MSI Afterburner profile (1-5) [default=2]
-- UIstyle = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
-- MiningMode = possible values are "legacy", "device" and "combo", see explanation below
+The config file will contain variables to reflect default values. You can safely replace those variables with values.
+
+An example:
+
+    "API_ID": "$API_ID",
+    "API_Key": "$API_Key",
+
+You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
+
+    "API_ID": "12345",
+    "API_Key": "0123456789abcdef0123456789abcdef0123456789abcdef",
+
+#### Basic setup ####
+
+- **Wallet** = your general BTC wallet address
+- **WorkerName** = your desired worker name
+- **UserName** = your MiningPoolHub user name
+- **Currency** = currencies, you want to be shown [default=BTC,USD,EUR]
+- **Region** = your region, [default=US]
+- **API_ID** = your MiningPoolHub USER ID (found at MPH on page "Edit account")
+- **API_Key** = your MiningPoolHub API KEY (found at MPH on page "Edit account")
+- **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
+
+#### Select devices ####
+
+- **DeviceName** = list of device descriptors, with which you want to mine [default=gpu]
+  - click ListDevices.bat to find out which devices are availabe
+  - out of this table, models, vendors and names can be used to select
+  - for mining on all GPUs, use "gpu"
+  - for mining on all Nvidia GPUs use "nvidia"
+  - for mining on all AMD GPUs use "amd"
+  - for mining on CPU, use "cpu"
+  - examples:
+    - "nvidia"
+    - "gtx1070,gtx1080,cpu"
+    - "cpu,gpu"
+    - "gpu#01,gpu#03"
+
+#### Select algorithms ####
+
+- **Algorithm** = list of algorithms, you want to mine [default=bitcore,blake2s,c11,cryptonightheavy,cryptonightv7,ethash,equihash,hmq1725,hsr,keccak,keccakc,lyra2re2,lyra2z,neoscrypt,pascal,phi,skein,skunk,timetravel,tribus,x16r,x16s,x17,vit,xevan,yescrypt,yescryptr16]
+- **ExcludeAlgorithm** = list of algorithms, you want to exclude from mining
+- **ExcludeCoin** = list of coins, you want to exclude from mining
+- **ExcludeFromWatchdog** = list of algorithms or miner, you want to exclude from the watchdog
+
+#### Select miners ####
+
+- **MinerName** = list of miner, you want to use for mining (see directory Miners, without .ps1, e.g. CcminerAlexis78.ps1 -> CcminerAlexis78)
+- **ExcludeMinerName** = list of miner names, you want to exclude from mining
+- **ExcludeMinersWithFee** = exclude all miners, that have a developer fee build-in [default=0]
+- **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
+- **ExcludeMinersWithFee** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
+- **ShowMinerWindow** = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
+- **FastestMinerOnly** = set to 1 to reduce list by only showing the fastest miner [default=1]
+- **DisableExtendInterval** = during benchmark, some miners will run longer to find an accurate hashrate. Set to 1 to disable the extended times (this is not recommended, as it may result in inaccurate hashrates or failed some miners) [default=0]
+
+#### Select pools ####
+
+- **PoolName** = list of pool names, you want to use for mining [default=nicehash,blazepool,miningpoolhubmini]
+- **ExcludePoolName** = list of pool names, you want to exclude from mining
+- **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
+
+#### Select mining mode ####
+
+- **MiningMode** = possible values are "legacy", "device" and "combo", see explanation below
   - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, AMD, CPU are possible to select.
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
   - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
 
+#### Set electricity cost handling ####
+
+- **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
+- **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
+- **UsePowerPrice** = set to (1), if electricity cost should be substracted from profits [default=0]
+- **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
+
+#### Set output preference ####
+
+#### Technical/Other ####
+- **Interval** = timing interval in seconds of RainbowMiner [default=60]
+- **SSL** = set to 1, if only ssl connections wanted
+- **Proxy** = set your proxy address here, if you are using one
+- **Delay** = extra delay in secondes, between switching to avoid blue screen [default=0]
+- **Watchdog** = use (1) or do not use (0) watchdog [default=1]
+- **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
+- **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
+- **RebootOnGPUFailure** = (currently disabled)
+- **MSIApath** = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
+- **MSIAprofile** = default MSI Afterburner profile (1-5) [default=2]
+- **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
+- **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
+- **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
 
 ### Config\pools.config.txt
 

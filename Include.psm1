@@ -928,7 +928,7 @@ function Get-Device {
         }
     }
     catch {
-        Write-Log -Level Warn "OpenCL device detection has failed. "
+        Write-Log -Level Warn "OpenCL device detection has failed: $($_.Exception.Message)"
     }
 
     try {
