@@ -2229,14 +2229,16 @@ Stop-AsyncLoader
 
 Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
 Write-Log "Gracefully halting RainbowMiner"
+[System.Collections.ArrayList]$ExcavatorWindowsClosed = @()
 $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
     $Miner = $_
     if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
         Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
         $Miner.StopMining()            
     }
-    if ($Miner.BaseName -like "Excavator*") {
+    if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {
         $Miner.SetStatus([MinerStatus]::Failed)
+        $ExcavatorWindowsClosed.Add($Miner.BaseName) | Out-Null
     }
 }
 
