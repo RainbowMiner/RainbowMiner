@@ -802,6 +802,7 @@ while ($true) {
                             $PoolSetupDone = $false
                             do {
                                 try {
+                                    $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
                                     $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     if ($Pool_Name -eq '') {throw}
 
@@ -956,7 +957,10 @@ while ($true) {
                                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
 
                                                         $PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
-                                                        $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
+                                                        $PoolsActualSave = [PSCustomObject]@{}
+                                                        $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$PoolsActualSave | Add-Member $_ ($PoolsActual.$_) -Force}
+
+                                                        $PoolsActualSave | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
 
                                                         Write-Host " "
                                                         Write-Host "Changes written to pool configuration. " -ForegroundColor Cyan
