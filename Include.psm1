@@ -2070,26 +2070,31 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            Get-ChildItem ".\Pools\*.ps1" | Select-Object -ExpandProperty BaseName | Foreach-Object {        
-                if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_) {
-                    $Setup_Content = $Preset.$_
-                } else {
-                    $Setup_Content = [PSCustomObject]@{}
-                    $Setup_Currencies = @("BTC")
-                    if ($Setup.$_) {
-                        if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
-                        $Setup_Currencies = @($Setup.$_.Currencies)            
+            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty BaseName)
+            if ($Pools.Count -gt 0) {
+                $Pools | Foreach-Object {        
+                    if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_) {
+                        $Setup_Content = $Preset.$_
+                    } else {
+                        $Setup_Content = [PSCustomObject]@{}
+                        $Setup_Currencies = @("BTC")
+                        if ($Setup.$_) {
+                            if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
+                            $Setup_Currencies = @($Setup.$_.Currencies)            
+                        }
+                        $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
                     }
-                    $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}                                
+                    $Done | Add-Member $_ $Setup_Content
                 }
-                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
-                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
-                if ($Setup_Content.PSObject.Properties.Name -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
-                if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
-                if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}                                
-                $Done | Add-Member $_ $Setup_Content
+                $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            } else {
+                Write-Log -Level Error "No pools found!"
             }
-            $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
