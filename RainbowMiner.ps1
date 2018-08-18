@@ -718,8 +718,12 @@ while ($true) {
                         }
                         elseif ($SetupType -eq "M") {
 
+                            Clear-Host
+
+                            Write-Host " "
                             Write-Host "*** Miner Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-HostSetupHints
+                            Write-Host " "
 
                             $AvailDeviceName = @("*")
                             if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
@@ -786,6 +790,9 @@ while ($true) {
                         }
                         elseif ($SetupType -eq "P") {
 
+                            Clear-Host
+
+                            Write-Host " "
                             Write-Host "*** Pool Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             Write-HostSetupHints
                             Write-Host " "
