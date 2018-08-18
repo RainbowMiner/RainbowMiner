@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.10a/excavator_v1.5.10a_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.11a/excavator_v1.5.11a_Win64.zip"
 $ManualUri = "https://github.com/nicehash/excavator/releases"
 $Port = "31100"
 
@@ -22,7 +22,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{Algorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     [PSCustomObject]@{Algorithm = "lyra2z"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2z
     [PSCustomObject]@{Algorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt
-    #[PSCustomObject]@{Algorithm = "x16r"; Threads = 1; MinMemGB = 2; ExtendInterval = 3; FaultTolerance = 0.5; Params = @()} #X16R
+    #[PSCustomObject]@{Algorithm = "x16r"; Threads = 1; MinMemGB = 2; ExtendInterval = 4; FaultTolerance = 0.5; Params = @()} #X16R
     #[PSCustomObject]@{Algorithm = "daggerhashimoto_decred"; Threads = 1; MinMemGB = 4; ExtendInterval = 2; Params = @()} #Dual mining
     #[PSCustomObject]@{Algorithm = "daggerhashimoto_pascal"; Threads = 1; MinMemGB = 4; ExtendInterval = 2; Params = @()} #Dual mining
 
