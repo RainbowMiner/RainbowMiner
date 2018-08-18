@@ -1370,10 +1370,18 @@ class Miner {
         $this.Activated++
 
         if (-not $this.Process) {
-            if (@('RevA','RevB') -icontains $this.EthPillEnable) {
-                Write-Log "Starting OhGodAnETHlargementPill $($this.EthPillEnable)"
-                $this.EthPill = Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "-$($this.EthPillEnable)"
-                Sleep -Milliseconds 250 #wait 1/4 second
+            if ($this.BaseAlgorithm -icontains "Ethash" -and $this.EthPillEnable -ne "disable") {
+                $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
+                $Prescription = ""
+                switch ($this.EthPillEnable) {
+                    "RevA" {$Prescription = "revA"}
+                    "RevB" {$Prescription = "revB"}
+                }
+                if ($Prescription -ne "" -and $Prescription_Device) {
+                    Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
+                    $this.EthPill = Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')"
+                    Sleep -Milliseconds 250 #wait 1/4 second
+                }
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
@@ -1419,6 +1427,7 @@ class Miner {
                 Write-Log "Stopping OhGodAnETHlargementPill"
                 Stop-Process -Id $this.EthPill.Id
                 $this.EthPill = $null
+                Sleep -Milliseconds 250 #Sleep for 1/4 second
             }
         }
     }

@@ -589,7 +589,7 @@ while ($true) {
                                             } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
                                         }
                                         "ethpillenable" {
-                                            if (@($SetupDevices.Model | Select-Object -Unique) -like 'GTX1080*') {
+                                            if ((Compare-Object @($SetupDevices.Model | Select-Object -Unique) @('GTX1080','GTX1080Ti','TITANXP') -ExcludeDifferent -IncludeEqual | Measure-Object).Count -gt 0) {
                                                 $Config.EthPillEnable = Read-HostString -Prompt "Enable OhGodAnETHlargementPill https://bitcointalk.org/index.php?topic=3370685.0 (only when mining Ethash)" -Default $Config.EthPillEnable -Valid @('disable','RevA','RevB') | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             }
                                         }
@@ -1522,7 +1522,7 @@ while ($true) {
             $_.Port -eq $Miner.Port -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
-        $Miner_EthPillEnable = @("RevA","RevB") -icontains $Config.EthPillEnable -and @($Miner.HashRates.PSObject.Properties.Name) -icontains "Ethash"
+        
         if ($ActiveMiner) {
             $ActiveMiner.Profit = $Miner.Profit
             $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
@@ -1540,7 +1540,7 @@ while ($true) {
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
             $ActiveMiner.Penalty = $Miner.Penalty
             $ActiveMiner.ManualUri = $Miner.ManualUri
-            $ActiveMiner.EthPillEnable = $Miner_EthPillEnable
+            $ActiveMiner.EthPillEnable = $Config.EthPillEnable
         }
         else {
             $ActiveMiners += New-Object $Miner.API -Property @{
@@ -1576,7 +1576,7 @@ while ($true) {
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri
-                EthPillEnable        = $Miner_EthPillEnable
+                EthPillEnable        = $Config.EthPillEnable
             }
         }
     }

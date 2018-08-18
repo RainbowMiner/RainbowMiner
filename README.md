@@ -27,6 +27,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Bind/exclude devices to/from specific algorithm and miners**
 - **Define pool's algorithms and coins**
 - **Switch MSI Afterburner profiles per miner**
+- **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0)**
 - **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
