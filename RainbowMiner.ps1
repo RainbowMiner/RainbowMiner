@@ -12,7 +12,7 @@ param(
     [Alias("Worker")]
     [String]$WorkerName = "rainbowminer", 
     [Parameter(Mandatory = $false)]
-    [Int]$API_ID = 0, 
+    [String]$API_ID = "", 
     [Parameter(Mandatory = $false)]
     [String]$API_Key = "", 
     [Parameter(Mandatory = $false)]
@@ -104,7 +104,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.1.5"
+$Version = "3.8.1.6"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -341,18 +341,21 @@ while ($true) {
                             $GlobalSetupStep = $GlobalSetupStepBack = 0
 
                             if (-not $IsInitialSetup) {
+                                Clear-Host
+                                Write-Host " "
                                 Write-Host "*** $GlobalSetupName Configuration ***" -BackgroundColor Green -ForegroundColor Black
                             }
                             Write-HostSetupHints
 
+                            if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
+                                $NicehashWallet = $PoolsActual.Nicehash.BTC
+                                $NicehashWorkerName = $PoolsActual.Nicehash.Worker
+                            } else {
+                                $NicehashWallet = "`$Wallet"
+                                $NicehashWorkerName = "`$WorkerName"
+                            }
+
                             do {
-                                if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
-                                    $NicehashWallet = $PoolsActual.Nicehash.BTC
-                                    $NicehashWorkerName = $PoolsActual.Nicehash.Worker
-                                } else {
-                                    $NicehashWallet = '$Wallet'
-                                    $NicehashWorkerName = '$WorkerName'
-                                }
                                 try {
                                    Switch ($GlobalSetupSteps[$GlobalSetupStep]) {
                                         "wallet" {                
@@ -379,10 +382,10 @@ while ($true) {
                                                 Write-Host " "
                                             }
 
-                                            if ($NicehashWallet -eq '$Wallet'){$NicehashWallet=$Config.Wallet}
+                                            if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
                                             $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
 
-                                            if ($NiceHashWallet -eq '$Wallet' -or $NiceHashWallet -eq $Config.Wallet) {
+                                            if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
                                                 if (Read-HostBool "You have entered your default wallet as Nicehash wallet. NiceHash will have a minimum payout of 0.1BTC. Do you want to disable NiceHash mining for now?" -Default $true) {
                                                     $NiceHashWallet = ''
                                                 }
@@ -391,7 +394,7 @@ while ($true) {
                                             $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"[,;:\s]+")}else{@()}
                                             if (-not $NicehashWallet) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "NiceHash"}
-                                                $NicehashWallet = '$Wallet'
+                                                $NicehashWallet = "`$Wallet"
                                             } elseif ($Config.PoolName -inotcontains "NiceHash") {
                                                 $Config.PoolName = @($Config.PoolName | Select-Object) + @("NiceHash") | Select-Object -Unique
                                             }
@@ -422,7 +425,7 @@ while ($true) {
                                                 $Config.PoolName = @($Config.PoolName | Select-Object) + @("MiningPoolHub") | Select-Object -Unique
                                             }
                                             $Config.PoolName = $Config.PoolName -join ','
-                                            if (-not $Config.UserName) {throw "Goto region"}                                        
+                                            if ($IsInitialSetup -and -not $Config.UserName -and $GlobalSetupSteps.Contains("region")) {throw "Goto region"}
                                         }
 
                                         "apiid" {
@@ -667,8 +670,8 @@ while ($true) {
                                             $ConfigActual | Add-Member EthPillEnable $Config.EthPillEnable -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
-                                                    BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){'$Wallet'}else{$NicehashWallet}
-                                                    Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){'$WorkerName'}else{$NicehashWorkerName}
+                                                    BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
+                                                    Worker = if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){"`$WorkerName"}else{$NicehashWorkerName}
                                             }) -Force
 
                                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFile -Encoding utf8                                             
