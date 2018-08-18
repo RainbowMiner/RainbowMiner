@@ -943,15 +943,13 @@ while ($true) {
                                                     "save" {
                                                         Write-Host " "
                                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
-
-                                                        $Pool_Name
+                                                        
                                                         $PoolConfig | Add-Member Algorithm $($PoolConfig.Algorithm -join ",") -Force
                                                         $PoolConfig | Add-Member ExcludeAlgorithm $($PoolConfig.ExcludeAlgorithm -join ",") -Force
                                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
-                                                        $PoolConfig
 
-                                                        #$PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
-                                                        #$PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
+                                                        $PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
+                                                        $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
 
                                                         Write-Host " "
                                                         Write-Host "Changes written to pool configuration. " -ForegroundColor Cyan
