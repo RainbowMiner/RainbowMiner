@@ -9,6 +9,7 @@ param(
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-avx2-sha.exe"
 $Uri = "https://github.com/JayDDee/cpuminer-opt/files/1996977/cpuminer-opt-3.8.8.1-windows.zip"
+$ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "503{0:d2}"
 
 $Devices = $Devices.CPU
