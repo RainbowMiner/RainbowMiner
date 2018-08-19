@@ -104,7 +104,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.1.6"
+$Version = "3.8.1.7"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -391,7 +391,7 @@ while ($true) {
                                                 }
                                             }
                                             
-                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"[,;:\s]+")}else{@()}
+                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
                                             if (-not $NicehashWallet) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "NiceHash"}
                                                 $NicehashWallet = "`$Wallet"
@@ -418,7 +418,7 @@ while ($true) {
                                             }
                                             $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
 
-                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"[,;:\s]+")}else{@()}
+                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
                                             if (-not $Config.UserName) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -notlike "MiningPoolHub*"}                                                
                                             } elseif ($Config.PoolName -inotcontains "MiningPoolHub") {
@@ -800,7 +800,7 @@ while ($true) {
                             Write-HostSetupHints
                             Write-Host " "
 
-                            $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"[,;:\s]+")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
+                            $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"\s*[,;:]+\s*")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
 
                             $PoolSetupDone = $false
                             do {
@@ -836,13 +836,14 @@ while ($true) {
                                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
                                         if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") | Out-Null}
-                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","excludecoin")) | Out-Null
+                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinname","excludecoin")) | Out-Null
                                         if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") | Out-Null} 
                                         $PoolSetupSteps.Add("save") | Out-Null
                                         $PoolSetupStep = $PoolSetupStepBack = 0
                                         $PoolSetupStepsDone = $false
                                                                                 
-                                        $Pool_Avail_Currency = @($Pool.Content.Currency | Select-Object -Unique | Sort-Object)                                        
+                                        $Pool_Avail_Currency = @($Pool.Content.Currency | Select-Object -Unique | Sort-Object)
+                                        $Pool_Avail_CoinName = @($Pool.Content | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
 
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
@@ -851,6 +852,7 @@ while ($true) {
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "Penalty") {$PoolConfig | Add-Member Penalty 0 -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "Algorithm") {$PoolConfig | Add-Member Algorithm "" -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$PoolConfig | Add-Member ExcludeAlgorithm "" -Force}            
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinName") {$PoolConfig | Add-Member CoinName "" -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$PoolConfig | Add-Member ExcludeCoin "" -Force}
                                         if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
                                         
@@ -889,8 +891,11 @@ while ($true) {
                                                     "excludealgorithm" {
                                                         $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
+                                                    "coinname" {
+                                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9 " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
                                                     "excludecoin" {
-                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9 " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "penalty" {                                                    
                                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -957,6 +962,7 @@ while ($true) {
                                                         
                                                         $PoolConfig | Add-Member Algorithm $($PoolConfig.Algorithm -join ",") -Force
                                                         $PoolConfig | Add-Member ExcludeAlgorithm $($PoolConfig.ExcludeAlgorithm -join ",") -Force
+                                                        $PoolConfig | Add-Member CoinName $($PoolConfig.CoinName -join ",") -Force
                                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
 
                                                         $PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
@@ -1147,7 +1153,7 @@ while ($true) {
         #for backwards compatibility
         if ($Config.Type -ne $null) {$Config | Add-Member DeviceName $Config.Type -Force}
         if ($Config.GPUs -ne $null -and $Config.GPUs) {
-            if ($Config.GPUs -is [string]) {$Config.GPUs = [regex]::split($Config.GPUs,"[,;:\s]+")}
+            if ($Config.GPUs -is [string]) {$Config.GPUs = [regex]::split($Config.GPUs,"\s*[,;:]+\s*")}
             $Config | Add-Member DeviceName @() -Force
             Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Vendor_Index)}
         }
@@ -1155,15 +1161,15 @@ while ($true) {
         $Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty"} | Select-Object Name,Value | Foreach-Object {
             $name = $_.Name;
             $var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
-            if ( $var -is [array] -and $Config.$name -is [string] ) {$Config.$name = $Config.$name.Trim(); $Config.$name = if ($Config.$name -ne ''){[regex]::split($Config.$name.Trim(),"[,;:\s]+")}else{@()}}
+            if ($var -is [array] -and $Config.$name -is [string]) {$Config.$name = $Config.$name.Trim(); $Config.$name = @(if ($Config.$name -ne ''){@([regex]::split($Config.$name.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
             elseif (($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool]) {$Config.$name = Get-Yes $Config.$name}
             elseif ($var -is [int] -and $Config.$name -isnot [int]) {$Config.$name = [int]$Config.$name}
         }
-        $Config.Algorithm = $Config.Algorithm | ForEach-Object {Get-Algorithm $_}
-        $Config.ExcludeAlgorithm = $Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_}
-        $Config.ExcludeCoin = $Config.ExcludeCoin | ForEach-Object {Get-CoinName $_}
+        $Config.Algorithm = @($Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_})
+        $Config.ExcludeAlgorithm = @($Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_})
+        $Config.ExcludeCoin = @($Config.ExcludeCoin | ForEach-Object {Get-CoinName $_} | Where-Object {$_})
         $Config.Region = $Config.Region | ForEach-Object {Get-Region $_}
-        $Config.Currency = $Config.Currency | ForEach-Object {$_.ToUpper()}        
+        $Config.Currency = @($Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}
         $Config.PowerPriceCurrency = $Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
 
@@ -1197,7 +1203,7 @@ while ($true) {
                 $Config.Devices.$p | Add-Member Algorithm @(($Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 $Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
-                    if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"[,;:\s]+")}}
+                    if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
                 }
                 $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
             }
@@ -1219,6 +1225,7 @@ while ($true) {
             foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
                 $Config.Pools.$p | Add-Member Algorithm @(($Config.Pools.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                $Config.Pools.$p | Add-Member CoinName @(($Config.Pools.$p.CoinName | Select-Object) | Where-Object {$_} | Foreach-Object {Get-CoinName $_}) -Force
                 $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_} | Foreach-Object {Get-CoinName $_}) -Force
             }
         }
@@ -1446,14 +1453,15 @@ while ($true) {
             foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
             Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
-                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split "-" | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
+                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split '-' | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
                 if ($Pool_Config.CoinName) {$Pool_Config.CoinName = Get-CoinName $_.Content.CoinName}
                 $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
                 }
         } |
         Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
         Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
-        Where-Object {-not $_.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName} |
+        Where-Object {-not $_.CoinName -or $Pool_Parameters.CoinName.Count -eq 0 -or @($Pool_Parameters.CoinName) -icontains $_.CoinName} |
+        Where-Object {-not $_.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName} |        
         ForEach-Object {
             $Pool_Factor = 1-[Double]($_.Penalty + $(if (-not $Config.IgnoreFees){$_.PoolFee}))/100
             $_.Price *= $Pool_Factor

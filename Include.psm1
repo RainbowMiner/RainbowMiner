@@ -7,7 +7,7 @@ function Get-Version {
     param($Version)
     # System.Version objects can be compared with -gt and -lt properly
     # This strips out anything that doens't belong in a version, eg. v at the beginning, or -preview1 at the end, and returns a version object
-    Return [System.Version]($Version -Split "-" -Replace "[^0-9.]")[0]
+    Return [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
 }
 
 function Confirm-Version {
@@ -823,6 +823,35 @@ function Invoke-TcpRequest {
     $Response
 }
 
+function Invoke-TcpRead {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Server = "localhost", 
+        [Parameter(Mandatory = $true)]
+        [String]$Port, 
+        [Parameter(Mandatory = $true)]
+        [Int]$Timeout = 10 #seconds
+    )
+    if ($Server -eq "localhost") {$Server = "127.0.0.1"}
+    #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
+    try {
+        $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
+        $Stream = $Client.GetStream()
+        $Reader = New-Object System.IO.StreamReader $Stream
+        $client.SendTimeout = $Timeout * 1000
+        $client.ReceiveTimeout = $Timeout * 1000
+        $Response = $Reader.ReadToEnd()
+    }
+    finally {
+        if ($Reader) {$Reader.Close()}
+        if ($Stream) {$Stream.Close()}
+        if ($Client) {$Client.Close()}
+    }
+
+    $Response
+}
+
 function Get-Device {
     [CmdletBinding()]
     param(
@@ -1122,7 +1151,7 @@ function Update-DeviceInformation {
 
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
-                        $AdlResultSplit = $_ -split (",")
+                        $AdlResultSplit = $_ -split ','
                         $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                             $_ | Add-Member Data ([PSCustomObject]@{
                                     AdapterId         = [int]$AdlResultSplit[0]
@@ -1151,7 +1180,7 @@ function Update-DeviceInformation {
             )
             if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content .\Data\nvidia-cards-tdp.json | ConvertFrom-Json}
             & $Command $Arguments  | ForEach-Object {
-                $SMIresultSplit = $_ -split (",")
+                $SMIresultSplit = $_ -split ','
                 if ($SMIresultSplit.count -gt 10) {
                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $Data = [PSCustomObject]@{
@@ -1228,9 +1257,9 @@ function Get-CoinName {
             Mandatory = $false)]
         [String]$CoinName = ""
     )
-    if ($CoinName -match "[,;\s]") {@($CoinName -split "[,;\s]+") | Foreach-Object {Get-CoinName $_}}
+    if ($CoinName -match "[,;]") {@($CoinName -split "\s*[,;]+\s*") | Foreach-Object {Get-CoinName $_}}
     else {
-        (Get-Culture).TextInfo.ToTitleCase(($CoinName -replace "[^`$a-z0-9]+", " ")) -replace " "
+        ((Get-Culture).TextInfo.ToTitleCase($CoinName -replace "[^`$a-z0-9\s]+")).Trim()        
     }
 }
 
@@ -1245,7 +1274,7 @@ function Get-Algorithm {
         [String]$Algorithm = ""
     )
 
-    if ($Algorithm -match "[,;\s]") {@($Algorithm -split "[,;\s]+") | Foreach-Object {Get-Algorithm $_}}
+    if ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
         if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
@@ -1810,7 +1839,7 @@ function Read-HostString {
         [Parameter(Mandatory = $False)]
         [Int]$Length = 0
     )
-    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
@@ -1910,8 +1939,8 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Array]$Valid = @()
     )
-    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:\s]") {[Array]$Default = [regex]::split($Default[0].Trim(),"[,;:\s]+")}
-    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:\s]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"[,;:\s]+")}
+    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = [regex]::split($Default[0].Trim(),"\s*[,;:]+\s*")}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
@@ -1928,7 +1957,7 @@ function Read-HostArray {
                 $Result = $Matches[2]
             }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
-            [Array]$Result = $Result -replace "[^$($Characters),;:\s]+","" -split "[,;:\s]+"
+            [Array]$Result = $Result -replace "[^$($Characters),;:]+","" -split "\s*[,;:]+\s*"
             Switch ($Mode) {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object) | Select-Object -Unique; break}
                 "-" {$Result = $Default | Where-Object {$Result -inotcontains $_} | Select-Object -Unique; break}
@@ -2084,7 +2113,8 @@ function Set-PoolsConfigDefault {
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}                                
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "CoinName") {$Setup_Content | Add-Member CoinName "" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}
                     $Done | Add-Member $_ $Setup_Content
                 }
                 $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
@@ -2338,7 +2368,7 @@ function Test-Port{
                         }   
                         #Close connection       
                         $tcpobject.Close()   
-                        #If unable to query port to due failure   
+                        #If unable to query port to due failure
                         If($failed){   
                             #Build report   
                             $temp.Server = $c   
