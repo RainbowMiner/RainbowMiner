@@ -499,5 +499,7 @@ The miner script has initially been forked from MultiPoolMiner, for my private u
 Since I changed and optimized the script a lot to suit my needs, I decided to make the source code public, so that others can profit from my optimizations.
 
 **If you are happy with the script, bitcoin donations are greatly appreciated:**
-- BTC: 3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx
+- BTC: 3P7pVVNpExuuHL9wjWKAo7jzQsb9ZziUFC
+- BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
+- ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
 
