@@ -62,15 +62,16 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
    - the pools, you want to mine as comma separated list. 
-   <details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
    - the algorithm, you want to mine as comma separated list.
-   <details><summary>Valid algorithms</summary> Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
-
+     
 5. Let the downloads and benchmarking finish (be patient! This might take a while. Anyway: it will already mine to your wallets)
 
 Done!
+
+<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
+<details><summary>Valid algorithms</summary> Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
 
 
 ## HOTKEYS
@@ -99,6 +100,19 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - Stopp.bat: halt RainbowMiner at once
   - Updater.bat: update to newest release of RainbowMiner manually. Make sure, you stop RainbowMiner before running this helper
 	
+
+## WEB-INTERFACE
+
+For your convenience, you can monitor and setup RainbowMiner using your web browser. The web interface very prominently shows RainbowMiner's live profitability and the current BTC exchange rates. To start the web interface, simply open the URL [localhost:4000](http://localhost:4000) in a new browser tab.
+- Dashboard: shows the live running miners & pool balances, click the Pause/Restart button to halt and restart RainbowMiner. It will take up to 20 seconds, until the miner script finalize the pause/restart procedure, so give it some time.
+- Selected Devices: lists the preselected devices
+- All Devices: lists all available devices in your rig
+- Best Pools: lists the best possible pool for every algorithm
+- All Pools: lists all pools available vs. all algorithm
+- Miners: lists all miners vs. all algorithm
+- Active Miners: lists the best possible miners for each algorithm
+- Benchmarks: monitor and reset benchmarks of failed and updated miners, reset all benchmarks
+
 
 ## POOLS
 
@@ -142,7 +156,30 @@ The miner can be setup to mine any coin or currency, that is listed at the respe
 - The RainbowMiner contains a list of well approved miners in the directory "Miners"
 - The miner Excavator mines on NiceHash pool, only
 - Miners Excavator & Excavator1.4.4 run in their own miner window. Since these two miners are each being controlled through an own API, the miner windows will stay open idle, even after the mining has stopped. This does no harm nor does it cost CPU - the miner will wait until it is being called again. You may close these windows, if you want. RainbowMiner will restart them, if Excavator is needed again.
-- Each miner's algorithm can be fine tuned for each device in your mining rig (see section [ADVANCED CONFIGURATION->Config\miners.config.txt](#config-miners-config-txt))
+- Each miner's algorithm can be fine tuned for each device in your mining rig
+
+
+## ALGORITHMS
+
+RainbowMiner uses a build-in hash table to convert different algorithmnames to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
+
+## Special notes for Equihash
+
+The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9).
+
+The n and k values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
+
+RainbowMiner uses the following nameing convention:
+- Equihash16x5 = Equihash (96, 5)	
+- Equihash20x9 = Equihash (200, 9)
+- Equihash21x9 = Equihash (210, 9)	
+- Equihash24x5 = Equihash (144,5)	
+- Equihash24x7 = Equihash (192,7)
+
+The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
+
+RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5
+
 
 ## MSI AFTERBURNER CONFIGURATION
 
@@ -172,27 +209,6 @@ I recommend you set the following profile setup in MSI Afterburner, so that you 
 - Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
-
-## ALGORITHMS
-
-RainbowMiner uses a build-in hash table to convert different algorithmnames to unique and beautified, internal representations. Because of this, you do not have to care too much about how to write an algorithm, when directly editing the "Config\config.txt" or using command line parameters. E.g. cryptonight-v7, cryptonight/1, cryptonightv7 would all be converted to CryptonightV7.
-
-## Special notes for Equihash
-
-The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9).
-
-The n and k values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
-
-RainbowMiner uses the following nameing convention:
-- Equihash16x5 = Equihash (96, 5)	
-- Equihash20x9 = Equihash (200, 9)
-- Equihash21x9 = Equihash (210, 9)	
-- Equihash24x5 = Equihash (144,5)	
-- Equihash24x7 = Equihash (192,7)
-
-The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
-
-RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5
 
 
 ## ADVANCED CONFIGURATION
@@ -477,28 +493,11 @@ Example:
 This configuration would bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner. Setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
 
 
-## WEB-INTERFACE
-
-For your convenience, you can monitor and setup RainbowMiner using your web browser. The web interface very prominently shows RainbowMiner's live profitability and the current BTC exchange rates. To start the web interface, simply open the URL [localhost:4000](http://localhost:4000) in a new browser tab.
-- Dashboard: shows the live running miners & pool balances, click the Pause/Restart button to halt and restart RainbowMiner. It will take up to 20 seconds, until the miner script finalize the pause/restart procedure, so give it some time.
-- Selected Devices: lists the preselected devices (through command line parameter or configuration)
-- All Devices: lists all available devices in your rig
-- Best Pools: lists the best possible pool for every algorithm
-- All Pools: lists all pools available vs. all algorithm
-- Miners: lists all miners vs. all algorithm
-- Active Miners: lists the best possible miners for each algorithm
-- Manage Stats: reset stats of failed miners & reset all benchmarks
-- Restart benchmarks for updated miners
-
-
 ## CREDITS
 
-The miner script has initially been forked from https://github.com/MultipoolMiner/MultipoolMiner for my private use, only.
+The miner script has initially been forked from MultiPoolMiner, for my private use, only.
 Since I changed and optimized the script a lot to suit my needs, I decided to make the source code public, so that others can profit from my optimizations.
 
-**
-If you are happy with the script, bitcoin donations are greatly appreciated:
-- The MultipoolMiner author: 1MsrCoAt8qM53HUMsUxvy9gMj3QVbHLazH
-- The RainbowMiner author: 3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx
-**
+**If you are happy with the script, bitcoin donations are greatly appreciated:**
+- BTC: 3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx
 
