@@ -27,5 +27,6 @@
     "Intel(R) Core(TM) i7-7660U CPU @ 2.50GHz": 15,
     "Intel(R) Core(TM) i7-7700 CPU @ 3.60GHz": 65,
     "Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz": 91,
-    "Intel(R) Core(TM) i7-7700T CPU @ 2.90GHz": 35
+    "Intel(R) Core(TM) i7-7700T CPU @ 2.90GHz": 35,
+    "Intel(R) Pentium(R) CPU G4560 @ 3.50GHz": 54
 }

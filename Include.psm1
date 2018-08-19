@@ -1178,18 +1178,12 @@ function Update-DeviceInformation {
     }
 
     if (-not $DeviceName -or $DeviceName -like "CPU*") {
-        $CPU_updated = $false
+        $CPU_count = ($Script:CachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+        if ($CPU_count -gt 0) {$Script:GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
         $Script:CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
             $Device = $_
-            $DeviceId = [convert]::ToInt32($_.Name -replace '[^0-9]+',10)
-            if (-not $CPU_updated) {
-                $Script:GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
-                $CPU_updated = $true
-            }
-
-            $Script:GetDeviceCacheCIM | Where-Object {[convert]::ToInt32($_.DeviceId -replace '[^0-9]+',10) -eq $DeviceId} | ForEach-Object {
-
-                if ($Script:abMonitor) {
+            $Script:GetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+                if ($Script:abMonitor -and $CPU_count -eq 1) {
                     $CpuData = @{
                         Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
                         Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
@@ -1205,7 +1199,8 @@ function Update-DeviceInformation {
                 }
                 if (-not $CpuData.PowerDraw) {
                     if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" | ConvertFrom-Json}
-                    $CpuData.PowerDraw = $Script:CpuTDP.($_.Name.Trim()) * $CpuData.Utilization / 100
+                    if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
+                    $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
                 }
                 if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}
 
