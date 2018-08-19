@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "http://www.srbminer.com/downloads/SRBMiner-CN-V1-6-5.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.6-srbminer/SRBMiner-CN-V1-6-6.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 
