@@ -220,6 +220,7 @@ Config files are found in directory "Config\"
 - config.txt = general settings, wallet, etc.
 - pools.config.txt = pool setup, set a different wallet, workername for each pool and coin
 - miners.config.txt = individually add arguments to miner (selected by name and device names and algorithm)
+- devices.config.txt = control algorithms and miners to be used by specific devices
 
 **Note: if you have not started the Start.bat yet, there will be no config files! Start it first!**
 **Config files are in JSON format. Look here for to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
@@ -279,7 +280,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **ExcludeMinerName** = list of miner names, you want to exclude from mining
 - **ExcludeMinersWithFee** = exclude all miners, that have a developer fee build-in [default=0]
 - **DisableDualMining** = set to 1, if you want to disable all dual mining [default=0]
-- **ExcludeMinersWithFee** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
+- **IgnoreFees** = set to 1, if you do not want RainbowMiner to account the pool- and miner fees [default=0]
 - **ShowMinerWindow** = show (1) or do not show (0) miner windows. Note: excavator will always run in an extra window [default=0]
 - **FastestMinerOnly** = set to 1 to reduce list by only showing the fastest miner [default=1]
 - **DisableExtendInterval** = during benchmark, some miners will run longer to find an accurate hashrate. Set to 1 to disable the extended times (this is not recommended, as it may result in inaccurate hashrates or failed some miners) [default=0]
@@ -499,7 +500,11 @@ The miner script has initially been forked from MultiPoolMiner, for my private u
 Since I changed and optimized the script a lot to suit my needs, I decided to make the source code public, so that others can profit from my optimizations.
 
 **If you are happy with the script, bitcoin donations are greatly appreciated:**
-- BTC: 3P7pVVNpExuuHL9wjWKAo7jzQsb9ZziUFC
-- BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
-- ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
 
+**The RainbowMiner author**
+  - BTC: 3P7pVVNpExuuHL9wjWKAo7jzQsb9ZziUFC
+  - BCH: 1MGRzyaLjQ67ZwwL9QTbXzwLxa8x1qSTBD
+  - ETH: 0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6
+
+**The MultiPoolMiner author**
+  - BTC: 1Q24z7gHPDbedkaWDTFqhMF8g7iHMehsCb
