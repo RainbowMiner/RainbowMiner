@@ -61,8 +61,10 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
    - your MiningPoolHub username, if you plan to use this pool
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
-   - the pools, you want to mine as comma separated list. Valid poolnames are: ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins
-   - the algorithm, you want to mine as comma separated list. Valid names are: Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash-BTG, Groestl, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more
+   - the pools, you want to mine as comma separated list. 
+   <details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
+   - the algorithm, you want to mine as comma separated list.
+   <details><summary>Valid algorithms</summary> Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 
@@ -100,37 +102,44 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 ## POOLS
 
-- AHashPool / AHashPoolCoins https://www.ahashpool.com/ (auto-exchange and payout in BTC)
-- BlazePool https://www.blazepool.com/ (auto-exchange and payout in BTC)
-- BlockCruncher https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in ["Config\pools.config.txt"](#config-pools-config-txt))
-- BlockMasters / BlockMastersCoins https://www.blockmasters.co/ (auto-exchange and payout in BTC)
-- Bsod https://bsod.pw/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
-- HashRefinery https://pool.hashrefinery.com (auto-exchange and payout in BTC)
-- MiningPoolHub / MiningPooHubCoins / MiningPoolHubMini https://miningpoolhub.com/ (auto-exchange and paymout in BTC, username required)
-  - 'miningpoolhub' and 'miningpoolhubmini' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
-  - 'miningpoolhubmini' is setup to mine lyra2z, skein, myriadgroestl, groestl, neoscrypt and equihash-btg, only.
-  - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports). 
-- Nicehash https://www.nicehash.com/ (auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below)
-- PhiPhiPool https://www.phi-phi-pool.com (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
-- Ravenminer https://www.ravenminer.com/ (ravencoin-pool, pays in RVN, set your RVN-address in ["Config\pools.config.txt"](#config-pools-config-txt))
-- YiiMP https://yiimp.eu/ (no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in ["Config\pools.config.txt"](#config-pools-config-txt))
-- ZergPool / ZergPoolCoins https://zergpool.eu/ (auto-exchange and payout in BTC)
+<details><summary>AHashPool / AHashPoolCoins</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
+<details><summary>BlazePool</summary> https://www.blazepool.com/ auto-exchange and payout in BTC</details>
+<details><summary>BlockCruncher</summary>https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
+<details><summary>BlockMasters / BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC</details>
+<details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
+<details><summary>MiningPoolHub / MiningPooHubCoins</summary>
+
+https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
+  - 'miningpoolhub' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
+  - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
+</details>
+<details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
+<details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
+<details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>ZergPool / ZergPoolCoins</summary>
+
+https://zergpool.eu/ auto-exchange and payout in BTC
   - 'zergpool' mine most profitable algorithm. Pool chooses coin or merged mining benefits
   - 'zergpoolcoins' mine most profitable coin. If you setup RainbowMiner with many algorithm, expect a lot of switching.
-- Zpool https://www.zpool.ca/ (auto-exchange and payout in BTC)
-	
-**Note for Nicehash:**  
-If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, Nicehash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
-This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the Nicehash wallet to your Coinbase account is free of charge.
+</details>
+<details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC</details>
+<br />	
+  
+<details><summary>Notes for NiceHash</summary>
 
-**Note for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool:**  
+If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, Nicehash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
+This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the Nicehash wallet to your Coinbase account is free of charge.</details>
+<details><summary>Notes for the pools BlockMasters, HashRefinery, YiiMP, ZergPool, ZergPoolCoins and Zpool</summary>
+  
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The YiiMP pool is an exception, as it does not have auto-exchange to BTC. Please be careful, what you choose to mine.
+</details>
 
 
 ## MINERS
 
 - The RainbowMiner contains a list of well approved miners in the directory "Miners"
-- In the directory "OptionalMiners" we put miners, that we consider as potential instable or possibly the cause of other problems (eg. T-Rex, CuBalloon). If you want to absolutely try these miners, simply copy them over into the "Miners" directory.
 - The miner Excavator mines on NiceHash pool, only
 - Miners Excavator & Excavator1.4.4 run in their own miner window. Since these two miners are each being controlled through an own API, the miner windows will stay open idle, even after the mining has stopped. This does no harm nor does it cost CPU - the miner will wait until it is being called again. You may close these windows, if you want. RainbowMiner will restart them, if Excavator is needed again.
 - Each miner's algorithm can be fine tuned for each device in your mining rig (see section [ADVANCED CONFIGURATION->Config\miners.config.txt](#config-miners-config-txt))
@@ -187,6 +196,9 @@ RainbowMiner's build-in hash table makes it possible for you, to use many differ
 
 
 ## ADVANCED CONFIGURATION
+
+RainbowMiner has a configuration function built-in: to change any parameter of the script, press key "**C**", while the script is running.
+**There is no more need to edit the following config files directly.**
 
 Config files are found in directory "Config\"
 - config.txt = general settings, wallet, etc.
