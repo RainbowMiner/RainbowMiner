@@ -45,7 +45,11 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 2. Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
-3. Right-click "Start.bat", choose "Run as administrator": there will start two windows, one contains RainbowMiner and the other will show the output of the running miners.
+3. Right-click "Start.bat", choose "Run as administrator".  Two windows will start, one contains RainbowMiner and the other will show the output of the running miners.
+<details>
+<summary>If windows prompts with "Windows protected your PC", click on "More info", then "Run anyway"</summary>
+![Picture](https://raw.githubusercontent.com/RainbowMiner/miner-binaries/master/windowsprotectedyourpc.jpg "Windows protected your PC")
+</details>
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
    - your desired workername (or accept the default)
