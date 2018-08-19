@@ -1420,7 +1420,8 @@ class Miner {
             }
             if ($this.EthPill -ne $null) {
                 Write-Log "Stopping OhGodAnETHlargementPill"
-                Stop-Process -Id $this.EthPill.Id
+                $this.EthPill.CloseMainWindow() | Out-Null
+                if(-not $this.EthPill.WaitForExit(1000)) {if(-not $this.EthPill.HasExited) {$this.EthPill.Kill()}}
                 $this.EthPill = $null
                 Sleep -Milliseconds 250 #Sleep for 1/4 second
             }
