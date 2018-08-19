@@ -282,6 +282,7 @@ while ($true) {
                         $ConfigActual = Get-Content $ConfigFile | ConvertFrom-Json
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
+                        $DevicesActual = Get-Content $DevicesConfigFile | ConvertFrom-Json
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
 
                         Clear-Host
@@ -318,8 +319,7 @@ while ($true) {
                             Write-Host "- Miner: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
                             Write-Host "- Pool: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
                             Write-Host " "
-                            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]election, [A]ll, [M]iner, [P]ools, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPX"
-
+                            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDX"
                         }
 
                         if ($SetupType -eq "X") {
@@ -1010,6 +1010,117 @@ while ($true) {
                         
                                 } catch {$PoolSetupDone = $true}
                             } until ($PoolSetupDone)
+                        }
+                        elseif ($SetupType -eq "D") {
+
+                            Clear-Host
+
+                            Write-Host " "
+                            Write-Host "*** Device Configuration ***" -BackgroundColor Green -ForegroundColor Black
+                            Write-HostSetupHints
+                            Write-Host " "
+
+                            $DeviceSetupDone = $false
+                            do {
+                                try {
+                                    $DevicesActual = Get-Content $DevicesConfigFile | ConvertFrom-Json
+                                    $Device_Name = Read-HostString -Prompt "Which device do you want to configure? (leave empty to end device config)" -Characters "A-Z0-9" -Valid @($SetupDevices.Model | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    if ($Device_Name -eq '') {throw}
+
+                                    if (-not $DevicesActual.$Device_Name) {
+                                        $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""}) -Force
+                                        $DevicesActual | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding utf8 
+                                    }
+
+                                    if ($Device_Name) {
+                                        [System.Collections.ArrayList]$DeviceSetupSteps = @()
+
+                                        $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
+
+                                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining")) | Out-Null
+                                        $DeviceSetupSteps.Add("save") | Out-Null
+                                        $DeviceSetupStep = $DeviceSetupStepBack = 0
+                                        $DeviceSetupStepsDone = $false
+                                        
+                                        do { 
+                                            try {
+                                                Switch ($DeviceSetupSteps[$DeviceSetupStep]) {
+                                                    "algorithm" {
+                                                        $DeviceConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine (leave empty for all)" -Default $DeviceConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "excludealgorithm" {
+                                                        $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "minername" {
+                                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "excludeminername" {
+                                                        $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "disabledualmining" {
+                                                        $DeviceConfig.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $DeviceConfig.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "save" {
+                                                        Write-Host " "
+                                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                                        
+                                                        $DeviceConfig | Add-Member Algorithm $($DeviceConfig.Algorithm -join ",") -Force
+                                                        $DeviceConfig | Add-Member ExcludeAlgorithm $($DeviceConfig.ExcludeAlgorithm -join ",") -Force
+                                                        $DeviceConfig | Add-Member MinerName $($DeviceConfig.MinerName -join ",") -Force
+                                                        $DeviceConfig | Add-Member ExcludeMinerName $($DeviceConfig.ExcludeMinerName -join ",") -Force
+                                                        $DeviceConfig | Add-Member DisableDualMining $(if (Get-Yes $DeviceConfig.DisableDualMining){"1"}else{"0"}) -Force
+
+                                                        $DevicesActual | Add-Member $Device_Name $DeviceConfig -Force
+                                                        $DevicesActualSave = [PSCustomObject]@{}
+                                                        $DevicesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ ($DevicesActual.$_) -Force}
+
+                                                        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding utf8
+
+                                                        Write-Host " "
+                                                        Write-Host "Changes written to device configuration. " -ForegroundColor Cyan
+                                                    
+                                                        $DeviceSetupStepsDone = $true
+                                                    }
+                                                }
+                                                $DeviceSetupStepBack = $DeviceSetupStep
+                                                $DeviceSetupStep++
+                                            }
+                                            catch {
+                                                if (@("back","<") -icontains $_.Exception.Message) {
+                                                    $DeviceSetupStep = $DeviceSetupStepBack
+                                                }
+                                                elseif ($_.Exception.Message -like "Goto*") {
+                                                    $OldDeviceSetupStepBack = $DeviceSetupStepBack
+                                                    $DeviceSetupStepBack = $DeviceSetupStep
+                                                    $DeviceSetupStep = $DeviceSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                                    if ($DeviceSetupStep -lt 0) {
+                                                        Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                                        $DeviceSetupStep = $DeviceSetupStepBack
+                                                        $DeviceSetupStepBack = $OldDeviceSetupStepBack
+                                                    }
+                                                }
+                                                elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                                    Write-Host " "
+                                                    Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                                    Write-Host " "
+                                                    $DeviceSetupStepsDone = $true                                               
+                                                }
+                                                else {
+                                                    Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                                    $DeviceSetupStepsDone = $true
+                                                }
+                                            }
+                                        } until ($DeviceSetupStepsDone)                                                                        
+
+                                    } else {
+                                        Write-Host "Please try again later" -ForegroundColor Yellow
+                                    }
+
+                                    Write-Host " "
+                                    if (-not (Read-HostBool "Edit another device?")){throw}
+                        
+                                } catch {$DeviceSetupDone = $true}
+                            } until ($DeviceSetupDone)
                         }
                     } until (-not $RunSetup)
                     $RestartMiners = $true
