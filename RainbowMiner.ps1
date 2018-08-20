@@ -149,7 +149,6 @@ $LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
-$MinersUriHash = $null
 
 [hashtable]$Updatetracker = @{
     Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
@@ -1481,14 +1480,13 @@ while ($true) {
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    [System.Collections.ArrayList]$AllPoolsAdd = @()    
-    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAdd.Add($Pool) | Out-Null}    
+    [System.Collections.ArrayList]$AllPoolsAddRemove = @()
+    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) | Out-Null}    
     [System.Collections.ArrayList]$AllPools = @($NewPools)
-    if ($AllPoolsAdd.Count) {$AllPools.Add($AllPoolsAdd) | Out-Null}
-    $AllPoolsAdd.Clear()
+    if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) | Out-Null}
+    $AllPoolsAddRemove.Clear()
 
     #Now remove all deselected pool/algorithm/coin from AllPools
-    [System.Collections.ArrayList]$AllPoolsRemove = @()
     $i=0
     foreach ($Pool in $AllPools) {    
         if (
@@ -1496,11 +1494,11 @@ while ($true) {
             ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
             ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
             ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName)
-            ) {$AllPoolsRemove.Add($Pool) | Out-Null}           
+            ) {$AllPoolsAddRemove.Add($Pool) | Out-Null}           
         $i++
     }
-    foreach($Pool in $AllPoolsRemove) {$AllPools.Remove($Pool)}
-    $AllPoolsRemove.Clear()
+    foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
+    $AllPoolsAddRemove.Clear()
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
@@ -1508,10 +1506,10 @@ while ($true) {
     #Apply watchdog to pools
     foreach ($Pool in $AllPools) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
-        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsRemove.Add($Pool) | Out-Null}
+        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsAddRemove.Add($Pool) | Out-Null}
     }
-    foreach($Pool in $AllPoolsRemove) {$AllPools.Remove($Pool)}
-    $AllPoolsRemove.Clear()
+    foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
+    $AllPoolsAddRemove = $null
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
@@ -1606,6 +1604,8 @@ while ($true) {
     }
     
     Write-Log "Calculating profit for each miner. "
+
+    [hashtable]$AllMiners_VersionCheck = @{}
     $AllMiners | ForEach-Object {
         $Miner = $_
 
@@ -1724,6 +1724,14 @@ while ($true) {
         $Miner.Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.Path)
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
+        if (-not $AllMiners_VersionCheck.ContainsKey($Miner.BaseName)) {
+            $Miner_UriJson = (Split-Path $Miner.Path) + "\_uri.json"
+            $Miner_Uri = ""
+            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI}
+            $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI
+        }
+        $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
+  
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
         else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress}
         
@@ -1736,21 +1744,17 @@ while ($true) {
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
     }
 
-    if ($AllMiners.Count -gt 0) {
-        $AllMinersUriHash = Get-MD5Hash $(@($AllMiners.URI | Select-Object -Unique | Sort-Object) -join ':')
-    } else {
-        $AllMinersUriHash = $null
-    }
-    if ($MinersUriHash -eq $null) {$MinersUriHash = $AllMinersUriHash}
-    $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath))}
-    if (($StartDownloader -or $MinersUriHash -ne $AllMinersUriHash -or $Miners.Count -ne $AllMiners.Count) -and $Downloader.State -ne "Running") {
-        if ($StartDownloader) {
-            Write-Log -Level Warn "User requested to start downloader. "
-        }
+    $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $_.VersionCheck}
+    $Miners_Downloading = $AllMiners.Count - $Miners.Count
+    if (($StartDownloader -or $Miners_Downloading -ne 0) -and $Downloader.State -ne "Running") {
+        $Miners_Downloading = (Compare-Object @($Miners.URI | Select-Object -Unique) @($AllMiners.URI | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Measure-Object).Count
+        Clear-Host
+        Write-Log "Starting downloader."
         $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
         $StartDownloader = $false
-        $MinersUriHash = $AllMinersUriHash
     }
+    $AllMiners_VersionCheck = $null
+
     # Open firewall ports for all miners
     if (Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) {
         if ((Get-Command "Get-MpComputerStatus" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
@@ -2062,7 +2066,7 @@ while ($true) {
             if (-not $Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
                 Write-Host " "
                 Write-Host "Please be patient!" -BackgroundColor Yellow -ForegroundColor Black
-                Write-Host "RainbowMiner will benchmark the following $($MinersNeedingBenchmarkWithEI) miner$(if ($MinersNeedingBenchmarkWithEI -gt 1){'s'}) with extended intervals at first!" -ForegroundColor Yellow
+                Write-Host "RainbowMiner will benchmark the following $($MinersNeedingBenchmarkWithEI) miner$(if ($MinersNeedingBenchmarkWithEI -gt 1){'s'}) with extended intervals!" -ForegroundColor Yellow
                 Write-Host "These algorithm need a longer time to reach an accurate average hashrate." -ForegroundColor Yellow
                 Write-Host "After that, benchmarking will be much faster (1-2 minutes per miner)." -ForegroundColor Yellow
                 Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt" -ForegroundColor Yellow
@@ -2076,6 +2080,11 @@ while ($true) {
                 [console]::ForegroundColor = $OldForegroundColor
             }
         }
+    }
+
+    if ($Miners_Downloading) {
+        Write-Host " "
+        Write-Host "Currently downloading $Miners_Downloading miner$(if($Miners_Downloading -gt 1){"s"}) in the background." -ForegroundColor Yellow
     }
 
     #Extend benchmarking interval to the maximum from running miners
@@ -2193,7 +2202,7 @@ while ($true) {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it RainbowMiner, [S]kip switching prevention, start [D]ownloader, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it RainbowMiner, [S]kip switching prevention, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
     if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false
@@ -2292,12 +2301,10 @@ while ($true) {
                     $keyPressed = $true
                 }
                 "U" {
-                    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
-                        $AutoUpdate = $Stopp = $true
-                        Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
-                        Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
-                        $keyPressed = $true
-                    }
+                    $AutoUpdate = $Stopp = $true
+                    Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
+                    Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
+                    $keyPressed = $true
                 }
             }
         }
