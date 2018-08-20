@@ -128,6 +128,10 @@
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "vitalium"; SecondaryAlgorithm = ""; Params = ""; Profile = ""}
         )
+        "EWBF" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; Profile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; Profile = "5"}
+        )
         "Excavator" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
