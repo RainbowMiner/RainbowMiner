@@ -6,20 +6,23 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 $Progress = 0
 
-$RunningMiners_Paths = @()
-
+[System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
     $RunningMiners_Request = Invoke-RestMethod "http://localhost:4000/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-    if ( $RunningMiners_Request -isnot [array] ) { $RunningMiners_Paths += $RunningMiners_Request.Path }
+    if ($RunningMiners_Request -isnot [array]) {
+        if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
+            $RunningMiners_Paths.Add($RunningMiners_Request.Path) | Out-Null
+        }
+    }
     else {
-        $RunningMiners_Request | Foreach-Object { $RunningMiners_Paths += $_.Path }        
+        $RunningMiners_Request | Foreach-Object {$RunningMiners_Paths += $_.Path}
     }
 }
 catch {
     Write-Log -Level Warn "RainbowMiner API is down!"
 }
 
-$DownloadList | Where-Object { $RunningMiners_Paths -notcontains $_.Path } | ForEach-Object {
+$DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI
     $Path = $_.Path
     $Searchable = $_.Searchable
@@ -30,7 +33,7 @@ $DownloadList | Where-Object { $RunningMiners_Paths -notcontains $_.Path } | For
     $UriJsonData = [PSCustomObject]@{URI = ""}
 
     if ((Test-Path $Path) -and (Test-Path $UriJson)) {
-        $UriJsonData = Get-Content $UriJson -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        $UriJsonData = Get-Content $UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
     }
 
     if (-not (Test-Path $Path) -or $URI -ne $UriJsonData.URI) {
@@ -48,14 +51,14 @@ $DownloadList | Where-Object { $RunningMiners_Paths -notcontains $_.Path } | For
             else {
                 Expand-WebRequest $URI (Split-Path $Path) -ErrorAction Stop
             }
-            [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson
+            [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
         }
         catch {
-            Write-Log -Level Warn "Something went wrong: $($error)"
             $ProgressPreference = $ProgressPreferenceBackup
             Write-Progress -Activity "Downloader" -Status $Path -CurrentOperation "Acquiring Offline (Computer)" -PercentComplete $Progress
 
             $ProgressPreference = "SilentlyContinue"
+            Write-Log -Level Warn "Downloader-error: $($_.Exception.Message)"
             if ($URI) {Write-Log -Level Warn "Cannot download $($Path) distributed at $($URI). "}
             else {Write-Log -Level Warn "Cannot download $($Path). "}
 
@@ -77,7 +80,7 @@ $DownloadList | Where-Object { $RunningMiners_Paths -notcontains $_.Path } | For
         }
         $ProgressPreference = $ProgressPreferenceBackup
     } elseif (-not (Test-Path $UriJson)) {
-        [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson
+        [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
     }
 
 }
