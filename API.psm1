@@ -307,6 +307,7 @@
             $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
             $Response.Close()
 
+            $Error.Clear()
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()

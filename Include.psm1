@@ -2661,6 +2661,7 @@ function Start-AsyncLoader {
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
+            $Error.Clear()
         }
     });
 
