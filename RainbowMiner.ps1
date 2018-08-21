@@ -891,10 +891,10 @@ while ($true) {
                                                         $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "coinname" {
-                                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9 " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "excludecoin" {
-                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9 " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "penalty" {                                                    
                                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1265,7 +1265,7 @@ while ($true) {
         }
         if ($DonateNow) {
             $Updatetracker["Config"]["ConfigFile"] = 0
-            $DonationAlgorithmAvail = $AllPools.Algorithm | Foreach-Object {$_ -split '-' | Select-Object -First 1} | Select-Object -Unique
+            $DonationAlgorithmAvail = $AllPools.Algorithm | Foreach-Object {$_ -replace '\-.*$'} | Select-Object -Unique
             $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
             $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
             if ($DonationAlgorithmAvail -inotcontains "x16r") {$Config.Algorithm = $Config.Algorithm | Where-Object {$_ -ne "x16r"}}
@@ -1452,7 +1452,7 @@ while ($true) {
             foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
             Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
-                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -split '-' | Select-Object -Index 0) | Select-Object -Unique)}else{@($_.Content.Algorithm)}
+                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -replace '\-.*$'))}else{@($_.Content.Algorithm)}
                 if ($Pool_Config.CoinName) {$Pool_Config.CoinName = Get-CoinName $_.Content.CoinName}
                 $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
                 }
@@ -1544,7 +1544,8 @@ while ($true) {
     $AllMiners = if (Test-Path "Miners") {
         Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {
             if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.Content.DeviceModel) {$_.Content.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.Content.DeviceModel)")}
-            $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=@($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object);PowerDraw=$Stats."$($_.Name)_$($_.Content.HashRates.PSObject.Properties.Name | Select-Object -Index 0)_HashRate".PowerDraw_Average} -PassThru -Force
+            $p = @($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
+            $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=$p;PowerDraw=$Stats."$($_.Name)_$($p[0])_HashRate".PowerDraw_Average} -PassThru -Force
         } | 
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
@@ -2030,7 +2031,7 @@ while ($true) {
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
         [System.Collections.ArrayList]$Miner_Table = @(
-            @{Label = "Miner"; Expression = {$_.Name -split '-' | Select-Object -Index 0}},
+            @{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}},
             @{Label = "Fee"; Expression = {($_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {'{0:p2}' -f ($_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
             @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}},
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'},
@@ -2103,7 +2104,7 @@ while ($true) {
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
-        @{Label = "Miner"; Expression = {@($_.Name -split '-') | Select-Object -Index 0}},
+        @{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}},
         @{Label = "Power"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
@@ -2112,7 +2113,7 @@ while ($true) {
     if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogResetOld) | Format-Table -Wrap (
-            @{Label = "Miner"; Expression = {@($_.MinerName -split '-') | Select-Object -Index 0}},
+            @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
             @{Label = "Algorithm"; Expression = {$_.Algorithm}}, 
@@ -2125,7 +2126,7 @@ while ($true) {
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
-        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -split '-' | Select-Object -Index 0)-$($_.Algorithm -join '/')"}}
+        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -replace '\-.*$')-$($_.Algorithm -join '/')"}}
 
         $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
 
@@ -2324,7 +2325,7 @@ while ($true) {
         $Miner = $_
         $Miner.Speed_Live = [Double[]]@()
 
-        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_)_HashRate")})}
+        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate")})}
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
@@ -2337,7 +2338,7 @@ while ($true) {
                 if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Config.Interval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
 
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Strikes * $Strikes) -or $Miner.GetActivateCount() -ge $Strikes) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_)_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw
                 }
 
                 #Update watchdog timer
