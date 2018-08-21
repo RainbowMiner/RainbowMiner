@@ -114,12 +114,10 @@ function Get-Balance {
     Return $Balances
 }
 
-function Get-Ticker {
+function Get-CoinSymbol {
     [CmdletBinding()]
-    param($Symbol, $Convert, [Switch]$PriceOnly)
-
-    if (-not $Convert) {$Convert="BTC"}
-
+    param($CoinName = "Bitcoin",[Switch]$Silent)
+    
     if (-not (Test-Path Variable:Script:CoinmarketCapList) -or -not $Script:CoinmarketCapList.Count) {
         $OldEAP = $ErrorActionPreference
         $ErrorActionPreference = "Stop"
@@ -136,8 +134,27 @@ function Get-Ticker {
             return
         }
         [hashtable]$Script:CoinmarketCapList = @{}
-        foreach ($data in $Request.data) {$Script:CoinmarketCapList[$data.symbol] = $data}
+        [hashtable]$Script:CoinmarketCapCoins = @{}
+        foreach ($data in $Request.data) {
+            $Script:CoinmarketCapList[$data.symbol] = $data
+            $Script:CoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
+        }
+        if (Test-Path ".\Data\Coins.json") {
+            $NewCoins = Get-Content ".\Data\Coins.json" -Raw | ConvertFrom-Json
+            $NewCoins.PSObject.Properties.Name | Foreach-Object {$name = $_.ToLower() -replace "[^a-z0-9]+";if (-not $Script:CoinmarketCapCoins.ContainsKey($name)) {$Script:CoinmarketCapCoins[$name] = $NewCoins.$_}}
+        }        
     }
+
+    if (-not $Silent) {$Script:CoinmarketCapCoins[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
+}
+
+function Get-Ticker {
+    [CmdletBinding()]
+    param($Symbol, $Convert, [Switch]$PriceOnly)
+
+    if (-not $Convert) {$Convert="BTC"}
+
+    Get-CoinSymbol -Silent
 
     if (-not $Script:CoinmarketCapList.ContainsKey($Symbol)) {
         Write-Log -Level Warn "$($Symbol) not found on Coinmarketcap "
@@ -520,7 +537,7 @@ function Get-MinersContent {
             $_ | Add-Member -NotePropertyMembers @{
                 Name = if ($_.Name) {$_.Name} else {$Name}
                 BaseName = $Name
-                Algorithm = @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -split '-' | Select-Object -Index 0} | Select-Object)
+                Algorithm = @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
                 DeviceModel = if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$DevicesByTypes.FullComboModels."$($_.DeviceModel)"} else {$_.DeviceModel}
             } -Force -PassThru
         }
@@ -1259,7 +1276,7 @@ function Get-CoinName {
     )
     if ($CoinName -match "[,;]") {@($CoinName -split "\s*[,;]+\s*") | Foreach-Object {Get-CoinName $_}}
     else {
-        ((Get-Culture).TextInfo.ToTitleCase($CoinName -replace "[^`$a-z0-9\s]+")).Trim()        
+        ((Get-Culture).TextInfo.ToTitleCase($CoinName -replace "[^`$a-z0-9\s\-]+")).Trim()        
     }
 }
 
@@ -2159,9 +2176,9 @@ function Get-YiiMPValue {
 
     $DataWindow = Get-YiiMPDataWindow $DataWindow
     if ("average-2","minimum-2","maximum-2" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -split '-' | Select-Object -First 1)"
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -replace '\-.*$')"
     } elseif ("average-3","minimum-3","maximum-3" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -split '-' | Select-Object -First 1)"
+        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -replace '\-.*$')"
     } else {
         if ($DataWindow -and ($Request | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Value = [Double]$Request.$DataWindow}
         else {$Value = [Double]$Request.estimate_current}
