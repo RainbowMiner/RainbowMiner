@@ -23,51 +23,56 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Coins = [PSCustomObject]@{
-    Aion        = "--pers AION0PoW"
-    BitcoinGold = "--pers BgoldPoW"
-    BitcoinZ    = "--pers BitcoinZ"
-    BTG         = "--pers BgoldPow"
-    Safecoin    = "--pers Safecoin"
-    Snowgem     = "--pers sngemPoW"
-    ZelCash     = "--pers ZelProof"
-    Zero        = "--pers ZERO_PoW"
-    ZeroCoin    = "--pers ZERO_PoW" 
+    AION        = "--pers AION0PoW"
+    BTG         = "--pers BgoldPoW"
+    BTCZ        = "--pers BitcoinZ"
+    SAFE        = "--pers Safecoin"
+    XSG         = "--pers sngemPoW"
+    ZEL         = "--pers ZelProof"
+    ZER         = "--pers ZERO_PoW"
 }
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Model = $_.Model    
+    $Miner_Model = $_.Model
 
-    $Commands | ForEach-Object {
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
-        $MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"
-        $MinMemGB = $_.MinMemGB
+    @("0")+@($Coins.PSObject.Properties.Name) | Foreach-Object {
+        $Miner_Coin = $_
 
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
-        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Commands | ForEach-Object {
+            $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+            if ($Miner_Coin -ne "0") {$Algorithm_Norm = "$Algorithm_Norm-$Miner_Coin"}
 
-        #ZergPool introduces auto switching for Equihash144: https://bitcointalk.org/index.php?topic=2759935.msg43324268#msg43324268
-        if (@("Equihash24x5","Equihash24x7") -icontains $Algorithm_Norm -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
+            #ZergPool introduces auto switching for Equihash144: https://bitcointalk.org/index.php?topic=2759935.msg43324268#msg43324268
+            if (@("Equihash24x5","Equihash24x7") -icontains ($Algorithm_Norm -replace '\-.*$') -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
+            else {
+                $MinerCoin_Params = if ($Pools.$Algorithm_Norm.CoinSymbol -eq '') {$Coins."$($Pools.$Algorithm_Norm.CoinSymbol)"} else {$Coins."$($Pools.$Algorithm_Norm.CoinName)"}
+            }
 
-        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+            $MinMemGB = $_.MinMemGB        
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
+            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'            
 
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($MinerCoin_Params) $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API = "DSTM"
-                Port = $Miner_Port
-                DevFee = 0
-                URI = $URI
-                ExtendInterval = 2
-                ManualUri = $ManualUri
+            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+        
+            if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+                [PSCustomObject]@{
+                    Name = $Miner_Name
+                    DeviceName = $Miner_Device.Name
+                    DeviceModel = $Miner_Model
+                    Path = $Path
+                    Arguments = "--api 127.0.0.1:$($Miner_Port) --cuda_devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --fee 0 --eexit 1 --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($MinerCoin_Params) $($_.Params)"
+                    HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+                    API = "DSTM"
+                    Port = $Miner_Port
+                    DevFee = 0
+                    URI = $URI
+                    ExtendInterval = 2
+                    ManualUri = $ManualUri
+                }
             }
         }
     }
