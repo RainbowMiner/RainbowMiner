@@ -25,7 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 4; FaultTolerance = 0.5} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 1; FaultTolerance = 0.5} #X16r (enemy 1.17 fastest)
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
 )
