@@ -260,7 +260,9 @@ while ($true) {
                 $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $MyCommandParameters | ForEach-Object {
-                    $Parameters.Add($_ , (Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue))
+                    $val = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
+                    if ($val -is [array]) {$val = $val -join ','}
+                    $Parameters.Add($_ , $val)
                 }
                 $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
@@ -304,7 +306,9 @@ while ($true) {
                             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
                             $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                                 $ConfigSetup_Name = $_.Name
-                                if ($_.Value -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $($_.Value) -Force}
+                                $val = $_.Value
+                                if ($val -is [array]) {$val = $val -join ','}
+                                if ($val -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $val -Force}
                             }
 
                         } else {
@@ -1791,6 +1795,10 @@ while ($true) {
     #Update the active miners
     if ($Miners.Count -eq 0) {
         Write-Log -Level Warn "No miners available. "
+        if ($Miners_Downloading -gt 0) {
+            Write-Host " "
+            Write-Host "Downloading first miners, mining operation will start in $($Config.Interval) seconds. Please be patient!" -ForegroundColor Black -BackgroundColor Yellow
+        }
         if ($Downloader) {$Downloader | Receive-Job}
         Start-Sleep $Config.Interval
         continue
