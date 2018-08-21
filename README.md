@@ -119,7 +119,12 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>AHashPool / AHashPoolCoins</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
 <details><summary>BlazePool</summary> https://www.blazepool.com/ auto-exchange and payout in BTC</details>
 <details><summary>BlockCruncher</summary>https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
-<details><summary>BlockMasters / BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC</details>
+<details><summary>BlockMasters / BlockMastersCoins</summary>
+
+https://www.blockmasters.co/ auto-exchange and payout in BTC
+  - 'blockmasters' mine most profitable algorithm. Pool chooses coin or merged mining benefits
+  - 'blockmasterscoins' mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
+</details>
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
 <details><summary>MiningPoolHub / MiningPooHubCoins</summary>
@@ -136,7 +141,7 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
 
 https://zergpool.eu/ auto-exchange and payout in BTC
   - 'zergpool' mine most profitable algorithm. Pool chooses coin or merged mining benefits
-  - 'zergpoolcoins' mine most profitable coin. If you setup RainbowMiner with many algorithm, expect a lot of switching.
+  - 'zergpoolcoins' mine most profitable coin. Either with auto-exchange to BTC, LTC, DASH, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
 <details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC</details>
 <br />	
