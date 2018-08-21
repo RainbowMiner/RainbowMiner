@@ -12,6 +12,9 @@
         "Blockmasters" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "BlockmastersCoins" = [PSCustomObject]@{
+            Currencies=@("BTC")
+        }
         "Bsod" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{DataWindow="actual_last24h"}
             Currencies=@("RVN","PGN")
