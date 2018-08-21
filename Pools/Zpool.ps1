@@ -12,64 +12,69 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Zpool_Request = [PSCustomObject]@{}
-$ZpoolCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Zpool_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/status"
-    $ZpoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Zpool_Regions = "us"
-$Zpool_Currencies = @("BTC") + @($ZpoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+[hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_Coins = @{}
 
-$ZPool_Coins = [PSCustomObject]@{}
-$ZPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$ZPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
+$Pool_Regions = "us"
+$Pool_Currencies = @("BTC") + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=(Get-CoinName $_.Group.name);Symbol=$_.Group.symbol}}
 
-$Zpool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Zpool_Request.$_.hashrate -gt 0} |ForEach-Object {
-    $Zpool_Host = "mine.zpool.ca"
-    $Zpool_Port = $Zpool_Request.$_.port
-    $Zpool_Algorithm = $Zpool_Request.$_.name
-    $Zpool_Algorithm_Norm = Get-Algorithm $Zpool_Algorithm
-    $ZPool_Coin = $ZPool_Coins.$ZPool_Algorithm
-    $Zpool_PoolFee = [Double]$Zpool_Request.$_.fees
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.hashrate -gt 0} |ForEach-Object {
+    $Pool_Host = "mine.zpool.ca"
+    $Pool_Port = $Pool_Request.$_.port
+    $Pool_Algorithm = $Pool_Request.$_.name
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
+    $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
+    $Pool_PoolFee = [Double]$Pool_Request.$_.fees
+    if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
 
-    $Divisor = 1000000 * [Double]$Zpool_Request.$_.mbtc_mh_factor
+    $Divisor = 1000000 * [Double]$Pool_Request.$_.mbtc_mh_factor
     
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\$($Name)_$($ZPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ([Double]$Zpool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-        else {$Stat = Set-Stat -Name "$($Name)_$($Zpool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $ZPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+        if (-not (Test-Path "Stats\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
     }
 
-    $Zpool_Regions | ForEach-Object {
-        $Zpool_Region = $_
-        $Zpool_Region_Norm = Get-Region $Zpool_Region
-        $Zpool_Currencies | ForEach-Object {
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
+        $Pool_Currencies | ForEach-Object {
             [PSCustomObject]@{
-                Algorithm     = $Zpool_Algorithm_Norm
-                CoinName      = $Zpool_Coin
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Symbol
                 Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = "$Zpool_Algorithm.$Zpool_Host"
-                Port          = $Zpool_Port
+                Host          = "$Pool_Algorithm.$Pool_Host"
+                Port          = $Pool_Port
                 User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
-                Region        = $Zpool_Region_Norm
+                Region        = $Pool_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
-                PoolFee       = $Zpool_PoolFee
+                PoolFee       = $Pool_PoolFee
                 UsesDataWindow = $True
             }
         }

@@ -9,64 +9,67 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Blockcruncher_Request = [PSCustomObject]@{}
-$BlockcruncherCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Blockcruncher_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/status"
-    $BlockcruncherCoins_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($BlockcruncherCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Blockcruncher_Regions = "us"
+[hashtable]$Pool_Algorithms = @{}
 
-$Blockcruncher_Currencies = ($BlockcruncherCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($BlockcruncherCoins_Request.$_.Symbol) {$BlockcruncherCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique  | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_Regions = "us"
+$Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique  | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
-$Blockcruncher_Currencies | Where-Object {$BlockcruncherCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
-    $Blockcruncher_Host = "blockcruncher.com"
-    $Blockcruncher_Port = $BlockcruncherCoins_Request.$_.port
-    $Blockcruncher_Algorithm = $BlockcruncherCoins_Request.$_.algo
-    $Blockcruncher_Algorithm_Norm = Get-Algorithm $Blockcruncher_Algorithm
-    $Blockcruncher_Coin = Get-CoinName $BlockcruncherCoins_Request.$_.name
-    $Blockcruncher_Currency = $_
-    $Blockcruncher_PoolFee = [Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.fees
+$Pool_Currencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "blockcruncher.com"
+    $Pool_Port = $PoolCoins_Request.$_.port
+    $Pool_Algorithm = $PoolCoins_Request.$_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
+    $Pool_Currency = $_
+    $Pool_PoolFee = [Double]$Pool_Request.$Pool_Algorithm.fees
 
-    #$Divisor = 1000000 * [Double]$Blockcruncher_Request.$Blockcruncher_Algorithm.mbtc_mh_factor
+    #$Divisor = 1000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
     $Divisor = 1000000000
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BlockcruncherCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
     }
 
-    $Blockcruncher_Regions | ForEach-Object {
-        $Blockcruncher_Region = $_
-        $Blockcruncher_Region_Norm = Get-Region $Blockcruncher_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
         
         [PSCustomObject]@{
-            Algorithm     = $Blockcruncher_Algorithm_Norm
-            CoinName      = $Blockcruncher_Coin
-            Currency      = $Blockcruncher_Currency
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
-            Host          = $Blockcruncher_Host
-            Port          = $Blockcruncher_Port
-            User          = Get-Variable $Blockcruncher_Currency -ValueOnly -ErrorAction SilentlyContinue
-            Pass          = "$Worker,c=$Blockcruncher_Currency"
-            Region        = $Blockcruncher_Region_Norm
+            Host          = $Pool_Host
+            Port          = $Pool_Port
+            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+            Pass          = "$Worker,c=$Pool_Currency"
+            Region        = $Pool_Region_Norm
             SSL           = $false
             Updated       = $Stat.Updated
-            PoolFee       = $Blockcruncher_PoolFee
+            PoolFee       = $Pool_PoolFee
         }
     }
 }

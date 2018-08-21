@@ -11,90 +11,100 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$ZergPool_Request = [PSCustomObject]@{}
-$ZergPoolCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $ZergPool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status" -retry 5 -retrywait 500
-    $ZergPoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -retry 5 -retrywait 750
+    $Pool_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/status" -retry 5 -retrywait 500
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -retry 5 -retrywait 750
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($ZergPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$ZergPool_Regions = "us"#, "europe"
-$ZergPool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
-$ZergPool_MiningCurrencies = ($ZergPoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($ZergPoolCoins_Request.$_.Symbol) {$ZergPoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
-$ZergPool_PoolFee = 0.5
+[hashtable]$Pool_Algorithms = @{}
 
-$ZergPool_MiningCurrencies | Where-Object {$ZergPoolCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
-    $ZergPool_Port = $ZergPoolCoins_Request.$_.port
-    $ZergPool_Algorithm = $ZergPoolCoins_Request.$_.algo
-    $ZergPool_Algorithm_Norm = Get-Algorithm $ZergPool_Algorithm
-    $ZergPool_Host = "$($ZergPool_Algorithm).mine.zergpool.com"
-    $ZergPool_Coin = Get-CoinName $ZergPoolCoins_Request.$_.name
-    $ZergPool_Currency = $_
-    $ZergPool_PoolFee = $ZergPool_Request.$ZergPool_Algorithm.fees
+$Pool_Regions = "us"#, "europe"
+$Pool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_MiningCurrencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
+$Pool_PoolFee = 0.5
 
-    $Divisor = 1000000000 * [Double]$ZergPool_Request.$ZergPool_Algorithm.mbtc_mh_factor
+$Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "$($PoolCoins_Request.$_.algo).mine.zergpool.com"
+    $Pool_Port = $PoolCoins_Request.$_.port
+    $Pool_Algorithm = $PoolCoins_Request.$_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
+    $Pool_Currency = $_
+    $Pool_PoolFee = $Pool_Request.$Pool_Algorithm.fees
+
+    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
+
+    $Divisor = 1000000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     if ($Divisor -eq 0) {
-        Write-Log -Level Info "Unable to determine divisor for $ZergPool_Coin using $ZergPool_Algorithm_Norm algorithm"
+        Write-Log -Level Info "Unable to determine divisor for $Pool_Coin using $Pool_Algorithm_Norm algorithm"
         return
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$ZergPoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $ZergPool_Regions | ForEach-Object {
-        $ZergPool_Region = $_
-        $ZergPool_Region_Norm = Get-Region $ZergPool_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
-        if ((Get-Variable $ZergPool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly) {
-            #Option 2
-            [PSCustomObject]@{
-                Algorithm     = $ZergPool_Algorithm_Norm
-                CoinName      = $ZergPool_Coin
-                Currency      = $ZergPool_Currency
-                Price         = $Stat.Hour #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = if ($ZergPool_Region -eq "us") {$ZergPool_Host} else {"$ZergPool_Region.$ZergPool_Host"}
-                Port          = $ZergPool_Port
-                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
-                Pass          = "$Worker,c=$ZergPool_Currency,mc=$ZergPool_Currency"
-                Region        = $ZergPool_Region_Norm
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $ZergPool_PoolFee
-            }
-        }
-        if ($ZergPoolCoins_Request.$ZergPool_Currency.noautotrade -eq 0 -and (-not (Get-Variable $ZergPool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly)) {
-            $ZergPool_Currencies | ForEach-Object {
-                #Option 3
+        $Pool_Algorithm_All | Foreach-Object {
+            $Pool_Algorithm_Norm = $_
+            if ((Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly) {
+                #Option 2
                 [PSCustomObject]@{
-                    Algorithm     = $ZergPool_Algorithm_Norm
-                    CoinName      = $ZergPool_Coin
-                    Currency      = $_
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
                     Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = if ($ZergPool_Region -eq "us") {$ZergPool_Host}else {"$ZergPool_Region.$ZergPool_Host"}
-                    Port          = $ZergPool_Port
+                    Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
+                    Port          = $Pool_Port
                     User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
-                    Pass          = "$Worker,c=$_,mc=$ZergPool_Currency"
-                    Region        = $ZergPool_Region_Norm
+                    Pass          = "$Worker,c=$Pool_Currency,mc=$Pool_Currency"
+                    Region        = $Pool_Region_Norm
                     SSL           = $false
                     Updated       = $Stat.Updated
-                    PoolFee       = $ZergPool_PoolFee
+                    PoolFee       = $Pool_PoolFee
+                }
+            }
+            if ($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0 -and (-not (Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly)) {
+                $Pool_Currencies | ForEach-Object {
+                    #Option 3
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        CoinName      = $Pool_Coin
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $_
+                        Price         = $Stat.Hour #instead of .Live
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+tcp"
+                        Host          = if ($Pool_Region -eq "us") {$Pool_Host}else {"$Pool_Region.$Pool_Host"}
+                        Port          = $Pool_Port
+                        User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
+                        Pass          = "$Worker,c=$_,mc=$Pool_Currency"
+                        Region        = $Pool_Region_Norm
+                        SSL           = $false
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_PoolFee
+                    }
                 }
             }
         }

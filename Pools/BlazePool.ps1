@@ -12,65 +12,69 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$BlazePool_Request = [PSCustomObject]@{}
-$BlazePoolCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $BlazePool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status"
-    #$BlazePoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status"
+    #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$BlazePool_Regions = "us"
-$BlazePool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+[hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_Coins = @{}
 
-$BlazePool_Coins = [PSCustomObject]@{}
-$BlazePoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$BlazePool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
+$Pool_Regions = "us"
+$Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=(Get-CoinName $_.Group.name);Symbol=$_.Group.symbol}}
 
-$BlazePool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$BlazePool_Request.$_.hashrate -gt 0 -and [Double]$BlazePool_Request.$_.estimate_current  -gt 0} | ForEach-Object {
-    $BlazePool_Host = "$_.mine.blazepool.com"
-    $BlazePool_Port = $BlazePool_Request.$_.port
-    $BlazePool_Algorithm = $BlazePool_Request.$_.name
-    $BlazePool_Algorithm_Norm = Get-Algorithm $BlazePool_Algorithm
-    $BlazePool_Coin = $BlazePool_Coins.$BlazePool_Algorithm
-    $BlazePool_PoolFee = [Double]$BlazePool_Request.$_.fees
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {($Pool_Request.$_.hashrate -gt 0 -and [Double]$Pool_Request.$_.estimate_current  -gt 0) -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "$_.mine.blazepool.com"
+    $Pool_Port = $Pool_Request.$_.port
+    $Pool_Algorithm = $Pool_Request.$_.name
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
+    $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
+    $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
-    $Divisor = 1000000 * [Double]$BlazePool_Request.$_.mbtc_mh_factor
+    $Divisor = 1000000 * [Double]$Pool_Request.$_.mbtc_mh_factor
 
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\$($Name)_$($BlazePool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ([Double]$BlazePool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-        else {$Stat = Set-Stat -Name "$($Name)_$($BlazePool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $BlazePool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+        if (-not (Test-Path "Stats\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
     }
 
-    $BlazePool_Regions | ForEach-Object {
-        $BlazePool_Region = $_
-        $BlazePool_Region_Norm = Get-Region $BlazePool_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
-        $BlazePool_Currencies | ForEach-Object {
+        $Pool_Currencies | ForEach-Object {
             [PSCustomObject]@{
-                Algorithm     = $BlazePool_Algorithm_Norm
-                CoinName      = $BlazePool_Coin
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Symbol
                 Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = $BlazePool_Host
-                Port          = $BlazePool_Port
+                Host          = $Pool_Host
+                Port          = $Pool_Port
                 User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "ID=$Worker,c=$_"
-                Region        = $BlazePool_Region_Norm
+                Region        = $Pool_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
-                PoolFee       = $BlazePool_PoolFee
+                PoolFee       = $Pool_PoolFee
                 UsesDataWindow = $True
             }
         }

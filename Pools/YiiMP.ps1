@@ -9,62 +9,66 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$YiiMP_Request = [PSCustomObject]@{}
-$YiiMPCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $YiiMP_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
-    $YiiMPCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$YiiMP_Regions = "us"
-$YiiMP_Currencies = ($YiiMPCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
-$YiiMP_PoolFee = 2.0
+[hashtable]$Pool_Algorithms = @{}
 
-$YiiMP_Currencies | Where-Object {$YiiMPCoins_Request.$_.hashrate -gt 0} | ForEach-Object {
-    $YiiMP_Host = "yiimp.eu"
-    $YiiMP_Port = $YiiMPCoins_Request.$_.port
-    $YiiMP_Algorithm = $YiiMPCoins_Request.$_.algo
-    $YiiMP_Algorithm_Norm = Get-Algorithm $YiiMP_Algorithm
-    $YiiMP_Coin = Get-CoinName $YiiMPCoins_Request.$_.name
-    $YiiMP_Currency = $_
-    $YiiMP_PoolFee = [Double]$YiiMP_Request.$YiiMP_Algorithm.fees
+$Pool_Regions = "us"
+$Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_PoolFee = 2.0
 
-    $Divisor = 1000000000 * [Double]$YiiMP_Request.$YiiMP_Algorithm.mbtc_mh_factor
+$Pool_Currencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "yiimp.eu"
+    $Pool_Port = $PoolCoins_Request.$_.port
+    $Pool_Algorithm = $PoolCoins_Request.$_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
+    $Pool_Currency = $_
+    $Pool_PoolFee = [Double]$Pool_Request.$Pool_Algorithm.fees
+
+    $Divisor = 1000000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$YiiMPCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $YiiMP_Regions | ForEach-Object {
-        $YiiMP_Region = $_
-        $YiiMP_Region_Norm = Get-Region $YiiMP_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
         [PSCustomObject]@{
-            Algorithm     = $YiiMP_Algorithm_Norm
-            CoinName      = $YiiMP_Coin
-            Currency      = $YiiMP_Currency
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
-            Host          = $YiiMP_Host
-            Port          = $YiiMP_Port
-            User          = Get-Variable $YiiMP_Currency -ValueOnly -ErrorAction SilentlyContinue
-            Pass          = "$Worker,c=$YiiMP_Currency"
-            Region        = $YiiMP_Region_Norm
+            Host          = $Pool_Host
+            Port          = $Pool_Port
+            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+            Pass          = "$Worker,c=$Pool_Currency"
+            Region        = $Pool_Region_Norm
             SSL           = $false
             Updated       = $Stat.Updated
-            PoolFee       = $YiiMP_PoolFee
+            PoolFee       = $Pool_PoolFee
         }
     }
 }

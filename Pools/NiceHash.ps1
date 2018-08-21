@@ -11,56 +11,60 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$NiceHash_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
 
 try {
-    $NiceHash_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info"
+    $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($NiceHash_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
+if (($Pool_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$NiceHash_Regions = "eu", "usa", "hk", "jp", "in", "br"
-$NiceHash_PoolFee = 2.0
+[hashtable]$Pool_Algorithms = @{}
 
-$NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00} | ForEach-Object {
-    $NiceHash_Host = "nicehash.com"
-    $NiceHash_Port = $_.port
-    $NiceHash_Algorithm = $_.name
-    $NiceHash_Algorithm_Norm = Get-Algorithm $NiceHash_Algorithm
-    $NiceHash_Coin = ""
+$Pool_Regions = "eu", "usa", "hk", "jp", "in", "br"
+$Pool_PoolFee = 2.0
 
-    if ($NiceHash_Algorithm_Norm -eq "Sia") {$NiceHash_Algorithm_Norm = "SiaNiceHash"} #temp fix
-    if ($NiceHash_Algorithm_Norm -eq "Decred") {$NiceHash_Algorithm_Norm = "DecredNiceHash"} #temp fix
+$Pool_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00 -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "nicehash.com"
+    $Pool_Port = $_.port
+    $Pool_Algorithm = $_.name
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = ""
+
+    if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
+    if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
     $Divisor = 1000000000
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($NiceHash_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $NiceHash_Regions | ForEach-Object {
-        $NiceHash_Region = $_
-        $NiceHash_Region_Norm = Get-Region $NiceHash_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
         if ($BTC -or $InfoOnly) {
-            @($NiceHash_Algorithm_Norm,"$($NiceHash_Algorithm_Norm)-NHMP") | Foreach-Object {
+            @($Pool_Algorithm_Norm,"$($Pool_Algorithm_Norm)-NHMP") | Foreach-Object {
                 if ($_ -match "-NHMP") {
                     $This_Port = 3200
-                    $This_Host = "nhmp.$NiceHash_Region.$NiceHash_Host"
+                    $This_Host = "nhmp.$Pool_Region.$Pool_Host"
                 } else {
-                    $This_Port = $NiceHash_Port
-                    $This_Host = "$NiceHash_Algorithm.$NiceHash_Region.$NiceHash_Host"
+                    $This_Port = $Pool_Port
+                    $This_Host = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                 }
                 [PSCustomObject]@{
                     Algorithm     = $_
-                    CoinName      = $NiceHash_Coin
+                    CoinName      = $Pool_Coin
+                    CoinSymbol    = ""
                     Currency      = "BTC"
                     Price         = $Stat.Live
                     StablePrice   = $Stat.Day #instead of .Week
@@ -70,16 +74,17 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                     Port          = $This_Port
                     User          = "$BTC.$Worker"
                     Pass          = "x"
-                    Region        = $NiceHash_Region_Norm
+                    Region        = $Pool_Region_Norm
                     SSL           = $false
                     Updated       = $Stat.Updated
-                    PoolFee       = $NiceHash_PoolFee
+                    PoolFee       = $Pool_PoolFee
                 }
 
                 if ($_ -like "Cryptonight*" -or $_ -eq "Equihash") {
                     [PSCustomObject]@{
                         Algorithm     = $_
-                        CoinName      = $NiceHash_Coin
+                        CoinName      = $Pool_Coin
+                        CoinSymbol    = ""
                         Price         = $Stat.Live
                         StablePrice   = $Stat.Day #instead of .Week
                         MarginOfError = $Stat.Week_Fluctuation
@@ -88,10 +93,10 @@ $NiceHash_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0
                         Port          = $This_Port + 30000
                         User          = "$BTC.$Worker"
                         Pass          = "x"
-                        Region        = $NiceHash_Region_Norm
+                        Region        = $Pool_Region_Norm
                         SSL           = $true
                         Updated       = $Stat.Updated
-                        PoolFee       = $NiceHash_PoolFee
+                        PoolFee       = $Pool_PoolFee
                     }
                 }
             }

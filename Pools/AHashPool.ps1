@@ -12,65 +12,70 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$AHashPool_Request = [PSCustomObject]@{}
-$AHashPoolCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $AHashPool_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/status"
-    $AHashPoolCoins_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$AHashPool_Regions = "us"
-$AHashPool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+[hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_Coins = @{}
 
-$AHashPool_Coins = [PSCustomObject]@{}
-$AHashPoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$AHashPool_Coins | Add-Member $_.Group.algo (Get-CoinName $_.Group.name)}
+$Pool_Regions = "us"
+$Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=(Get-CoinName $_.Group.name);Symbol=$_.Group.symbol}}
 
-$AHashPool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$AHashPool_Request.$_.hashrate -gt 0} | ForEach-Object {
-    $AHashPool_Host = "mine.ahashpool.com"
-    $AHashPool_Port = $AHashPool_Request.$_.port
-    $AHashPool_Algorithm = $AHashPool_Request.$_.name
-    $AHashPool_Algorithm_Norm = Get-Algorithm $AHashPool_Algorithm
-    $AHashPool_Coin = $AHashPool_Coins.$AHashPool_Algorithm
-    $AHashPool_PoolFee = [Double]$AHashPool_Request.$_.fees
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "mine.ahashpool.com"
+    $Pool_Port = $Pool_Request.$_.port
+    $Pool_Algorithm = $Pool_Request.$_.name
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
+    $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
+    $Pool_PoolFee = [Double]$Pool_Request.$_.fees
+    if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
 
-    $Divisor = 1000000 * [Double]$AHashPool_Request.$_.mbtc_mh_factor
+    $Divisor = 1000000 * [Double]$Pool_Request.$_.mbtc_mh_factor
 
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\$($Name)_$($AHashPool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ([Double]$AHashPool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-        else {$Stat = Set-Stat -Name "$($Name)_$($AHashPool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $AHashPool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+        if (-not (Test-Path "Stats\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
     }
 
-    $AHashPool_Regions | ForEach-Object {
-        $AHashPool_Region = $_
-        $AHashPool_Region_Norm = Get-Region $AHashPool_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
-        $AHashPool_Currencies | ForEach-Object {
+        $Pool_Currencies | ForEach-Object {
             [PSCustomObject]@{
-                Algorithm     = $AHashPool_Algorithm_Norm
-                CoinName      = $AHashPool_Coin
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Symbol
                 Currency      = $_
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = "$AHashPool_Algorithm.$AHashPool_Host"
-                Port          = $AHashPool_Port
+                Host          = "$Pool_Algorithm.$Pool_Host"
+                Port          = $Pool_Port
                 User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                 Pass          = "$Worker,c=$_"
-                Region        = $AHashPool_Region_Norm
+                Region        = $Pool_Region_Norm
                 SSL           = $false
                 Updated       = $Stat.Updated
-                PoolFee       = $AHashPool_PoolFee
+                PoolFee       = $Pool_PoolFee
                 UsesDataWindow = $True
             }
         }

@@ -9,67 +9,71 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Bsod_Request = [PSCustomObject]@{}
-$BsodCoins_Request = [PSCustomObject]@{}
+$Pool_Request = [PSCustomObject]@{}
+$PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Bsod_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status"
-    $BsodCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
 
-if (($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
+if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
 
-$Bsod_Regions = "eu","us","asia"
-$Bsod_Currencies = ($BsodCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+[hashtable]$Pool_Algorithms = @{}
 
-$Bsod_Currencies | Where-Object {$BsodCoins_Request.$_.hashrate -gt 0 -and [Double]$BsodCoins_Request.$_.estimate -gt 0} | ForEach-Object {
-    $Bsod_Host = "bsod.pw"
-    $Bsod_Port = $BsodCoins_Request.$_.port
-    $Bsod_Algorithm = $BsodCoins_Request.$_.algo
-    $Bsod_Algorithm_Norm = Get-Algorithm $Bsod_Algorithm
-    $Bsod_Coin = Get-CoinName $BsodCoins_Request.$_.name
-    $Bsod_Currency = $_
-    $Bsod_PoolFee = if($Bsod_Request."$($Bsod_Algorithm)_$($_.tolower())"){$Bsod_Request."$($Bsod_Algorithm)_$($_.tolower())".fees}else{[Double]$Bsod_Request.$Bsod_Algorithm.fees}
+$Pool_Regions = "eu","us","asia"
+$Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 
-    #$Divisor = 1000000000 * [Double]$Bsod_Request.$Bsod_Algorithm.mbtc_mh_factor
+$Pool_Currencies | Where-Object {($PoolCoins_Request.$_.hashrate -gt 0 -and [Double]$PoolCoins_Request.$_.estimate -gt 0) -or $InfoOnly} | ForEach-Object {
+    $Pool_Host = "bsod.pw"
+    $Pool_Port = $PoolCoins_Request.$_.port
+    $Pool_Algorithm = $PoolCoins_Request.$_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
+    $Pool_Currency = $_
+    $Pool_PoolFee = if($Pool_Request."$($Pool_Algorithm)_$($_.tolower())"){$Pool_Request."$($Pool_Algorithm)_$($_.tolower())".fees}else{[Double]$Pool_Request.$Pool_Algorithm.fees}
+
+    #$Divisor = 1000000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     $Divisor = 1000000000
 
-    switch ($Bsod_Algorithm) {
+    switch ($Pool_Algorithm) {
         "blake2s" {$Divisor *= 1000}
         "sha256d" {$Divisor *= 1000}
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$BsodCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $Bsod_Regions | ForEach-Object {
-        $Bsod_Region = $_
-        $Bsod_Region_Norm = Get-Region $Bsod_Region
+    $Pool_Regions | ForEach-Object {
+        $Pool_Region = $_
+        $Pool_Region_Norm = Get-Region $Pool_Region
 
         [PSCustomObject]@{
-            Algorithm     = $Bsod_Algorithm_Norm
-            CoinName      = $Bsod_Coin
-            Currency      = $Bsod_Currency
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
             Price         = $Stat.Hour #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
-            Host          = "$($Bsod_Region).bsod.pw"
-            Port          = $Bsod_Port
-            User          = "$(Get-Variable $Bsod_Currency -ValueOnly -ErrorAction SilentlyContinue).$($Worker)"
-            Pass          = "c=$Bsod_Currency"
-            Region        = $Bsod_Region_Norm
+            Host          = "$($Pool_Region).bsod.pw"
+            Port          = $Pool_Port
+            User          = "$(Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue).$($Worker)"
+            Pass          = "c=$Pool_Currency"
+            Region        = $Pool_Region_Norm
             SSL           = $false
             Updated       = $Stat.Updated
-            PoolFee       = $Bsod_PoolFee
+            PoolFee       = $Pool_PoolFee
         }
     }
 }
