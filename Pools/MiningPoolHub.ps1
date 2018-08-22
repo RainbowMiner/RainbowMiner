@@ -38,7 +38,7 @@ $Pool_Request.return | ForEach-Object {
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     if ($_.current_mining_coin) {
-        $Pool_Coin = Get-CoinName $_.current_mining_coin
+        $Pool_Coin = $_.current_mining_coin
         $Pool_Symbol = Get-CoinSymbol $_.current_mining_coin
         if (-not $Pool_Symbol -and $_.current_mining_coin -match '-') {
             $Pool_Symbol = Get-CoinSymbol ($_.current_mining_coin -replace '\-.*$')

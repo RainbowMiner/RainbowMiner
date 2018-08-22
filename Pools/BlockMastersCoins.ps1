@@ -32,18 +32,21 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 $Pool_Regions = "us"#, "europe"
 $Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
-$Pool_MiningCurrencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
+$Pool_MiningCurrencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
-$Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+foreach($Pool_Currency in $Pool_MiningCurrencies) {
+    if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
+
     $Pool_Host = "blockmasters.co"
-    $Pool_Port = $PoolCoins_Request.$_.port
-    $Pool_Algorithm = $PoolCoins_Request.$_.algo
+    $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
+    $Pool_Algorithm = $PoolCoins_Request.$Pool_Currency.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
-    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
-    $Pool_Currency = $_
+    $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
+    $Pool_Currency = $Pool_Currency
     $Pool_PoolFee = $Pool_Request.$Pool_Algorithm.fees
+    $Pool_User = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
@@ -54,16 +57,14 @@ $Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or 
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
+    foreach($Pool_Region in @($Pool_Regions)) {
         $Pool_Region_Norm = Get-Region $Pool_Region
 
-        $Pool_Algorithm_All | Foreach-Object {
-            $Pool_Algorithm_Norm = $_
-            if ((Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly) {
+        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+            if ($Pool_User -or $InfoOnly) {
                 #Option 2
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
@@ -76,7 +77,7 @@ $Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or 
                     Protocol      = "stratum+tcp"
                     Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                     Port          = $Pool_Port
-                    User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
+                    User          = $Pool_User
                     Pass          = "$Worker,c=$Pool_Currency,mc=$Pool_Currency"
                     Region        = $Pool_Region_Norm
                     SSL           = $false
@@ -84,7 +85,7 @@ $Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or 
                     PoolFee       = $Pool_PoolFee
                 }
             }
-            if (-not (Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly) {
+            if (-not $Pool_User -and -not $InfoOnly) {
                 $Pool_Currencies | ForEach-Object {
                     #Option 3
                     [PSCustomObject]@{
@@ -110,3 +111,9 @@ $Pool_MiningCurrencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or 
         }
     }
 }
+
+
+
+
+
+

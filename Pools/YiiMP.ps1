@@ -38,7 +38,7 @@ $Pool_Currencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoO
     $Pool_Algorithm = $PoolCoins_Request.$_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
-    $Pool_Coin = Get-CoinName $PoolCoins_Request.$_.name
+    $Pool_Coin = $PoolCoins_Request.$_.name
     $Pool_Currency = $_
     $Pool_PoolFee = [Double]$Pool_Request.$Pool_Algorithm.fees
 

@@ -45,7 +45,7 @@ $Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach
     $Pool_Algorithm = $_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
-    $Pool_Coin = Get-CoinName $_.coin_name
+    $Pool_Coin = $_.coin_name
     $Pool_Symbol = Get-CoinSymbol $_.coin_name
     if (-not $Pool_Symbol -and $_.coin_name -match '-') {
         $Pool_Symbol = Get-CoinSymbol ($_.coin_name -split '-' | Select-Object -Index 0)
