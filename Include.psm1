@@ -94,7 +94,7 @@ function Get-Balance {
 
             # Add local currency values
             $Balances | Foreach-Object {
-                Foreach($RateSymbol in $Rates.Keys) {
+                Foreach($RateSymbol in @($Rates.Keys | Sort-Object)) {
                     $Value = $Rates[$RateSymbol]
                     if ($_.currency -ne "BTC") {$Value = if ($RateSymbol -eq $_.currency){[Double]1}else{[Double]($Value/$Rates[$_.currency])}}
                     # Round BTC to 8 decimals, everything else is based on BTC value
@@ -2082,22 +2082,21 @@ function Set-DevicesConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining")
-            $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $AllDevices = Get-Device | Select-Object -ExpandProperty Model -Unique
+            $AllDevices = Get-Device "cpu","gpu" | Select-Object -ExpandProperty Model -Unique
             foreach ($DeviceModel in $AllDevices) {
-                if ($Preset.$DeviceModel) {
-                    $Done | Add-Member $DeviceModel $Preset.$DeviceModel
-                } elseif ($Setup.$DeviceModel) {
-                    $Done | Add-Member $DeviceModel $Setup.$DeviceModel
-                } else {
-                    $Done | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""})
+                if (-not $Preset.$DeviceModel) {
+                    if ($Setup.$DeviceModel) {
+                        $Preset | Add-Member $DeviceModel $Setup.$DeviceModel
+                    } else {
+                        $Preset | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""})
+                    }
                 }
-                foreach($SetupName in $SetupNames) {if ($Done.$DeviceModel.$SetupName -eq $null){$Done.$DeviceModel | Add-Member $SetupName ""}}
+                foreach($SetupName in $SetupNames) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName "" -Force}}
             }
-            $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            $Preset | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
