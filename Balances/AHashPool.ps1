@@ -17,7 +17,7 @@ if (!$PoolConfig.BTC) {
 $OldEAP = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
 try {
-    $Request = Invoke-RestMethod "http://www.ahashpool.com/api/wallet?address=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-RestMethod "http://www.ahashpool.com/api/walletEx?address=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
@@ -34,5 +34,8 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
     "balance" = $Request.balance
     "pending" = $Request.unsold
     "total" = $Request.total_unpaid
-    'lastupdated' = (Get-Date).ToUniversalTime()
+    "paid" = $Request.total_paid
+    "earned" = $Request.total_earned
+    "payouts" = @($Request.payouts | Select-Object)
+    "lastupdated" = (Get-Date).ToUniversalTime()
 }

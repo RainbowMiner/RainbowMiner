@@ -18,7 +18,7 @@ $OldEAP = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
 try {
     #NH API does not total all of your balances for each algo up, so you have to do it with another call then total them manually.
-    $UnpaidRequest = Invoke-RestMethod "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)"  -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $UnpaidRequest = Invoke-RestMethod "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
     $sum = 0
     $UnpaidRequest.result.stats.balance | Foreach { $sum += $_}
 }
@@ -32,5 +32,6 @@ $ErrorActionPreference = $OldEAP
     "balance" = $sum
     "pending" = 0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
     "total" = $sum
-    'lastupdated' = (Get-Date).ToUniversalTime()
+    "payouts" = @($UnpaidRequest.result.payments | Select-Object)
+    "lastupdated" = (Get-Date).ToUniversalTime()
 }

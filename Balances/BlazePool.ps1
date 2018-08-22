@@ -34,5 +34,8 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
     "balance" = $Request.balance
     "pending" = $Request.unsold
     "total" = $Request.total_unpaid
-    'lastupdated' = (Get-Date).ToUniversalTime()
+    "paid" = $Request.total_paid
+    "earned" = $Request.total_earned
+    "payouts" = @($Request.payouts | Select-Object)
+    "lastupdated" = (Get-Date).ToUniversalTime()
 }

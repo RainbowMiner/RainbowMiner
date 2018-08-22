@@ -14,7 +14,7 @@ if(!$MyConfig.BTC) {
 $OldEAP = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
 try {
-    $Request = Invoke-RestMethod "http://zpool.ca/api/wallet?address=$($MyConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-RestMethod "http://zpool.ca/api/walletEx?address=$($MyConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
@@ -31,5 +31,8 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
   "balance" = $Request.balance
   "pending" = $Request.unsold
   "total" = $Request.unpaid
-  'lastupdated' = (Get-Date).ToUniversalTime()
+  "payed" = $Request.total - $Request.unpaid
+  "earned" = $Request.total
+  "payouts" = @($Request.payouts | Select-Object)
+  "lastupdated" = (Get-Date).ToUniversalTime()
 }

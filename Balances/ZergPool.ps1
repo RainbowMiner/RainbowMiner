@@ -9,6 +9,10 @@ $PoolConfig = $Config.Pools.$Name
 
 $Request = [PSCustomObject]@{}
 
+#if ($Config.Pools.ZergPoolCoins.BTC -and -not (($Config.PoolName.Count -gt 0 -and $Config.PoolName -inotcontains "ZergPoolCoins") -or ($Config.ExcludePoolName -gt 0 -and $Config.ExcludePoolName -icontains "ZergPoolCoins"))) {
+#    return
+#}
+
 if (!$PoolConfig.BTC) {
     Write-Log -Level Verbose "Pool Balance API ($Name) has failed - no wallet address specified."
     return
@@ -17,7 +21,7 @@ if (!$PoolConfig.BTC) {
 $OldEAP = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
 try {
-    $Request = Invoke-RestMethod "http://zerg.zergpool.com/api/wallet?address=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-RestMethod "http://zerg.zergpool.com/api/walletEx?address=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
@@ -34,5 +38,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
     "balance" = $Request.balance
     "pending" = $Request.unsold
     "total" = $Request.unpaid
-    'lastupdated' = (Get-Date).ToUniversalTime()
+    "earned" = $Request.paidtotal
+    "payouts" = @($Request.payouts)
+    "lastupdated" = (Get-Date).ToUniversalTime()
 }

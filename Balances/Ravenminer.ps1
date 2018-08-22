@@ -16,9 +16,20 @@ if (!$PoolConfig.RVN) {
     return
 }
 
+$Out = [PSCustomObject]@{
+            "currency" = 'RVN'
+            "balance" = 0
+            "pending" = 0
+            "total" = 0
+            "paid" = 0
+            "earned" = 0
+            "payouts" = @()
+            "lastupdated" = $null
+        }
+
 $Ravenminer_Regions | ForEach-Object {
-    if ( $_ -eq "eu" ) { $Ravenminer_Host = "eu.ravenminer.com" }
-    else { $Ravenminer_Host = "ravenminer.com" }
+    if ( $_ -eq "eu" ) {$Ravenminer_Host = "eu.ravenminer.com"}
+    else {$Ravenminer_Host = "ravenminer.com"}
 
     $Success = $true
     $OldEAP = $ErrorActionPreference
@@ -36,8 +47,9 @@ $Ravenminer_Regions | ForEach-Object {
             $Request = [PSCustomObject]@{
                 "currency" = "RVN"
                 "balance" = [Double]($Values | Select-Object -Index 1).Value
-                "unsold" = [Double]($Values | Select-Object -Index 0).Value
-                "unpaid"   = [Double]($Values | Select-Object -Index 2).Value
+                "unsold"  = [Double]($Values | Select-Object -Index 0).Value
+                "unpaid"  = [Double]($Values | Select-Object -Index 2).Value                
+                "total"  = [Double]($Values | Select-Object -Index 4).Value
             }        
         }
         catch {$Success=$false}
@@ -53,14 +65,16 @@ $Ravenminer_Regions | ForEach-Object {
         return
     }
 
-    if ($Request.balance -or $Request.unsold -or $Request.unpaid) {
-        [PSCustomObject]@{
-            "region" = $_
-            "currency" = $Request.currency
-            "balance" = $Request.balance
-            "pending" = $Request.unsold
-            "total" = $Request.unpaid
-            'lastupdated' = (Get-Date).ToUniversalTime()
-        }
+    if ($Request.total) {
+        $Out.currency = $Request.currency
+        $Out.balance += $Request.balance
+        $Out.pending += $Request.unsold
+        $Out.total += $Request.unpaid
+        $Out.paid += $Request.total - $Request.unpaid
+        $Out.earned += $Request.total
+        $Out.payouts += @($Request.payouts | Select-Object)
+        $Out.lastupdated = (Get-Date).ToUniversalTime()
     }
 }
+
+if ($Out.earned) {$Out}
