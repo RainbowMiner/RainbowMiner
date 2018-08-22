@@ -165,7 +165,7 @@ if ($MyInvocation.MyCommand.Parameters -eq $null) {
 if (Test-Path ".\Logs"){
     Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore
 } else {
-    New-Item ".\Logs" -ItemType "directory" -Force | Out-Null
+    New-Item ".\Logs" -ItemType "directory" -Force > $null
 }
 
 #Start the log
@@ -182,7 +182,7 @@ Write-Log "Starting RainbowMiner v$Version"
 try {
     $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
     if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
-    if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" -Force | Out-Null}
+    if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" -Force > $null}
     if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}   
     if (-not (Test-Path $ConfigFile)) {
         $Parameters = @{VersionCompatibility=$Version}
@@ -220,9 +220,9 @@ try {
     }
 
     #cleanup legacy data
-    if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force | Out-Null}
+    if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force > $null}
     @("Algorithms","Devices","Regions") | Where-Object {-not (Test-Path "Data\$($_.ToLower()).json")} | Foreach-Object {
-        if (Test-Path "$($_).txt") {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force | Out-Null}
+        if (Test-Path "$($_).txt") {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force > $null}
         else {
             throw "Data\$($_.ToLower()).json is missing."
         }
@@ -334,13 +334,13 @@ while ($true) {
                             [System.Collections.ArrayList]$GlobalSetupSteps = @()
 
                             Switch ($SetupType) {
-                                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) | Out-Null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) | Out-Null}
-                                "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) | Out-Null}
-                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoin")) | Out-Null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) | Out-Null}
+                                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) > $null}
+                                "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
+                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoin")) > $null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
-                            $GlobalSetupSteps.Add("save") | Out-Null
+                            $GlobalSetupSteps.Add("save") > $null
                             $GlobalSetupStep = $GlobalSetupStepBack = 0
 
                             if (-not $IsInitialSetup) {
@@ -681,10 +681,10 @@ while ($true) {
                                             $PoolsActual | ConvertTo-Json | Out-File $PoolsConfigFile -Encoding utf8
 
                                             if ($IsInitialSetup) {
-                                                $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") | Out-Null
-                                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") | Out-Null                                                
+                                                $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
+                                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null                                                
                                             } else {
-                                                $SetupMessage.Add("Changes written to configuration. ") | Out-Null
+                                                $SetupMessage.Add("Changes written to configuration. ") > $null
                                             }
                                             $IsInitialSetup = $false
                                             $GlobalSetupDone = $true                                            
@@ -838,10 +838,10 @@ while ($true) {
 
                                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
-                                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") | Out-Null}
-                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinname","excludecoin")) | Out-Null
-                                        if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") | Out-Null} 
-                                        $PoolSetupSteps.Add("save") | Out-Null
+                                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
+                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinname","excludecoin")) > $null
+                                        if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null} 
+                                        $PoolSetupSteps.Add("save") > $null
                                         $PoolSetupStep = $PoolSetupStepBack = 0
                                         $PoolSetupStepsDone = $false
                                                                                 
@@ -1046,8 +1046,8 @@ while ($true) {
 
                                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
-                                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining")) | Out-Null
-                                        $DeviceSetupSteps.Add("save") | Out-Null
+                                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining")) > $null
+                                        $DeviceSetupSteps.Add("save") > $null
                                         $DeviceSetupStep = $DeviceSetupStepBack = 0
                                         $DeviceSetupStepsDone = $false
                                         
@@ -1448,29 +1448,30 @@ while ($true) {
     [System.Collections.ArrayList]$NewPools = @()
     [System.Collections.ArrayList]$SelectedPoolNames = @()
     if (Test-Path "Pools") {
-        $NewPools = $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
+        $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
             $Pool_Name = $_
-            $SelectedPoolNames.Add($Pool_Name) | Out-Null
+            $SelectedPoolNames.Add($Pool_Name) > $null
             [hashtable]$Pool_Config = @{Name = $Pool_Name}
             [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
             foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
             Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
-            Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {
-                $Pool_Config.AlgorithmList = if ($_.Content.Algorithm -match "-") {@((Get-Algorithm $_.Content.Algorithm), ($_.Content.Algorithm -replace '\-.*$'))}else{@($_.Content.Algorithm)}
-                if ($Pool_Config.CoinName) {$Pool_Config.CoinName = Get-CoinName $_.Content.CoinName}
-                $_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
+            foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
+                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
+                #if ($Pool.CoinName) {$Pool_Config.CoinName = Get-CoinName $Pool.CoinName}
+                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
+                if (
+                    ($Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -and
+                    ($Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -and
+                    (-not $Pool.CoinName -or $Pool_Parameters.CoinName.Count -eq 0 -or @($Pool_Parameters.CoinName) -icontains $Pool.CoinName) -and
+                    (-not $Pool.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $Pool.CoinName)
+                ) {
+                    $Pool_Factor = 1-[Double]($Pool.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
+                    $Pool.Price *= $Pool_Factor
+                    $Pool.StablePrice *= $Pool_Factor
+                    $NewPools.Add($Pool) > $null
                 }
-        } |
-        Where-Object {$Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
-        Where-Object {$Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($_.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} | 
-        Where-Object {-not $_.CoinName -or $Pool_Parameters.CoinName.Count -eq 0 -or @($Pool_Parameters.CoinName) -icontains $_.CoinName} |
-        Where-Object {-not $_.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $_.CoinName} |        
-        ForEach-Object {
-            $Pool_Factor = 1-[Double]($_.Penalty + $(if (-not $Config.IgnoreFees){$_.PoolFee}))/100
-            $_.Price *= $Pool_Factor
-            $_.StablePrice *= $Pool_Factor     
-            $_
-        }  
+            }
+        }
     }
 
     #Remove stats from pools & miners not longer in use
@@ -1485,9 +1486,9 @@ while ($true) {
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     [System.Collections.ArrayList]$AllPoolsAddRemove = @()
-    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) | Out-Null}    
+    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) > $null}    
     [System.Collections.ArrayList]$AllPools = @($NewPools)
-    if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) | Out-Null}
+    if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) > $null}
     $AllPoolsAddRemove.Clear()
 
     #Now remove all deselected pool/algorithm/coin from AllPools
@@ -1498,7 +1499,7 @@ while ($true) {
             ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
             ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
             ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName)
-            ) {$AllPoolsAddRemove.Add($Pool) | Out-Null}           
+            ) {$AllPoolsAddRemove.Add($Pool) > $null}           
         $i++
     }
     foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
@@ -1510,7 +1511,7 @@ while ($true) {
     #Apply watchdog to pools
     foreach ($Pool in $AllPools) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
-        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsAddRemove.Add($Pool) | Out-Null}
+        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsAddRemove.Add($Pool) > $null}
     }
     foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
     $AllPoolsAddRemove = $null
@@ -2046,13 +2047,13 @@ while ($true) {
             @{Label = "Power"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Config.Currency | Sort-Object)) {
-            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit) {ConvertTo-LocalCurrency `$(`$_.Profit) $($Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) | Out-Null
+            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit) {ConvertTo-LocalCurrency `$(`$_.Profit) $($Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
         }                        
         $Miner_Table.AddRange(@(
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
             @{Label = "Pool"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {"$($_.Name)$(if ($_.CoinName) {"-$($_.CoinName)"})"}}}
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
-        )) | Out-Null
+        )) > $null
 
         $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
     }
@@ -2130,7 +2131,7 @@ while ($true) {
     }
 
     #Display profit comparison
-    if ($Downloader.State -eq "Running") {$Downloader | Wait-Job -Timeout 10 | Out-Null}
+    if ($Downloader.State -eq "Running") {$Downloader | Wait-Job -Timeout 10 > $null}
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
@@ -2178,13 +2179,13 @@ while ($true) {
                     -3 {$Miner_Currency_Out = "sat";$CurrentProfitTotal_Out*=1e8}
                 }
             }
-            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2) $Miner_Currency_Out/Day") | Out-Null
+            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2) $Miner_Currency_Out/Day") > $null
     }
-    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") | Out-Null}
-    #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") | Out-Null
-    #$StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") | Out-Null
-    #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") | Out-Null
-    #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") | Out-Null
+    if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
+    #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") > $null
+    #$StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") > $null
+    #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") > $null
+    #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") > $null
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
@@ -2385,7 +2386,7 @@ $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
     }
     if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {
         $Miner.SetStatus([MinerStatus]::Failed)
-        $ExcavatorWindowsClosed.Add($Miner.BaseName) | Out-Null
+        $ExcavatorWindowsClosed.Add($Miner.BaseName) > $null
     }
 }
 

@@ -199,7 +199,7 @@ Function Write-Log {
         $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-        if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" | Out-Null}
+        if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
 
         switch ($Level) {
             'Error' {
@@ -262,8 +262,12 @@ function Set-Stat {
     $Path = "Stats\$Name.txt"
     $SmallestValue = 1E-20
 
-    $Stat = Get-Content $Path -ErrorAction SilentlyContinue -Raw
-
+    if (Test-Path $Path) {
+        $stream = [System.IO.StreamReader] $Path
+        $Stat = $stream.ReadToEnd()
+        $stream.Close()
+    }
+   
     try {
         $Stat = ConvertFrom-Json ($Stat) -ErrorAction Stop
         if ($PowerDraw -gt 0 -and $Stat.PowerDraw_Live -eq $null) {
@@ -376,7 +380,7 @@ function Set-Stat {
         }
     }
 
-    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" | Out-Null}
+    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
     if ($Stat.Duration -ne 0) {
         [PSCustomObject]@{
             Live = [Decimal]$Stat.Live
@@ -412,11 +416,15 @@ function Get-Stat {
         [String]$Name
     )
 
-    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" | Out-Null}
+    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
 
     if ($Name) {
         # Return single requested stat
-        if (Test-Path "Stats\$($Name).txt") {ConvertFrom-Json (Get-Content "Stats\$($Name).txt" -Raw)}
+        if (Test-Path "Stats\$($Name).txt") {
+            $stream = [System.IO.StreamReader] "Stats\$($Name).txt"
+            ConvertFrom-Json($stream.ReadToEnd())
+            $stream.Close()
+        }
     } else {
         # Return all stats
         $Stats = [hashtable]@{}
@@ -425,7 +433,7 @@ function Get-Stat {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             try {
-                $Stats[$BaseName] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
+                $Stats[$BaseName] = ConvertFrom-Json $($stream = [System.IO.StreamReader] $FullName;$stream.ReadToEnd();$stream.Close()) -ErrorAction Stop
             }
             catch {
                 #Remove broken stat file
@@ -468,13 +476,13 @@ function Get-ChildItemContent {
         $Content = @()
         if ($_.Extension -eq ".ps1") {
             $Content = & {
-                $Parameters.Keys | ForEach-Object {Set-Variable $_ $Parameters.$_}
+                foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
                 & $_.FullName @Parameters
             }
         }
         else {
             $Content = & {
-                $Parameters.Keys | ForEach-Object {Set-Variable $_ $Parameters.$_}
+                foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}                
                 try {
                     ($_ | Get-Content | ConvertFrom-Json) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
@@ -484,18 +492,18 @@ function Get-ChildItemContent {
             }
             if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
-        $Content | ForEach-Object {
-            if ($_.Name) {
-                [PSCustomObject]@{Name = $_.Name; BaseName = $Name; Content = $_}
+        foreach ($c in $Content) {
+            if ($c.Name) {
+                [PSCustomObject]@{Name = $c.Name; BaseName = $Name; Content = $c}
             }
             else {
-                [PSCustomObject]@{Name = $Name; BaseName = $Name; Content = $_}
+                [PSCustomObject]@{Name = $Name; BaseName = $Name; Content = $c}
             }
         }
-        if ( $Force ) {
-            $Parameters.Keys | ForEach-Object {
-                if (-not (Get-Member -InputObject $Content -Name $_ -Membertype Properties)) {
-                    $Content | Add-Member $_ $Parameters.$_ -Force 
+        if ($Force) {
+            foreach ($k in $Parameters.Keys) {
+                if (-not (Get-Member -InputObject $Content -Name $k -Membertype Properties)) {
+                    $Content | Add-Member $k $Parameters.$k -Force 
                 }
             }
         }
@@ -527,7 +535,7 @@ function Get-MinersContent {
         Pools = $Pools
     }
     
-    Get-ChildItem "Miners" -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Get-ChildItem "Miners\*.ps1" -File -ErrorAction SilentlyContinue | ForEach-Object {
         $Miner = $_
         $Name = $Miner.BaseName
  
@@ -741,10 +749,10 @@ function Start-SubProcessInConsole {
 
         [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
 
-        $ControllerProcess.Handle | Out-Null
-        $Process.Handle | Out-Null
+        $ControllerProcess.Handle > $null
+        $Process.Handle > $null
 
-        do {if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}}
+        do {if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() > $null}}
         while ($Process.HasExited -eq $false)
     }
 
@@ -774,7 +782,7 @@ function Expand-WebRequest {
     [Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
 
     if (-not $Path) {$Path = Join-Path ".\Downloads" ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName}
-    if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" | Out-Null}
+    if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" > $null}
     $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
 
     if (Test-Path $FileName) {Remove-Item $FileName}
@@ -879,7 +887,7 @@ function Get-Device {
     )
 
     if ($Name) {
-        if (-not (Test-Path Variable:Script:DataDeviceList) -or -not $Script:DataDeviceList) {$Script:DataDeviceList = Get-Content "Data\devices.json" | ConvertFrom-Json}        
+        if (-not (Test-Path Variable:Script:DataDeviceList) -or -not $Script:DataDeviceList) {$Script:DataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
@@ -1164,7 +1172,7 @@ function Update-DeviceInformation {
                 $DeviceId = 0
                 $Command = ".\Includes\OverdriveN.exe"
                 $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed"}
-                if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content .\Data\amd-cards-tdp.json | ConvertFrom-Json}
+                if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
 
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
@@ -1195,7 +1203,7 @@ function Update-DeviceInformation {
                 '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
                 '--format=csv,noheader'
             )
-            if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content .\Data\nvidia-cards-tdp.json | ConvertFrom-Json}
+            if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
             & $Command $Arguments  | ForEach-Object {
                 $SMIresultSplit = $_ -split ','
                 if ($SMIresultSplit.count -gt 10) {
@@ -1244,7 +1252,7 @@ function Update-DeviceInformation {
                     $CpuData.Utilization = $_.LoadPercentage
                 }
                 if (-not $CpuData.PowerDraw) {
-                    if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" | ConvertFrom-Json}
+                    if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
                     if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
                     $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
                 }
@@ -1322,7 +1330,7 @@ function Get-Algorithms {
     )
     if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {
         [hashtable]$Script:Algorithms = @{}
-        (Get-Content "Data\algorithms.json" | ConvertFrom-Json).PSObject.Properties | %{$Script:Algorithms[$_.Name]=$_.Value}
+        (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Script:Algorithms[$_.Name]=$_.Value}
         $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {$Script:Algorithms.Keys}
@@ -1336,7 +1344,7 @@ function Get-Regions {
     )
     if (-not (Test-Path Variable:Script:Regions)) {
         [hashtable]$Script:Regions = @{}
-        (Get-Content "Data\regions.json" | ConvertFrom-Json).PSObject.Properties | %{$Script:Regions[$_.Name]=$_.Value}
+        (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Script:Regions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Script:Regions.Keys}
 }
@@ -1442,7 +1450,7 @@ class Miner {
 
         if ($this.Process) {
             if ($this.HasOwnMinerWindow -and $this.Process.MiningProcess) {
-                $this.Process.MiningProcess.CloseMainWindow() | Out-Null
+                $this.Process.MiningProcess.CloseMainWindow() > $null
                 # Wait up to 10 seconds for the miner to close gracefully
                 $closedgracefully = $this.Process.MiningProcess.WaitForExit(10000)
                 if($closedgracefully) { 
@@ -1466,7 +1474,7 @@ class Miner {
             }
             if ($this.EthPill -ne $null) {
                 Write-Log "Stopping OhGodAnETHlargementPill"
-                $this.EthPill.CloseMainWindow() | Out-Null
+                $this.EthPill.CloseMainWindow() > $null
                 if(-not $this.EthPill.WaitForExit(1000)) {if(-not $this.EthPill.HasExited) {$this.EthPill.Kill()}}
                 $this.EthPill = $null
                 Sleep -Milliseconds 250 #Sleep for 1/4 second
@@ -2036,7 +2044,7 @@ function Set-MinersConfigDefault {
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
@@ -2044,8 +2052,8 @@ function Set-MinersConfigDefault {
             foreach ($a in @("NVIDIA","AMD")) {               
                 [System.Collections.ArrayList]$SetupDevices = @()
                 $Devices = @(Select-Device $AllDevices -Type $a | Select-Object Model,Model_Name,Name)
-                $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) | Out-Null}
-                Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') | Out-Null}
+                $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) > $null}
+                Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}
                 $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                     foreach ($SetupDevice in $SetupDevices) {
                         $Done | Add-Member "$($_.Name)-$($SetupDevice)" @($_.Value)
@@ -2073,7 +2081,7 @@ function Set-DevicesConfigDefault {
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining")
             $Done = [PSCustomObject]@{}
@@ -2108,7 +2116,7 @@ function Set-PoolsConfigDefault {
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile | ConvertFrom-Json}
+            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
@@ -2375,7 +2383,7 @@ function Test-Port{
                         $temp.Notes = "Connection to Port Timed Out"   
                     } Else {   
                         $error.Clear()   
-                        $tcpobject.EndConnect($connect) | out-Null   
+                        $tcpobject.EndConnect($connect) > $null   
                         #If error   
                         If($error[0]){   
                             #Begin making error more readable in report   
@@ -2654,7 +2662,7 @@ function Start-AsyncLoader {
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
-    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
+    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
     $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
         
