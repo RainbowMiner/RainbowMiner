@@ -42,7 +42,9 @@ param(
     [Alias("ExcludePool")]
     [Array]$ExcludePoolName = @(),
     [Parameter(Mandatory = $false)]
-    [Array]$ExcludeCoin = @(),     
+    [Array]$ExcludeCoin = @(),
+    [Parameter(Mandatory = $false)]
+    [Array]$ExcludeCoinSymbol = @(),
     [Parameter(Mandatory = $false)]
     [Array]$Currency = ("BTC", "USD"), #i.e. GBP,EUR,ZEC,ETH etc.
     [Parameter(Mandatory = $false)]
@@ -156,7 +158,7 @@ $IsInitialSetup = $false
 }
 
 if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
 } else {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
@@ -331,17 +333,18 @@ while ($true) {
                         elseif (@("W","C","E","S","A") -contains $SetupType) {
                             
                             $GlobalSetupDone = $false
+                            $GlobalSetupStep = 0
                             [System.Collections.ArrayList]$GlobalSetupSteps = @()
+                            [System.Collections.ArrayList]$GlobalSetupStepBack = @()
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
                                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
-                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoin")) > $null}
+                                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
                                 "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
-                            $GlobalSetupSteps.Add("save") > $null
-                            $GlobalSetupStep = $GlobalSetupStepBack = 0
+                            $GlobalSetupSteps.Add("save") > $null                            
 
                             if (-not $IsInitialSetup) {
                                 Clear-Host
@@ -496,8 +499,11 @@ while ($true) {
                                         "excludealgorithm" {
                                             $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
+                                        "excludecoinsymbol" {
+                                            $Config.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the name of coins by currency symbol, you want to globaly exclude (leave empty for none)" -Default $Config.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
                                         "excludecoin" {
-                                            $Config.ExcludeCoin = Read-HostArray -Prompt "Enter the name of coins, you want to exclude (leave empty for none)" -Default $Config.ExcludeCoin -Characters "\`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.ExcludeCoin = Read-HostArray -Prompt "Enter the name of coins, you want to globaly exclude (leave empty for none)" -Default $Config.ExcludeCoin -Characters "`$A-Z0-9. " | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         "disabledualmining" {
                                             $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -650,6 +656,7 @@ while ($true) {
                                             $ConfigActual | Add-Member Algorithm $($Config.Algorithm -join ",") -Force
                                             $ConfigActual | Add-Member ExcludeAlgorithm $($Config.ExcludeAlgorithm -join ",") -Force
                                             $ConfigActual | Add-Member ExcludeCoin $($Config.ExcludeCoin -join ",") -Force
+                                            $ConfigActual | Add-Member ExcludeCoinSymbol $($Config.ExcludeCoinSymbol -join ",") -Force
                                             $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
                                             $ConfigActual | Add-Member ShowPoolBalances $(if (Get-Yes $Config.ShowPoolBalances){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member ShowMinerWindow $(if (Get-Yes $Config.ShowMinerWindow){"1"}else{"0"}) -Force
@@ -693,21 +700,19 @@ while ($true) {
                                             Write-Log -Level Error "Unknown setup command `"$($GlobalSetupSteps[$GlobalSetupStep])`". You should never reach here. Please open an issue on github.com"
                                         }
                                     }
-                                    $GlobalSetupStepBack = $GlobalSetupStep
+                                    $GlobalSetupStepBack.Add($GlobalSetupStep) > $null
                                     $GlobalSetupStep++
                                 }
                                 catch {
                                     if (@("back","<") -icontains $_.Exception.Message) {
-                                        $GlobalSetupStep = $GlobalSetupStepBack
+                                        if ($GlobalSetupStepBack.Count) {$GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)}
                                     }
                                     elseif ($_.Exception.Message -like "Goto*") {
-                                        $OldGlobalSetupStepBack = $GlobalSetupStepBack
-                                        $GlobalSetupStepBack = $GlobalSetupStep
+                                        $GlobalSetupStepBack.Add($GlobalSetupStep) > $null
                                         $GlobalSetupStep = $GlobalSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
                                         if ($GlobalSetupStep -lt 0) {
                                             Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
-                                            $GlobalSetupStep = $GlobalSetupStepBack
-                                            $GlobalSetupStepBack = $OldGlobalSetupStepBack
+                                            $GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)
                                         }
                                     }
                                     elseif (@("exit","cancel") -icontains $_.Exception.Message) {
@@ -834,19 +839,21 @@ while ($true) {
                                     $Pool = Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {if ($Pool_Config.Count){$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force};$_}
 
                                     if ($Pool) {
+                                        $PoolSetupStepsDone = $false
+                                        $PoolSetupStep = 0
                                         [System.Collections.ArrayList]$PoolSetupSteps = @()
+                                        [System.Collections.ArrayList]$PoolSetupStepBack = @()
 
                                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
                                         if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
-                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinname","excludecoin")) > $null
+                                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
                                         if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null} 
-                                        $PoolSetupSteps.Add("save") > $null
-                                        $PoolSetupStep = $PoolSetupStepBack = 0
-                                        $PoolSetupStepsDone = $false
+                                        $PoolSetupSteps.Add("save") > $null                                        
                                                                                 
                                         $Pool_Avail_Currency = @($Pool.Content.Currency | Select-Object -Unique | Sort-Object)
                                         $Pool_Avail_CoinName = @($Pool.Content | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
+                                        $Pool_Avail_CoinSymbol = @($Pool.Content | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
 
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
@@ -857,6 +864,8 @@ while ($true) {
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$PoolConfig | Add-Member ExcludeAlgorithm "" -Force}            
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinName") {$PoolConfig | Add-Member CoinName "" -Force}
                                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$PoolConfig | Add-Member ExcludeCoin "" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinSymbol") {$PoolConfig | Add-Member CoinSymbol "" -Force}
+                                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$PoolConfig | Add-Member ExcludeCoinSymbol "" -Force}
                                         if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
                                         
                                         do { 
@@ -895,10 +904,16 @@ while ($true) {
                                                         $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "coinname" {
-                                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "excludecoin" {
-                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "coinsymbol" {
+                                                        $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine (leave empty for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "excludecoinsymbol" {
+                                                        $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "penalty" {                                                    
                                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -967,6 +982,8 @@ while ($true) {
                                                         $PoolConfig | Add-Member ExcludeAlgorithm $($PoolConfig.ExcludeAlgorithm -join ",") -Force
                                                         $PoolConfig | Add-Member CoinName $($PoolConfig.CoinName -join ",") -Force
                                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
+                                                        $PoolConfig | Add-Member CoinSymbol $($PoolConfig.CoinSymbol -join ",") -Force
+                                                        $PoolConfig | Add-Member ExcludeCoinSymbol $($PoolConfig.ExcludeCoinSymbol -join ",") -Force
 
                                                         $PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
                                                         $PoolsActualSave = [PSCustomObject]@{}
@@ -980,21 +997,19 @@ while ($true) {
                                                         $PoolSetupStepsDone = $true                                                  
                                                     }
                                                 }
-                                                $PoolSetupStepBack = $PoolSetupStep
+                                                if ($PoolSetupSteps[$PoolSetupStep] -notmatch 'title') {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
                                                 $PoolSetupStep++
                                             }
                                             catch {
                                                 if (@("back","<") -icontains $_.Exception.Message) {
-                                                    $PoolSetupStep = $PoolSetupStepBack
+                                                    if ($PoolSetupStepBack.Count) {$PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)}
                                                 }
                                                 elseif ($_.Exception.Message -like "Goto*") {
-                                                    $OldPoolSetupStepBack = $PoolSetupStepBack
-                                                    $PoolSetupStepBack = $PoolSetupStep
+                                                    $PoolSetupStepBack.Add($PoolSetupStep) > $null
                                                     $PoolSetupStep = $PoolSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
                                                     if ($PoolSetupStep -lt 0) {
                                                         Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
-                                                        $PoolSetupStep = $PoolSetupStepBack
-                                                        $PoolSetupStepBack = $OldPoolSetupStepBack
+                                                        $PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)
                                                     }
                                                 }
                                                 elseif (@("exit","cancel") -icontains $_.Exception.Message) {
@@ -1042,14 +1057,15 @@ while ($true) {
                                     }
 
                                     if ($Device_Name) {
+                                        $DeviceSetupStepsDone = $false
+                                        $DeviceSetupStep = 0
                                         [System.Collections.ArrayList]$DeviceSetupSteps = @()
+                                        [System.Collections.ArrayList]$DeviceSetupStepBack = @()
 
                                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
                                         $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining")) > $null
                                         $DeviceSetupSteps.Add("save") > $null
-                                        $DeviceSetupStep = $DeviceSetupStepBack = 0
-                                        $DeviceSetupStepsDone = $false
                                         
                                         do { 
                                             try {
@@ -1091,21 +1107,19 @@ while ($true) {
                                                         $DeviceSetupStepsDone = $true
                                                     }
                                                 }
-                                                $DeviceSetupStepBack = $DeviceSetupStep
+                                                $DeviceSetupStepBack.Add($DeviceSetupStep) > $null
                                                 $DeviceSetupStep++
                                             }
                                             catch {
                                                 if (@("back","<") -icontains $_.Exception.Message) {
-                                                    $DeviceSetupStep = $DeviceSetupStepBack
+                                                    if ($DeviceSetupStepBack.Count) {$DeviceSetupStep = $DeviceSetupStepBack[$DeviceSetupStepBack.Count-1];$DeviceSetupStepBack.RemoveAt($DeviceSetupStepBack.Count-1)}
                                                 }
                                                 elseif ($_.Exception.Message -like "Goto*") {
-                                                    $OldDeviceSetupStepBack = $DeviceSetupStepBack
-                                                    $DeviceSetupStepBack = $DeviceSetupStep
+                                                    $DeviceSetupStepBack.Add($DeviceSetupStep) > $null
                                                     $DeviceSetupStep = $DeviceSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
                                                     if ($DeviceSetupStep -lt 0) {
                                                         Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
-                                                        $DeviceSetupStep = $DeviceSetupStepBack
-                                                        $DeviceSetupStepBack = $OldDeviceSetupStepBack
+                                                        $DeviceSetupStep = $DeviceSetupStepBack[$DeviceSetupStepBack.Count-1];$DeviceSetupStepBack.RemoveAt($DeviceSetupStepBack.Count-1)
                                                     }
                                                 }
                                                 elseif (@("exit","cancel") -icontains $_.Exception.Message) {
@@ -1170,7 +1184,6 @@ while ($true) {
         }
         $Config.Algorithm = @($Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_})
         $Config.ExcludeAlgorithm = @($Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_})
-        $Config.ExcludeCoin = @($Config.ExcludeCoin | ForEach-Object {Get-CoinName $_} | Where-Object {$_})
         $Config.Region = $Config.Region | ForEach-Object {Get-Region $_}
         $Config.Currency = @($Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}
@@ -1228,8 +1241,8 @@ while ($true) {
             foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
                 $Config.Pools.$p | Add-Member Algorithm @(($Config.Pools.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                $Config.Pools.$p | Add-Member CoinName @(($Config.Pools.$p.CoinName | Select-Object) | Where-Object {$_} | Foreach-Object {Get-CoinName $_}) -Force
-                $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_} | Foreach-Object {Get-CoinName $_}) -Force
+                $Config.Pools.$p | Add-Member CoinName @(($Config.Pools.$p.CoinName | Select-Object) | Where-Object {$_}) -Force
+                $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_}) -Force
             }
         }
     }    
@@ -1448,6 +1461,25 @@ while ($true) {
     [System.Collections.ArrayList]$NewPools = @()
     [System.Collections.ArrayList]$SelectedPoolNames = @()
     if (Test-Path "Pools") {
+        $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
+            $Pool_Name = $_
+            $SelectedPoolNames.Add($Pool_Name) > $null
+            [hashtable]$Pool_Config = @{Name = $Pool_Name}
+            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
+            foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
+            Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
+            foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
+                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                
+                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
+                $Pool_Factor = 1-[Double]($Pool.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
+                $Pool.Price *= $Pool_Factor
+                $Pool.StablePrice *= $Pool_Factor
+                $NewPools.Add($Pool) > $null
+            }
+        }
+    }
+
+    if ($false -and (Test-Path "Pools")) {
         $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
             $Pool_Name = $_
             $SelectedPoolNames.Add($Pool_Name) > $null
@@ -1463,7 +1495,9 @@ while ($true) {
                     ($Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -and
                     ($Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -and
                     (-not $Pool.CoinName -or $Pool_Parameters.CoinName.Count -eq 0 -or @($Pool_Parameters.CoinName) -icontains $Pool.CoinName) -and
-                    (-not $Pool.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $Pool.CoinName)
+                    (-not $Pool.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $Pool.CoinName) -and
+                    (-not $Pool.CoinSymbol -or $Pool_Parameters.CoinSymbol.Count -eq 0 -or @($Pool_Parameters.CoinSymbol) -icontains $Pool.CoinSymbol) -and
+                    (-not $Pool.CoinSymbol -or $Pool_Parameters.ExcludeCoinSymbol.Count -eq 0 -or @($Pool_Parameters.ExcludeCoinSymbol) -inotcontains $Pool.CoinSymbol)
                 ) {
                     $Pool_Factor = 1-[Double]($Pool.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
                     $Pool.Price *= $Pool_Factor
@@ -1493,13 +1527,23 @@ while ($true) {
 
     #Now remove all deselected pool/algorithm/coin from AllPools
     $i=0
-    foreach ($Pool in $AllPools) {    
+    foreach ($Pool in $AllPools) {
+        $Pool_Name = $Pool.Name    
         if (
+            (-not $Config.Pools.$Pool_Name) -or
             ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
             ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
-            ($Config.ExcludePoolName.Count -and (Compare-Object $Config.ExcludePoolName $Pool.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName)
-            ) {$AllPoolsAddRemove.Add($Pool) > $null}           
+            ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool.Name) -or
+            ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool.Name) -or
+            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
+            ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+            ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
+            ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
+            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
+            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+        ) {$AllPoolsAddRemove.Add($Pool) > $null}
         $i++
     }
     foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
@@ -1612,9 +1656,7 @@ while ($true) {
     Write-Log "Calculating profit for each miner. "
 
     [hashtable]$AllMiners_VersionCheck = @{}
-    $AllMiners | ForEach-Object {
-        $Miner = $_
-
+    foreach ($Miner in $AllMiners) {
         $Miner_HashRates = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
@@ -1630,9 +1672,10 @@ while ($true) {
             $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
-            $Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)+@($Miner.BaseAlgorithm | Select-Object)
+            [System.Collections.ArrayList]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
+            $Miner_CommonCommands_array.AddRange(@($Miner.BaseAlgorithm | Select-Object))
             for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
-                $Miner_CommonCommands = ($Miner_CommonCommands_array | Select-Object -First $i) -join '-'
+                $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
                     if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
                     if ($Config.Miners.$Miner_CommonCommands.Profile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Config.Miners.$Miner_CommonCommands.Profile}
@@ -1749,7 +1792,6 @@ while ($true) {
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
     }
-
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $_.VersionCheck}
     $Miners_Downloading = $AllMiners.Count - $Miners.Count
     if (($StartDownloader -or $Miners_Downloading -ne 0) -and $Downloader.State -ne "Running") {
