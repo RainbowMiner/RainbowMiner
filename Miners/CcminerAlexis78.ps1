@@ -16,7 +16,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11 (CcminerSupr fastest)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR, HShare
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
