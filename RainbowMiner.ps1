@@ -182,6 +182,10 @@ Write-Log "Starting RainbowMiner v$Version"
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
 (Get-Process -Id $PID).PriorityClass = "BelowNormal"
 
+Write-Host "Detecting devices .."
+$AllDevices = Get-Device "cpu","gpu"
+
+Write-Host "Initialize configuration .."
 try {
     $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
     if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
@@ -244,6 +248,7 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
 }
 
+Write-Host "Start afterburner library .."
 Start-Afterburner
 
 #[console]::TreatControlCAsInput = $true
@@ -260,6 +265,7 @@ while ($true) {
         if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {        
 
             do {
+                if ($Config -eq $null) {Write-Host "Read configuration .."}
                 $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $MyCommandParameters | ForEach-Object {
@@ -341,10 +347,10 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("devicename","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","msiapath","ethpillenable")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","msiapath","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
                             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -364,6 +370,7 @@ while ($true) {
                             }
 
                             do {
+                                $GlobalSetupStepStore = $true
                                 try {
                                    Switch ($GlobalSetupSteps[$GlobalSetupStep]) {
                                         "wallet" {                
@@ -488,7 +495,7 @@ while ($true) {
                                                 Write-Host "You are almost done :) Our defaults for miners and algorithms give you a good start. If you want, you can skip the settings for now " -ForegroundColor Cyan
                                                 Write-Host " "
 
-                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto devicename"}
+                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {throw "Goto devicenamebegin"}
                                             }
                                             $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
@@ -513,55 +520,122 @@ while ($true) {
                                         "excludeminerswithfee" {
                                             $Config.ExcludeMinersWithFee = Read-HostBool -Prompt "Exclude all miners with developer fee" -Default $Config.ExcludeMinersWithFee | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
-                                        "devicename" {
+                                        "devicenamebegin" {
+                                            $GlobalSetupStepStore = $false
                                             if ($SetupType -eq "A") {
                                                 Write-Host ' '
                                                 Write-Host '(3) Select the devices to mine on and miningmode' -ForegroundColor Green
                                                 Write-Host ' '
                                             }
+                                            if ($IsInitialSetup) {
+                                                throw "Goto devicenamewizard"
+                                            }
+                                        }
+                                        "miningmode" {
+                                            $Config.MiningMode = Read-HostString "Select mining mode (legacy/device/combo)" -Default $Config.MiningMode -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            if ($Config.MiningMode -like "l*") {$Config.MiningMode="legacy"}
+                                            elseif ($Config.MiningMode -like "c*") {$Config.MiningMode="combo"}
+                                            else {$Config.MiningMode="device"}
+                                        }
+                                        "devicename" {
+                                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid @($AllDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            if ($GlobalSetupSteps.Contains("devicenameend")) {throw "Goto devicenameend"}
+                                        }
+                                        "devicenamewizard" {
+                                            $GlobalSetupStepStore = $false
+                                            $Config.DeviceName = @("GPU")                                            
+                                            [hashtable]$NewDeviceName = @{}
+                                            [hashtable]$AvailDeviceCounts = @{}
+                                            $AvailDeviceGPUVendors = @($AllDevices | Where-Object {$_.Type -eq "gpu" -and @("nvidia","amd") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
+                                            $AvailDevicecounts["CPU"] = @($AllDevices | Where-Object {$_.Type -eq "cpu"} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
+                                            $AvailDeviceCounts["GPU"] = 0
 
-                                            $AvailDeviceName = @()                                
-                                            if ((Select-Device $SetupDevices "nvidia" | Measure-Object).Count -gt 0) {$AvailDeviceName += "nvidia"}
-                                            if ((Select-Device $SetupDevices "amd" | Measure-Object).Count -gt 0) {$AvailDeviceName += "amd"}               
-
-                                            $WizardDeviceNameSet = $false                                                                
-                                            if ($IsInitialSetup -and -not $Config.DeviceName) {
-                                                $Config.DeviceName = @()
-                                                if ($AvailDeviceName.Count -gt 0) { #GPU mining possible
-                                                    if ($AvailDeviceName.Count -gt 1) {
-                                                        if (Read-HostBool -Prompt "Mine on all available GPU ($(($AvailDeviceName -join '&').ToUpper()), choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
-                                                            $Config.DeviceName += $AvailDeviceName                                            
-                                                        }
-                                                    }
-                                                    if ($Config.DeviceName.Count -eq 0) {
-                                                        $AvailDeviceName | Foreach-Object {
-                                                            if (Read-HostBool -Prompt "Mine on all $($_.ToUpper()) GPU (choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {$Config.DeviceName += @($_)}
-                                                        }
-                                                    }
-                                                    $WizardDeviceNameSet = $Config.DeviceName.Count -gt 0
+                                            if ($AvailDeviceGPUVendors.Count -eq 0) {throw "Goto devicenamewizardcpu1"}  
+                                                                                      
+                                            foreach ($p in $AvailDeviceGPUVendors) {
+                                                $NewDeviceName[$p] = @()
+                                                $AvailDevicecounts[$p] = @($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $p} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
+                                                $AvailDeviceCounts["GPU"] += $AvailDevicecounts[$p]
+                                            }
+                                        }
+                                        "devicenamewizardgpu" {
+                                            if ($AvailDeviceGPUVendors.Count -eq 1 -and $AvailDeviceCounts["GPU"] -gt 1) {
+                                                $GlobalSetupStepStore = $false
+                                                throw "Goto devicenamewizard$($p.ToLower())1"
+                                            }
+                                            if ($AvailDeviceCounts["GPU"] -eq 1) {
+                                                if (Read-HostBool -Prompt "Mine on your $($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $p} | Select -ExpandProperty Model_Name -Unique)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                    $NewDeviceName[$p] = $p
                                                 }
-                                   
-                                                if (Read-HostBool -Prompt "Mine on your CPU" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
-                                                    $Config.DeviceName += @("cpu")
-                                                }                                                                        
-                                            }                                                             
-
-                                            if (-not $IsInitialSetup) {
-                                                $Config.MiningMode = Read-HostString "Select mining mode (legacy/device/combo)" -Default $Config.MiningMode -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                                if ($Config.MiningMode -like "l*") {$Config.MiningMode="legacy"}
-                                                elseif ($Config.MiningMode -like "c*") {$Config.MiningMode="combo"}
-                                                else {$Config.MiningMode="device"}
+                                                throw "Goto devicenamewizardcpu1"
                                             }
-                        
-                                            if ($Config.MiningMode -ne "legacy") {$SetupDevices | Where-Object Type -eq "gpu" | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
-                                            $AvailDeviceName+="cpu"
-                                            if (-not $WizardDeviceNameSet) {
-                                                $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            if (Read-HostBool -Prompt "Mine on all available GPU ($($AvailDeviceGPUVendors -join '&'), choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                foreach ($p in $AvailDeviceGPUVendors) {$NewDeviceName[$p] = @($p)}
+                                                throw "Goto devicenamewizardcpu1"
                                             }
-
+                                        }
+                                        "devicenamewizardamd1" {
+                                            $NewDeviceName["AMD"] = @()
+                                            if ($AvailDeviceCounts["AMD"] -gt 1) {
+                                                if (Read-HostBool -Prompt "Do you want to mine on all AMD GPUs" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                    $NewDeviceName["AMD"] = @("AMD")
+                                                }
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
+                                        "devicenamewizardamd2" {
+                                            if ($AvailDeviceCounts["AMD"] -gt 1 -and $NewDeviceName["AMD"].Count -eq 0) {
+                                                $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
+                                        "devicenamewizardnvidia1" {
+                                            $NewDeviceName["NVIDIA"] = @()
+                                            if ($AvailDeviceCounts["NVIDIA"] -gt 1) {
+                                                if (Read-HostBool -Prompt "Do you want to mine on all NVIDIA GPUs" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                    $NewDeviceName["NVIDIA"] = @("NVIDIA")
+                                                }
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
+                                        "devicenamewizardnvidia2" {
+                                            if ($AvailDeviceCounts["NVIDIA"] -gt 1 -and $NewDeviceName["NVIDIA"].Count -eq 0) {
+                                                $NewDeviceName["NVIDIA"] = Read-HostArray -Prompt "Enter the NVIDIA devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Vendor -eq "NVIDIA" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
+                                        "devicenamewizardcpu1" {
+                                            $NewDeviceName["CPU"] = @()
+                                            if (Read-HostBool -Prompt "Do you want to mine on $(if ($AvailDeviceCounts["cpu"] -gt 1){"all CPUs"}else{"your CPU"})" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                $NewDeviceName["CPU"] = @("CPU")
+                                            }
+                                        }
+                                        "devicenamewizardcpu2" {
+                                            if ($AvailDeviceCounts["CPU"] -gt 1 -and $NewDeviceName["CPU"].Count -eq 0) {
+                                                $NewDeviceName["CPU"] = Read-HostArray -Prompt "Enter the CPUs you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Type -eq "CPU"} | Select-Object -ExpandProperty Name -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
+                                        "devicenamewizardend" {
+                                            $GlobalSetupStepStore = $false
+                                            $Config.DeviceName = @($NewDeviceName.Values | Foreach-Object {$_} | Foreach-Object {$_} | Select-Object -Unique | Sort-Object)
+                                            if ($Config.DeviceName.Count -eq 0) {
+                                                Write-Host " "
+                                                Write-Host "No devices selected. You cannot mine without devices. Restarting device input" -ForegroundColor Yellow
+                                                Write-Host " "
+                                                $GlobalSetupStepBack = $GlobalSetupStepBack.Where({$_ -notmatch "^devicenamewizard"})                                                
+                                                throw "Goto devicenamewizard"
+                                            }                                            
+                                        }
+                                        "devicenameend" {
+                                            $GlobalSetupStepStore = $false
                                             if ($IsInitialSetup) {throw "Goto save"}
                                         }
-
                                         "uistyle" {
                                             if ($SetupType -eq "A") {
                                                 Write-Host ' '
@@ -594,17 +668,21 @@ while ($true) {
                                             $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         "msia" {
-                                            do {
-                                                $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}                             
-                                                if ($Config.MSIAprofile -gt 0) {
-                                                    $Config.MSIApath = Read-HostString -Prompt "Enter path to MSI Afterburner" -Default $Config.MSIApath -Characters '' | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                                    if (-not (Test-Path $Config.MSIApath)) {Write-Host "MSI Afterburner not found at given path. Please try again or disable."}
-                                                }
-                                            } until ($Config.MSIAprofile -eq 0 -or (Test-Path $Config.MSIApath));
+                                            $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}                             
+                                        }
+                                        "msiapath" {
+                                            $GlobalSetupStepStore = $false
+                                            if ($Config.MSIAprofile -gt 0) {
+                                                $Config.MSIApath = Read-HostString -Prompt "Enter path to MSI Afterburner" -Default $Config.MSIApath -Characters '' | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if (-not (Test-Path $Config.MSIApath)) {Write-Host "MSI Afterburner not found at given path. Please try again or disable.";throw "Goto msiapath"}
+                                                $GlobalSetupStepStore = $true
+                                            }
                                         }
                                         "ethpillenable" {
                                             if ((Compare-Object @($SetupDevices.Model | Select-Object -Unique) @('GTX1080','GTX1080Ti','TITANXP') -ExcludeDifferent -IncludeEqual | Measure-Object).Count -gt 0) {
                                                 $Config.EthPillEnable = Read-HostString -Prompt "Enable OhGodAnETHlargementPill https://bitcointalk.org/index.php?topic=3370685.0 (only when mining Ethash)" -Default $Config.EthPillEnable -Valid @('disable','RevA','RevB') | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $GlobalSetupStepStore = $false
                                             }
                                         }
                                         "proxy" {
@@ -702,7 +780,7 @@ while ($true) {
                                             Write-Log -Level Error "Unknown setup command `"$($GlobalSetupSteps[$GlobalSetupStep])`". You should never reach here. Please open an issue on github.com"
                                         }
                                     }
-                                    $GlobalSetupStepBack.Add($GlobalSetupStep) > $null
+                                    if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
                                     $GlobalSetupStep++
                                 }
                                 catch {
@@ -710,7 +788,7 @@ while ($true) {
                                         if ($GlobalSetupStepBack.Count) {$GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)}
                                     }
                                     elseif ($_.Exception.Message -like "Goto*") {
-                                        $GlobalSetupStepBack.Add($GlobalSetupStep) > $null
+                                        if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
                                         $GlobalSetupStep = $GlobalSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
                                         if ($GlobalSetupStep -lt 0) {
                                             Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
@@ -999,7 +1077,7 @@ while ($true) {
                                                         $PoolSetupStepsDone = $true                                                  
                                                     }
                                                 }
-                                                if ($PoolSetupSteps[$PoolSetupStep] -notmatch 'title') {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
+                                                if ($PoolSetupSteps[$PoolSetupStep] -notmatch "title") {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
                                                 $PoolSetupStep++
                                             }
                                             catch {
@@ -1007,7 +1085,7 @@ while ($true) {
                                                     if ($PoolSetupStepBack.Count) {$PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)}
                                                 }
                                                 elseif ($_.Exception.Message -like "Goto*") {
-                                                    $PoolSetupStepBack.Add($PoolSetupStep) > $null
+                                                    if ($PoolSetupSteps[$PoolSetupStep] -notmatch "title") {$PoolSetupStepBack.Add($PoolSetupStep) > $null}
                                                     $PoolSetupStep = $PoolSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
                                                     if ($PoolSetupStep -lt 0) {
                                                         Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
@@ -1207,7 +1285,7 @@ while ($true) {
     $API.ComputerStats = $AsyncLoader.ComputerStats
 
     #Give API access to all possible devices
-    if ($API.AllDevices -eq $null) {$API.AllDevices = @(Get-Device -Refresh | Select-Object)}
+    if ($API.AllDevices -eq $null) {$API.AllDevices = $AllDevices}
 
     $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
