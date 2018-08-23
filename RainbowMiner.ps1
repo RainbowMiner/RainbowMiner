@@ -172,7 +172,7 @@ if (Test-Path ".\Logs"){
 }
 
 #Start the log
-Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"
+if (-not $psISE) {Start-Transcript ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
 #Start the async loader
 Start-AsyncLoader
@@ -816,68 +816,133 @@ while ($true) {
                             Write-HostSetupHints
                             Write-Host " "
 
-                            $AvailDeviceName = @("*")
-                            if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
-                            if (Select-Device $SetupDevices "nvidia") {$AvailDeviceName += "NVIDIA"}
-                            if (Select-Device $SetupDevices "amd") {$AvailDeviceName += "AMD"}
-                            if (Select-Device $SetupDevices "cpu") {$AvailDeviceName += "CPU"}
-                            $AvailDeviceName = $AvailDeviceName | Select-Object -Unique | Sort-Object
-
+                            [System.Collections.ArrayList]$AvailDeviceName = @("*")
+                            $AvailDeviceName.AddRange(@($AllDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object))
+                            
                             $MinerSetupDone = $false
-                            do {
-                                try {
-                                    $EditMinerName = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $AvailMiners
-                                    if ($EditMinerName -eq '') {throw}
-                                    if ($Config.MiningMode -eq "Legacy") {
-                                        $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z\*" -Valid $AvailDeviceName
-                                        if ($EditDeviceName -eq '') {throw}
-                                    } else {
-                                        [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9#\*" -Valid $AvailDeviceName
-                                        ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
-                                            if ($EditDeviceName_Array -icontains $EditDevice0) {
-                                                $EditDeviceName_Array = @(Select-Device $SetupDevices "nvidia" | Select-Object -ExpandProperty Model -Unique)
-                                                break
+                            do {             
+                                $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json                                                     
+                                $MinerSetupStepsDone = $false
+                                $MinerSetupStep = 0
+                                [System.Collections.ArrayList]$MinerSetupSteps = @()
+                                [System.Collections.ArrayList]$MinerSetupStepBack = @()
+                                                                    
+                                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","profile","extendinterval","faulttolerance","penalty")) > $null                                    
+                                $MinerSetupSteps.Add("save") > $null                         
+
+                                do { 
+                                    try {
+                                        $MinerSetupStepStore = $true
+                                        Switch ($MinerSetupSteps[$MinerSetupStep]) {
+                                            "minername" {                                                    
+                                                $Miner_Name = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if ($Miner_Name -eq '') {throw "cancel"}
+                                            }
+                                            "devices" {
+                                                if ($Config.MiningMode -eq "Legacy") {
+                                                    $EditDeviceName = Read-HostString -Prompt ".. running on which devices (amd/nvidia/cpu)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z\*" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    if ($EditDeviceName -eq '') {throw "cancel"}
+                                                } else {
+                                                    [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9#\*" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
+                                                        if ($EditDeviceName_Array -icontains $EditDevice0) {
+                                                            $EditDeviceName_Array = @($AllDevices | Where-Object {$_.Vendor -eq $EditDevice0 -and $_.Type -eq "gpu" -or $_.Type -eq $EditDevice0} | Select-Object -ExpandProperty Model -Unique | Sort-Object)
+                                                            break
+                                                        }
+                                                    }
+                                                    [String]$EditDeviceName = @($EditDeviceName_Array) -join '-'
+                                                    if ($EditDeviceName -eq '') {throw "cancel"}
+                                                }
+                                            }
+                                            "algorithm" {
+                                                $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9\*" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if ($EditAlgorithm -eq '') {throw "cancel"}
+                                                elseif ($EditAlgorithm -ne "*") {$EditAlgorithm = Get-Algorithm $EditAlgorithm}
+                                            }
+                                            "secondaryalgorithm" {
+                                                $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                $EditSecondaryAlgorithm = Get-Algorithm $EditSecondaryAlgorithm
+                                            }
+                                            "configure" {
+                                                $EditMinerName = "$($Miner_Name)$(if ($EditDeviceName -ne '*'){"-$EditDeviceName"})"                
+                                                Write-Host " "
+                                                Write-Host "Configuration for $EditMinerName, $(if ($EditAlgorithm -eq '*'){"all algorithms"}else{$EditAlgorithm})$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})" -BackgroundColor Yellow -ForegroundColor Black
+                                                Write-Host " "
+
+                                                $EditMinerConfig = [PSCustomObject]@{
+                                                    MainAlgorithm = $EditAlgorithm
+                                                    SecondaryAlgorithm = $EditSecondaryAlgorithm
+                                                    Params = ""
+                                                    Profile = ""
+                                                    ExtendInterval = ""
+                                                    FaultTolerance = ""
+                                                    Penalty = ""
+                                                }
+                        
+                                                if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
+                                                $MinerSetupStepStore = $false
+                                            }
+                                            "params" {
+                                                $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            }
+                                            "profile" {
+                                                $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "012345" -Length 1 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if ($EditMinerConfig.Profile -eq "0") {$EditMinerConfig.Profile = ""}
+                                            }
+                                            "extendinterval" {
+                                                $EditMinerConfig.ExtendInterval = Read-HostInt -Prompt "Extend interval for X times" -Default ([int]$EditMinerConfig.ExtendInterval) -Min 0 -Max 10 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            }
+                                            "faulttolerance" {
+                                                $EditMinerConfig.FaultTolerance = Read-HostDouble -Prompt "Use fault tolerance in %" -Default ([double]$EditMinerConfig.FaultTolerance) -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            }
+                                            "penalty" {
+                                                $EditMinerConfig.Penalty = Read-HostDouble -Prompt "Use a penalty in % (enter -1 to not change penalty)" -Default $(if ($EditMinerConfig.Penalty -eq ''){-1}else{$EditMinerConfig.Penalty}) -Min -1 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if ($EditMinerConfig.Penalty -lt 0) {$EditMinerConfig.Penalty=""}
+                                            }
+                                            "save" {
+                                                Write-Host " "
+                                                if (-not (Read-HostBool "Really write entered values to $($MinersConfigFile)?" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                                $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm} | Select-Object)+@($EditMinerConfig))
+
+                                                $MinersActualSave = [PSCustomObject]@{}
+                                                $MinersActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ ($MinersActual.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+                                                $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+
+                                                Write-Host " "
+                                                Write-Host "Changes written to Miner configuration. " -ForegroundColor Cyan
+                                                    
+                                                $MinerSetupStepsDone = $true                                                  
                                             }
                                         }
-                                        [String]$EditDeviceName = @($EditDeviceName_Array | Sort-Object) -join '-'
-                                        if ($EditDeviceName -eq '') {throw}
+                                        if ($MinerSetupStepStore) {$MinerSetupStepBack.Add($MinerSetupStep) > $null}                                                
+                                        $MinerSetupStep++
                                     }
-                                    $EditAlgorithm = Read-HostString -Prompt ".. calculating which main algorithm? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9\*" -Valid (@('*')+@(Get-Algorithms | Sort-Object))
-                                    if ($EditAlgorithm -eq '') {throw}
-                                    $EditSecondaryAlgorithm = Read-HostString -Prompt ".. calculating which secondary algorithm?" -Characters "A-Z0-9" -Valid (Get-Algorithms | Sort-Object)
-                        
-                                    if ($EditDeviceName -ne '*') {$EditMinerName += "-" + $EditDeviceName}
-                                    Write-Host " "
-                                    Write-Host "Configuration for $($EditMinerName), $(if ($EditAlgorithm -eq '*'){"all algorithms"}else{$EditAlgorithm})$(if($EditSecondaryAlgorithm -ne ''){"+"+$EditSecondaryAlgorithm})" -BackgroundColor Yellow -ForegroundColor Black
-
-                                    $EditMinerConfig = [PSCustomObject]@{
-                                        MainAlgorithm = $EditAlgorithm
-                                        SecondaryAlgorithm = $EditSecondaryAlgorithm
-                                        Params = ""
-                                        Profile = ""
-                                        ExtendInterval = ""
-                                        FaultTolerance = ""
-                                        Penalty = ""
+                                    catch {
+                                        if (@("back","<") -icontains $_.Exception.Message) {
+                                            if ($MinerSetupStepBack.Count) {$MinerSetupStep = $MinerSetupStepBack[$MinerSetupStepBack.Count-1];$MinerSetupStepBack.RemoveAt($MinerSetupStepBack.Count-1)}
+                                        }
+                                        elseif ($_.Exception.Message -like "Goto*") {
+                                            if ($MinerSetupStepStore) {$MinerSetupStepBack.Add($MinerSetupStep) > $null}
+                                            $MinerSetupStep = $MinerSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                            if ($MinerSetupStep -lt 0) {
+                                                Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                                $MinerSetupStep = $MinerSetupStepBack[$MinerSetupStepBack.Count-1];$MinerSetupStepBack.RemoveAt($MinerSetupStepBack.Count-1)
+                                            }
+                                        }
+                                        elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                            Write-Host " "
+                                            Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                            Write-Host " "
+                                            $MinerSetupStepsDone = $true                                               
+                                        }
+                                        else {
+                                            Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                            $MinerSetupStepsDone = $true
+                                        }
                                     }
+                                } until ($MinerSetupStepsDone)                               
                         
-                                    if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
-
-                                    $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~"
-                                    $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "12345" -Length 1
-                                    $EditMinerConfig.ExtendInterval = Read-HostInt -Prompt "Extend interval for X times" -Default ([int]$EditMinerConfig.ExtendInterval) -Min 0 -Max 10
-                                    $EditMinerConfig.FaultTolerance = Read-HostDouble -Prompt "Use fault tolerance in %" -Default ([double]$EditMinerConfig.FaultTolerance) -Min 0 -Max 100
-                                    $EditMinerConfig.Penalty = Read-HostDouble -Prompt "Use a penalty in % (enter -1 to not change penalty)" -Default $(if ($EditMinerConfig.Penalty -eq ''){-1}else{$EditMinerConfig.Penalty}) -Min -1 -Max 100
-                                    if ($EditMinerConfig.Penalty -lt 0) {$EditMinerConfig.Penalty=""}
-
-                                    if (Read-HostBool "Really write entered values to $($PoolsConfigFile)?") {
-                                        $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm})+@($EditMinerConfig))
-                                        $MinersActual | ConvertTo-Json | Out-File $MinersConfigFile
-                                    }                        
-
-                                    if (-not (Read-HostBool "Edit another miner?")){throw}
-                        
-                                } catch {$MinerSetupDone = $true}
-                            } until ($MinerSetupDone)
+                            } until (-not (Read-HostBool "Edit another miner?"))
                         }
                         elseif ($SetupType -eq "P") {
 
