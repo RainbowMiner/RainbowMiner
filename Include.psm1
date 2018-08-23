@@ -2152,7 +2152,7 @@ function Get-YiiMPDataWindow {
         [Parameter(Mandatory = $False)]
         [String]$DataWindow = ''
     )
-    Switch ($DataWindow -replace "[^A-Za-z0-9_]+","") {
+    Switch ($DataWindow -replace "[^A-Za-z0-9]+") {
         {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current"}
         {"2","e2","e24","e24h","last24","estimate24h","24h","estimatelast24h" -icontains $_} {"estimate_last24h"}
         {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h"}                
