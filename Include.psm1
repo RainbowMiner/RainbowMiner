@@ -262,11 +262,7 @@ function Set-Stat {
     $Path = "Stats\$Name.txt"
     $SmallestValue = 1E-20
 
-    if (Test-Path $Path) {
-        $stream = [System.IO.StreamReader] $Path
-        $Stat = $stream.ReadToEnd()
-        $stream.Close()
-    }
+    $Stat = Get-Content $Path -ErrorAction SilentlyContinue -Raw
    
     try {
         $Stat = ConvertFrom-Json ($Stat) -ErrorAction Stop
@@ -419,26 +415,22 @@ function Get-Stat {
     if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
 
     if ($Name) {
-        # Return single requested stat
-        if (Test-Path "Stats\$($Name).txt") {
-            $stream = [System.IO.StreamReader] "Stats\$($Name).txt"
-            ConvertFrom-Json($stream.ReadToEnd())
-            $stream.Close()
-        }
+        # Return single requested stat        
+        if (Test-Path "Stats\$($Name).txt") {ConvertFrom-Json (Get-Content "Stats\$($Name).txt" -ErrorAction Ignore -Raw) -ErrorAction Ignore}
     } else {
         # Return all stats
-        $Stats = [hashtable]@{}
+        [hashtable]$Stats = @{}
 
         foreach($p in (Get-ChildItem "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             try {
-                $Stats[$BaseName] = ConvertFrom-Json $($stream = [System.IO.StreamReader] $FullName;$stream.ReadToEnd();$stream.Close()) -ErrorAction Stop
+                $Stats[$BaseName] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }
             catch {
                 #Remove broken stat file
                 Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
-                Remove-Item -Path  $FullName -Force -Confirm:$false
+                if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
             }
         }
         Return $Stats
