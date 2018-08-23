@@ -23,7 +23,7 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Coins = [PSCustomObject]@{
-    "0"         = ""
+    default     = ""
     AION        = "--pers AION0PoW"
     BTG         = "--pers BgoldPoW"
     BTCZ        = "--pers BitcoinZ"
@@ -44,12 +44,12 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Commands | ForEach-Object {
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
-            if ($Miner_Coin -ne "0") {$Algorithm_Norm = "$Algorithm_Norm-$Miner_Coin"}
+            if ($Miner_Coin -ne "default") {$Algorithm_Norm = "$Algorithm_Norm-$Miner_Coin"}
 
             #ZergPool introduces auto switching for Equihash144: https://bitcointalk.org/index.php?topic=2759935.msg43324268#msg43324268
             if (@("Equihash24x5","Equihash24x7") -icontains ($Algorithm_Norm -replace '\-.*$') -and $Pools.$Algorithm_Norm.Name -like "ZergPool*") {$MinerCoin_Params = "--pers auto"}
             else {
-                $MinerCoin_Params = if ($Pools.$Algorithm_Norm.CoinSymbol -ne '') {$Coins."$($Pools.$Algorithm_Norm.CoinSymbol)"} else {$Coins."$($Pools.$Algorithm_Norm.CoinName)"}
+                $MinerCoin_Params = if ($Pools.$Algorithm_Norm.CoinSymbol) {$Coins."$($Pools.$Algorithm_Norm.CoinSymbol)"} else {$Coins."$($Pools.$Algorithm_Norm.CoinName)"}
             }
 
             $MinMemGB = $_.MinMemGB        
