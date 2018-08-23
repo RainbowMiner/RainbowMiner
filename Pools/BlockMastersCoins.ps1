@@ -31,7 +31,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 [hashtable]$Pool_Algorithms = @{}
 
 $Pool_Regions = "us"#, "europe"
-$Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_Currencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue)}
 $Pool_MiningCurrencies = ($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
@@ -85,7 +85,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     PoolFee       = $Pool_PoolFee
                 }
             }
-            if (-not $Pool_User -and -not $InfoOnly) {
+            if (-not $Pool_User -or $InfoOnly) {
                 $Pool_Currencies | ForEach-Object {
                     #Option 3
                     [PSCustomObject]@{
