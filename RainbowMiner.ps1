@@ -553,8 +553,8 @@ while ($true) {
                                                 else {$Config.MiningMode="device"}
                                             }
                         
-                                            if ($Config.MiningMode -ne "legacy") {$SetupDevices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}else{$AvailDeviceName+="cpu"}
-
+                                            if ($Config.MiningMode -ne "legacy") {$SetupDevices | Where-Object Type -eq "gpu" | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$AvailDeviceName += $_}}
+                                            $AvailDeviceName+="cpu"
                                             if (-not $WizardDeviceNameSet) {
                                                 $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             }
