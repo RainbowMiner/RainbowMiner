@@ -106,7 +106,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.3.1"
+$Version = "3.8.3.2"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -157,10 +157,11 @@ $IsInitialSetup = $false
     APIs = [hashtable]@{}
 }
 
-if ($MyInvocation.MyCommand.Parameters -eq $null) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
-} else {
-    $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
+if (-not $psISE) {
+    $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
+}
+if (-not $MyCommandParameters) {
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
 }
 
 #Cleanup the log
@@ -321,8 +322,9 @@ while ($true) {
                             Write-Host "- Energycosts: setup energy consumtion values" -ForegroundColor Yellow
                             Write-Host "- Selection: select which pools, miners, algorithm to use" -ForegroundColor Yellow
                             Write-Host "- All: step through the full setup, configuring all" -ForegroundColor Yellow
-                            Write-Host "- Miner: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
-                            Write-Host "- Pool: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
+                            Write-Host "- Miners: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
+                            Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
+                            Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
                             Write-Host " "
                             $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDX"
                         }
@@ -339,7 +341,7 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("devicename","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","ethpillenable")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
                                 "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicename","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
