@@ -83,10 +83,11 @@ $Pool_Request.return | ForEach-Object {
                     PoolFee       = $Pool_Fee
                 }
 
-                if ($Pool_Algorithm_Norm -eq "CryptonightV7" -or $Pool_Algorithm_Norm -like "Equihash*") {
+                if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
+                        CoinSymbol    = $Pool_Symbol
                         Currency      = ""
                         Price         = $Stat.Hour #instead of .Live
                         StablePrice   = $Stat.Week

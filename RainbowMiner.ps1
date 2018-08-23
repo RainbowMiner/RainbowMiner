@@ -1323,6 +1323,8 @@ while ($true) {
                 $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                 $Config.Pools.$p | Add-Member CoinName @(($Config.Pools.$p.CoinName | Select-Object) | Where-Object {$_}) -Force
                 $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_}) -Force
+                $Config.Pools.$p | Add-Member CoinSymbol @(($Config.Pools.$p.CoinSymbol | Select-Object) | Where-Object {$_}) -Force
+                $Config.Pools.$p | Add-Member ExcludeCoinSymbol @(($Config.Pools.$p.ExcludeCoinSymbol | Select-Object) | Where-Object {$_}) -Force
             }
         }
     }    
@@ -1555,35 +1557,6 @@ while ($true) {
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
                 $NewPools.Add($Pool) > $null
-            }
-        }
-    }
-
-    if ($false -and (Test-Path "Pools")) {
-        $AvailPools | Where-Object {$Config.Pools.$_ -and $Config.ExcludePoolName -inotcontains $_} | ForEach-Object {
-            $Pool_Name = $_
-            $SelectedPoolNames.Add($Pool_Name) > $null
-            [hashtable]$Pool_Config = @{Name = $Pool_Name}
-            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
-            foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                      
-            Compare-Object @("Penalty","PoolFee","DataWindow") @($Pool_Parameters.Keys) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Foreach-Object {$Pool_Config[$_] = $Pool_Parameters[$_]}
-            foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
-                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
-                #if ($Pool.CoinName) {$Pool_Config.CoinName = Get-CoinName $Pool.CoinName}
-                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
-                if (
-                    ($Pool_Parameters.Algorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -and
-                    ($Pool_Parameters.ExcludeAlgorithm.Count -eq 0 -or (Compare-Object @($Pool_Parameters.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -and
-                    (-not $Pool.CoinName -or $Pool_Parameters.CoinName.Count -eq 0 -or @($Pool_Parameters.CoinName) -icontains $Pool.CoinName) -and
-                    (-not $Pool.CoinName -or $Pool_Parameters.ExcludeCoin.Count -eq 0 -or @($Pool_Parameters.ExcludeCoin) -inotcontains $Pool.CoinName) -and
-                    (-not $Pool.CoinSymbol -or $Pool_Parameters.CoinSymbol.Count -eq 0 -or @($Pool_Parameters.CoinSymbol) -icontains $Pool.CoinSymbol) -and
-                    (-not $Pool.CoinSymbol -or $Pool_Parameters.ExcludeCoinSymbol.Count -eq 0 -or @($Pool_Parameters.ExcludeCoinSymbol) -inotcontains $Pool.CoinSymbol)
-                ) {
-                    $Pool_Factor = 1-[Double]($Pool.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
-                    $Pool.Price *= $Pool_Factor
-                    $Pool.StablePrice *= $Pool_Factor
-                    $NewPools.Add($Pool) > $null
-                }
             }
         }
     }

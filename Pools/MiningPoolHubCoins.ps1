@@ -87,21 +87,24 @@ $Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach
                     Updated       = $Stat.Updated
                 }
 
-                [PSCustomObject]@{
-                    Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
-                    CoinName      = $Pool_Coin
-                    Currency      = ""
-                    Price         = $Stat.Hour #instead of .Live
-                    StablePrice   = $Stat.Week
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+ssl"
-                    Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
-                    Port          = $Pool_Port
-                    User          = "$User.$Worker"
-                    Pass          = "x"
-                    Region        = $Pool_Region_Norm
-                    SSL           = $true
-                    Updated       = $Stat.Updated
+                if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
+                    [PSCustomObject]@{
+                        Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
+                        CoinName      = $Pool_Coin
+                        CoinSymbol    = $Pool_Symbol
+                        Currency      = ""
+                        Price         = $Stat.Hour #instead of .Live
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+ssl"
+                        Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
+                        Port          = $Pool_Port
+                        User          = "$User.$Worker"
+                        Pass          = "x"
+                        Region        = $Pool_Region_Norm
+                        SSL           = $true
+                        Updated       = $Stat.Updated
+                    }
                 }
             }
         }
