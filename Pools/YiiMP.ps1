@@ -9,12 +9,14 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$Pool_Fee = 2
+
 $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -27,48 +29,51 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 [hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = "us"
-$Pool_Currencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 $Pool_PoolFee = 2.0
 
-$Pool_Currencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+foreach($Pool_Currency in $Pool_MiningCurrencies) {
+    if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
+    
     $Pool_Host = "yiimp.eu"
-    $Pool_Port = $PoolCoins_Request.$_.port
-    $Pool_Algorithm = $PoolCoins_Request.$_.algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
+    $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
+    $Pool_Algorithm = $PoolCoins_Request.$Pool_Currency.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
-    $Pool_Coin = $PoolCoins_Request.$_.name
-    $Pool_Currency = $_
-    $Pool_PoolFee = [Double]$Pool_Request.$Pool_Algorithm.fees
+    $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
+    $Pool_PoolFee = if($Pool_Request.$Pool_Algorithm) {[Double]$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_User = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
 
-    $Divisor = 1000000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+    $Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region $Pool_Region
-
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = $Stat.Hour #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = $Pool_Host
-            Port          = $Pool_Port
-            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
-            Pass          = "$Worker,c=$Pool_Currency"
-            Region        = $Pool_Region_Norm
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_PoolFee
+    foreach($Pool_Region in $Pool_Regions) {
+        if ($Pool_User -or $InfoOnly) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = $Stat.Hour #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = $Pool_Host
+                Port          = $Pool_Port
+                User          = $Pool_User
+                Pass          = "$Worker,c=$Pool_Currency"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_PoolFee
+            }
         }
     }
 }

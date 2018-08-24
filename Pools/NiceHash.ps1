@@ -27,34 +27,36 @@ if (($Pool_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
 }
 
 [hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = "eu", "usa", "hk", "jp", "in", "br"
+$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_PoolFee = 2.0
 
 $Pool_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00 -or $InfoOnly} | ForEach-Object {
     $Pool_Host = "nicehash.com"
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.name
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = ""
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
-    $Divisor = 1000000000
+    $Divisor = 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region $Pool_Region
+    $Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$($Pool_Algorithm_Norm)-NHMP")
 
+    foreach($Pool_Region in $Pool_Regions) {
         if ($BTC -or $InfoOnly) {
-            @($Pool_Algorithm_Norm,"$($Pool_Algorithm_Norm)-NHMP") | Foreach-Object {
-                if ($_ -match "-NHMP") {
+            foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+                if ($Pool_Algorithm_Norm -match "-NHMP") {
                     $This_Port = 3200
                     $This_Host = "nhmp.$Pool_Region.$Pool_Host"
                 } else {
@@ -62,7 +64,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00 
                     $This_Host = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                 }
                 [PSCustomObject]@{
-                    Algorithm     = $_
+                    Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = ""
                     Currency      = "BTC"
@@ -74,15 +76,15 @@ $Pool_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00 
                     Port          = $This_Port
                     User          = "$BTC.$Worker"
                     Pass          = "x"
-                    Region        = $Pool_Region_Norm
+                    Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                 }
 
-                if ($_ -like "Cryptonight*" -or $_ -eq "Equihash") {
+                if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -eq "Equihash") {
                     [PSCustomObject]@{
-                        Algorithm     = $_
+                        Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = ""
                         Price         = $Stat.Live
@@ -93,7 +95,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {[Double]$_.paying -gt 0.00 
                         Port          = $This_Port + 30000
                         User          = "$BTC.$Worker"
                         Pass          = "x"
-                        Region        = $Pool_Region_Norm
+                        Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee

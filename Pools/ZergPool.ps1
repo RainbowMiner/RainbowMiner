@@ -31,8 +31,10 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_Coins = @{}
+[hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = "us"#, "europe"
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=$_.Group.name;Symbol=$_.Group.symbol}}
@@ -43,14 +45,14 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Host = "$($Pool_Request.$_.name).mine.zergpool.com"
     $Pool_Port = $Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
 
-    $Divisor = 1000000 * [Double]$Pool_Request.$_.mbtc_mh_factor
+    $Divisor = 1e6 * [Double]$Pool_Request.$_.mbtc_mh_factor
     if ($Divisor -eq 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
@@ -61,29 +63,28 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region $Pool_Region
-        $Pool_Currencies | ForEach-Object {
+    foreach($Pool_Region in $Pool_Regions) {
+        $Pool_Region_Host = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
+        foreach($Pool_Currency in $Pool_Currencies) {
             #Option 1
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_Symbol
-                Currency      = $_
+                Currency      = $Pool_Currency
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = if ($Pool_Region -eq "us") {$Pool_Host}else {"$Pool_Region.$Pool_Host"}
+                Host          = $Pool_Region_Host
                 Port          = $Pool_Port
-                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
-                Pass          = "$Worker,c=$_"
-                Region        = $Pool_Region_Norm
+                User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+                Pass          = "$Worker,c=$Pool_Currency"
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
-                UsesDataWindow = $True
+                DataWindow    = $DataWindow
             }
         }
     }

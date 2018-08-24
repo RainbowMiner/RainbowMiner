@@ -8,12 +8,9 @@ param(
     [Bool]$InfoOnly = $false
 )
 
-$Pool_Regions = "eu", "us"
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
-
 
 $Success = $true
 try {
@@ -56,6 +53,11 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
     return
 }
 
+[hashtable]$Pool_RegionsTable = @{}
+
+$Pool_Regions = @("eu","us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
@@ -73,12 +75,9 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $false
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region $Pool_Region
-
-        if ( $Pool_Region -eq "eu" -or $true ) { $Pool_Host = "eu.ravenminer.com"; $Pool_Port = 1111 }
-        else { $Pool_Host = "ravenminer.com"; $Pool_Port = 6666 }
+    foreach($Pool_Region in $Pool_Regions) {
+        if ($Pool_Region -eq "eu") {$Pool_Host = "eu.ravenminer.com";$Pool_Port = 1111}
+        else {$Pool_Host = "ravenminer.com";$Pool_Port = 6666}
 
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
@@ -93,11 +92,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Port          = $Pool_Port
             User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
             Pass          = "$Worker,c=$Pool_Currency"
-            Region        = $Pool_Region_Norm
+            Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
-            UsesDataWindow = $True
+            DataWindow    = $DataWindow
         }
     }
 }

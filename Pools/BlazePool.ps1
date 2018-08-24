@@ -31,8 +31,10 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_Coins = @{}
+[hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = "us"
+$Pool_Regions = @("us")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=$_.Group.name;Symbol=$_.Group.symbol}}
@@ -48,36 +50,33 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
-    $Divisor = 1000000 * [Double]$Pool_Request.$_.mbtc_mh_factor
+    $Divisor = 1e6 * [Double]$Pool_Request.$_.mbtc_mh_factor
 
     if (-not $InfoOnly) {
         if (-not (Test-Path "Stats\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
         else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region $Pool_Region
-
-        $Pool_Currencies | ForEach-Object {
+    foreach($Pool_Region in $Pool_Regions) {
+        foreach($Pool_Currency in $Pool_Currencies) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_Symbol
-                Currency      = $_
+                Currency      = $Pool_Currency
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host
                 Port          = $Pool_Port
-                User          = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
-                Pass          = "ID=$Worker,c=$_"
-                Region        = $Pool_Region_Norm
+                User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+                Pass          = "ID=$Worker,c=$Pool_Currency"
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
-                UsesDataWindow = $True
+                DataWindow    = $DataWindow
             }
         }
     }

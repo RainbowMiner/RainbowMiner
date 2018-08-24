@@ -27,16 +27,19 @@ if (($Pool_Request.return | Measure-Object).Count -le 1) {
 }
 
 [hashtable]$Pool_Algorithms = @{}
+[hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = "europe", "us-east", "asia"
+$Pool_Regions = @("europe", "us-east", "asia")
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region ($Pool_Region -replace '-.+$')}
+
 $Pool_Fee = 0.9 + 0.2
 
 $Pool_Request.return | ForEach-Object {
     $Pool_Hosts = $_.all_host_list.split(";")
     $Pool_Port = $_.algo_switch_port
     $Pool_Algorithm = $_.algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     if ($_.current_mining_coin) {
         $Pool_Coin = $_.current_mining_coin
         $Pool_Symbol = Get-CoinSymbol $_.current_mining_coin
@@ -51,19 +54,15 @@ $Pool_Request.return | ForEach-Object {
 
     if ($Pool_Symbol -and $Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Symbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
     
-    $Divisor = 1000000000
+    $Divisor = 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $false
     }
 
-    $Pool_Regions | ForEach-Object {
-        $Pool_Region = $_
-        $Pool_Region_Norm = Get-Region ($Pool_Region -replace "^us-east$", "us")
-
+    foreach($Pool_Region in $Pool_Regions) {
         if ($User -or $InfoOnly) {
-            $Pool_Algorithm_All | ForEach-Object {
-                $Pool_Algorithm_Norm = $_
+            foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
@@ -77,7 +76,7 @@ $Pool_Request.return | ForEach-Object {
                     Port          = $Pool_Port
                     User          = "$User.$Worker"
                     Pass          = "x"
-                    Region        = $Pool_Region_Norm
+                    Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
@@ -97,7 +96,7 @@ $Pool_Request.return | ForEach-Object {
                         Port          = $Pool_Port
                         User          = "$User.$Worker"
                         Pass          = "x"
-                        Region        = $Pool_Region_Norm
+                        Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_Fee
