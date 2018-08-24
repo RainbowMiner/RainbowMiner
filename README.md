@@ -91,6 +91,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 - Set your Windows virtual memory size to a fixed size of at least 16GB, or better to the sum of your GPU memories x 1.5, e.g. if you have 6x GTX1070 8GB installed, use at least 72GB (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
+- if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to disable "Force P2 State", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
 - the root directory of RainbowMiner contains the follwing, additional batch files:
   - ListDevices.bat: if clicked, a window will popup and list all available devices
   - MinerLog.bat: it reopens the window to show the output of the miners. Useful, if you unintentionally closed this log window.
@@ -209,6 +210,8 @@ Remember: __no overclocking values will be changed by RainbowMiner!__ It will sw
 
 I recommend you set the following profile setup in MSI Afterburner, so that you can use the default setup of RainbowMiner. The overclocking values in brackets (core clock/memory clock) are those I use for my GTX 1070 and are only for illustration.
 
+- Profile 1: no oc (e.g. +0/+0)
+- Profile 2: max. core / max. memory oc (e.g. +100/+400), good for most miners
 - Profile 3: max. core / half memory oc (e.g. +100/+200), recm. for claymore ethash-keccak, neoscrypt
 - Profile 4: max. core / no memory oc (e.g. +100/0), recm. for lyra2re2, lyra2z, x16r, x16s
 - Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
@@ -364,17 +367,23 @@ This would reduce the hashrate-results from the pool Ravenminer by 5%
 
 #### Change a pool's time frame (data window)
 
-To override the default data window of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashrefinery,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
+To override the default data window "average2e" of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashrefinery,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
 Possible values are:
 - estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
 - estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)
 - actual_last24h: the actual profitability over the past 24 hours (less switching)
-- mininum: the minimum value of estimate_current and actual_last24h will be used
-- maximum: the maximum value of estimate_current and actual_last24h will be used
-- average: the calculated average of estimate_current and actual_last24h will be used
-- mininumall: the minimum value of the above three values will be used
-- maximumall: the maximum value of the above three values will be used
-- averageall: the calculated average of the above three values will be used
+- minimum2: the minimum value of estimate_current and actual_last24h will be used
+- maximum2: the maximum value of estimate_current and actual_last24h will be used
+- average2: the calculated average of estimate_current and actual_last24h will be used
+- mininum2e: the minimum value of estimate_current and estimate_last24h will be used
+- maximum2e: the maximum value of estimate_current and estimate_last24h will be used
+- average2e: the calculated average of estimate_current and estimate_last24h will be used
+- minimum2h: the minimum value of estimate_last24h and actual_last24h will be used
+- maximum2h: the maximum value of estimate_last24h and actual_last24h will be used
+- average2h: the calculated average of estimate_last24h and actual_last24h will be used
+- mininum3: the minimum value of the above three values will be used
+- maximum3: the maximum value of the above three values will be used
+- average3: the calculated average of the above three values will be used
 
 Example:
 
@@ -382,7 +391,7 @@ Example:
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
         "Penalty": 0
-        "DataWindow": "minimum"
+        "DataWindow": "minimum3"
     }
 
 
