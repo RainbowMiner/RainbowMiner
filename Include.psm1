@@ -2162,7 +2162,7 @@ function Get-YiiMPDataWindow {
         {"7","min3","minimum3","minall","minimumall" -icontains $_} {"minimum-3"}
         {"8","max3","maximum3","maxall","maximumall" -icontains $_} {"maximum-3"}
         {"9","avg3","average3","avgall","averageall" -icontains $_} {"average-3"}
-        default {"estimate_current"}
+        default {"average"}
     }
 }
 
