@@ -2162,7 +2162,13 @@ function Get-YiiMPDataWindow {
         {"7","min3","minimum3","minall","minimumall" -icontains $_} {"minimum-3"}
         {"8","max3","maximum3","maxall","maximumall" -icontains $_} {"maximum-3"}
         {"9","avg3","average3","avgall","averageall" -icontains $_} {"average-3"}
-        default {"average"}
+        {"10","mine","min2e","minimume","minimum2e" -icontains $_} {"minimum-2e"}
+        {"11","maxe","max2e","maximume","maximum2e" -icontains $_} {"maximum-2e"}
+        {"12","avge","avg2e","averagee","average2e" -icontains $_} {"average-2e"}
+        {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h"}
+        {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h"}
+        {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h"}
+        default {"average-2e"}
     }
 }
 
@@ -2175,35 +2181,42 @@ function Get-YiiMPValue {
         [String]$DataWindow = '',
         [Parameter(Mandatory = $False)]
         [Switch]$CheckDataWindow = $false
-    )
-
+    )    
     [Double]$Value = 0
+    [hashtable]$div = @{"actual_last24h"=1000}
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
-    if ($DataWindow -match '-') {
-        [hashtable]$fields = @{"actual_last24h" = 1000;"estimate_current" = 1}
-        if ($DataWindow -match '-3$') {$fields["estimate_last24h"] = 1}        
-        Switch ($DataWindow -replace '-.*$') {
+    if ($DataWindow -match '^(.+)-(.+)$') {
+        Switch ($Matches[2]) {
+            "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
+            "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
+            "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h")}
+            "3"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current","estimate_last24h")}
+        }
+        Switch ($Matches[1]) {
             "minimum" {
                 $set = $true
-                foreach ($field in $fields.Keys) {
+                foreach ($field in $fields) {
                     if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field / $fields[$field]
+                    $v = [Double]$Request.$field
+                    if ($div[$field]) {$v /= $div[$field]}
                     if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
                 }
             }
             "maximum" {
                 $set = $true
-                foreach ($field in $fields.Keys) {
+                foreach ($field in $fields) {
                     if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field / $fields[$field]
+                    $v = [Double]$Request.$field
+                    if ($div[$field]) {$v /= $div[$field]}
                     if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
                 }
             }
             "average" {
                 $c=0
-                foreach ($field in $fields.Keys) {                
+                foreach ($field in $fields) {                
                     if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field / $fields[$field]                
+                    $v = [Double]$Request.$field
+                    if ($div[$field]) {$v /= $div[$field]}
                     $Value+=$v
                     $c++
                 }
@@ -2214,7 +2227,7 @@ function Get-YiiMPValue {
         if (-not $DataWindow) {foreach ($field in [System.Collections.ArrayList]@("estimate_current","estimate_last24h","actual_last24h")) {if ($Request.$field -ne $null) {$DataWindow = $field;break}}}
         if ($DataWindow -and $Request.$DataWindow -ne $null) {
             $Value = $Request.$DataWindow
-            if ($DataWindow -eq "actual_last24h") {$Value /= 1000}
+            if ($div[$DataWindow]) {$Value /= $div[$DataWindow]}
         }
     }
     $Value
