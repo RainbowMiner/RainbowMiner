@@ -106,7 +106,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.3.6"
+$Version = "3.8.3.7"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -227,12 +227,25 @@ try {
     }
 
     #cleanup legacy data
-    if (-not (Test-Path ".\Data")) {New-Item -Name "Data" -ItemType "directory" -Force > $null}
-    @("Algorithms","Devices","Regions") | Where-Object {-not (Test-Path "Data\$($_.ToLower()).json")} | Foreach-Object {
-        if (Test-Path "$($_).txt") {Move-Item "$($_).txt" "Data\$($_.ToLower()).json" -Force > $null}
-        else {
-            throw "Data\$($_.ToLower()).json is missing."
+    if (Test-Path ".\Cleanup.ps1") {
+        Write-Host "Cleanup legacy data .."
+        [hashtable]$Cleanup_Parameters = @{
+            ConfigFile = $ConfigFile
+            PoolsConfigFile = $PoolsConfigFile
+            MinersConfigFile = $MinersConfigFile
+            DevicesConfigFile = $DevicesConfigFile
+            AllDevices = $AllDevices
+            MyCommandParameters = $MyCommandParameters
         }
+        if (Test-Path ".\Data\Version.json") {$Cleanup_Parameters.Version = (Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}
+        Get-Item ".\Cleanup.ps1" | Foreach-Object {
+            $Cleanup_Result = & {
+                foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
+                & $_.FullName @Cleanup_Parameters
+            }
+            if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+        }
+        Remove-Item ".\Cleanup.ps1" -Force
     }
 
     #write version to data
