@@ -29,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12 (testing)
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus, new in 1.10
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 4; FaultTolerance = 0.5; HashrateDuration = "Day"} #X16R
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 4; FaultTolerance = 0.7} #X16R
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S (T-Rex faster)
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan, new in 1.09a
