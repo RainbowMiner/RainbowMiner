@@ -16,7 +16,7 @@ if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 1; FaultTolerance = 0.7} #X16R RavenCoin
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 1; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16S PigeonCoin
 )
 
