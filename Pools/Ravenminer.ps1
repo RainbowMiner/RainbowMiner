@@ -38,7 +38,8 @@ if ( -not $Success ) {
     try {
         $Pool_Request = Invoke-WebRequestAsync "https://eu.ravenminer.com/site/current_results"
         if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Pool_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
-        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0;name = "x16r"}}
+        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0.5;name = "x16r"}}
+        $DataWindow = "actual_last24h"
     }
     catch {
         $Success = $false
@@ -55,15 +56,14 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
     return
 }
 
-
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
-    $Pool_Coin = Get-CoinName "Ravencoin"
+    $Pool_Coin = "Ravencoin"
     $Pool_Currency = "RVN"
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
-    $Divisor = 1000000000
+    $Divisor = 1e6
 
     switch ($Pool_Algorithm_Norm) {
         "x16r" {$Divisor *= 1}
