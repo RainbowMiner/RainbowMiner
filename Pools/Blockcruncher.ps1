@@ -43,7 +43,7 @@ $Pool_Currencies | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoO
 
     #$Divisor = 1000000 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
-    $Divisor = 1000000000
+    $Divisor = 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
