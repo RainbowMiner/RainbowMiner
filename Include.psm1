@@ -2172,18 +2172,50 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $True)]
         [PSCustomObject]$Request,
         [Parameter(Mandatory = $False)]
-        [String]$DataWindow = ''
+        [String]$DataWindow = '',
+        [Parameter(Mandatory = $False)]
+        [Switch]$CheckDataWindow = $false
     )
 
-    $DataWindow = Get-YiiMPDataWindow $DataWindow
-    if ("average-2","minimum-2","maximum-2" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -replace '\-.*$')"
-    } elseif ("average-3","minimum-3","maximum-3" -icontains $DataWindow) {
-        $Value = ([Double[]]@($([Double]$Request.actual_last24h / 1000),[Double]$Request.estimate_current,[Double]$Request.estimate_last24h) | Measure-Object -Average -Minimum -Maximum)."$($DataWindow -replace '\-.*$')"
+    [Double]$Value = 0
+    if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
+    if ($DataWindow -match '-') {
+        [hashtable]$fields = @{"actual_last24h" = 1000;"estimate_current" = 1}
+        if ($DataWindow -match '-3$') {$fields["estimate_last24h"] = 1}        
+        Switch ($DataWindow -replace '-.*$') {
+            "minimum" {
+                $set = $true
+                foreach ($field in $fields.Keys) {
+                    if($Request.$field -eq $null) {continue}
+                    $v = [Double]$Request.$field / $fields[$field]
+                    if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
+                }
+            }
+            "maximum" {
+                $set = $true
+                foreach ($field in $fields.Keys) {
+                    if($Request.$field -eq $null) {continue}
+                    $v = [Double]$Request.$field / $fields[$field]
+                    if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
+                }
+            }
+            "average" {
+                $c=0
+                foreach ($field in $fields.Keys) {                
+                    if($Request.$field -eq $null) {continue}
+                    $v = [Double]$Request.$field / $fields[$field]                
+                    $Value+=$v
+                    $c++
+                }
+                if ($c) {$Value/=$c}
+            }
+        }
     } else {
-        if ($DataWindow -and ($Request | Get-Member -Name $DataWindow -MemberType NoteProperty -ErrorAction Ignore)) {$Value = [Double]$Request.$DataWindow}
-        else {$Value = [Double]$Request.estimate_current}
-        if ($DataWindow -eq "actual_last24h") {$Value /= 1000}
+        if (-not $DataWindow) {foreach ($field in [System.Collections.ArrayList]@("estimate_current","estimate_last24h","actual_last24h")) {if ($Request.$field -ne $null) {$DataWindow = $field;break}}}
+        if ($DataWindow -and $Request.$DataWindow -ne $null) {
+            $Value = $Request.$DataWindow
+            if ($DataWindow -eq "actual_last24h") {$Value /= 1000}
+        }
     }
     $Value
 }
