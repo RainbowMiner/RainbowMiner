@@ -2442,7 +2442,7 @@ while ($true) {
 
         if ((Test-Path ".\stopp.txt") -or $API.Stop) {$keyPressedValue = "X"}
         elseif ($API.Pause -ne $PauseMiners) {$keyPressedValue = "P"}
-        elseif ($API.Download) {$keyPressedValue = "U"}
+        elseif ($API.Update) {$keyPressedValue = "U"}
         elseif ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
 
         if ($keyPressedValue) {

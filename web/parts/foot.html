@@ -10,6 +10,7 @@
   
   // set the values in the header
   $(function () {
+      var remoteversion = '0.0.0.0';
       var text = $('a.navbar-brand').text();
       var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
       var out = [];
@@ -23,7 +24,7 @@
       $("#updatenow").click(function () {
           $.ajax({
               url: '/update', success: function (result) {
-                  $('.modal-body').text('Rainbowminer will be updated to Version '+$('#version').text()+'. Please be patient!');
+                  $('.modal-body').text('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!');
                   $('.modal-title').text('Update started');
                   $('#myModal').modal({ show: true });
                   $('#updatemsg').hide();
@@ -49,7 +50,7 @@
       (function q() {
           $.getJSON("/version", function (data) {
               var version = formatVersion(data.Version)
-              var remoteversion = formatVersion(data.RemoteVersion)
+              remoteversion = formatVersion(data.RemoteVersion)
               $('#version').text('v' + version)
               if (version < remoteversion) {
                   $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": data.ManualURI }).text('v' + remoteversion)
