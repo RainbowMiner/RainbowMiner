@@ -20,6 +20,17 @@
       $('a.navbar-brand').html(out.join(''));
       $('#updatemsg').hide();
 
+      $("#updatenow").click(function () {
+          $.ajax({
+              url: '/update', success: function (result) {
+                  $('.modal-body').text('Rainbowminer will be updated to Version '+$('#version').text()+'. Please be patient!');
+                  $('.modal-title').text('Update started');
+                  $('#myModal').modal({ show: true });
+                  $('#updatemsg').hide();
+              }
+          })
+      });
+
       (function p() {
           $.ajax({
               url: '/currentprofit', success: function (result) {
@@ -41,13 +52,9 @@
               var remoteversion = formatVersion(data.RemoteVersion)
               $('#version').text('v' + version)
               if (version < remoteversion) {
-                  $('#updatemsg').html('New Version <a href="'+data.ManualURI+'" title="Show info about release v'+remoteversion+'" target="_blank">v' + remoteversion + '</a> available: <a href="' + data.DownloadURI + '" title="Download now!">Download</a>')
-                  $('#updatemsg').show()
-              } else if (version > remoteversion) {
-                  $('#updatemsg').html('beta version')
+                  $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": data.ManualURI }).text('v' + remoteversion)
                   $('#updatemsg').show()
               } else {
-                  $('#updatemsg').html('')
                   $('#updatemsg').hide()
               }
               setTimeout(q, 600000);

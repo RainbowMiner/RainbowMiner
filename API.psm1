@@ -10,6 +10,7 @@
     # Setup flags for controlling script execution
     $API.Stop = $false
     $API.Pause = $false
+    $API.Update = $false
     $API.RemoteAPI = $RemoteAPI
 
     # Starting the API for remote access requires that a reservation be set to give permission for non-admin users.
@@ -239,6 +240,11 @@
                 "/pause" {
                     $API.Pause = -not $API.Pause
                     $Data = $API.Pause | ConvertTo-Json
+                    Break
+                }
+                "/update" {
+                    $API.Update = $true
+                    $Data = $API.Update | ConvertTo-Json
                     Break
                 }
                 "/status" {
