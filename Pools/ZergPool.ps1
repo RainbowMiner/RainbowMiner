@@ -35,7 +35,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_Currencies = @("BTC", "DASH", "LTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_Currencies = @("BTC", "DASH", "LTC") + @(@($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Where-Object {$_} | Select-Object -Unique) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=$_.Group.name;Symbol=$_.Group.symbol}}
 }
