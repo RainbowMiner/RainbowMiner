@@ -1510,7 +1510,7 @@ while ($true) {
             #Give API access to the device information
             $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
         }
-    }
+    }    
 
     Update-DeviceInformation @($Devices.Name | Select-Object -Unique)
 
@@ -1604,6 +1604,8 @@ while ($true) {
         }
     }
 
+    $UserConfig = $ConfigBackup = $null
+
     #Give API access to the current rates
     $API.Rates = $Rates
 
@@ -1655,6 +1657,8 @@ while ($true) {
     [System.Collections.ArrayList]$AllPools = @($NewPools)
     if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) > $null}
     $AllPoolsAddRemove.Clear()
+
+
 
     #Now remove all deselected pool/algorithm/coin from AllPools
     $i=0
