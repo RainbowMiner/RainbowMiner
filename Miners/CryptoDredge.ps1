@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-cryptodredge/CryptoDredge_0.8.3_win_x64.zip"
+$Uri = "https://github.com/CryptoDredge/beta/releases/download/v0.8.4-beta/CryptoDredge_0.8.4-beta_cuda_9.2_windows.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "313{0:d2}"
 
