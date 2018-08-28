@@ -109,6 +109,12 @@
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "1"}
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
         )
+        "CryptoDredgeBeta" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; Profile = "1"}
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
+        )
         "CuBalloon" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
