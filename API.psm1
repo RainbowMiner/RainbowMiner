@@ -211,7 +211,7 @@
                         if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
                             $Miners_List[$Miners_Key] = $true                            
                             $Miner_Path = ".\Stats\$($Miners_Key)_HashRate.txt"
-                            $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0
+                            $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
                             $Miner_NeedsBenchmark = (Test-Path $Miner_Path) -and (Get-ChildItem $Miner_Path).LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
                             $Out.Add([PSCustomObject]@{
                                 BaseName = $_.BaseName
