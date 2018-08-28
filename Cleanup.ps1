@@ -4,9 +4,11 @@ param(
     [String]$Version 
 )
 
+$Version = Get-Version $Version
+
 $ChangesTotal = 0
 try {
-    if ($Version -le "3.8.3.7") {
+    if ($Version -le (Get-Version "3.8.3.7")) {
         $Changes = 0
         $PoolsActual = Get-Content "$PoolsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($PoolsActual) {
@@ -21,12 +23,12 @@ try {
             }
         }
     }
-    if ($Version -le "3.8.3.8") {
+    if ($Version -le (Get-Version "3.8.3.8")) {
         $Remove = @(Get-ChildItem "Stats\*_Balloon_Profit.txt" | Select-Object)
         $ChangesTotal += $Remove.Count
         $Remove | Remove-Item -Force
     }
-    if ($Version -le "3.8.3.9") {
+    if ($Version -le (Get-Version "3.8.3.9")) {
         $Remove = @(Get-ChildItem "Stats\Bsod_*_Profit.txt" | Select-Object)
         $ChangesTotal += $Remove.Count
         $Remove | Remove-Item -Force
