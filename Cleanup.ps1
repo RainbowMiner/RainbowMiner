@@ -26,7 +26,11 @@ try {
         $ChangesTotal += $Remove.Count
         $Remove | Remove-Item -Force
     }
-
+    if ($Version -le "3.8.3.9") {
+        $Remove = @(Get-ChildItem "Stats\Bsod_*_Profit.txt" | Select-Object)
+        $ChangesTotal += $Remove.Count
+        $Remove | Remove-Item -Force
+    }
     "Cleaned $ChangesTotal elements"
 }
 catch {
