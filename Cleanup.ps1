@@ -4,8 +4,9 @@ param(
     [String]$Version 
 )
 
-if ($Version -le "3.8.3.7") {
-    try {
+$ChangesTotal = 0
+try {
+    if ($Version -le "3.8.3.7") {
         $Changes = 0
         $PoolsActual = Get-Content "$PoolsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($PoolsActual) {
@@ -16,11 +17,19 @@ if ($Version -le "3.8.3.7") {
             if ($PoolsActual.ZergPoolCoins.DataWindow -and (Get-YiiMPDataWindow $PoolsActual.ZergPoolCoins.DataWindow) -eq (Get-YiiMPDataWindow "minimum")) {$PoolsActual.ZergPoolCoins.DataWindow = "";$Changes++}
             if ($Changes) {
                 $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding UTF8
+                $ChangesTotal += $Changes
             }
         }
-        "Cleaned $Changes elements"
     }
-    catch {
-        "Cleanup failed $($_.Exception.Message)"
-    }    
+    if ($Version -le "3.8.3.8") {
+        $Remove = @(Get-ChildItem "Stats\*_Balloon_Profit.txt" | Select-Object)
+        $ChangesTotal += $Remove.Count
+        $Remove | Remove-Item -Force
+    }
+
+    "Cleaned $ChangesTotal elements"
 }
+catch {
+    "Cleanup failed $($_.Exception.Message)"
+}
+
