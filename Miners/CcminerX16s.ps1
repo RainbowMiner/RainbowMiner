@@ -26,7 +26,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
     #[PSCustomObject]@{MainAlgorithm = "ethash"; Params = ""} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #hmq1725
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""; FaultTolerance = 0.5} #hmq1725
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "lbry"; Params = ""} #Lbry
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
