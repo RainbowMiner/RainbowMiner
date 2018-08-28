@@ -106,7 +106,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.3.8"
+$Version = "3.8.3.7"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 
@@ -1629,11 +1629,11 @@ while ($true) {
             [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
             foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
             $Pool_Parameters.DataWindow = Get-YiiMPDataWindow $Pool_Parameters.DataWindow
-            $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty            
+            $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty
+            $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool_Config.PoolFee}))/100
             foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
                 $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                
                 $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
-                $Pool_Factor = 1-[Double]($Pool.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
                 $NewPools.Add($Pool) > $null
@@ -1653,12 +1653,10 @@ while ($true) {
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     [System.Collections.ArrayList]$AllPoolsAddRemove = @()
-    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) > $null}    
+    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) > $null}
     [System.Collections.ArrayList]$AllPools = @($NewPools)
     if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) > $null}
     $AllPoolsAddRemove.Clear()
-
-
 
     #Now remove all deselected pool/algorithm/coin from AllPools
     $i=0
@@ -2377,6 +2375,8 @@ while ($true) {
     #Reduce Memory
     Get-Job -State Completed | Remove-Job
     [GC]::Collect()
+    Sleep -Milliseconds 200
+
     $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status

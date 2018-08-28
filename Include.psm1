@@ -2708,19 +2708,22 @@ function Start-AsyncLoader {
 
         $AsyncLoader.Stop = $false
         $AsyncLoader.Cycle = -1
-        $AsyncLoader.Jobs = @{}
-        $AsyncLoader.Result = [string[]]@()
+        [hashtable]$AsyncLoader.Jobs = @{}
+        [System.Collections.ArrayList]$AsyncLoader.Result = @()
         $AsyncLoader.CycleTime = 10
 
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[GC]::Collect()}
+            if (-not ($AsyncLoader.Cycle % 6)) {
+                $AsyncLoader.ComputerStats = Get-ComputerStats
+            }
             try {
                 $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
             }
             catch {
-                $AsyncLoader.Result += $_.Exception.Message
+                $AsyncLoader.Result.Add($_.Exception.Message) > $null
+                if ($AsyncLoader.Result.Count -gt 50) {$AsyncLoader.Result.RemoveAt(0)}
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
