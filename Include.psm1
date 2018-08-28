@@ -298,9 +298,9 @@ function Set-Stat {
         $ToleranceMax = $Value
 
         if ($FaultDetection) {
-            if ( $FaultTolerance -eq $null ) {$FaultTolerance = 0.1}
+            if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
             $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
-            $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
+            $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1), 0.9))
         }
 
         if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live) {$Updated = $Stat.updated}
