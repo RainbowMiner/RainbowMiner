@@ -183,8 +183,12 @@
                     $Data = ConvertTo-Json @($API.Rates | Select-Object)
                     Break
                 }
-                "/asyncjobs" {
+                "/asyncloaderjobs" {
                     $Data = ConvertTo-Json @($AsyncLoader.Jobs | Select-Object)
+                    Break
+                }
+                "/asyncloadererrors" {
+                    $Data = ConvertTo-Json @($AsyncLoader.Errors | Select-Object)
                     Break
                 }
                 "/minerstats" {

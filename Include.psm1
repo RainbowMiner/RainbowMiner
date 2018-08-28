@@ -2709,7 +2709,7 @@ function Start-AsyncLoader {
         $AsyncLoader.Stop = $false
         $AsyncLoader.Cycle = -1
         [hashtable]$AsyncLoader.Jobs = @{}
-        [System.Collections.ArrayList]$AsyncLoader.Result = @()
+        [System.Collections.ArrayList]$AsyncLoader.Errors = @()
         $AsyncLoader.CycleTime = 10
 
         while (-not $AsyncLoader.Stop) {
@@ -2722,8 +2722,8 @@ function Start-AsyncLoader {
                 $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
             }
             catch {
-                $AsyncLoader.Result.Add($_.Exception.Message) > $null
-                if ($AsyncLoader.Result.Count -gt 50) {$AsyncLoader.Result.RemoveAt(0)}
+                $AsyncLoader.Errors.Add($_.Exception.Message) > $null
+                if ($AsyncLoader.Errors.Count -gt 50) {$AsyncLoader.Errors.RemoveAt(0)}
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
