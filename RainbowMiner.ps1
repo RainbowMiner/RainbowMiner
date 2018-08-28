@@ -1980,15 +1980,15 @@ while ($true) {
         continue
     }
 
-    $ActiveMiners | ForEach-Object {
-        $_.Profit = 0
-        $_.Profit_Comparison = 0
-        $_.Profit_MarginOfError = 0
-        $_.Profit_Bias = 0
-        $_.Profit_Unbias = 0
-        $_.Profit_Cost = 0
-        $_.Best = $false
-        $_.Best_Comparison = $false
+    foreach($Miner in $ActiveMiners) {
+        $Miner.Profit = 0
+        $Miner.Profit_Comparison = 0
+        $Miner.Profit_MarginOfError = 0
+        $Miner.Profit_Bias = 0
+        $Miner.Profit_Unbias = 0
+        $Miner.Profit_Cost = 0
+        $Miner.Best = $false
+        $Miner.Best_Comparison = $false
     }
     $Miners | ForEach-Object {
         $Miner = $_
@@ -2021,7 +2021,7 @@ while ($true) {
             $ActiveMiner.EthPillEnable = $Config.EthPillEnable
         }
         else {
-            $ActiveMiners += New-Object $Miner.API -Property @{
+            $NewMiner = New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 BaseName             = $Miner.BaseName
                 Path                 = $Miner.Path
@@ -2056,16 +2056,12 @@ while ($true) {
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Config.EthPillEnable
             }
+            $ActiveMiners.Add($NewMiner) > $null
         }
     }
 
     #Don't penalize active miners
-    if ($SkipSwitchingPrevention) {
-        $SkipSwitchingPrevention = $false
-        $ActiveMiners | ForEach-Object {$_.Profit_Bias = $_.Profit_Unbias}
-    } else {
-        $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {$_.Profit_Bias = $_.Profit_Unbias}
-    }
+    foreach($Miner in $ActiveMiners) {if ($SkipSwitchingPrevention -or ($Miner.GetStatus() -eq [MinerStatus]::Running)) {$Miner.Profit_Bias = $Miner.Profit_Unbias}}
 
     #Get most profitable miner combination i.e. AMD+NVIDIA+CPU
     $BestMiners = $ActiveMiners | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($ActiveMiners | Where-Object {(Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count}, {$_.Benchmarked}, {if ($Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
@@ -2135,7 +2131,7 @@ while ($true) {
         Get-Process | Where-Object {@($ActiveMiners | Foreach-Object {$_.GetExecNames()}) -contains $_.ProcessName} | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {$_.GetExecNames()}) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object {$Running -notcontains $_.Id} | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
     if ($Downloader) {$Downloader | Receive-Job}
-    Start-Sleep $Config.Delay #Wait to prevent BSOD
+    if ($Config.Delay -gt 0) {Start-Sleep $Config.Delay} #Wait to prevent BSOD
 
     $ActiveMiners | Where-Object Best -EQ $true | ForEach-Object {
         if ($_.GetStatus() -ne [MinerStatus]::Running) {
@@ -2383,7 +2379,7 @@ while ($true) {
     $WaitTimer = (Get-Date).ToUniversalTime()
     $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
 
-    $AutoUpdate = $Stopp = $false
+    $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
     $Host.UI.RawUI.FlushInputBuffer()

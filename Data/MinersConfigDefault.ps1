@@ -73,6 +73,7 @@
         )
         "CcminerTpruvotx64" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "allium"; SecondaryAlgorithm = ""; Params = "-i 22.125"; Profile = ""}
+            [PSCustomObject]@{MainAlgorithm = "hmq1725"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
             [PSCustomObject]@{MainAlgorithm = "keccak"; SecondaryAlgorithm = ""; Params = "-i 29"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "keccakc"; SecondaryAlgorithm = ""; Params = "-i 29"; Profile = ""}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 21"; Profile = "4"}
@@ -84,6 +85,7 @@
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
         "CcminerX16s" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "hmq1725"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
             [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
         )
