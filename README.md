@@ -36,7 +36,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 1. Install PowerShell 6: [Download Installer for version 6.0.4](https://github.com/PowerShell/PowerShell/releases/download/v6.0.4/PowerShell-6.0.4-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
-3. Update GPU drivers: [Nvidia 398.82](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.5.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+3. Update GPU drivers: [Nvidia 399.07](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.8.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
@@ -213,7 +213,7 @@ I recommend you set the following profile setup in MSI Afterburner, so that you 
 - Profile 1: no oc (e.g. +0/+0)
 - Profile 2: max. core / max. memory oc (e.g. +100/+400), good for most miners
 - Profile 3: max. core / half memory oc (e.g. +100/+200), recm. for claymore ethash-keccak, neoscrypt
-- Profile 4: max. core / no memory oc (e.g. +100/0), recm. for lyra2re2, lyra2z, x16r, x16s
+- Profile 4: max. core / low memory oc (e.g. +100/-500), recm. for lyra2re2, lyra2z, x16r, x16s
 - Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
