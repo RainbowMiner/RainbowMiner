@@ -655,9 +655,8 @@ function Start-SubProcessInBackground {
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
-    if ( $ProcessName -ne "" -and $ProcessName -ne $ExecName ) { $ExecName = $ProcessName }
-    $Running = @(Get-Process | Where-Object { $_.Name -eq $ExecName } | Select-Object -ExpandProperty Id)
-
+    if ($ProcessName -ne "" -and $ProcessName -ne $ExecName) {$ExecName = $ProcessName}
+    $Running = @(Get-Process | Where-Object {$_.Name -eq $ExecName} | Select-Object -ExpandProperty Id)
 
     $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
     $ScriptBlock += "& '$FilePath'"
