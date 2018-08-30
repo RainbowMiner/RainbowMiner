@@ -22,7 +22,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak (Excavator is faster)
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2RE
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2 (fastest)
-    [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
+    #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
