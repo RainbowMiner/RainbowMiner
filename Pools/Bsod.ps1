@@ -49,6 +49,8 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Pool_PoolFee = if ($Pool_Request -and $Pool_Request.$Pool_Key) {$Pool_Request.$Pool_Key.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
 
+    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
+
     #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     $Divisor = 1
 
@@ -73,24 +75,26 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Pool_Currency = $PoolCoins_Request.$Pool_Currency.symbol
 
     foreach($Pool_Region in $Pool_Regions) {
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = $Stat.Hour #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = "$($Pool_Region).bsod.pw"
-            Port          = $Pool_Port
-            User          = "$(Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue).$($Worker)"
-            Pass          = "c=$Pool_Currency"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_PoolFee
-            DataWindow    = $Pool_DataWindow
+        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = $Stat.Hour #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = "$($Pool_Region).bsod.pw"
+                Port          = $Pool_Port
+                User          = "$(Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue).$($Worker)"
+                Pass          = "c=$Pool_Currency"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_PoolFee
+                DataWindow    = $Pool_DataWindow
+            }
         }
     }
 }

@@ -37,7 +37,8 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
 if ($PoolCoins_Request) {
-    $PoolCoins_Request.PSObject.Properties.Value | Group-Object algo | Where-Object Count -eq 1 | Foreach-Object {$Pool_Coins[$_.Group.algo] = @{Name=$_.Group.name;Symbol=$_.Group.symbol}}
+    $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
+    if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
 }
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {($Pool_Request.$_.hashrate -gt 0 -and [Double]$Pool_Request.$_.estimate_current  -gt 0) -or $InfoOnly} | ForEach-Object {
@@ -49,6 +50,9 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Coin = $Pool_Coins.$Pool_Algorithm.Name
     $Pool_Symbol = $Pool_Coins.$Pool_Algorithm.Symbol
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
+    if ($Pool_Coin -and -not $Pool_Symbol) {$Pool_Symbol = Get-CoinSymbol $Pool_Coin}
+
+    if ($Pool_Symbol -and $Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Symbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
     $Divisor = 1e6 * [Double]$Pool_Request.$_.mbtc_mh_factor
 
@@ -59,24 +63,26 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
 
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Currency in $Pool_Currencies) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Symbol
-                Currency      = $Pool_Currency
-                Price         = $Stat.Hour #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = $Pool_Host
-                Port          = $Pool_Port
-                User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
-                Pass          = "ID=$Worker,c=$Pool_Currency"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                DataWindow    = $DataWindow
+            foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin
+                    CoinSymbol    = $Pool_Symbol
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.Hour #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+tcp"
+                    Host          = $Pool_Host
+                    Port          = $Pool_Port
+                    User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+                    Pass          = "ID=$Worker,c=$Pool_Currency"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $false
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_PoolFee
+                    DataWindow    = $DataWindow
+                }
             }
         }
     }
