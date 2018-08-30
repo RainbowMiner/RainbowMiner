@@ -150,7 +150,7 @@
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; Profile = "3"}
         )
         "lolMiner" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "equihash16x5"; SecondaryAlgorithm = ""; Params = ""; Profile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "equihash16x5"; SecondaryAlgorithm = ""; Params = ""; Profile = "4"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; Profile = "5"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; Profile = "5"}
         )
