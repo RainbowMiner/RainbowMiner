@@ -4,7 +4,7 @@ $text = ''
 $count = 0
 
 if ($Parameters.name -and $Parameters.algorithm -and $Parameters.DeviceModel) {
-	$Algorithm = $Parameters.algorithm
+	$Algorithm = $Parameters.algorithm -replace '-.+$'
 	if (($Parameters.name -replace '-GPU.+$' -split '-').Count -gt 2) {
 		$Algorithm = "*"
 	}
