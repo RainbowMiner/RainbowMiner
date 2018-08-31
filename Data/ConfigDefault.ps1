@@ -7,4 +7,6 @@
     Watchdog = $true 
     UseTimeSync = $false
     MSIAprofile = 0
+    EnableOCProfiles = $false
+    EnableAutoUpdate = $true
 }
