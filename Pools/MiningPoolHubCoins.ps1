@@ -37,7 +37,7 @@ if (($Pool_Request.return | Measure-Object).Count -le 1) {
 [hashtable]$Pool_RegionsTable = @{}
 
 $Pool_Regions = @("europe", "us-east", "asia")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region ($Pool_Region -replace '-.+$')}
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
 
