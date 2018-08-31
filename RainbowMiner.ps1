@@ -2337,6 +2337,7 @@ while ($true) {
                     Start-Sleep 1
                 }
             } elseif ($Config.EnableOCprofiles) {
+                Start-Sleep -Milliseconds 500
                 $_.SetOCprofile($Config.OCprofiles)
                 Start-Sleep -Milliseconds 500
             }
