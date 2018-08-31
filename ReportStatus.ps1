@@ -15,11 +15,11 @@ $minerreport = ConvertTo-Json @(
     $ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq "Running"} | Foreach-Object {
         # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
         [pscustomobject]@{
-            Name           = $_.Name
+            Name           = $_.BaseName
             Path           = Resolve-Path -Relative $_.Path
-            Type           = @($_.Type)
+            Type           = @($_.DeviceModel)
             Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()
-            Algorithm      = @($_.Algorithm)
+            Algorithm      = @($_.BaseAlgorithm)
             Pool           = @($_.Pool)
             CurrentSpeed   = @($_.Speed_Live)
             EstimatedSpeed = @($_.Speed)
