@@ -494,12 +494,17 @@ class Excavator : Miner {
 
         switch ($Status) {
             Running {
+                $this.StartMiningPreProcess()
                 $this.StartMining()
+                $this.StartMiningPostProcess()
             }
             Idle {
+                $this.StopMiningPreProcess()
                 $this.StopMining()
+                $this.StopMiningPostProcess()
             }
             Default {
+                $this.StopMiningPreProcess()
                 if ([Excavator]::Service.MiningProcess) {
                     [Excavator]::Service.MiningProcess.CloseMainWindow() | Out-Null
                     # Wait up to 10 seconds for the miner to close gracefully
@@ -524,6 +529,7 @@ class Excavator : Miner {
                 }
 
                 $this.Status = $Status
+                $this.StopMiningPostProcess()
             }
         }
     }

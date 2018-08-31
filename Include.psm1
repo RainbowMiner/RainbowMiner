@@ -1365,6 +1365,7 @@ class Miner {
     hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false
     hidden $EthPill = $null
+    hidden [System.Collections.ArrayList]$OCprofileBackup = @()
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -1447,7 +1448,17 @@ class Miner {
                 $this.EthPill = $null
                 Sleep -Milliseconds 250 #Sleep for 1/4 second
             }
-        }
+        }    
+    }
+
+    hidden StartMiningPreProcess() { }
+
+    hidden StartMiningPostProcess() { }
+
+    hidden StopMiningPreProcess() { }
+
+    hidden StopMiningPostProcess() {
+        $this.ResetOCprofile() #reset all overclocking
     }
 
     [DateTime]GetActiveStart() {
@@ -1520,13 +1531,18 @@ class Miner {
 
         switch ($Status) {
             Running {
+                $this.StartMiningPreProcess()
                 $this.StartMining()
-            }
+                $this.StartMiningPostProcess()            }
             Idle {
+                $this.StopMiningPreProcess()
                 $this.StopMining()
+                $this.StopMiningPostProcess()
             }
             Default {
+                $this.StopMiningPreProcess()
                 $this.StopMining()
+                $this.StopMiningPostProcess()
                 $this.Status = [MinerStatus]$Status
             }
         }
@@ -1656,6 +1672,22 @@ class Miner {
         return @($this.HashRates.PSObject.Properties.Name | Foreach-Object {$this.DevFee.$_})
     }
 
+    ResetOCprofile() {
+        if ($this.OCprofile.Count -eq 0 -or $this.OCprofileBackup.Count -eq 0) {return}
+
+        try {
+            $Script:abMonitor.ReloadAll()
+            $Script:abControl.ReloadAll()
+        } catch {        
+            Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
+            return
+        }
+        foreach($Profile in $this.OCprofileBackup) {foreach($Name in $Profile.Keys) {if ($Name -ne "Index") {$Script:abControl.GpuEntries[$Profile.Index].$Name = $Profile.$Name}}}
+        $Script:abControl.CommitChanges()
+        $this.OCprofileBackup.Clear()
+        Write-Log "OC reset for $($this.BaseName)"
+    }
+
     SetOCprofile($Profiles) {        
         if ($this.OCprofile.Count -eq 0) {return}
 
@@ -1673,6 +1705,8 @@ class Miner {
             Intel  = "*Intel*"
         }
 
+        $this.OCprofileBackup.Clear()
+
         [System.Collections.ArrayList]$applied = @()
         foreach ($DeviceModel in $this.OCprofile.Keys) {
             if ($Profiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
@@ -1687,10 +1721,12 @@ class Miner {
                     $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
                         if ($DeviceId -in $DeviceIds) {
                             $GpuEntry = $Script:abControl.GpuEntries[$_]
-                            if ($Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}
-                            if ($Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}
-                            if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}
-                            if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}                            
+                            $ProfileBackup = [hashtable]@{}
+                            if ($Profile.PowerLimit -gt 0) {$ProfileBackup.PowerLimitCur = $GpuEntry.PowerLimitCur;$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}
+                            if ($Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}
+                            if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}
+                            if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}                            
+                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null}
                         }
                         $DeviceId++
                     }
