@@ -9,4 +9,5 @@
     MSIAprofile = 0
     EnableOCProfiles = $false
     EnableAutoUpdate = $true
+    Delay = 1
 }

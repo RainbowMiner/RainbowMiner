@@ -1459,6 +1459,7 @@ class Miner {
 
     hidden StopMiningPostProcess() {
         $this.ResetOCprofile() #reset all overclocking
+        Sleep -Milliseconds 500
     }
 
     [DateTime]GetActiveStart() {
@@ -1533,7 +1534,8 @@ class Miner {
             Running {
                 $this.StartMiningPreProcess()
                 $this.StartMining()
-                $this.StartMiningPostProcess()            }
+                $this.StartMiningPostProcess()
+            }
             Idle {
                 $this.StopMiningPreProcess()
                 $this.StopMining()
