@@ -1246,6 +1246,7 @@ while ($true) {
                             do {
                                 try {
                                     $DevicesActual = Get-Content $DevicesConfigFile | ConvertFrom-Json
+                                    $OCprofilesActual = Get-Content $OCprofilesConfigFile | ConvertFrom-Json
                                     $Device_Name = Read-HostString -Prompt "Which device do you want to configure? (leave empty to end device config)" -Characters "A-Z0-9" -Valid @($SetupDevices.Model | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     if ($Device_Name -eq '') {throw}
 
@@ -1262,7 +1263,7 @@ while ($true) {
 
                                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
-                                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining")) > $null
+                                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile")) > $null
                                         $DeviceSetupSteps.Add("save") > $null
                                         
                                         do { 
@@ -1282,6 +1283,9 @@ while ($true) {
                                                     }
                                                     "disabledualmining" {
                                                         $DeviceConfig.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $DeviceConfig.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "defaultocprofile" {                                                        
+                                                        $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device (leave empty for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                     }
                                                     "save" {
                                                         Write-Host " "
@@ -1355,22 +1359,23 @@ while ($true) {
                             $OCProfileSetupDone = $false
                             do {
                                 try {
-                                    $OCProfilesActual = Get-Content $OCProfilesConfigFile | ConvertFrom-Json
-                                    Write-Host " "
-                                    $p = [console]::ForegroundColor
-                                    [console]::ForegroundColor = "Cyan"
-                                    Write-Host "Current profiles:"
-                                    $OCProfilesActual.PSObject.Properties | Format-Table @(
-                                        @{Label="Name"; Expression={"$($_.Name)"}}
-                                        @{Label="Power Limit"; Expression={"$(if ($_.Value.PowerLimit -eq '0'){'*'}else{"$($_.Value.PowerLimit) %"})"}; Align="center"}
-                                        @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) %"})"}; Align="center"}
-                                        @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ($_.Value.CoreClockBoost -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
-                                        @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ($_.Value.MemoryClockBoost -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
-                                    )
-                                    [console]::ForegroundColor = $p
-
+        
                                     do {
-                                        $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create? (leave empty to end profile config)" -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $OCProfilesActual = Get-Content $OCProfilesConfigFile | ConvertFrom-Json
+                                        Write-Host " "
+                                        $p = [console]::ForegroundColor
+                                        [console]::ForegroundColor = "Cyan"
+                                        Write-Host "Current profiles:"
+                                        $OCProfilesActual.PSObject.Properties | Format-Table @(
+                                            @{Label="Name"; Expression={"$($_.Name)"}}
+                                            @{Label="Power Limit"; Expression={"$(if ($_.Value.PowerLimit -eq '0'){'*'}else{"$($_.Value.PowerLimit) %"})"}; Align="center"}
+                                            @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) %"})"}; Align="center"}
+                                            @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
+                                            @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
+                                        )
+                                        [console]::ForegroundColor = $p
+
+                                        $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create/delete? (leave empty to end profile config)" -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         if ($OCProfile_Name -eq '') {throw}
 
                                         if (-not $OCProfilesActual.$OCProfile_Name) {
@@ -1382,7 +1387,17 @@ while ($true) {
                                             }
                                         } else {
                                             $OCProfile_Name = $OCProfilesActual.PSObject.Properties.Name | Where-Object {$_ -eq $OCProfile_Name}
+                                            $What = Read-HostString "Do you want to [e]dit or [d]elete `"$OCProfile_Name`"? (or enter [b]ack, to choose another)" -Characters "edb" -Mandatory -Default "e"                                            
+                                            if ($What -ne "e") {                                                
+                                                if ($What -eq "d") {
+                                                    $OCProfilesSave = [PSCustomObject]@{}
+                                                    $OCProfilesActual.PSObject.Properties | Where-Object {$_.Name -ne $OCProfile_Name} | Foreach-Object {$OCProfilesSave | Add-Member $_.Name $_.Value}
+                                                    $OCProfilesSave | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding UTF8
+                                                }
+                                                $OCProfile_Name = ""
+                                            }
                                         }
+                                        if ($OCProfile_Name -eq '') {Clear-Host}
                                     } until ($OCProfile_Name -ne '')
 
                                     if ($OCProfile_Name) {
@@ -1996,10 +2011,10 @@ while ($true) {
                 if (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
                     if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
                     if ($Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Config.Miners.$Miner_CommonCommands.MSIAprofile}
-                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {if ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {@($Miner.DeviceModel -split '-') | Foreach-Object {$Miner_OCprofile[$_]=$Config.Miners.$Miner_CommonCommands.OCprofile}}else{$Miner_OCprofile[$Miner.DeviceModel]=$Config.Miners.$Miner_CommonCommands.OCprofile}}
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
+                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {if ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {@($Miner.DeviceModel -split '-') | Foreach-Object {$Miner_OCprofile[$_]=$Config.Miners.$Miner_CommonCommands.OCprofile}}else{$Miner_OCprofile[$Miner.DeviceModel]=$Config.Miners.$Miner_CommonCommands.OCprofile}}
                     $Miner_CommonCommands_found = $true
                 }
             }
@@ -2010,12 +2025,21 @@ while ($true) {
                     $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
                     if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
                     if ($Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -ge 0 -and $Config.Miners.$Miner_CommonCommands.MSIAprofile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Config.Miners.$Miner_CommonCommands.MSIAprofile}else{-1}}
-                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile[$p] = $Config.Miners.$Miner_CommonCommands.OCprofile}
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance -gt $Miner_FaultTolerance) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
+                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile[$p] = $Config.Miners.$Miner_CommonCommands.OCprofile}
                 }
             }
+
+            #overclocking is different
+            foreach($p in @($Miner.DeviceModel -split '-')) {
+                $Miner_CommonCommands_array[1] = $p
+                $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
+                if (-not $Miner_OCprofile[$p]) {$Miner_OCprofile[$p]=$Config.Miners.$Miner_CommonCommands.OCprofile}
+                if (-not $Miner_OCprofile[$p]) {$Miner_OCprofile[$p]=$Config.Devices.$p.DefaultOCprofile}
+            }
+
             if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force}
             if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
             if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
