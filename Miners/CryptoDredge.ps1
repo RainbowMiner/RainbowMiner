@@ -42,13 +42,13 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {             
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "--retry-pause 1 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) --no-watchdog -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "--retry-pause 1 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) --no-watchdog -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --log log_$($Miner_Port).txt $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "CryptoDredge"
                 Port = $Miner_Port
