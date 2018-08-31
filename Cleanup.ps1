@@ -1,9 +1,5 @@
 ﻿using module .\Include.psm1
 
-param(
-    [String]$Version 
-)
-
 $Version = Get-Version $Version
 
 $ChangesTotal = 0
@@ -32,6 +28,23 @@ try {
         $Remove = @(Get-ChildItem "Stats\Bsod_*_Profit.txt" | Select-Object)
         $ChangesTotal += $Remove.Count
         $Remove | Remove-Item -Force
+    }
+    if ($Version -le (Get-Version "3.8.3.13")) {
+        $MinersSave = [PSCustomObject]@{}
+        $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $MinersActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
+            $MinerSaveArray = [PSCustomObject[]]@()
+            @($_.Value) | Foreach-Object {
+                $MinerSave = [PSCustomObject]@{}
+                $_.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$MinerSave | Add-Member $(if ($_.Name -eq "Profile"){$ChangesTotal++;"MSIAprofile"}else{$_.Name}) $_.Value}
+                $MinerSaveArray += $MinerSave
+            }
+            $MinersSave | Add-Member $_.Name $MinerSaveArray
+
+            $MinersActualSave = [PSCustomObject]@{}
+            $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+            $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+        }
     }
     "Cleaned $ChangesTotal elements"
 }
