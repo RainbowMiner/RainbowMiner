@@ -2105,18 +2105,24 @@ function Set-MinersConfigDefault {
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "gpu"
-            foreach ($a in @("NVIDIA","AMD")) {               
+            foreach ($a in @("NVIDIA","AMD")) {
                 [System.Collections.ArrayList]$SetupDevices = @()
                 $Devices = @(Select-Device $AllDevices -Type $a | Select-Object Model,Model_Name,Name)
                 $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) > $null}
                 Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}
                 $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                     foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @($_.Value)
+                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @($_.Value | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                     }
                 }
                 $Preset.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-                    $Done | Add-Member $_.Name @($_.Value) -Force
+                    $Name = $_.Name
+                    $Value = @($_.Value)
+                    if ($Done.$Name -ne $null) {
+                        $NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm -PassThru | Where-Object SideIndicator -eq '<=' | Foreach-Object {$_.PSObject.Properties.Remove("SideIndicator");$_} | Select-Object)
+                        if ($NewValues.count) {$Value += $NewValues}
+                    }
+                    $Done | Add-Member $Name ($Value | Sort-Object MainAlgorithm,SecondaryAlgorithm) -Force
                 }
             }
             $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
