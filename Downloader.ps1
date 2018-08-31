@@ -26,17 +26,21 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     $URI = $_.URI
     $Path = $_.Path
     $Searchable = $_.Searchable
+    $IsMiner = $_.IsMiner
 
     $Progress += 100 / $DownloadList.Count
 
-    $UriJson = (Split-Path $Path) + "\_uri.json"
-    $UriJsonData = [PSCustomObject]@{URI = ""}
 
-    if ((Test-Path $Path) -and (Test-Path $UriJson)) {
-        $UriJsonData = Get-Content $UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+    if ($IsMiner) {
+        $UriJson = (Split-Path $Path) + "\_uri.json"
+        $UriJsonData = [PSCustomObject]@{URI = ""}
+
+        if ((Test-Path $Path) -and (Test-Path $UriJson)) {
+            $UriJsonData = Get-Content $UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        }
     }
 
-    if (-not (Test-Path $Path) -or $URI -ne $UriJsonData.URI) {
+    if (-not (Test-Path $Path) -or ($IsMiner -and ($URI -ne $UriJsonData.URI))) {
        
         $ProgressPreferenceBackup = $ProgressPreference
         try {
@@ -51,7 +55,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             else {
                 Expand-WebRequest $URI (Split-Path $Path) -ErrorAction Stop
             }
-            [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
+            if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
         catch {
             $ProgressPreference = $ProgressPreferenceBackup
@@ -79,7 +83,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             }
         }
         $ProgressPreference = $ProgressPreferenceBackup
-    } elseif (-not (Test-Path $UriJson)) {
+    } elseif ($IsMiner -and -not (Test-Path $UriJson)) {
         [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
     }
 

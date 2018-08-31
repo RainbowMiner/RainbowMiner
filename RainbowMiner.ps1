@@ -101,7 +101,11 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableExtendInterval = $false, # if set to $true, benchmark intervals will never be extended
     [Parameter(Mandatory = $false)]
-    [String]$EthPillEnable = "disable" # set to RevA or RevB to enable the OhGodAnETHlargementPill
+    [String]$EthPillEnable = "disable", # set to RevA or RevB to enable the OhGodAnETHlargementPill
+    [Parameter(Mandatory = $false)]
+    [Switch]$EnableOCProfiles = $false, # if set to $true, the build in overclocking profiles will be used
+    [Parameter(Mandatory = $false)]
+    [Switch]$EnableAutoUpdate = $false # if set to $true, RainbowMiner will trigger the update process, as soon as a new release is published
 )
 
 Clear-Host
@@ -161,7 +165,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableAutoUpdate")
 }
 
 #Cleanup the log
@@ -210,6 +214,7 @@ try {
         $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
         $DevicesConfigFile = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
+        $OCProfilesConfigFile = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
         
         # Create pools.config.txt if it is missing
         Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
@@ -223,6 +228,10 @@ try {
         Set-DevicesConfigDefault -PathToFile $DevicesConfigFile -Force
         $DevicesConfigFile = $DevicesConfigFile | Resolve-Path -Relative
 
+        # Create ocprofiles.config.txt if it is missing
+        Set-OCProfilesConfigDefault -PathToFile $OCProfilesConfigFile -Force
+        $OCProfilesConfigFile = $OCProfilesConfigFile | Resolve-Path -Relative
+
         $_ | Resolve-Path -Relative
     }
 
@@ -234,10 +243,11 @@ try {
             PoolsConfigFile = $PoolsConfigFile
             MinersConfigFile = $MinersConfigFile
             DevicesConfigFile = $DevicesConfigFile
+            OCProfilesConfigFile = $OCProfilesConfigFile
             AllDevices = $AllDevices
             MyCommandParameters = $MyCommandParameters
-        }
-        if (Test-Path ".\Data\Version.json") {$Cleanup_Parameters.Version = (Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}
+            Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
+        }        
         Get-Item ".\Cleanup.ps1" | Foreach-Object {
             $Cleanup_Result = & {
                 foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
@@ -289,6 +299,7 @@ while ($true) {
                 $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+                $Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force
 
                 if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName -or -not $Config.Algorithm) {
                     $IsInitialSetup = $true
@@ -306,6 +317,7 @@ while ($true) {
                         $MinersActual = Get-Content $MinersConfigFile | ConvertFrom-Json
                         $PoolsActual = Get-Content $PoolsConfigFile | ConvertFrom-Json
                         $DevicesActual = Get-Content $DevicesConfigFile | ConvertFrom-Json
+                        $OCProfilesActual = Get-Content $OCProfilesConfigFile | ConvertFrom-Json
                         $SetupDevices = Get-Device "nvidia","amd","cpu"
 
                         Clear-Host
@@ -344,8 +356,9 @@ while ($true) {
                             Write-Host "- Miners: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
                             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
                             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
+                            Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
                             Write-Host " "
-                            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDX"
+                            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDOX"
                         }
 
                         if ($SetupType -eq "X") {
@@ -360,10 +373,10 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","msia","msiapath","ethpillenable")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","enableocprofiles","msia","msiapath","ethpillenable","enableautoupdate")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","msia","msiapath","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","enableocprofiles","msia","msiapath","ethpillenable","proxy","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
                             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -681,11 +694,15 @@ while ($true) {
                                             $Config.Watchdog = Read-HostBool -Prompt "Enable watchdog" -Default $Config.Watchdog | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         "msia" {
-                                            $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI action)" -Default $Config.MSIAprofile -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}                             
+                                            $GlobalSetupStepStore = $false
+                                            if (-not $Config.EnableOCProfiles) {
+                                                $Config.MSIAprofile = Read-HostInt -Prompt "Enter default MSI Afterburner profile (0 to disable all MSI profile action)" -Default $Config.MSIAprofile -Min 0 -Max 5 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                $GlobalSetupStepStore = $true                                                
+                                            }
                                         }
                                         "msiapath" {
                                             $GlobalSetupStepStore = $false
-                                            if ($Config.MSIAprofile -gt 0) {
+                                            if (-not $Config.EnableOCProfiles -and $Config.MSIAprofile -gt 0) {
                                                 $Config.MSIApath = Read-HostString -Prompt "Enter path to MSI Afterburner" -Default $Config.MSIApath -Characters '' | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                                 if (-not (Test-Path $Config.MSIApath)) {Write-Host "MSI Afterburner not found at given path. Please try again or disable.";throw "Goto msiapath"}
                                                 $GlobalSetupStepStore = $true
@@ -697,6 +714,12 @@ while ($true) {
                                             } else {
                                                 $GlobalSetupStepStore = $false
                                             }
+                                        }
+                                        "enableocprofiles" {
+                                            $Config.EnableOCProfiles = Read-HostBool -Prompt "Enable custom overclocking profiles (MSI Afterburner profiles will be disabled)" -Default $Config.EnableOCProfiles | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+                                        "enableautoupdate" {
+                                            $Config.EnableAutoUpdate = Read-HostBool -Prompt "Enable automatic update, as soon as a new release is published" -Default $Config.EnableAutoUpdate | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
                                         "proxy" {
                                             $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -771,6 +794,8 @@ while ($true) {
                                             $ConfigActual | Add-Member UsePowerPrice $(if (Get-Yes $Config.UsePowerPrice){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member CheckProfitability $(if (Get-Yes $Config.CheckProfitability){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member EthPillEnable $Config.EthPillEnable -Force
+                                            $ConfigActual | Add-Member EnableOCProfiles $(if (Get-Yes $Config.EnableOCProfiles){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member EnableAutoupdate $(if (Get-Yes $Config.EnableAutoupdate){"1"}else{"0"}) -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
@@ -840,7 +865,7 @@ while ($true) {
                                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","profile","extendinterval","faulttolerance","penalty")) > $null                                    
+                                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","extendinterval","faulttolerance","penalty")) > $null                                    
                                 $MinerSetupSteps.Add("save") > $null                         
 
                                 do { 
@@ -886,7 +911,8 @@ while ($true) {
                                                     MainAlgorithm = $EditAlgorithm
                                                     SecondaryAlgorithm = $EditSecondaryAlgorithm
                                                     Params = ""
-                                                    Profile = ""
+                                                    MSIAprofile = ""
+                                                    OCprofile = ""
                                                     ExtendInterval = ""
                                                     FaultTolerance = ""
                                                     Penalty = ""
@@ -898,9 +924,20 @@ while ($true) {
                                             "params" {
                                                 $EditMinerConfig.Params = Read-HostString -Prompt "Additional command line parameters" -Default $EditMinerConfig.Params -Characters " -~" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             }
-                                            "profile" {
-                                                $EditMinerConfig.Profile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.Profile -Characters "012345" -Length 1 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                                                if ($EditMinerConfig.Profile -eq "0") {$EditMinerConfig.Profile = ""}
+                                            "ocprofile" {
+                                                $MinerSetupStepStore = $false
+                                                if ($Config.EnableOCProfile) {
+                                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile (leave empty for none)" -Default $EditMinerConfig.OCprofile -Valid @($ProfilesActual.PSObject.Properties.Name) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    $MinerSetupStepStore = $true
+                                                }
+                                            }
+                                            "msiaprofile" {
+                                                $MinerSetupStepStore = $false
+                                                if (-not $Config.EnableOCProfile) {
+                                                    $EditMinerConfig.MSIAprofile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.MSIAprofile -Characters "012345" -Length 1 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    if ($EditMinerConfig.MSIAprofile -eq "0") {$EditMinerConfig.MSIAprofile = ""}
+                                                    $MinerSetupStepStore = $true
+                                                }
                                             }
                                             "extendinterval" {
                                                 $EditMinerConfig.ExtendInterval = Read-HostInt -Prompt "Extend interval for X times" -Default ([int]$EditMinerConfig.ExtendInterval) -Min 0 -Max 10 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -918,7 +955,7 @@ while ($true) {
                                                 $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm} | Select-Object)+@($EditMinerConfig))
 
                                                 $MinersActualSave = [PSCustomObject]@{}
-                                                $MinersActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ ($MinersActual.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+                                                $MinersActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersActual.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
                                                 $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
 
                                                 Write-Host " "
@@ -1302,6 +1339,139 @@ while ($true) {
                                 } catch {$DeviceSetupDone = $true}
                             } until ($DeviceSetupDone)
                         }
+                        elseif ($SetupType -eq "O") {
+
+                            Clear-Host
+
+                            Write-Host " "
+                            Write-Host "*** Overclocking Profile Configuration ***" -BackgroundColor Green -ForegroundColor Black
+                            Write-HostSetupHints
+                            Write-Host " "
+
+                            $OCProfileSetupDone = $false
+                            do {
+                                try {
+                                    $OCProfilesActual = Get-Content $OCProfilesConfigFile | ConvertFrom-Json
+                                    Write-Host " "
+                                    $p = [console]::ForegroundColor
+                                    [console]::ForegroundColor = "Cyan"
+                                    Write-Host "Current profiles:"
+                                    $OCProfilesActual.PSObject.Properties | Format-Table @(
+                                        @{Label="Name"; Expression={"$($_.Name)"}}
+                                        @{Label="Power Limit"; Expression={"$(if ($_.Value.PowerLimit -eq '0'){'*'}else{"$($_.Value.PowerLimit) %"})"}; Align="center"}
+                                        @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) %"})"}; Align="center"}
+                                        @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ($_.Value.CoreClockBoost -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
+                                        @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ($_.Value.MemoryClockBoost -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
+                                    )
+                                    [console]::ForegroundColor = $p
+
+                                    do {
+                                        $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create? (leave empty to end profile config)" -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        if ($OCProfile_Name -eq '') {throw}
+
+                                        if (-not $OCProfilesActual.$OCProfile_Name) {
+                                            if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
+                                                $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*"}) -Force
+                                                $OCProfilesActual | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding utf8 
+                                            } else {
+                                                $OCProfile_Name = ''
+                                            }
+                                        } else {
+                                            $OCProfile_Name = $OCProfilesActual.PSObject.Properties.Name | Where-Object {$_ -eq $OCProfile_Name}
+                                        }
+                                    } until ($OCProfile_Name -ne '')
+
+                                    if ($OCProfile_Name) {
+                                        $OCProfileSetupStepsDone = $false
+                                        $OCProfileSetupStep = 0
+                                        [System.Collections.ArrayList]$OCProfileSetupSteps = @()
+                                        [System.Collections.ArrayList]$OCProfileSetupStepBack = @()
+
+                                        $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
+
+                                        $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","coreclockboost","memoryclockboost")) > $null
+                                        $OCProfileSetupSteps.Add("save") > $null
+                                        
+                                        do { 
+                                            try {
+                                                Switch ($OCProfileSetupSteps[$OCProfileSetupStep]) {
+                                                    "powerlimit" {
+                                                        $OCProfileConfig.PowerLimit = Read-HostInt -Prompt "Enter the power limit in % (input 0 to never set)" -Default $OCProfileConfig.PowerLimit -Min 0 -Max 150 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "thermallimit" {
+                                                        $OCProfileConfig.ThermalLimit = Read-HostInt -Prompt "Enter the thermal limit in °C (input 0 to never set)" -Default $OCProfileConfig.ThermalLimit -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                    }
+                                                    "memoryclockboost" {
+                                                        $p = Read-HostString -Prompt "Enter a value for memory clock boost or `"*`" to never set" -Default $OCProfileConfig.MemoryClockBoost -Characters "0-9*+-" -Mandatory | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        if ($p -ne '*') {
+                                                            $p = $p -replace '\+'
+                                                            if ($p -match '^.+-' -or $p -eq '') {Write-Host "This is not a correct number" -ForegroundColor Yellow; throw "goto powerlimit"}
+                                                        }
+                                                        $OCProfileConfig.MemoryClockBoost = $p                                                            
+                                                    }
+                                                    "coreclockboost" {
+                                                        $p = Read-HostString -Prompt "Enter a value for core clock boost or `"*`" to never set" -Default $OCProfileConfig.CoreClockBoost -Characters "0-9*+-" -Mandatory | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        if ($p -ne '*') {
+                                                            $p = $p -replace '\+'
+                                                            if ($p -match '^.+-' -or $p -eq '') {Write-Host "This is not a correct number" -ForegroundColor Yellow; throw "goto coreclockboost"}
+                                                        }
+                                                        $OCProfileConfig.CoreClockBoost = $p                                                            
+                                                    }
+
+                                                    "save" {
+                                                        Write-Host " "
+                                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                                        
+                                                        $OCProfilesActual | Add-Member $OCProfile_Name $OCProfileConfig -Force
+                                                        $OCProfilesActualSave = [PSCustomObject]@{}
+                                                        $OCProfilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCProfilesActualSave | Add-Member $_ ($OCProfilesActual.$_) -Force}
+
+                                                        $OCProfilesActualSave | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding utf8
+
+                                                        Write-Host " "
+                                                        Write-Host "Changes written to profiles configuration. " -ForegroundColor Cyan
+                                                    
+                                                        $OCProfileSetupStepsDone = $true
+                                                    }
+                                                }
+                                                $OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null
+                                                $OCProfileSetupStep++
+                                            }
+                                            catch {
+                                                if (@("back","<") -icontains $_.Exception.Message) {
+                                                    if ($OCProfileSetupStepBack.Count) {$OCProfileSetupStep = $OCProfileSetupStepBack[$OCProfileSetupStepBack.Count-1];$OCProfileSetupStepBack.RemoveAt($OCProfileSetupStepBack.Count-1)}
+                                                }
+                                                elseif ($_.Exception.Message -like "Goto*") {
+                                                    $OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null
+                                                    $OCProfileSetupStep = $OCProfileSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                                    if ($OCProfileSetupStep -lt 0) {
+                                                        Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                                        $OCProfileSetupStep = $OCProfileSetupStepBack[$OCProfileSetupStepBack.Count-1];$OCProfileSetupStepBack.RemoveAt($OCProfileSetupStepBack.Count-1)
+                                                    }
+                                                }
+                                                elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                                    Write-Host " "
+                                                    Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                                    Write-Host " "
+                                                    $OCProfileSetupStepsDone = $true                                               
+                                                }
+                                                else {
+                                                    Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                                    $OCProfileSetupStepsDone = $true
+                                                }
+                                            }
+                                        } until ($OCProfileSetupStepsDone)                                                                        
+
+                                    } else {
+                                        Write-Host "Please try again later" -ForegroundColor Yellow
+                                    }
+
+                                    Write-Host " "
+                                    if (-not (Read-HostBool "Edit another device?")){throw}
+                        
+                                } catch {$OCProfileSetupDone = $true}
+                            } until ($OCProfileSetupDone)
+                        }
                     } until (-not $RunSetup)
                     $RestartMiners = $true
                     $ReReadConfig = $true
@@ -1364,7 +1534,7 @@ while ($true) {
     #Give API access to all possible devices
     if ($API.AllDevices -eq $null) {$API.AllDevices = $AllDevices}
 
-    $MSIAenabled = $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
+    $MSIAenabled = -not $Config.EnableOCProfiles -and $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
     #Check for devices config
     Set-DevicesConfigDefault $DevicesConfigFile
@@ -1380,6 +1550,15 @@ while ($true) {
                 }
                 $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
             }
+        }
+    }
+
+    #Check for oc profile config
+    Set-OCProfilesConfigDefault $OCProfilesConfigFile
+    if (Test-Path $OCProfilesConfigFile) {
+        if ($ConfigCheckFields -or -not $Config.OCProfiles -or (Get-ChildItem $OCProfilesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["OCProfilesConfigFile"]) {        
+            $Updatetracker["Config"]["OCProfilesConfigFile"] = (Get-ChildItem $OCProfilesConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member OCProfiles (Get-ChildItemContent $OCProfilesConfigFile).Content -Force
         }
     }   
 
@@ -1798,11 +1977,12 @@ while ($true) {
         $Miner_Profits_Comparison = [PSCustomObject]@{}
         $Miner_Profits_MarginOfError = [PSCustomObject]@{}
         $Miner_Profits_Bias = [PSCustomObject]@{}
-        $Miner_Profits_Unbias = [PSCustomObject]@{}        
+        $Miner_Profits_Unbias = [PSCustomObject]@{}
+        $Miner_OCprofile = [hashtable]@{}
 
         if ($Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = ''
-            $Miner_MSIAprofile = 0
+            $Miner_MSIAprofile = 0           
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
             [System.Collections.ArrayList]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
@@ -1811,7 +1991,8 @@ while ($true) {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
                     if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
-                    if ($Config.Miners.$Miner_CommonCommands.Profile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Config.Miners.$Miner_CommonCommands.Profile}
+                    if ($Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Config.Miners.$Miner_CommonCommands.MSIAprofile}
+                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {if ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {@($Miner.DeviceModel -split '-') | Foreach-Object {$Miner_OCprofile[$_]=$Config.Miners.$Miner_CommonCommands.OCprofile}}else{$Miner_OCprofile[$Miner.DeviceModel]=$Config.Miners.$Miner_CommonCommands.OCprofile}}
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
@@ -1824,7 +2005,8 @@ while ($true) {
                     $Miner_CommonCommands_array[1] = $p
                     $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
                     if ($Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Config.Miners.$Miner_CommonCommands.Params}
-                    if ($Config.Miners.$Miner_CommonCommands.Profile -and $Miner_MSIAprofile -ge 0 -and $Config.Miners.$Miner_CommonCommands.Profile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Config.Miners.$Miner_CommonCommands.Profile}else{-1}}
+                    if ($Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -ge 0 -and $Config.Miners.$Miner_CommonCommands.MSIAprofile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Config.Miners.$Miner_CommonCommands.MSIAprofile}else{-1}}
+                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile[$p] = $Config.Miners.$Miner_CommonCommands.OCprofile}
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance -gt $Miner_FaultTolerance) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
@@ -1834,7 +2016,7 @@ while ($true) {
             if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
             if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
             if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
-            if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}
+            if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}            
         }
 
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
@@ -1881,6 +2063,7 @@ while ($true) {
 
         $Miner | Add-Member HashRates $Miner_HashRates -Force
         $Miner | Add-Member DevFee $Miner_DevFees -Force
+        $Miner | Add-Member OCprofile $Miner_OCprofile -Force
 
         $Miner | Add-Member Pools $Miner_Pools
         $Miner | Add-Member Profits $Miner_Profits
@@ -1931,7 +2114,7 @@ while ($true) {
         $Miners_Downloading = (Compare-Object @($Miners.URI | Select-Object -Unique) @($AllMiners.URI | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Measure-Object).Count
         Clear-Host
         Write-Log "Starting downloader."
-        $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
+        $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}, @{name = "IsMiner"; expression = {$true}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
         $StartDownloader = $false
     }
     $AllMiners_VersionCheck = $null
@@ -2015,6 +2198,7 @@ while ($true) {
             $ActiveMiner.ShowMinerWindow = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
             $ActiveMiner.DevFee = $Miner.DevFee
             $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
+            $ActiveMiner.OCprofile = $Miner.OCprofile
             $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
             $ActiveMiner.Penalty = $Miner.Penalty
             $ActiveMiner.ManualUri = $Miner.ManualUri
@@ -2047,6 +2231,7 @@ while ($true) {
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
                 MSIAprofile          = $Miner.MSIAprofile
+                OCprofile            = $Miner.OCprofile
                 ExtendInterval       = $Miner.ExtendInterval
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
@@ -2147,6 +2332,9 @@ while ($true) {
                     $MSIAcurrentprofile = $MSIAplannedprofile
                     Start-Sleep 1
                 }
+            } elseif ($Config.EnableOCprofiles) {
+                $_.SetOCprofile($Config.OCprofiles)
+                Start-Sleep 1
             }
             if ($_.Speed -contains $null) {
                 Write-Log "Benchmarking miner ($($_.Name)): '$($_.Path) $($_.Arguments)' (Extend Interval $($_.ExtendInterval))"
@@ -2364,7 +2552,12 @@ while ($true) {
     #Check for updated RainbowMiner
     $API.Version = $ConfirmedVersion = Confirm-Version $Version
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
-        Write-Host "To start auto-update, press key `"U`"" -ForegroundColor Yellow
+        if ($Config.EnableAutoUpdate) {
+            Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
+            $API.Update = $true
+        } else {
+            Write-Host "To start update, press key `"U`"" -ForegroundColor Yellow            
+        }
         Write-Host " "
     }
 
@@ -2376,10 +2569,11 @@ while ($true) {
     $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
+    $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
+
     $WaitTimer = (Get-Date).ToUniversalTime()
     $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
 
-    $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
     $Host.UI.RawUI.FlushInputBuffer()

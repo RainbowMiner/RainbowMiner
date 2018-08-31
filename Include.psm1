@@ -1044,48 +1044,23 @@ function Start-Afterburner {
         Write-Log "Failed to create MSI Afterburner Control object. PowerLimits will not be available"
         $Script:abControl = $false
     }
+
+    if ($Script:abControl) {
+        $Script:abControlBackup = @($Script:abControl.GpuEntries | Select-Object Index,PowerLimitCur,ThermalLimitCur,CoreClockBoostCur,MemoryClockBoostCur)
+    }
 }
 
-function Set-AfterburnerPowerLimit ([int]$PowerLimitPercent, $DeviceGroup) {
-    try {
-        $Script:abMonitor.ReloadAll()
-        $Script:abControl.ReloadAll()
-    } catch {        
-        Write-Log -Level Error "Failed to communicate with MSI Afterburner"
-        return
-    }
-
-    if ($DeviceGroup.DevicesArray.Length -gt 0) {
-
-        $PowerLimit = $PowerLimitPercent
-
-        $Pattern = @{
-            AMD    = '*Radeon*'
-            NVIDIA = '*GeForce*'
-            Intel  = '*Intel*'
-        }
-
-        $Devices = @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$($DeviceGroup.Type) | Select-Object -ExpandProperty Index)[$DeviceGroup.DevicesArray]
-
-        foreach ($device in $Devices) {
-            if ($Script:abControl.GpuEntries[$device].PowerLimitCur -ne $PowerLimit) {
-
-                # Stay within HW limitations
-                if ($PowerLimit -gt $Script:abControl.GpuEntries[$device].PowerLimitMax) {$PowerLimit = $Script:abControl.GpuEntries[$device].PowerLimitMax}
-                if ($PowerLimit -lt $Script:abControl.GpuEntries[$device].PowerLimitMin) {$PowerLimit = $Script:abControl.GpuEntries[$device].PowerLimitMin}
-
-                $Script:abControl.GpuEntries[$device].PowerLimitCur = $PowerLimit
-            }
-        }
-        $Script:abControl.CommitChanges()
-    }
+function Test-Afterburner {
+    return $Script:abMonitor -and $Script:abControl
 }
 
 function Get-AfterburnerDevices ($Type) {
+    if (-not $Script:abControl) {return}
+
     try {
         $Script:abControl.ReloadAll()
     } catch {        
-        Write-Log -Level Error "Failed to communicate with MSI Afterburner"
+        Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
         return
     }
 
@@ -1139,10 +1114,11 @@ function Update-DeviceInformation {
             }
             @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
                 $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
+                $AdapterId = $_.Index
 
                 $Devices | Where-Object Vendor -eq $Vendor -and Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                     $_ | Add-Member Data ([PSCustomObject]@{
-                            AdapterId         = [int]$_.Index
+                            AdapterId         = [int]$AdapterId
                             Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                             UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
                             Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
@@ -1373,6 +1349,7 @@ class Miner {
     $Pool
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
+    [hashtable]$OCprofile = @{}
     $DevFee
     $BaseName = $null
     $ExecName = $null
@@ -1677,6 +1654,55 @@ class Miner {
 
     [array]GetDevFees() {
         return @($this.HashRates.PSObject.Properties.Name | Foreach-Object {$this.DevFee.$_})
+    }
+
+    SetOCprofile($Profiles) {        
+        if ($this.OCprofile.Count -eq 0) {return}
+
+        try {
+            $Script:abMonitor.ReloadAll()
+            $Script:abControl.ReloadAll()
+        } catch {        
+            Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
+            return
+        }
+
+        $Pattern = @{
+            AMD    = "*Radeon*"
+            NVIDIA = "*GeForce*"
+            Intel  = "*Intel*"
+        }
+
+        [System.Collections.ArrayList]$applied = @()
+        foreach ($DeviceModel in $this.OCprofile.Keys) {
+            if ($Profiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
+                $DeviceIds = @($Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
+                $Vendor = $Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Vendor -Unique
+                $Profile = $Profiles."$($this.OCprofile.$DeviceModel)"
+                $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
+                $Profile.MemoryClockBoost =$Profile.MemoryClockBoost -replace '[^0-9\-]+'                
+
+                if ($Pattern.$Vendor -ne $null) {
+                    $DeviceId = 0
+                    $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
+                        if ($DeviceId -in $DeviceIds) {
+                            $GpuEntry = $Script:abControl.GpuEntries[$_]
+                            if ($Profile.PowerLimit -gt 0) {$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}
+                            if ($Profile.ThermalLimit -gt 0) {$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}
+                            if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}
+                            if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}                            
+                        }
+                        $DeviceId++
+                    }
+                    $applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit) %"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit) °C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"})") > $null
+                }
+            }
+        }
+
+        if ($applied.Count) {
+            $Script:abControl.CommitChanges()
+            $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
+        }
     }
 }
 
@@ -2138,6 +2164,28 @@ function Set-PoolsConfigDefault {
             } else {
                 Write-Log -Level Error "No pools found!"
             }
+        }
+        catch{
+            Write-Log -Level Error "Could not create $($PathToFile) "
+        }
+    }
+}
+
+function Set-OCProfilesConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        try {
+            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
+            $Preset | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
