@@ -26,10 +26,12 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Finetune miner- and pool-configuration during runtime**
 - **Bind/exclude devices to/from specific algorithm and miners**
 - **Define pool's algorithms and coins**
-- **Switch MSI Afterburner profiles per miner**
+- **Switch MSI Afterburner profiles per miner/algorithm**
+- **Use unlimited custom overclocking profiles per miner/algorithm**
 - **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0)**
 - **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
+- **Full automatic update**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 
 ## REQUIRED PRE-REQUESITES
@@ -37,6 +39,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 1. Install PowerShell 6: [Download Installer for version 6.0.4](https://github.com/PowerShell/PowerShell/releases/download/v6.0.4/PowerShell-6.0.4-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 399.07](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.8.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
@@ -47,7 +50,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 2. Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
 
-3. Right-click "Start.bat", choose "Run as administrator".  Two windows will start, one contains RainbowMiner and the other will show the output of the running miners.
+3. Right-click "Start.bat", choose "Run as administrator".
 <details>
 <summary>If windows prompts with "Windows protected your PC", click on "More info", then "Run anyway"</summary>
 
@@ -71,7 +74,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 Done!
 
 <details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
-<details><summary>Valid algorithms</summary> Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
+<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
 
 
 ## HOTKEYS
@@ -186,12 +189,25 @@ The new numbers (16x5, 20x9, ..) describe the number of bits matched in each rou
 
 RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5
 
+## OVERCLOCKING
 
-## MSI AFTERBURNER CONFIGURATION
+There are two ways to adjust overclocking values in RainbowMiner:
+- using MSI Afterburner profiles: recommended for mining rigs with identical GPUs, only
+- using custom overclocking profiles: recommended for mining rigs with mixed GPUs
+
+The selection is simple:
+- if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the Configuration->Common)
+- if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the Configuration->Common)
+- if you do not want anything of the above two, set both, "**EnableOCProfiles**" and "**MSIAprofile**" to "**0**"
+
+
+## MSI AFTERBURNER PROFILES
+
+Overclocking option, recommended for unique GPU mining rigs.
 
 ### Introduction
 
-MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during minining (miners.config.txt, fields "Profile"). RainbowMiner comes with some miner/algorithm presets, already.
+MSI Afterburner allows to configure up to five profiles. Each of which defines the exact overclocking parameters for any number of GPU. RainbowMiner will never change these values, but it can be defined for miners/algorithms/devices, that another profile than the default should be used during minining (miners.config.txt, fields "MSIAprofile"). RainbowMiner comes with some miner/algorithm presets, already.
 
 ### Enable Profile Switching
 
@@ -201,7 +217,7 @@ By default, the profile switching is disabled. To enable MSI Afterburner profile
 
 ### Explanation of operation
 
-RainbowMiner's default setup has already preset some Profile fields for the following algorithms (miners.config.txt, fields "Profile"):
+RainbowMiner's default setup has already preset some Profile fields for the following algorithms (miners.config.txt, fields "MSIAprofile"):
 - ClaymoreEthash-Keccak, NeoScrypt => Profile 3
 - Lyra2Re2, Lyra2z, X16r, X16s => Profile 4
 - ClaymoreEthash-Blake2s, ClaymoreEthash-Pascal => Profile 5
@@ -217,6 +233,23 @@ I recommend you set the following profile setup in MSI Afterburner, so that you 
 - Profile 5: max. core / reduced memory oc (e.g. +100/+350), recm. for claymore ethash-blake2s, claymore ethash-pascal
 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
+
+
+## CUSTOM OVERCLOCKING PROFILES
+
+Recommended for mixed GPU mining rigs.
+
+### Introduction
+
+Each miner/device/algorithm combination can have it's own overclocking values set by RainbowMiner. To enable: set "**EnableOCProfiles**" to "**1**" in your config.txt or use the Configuration->Common.
+
+### First setup overclocking profiles
+
+Use the Configuration->OC-Profiles to edit and create different profiles. Values for PowerLimit, ThermalLimit, MemoryClockBoost and CoreClockBoost can be defined. You may name the profiles like you want. Of course you may also edit the ocprofiles.config.txt file directly.
+
+### Second, assign profiles to miner-device-algorithms
+
+The assignment is done, using either the Configuration->Miners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
 
 
 ## ADVANCED CONFIGURATION
@@ -259,6 +292,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **API_ID** = your MiningPoolHub USER ID (found at MPH on page "Edit account")
 - **API_Key** = your MiningPoolHub API KEY (found at MPH on page "Edit account")
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
+- **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
 
 #### Select devices ####
 
@@ -324,8 +358,9 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **RebootOnGPUFailure** = (currently disabled)
+- **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **MSIApath** = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
-- **MSIAprofile** = default MSI Afterburner profile (1-5) [default=2]
+- **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
 - **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
 - **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
@@ -427,13 +462,15 @@ Example:
                                     "MainAlgorithm":  "c11",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-i 21",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": ""
                                 },
                                 {
                                     "MainAlgorithm":  "keccak",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-m 2 -i 19,29",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": ""
                                 }
                             ],
        "CcminerAlexis78-GTX1070":  [
@@ -441,13 +478,15 @@ Example:
                                     "MainAlgorithm":  "c11",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-i 21",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": "Profile1"
                                 },
                                 {
                                     "MainAlgorithm":  "keccak",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-m 2 -i 19,29",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": ""
                                 }
                             ],
         "Sgminer-AMD":  [
@@ -455,13 +494,15 @@ Example:
                                     "MainAlgorithm":  "lyra2rev2",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "--gpu-threads 2 --worksize 128 --intensity d",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": ""
                                 },
                                 {
                                     "MainAlgorithm":  "neoscrypt",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "--gpu-threads 1 --worksize 64 --intensity 15",
-                                    "Profile":  ""
+                                    "MSIAprofile":  "",
+                                    "OCprofile": ""
                                 }
                             ],
         "Trex":  [
@@ -469,7 +510,7 @@ Example:
                                     "MainAlgorithm":  "\*",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "",
-                                    "Profile":  "",
+                                    "MSIAprofile":  "",
                                     "Penalty": "12.5"
                                 }
                             ]                                                                
@@ -478,11 +519,12 @@ Example:
 .. this adds extra command line parameters "-i 21" and "-m 2 -i 19,29" to
 - "CcminerAlexis78-NVIDIA": miner CcminerAlexis78 in LegacyMining mode, mine on all selected nvidia GPU, Algorithms c11 and keccak
 - "CcminerAlexis78-GTX1070": miner CcminerAlexis78 in non-LegacyMining mode on selected GPU devices with model name GTX1070, Algorithms c11 and keccak
+- "CcminerAlexis78-GTX1070": miner will use custom overclocking profile "Profile1"
 - "Sgminer-AMD": miner Sgminer in LegacyMining mode, mine on all selected amd GPU, Algorithms c11 and keccak
 - "MainAlgorithm": alogrithm, for which the extra configuration will be used
 - "SecondaryAlgorithm": secondary alogrithm, for which the extra configuration will be used (used for dual-mining Claymore, Excavator)
 - "Params": these are the extra parameters, that will be added to the miner call
-- "Profile": desired MSI Afterburner profile
+- "MSIAprofile": desired MSI Afterburner profile
 
 .. this adds a Penalty of 12.5% to all algorithms used by Trex
 
@@ -506,6 +548,39 @@ Example:
     }
 
 This configuration would bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner. Setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
+
+
+### Config\ocprofiles.config.txt
+
+This file contains all custom overclocking profiles. These profiles can be assigned by name to miners in file Config\miners.config.txt, field "OCprofile".
+
+Example:
+
+    {
+      "Profile1": {
+        "PowerLimit": 80,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "*",
+        "CoreClockBoost": "*"
+      },
+      "Profile2": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "400",
+        "CoreClockBoost": "100"
+      },
+      "Profile3": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "200",
+        "CoreClockBoost": "100"
+      }
+    }
+
+- PowerLimit: in percent, set to 0, if you do not want this to be changed
+- ThermalLimit: in °C, set to 0, if you do not want this to be changed
+- MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
+- CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 
 
 ## CREDITS
