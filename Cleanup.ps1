@@ -46,6 +46,17 @@ try {
             $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
         }
     }
+    if ($Version -le (Get-Version "3.8.4.4")) {       
+        $cpus = @(Get-CimInstance -ClassName CIM_Processor | Select-Object -Unique -ExpandProperty Name | Foreach-Object {[String]$($_ -replace '\(TM\)|\(R\)|([a-z]+?-Core)' -replace "[^A-Za-z0-9]+" -replace "Intel|AMD|CPU|Processor")})
+        $MinersSave = [PSCustomObject]@{}
+        $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $MinersActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {            
+            $MinersSave | Add-Member ($_.Name -replace "($($cpus -join '|'))","CPU") $_.Value
+        }
+        $MinersActualSave = [PSCustomObject]@{}
+        $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+        $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+    }
     "Cleaned $ChangesTotal elements"
 }
 catch {

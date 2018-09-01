@@ -11,6 +11,7 @@ $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
 $URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0/ethminer-0.15.0-Windows.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
+$DevFee = 0.0
 
 $Devices = @($Devices.NVIDIA) + @($Devices.AMD) 
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in system
@@ -25,12 +26,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD","NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD","NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -66,7 +69,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Claymore"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
                 ManualUri = $ManualUri
             }
         }

@@ -11,6 +11,7 @@ $Path = ".\Bin\Equihash-BMiner\bminer.exe"
 $URI = "https://www.bminercontent.com/releases/bminer-lite-v10.2.0-c698b5f-amd64.zip"
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
+$DevFee = 2.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -39,13 +40,15 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
-        Coins = $Coins
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
+		Coins     = @($Coins.PSObject.Properties.Name)
     }
     return
 }
@@ -92,7 +95,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
                             API = "Bminer"
                             Port = $Miner_Port
-                            URI = $Uri
+                            Uri = $Uri
                             DevFee = $_.DevFee
                             ManualUri = $ManualUri
                         }
@@ -107,7 +110,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                         HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
                         API = "Bminer"
                         Port = $Miner_Port
-                        URI = $Uri
+                        Uri = $Uri
                         DevFee = $_.DevFee
                         ManualUri = $ManualUri
                     }
@@ -126,7 +129,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     }
                     API = "Bminer"
                     Port = $Miner_Port
-                    URI = $Uri
+                    Uri = $Uri
                     DevFee = [PSCustomObject]@{
                         ($MainAlgorithm_Norm) = $_.DevFee
                         ($SecondAlgorithm_Norm) = 0

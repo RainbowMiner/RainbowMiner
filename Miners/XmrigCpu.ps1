@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
 $Uri = "https://github.com/xmrig/xmrig/releases/download/v2.6.4/xmrig-2.6.4-msvc-win64.zip"
 $Port = "521{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.CPU
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
@@ -33,12 +34,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("CPU")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("CPU")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -65,8 +68,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
-                URI       = $Uri
-                DevFee    = 1.0
+                Uri       = $Uri
+                DevFee    = $DevFee
                 ManualUri = $ManualUri
             }
         }

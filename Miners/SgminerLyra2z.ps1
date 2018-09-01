@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\Lyra2z-AMD\sgminer.exe"
 $Uri = "https://github.com/djm34/sgminer-msvc2015/releases/download/v0.3/kernel.rar"
 $Port = "403{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -20,12 +21,14 @@ $Commands = [PSCustomObject[]]@(
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -55,8 +58,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Xgminer"
                 Port = $Miner_Port
-                URI = $Uri
-                DevFee = 1.0
+                Uri = $Uri
+                DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

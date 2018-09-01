@@ -11,6 +11,7 @@ $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.7-srbminer/SRBMiner-CN-V1-6-7.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
+$DevFee = 0.85
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -65,12 +66,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -133,8 +136,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "SrbMiner"
                 Port      = $Miner_Port
-                URI       = $Uri
-                DevFee    = 0.85
+                Uri       = $Uri
+                DevFee    = $DevFee
                 ManualUri = $ManualUri
             }
         }

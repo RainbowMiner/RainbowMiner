@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\CryptoNight-Claymore-Cpu\NsCpuCNMiner64.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0-claymorecpu/claymore_cryptonight_cpu_4.0.zip"
 $Port = "520{0:d2}"
+$DevFee = 1.5
 
 $Devices = $Devices.CPU
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
@@ -23,12 +24,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("CPU")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("CPU")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -55,7 +58,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
+				DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

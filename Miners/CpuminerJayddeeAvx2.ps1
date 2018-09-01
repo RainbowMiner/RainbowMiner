@@ -11,6 +11,7 @@ $Path = ".\Bin\CPU-JayDDee\cpuminer-avx2.exe"
 $Uri = "https://github.com/JayDDee/cpuminer-opt/files/1996977/cpuminer-opt-3.8.8.1-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "502{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.CPU
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
@@ -104,12 +105,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("CPU")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("CPU")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -136,9 +139,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
                 FaultTolerance = 0.5 #$_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
+				DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-CcminerBalloon\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-ccminerballoon/ccminer.balloon.v2.3.monkins9.2.zip"
 $Port = "104{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -22,12 +23,14 @@ $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -53,10 +56,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
             API = "Ccminer"
             Port = $Miner_Port
-            URI = $Uri
+            Uri = $Uri
             FaultTolerance = $_.FaultTolerance
             ExtendInterval = $_.ExtendInterval
-            DevFee = 0.0
+            DevFee = $DevFee
             Penalty = 38
         }
     }

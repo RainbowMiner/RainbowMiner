@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\AMD-NiceHash\sgminer.exe"
 $Uri = "https://github.com/nicehash/sgminer/releases/download/5.6.1/sgminer-5.6.1-nicehash-51-windows-amd64.zip"
 $Port = "400{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -42,12 +43,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -75,8 +78,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Xgminer"
                 Port = $Miner_Port
-                URI = $Uri
-                DevFee = 1.0
+                Uri = $Uri
+                DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

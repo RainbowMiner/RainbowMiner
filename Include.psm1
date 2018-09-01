@@ -993,7 +993,7 @@ function Get-Device {
                 Type = "Cpu"
                 Type_Index = $CPUIndex
                 CIM = $CPUInfo
-                Model = [String]$($CPUinfo.Name -replace '\(TM\)|\(R\)|([a-z]+?-Core)' -replace "[^A-Za-z0-9]+" -replace "Intel|AMD|CPU|Processor")
+                Model = "CPU"
                 Model_Name = $CPUInfo.Name
             }
 
@@ -2096,7 +2096,9 @@ function Set-MinersConfigDefault {
         [Parameter(Mandatory = $True)]
         [String]$PathToFile,
         [Parameter(Mandatory = $False)]
-        [Switch]$Force = $false
+        [Switch]$Force = $false,
+        [Parameter(Mandatory = $False)]
+        [Switch]$UseDefaultParams = $false
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
@@ -2104,35 +2106,58 @@ function Set-MinersConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $AllDevices = Get-Device "gpu"
-            foreach ($a in @("NVIDIA","AMD")) {
-                [System.Collections.ArrayList]$SetupDevices = @()
-                $Devices = @(Select-Device $AllDevices -Type $a | Select-Object Model,Model_Name,Name)
-                $Devices | Select-Object -ExpandProperty Model -Unique | Foreach-Object {$SetupDevices.Add($_) > $null}
-                Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}
-                $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+            $AllDevices = Get-Device "cpu","gpu"
+            $AllMiners = if (Test-Path "Miners") {@(Get-ChildItemContent "Miners" -Parameters @{Pools = @{}; Stats = @{}; Config = @{InfoOnly=$true}; Devices = @{}} | Select-Object -ExpandProperty Content)}
+            foreach ($a in @("CPU","NVIDIA","AMD")) {
+                if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
+                else {
+                    $Devices = @($AllDevices | Where-Object {$_.Vendor -eq $a} | Select-Object Model,Model_Name,Name)
+                    [System.Collections.ArrayList]$SetupDevices = @($Devices | Select-Object -ExpandProperty Model -Unique)
+                    if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
+                }
+                
+                $Miners = @($AllMiners | Where-Object Type -icontains $a)
+                foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($_.Name)-$($SetupDevice)" @($_.Value | Sort-Object MainAlgorithm,SecondaryAlgorithm)
+                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @($Miner.Commands | Foreach-Object {[PSCustomObject]@{MainAlgorithm=Get-Algorithm $_.MainAlgorithm;SecondaryAlgorithm=Get-Algorithm $_.SecondaryAlgorithm;Params = "";MSIAprofile = "";OCprofile = ""}})
                     }
                 }
-                $Preset.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+
+                $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                     $Name = $_.Name
-                    $Value = @($_.Value)
-                    if ($Done.$Name -ne $null) {
-                        $NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm -PassThru | Where-Object SideIndicator -eq '<=' | Foreach-Object {$_.PSObject.Properties.Remove("SideIndicator");$_} | Select-Object)
-                        if ($NewValues.count) {$Value += $NewValues}
+                    $Value = @($_.Value | Foreach-Object {if (-not $UseDefaultParams) {$_.Params = ''};if ($_.MainAlgorithm -ne '*') {$_.MainAlgorithm=Get-Algorithm $_.MainAlgorithm};$_ | Add-Member SecondaryAlgorithm (Get-Algorithm $_.SecondaryAlgorithm) -Force -PassThru} | Select-Object)
+                    if ($Miners | Where-Object Name -eq $Name) {
+                        foreach ($SetupDevice in $SetupDevices) {
+                            $Name = "$($Name)-$($SetupDevice)"
+                            if ($Done.$Name -ne $null) {
+                                $NewValues = @(Compare-Object $Done.$Name $Setup."$($_.Name)" -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                if ($NewValues.count) {$Value += $NewValues}
+                            }
+                            $Done | Add-Member $Name $Value -Force
+                        }
                     }
-                    $Done | Add-Member $Name ($Value | Sort-Object MainAlgorithm,SecondaryAlgorithm) -Force
                 }
             }
-            $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+
+            $Preset.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+                $Name = $_.Name
+                $Value = @($_.Value | Foreach-Object {if ($_.MainAlgorithm -ne '*') {$_.MainAlgorithm=Get-Algorithm $_.MainAlgorithm};$_ | Add-Member SecondaryAlgorithm (Get-Algorithm $_.SecondaryAlgorithm) -Force -PassThru} | Select-Object)
+                if ($Done.$Name -ne $null) {
+                    $NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                    if ($NewValues.Count) {$Value += $NewValues}
+                }
+                $Done | Add-Member $Name $Value -Force
+            }
+
+            $DoneSave = [PSCustomObject]@{}
+            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+            $DoneSave | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
         }
     }
 }
-
 function Set-DevicesConfigDefault {
     [CmdletBinding()]
     param(

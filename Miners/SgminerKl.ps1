@@ -11,6 +11,7 @@ $Path = ".\Bin\AMD-SgminerKl\sgminer.exe"
 $Uri = "https://github.com/KL0nLutiy/sgminer-kl/releases/download/kl-1.0.5fix/sgminer-kl-1.0.5_fix-windows_x64.zip"
 $ManualUri = "https://github.com/KL0nLutiy"
 $Port = "402{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -36,12 +37,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -70,7 +73,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API        = "Xgminer"
                 Port       = $Miner_Port
                 URI        = $Uri
-                DevFee     = 1.0
+                DevFee     = $DevFee
                 ManualUri = $ManualUri
             }
         }

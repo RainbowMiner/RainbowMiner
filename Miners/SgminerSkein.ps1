@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\Skein-AMD\sgminer.exe"
 $Uri = "https://github.com/miningpoolhub/sgminer/releases/download/5.3.1/Release.zip"
 $Port = "404{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -22,12 +23,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -55,10 +58,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Xgminer"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
                 PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
                 PrerequisiteURI = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
-                DevFee = 1.0
+                DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

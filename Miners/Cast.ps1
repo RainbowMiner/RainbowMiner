@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
 $Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_130.zip"
 $Port = "306{0:d2}"
+$DevFee = 1.5
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -29,12 +30,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -62,7 +65,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 API       = "Cast"
                 Port      = $Miner_Port
                 URI       = $Uri
-                DevFee    = 1.5
+                DevFee    = $DevFee
                 ManualUri = $ManualUri
             }
         }

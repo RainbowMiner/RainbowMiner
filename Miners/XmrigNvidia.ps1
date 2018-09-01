@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
 $Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.7.0-beta/xmrig-nvidia-2.7.0-beta-cuda9-win64.zip"
 $Port = "303{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -33,12 +34,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -66,8 +69,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
-                URI       = $Uri
-                DevFee    = 1.0
+                Uri       = $Uri
+                DevFee    = $DevFee
                 ManualUri = $ManualUri
             }
         }

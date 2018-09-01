@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-TPruvotx64\ccminer-x64.exe"
 $Uri = "https://github.com/tpruvot/ccminer/releases/download/2.3-tpruvot/ccminer-2.3-cuda9.7z"
 $Port = "115{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -91,12 +92,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -124,7 +127,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                     API = "Ccminer"
                     Port = $Miner_Port
-                    URI = $Uri
+                    Uri = $Uri
+					DevFee = $DevFee
                     FaultTolerance = $_.FaultTolerance
                     ExtendInterval = $_.ExtendInterval
                     ManualUri = $ManualUri

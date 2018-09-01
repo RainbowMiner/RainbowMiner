@@ -88,12 +88,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD","NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD","NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -154,7 +156,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     HashRates   = $Miner_HashRates
                     API         = "Claymore"
                     Port        = $Miner_Port
-                    URI         = $Uri
+                    Uri         = $Uri
                     DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
                     ManualUri   = $ManualUri
                 }

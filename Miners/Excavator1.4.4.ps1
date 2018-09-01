@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-Excavator1.4.4\excavator.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.4a-excavator/excavator_v1.4.4a_NVIDIA_Win64.zip"
 $Port = "31000"
+$DevFee = 0.0
 
 if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
@@ -44,12 +45,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -83,7 +86,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     HashRates        = [PSCustomObject]@{$Main_Algorithm_Norm = $Stats."$($Miner_Name)_$($Main_Algorithm_Norm)_HashRate".Week}
                     API              = "Excavator144"
                     Port             = $Miner_Port
-                    URI              = $Uri
+                    Uri              = $Uri
                     ShowMinerWindow  = $True
                     PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
                     PrerequisiteURI  = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
@@ -104,7 +107,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                         HashRates        = [PSCustomObject]@{$Main_Algorithm_Norm = $Stats."$($Miner_Name)_$($Main_Algorithm_Norm)_HashRate".Week; $Secondary_Algorithm_Norm = $Stats."$($Miner_Name)_$($Secondary_Algorithm_Norm)_HashRate".Week}
                         API              = "Excavator144"
                         Port             = $Miner_Port
-                        URI              = $Uri
+                        Uri              = $Uri
                         ShowMinerWindow  = $True
                         PrerequisitePath = "$env:SystemRoot\System32\msvcr120.dll"
                         PrerequisiteURI  = "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"

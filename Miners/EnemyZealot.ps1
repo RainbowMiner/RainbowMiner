@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.17-enemyzealot/z-enemy.1-17-cuda9.2_x64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
 $Port = "302{0:d2}"
+$DevFee = 1.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -39,12 +40,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -71,10 +74,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                 API = "Ccminer"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
-                DevFee = 1.0
+                DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }

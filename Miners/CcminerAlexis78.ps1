@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\NVIDIA-Alexis78\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-ccmineralexis78/ccmineralexis78_1.2.7z"
 $Port = "102{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -62,12 +63,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -94,7 +97,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                 API = "Ccminer"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
+				DevFee = $DevFee
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
                 ManualUri = $ManualUri

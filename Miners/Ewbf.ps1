@@ -11,6 +11,7 @@ $Path = ".\Bin\Equihash-EWBF\miner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5-ewbf/EWBF.Equihash.miner.v0.5.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"
 $Port = "311{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -24,12 +25,14 @@ $Commands = [PSCustomObject[]]@(
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -81,8 +84,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
                     API = "DSTM"
                     Port = $Miner_Port
-                    DevFee = 0
-                    URI = $URI
+                    DevFee = $DevFee
+                    Uri = $Uri
                     ExtendInterval = 2
                     ManualUri = $ManualUri
                 }

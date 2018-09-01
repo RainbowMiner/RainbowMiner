@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.4.7-fireice/xmr-stak-win64.zip"
 $Port = "308{0:d2}"
+$DevFee = 0.0
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""} #CryptoNight
@@ -28,12 +29,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
-        Vendor = @("AMD","CPU","NVIDIA")
-        Name = $Name
-        Path = $Path
-        Uri = $Uri
-        Port = $Port
-        Commands = $Commands
+        Type      = @("AMD","CPU","NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
     }
     return
 }
@@ -111,8 +114,8 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
                     HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                     API       = "XMRig"
                     Port      = $Miner_Port
-                    URI       = $Uri
-                    DevFee    = 0.0
+                    Uri       = $Uri
+                    DevFee    = $DevFee
                     ManualUri = $ManualUri
                 }
             }
