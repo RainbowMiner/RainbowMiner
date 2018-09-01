@@ -192,12 +192,12 @@ RainbowMiner's build-in hash table makes it possible for you, to use many differ
 ## OVERCLOCKING
 
 There are two ways to adjust overclocking values in RainbowMiner:
-- using MSI Afterburner profiles: recommended for mining rigs with identical GPUs, only
-- using custom overclocking profiles: recommended for mining rigs with mixed GPUs
+- Option1: MSI Afterburner profiles, recommended for **mining rigs with max. 6 identical GPUs**
+- Option2: custom overclocking profiles, recommended for mining rigs with **more than 6 or mixed GPUs**
 
 The selection is simple:
-- if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the [C]onfiguration->[C]ommon)
-- if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the [C]onfiguration->[C]ommon)
+- Option1: if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the [C]onfiguration->[C]ommon)
+- Option2: if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the [C]onfiguration->[C]ommon) and (important!) set a default profile for each GPU group
 - if you do not want anything of the above two, set both, "**EnableOCProfiles**" and "**MSIAprofile**" to "**0**"
 
 
@@ -248,13 +248,17 @@ Each miner/device/algorithm combination can have it's own overclocking values se
 You can edit the file directly: put the name of your custom default profile into field "**DefaultOCprofile**"
 Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
-### First setup overclocking profiles
+### 1. setup overclocking profiles
 
 Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
-### Second, assign profiles to miner-device-algorithms
+### 2. set one default profile for each GPU group ###
+
+With the help of [C]onfiguration->[D]evices it is very easy to choose a default profile for each GPU group used. The values can be edited directly in file devices.config.txt, too. Put the names of the default profiles into the property "DefaultOCprofile".
+
+### 3. assign profiles to miner-device-algorithms
 
 The assignment is done, using either [C]onfiguration->[M]iners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
 
