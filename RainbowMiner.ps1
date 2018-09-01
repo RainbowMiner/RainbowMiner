@@ -105,6 +105,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableOCProfiles = $false, # if set to $true, the build in overclocking profiles will be used
     [Parameter(Mandatory = $false)]
+    [Switch]$EnableOCVoltage = $false, # if set to $true, overclocking setting include voltage
+    [Parameter(Mandatory = $false)]
     [Switch]$EnableAutoUpdate = $false # if set to $true, RainbowMiner will trigger the update process, as soon as a new release is published
 )
 
@@ -165,7 +167,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableAutoUpdate")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate")
 }
 
 #Cleanup the log
@@ -1409,6 +1411,7 @@ while ($true) {
                                         $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
 
                                         $OCProfileSetupSteps.AddRange(@("powerlimit","thermallimit","coreclockboost","memoryclockboost")) > $null
+                                        if (Get-Yes $ConfigActual.EnableOCVoltage) {$OCProfileSetupSteps.Add("lockvoltagepoint") >$null}
                                         $OCProfileSetupSteps.Add("save") > $null
                                         
                                         do { 
@@ -1436,7 +1439,14 @@ while ($true) {
                                                         }
                                                         $OCProfileConfig.CoreClockBoost = $p                                                            
                                                     }
-
+                                                    "lockvoltagepoint" {
+                                                        $p = Read-HostString -Prompt "Enter a value in µV to lock voltage or `"0`" to unlock, `"*`" to never set" -Default $OCProfileConfig.LockVoltagePoint -Characters "0-9*+-" -Mandatory | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                        if ($p -ne '*') {
+                                                            $p = $p -replace '[^0-9]+'
+                                                            if ($p -eq '') {Write-Host "This is not a correct number" -ForegroundColor Yellow; throw "goto lockvoltagepoint"}
+                                                        }
+                                                        $OCProfileConfig.LockVoltagePoint = $p                                                            
+                                                    }
                                                     "save" {
                                                         Write-Host " "
                                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -1555,23 +1565,6 @@ while ($true) {
 
     $MSIAenabled = -not $Config.EnableOCProfiles -and $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
-    #Check for devices config
-    Set-DevicesConfigDefault $DevicesConfigFile
-    if (Test-Path $DevicesConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Devices -or (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["DevicesConfigFile"]) {        
-            $Updatetracker["Config"]["DevicesConfigFile"] = (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Devices (Get-ChildItemContent $DevicesConfigFile).Content -Force
-            foreach ($p in @($Config.Devices.PSObject.Properties.Name)) {
-                $Config.Devices.$p | Add-Member Algorithm @(($Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                $Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
-                    if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
-                }
-                $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
-            }
-        }
-    }
-
     #Check for oc profile config
     Set-OCProfilesConfigDefault $OCProfilesConfigFile
     if (Test-Path $OCProfilesConfigFile) {
@@ -1580,6 +1573,25 @@ while ($true) {
             $Config | Add-Member OCProfiles (Get-ChildItemContent $OCProfilesConfigFile).Content -Force
         }
     }   
+
+    #Check for devices config
+    Set-DevicesConfigDefault $DevicesConfigFile
+    if (Test-Path $DevicesConfigFile) {
+        if ($ConfigCheckFields -or -not $Config.Devices -or (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["DevicesConfigFile"]) {        
+            $Updatetracker["Config"]["DevicesConfigFile"] = (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Devices (Get-ChildItemContent $DevicesConfigFile).Content -Force
+            $OCprofileFirst = $Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
+            foreach ($p in @($Config.Devices.PSObject.Properties.Name)) {
+                $Config.Devices.$p | Add-Member Algorithm @(($Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                $Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
+                    if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
+                }
+                $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
+                if ($p -ne "CPU" -and -not $Config.Devices.$p.DefaultOCprofile) {$Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force}
+            }
+        }
+    }
 
     #Check for pool config
     Set-PoolsConfigDefault $PoolsConfigFile
@@ -1674,6 +1686,7 @@ while ($true) {
 
             #Load information about the devices
             $Devices = @(Get-Device $Config.DeviceName | Select-Object)
+            $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
             $DevicesByTypes = [PSCustomObject]@{
                 NVIDIA = @(Select-Device $Devices "NVIDIA")
                 AMD = @(Select-Device $Devices "AMD")
@@ -1725,17 +1738,22 @@ while ($true) {
     if (Test-Path $MinersConfigFile) {
         if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
             $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
             foreach ($CcMiner in @((Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties)) {
                 [String[]]$CcMinerName_Array = @($CcMiner.Name -split '-')
                 if ($CcMinerName_Array.Count -gt 1 -and $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])") {$CcMiner.Name = $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])"}
+                $CcMinerName_Array = @($CcMiner.Name -split '-')
+                if ($Config.DeviceModel -inotcontains $CcMinerName_Array[1] -or ($CcMinerName_Array.Count -gt 2 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[2])) {continue}
+                
                 foreach($p in $CcMiner.Value) {
-                    $CcMinerName = $CcMiner.Name
-                    if ($p.MainAlgorithm -ne '*') {
-                        $CcMinerName += "-$(Get-Algorithm $p.MainAlgorithm)"
-                        if ($p.SecondaryAlgorithm) {$CcMinerName += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                    if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $p.$q.Trim() -ne "") {$true;break}})) {
+                        $CcMinerName = $CcMiner.Name
+                        if ($p.MainAlgorithm -ne '*') {
+                            $CcMinerName += "-$(Get-Algorithm $p.MainAlgorithm)"
+                            if ($p.SecondaryAlgorithm) {$CcMinerName += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                        }
+                        $Config.Miners | Add-Member -Name $CcMinerName -Value $p -MemberType NoteProperty -Force
                     }
-                    $Config.Miners | Add-Member -Name $CcMinerName -Value $p -MemberType NoteProperty -Force
                 }
             }
         }
@@ -1922,7 +1940,9 @@ while ($true) {
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     $AllMiners = if (Test-Path "Miners") {
-        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {
+        $ConfigMini = [PSCustomObject]@{}
+        $Config.PSObject.Properties | Where-Object {@("Pools","Miners","Devices","OCProfiles") -inotcontains $_.Name} | Foreach-Object {$ConfigMini | Add-Member $_.Name $_.Value}
+        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $ConfigMini; Devices = $DevicesByTypes} | ForEach-Object {
             if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.Content.DeviceModel) {$_.Content.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.Content.DeviceModel)")}
             $p = @($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
             $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=$p;PowerDraw=$Stats."$($_.Name)_$($p[0])_HashRate".PowerDraw_Average} -PassThru -Force
@@ -2362,7 +2382,7 @@ while ($true) {
                 }
             } elseif ($Config.EnableOCprofiles) {
                 Start-Sleep -Milliseconds 500
-                $_.SetOCprofile($Config.OCprofiles)
+                $_.SetOCprofile($Config)
                 Start-Sleep -Milliseconds 500
             }
             if ($_.Speed -contains $null) {

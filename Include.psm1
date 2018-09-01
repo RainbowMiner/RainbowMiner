@@ -1041,7 +1041,7 @@ function Start-Afterburner {
     try {
         $Script:abControl = New-Object MSI.Afterburner.ControlMemory
     } catch {
-        Write-Log "Failed to create MSI Afterburner Control object. PowerLimits will not be available"
+        Write-Log "Failed to create MSI Afterburner Control object. Overclocking non-NVIDIA devices will not be available."
         $Script:abControl = $false
     }
 
@@ -1691,15 +1691,23 @@ class Miner {
         Write-Log "OC reset for $($this.BaseName)"
     }
 
-    SetOCprofile($Profiles) {        
-        if ($this.OCprofile.Count -eq 0) {return}
+    SetOCprofile($Config) {        
+        if ($this.OCprofile.Count -eq 0 -or $this.DeviceModel -like 'CPU*') {return}
 
-        try {
-            $Script:abMonitor.ReloadAll()
-            $Script:abControl.ReloadAll()
-        } catch {        
-            Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
-            return
+        [System.Collections.ArrayList]$applied = @()
+        [System.Collections.ArrayList]$NvCmd = @()
+
+        $this.OCprofileBackup.Clear()
+        $Vendor = $Script:CachedDevices | Where-Object @($this.OCprofiles.Keys) -icontains Model | Select-Object -ExpandProperty Vendor -Unique
+
+        if ($Vendor -ne "NVIDIA") {
+            try {
+                $Script:abMonitor.ReloadAll()
+                $Script:abControl.ReloadAll()
+            } catch {        
+                Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
+                return
+            }
         }
 
         $Pattern = @{
@@ -1708,18 +1716,26 @@ class Miner {
             Intel  = "*Intel*"
         }
 
-        $this.OCprofileBackup.Clear()
-
-        [System.Collections.ArrayList]$applied = @()
         foreach ($DeviceModel in $this.OCprofile.Keys) {
-            if ($Profiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
+            if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
                 $DeviceIds = @($Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
-                $Vendor = $Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Vendor -Unique
-                $Profile = $Profiles."$($this.OCprofile.$DeviceModel)"
+                $Profile = $Config.OCprofiles."$($this.OCprofile.$DeviceModel)"
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
-                $Profile.MemoryClockBoost =$Profile.MemoryClockBoost -replace '[^0-9\-]+'                
+                $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
+                $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
+                if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = '*'}
 
-                if ($Pattern.$Vendor -ne $null) {
+                $applied_any = $false
+
+                if ($Vendor -eq "NVIDIA") {
+                    foreach($DeviceId in $DeviceIds) {
+                        if ($Profile.PowerLimit -gt 0) {$NvCmd.Add("-setPowerTarget:$($DeviceId),$([math]::max([math]::min($Profile.PowerLimit,200),20))") >$null;$applied_any=$true}
+                        if ($Profile.ThermalLimit -gt 0) {$NvCmd.Add("-setTempTarget:$($DeviceId),0,$([math]::max([math]::min($Profile.ThermalLimit,95),50))") >$null;$applied_any=$true}
+                        if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$')  {$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$([int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500))*12500") >$null;$applied_any=$true}
+                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setBaseClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.CoreClockBoost))") >$null;$applied_any=$true}
+                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setMemoryClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.CoreClockBoost))") >$null;$applied_any=$true}
+                    }
+                } elseif ($Pattern.$Vendor -ne $null) {
                     $DeviceId = 0
                     $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
                         if ($DeviceId -in $DeviceIds) {
@@ -1729,17 +1745,18 @@ class Miner {
                             try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}} catch {Write-Log -Level Warn $_.Exception.Message}
                             try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {Write-Log -Level Warn $_.Exception.Message}
                             try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {Write-Log -Level Warn $_.Exception.Message}
-                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null}
+                            if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
+                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null;$applied_any=$true}
                         }
                         $DeviceId++
-                    }
-                    $applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit) %"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit) °C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"})") > $null
+                    }                 
                 }
+                if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
             }
         }
 
         if ($applied.Count) {
-            $Script:abControl.CommitChanges()
+            if ($Vendor -eq "NVIDIA") {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd} else {$Script:abControl.CommitChanges()}
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
         }
     }
@@ -2105,6 +2122,7 @@ function Set-MinersConfigDefault {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Done = [PSCustomObject]@{}
+            $Algo = [hashtable]@{}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "cpu","gpu"
             $AllMiners = if (Test-Path "Miners") {@(Get-ChildItemContent "Miners" -Parameters @{Pools = @{}; Stats = @{}; Config = @{InfoOnly=$true}; Devices = @{}} | Select-Object -ExpandProperty Content)}
@@ -2116,41 +2134,40 @@ function Set-MinersConfigDefault {
                     if ($SetupDevices.Count -gt 1) {Get-DeviceSubsets $Devices | Foreach-Object {$SetupDevices.Add($_.Model -join '-') > $null}}
                 }
                 
-                $Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
+                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @($Miner.Commands | Foreach-Object {[PSCustomObject]@{MainAlgorithm=Get-Algorithm $_.MainAlgorithm;SecondaryAlgorithm=Get-Algorithm $_.SecondaryAlgorithm;Params = "";MSIAprofile = "";OCprofile = ""}})
+                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @($Miner.Commands | Foreach-Object {[PSCustomObject]@{MainAlgorithm=$(if (-not $Algo[$_.MainAlgorithm]) {$Algo[$_.MainAlgorithm]=Get-Algorithm $_.MainAlgorithm};$Algo[$_.MainAlgorithm]);SecondaryAlgorithm=$(if ($_.SecondaryAlgorithm) {if (-not $Algo[$_.SecondaryAlgorithm]) {$Algo[$_.SecondaryAlgorithm]=Get-Algorithm $_.SecondaryAlgorithm};$Algo[$_.SecondaryAlgorithm]});Params = "";MSIAprofile = "";OCprofile = ""}})
                     }
                 }
 
-                $Setup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-                    $Name = $_.Name
-                    $Value = @($_.Value | Foreach-Object {if (-not $UseDefaultParams) {$_.Params = ''};if ($_.MainAlgorithm -ne '*') {$_.MainAlgorithm=Get-Algorithm $_.MainAlgorithm};$_ | Add-Member SecondaryAlgorithm (Get-Algorithm $_.SecondaryAlgorithm) -Force -PassThru} | Select-Object)
-                    if ($Miners | Where-Object Name -eq $Name) {
+                foreach ($Name in @($Setup.PSObject.Properties.Name)) {
+                    if ($MinerNames.Contains($Name)) {
+                        $Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]})};$v})
                         foreach ($SetupDevice in $SetupDevices) {
-                            $Name = "$($Name)-$($SetupDevice)"
-                            if ($Done.$Name -ne $null) {
-                                $NewValues = @(Compare-Object $Done.$Name $Setup."$($_.Name)" -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                            $NameKey = "$($Name)-$($SetupDevice)"
+                            if ($Done.$NameKey -ne $null) {
+                                $NewValues = @(Compare-Object $Done.$NameKey $Setup.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                 if ($NewValues.count) {$Value += $NewValues}
-                            }
-                            $Done | Add-Member $Name $Value -Force
+                                $Done | Add-Member $NameKey $Value -Force
+                            }                            
                         }
                     }
                 }
             }
 
-            $Preset.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
-                $Name = $_.Name
-                $Value = @($_.Value | Foreach-Object {if ($_.MainAlgorithm -ne '*') {$_.MainAlgorithm=Get-Algorithm $_.MainAlgorithm};$_ | Add-Member SecondaryAlgorithm (Get-Algorithm $_.SecondaryAlgorithm) -Force -PassThru} | Select-Object)
+            foreach ($Name in @($Preset.PSObject.Properties.Name)) {
                 if ($Done.$Name -ne $null) {
+                    $Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]})};$v})
                     $NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                     if ($NewValues.Count) {$Value += $NewValues}
+                    $Done.$Name = $Value
                 }
-                $Done | Add-Member $Name $Value -Force
             }
 
             $DoneSave = [PSCustomObject]@{}
-            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
             $DoneSave | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
         }
         catch{
@@ -2158,6 +2175,7 @@ function Set-MinersConfigDefault {
         }
     }
 }
+
 function Set-DevicesConfigDefault {
     [CmdletBinding()]
     param(
@@ -2172,7 +2190,7 @@ function Set-DevicesConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining","DefaultOCprofile")
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $AllDevices = Get-Device "cpu","gpu" | Select-Object -ExpandProperty Model -Unique
+            $AllDevices = Get-Device "cpu","nvidia","amd" | Select-Object -ExpandProperty Model -Unique
             foreach ($DeviceModel in $AllDevices) {
                 if (-not $Preset.$DeviceModel) {
                     if ($Setup.$DeviceModel) {
