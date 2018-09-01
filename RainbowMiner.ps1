@@ -375,10 +375,10 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","enableocprofiles","msia","msiapath","ethpillenable","enableautoupdate")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","enableautoupdate")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","enableocprofiles","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
                             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -720,6 +720,13 @@ while ($true) {
                                         "enableocprofiles" {
                                             $Config.EnableOCProfiles = Read-HostBool -Prompt "Enable custom overclocking profiles (MSI Afterburner profiles will be disabled)" -Default $Config.EnableOCProfiles | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
+                                        "enableocvoltage" {
+                                            if ($Config.EnableOCProfiles) {
+                                                $Config.EnableOCVoltage = Read-HostBool -Prompt "Enable custom overclocking voltage setting" -Default $Config.EnableOCVoltage | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $GlobalSetupStepStore = $false
+                                            }
+                                        }
                                         "enableautoupdate" {
                                             $Config.EnableAutoUpdate = Read-HostBool -Prompt "Enable automatic update, as soon as a new release is published" -Default $Config.EnableAutoUpdate | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
@@ -800,6 +807,7 @@ while ($true) {
                                             $ConfigActual | Add-Member CheckProfitability $(if (Get-Yes $Config.CheckProfitability){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member EthPillEnable $Config.EthPillEnable -Force
                                             $ConfigActual | Add-Member EnableOCProfiles $(if (Get-Yes $Config.EnableOCProfiles){"1"}else{"0"}) -Force
+                                            $ConfigActual | Add-Member EnableOCVoltage $(if (Get-Yes $Config.EnableOCVoltage){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member EnableAutoupdate $(if (Get-Yes $Config.EnableAutoupdate){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member Delay $Config.Delay -Force
 
@@ -1588,7 +1596,12 @@ while ($true) {
                     if ($Config.Devices.$p.$q -is [string]){$Config.Devices.$p.$q = if ($Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
                 }
                 $Config.Devices.$p | Add-Member DisableDualMining ($Config.Devices.$p.DisableDualMining -and (Get-Yes $Config.Devices.$p.DisableDualMining)) -Force
-                if ($p -ne "CPU" -and -not $Config.Devices.$p.DefaultOCprofile) {$Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force}
+                if ($p -ne "CPU" -and -not $Config.Devices.$p.DefaultOCprofile) {
+                    $Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
+                    if ($Config.EnableOCprofiles) {
+                        Write-Log -Level Warn "No default overclocking profile defined for `"$p`" in $($OCProfilesConfigFile). Using `"$OCprofileFirst`" for now!"
+                    }
+                }
             }
         }
     }
