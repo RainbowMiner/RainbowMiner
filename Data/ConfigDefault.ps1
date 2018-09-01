@@ -8,6 +8,7 @@
     UseTimeSync = $false
     MSIAprofile = 0
     EnableOCProfiles = $false
+    EnableOCVoltage = $false
     EnableAutoUpdate = $true
     Delay = 1
 }
