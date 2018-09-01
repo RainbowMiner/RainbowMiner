@@ -136,6 +136,7 @@ Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defe
 if ($UseTimeSync) {Test-TimeSync}
 
 $Timer = (Get-Date).ToUniversalTime()
+$NextReport = $Timer
 $StatEnd = $Timer
 $DecayStart = $Timer
 $DecayPeriod = 60 #seconds
@@ -192,20 +193,18 @@ Write-Host "Detecting devices .."
 $AllDevices = Get-Device "cpu","gpu"
 
 if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
-if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
-    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
-}
 
 Write-Host "Initialize configuration .."
 try {
     $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
     if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
     if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" -Force > $null}
-    if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}   
+    if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}    
+    if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
     if (-not (Test-Path $ConfigFile)) {
         $Parameters = @{VersionCompatibility=$Version}
         $MyCommandParameters | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
-        $Parameters | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8
+        Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
     } else {
         $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
         $ConfigForUpdate_changed = $false
@@ -213,7 +212,7 @@ try {
             if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
             elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
         }
-        if ($ConfigForUpdate_changed) {$ConfigForUpdate | ConvertTo-Json | Set-Content $ConfigFile -Encoding utf8}
+        if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
     }
     $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
         $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
@@ -222,6 +221,15 @@ try {
         $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
         $DevicesConfigFile = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
         $OCProfilesConfigFile = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
+
+        if (-not $psISE) {
+            $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
+            if (Test-Path $ConfigFile) {Copy-Item $ConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_$($ConfigFile_Name)"}
+            if (Test-Path $PoolsConfigFile) {Copy-Item $PoolsConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_pools.$($ConfigFile_Name)"}
+            if (Test-Path $MinersConfigFile) {Copy-Item $MinersConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_miners.$($ConfigFile_Name)"}
+            if (Test-Path $DevicesConfigFile) {Copy-Item $DevicesConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
+            if (Test-Path $OCProfilesConfigFile) {Copy-Item $OCProfilesConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
+        }
         
         # Create pools.config.txt if it is missing
         Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
@@ -266,7 +274,7 @@ try {
     }
 
     #write version to data
-    [PSCustomObject]@{Version=$Version} | ConvertTo-Json | Set-Content ".\Data\Version.json" -Encoding utf8
+    Set-ContentJson -PathToFile ".\Data\Version.json" -Data ([PSCustomObject]@{Version=$Version}) > $null
 }
 catch {
     Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
@@ -275,6 +283,10 @@ catch {
 
 Write-Host "Start afterburner library .."
 Start-Afterburner
+
+if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction SilentlyContinue) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
+    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
+}
 
 #[console]::TreatControlCAsInput = $true
 
@@ -970,7 +982,7 @@ while ($true) {
 
                                                 $MinersActualSave = [PSCustomObject]@{}
                                                 $MinersActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersActual.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-                                                $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+                                                Set-ContentJson -PathToFile $MinersConfigFile -Data $MinersActualSave > $null
 
                                                 Write-Host " "
                                                 Write-Host "Changes written to Miner configuration. " -ForegroundColor Cyan
@@ -1036,7 +1048,7 @@ while ($true) {
                                                 API_Key = "`$API_Key"
                                             }
                                         ) -Force
-                                        $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8 
+                                        Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                                     }
 
                                     [hashtable]$Pool_Config = @{Name = $Pool_Name}
@@ -1197,7 +1209,7 @@ while ($true) {
                                                         $PoolsActualSave = [PSCustomObject]@{}
                                                         $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$PoolsActualSave | Add-Member $_ ($PoolsActual.$_) -Force}
 
-                                                        $PoolsActualSave | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding utf8
+                                                        Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActualSave > $null
 
                                                         Write-Host " "
                                                         Write-Host "Changes written to pool configuration. " -ForegroundColor Cyan
@@ -1262,7 +1274,7 @@ while ($true) {
 
                                     if (-not $DevicesActual.$Device_Name) {
                                         $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""}) -Force
-                                        $DevicesActual | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding utf8 
+                                        Set-ContentJson -PathToFile $DevicesConfigFile -Data $DevicesActual > $null
                                     }
 
                                     if ($Device_Name) {
@@ -1310,8 +1322,8 @@ while ($true) {
                                                         $DevicesActual | Add-Member $Device_Name $DeviceConfig -Force
                                                         $DevicesActualSave = [PSCustomObject]@{}
                                                         $DevicesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ ($DevicesActual.$_) -Force}
-
-                                                        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding utf8
+                                                        
+                                                        Set-ContentJson -PathToFile $DevicesConfigFile -Data $DevicesActualSave > $null
 
                                                         Write-Host " "
                                                         Write-Host "Changes written to device configuration. " -ForegroundColor Cyan
@@ -1390,8 +1402,8 @@ while ($true) {
 
                                         if (-not $OCProfilesActual.$OCProfile_Name) {
                                             if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
-                                                $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*"}) -Force
-                                                $OCProfilesActual | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding utf8 
+                                                $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*"}) -Force                                                
+                                                Set-ContentJson -PathToFile $OCProfilesConfigFile -Data $OCProfilesActual > $null
                                             } else {
                                                 $OCProfile_Name = ''
                                             }
@@ -1401,8 +1413,8 @@ while ($true) {
                                             if ($What -ne "e") {                                                
                                                 if ($What -eq "d") {
                                                     $OCProfilesSave = [PSCustomObject]@{}
-                                                    $OCProfilesActual.PSObject.Properties | Where-Object {$_.Name -ne $OCProfile_Name} | Foreach-Object {$OCProfilesSave | Add-Member $_.Name $_.Value}
-                                                    $OCProfilesSave | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding UTF8
+                                                    $OCProfilesActual.PSObject.Properties | Where-Object {$_.Name -ne $OCProfile_Name} | Foreach-Object {$OCProfilesSave | Add-Member $_.Name $_.Value}                                                    
+                                                    Set-ContentJson -PathToFile $OCProfilesConfigFile -Data $OCProfilesSave > $null
                                                 }
                                                 $OCProfile_Name = ""
                                             }
@@ -1463,7 +1475,7 @@ while ($true) {
                                                         $OCProfilesActualSave = [PSCustomObject]@{}
                                                         $OCProfilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCProfilesActualSave | Add-Member $_ ($OCProfilesActual.$_) -Force}
 
-                                                        $OCProfilesActualSave | ConvertTo-Json | Set-Content $OCProfilesConfigFile -Encoding utf8
+                                                        Set-ContentJson -PathToFile $OCProfilesConfigFile -Data $OCProfilesActualSave > $null
 
                                                         Write-Host " "
                                                         Write-Host "Changes written to profiles configuration. " -ForegroundColor Cyan
@@ -2030,11 +2042,13 @@ while ($true) {
         $Miner_Profits_MarginOfError = [PSCustomObject]@{}
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
-        $Miner_OCprofile = [hashtable]@{}
+        $Miner_OCprofile = [PSCustomObject]@{}
+
+        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile | Add-Member $p ""}
 
         if ($Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = ''
-            $Miner_MSIAprofile = 0           
+            $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
             [System.Collections.ArrayList]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
@@ -2047,7 +2061,7 @@ while ($true) {
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
-                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {if ($Config.MiningMode -eq "combo" -and $Miner.DeviceModel -match '-') {@($Miner.DeviceModel -split '-') | Foreach-Object {$Miner_OCprofile[$_]=$Config.Miners.$Miner_CommonCommands.OCprofile}}else{$Miner_OCprofile[$Miner.DeviceModel]=$Config.Miners.$Miner_CommonCommands.OCprofile}}
+                    if ($Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in @($Miner.DeviceModel -split '-')) {if (-not $Miner_OCprofile.$p) {$Miner_OCprofile.$p=$Config.Miners.$Miner_CommonCommands.OCprofile}}}
                     $Miner_CommonCommands_found = $true
                 }
             }
@@ -2061,16 +2075,19 @@ while ($true) {
                     if ($Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Config.Miners.$Miner_CommonCommands.FaultTolerance -and [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance -gt $Miner_FaultTolerance) {$Miner_FaultTolerance = [double]$Config.Miners.$Miner_CommonCommands.FaultTolerance}
-                    if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile[$p] = $Config.Miners.$Miner_CommonCommands.OCprofile}
                 }
-            }
+            }           
 
             #overclocking is different
             foreach($p in @($Miner.DeviceModel -split '-')) {
+                if ($Miner_OCprofiles.$p -ne '') {continue}
                 $Miner_CommonCommands_array[1] = $p
-                $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
-                if (-not $Miner_OCprofile[$p]) {$Miner_OCprofile[$p]=$Config.Miners.$Miner_CommonCommands.OCprofile}
-                if (-not $Miner_OCprofile[$p]) {$Miner_OCprofile[$p]=$Config.Devices.$p.DefaultOCprofile}
+                for($i=$Miner_CommonCommands_array.Count;$i -gt 1; $i--) {
+                    $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
+                    if (Get-Member -InputObject $Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
+                        if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile.$p=$Config.Miners.$Miner_CommonCommands.OCprofile}
+                    }
+                }
             }
 
             if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force}
@@ -2079,6 +2096,8 @@ while ($true) {
             if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
             if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}            
         }
+
+        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner_OCprofile.$p -eq '') {$Miner_OCprofile.$p=$Config.Devices.$p.DefaultOCprofile}}
 
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
             $Miner_DevFees | Add-Member $_ ([Double]$(if (-not $Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
@@ -2431,8 +2450,6 @@ while ($true) {
         }
     }
 
-    if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {& .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL}
-
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
@@ -2670,7 +2687,13 @@ while ($true) {
 
         if (($WaitMaxI-$i+1) % 5 -eq 0) {
             #pick up a sample every ten seconds, starting after ten seconds
-            
+
+            if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
+                if ($Timer -gt $NextReport) {
+                    & .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL
+                    $NextReport = $Timer.AddSeconds($Config.Interval)
+                }
+            }
             Update-DeviceInformation @($ActiveMiners.DeviceName | Select-Object -Unique)
 
             $ActiveMiners | ForEach-Object {

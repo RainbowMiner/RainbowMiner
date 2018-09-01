@@ -85,7 +85,7 @@ function Get-Balance {
             }
 
             # Add total of totals
-            $Total = ($Balances | ForEach-Object {$_.total/$Rates[$_.currency]} | Measure-Object -Sum).Sum
+            $Total = ($Balances | Where-Object {$_.total} | ForEach-Object {$_.total/$Rates[$_.currency]} | Measure-Object -Sum).Sum
             $Balances += [PSCustomObject]@{
                 currency = "BTC"
                 total = $Total
@@ -111,7 +111,7 @@ function Get-Balance {
     catch {
         Write-Log -Level Warn "Trouble fetching Balances. "
     }
-    Return $Balances
+    $Balances
 }
 
 function Get-CoinSymbol {
@@ -184,7 +184,7 @@ Function Write-Log {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()][Alias("LogContent")][string]$Message,
         [Parameter(Mandatory = $false)][ValidateSet("Error", "Warn", "Info", "Verbose", "Debug")][string]$Level = "Info"
     )
-
+    
     Begin { }
     Process {
         # Inherit the same verbosity settings as the script importing this
@@ -463,7 +463,7 @@ function Get-ChildItemContent {
         return $Expression
     }
 
-    Get-ChildItem $Path -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
         $Name = $_.BaseName
         $Content = @()
         if ($_.Extension -eq ".ps1") {
@@ -1116,7 +1116,7 @@ function Update-DeviceInformation {
                 $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
                 $AdapterId = $_.Index
 
-                $Devices | Where-Object Vendor -eq $Vendor -and Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                     $_ | Add-Member Data ([PSCustomObject]@{
                             AdapterId         = [int]$AdapterId
                             Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
@@ -1349,7 +1349,7 @@ class Miner {
     $Pool
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
-    [hashtable]$OCprofile = @{}
+    $OCprofile
     $DevFee
     $BaseName = $null
     $ExecName = $null
@@ -1698,7 +1698,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
 
         $this.OCprofileBackup.Clear()
-        $Vendor = $Script:CachedDevices | Where-Object @($this.OCprofiles.Keys) -icontains Model | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Script:CachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
             try {
@@ -1716,14 +1716,14 @@ class Miner {
             Intel  = "*Intel*"
         }
 
-        foreach ($DeviceModel in $this.OCprofile.Keys) {
+        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
             if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
                 $DeviceIds = @($Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
                 $Profile = $Config.OCprofiles."$($this.OCprofile.$DeviceModel)"
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
                 $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
-                if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = '*'}
+                if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
 
                 $applied_any = $false
 
@@ -1733,7 +1733,7 @@ class Miner {
                         if ($Profile.ThermalLimit -gt 0) {$NvCmd.Add("-setTempTarget:$($DeviceId),0,$([math]::max([math]::min($Profile.ThermalLimit,95),50))") >$null;$applied_any=$true}
                         if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$')  {$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$([int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500))*12500") >$null;$applied_any=$true}
                         if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setBaseClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.CoreClockBoost))") >$null;$applied_any=$true}
-                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setMemoryClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.CoreClockBoost))") >$null;$applied_any=$true}
+                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setMemoryClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.MemoryClockBoost))") >$null;$applied_any=$true}
                     }
                 } elseif ($Pattern.$Vendor -ne $null) {
                     $DeviceId = 0
@@ -2107,6 +2107,28 @@ function Read-HostKey {
     }
 }
 
+function Set-ContentJson {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $True)]
+        $Data
+    )
+    $retry = 3
+    do {
+        try {
+            if (Test-Path $PathToFile) {[io.file]::OpenWrite($PathToFile).close()}
+            $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            return $true
+        } catch { }
+        $retry--
+        Sleep -Seconds 1
+    } until ($retry -le 0)
+    Write-Log -Level Warn "Unable to write to file $PathToFile"
+    return $false
+}
+
 function Set-MinersConfigDefault {
     [CmdletBinding()]
     param(
@@ -2135,10 +2157,18 @@ function Set-MinersConfigDefault {
                 }
                 
                 [System.Collections.ArrayList]$Miners = @($AllMiners | Where-Object Type -icontains $a)
-                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)
+                [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
-                    foreach ($SetupDevice in $SetupDevices) {
-                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @($Miner.Commands | Foreach-Object {[PSCustomObject]@{MainAlgorithm=$(if (-not $Algo[$_.MainAlgorithm]) {$Algo[$_.MainAlgorithm]=Get-Algorithm $_.MainAlgorithm};$Algo[$_.MainAlgorithm]);SecondaryAlgorithm=$(if ($_.SecondaryAlgorithm) {if (-not $Algo[$_.SecondaryAlgorithm]) {$Algo[$_.SecondaryAlgorithm]=Get-Algorithm $_.SecondaryAlgorithm};$Algo[$_.SecondaryAlgorithm]}else{""});Params = "";MSIAprofile = "";OCprofile = ""}})
+                    foreach ($SetupDevice in $SetupDevices) {                        
+                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @(
+                            [System.Collections.ArrayList]$MinerCheck = @()
+                            foreach($cmd in $Miner.Commands) {
+                                $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
+                                $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
+                                $k = "$m-$s"                                
+                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = ""};$MinerCheck.Add($k)>$null}
+                            }
+                        )                        
                     }
                 }
 
@@ -2147,7 +2177,7 @@ function Set-MinersConfigDefault {
                         [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                         foreach ($SetupDevice in $SetupDevices) {
                             $NameKey = "$($Name)-$($SetupDevice)"
-                            if ($Done.$NameKey -ne $null) {
+                            if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
                                 [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$NameKey $Setup.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                                 if ($NewValues.count) {$Value.AddRange($NewValues) > $null}
                                 $Done | Add-Member $NameKey $Value -Force
@@ -2158,17 +2188,17 @@ function Set-MinersConfigDefault {
             }
 
             foreach ($Name in @($Preset.PSObject.Properties.Name)) {
-                if ($Done.$Name -ne $null) {
-                    [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                [System.Collections.ArrayList]$Value = @(foreach ($v in $Preset.$Name) {if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                if (Get-Member -inputobject $Done -name $Name -Membertype Properties) {
                     [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$Name $Preset.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$Name | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
                     if ($NewValues.Count) {$Value.AddRange($NewValues) > $null}
-                    $Done.$Name = $Value.ToArray()
                 }
+                $Done | Add-Member $Name $Value.ToArray() -Force
             }
 
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
-            $DoneSave | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            Set-ContentJson -PathToFile $PathToFile -Data $DoneSave > $null
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
@@ -2201,7 +2231,7 @@ function Set-DevicesConfigDefault {
                 }
                 foreach($SetupName in $SetupNames) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName "" -Force}}
             }
-            $Preset | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset > $null
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
@@ -2248,7 +2278,7 @@ function Set-PoolsConfigDefault {
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$Setup_Content | Add-Member ExcludeCoinSymbol "" -Force}
                     $Done | Add-Member $_ $Setup_Content
                 }
-                $Done | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+                Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
             } else {
                 Write-Log -Level Error "No pools found!"
             }
@@ -2273,7 +2303,7 @@ function Set-OCProfilesConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
-            $Preset | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset > $null
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
