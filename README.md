@@ -196,14 +196,14 @@ There are two ways to adjust overclocking values in RainbowMiner:
 - using custom overclocking profiles: recommended for mining rigs with mixed GPUs
 
 The selection is simple:
-- if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the Configuration->Common)
-- if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the Configuration->Common)
+- if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the [C]onfiguration->[C]ommon)
+- if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the [C]onfiguration->[C]ommon)
 - if you do not want anything of the above two, set both, "**EnableOCProfiles**" and "**MSIAprofile**" to "**0**"
 
 
 ## MSI AFTERBURNER PROFILES
 
-Overclocking option, recommended for unique GPU mining rigs.
+Overclocking option, recommended for **unique GPU mining rigs with maximum 6 GPU**
 
 ### Introduction
 
@@ -237,19 +237,26 @@ Be careful when playing with OC, since this can damage your devices. RainbowMine
 
 ## CUSTOM OVERCLOCKING PROFILES
 
-Recommended for mixed GPU mining rigs.
+Recommended for mining rigs with **more than 6 GPU** or **different GPU**
 
 ### Introduction
 
-Each miner/device/algorithm combination can have it's own overclocking values set by RainbowMiner. To enable: set "**EnableOCProfiles**" to "**1**" in your config.txt or use the Configuration->Common.
+Each miner/device/algorithm combination can have it's own overclocking values set by RainbowMiner. To enable: set "**EnableOCProfiles**" to "**1**" in your config.txt or use the [C]onfiguration->[C]ommon.
+
+**!! It is important, that you coose a default profile for each GPU device in your devices.config.txt !!**
+
+You can edit the file directly: put the name of your custom default profile into field "**DefaultOCprofile**"
+Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### First setup overclocking profiles
 
-Use the Configuration->OC-Profiles to edit and create different profiles. Values for PowerLimit, ThermalLimit, MemoryClockBoost and CoreClockBoost can be defined. You may name the profiles like you want. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Of course you may also edit the ocprofiles.config.txt file directly.
+
+Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
 ### Second, assign profiles to miner-device-algorithms
 
-The assignment is done, using either the Configuration->Miners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
+The assignment is done, using either [C]onfiguration->[M]iners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
 
 
 ## ADVANCED CONFIGURATION
@@ -542,12 +549,16 @@ Example:
           "ExcludeAlgorithm": "",
           "MinerName": "",
           "ExcludeMinerName": "ClaymoreEthash",
-          "DisableDualMining": "1"
+          "DisableDualMining": "1",
+          "DefaultOCprofile": "Profile1"
         }
       ]
     }
 
-This configuration would bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner. Setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
+This configuration would:
+- bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
+- setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
+- for custom overclocking Profile1 is used as default for this GPU type
 
 
 ### Config\ocprofiles.config.txt
@@ -561,19 +572,22 @@ Example:
         "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "*",
-        "CoreClockBoost": "*"
+        "CoreClockBoost": "*",
+        "LockVoltagePoint": "*"
       },
       "Profile2": {
         "PowerLimit": 0,
         "ThermalLimit": 0,
         "MemoryClockBoost": "400",
-        "CoreClockBoost": "100"
+        "CoreClockBoost": "100",
+        "LockVoltagePoint": "*"
       },
       "Profile3": {
         "PowerLimit": 0,
         "ThermalLimit": 0,
         "MemoryClockBoost": "200",
-        "CoreClockBoost": "100"
+        "CoreClockBoost": "100",
+        "LockVoltagePoint": "1000000"
       }
     }
 
@@ -581,6 +595,7 @@ Example:
 - ThermalLimit: in °C, set to 0, if you do not want this to be changed
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
+- LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 
 
 ## CREDITS
