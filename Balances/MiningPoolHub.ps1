@@ -18,12 +18,12 @@ try {
     $Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($MyConfig.API_Key)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
-    Write-Log -Level "Pool Balance API ($Name) has failed. "
+    Write-Log -Level Verbose "Pool Balance API ($Name) has failed. "
 }
 $ErrorActionPreference = $OldEAP
 
 if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-    Write-Log -Level Warn "Pool Balance API ($Name) returned nothing. "    
+    Write-Log -Level Verbose "Pool Balance API ($Name) returned nothing. "    
     return
 }
 
