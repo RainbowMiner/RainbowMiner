@@ -46,11 +46,11 @@ try {
             $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
         }
     }
-    if ($Version -le (Get-Version "3.8.4.4")) {       
+    if ($Version -le (Get-Version "3.8.4.4")) {
         $cpus = @(Get-CimInstance -ClassName CIM_Processor | Select-Object -Unique -ExpandProperty Name | Foreach-Object {[String]$($_ -replace '\(TM\)|\(R\)|([a-z]+?-Core)' -replace "[^A-Za-z0-9]+" -replace "Intel|AMD|CPU|Processor")})
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        $MinersActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {            
+        $MinersActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
             $MinersSave | Add-Member ($_.Name -replace "($($cpus -join '|'))","CPU") $_.Value
         }
         $MinersActualSave = [PSCustomObject]@{}
@@ -59,12 +59,20 @@ try {
 
         $DevicesSave = [PSCustomObject]@{}
         $DevicesActual = Get-Content "$DevicesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        $DevicesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {            
+        $DevicesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
             $DevicesSave | Add-Member ($_.Name -replace "($($cpus -join '|'))","CPU") $_.Value
         }
         $DevicesActualSave = [PSCustomObject]@{}
         $DevicesSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ $DevicesSave.$_}
         $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding Utf8
+
+        $OCprofilesActual = Get-Content "$OCprofilesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $OCprofilesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
+            if ($_.Value.LockVoltagePoint -eq $null) {$_.Value | Add-Member LockVoltagePoint "*" -Force}
+        }
+        $OCprofilesActualSave = [PSCustomObject]@{}
+        $OCprofilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCprofilesActualSave | Add-Member $_ $OCprofilesActual.$_}
+        $OCprofilesActualSave | ConvertTo-Json | Set-Content $OCprofilesConfigFile -Encoding Utf8
     }
     "Cleaned $ChangesTotal elements"
 }
