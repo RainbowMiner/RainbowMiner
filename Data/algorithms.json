@@ -1,4 +1,5 @@
 {
+    "aeon": "Aeon",
     "aergo": "AeriumX",
     "aeriumx": "AeriumX",
     "aion": "Equihash21x9",
@@ -162,6 +163,7 @@
     "machine": "Timetravel",
     "machinecoin": "Timetravel",
     "magi": "m7m",
+    "masari": "CryptoNightFast",
     "maxcoin": "Keccak",
     "memohash": "Axiom",
     "monero": "CryptoNightV7",
