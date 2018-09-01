@@ -474,9 +474,9 @@ class Excavator144 : Miner {
                     if($closedgracefully) { 
                         Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
                     } else {
-                        Write-Log -Level Warning "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
+                        Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
                         if(![Excavator144]::Service.MiningProcess.HasExited) {
-                            Write-Log -Level Warning "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
+                            Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
                             [Excavator144]::Service.MiningProcess.Kill()
                         }
                     }
