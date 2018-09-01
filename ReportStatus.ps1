@@ -41,5 +41,3 @@ try {
 catch {
     Write-Log -Level Warn "Miner Status ($MinerStatusURL) has failed. "
 }
-
-Write-Host "Your miner status key is: $Key"
