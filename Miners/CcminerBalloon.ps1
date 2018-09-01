@@ -12,13 +12,25 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-cc
 $Port = "104{0:d2}"
 
 $Devices = $Devices.NVIDIA
-if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "balloon"; Params = "--cuda_threads 256 --cuda_blocks 100"} #Balloon
 )
 
 $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("NVIDIA")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

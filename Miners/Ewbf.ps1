@@ -13,7 +13,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"
 $Port = "311{0:d2}"
 
 $Devices = $Devices.NVIDIA
-if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2.5; Params = "--algo 96_5"}  #Equihash 96,5
@@ -21,6 +21,18 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 2.5; Params = "--algo 192_7"} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9"} #Equihash 210,9 (beta)
 )
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("NVIDIA")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Coins = [PSCustomObject]@{
     default     = ""

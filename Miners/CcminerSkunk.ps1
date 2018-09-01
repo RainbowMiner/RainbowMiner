@@ -12,13 +12,25 @@ $URI = "https://github.com/scaras/ccminer-2.2-mod-r1/releases/download/2.2-r1/2.
 $Port = "109{0:d2}"
 
 $Devices = $Devices.NVIDIA
-if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("NVIDIA")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

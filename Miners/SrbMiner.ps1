@@ -13,7 +13,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 
 $Devices = $Devices.AMD
-if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     # Note: For fine tuning directly edit Config_[MinerName]-[Algorithm]-[Port].txt in the miner binary directory
@@ -62,6 +62,18 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight Red [mox]
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

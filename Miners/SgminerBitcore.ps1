@@ -12,11 +12,23 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.
 $Port = "401{0:d2}"
 
 $Devices = $Devices.AMD
-if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel10"; Params = "--intensity 19"} #Bitcore
 )
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 

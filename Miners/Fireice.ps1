@@ -26,6 +26,18 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD","CPU","NVIDIA")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
+
 if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not $Config.InfoOnly) {return} # No GPU present in system
 
 #$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {

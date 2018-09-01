@@ -12,13 +12,25 @@ $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.6-c
 $Port = "201{0:d2}"
 
 $Devices = $Devices.AMD
-if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

@@ -12,7 +12,7 @@ $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.3-c
 $Port = "200{0:d2}"
 
 $Devices = $Devices.AMD
-if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptolite"; Params = " -lite 1 0"} #Cryptolite
@@ -21,6 +21,18 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

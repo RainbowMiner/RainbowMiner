@@ -12,7 +12,7 @@ $Uri = "https://github.com/nicehash/sgminer/releases/download/5.6.1/sgminer-5.6.
 $Port = "400{0:d2}"
 
 $Devices = $Devices.AMD
-if (-not $Devices -or $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "groestlcoin"; Params = "--gpu-threads 2 --worksize 128 --intensity d"} #Groestl
@@ -39,6 +39,18 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

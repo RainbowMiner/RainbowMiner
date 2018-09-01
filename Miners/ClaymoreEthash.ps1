@@ -15,6 +15,9 @@ $Port = "203{0:d2}"
 $DevFee = 1.0
 $DevFeeDual = 1.5
 
+$Devices = @($Devices.NVIDIA) + @($Devices.AMD) 
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in system
+
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = ""; SecondaryIntensity = 00; Params = ""} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = "blake2s"; SecondaryIntensity = 40; Params = ""} #Ethash/Blake2s
@@ -83,8 +86,17 @@ $Coins = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Devices = @($Devices.NVIDIA) + @($Devices.AMD) 
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in system
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Vendor = @("AMD","NVIDIA")
+        Name = $Name
+        Path = $Path
+        Uri = $Uri
+        Port = $Port
+        Commands = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
