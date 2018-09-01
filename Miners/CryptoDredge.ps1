@@ -17,15 +17,21 @@ $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "aeon"; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Allium
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s, ASIC domain. no longer profitable
+    [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; Params = ""} #Cryptonightheavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptonightV7 / Monero
+    [PSCustomObject]@{MainAlgorithm = "lbk3"; Params = ""} #LBK3
     [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "masari"; Params = ""} #Cryptonightfast / Masari
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""; ExtendInterval = 2} #Tribus
 )
 
