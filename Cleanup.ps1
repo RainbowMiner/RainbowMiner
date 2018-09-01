@@ -77,22 +77,18 @@ try {
     }
     if ($Version -le (Get-Version "3.8.5.0")) {
         if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
-        if (-not (Test-Path "Stats\Pools")) {
-            try {
-                New-Item "Stats\Pools" -ItemType "directory" > $null
-                Copy-Item "Stats\*_Profit.txt" "Stats\Pools"
-                Remove-Item "Stats\*_Profit.txt"
-                $ChangesTotal++
-            } catch { }
-        }
-        if (-not (Test-Path "Stats\Miners")) {
-            try {
-                New-Item "Stats\Miners" -ItemType "directory" > $null
-                Copy-Item "Stats\*_Hashrate.txt" "Stats\Miners"
-                Remove-Item "Stats\*_Hashrate.txt"
-                $ChangesTotal++
-            } catch { }
-        }
+        if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+        if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+        try {
+            Copy-Item "Stats\*_Profit.txt" "Stats\Pools" -Force
+            Remove-Item "Stats\*_Profit.txt"
+            $ChangesTotal++
+        } catch { }
+        try {
+            Copy-Item "Stats\*_Hashrate.txt" "Stats\Miners" -Force
+            Remove-Item "Stats\*_Hashrate.txt"
+            $ChangesTotal++
+        } catch { }
     }
     "Cleaned $ChangesTotal elements"
 }
