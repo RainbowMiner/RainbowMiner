@@ -3,7 +3,7 @@
 $text = ""
 $count = 0
 
-Get-ChildItem Stats | Where-Object {$_.Name -like '*HashRate.txt'} | Foreach-Object {
+Get-ChildItem "Stats" -Recurse -File | Where-Object {$_.Name -like '*HashRate.txt'} | Foreach-Object {
   $FileName = $_.FullName
   $Stats = Get-Content $Filename | ConvertFrom-Json
   

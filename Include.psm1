@@ -200,6 +200,8 @@ Function Write-Log {
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
         if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
+        if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+        if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
 
         switch ($Level) {
             'Error' {
@@ -259,7 +261,10 @@ function Set-Stat {
 
     $Updated = $Updated.ToUniversalTime()
 
-    $Path = "Stats\$Name.txt"
+    if ($Name -match '_Profit$') {$Path = "Stats\Pools\$Name.txt"}
+    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners\$Name.txt"}
+    else {$Path = "Stats\$Name.txt"}
+
     $SmallestValue = 1E-20
 
     $Stat = Get-Content $Path -ErrorAction SilentlyContinue -Raw
@@ -377,6 +382,9 @@ function Set-Stat {
     }
 
     if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
+    if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+    if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+
     if ($Stat.Duration -ne 0) {
         [PSCustomObject]@{
             Live = [Decimal]$Stat.Live
@@ -413,15 +421,20 @@ function Get-Stat {
     )
 
     if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
+    if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+    if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
 
     if ($Name) {
-        # Return single requested stat        
-        if (Test-Path "Stats\$($Name).txt") {ConvertFrom-Json (Get-Content "Stats\$($Name).txt" -ErrorAction Ignore -Raw) -ErrorAction Ignore}
+        # Return single requested stat
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools\$Name.txt"}
+        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners\$Name.txt"}
+        else {$Path = "Stats\$Name.txt"}
+        if (Test-Path $Path) {ConvertFrom-Json (Get-Content $Path -ErrorAction Ignore -Raw) -ErrorAction Ignore}
     } else {
         # Return all stats
         [hashtable]$Stats = @{}
 
-        foreach($p in (Get-ChildItem "Stats" -File)) {
+        foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             try {

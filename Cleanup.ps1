@@ -75,6 +75,25 @@ try {
         $OCprofilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCprofilesActualSave | Add-Member $_ $OCprofilesActual.$_}
         $OCprofilesActualSave | ConvertTo-Json | Set-Content $OCprofilesConfigFile -Encoding Utf8
     }
+    if ($Version -le (Get-Version "3.8.5.0")) {
+        if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
+        if (-not (Test-Path "Stats\Pools")) {
+            try {
+                New-Item "Stats\Pools" -ItemType "directory" > $null
+                Copy-Item "Stats\*_Profit.txt" "Stats\Pools"
+                Remove-Item "Stats\*_Profit.txt"
+                $ChangesTotal++
+            } catch { }
+        }
+        if (-not (Test-Path "Stats\Miners")) {
+            try {
+                New-Item "Stats\Miners" -ItemType "directory" > $null
+                Copy-Item "Stats\*_Hashrate.txt" "Stats\Miners"
+                Remove-Item "Stats\*_Hashrate.txt"
+                $ChangesTotal++
+            } catch { }
+        }
+    }
     "Cleaned $ChangesTotal elements"
 }
 catch {

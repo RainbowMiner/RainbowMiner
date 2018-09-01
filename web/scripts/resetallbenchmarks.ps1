@@ -1,6 +1,6 @@
 ﻿param($Parameters)
 
-$files = Get-ChildItem Stats | Where-Object {$_.Name -like '*HashRate.txt'}
+$files = Get-ChildItem "Stats" -Recurse -File | Where-Object {$_.Name -like '*HashRate.txt'}
 
 $count = $files.Count
 

@@ -9,7 +9,7 @@ if ($Parameters.name -and $Parameters.algorithm -and $Parameters.DeviceModel) {
 		$Algorithm = "*"
 	}
 
-    $Miners_Path = ".\Stats\$($Parameters.name)_$($Algorithm)_HashRate.txt"
+    $Miners_Path = ".\Stats\Miners\$($Parameters.name)_$($Algorithm)_HashRate.txt"
 
 	Get-ChildItem $Miners_Path -ErrorAction Ignore | Foreach-Object {
 		$count++
