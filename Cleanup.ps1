@@ -56,6 +56,15 @@ try {
         $MinersActualSave = [PSCustomObject]@{}
         $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
         $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+
+        $DevicesSave = [PSCustomObject]@{}
+        $DevicesActual = Get-Content "$DevicesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $DevicesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {            
+            $DevicesSave | Add-Member ($_.Name -replace "($($cpus -join '|'))","CPU") $_.Value
+        }
+        $DevicesActualSave = [PSCustomObject]@{}
+        $DevicesSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ $DevicesSave.$_}
+        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding Utf8
     }
     "Cleaned $ChangesTotal elements"
 }
