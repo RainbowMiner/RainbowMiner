@@ -115,6 +115,7 @@ Clear-Host
 $Version = "3.8.4.4"
 $Strikes = 3
 $SyncWindow = 5 #minutes
+$OutofsyncWindow = 60 #minutes
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
@@ -1901,6 +1902,7 @@ while ($true) {
 
     #Now remove all deselected pool/algorithm/coin from AllPools
     $i=0
+    $OutofsyncTime = (Get-Date).ToUniversalTime().AddMinutes(-$OutofsyncWindow)
     foreach ($Pool in $AllPools) {
         $Pool_Name = $Pool.Name    
         if (
@@ -1916,7 +1918,8 @@ while ($true) {
             ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
             ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
             ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+            ($Pool.Updated -lt $OutofsyncTime)
         ) {$AllPoolsAddRemove.Add($Pool) > $null}
         $i++
     }
