@@ -2173,7 +2173,7 @@ function Set-MinersConfigDefault {
                 [System.Collections.ArrayList]$MinerNames = @($Miners | Select-Object -ExpandProperty Name -Unique)                
                 foreach ($Miner in $Miners) {
                     foreach ($SetupDevice in $SetupDevices) {                        
-                        $Done | Add-Member "$($Miner.Name)-$($SetupDevices)" @(
+                        $Done | Add-Member "$($Miner.Name)-$($SetupDevice)" @(
                             [System.Collections.ArrayList]$MinerCheck = @()
                             foreach($cmd in $Miner.Commands) {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
