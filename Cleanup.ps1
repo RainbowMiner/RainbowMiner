@@ -75,7 +75,7 @@ try {
         $OCprofilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCprofilesActualSave | Add-Member $_ $OCprofilesActual.$_}
         $OCprofilesActualSave | ConvertTo-Json | Set-Content $OCprofilesConfigFile -Encoding Utf8
     }
-    if ($Version -le (Get-Version "3.8.5.0")) {
+    if ($Version -le (Get-Version "3.8.5.5")) {
         if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
