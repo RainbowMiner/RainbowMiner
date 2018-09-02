@@ -1,4 +1,7 @@
 ﻿<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+</head>
 <body>
 <style>
 fieldset {margin-top:1em}
@@ -7,7 +10,7 @@ legend {font-size:1.5em;font-weight:bold}
 
     <h1>RainbowMiner API</h1>
 
-    API data is available at http://localhost:4000/&lt;resource&gt;
+    API data is available at <span id="res">http://localhost:4000/&lt;resource&gt;</span>
 
     <fieldset>
     <legend>Common Resources</legend>
@@ -143,5 +146,12 @@ legend {font-size:1.5em;font-weight:bold}
     <p>Dump of the $AsyncLoader.Errors variable, used only for debugging. These are the past 50 errors, the jobs running in the background have caused.</p>
 
     </fieldset>
+<script>
+    $(function () {
+        var port = $(location).attr('port')
+        $("a").each(function () { $(this).attr('href', $(this).attr('href').replace(':4000', ':' + port)) })
+        $("#res").text($("#res").text().replace(':4000', ':' + port))
+    })
+</script>
 </body>
 </html>
