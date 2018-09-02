@@ -197,9 +197,10 @@ if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -
 
 Write-Host "Initialize configuration .."
 try {
+    $RunCleanup = $true
     $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
     if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
-    if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" -Force > $null}
+    if (-not (Test-Path $ConfigPath)) {$RunCleanup = $false;New-Item $ConfigPath -ItemType "directory" -Force > $null}
     if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}    
     if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
     if (-not (Test-Path $ConfigFile)) {
@@ -253,23 +254,25 @@ try {
 
     #cleanup legacy data
     if (Test-Path ".\Cleanup.ps1") {
-        Write-Host "Cleanup legacy data .."
-        [hashtable]$Cleanup_Parameters = @{
-            ConfigFile = $ConfigFile
-            PoolsConfigFile = $PoolsConfigFile
-            MinersConfigFile = $MinersConfigFile
-            DevicesConfigFile = $DevicesConfigFile
-            OCProfilesConfigFile = $OCProfilesConfigFile
-            AllDevices = $AllDevices
-            MyCommandParameters = $MyCommandParameters
-            Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
-        }        
-        Get-Item ".\Cleanup.ps1" | Foreach-Object {
-            $Cleanup_Result = & {
-                foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
-                & $_.FullName @Cleanup_Parameters
+        if ($RunCleanup) {
+            Write-Host "Cleanup legacy data .."
+            [hashtable]$Cleanup_Parameters = @{
+                ConfigFile = $ConfigFile
+                PoolsConfigFile = $PoolsConfigFile
+                MinersConfigFile = $MinersConfigFile
+                DevicesConfigFile = $DevicesConfigFile
+                OCProfilesConfigFile = $OCProfilesConfigFile
+                AllDevices = $AllDevices
+                MyCommandParameters = $MyCommandParameters
+                Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
+            }        
+            Get-Item ".\Cleanup.ps1" | Foreach-Object {
+                $Cleanup_Result = & {
+                    foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
+                    & $_.FullName @Cleanup_Parameters
+                }
+                if ($Cleanup_Result) {Write-Host $Cleanup_Result}
             }
-            if ($Cleanup_Result) {Write-Host $Cleanup_Result}
         }
         Remove-Item ".\Cleanup.ps1" -Force
     }
