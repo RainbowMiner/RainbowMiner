@@ -11,9 +11,10 @@ $Path = ".\Bin\CPU-JayDDee\cpuminer-aes-sse42.exe"
 $Uri = "https://github.com/JayDDee/cpuminer-opt/files/1996977/cpuminer-opt-3.8.8.1-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "501{0:d2}"
+$DevFee = 0.0
 
 $Devices = $Devices.CPU
-if (-not $Devices -or $Config.InfoOnly) {return} # No CPU present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     ### CPU PROFITABLE ALGOS AS OF 06/03/2018
@@ -102,6 +103,20 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Type      = @("CPU")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
+    }
+    return
+}
+
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -124,9 +139,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
-                URI = $Uri
+                Uri = $Uri
                 FaultTolerance = 0.5 #$_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
+				DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }
