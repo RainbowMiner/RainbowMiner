@@ -518,7 +518,7 @@ while ($true) {
                                                 Write-Host "RainbowMiner can be monitored using your webbrowser at http://localhost:$($Config.LocalAPIPort)" -ForegroundColor Cyan
                                                 Write-Host " "
                                             }
-                                            $Config.LocalAPIport = Read-HostInt -Prompt "Choose the web interface localhost port" -Default $Config.LocalAPIPort -Mandatory -Min 1000 -Max 65535 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                            $Config.LocalAPIport = Read-HostInt -Prompt "Choose the web interface localhost port" -Default $Config.LocalAPIPort -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
                                         "currency" {
