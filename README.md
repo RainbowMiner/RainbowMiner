@@ -570,14 +570,14 @@ This configuration would:
 
 This file contains all custom overclocking profiles. These profiles can be assigned by name to miners in file Config\miners.config.txt, field "OCprofile".
 
-Example:
+Example (this is the setup for one of my GTX1070 rigs, basicly substituting the MSI Afterburner profiles I recommended above)
 
     {
       "Profile1": {
-        "PowerLimit": 80,
+        "PowerLimit": 0,
         "ThermalLimit": 0,
-        "MemoryClockBoost": "*",
-        "CoreClockBoost": "*",
+        "MemoryClockBoost": "0",
+        "CoreClockBoost": "0",
         "LockVoltagePoint": "*"
       },
       "Profile2": {
@@ -592,6 +592,34 @@ Example:
         "ThermalLimit": 0,
         "MemoryClockBoost": "200",
         "CoreClockBoost": "100",
+        "LockVoltagePoint": "*"
+      },
+      "Profile4": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "-500",
+        "CoreClockBoost": "100",
+        "LockVoltagePoint": "*"
+      },
+      "Profile5": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "350",
+        "CoreClockBoost": "100",
+        "LockVoltagePoint": "*"
+      },
+      "Profile6": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "0",
+        "CoreClockBoost": "100",
+        "LockVoltagePoint": "*"
+      },
+      "Profile7": {
+        "PowerLimit": 0,
+        "ThermalLimit": 0,
+        "MemoryClockBoost": "*",
+        "CoreClockBoost": "*",
         "LockVoltagePoint": "1000000"
       }
     }
