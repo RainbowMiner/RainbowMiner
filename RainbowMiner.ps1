@@ -75,6 +75,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
+    [int]$LocalAPIPort = 4000,
+    [Parameter(Mandatory = $false)]
     [Switch]$RemoteAPI = $false,
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
@@ -169,7 +171,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction SilentlyContinue)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate")
 }
 
 #Cleanup the log
@@ -391,10 +393,10 @@ while ($true) {
 
                             Switch ($SetupType) {
                                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","enableautoupdate")) > $null}
+                                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautoupdate")) > $null}
                                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
                                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
+                                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
                             }
                             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -508,6 +510,15 @@ while ($true) {
                                                 Write-Host " "
                                             }
                                             $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        }
+
+                                        "localapiport" {
+                                            if ($IsInitialSetup) {
+                                                Write-Host " "
+                                                Write-Host "RainbowMiner can be monitored using your webbrowser at http://localhost:$($Config.LocalAPIPort)" -ForegroundColor Cyan
+                                                Write-Host " "
+                                            }
+                                            $Config.LocalAPIport = Read-HostInt -Prompt "Choose the web interface localhost port" -Default $Config.LocalAPIPort -Mandatory -Min 1000 -Max 65535 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
 
                                         "currency" {
@@ -826,6 +837,7 @@ while ($true) {
                                             $ConfigActual | Add-Member EnableOCVoltage $(if (Get-Yes $Config.EnableOCVoltage){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member EnableAutoupdate $(if (Get-Yes $Config.EnableAutoupdate){"1"}else{"0"}) -Force
                                             $ConfigActual | Add-Member Delay $Config.Delay -Force
+                                            $ConfigActual | Add-Member LocalAPIport $Config.LocalAPIport -Force
 
                                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
@@ -1568,6 +1580,8 @@ while ($true) {
         $Config.Currency = @($Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Config.UIstyle = if ( $Config.UIstyle -ne "full" -and $Config.UIstyle -ne "lite" ) {"full"} else {$Config.UIstyle}
         $Config.PowerPriceCurrency = $Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
+        if (-not $Config.LocalAPIport) {$Config | Add-Member LocalAPIport 4000 -Force}
+        Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Config.LocalAPIport} > $null
 
         #For backwards compatibility
         if ($Config.Wallet -and -not $Config.MinerStatusKey) {$Config.MinerStatusKey = $Config.Wallet}      
@@ -1575,9 +1589,19 @@ while ($true) {
     }
 
     #Initialize the API and Get-Device
+    $StartAPI = $false
     if(!(Test-Path Variable:API)) {
         Import-Module .\API.psm1
-        Start-APIServer -RemoteAPI:$Config.RemoteAPI
+        $StartAPI = $true
+    } elseif ($Config.LocalAPIport -and ($API.LocalAPIport -ne $Config.LocalAPIport)) {
+        #restart API server
+        Write-Log -Level Warn "Restarting API at new port $($Config.LocalAPIport)"
+        Stop-APIServer
+        Sleep 2
+        $StartAPI = $true
+    }
+    if ($StartAPI) {
+        Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
         $API.Version = Confirm-Version $Version
     }
 
@@ -1715,7 +1739,6 @@ while ($true) {
 
             #Load information about the devices
             $Devices = @(Get-Device $Config.DeviceName | Select-Object)
-            $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
             $DevicesByTypes = [PSCustomObject]@{
                 NVIDIA = @(Select-Device $Devices "NVIDIA")
                 AMD = @(Select-Device $Devices "AMD")
@@ -1750,6 +1773,7 @@ while ($true) {
             #Give API access to the device information
             $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
         }
+        $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
     }    
 
     Update-DeviceInformation @($Devices.Name | Select-Object -Unique)
@@ -1772,10 +1796,10 @@ while ($true) {
                 [String[]]$CcMinerName_Array = @($CcMiner.Name -split '-')
                 if ($CcMinerName_Array.Count -gt 1 -and $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])") {$CcMiner.Name = $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])"}
                 $CcMinerName_Array = @($CcMiner.Name -split '-')
-                if ($Config.DeviceModel -inotcontains $CcMinerName_Array[1] -or ($CcMinerName_Array.Count -gt 2 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[2])) {continue}
+                if (($CcMinerName_Array.Count -gt 1 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[1]) -or ($CcMinerName_Array.Count -gt 2 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[2])) {continue}
                 
-                foreach($p in $CcMiner.Value) {
-                    if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $p.$q.Trim() -ne "") {$true;break}})) {
+                foreach($p in @($CcMiner.Value)) {
+                    if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) {$true;break}})) {
                         $CcMinerName = $CcMiner.Name
                         if ($p.MainAlgorithm -ne '*') {
                             $CcMinerName += "-$(Get-Algorithm $p.MainAlgorithm)"

@@ -6,9 +6,12 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 $Progress = 0
 
+$LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" | ConvertFrom-Json}).LocalAPIport
+if (-not $LocalAPIport) {$LocalAPIport = 4000}
+
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
-    $RunningMiners_Request = Invoke-RestMethod "http://localhost:4000/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $RunningMiners_Request = Invoke-RestMethod "http://localhost:$($LocalAPIport)/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
     if ($RunningMiners_Request -isnot [array]) {
         if (-not $RunningMiners_Paths.Contains($RunningMiners_Request.Path)) {
             $RunningMiners_Paths.Add($RunningMiners_Request.Path) | Out-Null

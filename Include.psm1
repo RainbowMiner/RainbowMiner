@@ -1282,8 +1282,8 @@ function Get-Algorithm {
             Mandatory = $false)]
         [String]$Algorithm = ""
     )
-
-    if ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
+    if ($Algorithm -eq '*') {$Algorithm}
+    elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
         if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
@@ -2218,7 +2218,7 @@ function Set-MinersConfigDefault {
                                 $k = "$m-$s"                                
                                 if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = ""};$MinerCheck.Add($k)>$null}
                             }
-                        )                        
+                        )
                     }
                 }
 
@@ -2250,7 +2250,7 @@ function Set-MinersConfigDefault {
             }
 
             $DoneSave = [PSCustomObject]@{}
-            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
+            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ @($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{

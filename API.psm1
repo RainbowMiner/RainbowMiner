@@ -1,7 +1,9 @@
 ﻿Function Start-APIServer {
     Param(
         [Parameter(Mandatory = $false)]
-        [Switch]$RemoteAPI = $false
+        [Switch]$RemoteAPI = $false,
+        [Parameter(Mandatory = $false)]
+        [int]$LocalAPIport = 4000
     )
 
     # Create a global synchronized hashtable that all threads can access to pass data between the main script and API
@@ -12,18 +14,19 @@
     $API.Pause = $false
     $API.Update = $false
     $API.RemoteAPI = $RemoteAPI
+    $API.LocalAPIport = $LocalAPIport
 
     # Starting the API for remote access requires that a reservation be set to give permission for non-admin users.
     # If switching back to local only, the reservation needs to be removed first.
     # Check the reservations before trying to create them to avoid unnecessary UAC prompts.
     $urlACLs = & netsh http show urlacl | Out-String
 
-    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:4000/'))) {
+    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:'+$LocalAPIport+'/'))) {
         # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:4000/ sddl=D:(A;;GX;;;S-1-5-32-545)'
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:'+$LocalAPIport+'/ sddl=D:(A;;GX;;;S-1-5-32-545)'
     }
-    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:4000/'))) {
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:4000/'
+    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:'+$LocalAPIport+'/'))) {
+        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:'+$LocalAPIport+'/'
     }
 
     # Setup runspace to launch the API webserver in a separate thread
@@ -57,11 +60,11 @@
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
         if ($API.RemoteAPI) {
-            $Server.Prefixes.Add("http://+:4000/")
+            $Server.Prefixes.Add("http://+:$($API.LocalAPIport)/")
             # Require authentication when listening remotely
             $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
         } else {
-            $Server.Prefixes.Add("http://localhost:4000/")
+            $Server.Prefixes.Add("http://localhost:$($API.LocalAPIport)/")
         }
         $Server.Start()
 
@@ -329,8 +332,8 @@
 }
 
 Function Stop-APIServer {
-    if ( -not $Global:API.Stop ) {
-        try { $result = Invoke-WebRequest -Uri "http://localhost:4000/stop" } catch { Write-Host "Listener ended" }
+    if (-not $Global:API.Stop) {
+        try {$result = Invoke-WebRequest -Uri "http://localhost:$($API.LocalAPIport)/stop" } catch { Write-Host "Listener ended"}
     }
     $Global:API.Server.dispose()
 }
