@@ -923,6 +923,7 @@ function Get-Device {
     $Vendor_Index = @{}
     $Type_Vendor_Index = @{}
     $Type_Index = @{}
+    $Type_Mineable_Index = @{}
     $GPUVendorLists = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
 
@@ -958,6 +959,7 @@ function Get-Device {
                     Type_Vendor_Index = [Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
+                    Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
                     OpenCL = $Device_OpenCL
                     Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
                     Model_Name = [String]$Device_Name
@@ -980,6 +982,7 @@ function Get-Device {
                 $Vendor_Index."$($Device_OpenCL.Vendor)"++
                 $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                 $Type_Index."$($Device_OpenCL.Type)"++
+                if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
             }
 
             $PlatformId++
@@ -1005,6 +1008,7 @@ function Get-Device {
                 Type_Vendor_Index = $CPUIndex
                 Type = "Cpu"
                 Type_Index = $CPUIndex
+                Type_Mineable_Index = $CPUIndex
                 CIM = $CPUInfo
                 Model = "CPU"
                 Model_Name = $CPUInfo.Name
@@ -2120,19 +2124,35 @@ function Read-HostKey {
     }
 }
 
+function Get-ContentDataMD5hash {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        $Data
+    )
+    if ($Data -eq $null) {$Data = ''}
+    Get-MD5Hash ($Data | ConvertTo-Json -Compress)
+}
+
 function Set-ContentJson {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $True)]
         [String]$PathToFile,
         [Parameter(Mandatory = $True)]
-        $Data
+        $Data,
+        [Parameter(Mandatory = $False)]
+        $MD5hash = ''
     )
     $retry = 3
     do {
         try {
             if (Test-Path $PathToFile) {[io.file]::OpenWrite($PathToFile).close()}
-            $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
+                $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+            } else {
+                Write-Log -Level Verbose "No changes in $PathToFile"
+            }
             return $true
         } catch { }
         $retry--
@@ -2156,8 +2176,10 @@ function Set-MinersConfigDefault {
         try {
             $Algo = [hashtable]@{}
             $Done = [PSCustomObject]@{}
+            $ChangeTag = $null
             if (Test-Path $PathToFile) {
                 $PresetTmp = Get-Content $PathToFile -Raw | ConvertFrom-Json
+                $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
                 #cleanup duplicates in algorithm lists
                 $Preset = [PSCustomObject]@{}
                 foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
@@ -2229,10 +2251,10 @@ function Set-MinersConfigDefault {
 
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ ($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
-            Set-ContentJson -PathToFile $PathToFile -Data $DoneSave > $null
+            Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{
-            Write-Log -Level Error "Could not create $($PathToFile) "
+            Write-Log -Level Error "Could not create $($PathToFile): $($_.Exception.Message) "
         }
     }
 }
@@ -2249,6 +2271,7 @@ function Set-DevicesConfigDefault {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
             $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining","DefaultOCprofile")
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "cpu","nvidia","amd" | Select-Object -ExpandProperty Model -Unique
@@ -2262,7 +2285,7 @@ function Set-DevicesConfigDefault {
                 }
                 foreach($SetupName in $SetupNames) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName "" -Force}}
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset > $null
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
@@ -2283,6 +2306,7 @@ function Set-PoolsConfigDefault {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty BaseName)
@@ -2309,7 +2333,7 @@ function Set-PoolsConfigDefault {
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$Setup_Content | Add-Member ExcludeCoinSymbol "" -Force}
                     $Done | Add-Member $_ $Setup_Content
                 }
-                Set-ContentJson -PathToFile $PathToFile -Data $Done > $null
+                Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null
             } else {
                 Write-Log -Level Error "No pools found!"
             }
@@ -2332,9 +2356,10 @@ function Set-OCProfilesConfigDefault {
         try {
             if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset > $null
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
             Write-Log -Level Error "Could not create $($PathToFile) "
