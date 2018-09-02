@@ -21,12 +21,12 @@
     # Check the reservations before trying to create them to avoid unnecessary UAC prompts.
     $urlACLs = & netsh http show urlacl | Out-String
 
-    if ($API.RemoteAPI -and (!$urlACLs.Contains('http://+:'+$LocalAPIport+'/'))) {
+    if ($API.RemoteAPI -and (!$urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
         # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http add urlacl url=http://+:'+$LocalAPIport+'/ sddl=D:(A;;GX;;;S-1-5-32-545)'
+        Start-Process netsh -Verb runas -Wait -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545)"
     }
-    if (!$API.RemoteAPI -and ($urlACLs.Contains('http://+:'+$LocalAPIport+'/'))) {
-        Start-Process netsh -Verb runas -Wait -ArgumentList 'http delete urlacl url=http://+:'+$LocalAPIport+'/'
+    if (!$API.RemoteAPI -and ($urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
+        Start-Process netsh -Verb runas -Wait -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/"
     }
 
     # Setup runspace to launch the API webserver in a separate thread
