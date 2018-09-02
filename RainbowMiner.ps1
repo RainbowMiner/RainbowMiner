@@ -1747,6 +1747,8 @@ while ($true) {
                 FullComboModels = [PSCustomObject]@{}
             }
 
+            $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
+
             #Create combos
             @($DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
                 $SubsetType = [String]$_
@@ -1772,8 +1774,7 @@ while ($true) {
 
             #Give API access to the device information
             $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
-        }
-        $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
+        }        
     }    
 
     Update-DeviceInformation @($Devices.Name | Select-Object -Unique)
@@ -1791,21 +1792,24 @@ while ($true) {
     if (Test-Path $MinersConfigFile) {
         if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
             $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force            
+            $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+            $ConfigFullComboModelNames = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name)
             foreach ($CcMiner in @((Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties)) {
-                [String[]]$CcMinerName_Array = @($CcMiner.Name -split '-')
-                if ($CcMinerName_Array.Count -gt 1 -and $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])") {$CcMiner.Name = $CcMinerName_Array[0] + "-" + $DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])"}
-                $CcMinerName_Array = @($CcMiner.Name -split '-')
-                if (($CcMinerName_Array.Count -gt 1 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[1]) -or ($CcMinerName_Array.Count -gt 2 -and $Config.DeviceModel -inotcontains $CcMinerName_Array[2])) {continue}
-                
-                foreach($p in @($CcMiner.Value)) {
-                    if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) {$true;break}})) {
-                        $CcMinerName = $CcMiner.Name
-                        if ($p.MainAlgorithm -ne '*') {
-                            $CcMinerName += "-$(Get-Algorithm $p.MainAlgorithm)"
-                            if ($p.SecondaryAlgorithm) {$CcMinerName += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                $CcMinerName = $CcMiner.Name
+                [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
+                if ($CcMinerName_Array.Count -gt 1 -and ($ConfigFullComboModelNames -icontains $CcMinerName_Array[1]) -and ($DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")) {$CcMinerName = "$($CcMinerName_Array[0])-$($DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")";$CcMinerName_Array = @($CcMinerName -split '-')}                
+                $CcMinerOk = $true
+                for($i=1;($i -lt $CcMinerName_Array.Count) -and $CcMinerOk;$i++) {if ($Config.DeviceModel -inotcontains $CcMinerName_Array[$i]) {$CcMinerOk=$false}}
+                if ($CcMinerOk) {
+                    foreach($p in @($CcMiner.Value)) {
+                        if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) {$true;break}})) {
+                            $CcMinerNameToAdd = $CcMinerName
+                            if ($p.MainAlgorithm -ne '*') {
+                                $CcMinerNameToAdd += "-$(Get-Algorithm $p.MainAlgorithm)"
+                                if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                            }
+                            $Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
                         }
-                        $Config.Miners | Add-Member -Name $CcMinerName -Value $p -MemberType NoteProperty -Force
                     }
                 }
             }
