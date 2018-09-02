@@ -1144,7 +1144,7 @@ function Update-DeviceInformation {
                             Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
                             PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
                             PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
-                            PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
+                            #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                         }) -Force
                 }
                 $DeviceId++
