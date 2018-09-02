@@ -1188,9 +1188,12 @@ function Update-DeviceInformation {
                 '--format=csv,noheader'
             )
             if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
-            & $Command $Arguments  | ForEach-Object {
+            & $Command $Arguments | ForEach-Object {
                 $SMIresultSplit = $_ -split ','
                 if ($SMIresultSplit.count -gt 10) {
+                    for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
+                        if ($SMIresultSplit[$i] -like '*error*') {$SMIresultSplit[$i] = "[Not Supported]"}
+                    }
                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $Data = [PSCustomObject]@{
                             Utilization       = if ($SMIresultSplit[1] -like "*Supported*") {100} else {[int]($SMIresultSplit[1] -replace '%', '')} #If we dont have real Utilization, at least make the watchdog happy
