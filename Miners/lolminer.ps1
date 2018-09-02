@@ -11,27 +11,42 @@ $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43-lolminer/lolMiner_v043_Win64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
+$DevFee = 2.0
 
 $Devices = @($Devices.NVIDIA) + @($Devices.AMD)
-if (-not $Devices -or $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "MEDIUM"; MinMemGB = 6; Params = "-workbatch=MEDIUM"; Fee=1}  #Equihash 96,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "HIGH"; MinMemGB = 6; Params = "-workbatch=HIGH"; Fee=1}  #Equihash 96,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "VERYHIGH"; MinMemGB = 6; Params = "-workbatch=VERYHIGH"; Fee=1}  #Equihash 96,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "";      WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "ASF";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTCZ";  WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "HEPTA"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "LTZ";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "SAFE";  WorkBatch = ""; MinMemGB = 2; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "XSG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "SCASH"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "ZER";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "";      WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "ASF";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTCZ";  WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTG";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "HEPTA"; WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "LTZ";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "SAFE";  WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "XSG";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "SCASH"; WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "ZER";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Type      = @("AMD","NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
+    }
+    return
+}
 
 $UserConfig = [hashtable]@{
     DEFAULTS = [hashtable]@{
@@ -89,7 +104,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     API = "Lol"
                     Port = $Miner_Port
                     DevFee = $Miner_Fee
-                    URI = $URI
+                    Uri = $Uri
                     ExtendInterval = 1
                     ManualUri = $ManualUri
                 }
