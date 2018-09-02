@@ -303,6 +303,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **API_ID** = your MiningPoolHub USER ID (found at MPH on page "Edit account")
 - **API_Key** = your MiningPoolHub API KEY (found at MPH on page "Edit account")
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
+- **LocalAPIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
 
 #### Select devices ####
