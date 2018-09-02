@@ -2154,10 +2154,25 @@ function Set-MinersConfigDefault {
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
-            $Done = [PSCustomObject]@{}
             $Algo = [hashtable]@{}
+            $Done = [PSCustomObject]@{}
+            if (Test-Path $PathToFile) {
+                $PresetTmp = Get-Content $PathToFile -Raw | ConvertFrom-Json
+                #cleanup duplicates in algorithm lists
+                $Preset = [PSCustomObject]@{}
+                foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
+                    if (Get-Member -inputobject $Preset -name $Name -Membertype Properties) {continue}
+                    $Preset | Add-Member $Name @(
+                        [System.Collections.ArrayList]$MinerCheck = @()
+                        foreach($cmd in $PresetTmp.$Name) {
+                            $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
+                            $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
+                            $k = "$m-$s"
+                            if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
+                        }) -Force
+                }
+            }
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "cpu","gpu"
             $AllMiners = if (Test-Path "Miners") {@(Get-ChildItemContent "Miners" -Parameters @{Pools = @{}; Stats = @{}; Config = @{InfoOnly=$true}; Devices = @{}} | Select-Object -ExpandProperty Content)}
@@ -2190,11 +2205,12 @@ function Set-MinersConfigDefault {
                         [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
                         foreach ($SetupDevice in $SetupDevices) {
                             $NameKey = "$($Name)-$($SetupDevice)"
+                            [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
                             if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                [System.Collections.ArrayList]$NewValues = @(Compare-Object $Done.$NameKey $Setup.$Name -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
-                                if ($NewValues.count) {$Value.AddRange($NewValues) > $null}
-                                $Done | Add-Member $NameKey $Value -Force
-                            }                            
+                                [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
+                                $Done | Add-Member $NameKey $ValueTmp -Force
+                            }
                         }
                     }
                 }

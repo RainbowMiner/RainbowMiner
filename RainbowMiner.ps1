@@ -112,7 +112,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.5.2"
+$Version = "3.8.5.3"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -188,7 +188,7 @@ Start-AsyncLoader
 Write-Log "Starting RainbowMiner v$Version"
 
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
-(Get-Process -Id $PID).PriorityClass = "BelowNormal"
+if (-not $psISE) {(Get-Process -Id $PID).PriorityClass = "BelowNormal"}
 
 Write-Host "Detecting devices .."
 $AllDevices = Get-Device "cpu","gpu"
