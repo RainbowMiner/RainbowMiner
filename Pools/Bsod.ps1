@@ -62,7 +62,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if (-not $InfoOnly) {
         if ($Pool_Request -and $Pool_Request.$Pool_Key) {
             $Divisor *= 1e6
-            if (-not (Test-Path "Stats\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$Pool_Key.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
+            if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$Pool_Key.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
             else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$Pool_Key $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
         } else {
             $Divisor *= 1e9
