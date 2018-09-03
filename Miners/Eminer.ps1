@@ -21,7 +21,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; Params = @()} #Ethash3GB
     #[PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 4; Params = @()} #Ethash
 )
-$CommonCommands = " -no-devfee -intensity 64"
+$CommonCommands = " -no-devfee"
 
 # Set devfee default coin, it may reduce DAG changes
 $DevFeeCoin  = [PSCustomObject]@{
