@@ -1160,17 +1160,24 @@ function Update-DeviceInformation {
 
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
-                        $AdlResultSplit = $_ -split ','
+                        [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0)
+                        $i=0
+                        foreach($v in @($x -split ',')) {
+                            $v = $v -replace "[^\d\.]+"
+                            if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
+                            $i++
+                        }
+                        if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
                         $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                             $_ | Add-Member Data ([PSCustomObject]@{
-                                    AdapterId         = [int]$AdlResultSplit[0]
-                                    FanSpeed          = [int]([int]$AdlResultSplit[1] / [int]$AdlResultSplit[2] * 100)
-                                    Clock             = [int]([int]($AdlResultSplit[3] / 100))
-                                    ClockMem          = [int]([int]($AdlResultSplit[4] / 100))
+                                    AdapterId         = $AdlResultSplit[0]
+                                    FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
+                                    Clock             = [int]($AdlResultSplit[3] / 100)
+                                    ClockMem          = [int]($AdlResultSplit[4] / 100)
                                     Utilization       = [int]$AdlResultSplit[5]
                                     Temperature       = [int]$AdlResultSplit[6] / 1000
                                     PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                    PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + [double]$AdlResultSplit[7]) / 100) * ([double]$AdlResultSplit[5] / 100)                                
+                                    PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
                                 }) -Force
                         }
                         $DeviceId++
@@ -1192,21 +1199,27 @@ function Update-DeviceInformation {
                 $SMIresultSplit = $_ -split ','
                 if ($SMIresultSplit.count -gt 10) {
                     for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
-                        if ($SMIresultSplit[$i] -like '*error*') {$SMIresultSplit[$i] = "[Not Supported]"}
+                        $v = $SMIresultSplit[$i].Trim()
+                        if ($v -match '(error|supported)') {$v = "-"}
+                        elseif ($i -ne 7) {
+                            $v = $v -replace "[^\d\.]"
+                            if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = "-"}
+                        }
+                        $SMIresultSplit[$i] = $v                        
                     }
                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                         $Data = [PSCustomObject]@{
-                            Utilization       = if ($SMIresultSplit[1] -like "*Supported*") {100} else {[int]($SMIresultSplit[1] -replace '%', '')} #If we dont have real Utilization, at least make the watchdog happy
-                            UtilizationMem    = if ($SMIresultSplit[2] -like "*Supported*") {$null} else {[int]($SMIresultSplit[2] -replace '%', '')}
-                            Temperature       = if ($SMIresultSplit[3] -like "*Supported*") {$null} else {[int]($SMIresultSplit[3] -replace '%', '')}
-                            PowerDraw         = if ($SMIresultSplit[4] -like "*Supported*") {$null} else {[int]($SMIresultSplit[4] -replace 'W', '')}
-                            PowerLimit        = if ($SMIresultSplit[5] -like "*Supported*" -or $SMIresultSplit[5] -like "*error*") {$null} else {[int]($SMIresultSplit[5] -replace 'W', '')}
-                            FanSpeed          = if ($SMIresultSplit[6] -like "*Supported*" -or $SMIresultSplit[6] -like "*error*") {$null} else {[int]($SMIresultSplit[6] -replace '%', '')}
+                            Utilization       = if ($SMIresultSplit[1] -eq "-") {100} else {[int]$SMIresultSplit[1]} #If we dont have real Utilization, at least make the watchdog happy
+                            UtilizationMem    = if ($SMIresultSplit[2] -eq "-") {$null} else {[int]$SMIresultSplit[2]}
+                            Temperature       = if ($SMIresultSplit[3] -eq "-") {$null} else {[int]$SMIresultSplit[3]}
+                            PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4]}
+                            PowerLimit        = if ($SMIresultSplit[5] -eq "-") {$null} else {[int]$SMIresultSplit[5]}
+                            FanSpeed          = if ($SMIresultSplit[6] -eq "-") {$null} else {[int]$SMIresultSplit[6]}
                             Pstate            = $SMIresultSplit[7]
-                            Clock             = if ($SMIresultSplit[8] -like "*Supported*") {$null} else {[int]($SMIresultSplit[8] -replace 'Mhz', '')}
-                            ClockMem          = if ($SMIresultSplit[9] -like "*Supported*") {$null} else {[int]($SMIresultSplit[9] -replace 'Mhz', '')}
-                            PowerMaxLimit     = if ($SMIresultSplit[10] -like "*Supported*") {$null} else {[int]($SMIresultSplit[10] -replace 'W', '')}
-                            PowerDefaultLimit = if ($SMIresultSplit[11] -like "*Supported*") {$null} else {[int]($SMIresultSplit[11] -replace 'W', '')}
+                            Clock             = if ($SMIresultSplit[8] -eq "-") {$null} else {[int]$SMIresultSplit[8]}
+                            ClockMem          = if ($SMIresultSplit[9] -eq "-") {$null} else {[int]$SMIresultSplit[9]}
+                            PowerMaxLimit     = if ($SMIresultSplit[10] -eq "-") {$null} else {[int]$SMIresultSplit[10]}
+                            PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
                         }
                         if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
                         if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
