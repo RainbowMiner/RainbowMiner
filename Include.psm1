@@ -2068,7 +2068,9 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [String]$Characters = "A-Z0-9",
         [Parameter(Mandatory = $False)]
-        [Array]$Valid = @()
+        [Array]$Valid = @(),
+        [Parameter(Mandatory = $False)]
+        [Switch]$Unique = $False
     )
     if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = [regex]::split($Default[0].Trim(),"\s*[,;:]+\s*")}
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
@@ -2090,9 +2092,10 @@ function Read-HostArray {
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
             [Array]$Result = $Result -replace "[^$($Characters),;:]+","" -split "\s*[,;:]+\s*"
             Switch ($Mode) {
-                "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object) | Select-Object -Unique; break}
-                "-" {$Result = $Default | Where-Object {$Result -inotcontains $_} | Select-Object -Unique; break}
+                "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
+                "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
             }
+            if ($Unique) {$Result = $Result | Select-Object -Unique}
             if ($Valid.Count -gt 0) {
                 if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
                     Write-Host "The following entries are invalid (type `"list`" to show all valid):"
