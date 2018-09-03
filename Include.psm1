@@ -1162,7 +1162,7 @@ function Update-DeviceInformation {
                     $AdlResult | ForEach-Object {
                         [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0)
                         $i=0
-                        foreach($v in @($x -split ',')) {
+                        foreach($v in @($_ -split ',')) {
                             $v = $v -replace "[^\d\.]+"
                             if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
                             $i++
