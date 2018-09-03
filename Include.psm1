@@ -2552,7 +2552,7 @@ function Get-MinerPort{
         do {$portin++} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
         if ($portin -gt $portmax) {$portin=[int]$Port}
     }
-    if (-not $Global:GlobalMinerPorts.ContainsKey($MinerName) -or $portin -ne $Global:GlobalMinerPorts.ContainsKey($MinerName)) {Write-Log "Assigning port $portin to $MinerName"}
+    if (-not $Global:GlobalMinerPorts.ContainsKey($MinerName) -or $portin -ne $Global:GlobalMinerPorts[$MinerName]) {Write-Log "Assigning port $portin to $MinerName"}
     $Global:GlobalMinerPorts[$MinerName]=$portin
     $portin
 }
