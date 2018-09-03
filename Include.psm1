@@ -118,7 +118,7 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent)
     
-    if (-not (Test-Path Variable:Script:CoinmarketCapList) -or -not $Script:CoinmarketCapList.Count) {
+    if (-not (Test-Path Variable:Global:GlobalCoinmarketCapList) -or -not $Global:GlobalCoinmarketCapList.Count) {
         $OldEAP = $ErrorActionPreference
         $ErrorActionPreference = "Stop"
         try {
@@ -133,19 +133,19 @@ function Get-CoinSymbol {
             Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
             return
         }
-        [hashtable]$Script:CoinmarketCapList = @{}
-        [hashtable]$Script:CoinmarketCapCoins = @{}
+        [hashtable]$Global:GlobalCoinmarketCapList = @{}
+        [hashtable]$Global:GlobalCoinmarketCapCoins = @{}
         foreach ($data in $Request.data) {
-            $Script:CoinmarketCapList[$data.symbol] = $data
-            $Script:CoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
+            $Global:GlobalCoinmarketCapList[$data.symbol] = $data
+            $Global:GlobalCoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
         }
         if (Test-Path ".\Data\Coins.json") {
             $NewCoins = Get-Content ".\Data\Coins.json" -Raw | ConvertFrom-Json
-            $NewCoins.PSObject.Properties.Name | Foreach-Object {$name = $_.ToLower() -replace "[^a-z0-9]+";if (-not $Script:CoinmarketCapCoins.ContainsKey($name)) {$Script:CoinmarketCapCoins[$name] = $NewCoins.$_}}
+            $NewCoins.PSObject.Properties.Name | Foreach-Object {$name = $_.ToLower() -replace "[^a-z0-9]+";if (-not $Global:GlobalCoinmarketCapCoins.ContainsKey($name)) {$Global:GlobalCoinmarketCapCoins[$name] = $NewCoins.$_}}
         }        
     }
 
-    if (-not $Silent) {$Script:CoinmarketCapCoins[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
+    if (-not $Silent) {$Global:GlobalCoinmarketCapCoins[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
 }
 
 function Get-Ticker {
@@ -156,11 +156,11 @@ function Get-Ticker {
 
     Get-CoinSymbol -Silent
 
-    if (-not $Script:CoinmarketCapList.ContainsKey($Symbol)) {
+    if (-not $Global:GlobalCoinmarketCapList.ContainsKey($Symbol)) {
         Write-Log -Level Warn "$($Symbol) not found on Coinmarketcap "
         return
     }
-    $Symbol_ID = $Script:CoinmarketCapList[$Symbol].id
+    $Symbol_ID = $Global:GlobalCoinmarketCapList[$Symbol].id
 
     try {
         $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)"
@@ -891,13 +891,13 @@ function Get-Device {
     )
 
     if ($Name) {
-        if (-not (Test-Path Variable:Script:DataDeviceList) -or -not $Script:DataDeviceList) {$Script:DataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
+        if (-not (Test-Path Variable:Global:GlobalDataDeviceList) -or -not $Global:GlobalDataDeviceList) {$Global:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
             $Name_Split += @("*") * (100 - $Name_Split.Count)
 
-            $Name_Device = $Script:DataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
 
             $Name_Device
@@ -905,8 +905,8 @@ function Get-Device {
     }
 
     # Try to get cached devices first to improve performance
-    if ((Test-Path Variable:Script:CachedDevices) -and -not $Refresh) {
-        $Script:CachedDevices | Foreach-Object {
+    if ((Test-Path Variable:Global:GlobalCachedDevices) -and -not $Refresh) {
+        $Global:GlobalCachedDevices | Foreach-Object {
             $Device = $_
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
                 $Device
@@ -994,10 +994,10 @@ function Get-Device {
 
     try {
         $CPUIndex = 0
-        if (-not (Test-Path Variable:Script:GetDeviceCacheCIM)) {
-            $Script:GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
+        if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {
+            $Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
         }
-        $Script:GetDeviceCacheCIM | Foreach-Object {
+        $Global:GlobalGetDeviceCacheCIM | Foreach-Object {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
             $CPUInfo = $_ | ConvertTo-Json | ConvertFrom-Json
             $Device = [PSCustomObject]@{
@@ -1026,7 +1026,7 @@ function Get-Device {
         Write-Log -Level Warn "CIM CPU detection has failed. "
     }
 
-    $Script:CachedDevices = $Devices
+    $Global:GlobalCachedDevices = $Devices
     $Devices
 }
 
@@ -1036,7 +1036,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Script:CachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Global:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -1113,7 +1113,7 @@ function Update-DeviceInformation {
     
     $abReload = $true
 
-    $Script:CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
         
@@ -1232,11 +1232,11 @@ function Update-DeviceInformation {
     }
 
     if (-not $DeviceName -or $DeviceName -like "CPU*") {
-        $CPU_count = ($Script:CachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-        if ($CPU_count -gt 0) {$Script:GetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
-        $Script:CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+        $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+        if ($CPU_count -gt 0) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+        $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
             $Device = $_
-            $Script:GetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+            $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
                 if ($Script:abMonitor -and $CPU_count -eq 1) {
                     $CpuData = @{
                         Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
@@ -1301,9 +1301,9 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {Get-Algorithms -Silent}
+        if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-        if ($Script:Algorithms.ContainsKey($Algorithm)) {$Script:Algorithms[$Algorithm]} else {$Algorithm}
+        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {$Global:GlobalAlgorithms[$Algorithm]} else {$Algorithm}
     }
 }
 
@@ -1317,9 +1317,9 @@ function Get-Region {
             Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Script:Regions)) {Get-Regions -Silent}
+    if (-not (Test-Path Variable:Global:GlobalRegions)) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Script:Regions.ContainsKey($Region)) {$Script:Regions[$Region]} else {foreach($r in @($Script:Regions.Keys)) {if ($Region -match "^$($r)") {$Script:Regions[$r];return}};$Region}
+    if ($Global:GlobalRegions.ContainsKey($Region)) {$Global:GlobalRegions[$Region]} else {foreach($r in @($Global:GlobalRegions.Keys)) {if ($Region -match "^$($r)") {$Global:GlobalRegions[$r];return}};$Region}
 }
 
 function Get-Algorithms {
@@ -1328,12 +1328,12 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:Algorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Script:AlgorithmsTimeStamp) {
-        [hashtable]$Script:Algorithms = @{}
-        (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Script:Algorithms[$_.Name]=$_.Value}
-        $Script:AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
+    if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithms = @{}
+        (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
-    if (-not $Silent) {$Script:Algorithms.Keys}
+    if (-not $Silent) {$Global:GlobalAlgorithms.Keys}
 }
 
 function Get-Regions {
@@ -1342,11 +1342,11 @@ function Get-Regions {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Script:Regions)) {
-        [hashtable]$Script:Regions = @{}
-        (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Script:Regions[$_.Name]=$_.Value}
+    if (-not (Test-Path Variable:Global:GlobalRegions)) {
+        [hashtable]$Global:GlobalRegions = @{}
+        (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Script:Regions.Keys}
+    if (-not $Silent) {$Global:GlobalRegions.Keys}
 }
 
 enum MinerStatus {
@@ -1410,6 +1410,10 @@ class Miner {
 
     [String]GetArguments() {
         return $this.Arguments
+    }
+
+    [String]GetMinerDeviceName() {
+        return "$($this.BaseName)-$(($this.DeviceName | Sort-Object) -join '-')"
     }
 
     hidden StartMining() {
@@ -1731,7 +1735,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
 
         $this.OCprofileBackup.Clear()
-        $Vendor = $Script:CachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Global:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
             try {
@@ -1751,7 +1755,7 @@ class Miner {
 
         foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
             if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
-                $DeviceIds = @($Script:CachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
+                $DeviceIds = @($Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
                 $Profile = $Config.OCprofiles."$($this.OCprofile.$DeviceModel)"
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
@@ -2515,266 +2519,40 @@ function Get-Subsets($a){
     $l | Group-Object -Property Length | %{$_.Group | sort}
 }
 
-function Test-Port{   
-<#     
-.SYNOPSIS     
-    Tests port on computer.   
-     
-.DESCRIPTION   
-    Tests port on computer.  
-      
-.PARAMETER computer   
-    Name of server to test the port connection on. 
-       
-.PARAMETER port   
-    Port to test  
-        
-.PARAMETER tcp   
-    Use tcp port  
-       
-.PARAMETER udp   
-    Use udp port   
-      
-.PARAMETER UDPTimeOut  
-    Sets a timeout for UDP port query. (In milliseconds, Default is 1000)   
-       
-.PARAMETER TCPTimeOut  
-    Sets a timeout for TCP port query. (In milliseconds, Default is 1000) 
-                  
-.NOTES     
-    Name: Test-Port.ps1   
-    Author: Boe Prox   
-    DateCreated: 18Aug2010    
-    List of Ports: http://www.iana.org/assignments/port-numbers   
-       
-    To Do:   
-        Add capability to run background jobs for each host to shorten the time to scan.          
-.LINK     
-    https://boeprox.wordpress.org  
-      
-.EXAMPLE     
-    Test-Port -computer 'server' -port 80   
-    Checks port 80 on server 'server' to see if it is listening   
-     
-.EXAMPLE     
-    'server' | Test-Port -port 80   
-    Checks port 80 on server 'server' to see if it is listening  
-       
-.EXAMPLE     
-    Test-Port -computer @("server1","server2") -port 80   
-    Checks port 80 on server1 and server2 to see if it is listening   
-     
-.EXAMPLE 
-    Test-Port -comp dc1 -port 17 -udp -UDPtimeout 10000 
-     
-    Server   : dc1 
-    Port     : 17 
-    TypePort : UDP 
-    Open     : True 
-    Notes    : "My spelling is Wobbly.  It's good spelling but it Wobbles, and the letters 
-            get in the wrong places." A. A. Milne (1882-1958) 
-     
-    Description 
-    ----------- 
-    Queries port 17 (qotd) on the UDP port and returns whether port is open or not 
-        
-.EXAMPLE     
-    @("server1","server2") | Test-Port -port 80   
-    Checks port 80 on server1 and server2 to see if it is listening   
-       
-.EXAMPLE     
-    (Get-Content hosts.txt) | Test-Port -port 80   
-    Checks port 80 on servers in host file to see if it is listening  
-      
-.EXAMPLE     
-    Test-Port -computer (Get-Content hosts.txt) -port 80   
-    Checks port 80 on servers in host file to see if it is listening  
-         
-.EXAMPLE     
-    Test-Port -computer (Get-Content hosts.txt) -port @(1..59)   
-    Checks a range of ports from 1-59 on all servers in the hosts.txt file       
-             
-#>    
-[cmdletbinding(   
-    DefaultParameterSetName = '',   
-    ConfirmImpact = 'low'   
-)]   
+function Set-ActiveMinerPorts {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        $RunningMiners
+    )
+    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
+    [hashtable]$Global:GlobalActiveMinerPorts = @{}
+    if ($RunningMiners) {foreach($m in $RunningMiners) {$Global:GlobalActiveMinerPorts[$m.GetMinerDeviceName()] = $m.Port}}
+    try {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)}
+    catch {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
+}
+
+function Get-MinerPort{
+    [cmdletbinding()]
     Param(   
-        [Parameter(   
-            Mandatory = $True,   
-            Position = 0,   
-            ParameterSetName = '',   
-            ValueFromPipeline = $True)]   
-            [array]$computer,   
-        [Parameter(   
-            Position = 1,   
-            Mandatory = $True,   
-            ParameterSetName = '')]   
-            [array]$port,   
-        [Parameter(   
-            Mandatory = $False,   
-            ParameterSetName = '')]   
-            [int]$TCPtimeout=1000,   
-        [Parameter(   
-            Mandatory = $False,   
-            ParameterSetName = '')]   
-            [int]$UDPtimeout=1000,              
-        [Parameter(   
-            Mandatory = $False,   
-            ParameterSetName = '')]   
-            [switch]$TCP,   
-        [Parameter(   
-            Mandatory = $False,   
-            ParameterSetName = '')]   
-            [switch]$UDP                                     
-        )   
-    Begin {   
-        If (!$tcp -AND !$udp) {$tcp = $True}   
-        #Typically you never do this, but in this case I felt it was for the benefit of the function   
-        #as any errors will be noted in the output of the report           
-        $ErrorActionPreference = "SilentlyContinue"   
-        $report = @()   
-    }   
-    Process {      
-        ForEach ($c in $computer) {   
-            ForEach ($p in $port) {   
-                If ($tcp) {     
-                    #Create temporary holder    
-                    $temp = "" | Select Server, Port, TypePort, Open, Notes   
-                    #Create object for connecting to port on computer   
-                    $tcpobject = new-Object system.Net.Sockets.TcpClient   
-                    #Connect to remote machine's port                 
-                    $connect = $tcpobject.BeginConnect($c,$p,$null,$null)   
-                    #Configure a timeout before quitting   
-                    $wait = $connect.AsyncWaitHandle.WaitOne($TCPtimeout,$false)   
-                    #If timeout   
-                    If(!$wait) {   
-                        #Close connection   
-                        $tcpobject.Close()   
-                        Write-Log -Verbose "Connection Timeout"   
-                        #Build report   
-                        $temp.Server = $c   
-                        $temp.Port = $p   
-                        $temp.TypePort = "TCP"   
-                        $temp.Open = "False"   
-                        $temp.Notes = "Connection to Port Timed Out"   
-                    } Else {   
-                        $error.Clear()   
-                        $tcpobject.EndConnect($connect) > $null   
-                        #If error   
-                        If($error[0]){   
-                            #Begin making error more readable in report   
-                            [string]$string = ($error[0].exception).message   
-                            $message = (($string.split(":")[1]).replace('"',"")).TrimStart()   
-                            $failed = $true   
-                        }   
-                        #Close connection       
-                        $tcpobject.Close()   
-                        #If unable to query port to due failure
-                        If($failed){   
-                            #Build report   
-                            $temp.Server = $c   
-                            $temp.Port = $p   
-                            $temp.TypePort = "TCP"   
-                            $temp.Open = "False"   
-                            $temp.Notes = "$message"   
-                        } Else{   
-                            #Build report   
-                            $temp.Server = $c   
-                            $temp.Port = $p   
-                            $temp.TypePort = "TCP"   
-                            $temp.Open = "True"     
-                            $temp.Notes = ""   
-                        }   
-                    }      
-                    #Reset failed value   
-                    $failed = $Null       
-                    #Merge temp array with report               
-                    $report += $temp   
-                }       
-                If ($udp) {   
-                    #Create temporary holder    
-                    $temp = "" | Select Server, Port, TypePort, Open, Notes                                      
-                    #Create object for connecting to port on computer   
-                    $udpobject = new-Object system.Net.Sockets.Udpclient 
-                    #Set a timeout on receiving message  
-                    $udpobject.client.ReceiveTimeout = $UDPTimeout  
-                    #Connect to remote machine's port                 
-                    Write-Log -Verbose "Making UDP connection to remote server"  
-                    $udpobject.Connect("$c",$p)  
-                    #Sends a message to the host to which you have connected.  
-                    Write-Log -Verbose "Sending message to remote host"  
-                    $a = new-object system.text.asciiencoding  
-                    $byte = $a.GetBytes("$(Get-Date)")  
-                    [void]$udpobject.Send($byte,$byte.length)  
-                    #IPEndPoint object will allow us to read datagrams sent from any source.   
-                    Write-Log -Verbose "Creating remote endpoint"  
-                    $remoteendpoint = New-Object system.net.ipendpoint([system.net.ipaddress]::Any,0)  
-                    Try {  
-                        #Blocks until a message returns on this socket from a remote host.  
-                        Write-Log -Verbose "Waiting for message return"  
-                        $receivebytes = $udpobject.Receive([ref]$remoteendpoint)  
-                        [string]$returndata = $a.GetString($receivebytes) 
-                        If ($returndata) { 
-                           Write-Log -Verbose "Connection Successful"   
-                            #Build report   
-                            $temp.Server = $c   
-                            $temp.Port = $p   
-                            $temp.TypePort = "UDP"   
-                            $temp.Open = "True"   
-                            $temp.Notes = $returndata    
-                            $udpobject.close()    
-                        }                        
-                    } Catch {  
-                        If ($Error[0].ToString() -match "\bRespond after a period of time\b") {  
-                            #Close connection   
-                            $udpobject.Close()   
-                            #Make sure that the host is online and not a false positive that it is open  
-                            If (Test-Connection -comp $c -count 1 -quiet) {  
-                                Write-Log -Verbose "Connection Open"   
-                                #Build report   
-                                $temp.Server = $c   
-                                $temp.Port = $p   
-                                $temp.TypePort = "UDP"   
-                                $temp.Open = "True"   
-                                $temp.Notes = ""  
-                            } Else {  
-                                <#  
-                                It is possible that the host is not online or that the host is online,   
-                                but ICMP is blocked by a firewall and this port is actually open.  
-                                #>  
-                                Write-Log -Verbose "Host maybe unavailable"   
-                                #Build report   
-                                $temp.Server = $c   
-                                $temp.Port = $p   
-                                $temp.TypePort = "UDP"   
-                                $temp.Open = "False"   
-                                $temp.Notes = "Unable to verify if port is open or if host is unavailable."                                  
-                            }                          
-                        } ElseIf ($Error[0].ToString() -match "forcibly closed by the remote host" ) {  
-                            #Close connection   
-                            $udpobject.Close()   
-                            Write-Log -Verbose "Connection Timeout"   
-                            #Build report   
-                            $temp.Server = $c   
-                            $temp.Port = $p   
-                            $temp.TypePort = "UDP"   
-                            $temp.Open = "False"   
-                            $temp.Notes = "Connection to Port Timed Out"                          
-                        } Else {                       
-                            $udpobject.close()  
-                        }  
-                    }      
-                    #Merge temp array with report               
-                    $report += $temp   
-                }                                   
-            }   
-        }                   
-    }   
-    End {   
-        #Generate Report   
-        $report  
-    } 
+        [Parameter(Mandatory = $True)]
+        [string]$MinerName,
+        [Parameter(Mandatory = $False)]
+        [string[]]$DeviceName = @(),
+        [Parameter(Mandatory = $False)]
+        $Port = 30000
+    )
+    if ($DeviceName -and $DeviceName.Count) {$MinerName = "$($MinerName)-$(($DeviceName | Sort-Object) -join '-')"}
+    if ($Global:GlobalActiveMinerPorts -and $Global:GlobalActiveMinerPorts.ContainsKey($MinerName)) {return $Global:GlobalActiveMinerPorts[$MinerName]}
+    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}    
+    $portin  = [int]($Port -replace "[^\d]")
+    if ($Global:GlobalActiveTcpPorts.Contains($portin)) {
+        $portmax = [math]::min($portin+9999,65535)
+        do {$portin++} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
+        if ($portin -gt $portmax) {$portin=[int]($Port -replace "[^\d]")}
+    }        
+    $Global:GlobalMinerPorts[$MinerName]=$portin
+    $portin
 }
 
 function Get-ComputerStats {
@@ -2794,7 +2572,7 @@ function Get-MD5Hash {
     ConfirmImpact = 'low'   
 )]   
 Param(   
-    [Parameter(   
+    [Parameter(
         Mandatory = $True,   
         Position = 0,   
         ParameterSetName = '',   

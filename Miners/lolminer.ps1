@@ -76,7 +76,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             $MinMemGB = $_.MinMemGB
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
             $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-            $Miner_Name = (@($Name) + @($_.WorkBatch | Select-Object) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-' -replace '-+','-'
+            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+            $Miner_Name = (@($Name) + @($_.WorkBatch | Select-Object) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-' -replace '-+','-'            
 
             if ($Miner_Device) {
                 $UserConfig_Name = $Algorithm_Norm.ToUpper() -replace '-','_'

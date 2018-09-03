@@ -40,7 +40,6 @@ if ($Config.InfoOnly) {
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
 
     switch($_.Vendor) {
@@ -54,7 +53,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $MinMemGB = $_.MinMemGB
 
         if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {
-            $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
+            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+
+            $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f ($_.Type_Vendor_Index + 1)}) -join ''
 
             $Miner_Protocol_Params = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"-proto 4 -stales 0"} else {"-proto 1"}

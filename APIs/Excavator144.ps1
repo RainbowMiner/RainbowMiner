@@ -15,6 +15,10 @@ class Excavator144 : Miner {
         return @()
     }
 
+    [String]GetMinerDeviceName() {
+        return $this.BaseName
+    }
+
     hidden StartMining() {
         $Server = "localhost"
         $Timeout = 10 #seconds

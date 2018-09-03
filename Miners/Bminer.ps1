@@ -56,6 +56,7 @@ if ($Config.InfoOnly) {
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
     $Miner_Model = $_.Model
 
     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','

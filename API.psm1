@@ -235,6 +235,10 @@
                     $Data = $API.ComputerStats | ConvertTo-Json
                     Break
                 }
+                "/minerports" {
+                    $Data = $API.MinerPorts | ConvertTo-Json
+                    Break
+                }
                 "/currentprofit" {
                     $Data = [PSCustomObject]@{ProfitBTC=($API.RunningMiners | Measure-Object -Sum -Property Profit).Sum;Rates=$API.Rates} | ConvertTo-Json
                     Break

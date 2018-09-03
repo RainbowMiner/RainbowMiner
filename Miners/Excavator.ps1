@@ -67,6 +67,7 @@ $Devices | Select-Object Model -Unique | ForEach-Object {
     $Device = @($Devices | Where-Object Model -EQ $_.Model)
     $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
+    $Miner_Port = Get-MinerPort -MinerName $Name -Port $Miner_Port
 
     $Commands | ForEach-Object {
         $Main_Algorithm = $_.MainAlgorithm

@@ -59,6 +59,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)        
         $Miner_Model = $_.Model
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
             
         switch($Miner_Vendor) {
             "NVIDIA" {$Miner_Deviceparams = "--noUAC --noAMD --noCPU"}

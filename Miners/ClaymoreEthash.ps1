@@ -102,7 +102,6 @@ if ($Config.InfoOnly) {
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Fee = 0
     if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
@@ -130,7 +129,10 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
             if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
 
-            if ($Arguments_Platform) {
+            if ($Arguments_Platform) {                
+                $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+
                 if ($_.SecondaryAlgorithm) {
                     $SecondaryAlgorithm = $_.SecondaryAlgorithm
                     $SecondaryAlgorithm_Norm = Get-Algorithm $SecondaryAlgorithm
