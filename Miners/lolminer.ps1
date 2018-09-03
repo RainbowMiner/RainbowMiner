@@ -20,16 +20,16 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "MEDIUM"; MinMemGB = 6; Params = "-workbatch=MEDIUM"; Fee=1}  #Equihash 96,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "HIGH"; MinMemGB = 6; Params = "-workbatch=HIGH"; Fee=1}  #Equihash 96,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "VERYHIGH"; MinMemGB = 6; Params = "-workbatch=VERYHIGH"; Fee=1}  #Equihash 96,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "";      WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "ASF";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTCZ";  WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTG";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "HEPTA"; WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "LTZ";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "SAFE";  WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "XSG";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "SCASH"; WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "ZER";   WorkBatch = ""; MinMemGB = 9; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "";      WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "ASF";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTCZ";  WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "HEPTA"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "LTZ";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "SAFE";  WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "XSG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "SCASH"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "ZER";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
