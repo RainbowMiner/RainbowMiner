@@ -189,19 +189,25 @@ The new numbers (16x5, 20x9, ..) describe the number of bits matched in each rou
 
 RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5
 
-## OVERCLOCKING
+
+## OVERCLOCKING OVERVIEW
 
 There are two ways to adjust overclocking values in RainbowMiner:
-- Option1: MSI Afterburner profiles, recommended for **mining rigs with max. 6 identical GPUs**
-- Option2: custom overclocking profiles, recommended for mining rigs with **more than 6 or mixed GPUs**
+- **Option1: MSI Afterburner profiles**
+  - recommended for **mining rigs with max. 6 identical GPUs**
+  - to enable, set "**MSIAprofile**" to the number of your default AB profile ([C]onfiguration->[C]ommon)
+  - MSI Afterburner profiles are addressed by number 1-5
+- **Option2: custom overclocking profiles**
+  - recommended for mining rigs with **more than 6 or mixed GPUs**
+  - to enable, set "**EnableOCProfiles**" to "**1**" ([C]onfiguration->[C]ommon)
+  - custom profiles have freely defined names (it differs from option 1!)
+  - **important:** set a default profile for each GPU group ([C]onfiguration->[D]evices). Use the name of the profiles (look into ocprofiles.config.txt, if in doubt)
+  - independant of MSI Afterburner
 
-The selection is simple:
-- Option1: if you want RainbowMiner to switch between your MSI Afterburner profiles automatically, set "**MSIAprofile**" to the number (1 to 5) of your default profile (or use the [C]onfiguration->[C]ommon)
-- Option2: if you plan to use custom overclocking, set "**EnableOCProfiles**" to "**1**" in your config.txt (or use the [C]onfiguration->[C]ommon) and (important!) set a default profile for each GPU group
-- if you do not want anything of the above two, set both, "**EnableOCProfiles**" and "**MSIAprofile**" to "**0**"
+If you do not want to use the overclocking features in RainbowMiner: set both, "**EnableOCProfiles**" and "**MSIAprofile**", to "**0**" ([C]onfiguration->[C]ommon)
 
 
-## MSI AFTERBURNER PROFILES
+## OC OPTION1: MSI AFTERBURNER PROFILES
 
 Overclocking option, recommended for **unique GPU mining rigs with maximum 6 GPU**
 
@@ -235,7 +241,7 @@ I recommend you set the following profile setup in MSI Afterburner, so that you 
 Be careful when playing with OC, since this can damage your devices. RainbowMiner will not be responsible, if you kill your devices.
 
 
-## CUSTOM OVERCLOCKING PROFILES
+## OC OPTION2: CUSTOM OVERCLOCKING PROFILES
 
 Recommended for mining rigs with **more than 6 GPU** or **different GPU**
 
@@ -250,7 +256,7 @@ Alternatively, the devices can be changed using [C]onfiguration->[D]evices
 
 ### 1. setup overclocking profiles
 
-Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Of course you may also edit the ocprofiles.config.txt file directly.
+Use [C]onfiguration->[O]C-Profiles to edit, create and delete overclocking profiles. Values for PowerLimit (%), ThermalLimit (°C), MemoryClockBoost (MHz), CoreClockBoost (MHz) and LockVoltagePoint (µV) (see hint below) can be defined. You may name the profiles like you want. Hint: Use the complete profile's names, when editing the config files directly. Of course you may also edit the ocprofiles.config.txt file directly.
 
 Hint: LockVoltagePoint can only be set, if EnableOCvoltage is set to 1 in your config.txt (or use [C]onfiguration->[C]ommon to change)
 
