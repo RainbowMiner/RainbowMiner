@@ -1163,7 +1163,7 @@ function Update-DeviceInformation {
                         [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0)
                         $i=0
                         foreach($v in @($_ -split ',')) {
-                            $v = $v -replace "[^\d\.]+"
+                            $v = $v -replace "[^\d\.]"
                             if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
                             $i++
                         }
@@ -2522,12 +2522,14 @@ function Get-Subsets($a){
 function Set-ActiveMinerPorts {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $False)]
         $RunningMiners
     )
-    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
     [hashtable]$Global:GlobalActiveMinerPorts = @{}
     if ($RunningMiners) {foreach($m in $RunningMiners) {$Global:GlobalActiveMinerPorts[$m.GetMinerDeviceName()] = $m.Port}}
+}
+
+function Set-ActiveTcpPorts {
     try {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)}
     catch {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
 }
@@ -2545,11 +2547,12 @@ function Get-MinerPort{
     if ($DeviceName -and $DeviceName.Count) {$MinerName = "$($MinerName)-$(($DeviceName | Sort-Object) -join '-')"}
     if ($Global:GlobalActiveMinerPorts -and $Global:GlobalActiveMinerPorts.ContainsKey($MinerName)) {return $Global:GlobalActiveMinerPorts[$MinerName]}
     if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
+    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts)) {Set-ActiveTcpPorts}    
     $Port = [int]($Port -replace "[^\d]")
     $portin  = [int]$Port
     if ($Global:GlobalActiveTcpPorts.Contains($portin)) {
         $portmax = [math]::min($portin+9999,65535)
-        do {$portin++} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
+        do {$portin+=20} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
         if ($portin -gt $portmax) {$portin=[int]$Port}
     }
     if (-not $Global:GlobalMinerPorts.ContainsKey($MinerName) -or $portin -ne $Global:GlobalMinerPorts[$MinerName]) {Write-Log "Assigning port $portin to $MinerName"}

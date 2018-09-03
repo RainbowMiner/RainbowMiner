@@ -1999,6 +1999,7 @@ while ($true) {
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName
     Set-ActiveMinerPorts @($ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object)
+    Set-ActiveTcpPorts
     $AllMiners = if (Test-Path "Miners") {
         $ConfigMini = [PSCustomObject]@{}
         $Config.PSObject.Properties | Where-Object {@("Pools","Miners","Devices","OCProfiles") -inotcontains $_.Name} | Foreach-Object {$ConfigMini | Add-Member $_.Name $_.Value}
