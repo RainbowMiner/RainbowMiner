@@ -2070,7 +2070,7 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Array]$Valid = @(),
         [Parameter(Mandatory = $False)]
-        [Switch]$Unique = $False
+        [Switch]$AllowDuplicates = $False
     )
     if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = [regex]::split($Default[0].Trim(),"\s*[,;:]+\s*")}
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
@@ -2095,16 +2095,14 @@ function Read-HostArray {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
                 "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
             }
-            if ($Unique) {$Result = $Result | Select-Object -Unique}
+            if (-not $AllowDuplicates) {$Result = $Result | Select-Object -Unique}
             if ($Valid.Count -gt 0) {
-                if ($Invalid = Compare-Object @($Result) @($Valid) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
+                if ($Invalid = Compare-Object @($Result | Select-Object -Unique) @($Valid | Select-Object -Unique) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) {
                     Write-Host "The following entries are invalid (type `"list`" to show all valid):"
                     Write-Host $($Invalid -join ",")
                     Write-Host " "
                     $Repeat = $true
-                } else {
-                    [Array]$Result = Compare-Object $Valid $Result -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
-                }           
+                }
             }
         }
     } until (-not $Repeat -and ($Result.Count -gt 0 -or -not $Mandatory))
