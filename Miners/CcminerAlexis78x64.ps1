@@ -9,7 +9,7 @@ param(
 
 $Path = ".\Bin\NVIDIA-Alexis78x64\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-ccmineralexis78/ccminerAlexis78v1.3x64.7z"
-$Port = "102{0:d2}"
+$Port = "123{0:d2}"
 $DevFee = 0.0
 
 $Devices = $Devices.NVIDIA

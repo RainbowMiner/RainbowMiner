@@ -2544,13 +2544,15 @@ function Get-MinerPort{
     )
     if ($DeviceName -and $DeviceName.Count) {$MinerName = "$($MinerName)-$(($DeviceName | Sort-Object) -join '-')"}
     if ($Global:GlobalActiveMinerPorts -and $Global:GlobalActiveMinerPorts.ContainsKey($MinerName)) {return $Global:GlobalActiveMinerPorts[$MinerName]}
-    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}    
-    $portin  = [int]($Port -replace "[^\d]")
+    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
+    $Port = [int]($Port -replace "[^\d]")
+    $portin  = [int]$Port
     if ($Global:GlobalActiveTcpPorts.Contains($portin)) {
         $portmax = [math]::min($portin+9999,65535)
         do {$portin++} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
-        if ($portin -gt $portmax) {$portin=[int]($Port -replace "[^\d]")}
-    }        
+        if ($portin -gt $portmax) {$portin=[int]$Port}
+    }
+    if (-not $Global:GlobalMinerPorts.ContainsKey($MinerName) -or $portin -ne $Global:GlobalMinerPorts.ContainsKey($MinerName)) {Write-Log "Assigning port $portin to $MinerName"}
     $Global:GlobalMinerPorts[$MinerName]=$portin
     $portin
 }
