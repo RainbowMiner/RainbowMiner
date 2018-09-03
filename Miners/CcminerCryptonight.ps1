@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoNight\ccminer-cryptonight.exe"
-$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.04/ccminer-cryptonight-304-x64-cuda92.zip"
+$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.05/ccminer-cryptonight-305-x64-cuda92.zip"
 $Port = "105{0:d2}"
 $DevFee = 0.0
 
