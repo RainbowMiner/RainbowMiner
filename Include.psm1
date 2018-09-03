@@ -1304,9 +1304,9 @@ function Get-Region {
             Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Script:Regions)) {Get-Regions -Silent}    
+    if (-not (Test-Path Variable:Script:Regions)) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Script:Regions.ContainsKey($Region)) {$Script:Regions[$Region]} else {$Region}
+    if ($Script:Regions.ContainsKey($Region)) {$Script:Regions[$Region]} else {foreach($r in @($Script:Regions.Keys)) {if ($Region -match "^$($r)") {$Script:Regions[$r];return}};$Region}
 }
 
 function Get-Algorithms {
