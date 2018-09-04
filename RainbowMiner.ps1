@@ -149,7 +149,11 @@ $DecayBase = 1 - 0.1 #decimal percentage
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
+[System.Collections.ArrayList]$NewPools = @()
+[System.Collections.ArrayList]$SelectedPoolNames = @()
+[System.Collections.ArrayList]$AllPoolsAddRemove = @()
 [hashtable]$Rates = @{BTC = [Double]1}
+[hashtable]$NewRates = @{}
 
 $LastDonated = 0
 
@@ -299,7 +303,7 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
 #[console]::TreatControlCAsInput = $true
 
 while ($true) {
-    #Load the config
+    #Load the config    
     $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
     $ConfigCheckFields = $true
     
@@ -317,7 +321,7 @@ while ($true) {
                     $val = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
-                }
+                }                
                 $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
@@ -1737,10 +1741,10 @@ while ($true) {
     $API.Config = $Config
 
     #Clear pool cache if the pool configuration has changed
-    if (($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {$AllPools = $null}
+    if ($AllPools -ne $null -and ($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {Remove-Variable "AllPools"}
 
     #Clear balances if pool configuration flag has changed
-    if ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {$Balances = $null}
+    if ($Balances -ne $null -and $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {Remove-Variable "Balances"}
 
     if ($ConfigCheckFields) {
         #Actions, when config has changes (or initial)
@@ -1859,7 +1863,7 @@ while ($true) {
     $WatchdogReset = ($WatchdogReset / ($Strikes * $Strikes * $Strikes) * (($Strikes * $Strikes * $Strikes) - 1)) + $StatSpan.TotalSeconds
 
     #Update the exchange rates
-    [hashtable]$NewRates = @{}
+    $NewRates.Clear()    
     try {
         Write-Log "Updating exchange rates from Coinbase. "
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
@@ -1882,7 +1886,7 @@ while ($true) {
 
     #Update the pool balances every 10 Minutes
     if ($Config.ShowPoolBalances) {
-        if ( -not $Balances -or $LastBalances -lt $Timer.AddMinutes(-10) ) {
+        if (-not $Balances -or $LastBalances -lt $Timer.AddMinutes(-10)) {
             Write-Log "Getting pool balances. "
             $Balances = Get-Balance -Config $UserConfig -Rates $Rates -NewRates $NewRates
             $API.Balances = $Balances
@@ -1890,7 +1894,7 @@ while ($true) {
         }
     }
 
-    $UserConfig = $ConfigBackup = $null
+    Remove-Variable "UserConfig", "ConfigBackup"
 
     #Give API access to the current rates
     $API.Rates = $Rates
@@ -1905,8 +1909,8 @@ while ($true) {
 
     #Load information about the pools
     Write-Log "Loading pool information. "
-    [System.Collections.ArrayList]$NewPools = @()
-    [System.Collections.ArrayList]$SelectedPoolNames = @()
+    $NewPools.Clear()
+    $SelectedPoolNames.Clear()
     if (Test-Path "Pools") {
         $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
             $Pool_Name = $_
@@ -1937,8 +1941,8 @@ while ($true) {
     $API.NewPools = $NewPools
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
-    #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    [System.Collections.ArrayList]$AllPoolsAddRemove = @()
+    #since mining is probably still working.  Then it filters out any algorithms that aren't being used.    
+    $AllPoolsAddRemove.Clear()
     foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) > $null}
     [System.Collections.ArrayList]$AllPools = @($NewPools)
     if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) > $null}
@@ -1979,7 +1983,6 @@ while ($true) {
         if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsAddRemove.Add($Pool) > $null}
     }
     foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
-    $AllPoolsAddRemove = $null
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {

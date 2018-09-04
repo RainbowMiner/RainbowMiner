@@ -2758,7 +2758,8 @@ function Start-AsyncLoader {
             }
             catch {
                 $AsyncLoader.Errors.Add($_.Exception.Message) > $null
-                if ($AsyncLoader.Errors.Count -gt 50) {$AsyncLoader.Errors.RemoveAt(0)}
+                #$_.Exception.Message | Out-File "Logs\asyncloader.txt" -Append
+                if ($AsyncLoader.Errors.Count -gt 50) {$AsyncLoader.Errors.RemoveRange(0,[math]::max(1,$AsyncLoader.Errors.Count - 50))}
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}

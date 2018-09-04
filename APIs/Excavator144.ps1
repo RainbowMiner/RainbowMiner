@@ -471,31 +471,34 @@ class Excavator144 : Miner {
             }
             Default {
                 $this.StopMiningPreProcess()
-                if ([Excavator144]::Service.MiningProcess) {
-                    [Excavator144]::Service.MiningProcess.CloseMainWindow() | Out-Null
-                    # Wait up to 10 seconds for the miner to close gracefully
-                    $closedgracefully = [Excavator144]::Service.MiningProcess.WaitForExit(10000)
-                    if($closedgracefully) { 
-                        Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
-                    } else {
-                        Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
-                        if(![Excavator144]::Service.MiningProcess.HasExited) {
-                            Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
-                            [Excavator144]::Service.MiningProcess.Kill()
-                        }
-                    }
-                }
-                if ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue) {
-                    [Excavator144]::Service | Remove-Job -Force
-                }
-
-                if (-not ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue)) {
-                    [Excavator144]::Service = $null
-                }
-
+                $this.ShutdownMiner()
                 $this.Status = $Status
                 $this.StopMiningPostProcess()
             }
+        }
+    }
+
+    ShutDownMiner() {
+        if ([Excavator144]::Service.MiningProcess) {
+            [Excavator144]::Service.MiningProcess.CloseMainWindow() | Out-Null
+            # Wait up to 10 seconds for the miner to close gracefully
+            $closedgracefully = [Excavator144]::Service.MiningProcess.WaitForExit(10000)
+            if($closedgracefully) { 
+                Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
+            } else {
+                Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
+                if(![Excavator144]::Service.MiningProcess.HasExited) {
+                    Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
+                    [Excavator144]::Service.MiningProcess.Kill()
+                }
+            }
+        }
+        if ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue) {
+            [Excavator144]::Service | Remove-Job -Force
+        }
+
+        if (-not ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue)) {
+            [Excavator144]::Service = $null
         }
     }
 
