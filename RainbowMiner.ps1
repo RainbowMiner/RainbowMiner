@@ -452,7 +452,9 @@ while ($true) {
                                                 }
                                             }
                                             
-                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
+                                            if ($Config.PoolName -isnot [array]) {
+                                                $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
+                                            }
                                             if (-not $NicehashWallet) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -ne "NiceHash"}
                                                 $NicehashWallet = "`$Wallet"
@@ -479,7 +481,9 @@ while ($true) {
                                             }
                                             $Config.UserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $Config.UserName -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
 
-                                            $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
+                                            if ($Config.PoolName -isnot [array]) {
+                                                $Config.PoolName = if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}
+                                            }
                                             if (-not $Config.UserName) {
                                                 $Config.PoolName = $Config.PoolName | Where-Object {$_ -notlike "MiningPoolHub*"}                                                
                                             } elseif ($Config.PoolName -inotcontains "MiningPoolHub") {
@@ -2001,9 +2005,7 @@ while ($true) {
     Set-ActiveMinerPorts @($ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object)
     Set-ActiveTcpPorts
     $AllMiners = if (Test-Path "Miners") {
-        $ConfigMini = [PSCustomObject]@{}
-        $Config.PSObject.Properties | Where-Object {@("Pools","Miners","Devices","OCProfiles") -inotcontains $_.Name} | Foreach-Object {$ConfigMini | Add-Member $_.Name $_.Value}
-        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $ConfigMini; Devices = $DevicesByTypes} | ForEach-Object {
+        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {
             if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.Content.DeviceModel) {$_.Content.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.Content.DeviceModel)")}
             $p = @($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
             $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=$p;PowerDraw=$Stats."$($_.Name)_$($p[0])_HashRate".PowerDraw_Average} -PassThru -Force

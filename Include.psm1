@@ -139,8 +139,8 @@ function Get-CoinSymbol {
             $Global:GlobalCoinmarketCapList[$data.symbol] = $data
             $Global:GlobalCoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
         }
-        if (Test-Path ".\Data\Coins.json") {
-            $NewCoins = Get-Content ".\Data\Coins.json" -Raw | ConvertFrom-Json
+        if (Test-Path "Data\Coins.json") {
+            $NewCoins = Get-Content "Data\Coins.json" -Raw | ConvertFrom-Json
             $NewCoins.PSObject.Properties.Name | Foreach-Object {$name = $_.ToLower() -replace "[^a-z0-9]+";if (-not $Global:GlobalCoinmarketCapCoins.ContainsKey($name)) {$Global:GlobalCoinmarketCapCoins[$name] = $NewCoins.$_}}
         }        
     }
@@ -2525,13 +2525,18 @@ function Set-ActiveMinerPorts {
         [Parameter(Mandatory = $False)]
         $RunningMiners
     )
-    [hashtable]$Global:GlobalActiveMinerPorts = @{}
+    if (-not (Test-Path Variable:Global:GlobalActiveMinerPorts)) {[hashtable]$Global:GlobalActiveMinerPorts = @{}}
+    $Global:GlobalActiveMinerPorts.Clear()
     if ($RunningMiners) {foreach($m in $RunningMiners) {$Global:GlobalActiveMinerPorts[$m.GetMinerDeviceName()] = $m.Port}}
 }
 
 function Set-ActiveTcpPorts {
-    try {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)}
-    catch {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
+    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts)) {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
+    $Global:GlobalActiveTcpPorts.Clear()
+    try {
+        $NewPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
+        if ($NewPorts.Count -gt 0 ) {$Global:GlobalActiveTcpPorts.AddRange($NewPorts)>$null}
+    } catch {$Global:GlobalActiveTcpPorts.Clear()}
 }
 
 function Get-MinerPort{
