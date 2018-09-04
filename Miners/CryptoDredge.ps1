@@ -64,7 +64,13 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {             
+        $Miner_Enable = $true
+        if ($Pools.$Algorithm_Norm.Name -eq "NiceHash" -and ($Algorithm_Norm -eq "CryptonightV7" -or $Algorithm_Norm -eq "CryptonightHeavy")) {
+            #too bad: CryptoDredge v0.9.0 does not operate CryptonightV7 nor CryptonightHeavy on NiceHash
+            $Miner_Enable = $false
+        }
+
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Miner_Enable) {
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
