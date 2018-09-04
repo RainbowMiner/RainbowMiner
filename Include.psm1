@@ -1108,7 +1108,9 @@ function Update-DeviceInformation {
     [cmdletbinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [String[]]$DeviceName = @()
+        [String[]]$DeviceName = @(),
+        [Parameter(Mandatory = $false)]
+        [Bool]$UseAfterburner = $true        
     )
     
     $abReload = $true
@@ -1117,7 +1119,7 @@ function Update-DeviceInformation {
         $Devices = $_.Group
         $Vendor = $_.Name
         
-        if ($Script:abMonitor -and $Vendor -eq "AMD") {
+        if ($UseAfterburner -and $Script:abMonitor -and $Vendor -eq "AMD") {
             if ($abReload) {
                 if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
                 if ($Script:abControl) {$Script:abControl.ReloadAll()}
@@ -1237,7 +1239,7 @@ function Update-DeviceInformation {
         $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
             $Device = $_
             $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
-                if ($Script:abMonitor -and $CPU_count -eq 1) {
+                if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
                     $CpuData = @{
                         Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
                         Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
