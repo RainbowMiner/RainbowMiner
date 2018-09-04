@@ -2752,7 +2752,7 @@ while ($true) {
                     $NextReport = $Timer.AddSeconds($Config.Interval)
                 }
             }
-            Update-DeviceInformation @($ActiveMiners.DeviceName | Select-Object -Unique)
+            Update-DeviceInformation @($ActiveMiners.DeviceName | Select-Object -Unique) -UseAfterburner (-not $Config.DisableMSIAmonitor)
 
             $ActiveMiners | ForEach-Object {
                 $Miner = $_
