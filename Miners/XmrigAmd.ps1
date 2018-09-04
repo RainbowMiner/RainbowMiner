@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.1-beta/xmrig-amd-2.7.1-beta-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.3-beta/xmrig-amd-2.7.3-beta-win64.zip"
 $Port = "304{0:d2}"
 $DevFee = 1.0
 
@@ -24,7 +24,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv"; Params = ""}
