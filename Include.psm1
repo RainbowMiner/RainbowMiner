@@ -2525,18 +2525,25 @@ function Set-ActiveMinerPorts {
         [Parameter(Mandatory = $False)]
         $RunningMiners
     )
-    if (-not (Test-Path Variable:Global:GlobalActiveMinerPorts)) {[hashtable]$Global:GlobalActiveMinerPorts = @{}}
+    if (-not (Test-Path Variable:Global:GlobalActiveMinerPorts) -or $Global:GlobalActiveMinerPorts -eq $null) {[hashtable]$Global:GlobalActiveMinerPorts = @{}}
     $Global:GlobalActiveMinerPorts.Clear()
     if ($RunningMiners) {foreach($m in $RunningMiners) {$Global:GlobalActiveMinerPorts[$m.GetMinerDeviceName()] = $m.Port}}
 }
 
 function Set-ActiveTcpPorts {
-    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts)) {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Switch]$Disable = $false
+    )
+    if ($Disable) {$Global:GlobalActiveTcpPorts=$null;return}
+    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts) -or $Global:GlobalActiveTcpPorts -eq $null) {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
     $Global:GlobalActiveTcpPorts.Clear()
     try {
         $NewPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
         if ($NewPorts.Count -gt 0 ) {$Global:GlobalActiveTcpPorts.AddRange($NewPorts)>$null}
-    } catch {$Global:GlobalActiveTcpPorts.Clear()}
+        $NewPorts = $null
+    } catch {$Global:GlobalActiveTcpPorts=$null}
 }
 
 function Get-MinerPort{
@@ -2549,10 +2556,11 @@ function Get-MinerPort{
         [Parameter(Mandatory = $False)]
         $Port = 30000
     )
+    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts) -or $Global:GlobalActiveTcpPorts -eq $null) {return $Port}
+
     if ($DeviceName -and $DeviceName.Count) {$MinerName = "$($MinerName)-$(($DeviceName | Sort-Object) -join '-')"}
     if ($Global:GlobalActiveMinerPorts -and $Global:GlobalActiveMinerPorts.ContainsKey($MinerName)) {return $Global:GlobalActiveMinerPorts[$MinerName]}
     if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
-    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts)) {Set-ActiveTcpPorts}    
     $Port = [int]($Port -replace "[^\d]")
     $portin  = [int]$Port
     if ($Global:GlobalActiveTcpPorts.Contains($portin)) {
