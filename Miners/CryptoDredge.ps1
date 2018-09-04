@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.0-cryptodredge/CryptoDredge_0.9.0_win_x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-cryptodredge/CryptoDredge_0.9.1_cuda_9.2_windows.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "313{0:d2}"
 $DevFee = 1.0
@@ -20,6 +20,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon"; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Allium
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s, ASIC domain. no longer profitable
+    [PSCustomObject]@{MainAlgorithm = "cryptonighthaven"; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; Params = ""} #Cryptonightheavy
     [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptonightV7 / Monero
     [PSCustomObject]@{MainAlgorithm = "lbk3"; Params = ""} #LBK3
@@ -64,13 +65,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
-        $Miner_Enable = $true
-        if ($Pools.$Algorithm_Norm.Name -eq "NiceHash" -and ($Algorithm_Norm -eq "CryptonightV7" -or $Algorithm_Norm -eq "CryptonightHeavy")) {
-            #too bad: CryptoDredge v0.9.0 does not operate CryptonightV7 nor CryptonightHeavy on NiceHash
-            $Miner_Enable = $false
-        }
-
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Miner_Enable) {
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
