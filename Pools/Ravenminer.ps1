@@ -90,7 +90,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Protocol      = "stratum+tcp"
             Host          = $Pool_Host
             Port          = $Pool_Port
-            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
             Pass          = "$Worker,c=$Pool_Currency"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false

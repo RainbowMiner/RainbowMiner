@@ -33,7 +33,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique  | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue) -or $InfoOnly}
+$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique  | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore) -or $InfoOnly}
 
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
@@ -69,7 +69,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host
                 Port          = $Pool_Port
-                User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction SilentlyContinue
+                User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
                 Pass          = "$Worker,c=$Pool_Currency"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
