@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
-$Uri = "http://www.gandalph3000.com/download/cast_xmr-vega-win64_130.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-cast/cast_xmr-vega-win64_130.zip"
 $Port = "306{0:d2}"
 $DevFee = 1.5
 
