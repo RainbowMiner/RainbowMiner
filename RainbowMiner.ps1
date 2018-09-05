@@ -632,23 +632,23 @@ while ($true) {
                                         "devicenamewizardgpu" {
                                             if ($AvailDeviceGPUVendors.Count -eq 1 -and $AvailDeviceCounts["GPU"] -gt 1) {
                                                 $GlobalSetupStepStore = $false
-                                                throw "Goto devicenamewizard$($p.ToLower())1"
+                                                throw "Goto devicenamewizard$($AvailDeviceGPUVendors[0].ToLower())1"
                                             }
                                             if ($AvailDeviceCounts["GPU"] -eq 1) {
-                                                if (Read-HostBool -Prompt "Mine on your $($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $p} | Select -ExpandProperty Model_Name -Unique)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
-                                                    $NewDeviceName[$p] = $p
+                                                if (Read-HostBool -Prompt "Mine on your $($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $AvailDeviceGPUVendors[0]} | Select -ExpandProperty Model_Name -Unique)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                                    $NewDeviceName[$AvailDeviceGPUVendors[0]] = $AvailDeviceGPUVendors[0]
                                                 }
                                                 throw "Goto devicenamewizardcpu1"
                                             }
-                                            if (Read-HostBool -Prompt "Mine on all available GPU ($($AvailDeviceGPUVendors -join '&'), choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                            if (Read-HostBool -Prompt "Mine on all available GPU ($($AvailDeviceGPUVendors -join ' and '), choose no to select devices)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                                                 foreach ($p in $AvailDeviceGPUVendors) {$NewDeviceName[$p] = @($p)}
                                                 throw "Goto devicenamewizardcpu1"
                                             }
                                         }
                                         "devicenamewizardamd1" {
                                             $NewDeviceName["AMD"] = @()
-                                            if ($AvailDeviceCounts["AMD"] -gt 1) {
-                                                if (Read-HostBool -Prompt "Do you want to mine on all AMD GPUs" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                            if ($AvailDeviceCounts["AMD"] -gt 0) {
+                                                if (Read-HostBool -Prompt "Do you want to mine on $(if ($AvailDeviceCounts["AMD"] -gt 1) {"all AMD GPUs"}else{"your AMD GPU"})" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                                                     $NewDeviceName["AMD"] = @("AMD")
                                                 }
                                             } else {
@@ -664,8 +664,8 @@ while ($true) {
                                         }
                                         "devicenamewizardnvidia1" {
                                             $NewDeviceName["NVIDIA"] = @()
-                                            if ($AvailDeviceCounts["NVIDIA"] -gt 1) {
-                                                if (Read-HostBool -Prompt "Do you want to mine on all NVIDIA GPUs" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                            if ($AvailDeviceCounts["NVIDIA"] -gt 0) {
+                                                if (Read-HostBool -Prompt "Do you want to mine on $(if ($AvailDeviceCounts["NVIDIA"] -gt 1) {"all NVIDIA GPUs"}else{"your NVIDIA GPU"})" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                                                     $NewDeviceName["NVIDIA"] = @("NVIDIA")
                                                 }
                                             } else {
@@ -694,14 +694,20 @@ while ($true) {
                                         }
                                         "devicenamewizardend" {
                                             $GlobalSetupStepStore = $false
-                                            $Config.DeviceName = @($NewDeviceName.Values | Foreach-Object {$_} | Foreach-Object {$_} | Select-Object -Unique | Sort-Object)
+                                            $Config.DeviceName = @($NewDeviceName.Values | Where-Object {$_} | Foreach-Object {$_} | Select-Object -Unique | Sort-Object)
                                             if ($Config.DeviceName.Count -eq 0) {
                                                 Write-Host " "
                                                 Write-Host "No devices selected. You cannot mine without devices. Restarting device input" -ForegroundColor Yellow
                                                 Write-Host " "
                                                 $GlobalSetupStepBack = $GlobalSetupStepBack.Where({$_ -notmatch "^devicenamewizard"})                                                
                                                 throw "Goto devicenamewizard"
-                                            }                                            
+                                            }
+                                            if ($NewDeviceName["AMD"]) {
+                                                Write-Host " "
+                                                Write-Host "Since you plan to mine on AMD, the minimum delay between miner change will be set to 2 seconds" -ForegroundColor Yellow
+                                                Write-Host " "
+                                                $Config.Delay = 2
+                                            }
                                         }
                                         "devicenameend" {
                                             $GlobalSetupStepStore = $false
