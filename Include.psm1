@@ -2582,7 +2582,7 @@ function Get-ComputerStats {
         VirtualMemoryUsage = Get-CimInstance win32_operatingsystem | ForEach-Object {"{0:N2}" -f ((($_.TotalVirtualMemorySize - $_.FreeVirtualMemory) * 100) / $_.TotalVirtualMemorySize)}
         DriveFree = Get-CimInstance Win32_Volume -Filter "DriveLetter = '$($PWD.Drive.Name):'" | ForEach-Object {"{0:N2}" -f (($_.FreeSpace / $_.Capacity) * 100)}
         Processes = (Get-Process).count
-        Connections = if (Get-Command "Get-NetTCPConnection" -ErrorAction SilentlyContinue) {(Get-NetTCPConnection).count}
+        Connections = if (Get-Command "Get-NetTCPConnection" -ErrorAction Ignore) {(Get-NetTCPConnection).count}
     }
 }
 
@@ -2759,8 +2759,7 @@ function Start-AsyncLoader {
                 $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
             }
             catch {
-                $AsyncLoader.Errors.Add($_.Exception.Message) > $null
-                #$_.Exception.Message | Out-File "Logs\asyncloader.txt" -Append
+                $AsyncLoader.Errors.Add($_.Exception.Message) > $null                
                 if ($AsyncLoader.Errors.Count -gt 50) {$AsyncLoader.Errors.RemoveRange(0,[math]::max(1,$AsyncLoader.Errors.Count - 50))}
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
