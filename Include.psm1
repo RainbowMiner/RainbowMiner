@@ -483,6 +483,7 @@ function Get-ChildItemContent {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
                 & $_.FullName @Parameters
+                foreach ($k in $Parameters.Keys) {Remove-Variable $k -ErrorAction Ignore}
             }
         }
         else {
@@ -494,6 +495,7 @@ function Get-ChildItemContent {
                 catch [ArgumentException] {
                     $null
                 }
+                foreach ($k in $Parameters.Keys) {Remove-Variable $k -ErrorAction Ignore}
             }
             if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
