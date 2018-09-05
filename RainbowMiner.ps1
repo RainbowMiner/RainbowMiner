@@ -565,8 +565,8 @@ while ($true) {
                                                 Write-Host " "
                                                 Write-Host "You are almost done :) Our defaults for miners and algorithms give you a good start. If you want, you can skip the settings for now " -ForegroundColor Cyan
                                                 Write-Host " "
-
-                                                if (Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true) {$GlobalSetupStepStore = $false;throw "Goto devicenamebegin"}
+                                                $Skip = Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                                if ($Skip) {throw "Goto devicenamebegin"}
                                             }
                                             $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         }
