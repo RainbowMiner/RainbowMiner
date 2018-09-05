@@ -270,7 +270,7 @@ function Set-Stat {
     $Stat = Get-Content $Path -ErrorAction Ignore -Raw
    
     try {
-        $Stat = ConvertFrom-Json ($Stat) -ErrorAction Stop
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
         if ($PowerDraw -gt 0 -and $Stat.PowerDraw_Live -eq $null) {
             #backward compatibility
             $Stat | Add-Member -NotePropertyMembers ([PSCustomObject]@{PowerDraw_Live = $PowerDraw;PowerDraw_Average = $PowerDraw;PowerDraw_Fluctuation = 0})            
