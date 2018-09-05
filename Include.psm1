@@ -2218,7 +2218,7 @@ function Set-MinersConfigDefault {
                 }
             }
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
-            $Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content}
             $AllDevices = Get-Device "cpu","gpu"
             $AllMiners = if (Test-Path "Miners") {@(Get-ChildItemContent "Miners" -Parameters @{Pools = @{}; Stats = @{}; Config = @{InfoOnly=$true}; Devices = @{}} | Select-Object -ExpandProperty Content)}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
@@ -2245,16 +2245,18 @@ function Set-MinersConfigDefault {
                     }
                 }
 
-                foreach ($Name in @($Setup.PSObject.Properties.Name)) {
-                    if ($MinerNames.Contains($Name)) {
-                        [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
-                        foreach ($SetupDevice in $SetupDevices) {
-                            $NameKey = "$($Name)-$($SetupDevice)"
-                            [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
-                            if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
-                                [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
-                                if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
-                                $Done | Add-Member $NameKey $ValueTmp -Force
+                if ($Setup) {
+                    foreach ($Name in @($Setup.PSObject.Properties.Name)) {
+                        if ($MinerNames.Contains($Name)) {
+                            [System.Collections.ArrayList]$Value = @(foreach ($v in $Setup.$Name) {if (-not $UseDefaultParams) {$v.Params = ''};if ($v.MainAlgorithm -ne '*') {$v.MainAlgorithm=$(if (-not $Algo[$v.MainAlgorithm]) {$Algo[$v.MainAlgorithm]=Get-Algorithm $v.MainAlgorithm};$Algo[$v.MainAlgorithm]);$v.SecondaryAlgorithm=$(if ($v.SecondaryAlgorithm) {if (-not $Algo[$v.SecondaryAlgorithm]) {$Algo[$v.SecondaryAlgorithm]=Get-Algorithm $v.SecondaryAlgorithm};$Algo[$v.SecondaryAlgorithm]}else{""})};$v})
+                            foreach ($SetupDevice in $SetupDevices) {
+                                $NameKey = "$($Name)-$($SetupDevice)"
+                                [System.Collections.ArrayList]$ValueTmp = $Value.Clone()
+                                if (Get-Member -inputobject $Done -name $NameKey -Membertype Properties) {
+                                    [System.Collections.ArrayList]$NewValues = @(Compare-Object @($Done.$NameKey) @($Setup.$Name) -Property MainAlgorithm,SecondaryAlgorithm | Where-Object SideIndicator -eq '<=' | Foreach-Object {$m=$_.MainAlgorithm;$s=$_.SecondaryAlgorithm;$Done.$NameKey | Where-Object {$_.MainAlgorithm -eq $m -and $_.SecondaryAlgorithm -eq $s}} | Select-Object)
+                                    if ($NewValues.count) {$ValueTmp.AddRange($NewValues) > $null}
+                                    $Done | Add-Member $NameKey $ValueTmp -Force
+                                }
                             }
                         }
                     }

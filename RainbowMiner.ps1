@@ -118,7 +118,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.5.12"
+$Version = "3.8.5.13"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -1590,9 +1590,9 @@ while ($true) {
             Get-Device "nvidia" | Where-Object {$Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {$Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Vendor_Index)}
         }
 
-        $Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty" -and (Test-Path Variable:$Name)} | Select-Object Name,Value | Foreach-Object {
+        $Config.PSObject.Properties | Where-Object {$_.TypeNameOfValue -ne "System.Object" -and $_.MemberType -eq "NoteProperty"} | Select-Object Name,Value | Foreach-Object {
             $name = $_.Name;
-            $var = Get-Variable -ValueOnly $name -ErrorAction SilentlyContinue
+            $var = Get-Variable -ValueOnly $name -ErrorAction Ignore
             if ($var -is [array] -and $Config.$name -is [string]) {$Config.$name = $Config.$name.Trim(); $Config.$name = @(if ($Config.$name -ne ''){@([regex]::split($Config.$name.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
             elseif (($var -is [bool] -or $var -is [switch]) -and $Config.$name -isnot [bool]) {$Config.$name = Get-Yes $Config.$name}
             elseif ($var -is [int] -and $Config.$name -isnot [int]) {$Config.$name = [int]$Config.$name}
