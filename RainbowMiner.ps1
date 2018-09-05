@@ -118,7 +118,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.5.13"
+$Version = "3.8.5.14"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -151,9 +151,7 @@ $DecayBase = 1 - 0.1 #decimal percentage
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
-[System.Collections.ArrayList]$NewPools = @()
 [System.Collections.ArrayList]$SelectedPoolNames = @()
-[System.Collections.ArrayList]$AllPoolsAddRemove = @()
 [hashtable]$Rates = @{BTC = [Double]1}
 [hashtable]$NewRates = @{}
 
@@ -247,7 +245,7 @@ try {
         Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
         $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
 
-        # Create miners.config.txt if it is missing
+        # Create miners.config.txt and cpu.miners.config.txt, if they are missing
         Set-MinersConfigDefault -PathToFile $MinersConfigFile -Force
         $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
 
@@ -1682,12 +1680,10 @@ while ($true) {
                 API_Key             = $Config.API_Key
             } | Select-Object -ExpandProperty Content) -Force
             foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
-                $Config.Pools.$p | Add-Member Algorithm @(($Config.Pools.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                $Config.Pools.$p | Add-Member ExcludeAlgorithm @(($Config.Pools.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                $Config.Pools.$p | Add-Member CoinName @(($Config.Pools.$p.CoinName | Select-Object) | Where-Object {$_}) -Force
-                $Config.Pools.$p | Add-Member ExcludeCoin @(($Config.Pools.$p.ExcludeCoin | Select-Object) | Where-Object {$_}) -Force
-                $Config.Pools.$p | Add-Member CoinSymbol @(($Config.Pools.$p.CoinSymbol | Select-Object) | Where-Object {$_}) -Force
-                $Config.Pools.$p | Add-Member ExcludeCoinSymbol @(($Config.Pools.$p.ExcludeCoinSymbol | Select-Object) | Where-Object {$_}) -Force
+                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
+                    if ($Config.Pools.$p.$q -isnot [array]) {$Config.Pools.$p.$q = @(($Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
+                    $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+                }
             }
         }
     }    
@@ -1752,53 +1748,48 @@ while ($true) {
     #Clear balances if pool configuration flag has changed
     if ($Balances -ne $null -and $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {Remove-Variable "Balances"}
 
-    if ($ConfigCheckFields) {
-        #Actions, when config has changes (or initial)
-        # .. for every change
+    #load device(s) informatino and device combos
+    if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
+        Write-Log "Device configuration changed. Refreshing now. "
 
-        #load device(s) informatino and device combos
-        if ($ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
-            Write-Log "Device configuration changed. Refreshing now. "
+        #Load information about the devices
+        $Devices = @(Get-Device $Config.DeviceName | Select-Object)
+        $DevicesByTypes = [PSCustomObject]@{
+            NVIDIA = @(Select-Device $Devices "NVIDIA")
+            AMD = @(Select-Device $Devices "AMD")
+            CPU = @(Select-Device $Devices "CPU")
+            Combos = [PSCustomObject]@{}
+            FullComboModels = [PSCustomObject]@{}
+        }
 
-            #Load information about the devices
-            $Devices = @(Get-Device $Config.DeviceName | Select-Object)
-            $DevicesByTypes = [PSCustomObject]@{
-                NVIDIA = @(Select-Device $Devices "NVIDIA")
-                AMD = @(Select-Device $Devices "AMD")
-                CPU = @(Select-Device $Devices "CPU")
-                Combos = [PSCustomObject]@{}
-                FullComboModels = [PSCustomObject]@{}
-            }
+        $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
 
-            $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
+        #Create combos
+        @($DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
+            $SubsetType = [String]$_
+            $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
+            $DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
+            Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
+                $SubsetModel= $_
+                $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
+            }                                        
+        }     
 
-            #Create combos
-            @($DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
-                $SubsetType = [String]$_
-                $DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
-                $DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
-                Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
-                    $SubsetModel= $_
-                    $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
-                }                                        
-            }     
-
-            if ($Config.MiningMode -eq "legacy") {
-                @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {
-                    $Device_LegacyModel = $_
-                    if ($DevicesByTypes.FullComboModels.$Device_LegacyModel -match '-') {
-                        $DevicesByTypes.$Device_LegacyModel = $DevicesByTypes.Combos.$Device_LegacyModel | Where-Object Model -eq $DevicesByTypes.FullComboModels.$Device_LegacyModel
-                    }
+        if ($Config.MiningMode -eq "legacy") {
+            @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {
+                $Device_LegacyModel = $_
+                if ($DevicesByTypes.FullComboModels.$Device_LegacyModel -match '-') {
+                    $DevicesByTypes.$Device_LegacyModel = $DevicesByTypes.Combos.$Device_LegacyModel | Where-Object Model -eq $DevicesByTypes.FullComboModels.$Device_LegacyModel
                 }
-            } elseif ($Config.MiningMode -eq "combo") {
-                #add combos to DevicesbyTypes
-                @("NVIDIA","AMD","CPU") | Foreach-Object {$DevicesByTypes.$_ += $DevicesByTypes.Combos.$_}     
             }
+        } elseif ($Config.MiningMode -eq "combo") {
+            #add combos to DevicesbyTypes
+            @("NVIDIA","AMD","CPU") | Foreach-Object {$DevicesByTypes.$_ += $DevicesByTypes.Combos.$_}     
+        }
 
-            #Give API access to the device information
-            $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
-        }        
-    }    
+        #Give API access to the device information
+        $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
+    }
 
     Update-DeviceInformation @($Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Config.DisableMSIAmonitor)
 
@@ -1915,10 +1906,9 @@ while ($true) {
 
     #Load information about the pools
     Write-Log "Loading pool information. "
-    $NewPools.Clear()
     $SelectedPoolNames.Clear()
-    if (Test-Path "Pools") {
-        $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
+    if (Test-Path "Pools") {        
+        $NewPools = @($AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
             $Pool_Name = $_
             $SelectedPoolNames.Add($Pool_Name) > $null
             [hashtable]$Pool_Config = @{Name = $Pool_Name}
@@ -1928,13 +1918,12 @@ while ($true) {
             $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty
             $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool_Config.PoolFee}))/100
             foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
-                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                
-                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
+                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
-                $NewPools.Add($Pool) > $null
+                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
             }
-        }
+        })
     }
 
     #Remove stats from pools & miners not longer in use
@@ -1948,47 +1937,38 @@ while ($true) {
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.    
-    $AllPoolsAddRemove.Clear()
-    foreach ($Pool in @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_})) {$AllPoolsAddRemove.Add($Pool) > $null}
-    [System.Collections.ArrayList]$AllPools = @($NewPools)
-    if ($AllPoolsAddRemove.Count) {$AllPools.Add($AllPoolsAddRemove) > $null}
-    $AllPoolsAddRemove.Clear()
-
-    #Now remove all deselected pool/algorithm/coin from AllPools
-    $i=0
     $OutofsyncTime = (Get-Date).ToUniversalTime().AddMinutes(-$OutofsyncWindow)
-    foreach ($Pool in $AllPools) {
-        $Pool_Name = $Pool.Name    
-        if (
-            (-not $Config.Pools.$Pool_Name) -or
-            ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
-            ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool.Name) -or
-            ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool.Name) -or
-            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
-            ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-            ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
-            ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
-            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-            ($Pool.Updated -lt $OutofsyncTime)
-        ) {$AllPoolsAddRemove.Add($Pool) > $null}
-        $i++
-    }
-    foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
-    $AllPoolsAddRemove.Clear()
+    $AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) |
+        Where-Object {
+            $Pool = $_
+            $Pool_Name = $_.Name
+            -not (
+                (-not $Config.Pools.$Pool_Name) -or
+                ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
+                ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool_Name) -or
+                ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool_Name) -or
+                ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
+                ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+                ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
+                ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
+                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
+                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+                ($Pool.Updated -lt $OutofsyncTime)
+            )
+        }
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
 
     #Apply watchdog to pools
-    foreach ($Pool in $AllPools) {
+    $AllPools = $AllPools | Where-Object {
+        $Pool = $_
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
-        if (($Pool_WatchdogTimers | Measure-Object).Count -ge <#stage#>3 -or ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -ge <#statge#>2) {$AllPoolsAddRemove.Add($Pool) > $null}
+        ($Pool_WatchdogTimers | Measure-Object).Count -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -lt <#statge#>2
     }
-    foreach($Pool in $AllPoolsAddRemove) {$AllPools.Remove($Pool)}
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
@@ -2377,6 +2357,7 @@ while ($true) {
                 EthPillEnable        = $Config.EthPillEnable
             }
             $ActiveMiners.Add($NewMiner) > $null
+            #Write-Log -Level Verbose "Create miner $($NewMiner.Name) $($NewMiner.DeviceModel) $($NewMiner.BaseAlgorithm.PSObject.Properties.Name -join '-') $($NewMiner.Pool)"
         }
     }
 
@@ -2699,10 +2680,11 @@ while ($true) {
     }
 
     #Reduce Memory
-    Get-Job -State Completed | Remove-Job
+    Get-Job -State Completed | Remove-Job -Force
     [GC]::Collect()
     Sleep -Milliseconds 200
 
+    if ($Error.Count) {$Error | Out-File "Logs\errors.main.txt" -Append}
     $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status

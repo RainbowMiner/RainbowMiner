@@ -267,7 +267,7 @@ function Set-Stat {
 
     $SmallestValue = 1E-20
 
-    $Stat = Get-Content $Path -ErrorAction SilentlyContinue -Raw
+    $Stat = Get-Content $Path -ErrorAction Ignore -Raw
    
     try {
         $Stat = ConvertFrom-Json ($Stat) -ErrorAction Stop
@@ -542,7 +542,7 @@ function Get-MinersContent {
         Pools = $Pools
     }
     
-    Get-ChildItem "Miners\*.ps1" -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Get-ChildItem "Miners\*.ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Miner = $_
         $Name = $Miner.BaseName
  
@@ -1447,7 +1447,7 @@ class Miner {
             $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
-            if ($this.Process | Get-Job -ErrorAction SilentlyContinue) {
+            if ($this.Process | Get-Job -ErrorAction Ignore) {
                 $this.Status = [MinerStatus]::Running
             }
         }
@@ -1473,11 +1473,11 @@ class Miner {
                     }
                 }
             }
-            if ($this.Process | Get-Job -ErrorAction SilentlyContinue) {
+            if ($this.Process | Get-Job -ErrorAction Ignore) {
                 $this.Process | Remove-Job -Force
             }
 
-            if (-not ($this.Process | Get-Job -ErrorAction SilentlyContinue)) {
+            if (-not ($this.Process | Get-Job -ErrorAction Ignore)) {
                 $this.Active = $this.GetActiveTime();
                 $this.Process = $null
                 $this.Status = [MinerStatus]::Idle
@@ -2197,6 +2197,7 @@ function Set-MinersConfigDefault {
         [Parameter(Mandatory = $False)]
         [Switch]$UseDefaultParams = $false
     )
+    $PathToFileCpu = "$(([IO.FileInfo]$PathToFile).DirectoryName)\cpu.$(([IO.FileInfo]$PathToFile).Name)"
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         try {
             $Algo = [hashtable]@{}
@@ -2336,7 +2337,7 @@ function Set-PoolsConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty BaseName)
+            $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             if ($Pools.Count -gt 0) {
                 $Pools | Foreach-Object {        
                     if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_) {
@@ -2768,6 +2769,7 @@ function Start-AsyncLoader {
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
+            if ($Error.Count) {$Error | Out-File "Logs\errors.asyncloader.txt" -Append}
             $Error.Clear()
         }
     });

@@ -323,7 +323,7 @@
             $Response.ContentLength64 = $ResponseBuffer.Length
             $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
             $Response.Close()
-
+            if ($Error.Count) {$Error | Out-File "Logs\errors.api.txt" -Append}
             $Error.Clear()
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
