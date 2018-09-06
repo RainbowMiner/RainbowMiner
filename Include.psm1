@@ -256,14 +256,24 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$FaultTolerance = 0.1,
         [Parameter(Mandatory = $false)]
-        [Double]$PowerDraw = 0
+        [Double]$PowerDraw = 0,
+        [Parameter(Mandatory = $false)]
+        [String]$Sub = ""
     )
 
     $Updated = $Updated.ToUniversalTime()
 
-    if ($Name -match '_Profit$') {$Path = "Stats\Pools\$Name.txt"}
-    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners\$Name.txt"}
-    else {$Path = "Stats\$Name.txt"}
+    if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
+    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
+    else {$Path = "Stats"}
+
+    if ($Sub) {
+        #legacy
+        if (Test-Path ("$Path\$Name.txt")) {Move-Item "$Path\$Name.txt" "$Path\$Sub-$Name.txt" -Force}
+        $Path = "$Path\$Sub-$Name.txt"
+    } else {
+        $Path = "$Path\$Name.txt"
+    }
 
     $SmallestValue = 1E-20
 
@@ -417,7 +427,9 @@ function Get-Stat {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [String]$Name
+        [String]$Name,
+        [Parameter(Mandatory = $false)]
+        [String]$Sub = ""
     )
 
     if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
@@ -426,9 +438,17 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        if ($Name -match '_Profit$') {$Path = "Stats\Pools\$Name.txt"}
-        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners\$Name.txt"}
-        else {$Path = "Stats\$Name.txt"}
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
+        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
+        else {$Path = "Stats"}
+
+        if ($Sub) {
+            #legacy
+            if (Test-Path ("$Path\$Name.txt")) {Move-Item "$Path\$Name.txt" "$Path\$Sub-$Name.txt" -Force}
+            $Path = "$Path\$Sub-$Name.txt"
+        } else {
+            $Path = "$Path\$Name.txt"
+        }
         if (Test-Path $Path) {ConvertFrom-Json (Get-Content $Path -ErrorAction Ignore -Raw) -ErrorAction Ignore}
     } else {
         # Return all stats
@@ -438,7 +458,7 @@ function Get-Stat {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             try {
-                $Stats[$BaseName] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
+                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }
             catch {
                 #Remove broken stat file
@@ -1365,6 +1385,7 @@ class Miner {
     $Arguments
     $API
     $Port
+    $Type
     [string[]]$Algorithm = @()
     [string[]]$BaseAlgorithm = @()
     $DeviceName

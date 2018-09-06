@@ -280,7 +280,7 @@ try {
                     & $_.FullName @Cleanup_Parameters
                 }
                 if ($Cleanup_Result) {Write-Host $Cleanup_Result}
-            }
+            }            
         }
         Remove-Item ".\Cleanup.ps1" -Force
     }
@@ -1767,6 +1767,7 @@ while ($true) {
             Combos = [PSCustomObject]@{}
             FullComboModels = [PSCustomObject]@{}
         }
+        [hashtable]$DevicesToVendors = @{}
 
         $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
 
@@ -1778,8 +1779,11 @@ while ($true) {
             Get-DeviceSubSets @($DevicesByTypes.$SubsetType) | Foreach-Object {                       
                 $SubsetModel= $_
                 $DevicesByTypes.Combos.$SubsetType += @($DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
-            }                                        
-        }     
+            }
+            if ($DevicesByTypes.$SubsetType) {
+                @($DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique) + @($DevicesByTypes.Combos.$SubsetType | Select-Object -ExpandProperty Model) | Where-Object {$_} | Foreach-Object {$DevicesToVendors[$_] = $SubsetType}
+            }
+        }
 
         if ($Config.MiningMode -eq "legacy") {
             @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {
@@ -2839,7 +2843,7 @@ while ($true) {
         $Miner = $_
         $Miner.Speed_Live = [Double[]]@()
 
-        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate")})}
+        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $DevicesToVendors[$Miner.DeviceModel])})}
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
@@ -2852,7 +2856,7 @@ while ($true) {
                 if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Config.Interval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Strikes))}
 
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Strikes * $Strikes) -or $Miner.GetActivateCount() -ge $Strikes) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $DevicesToVendors[$Miner.DeviceModel]
                 }
 
                 #Update watchdog timer
