@@ -2363,7 +2363,6 @@ while ($true) {
                 EthPillEnable        = $Config.EthPillEnable
             }
             $ActiveMiners.Add($NewMiner) > $null
-            #Write-Log -Level Verbose "Create miner $($NewMiner.Name) $($NewMiner.DeviceModel) $($NewMiner.BaseAlgorithm.PSObject.Properties.Name -join '-') $($NewMiner.Pool)"
         }
     }
 
@@ -2408,6 +2407,8 @@ while ($true) {
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
 
+    $StoppedMiners = @()
+
     #Stop or start miners in the active list depending on if they are the most profitable
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0} | Where-Object {($_.Best -EQ $false) -or $RestartMiners} | ForEach-Object {
         $Miner = $_
@@ -2430,6 +2431,7 @@ while ($true) {
                     }
                 }
             }
+            $StoppedMiners += $Miner
         }
     }
 
@@ -2491,6 +2493,10 @@ while ($true) {
             }
         }
     }
+
+    #Cleanup stopped miners
+    $StoppedMiners | Foreach-Object {$_.Cleanup()}
+    Remove-Variable "StoppedMiners"
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
@@ -2736,7 +2742,7 @@ while ($true) {
 
             if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
                 if ($Timer -gt $NextReport) {
-                    & .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL
+                    & .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL
                     $NextReport = $Timer.AddSeconds($Config.Interval)
                 }
             }
@@ -2884,7 +2890,7 @@ $ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
         $Miner.StopMining()            
     }
     if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {
-        $Miner.SetStatus([MinerStatus]::Failed)
+        $Miner.ShutDownMiner()
         $ExcavatorWindowsClosed.Add($Miner.BaseName) > $null
     }
 }

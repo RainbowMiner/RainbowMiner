@@ -271,7 +271,7 @@ function Set-Stat {
    
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
-        if ($PowerDraw -gt 0 -and $Stat.PowerDraw_Live -eq $null) {
+        if ($Stat -and $PowerDraw -gt 0 -and $Stat.PowerDraw_Live -eq $null) {
             #backward compatibility
             $Stat | Add-Member -NotePropertyMembers ([PSCustomObject]@{PowerDraw_Live = $PowerDraw;PowerDraw_Average = $PowerDraw;PowerDraw_Fluctuation = 0})            
         }
@@ -1503,6 +1503,8 @@ class Miner {
         $this.ResetOCprofile() #reset all overclocking
         Sleep -Milliseconds 500
     }
+
+    cleanup() { }
 
     [DateTime]GetActiveStart() {
         $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}

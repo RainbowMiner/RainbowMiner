@@ -379,6 +379,67 @@ class Excavator144 : Miner {
         }
     }
 
+    cleanup() {
+        $Server = "localhost"
+        $Timeout = 10
+       
+        if ([Excavator144]::Service | Get-Job -ErrorAction Ignore) {
+            #Get algorithm list
+            $Failed = $false
+            $Data = [PSCustomObject]@{}
+            $Request = @{id = 1; method = "algorithm.list"; params = @()} | ConvertTo-Json -Compress
+            try {
+                $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
+                $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+
+                if ($Data.id -ne 1) {
+                    Write-Log -Level Error  "Invalid response returned by miner ($($this.Name)). "
+                    $Failed = $true
+                }
+
+                if ($Data.error) {
+                    Write-Log -Level Error  "Error returned by miner ($($this.Name)): $($Data.error)"
+                    $Failed = $true
+                }
+            }
+            catch {
+                Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
+                $Failed = $true
+            }
+
+            if (-not $Failed -and -not $Data.algorithms) {
+                #Quit miner
+                $Request = @{id = 1; method = "quit"; params = @()} | ConvertTo-Json -Compress
+                $Response = ""
+
+                $HashRate = [PSCustomObject]@{}
+                $Failed = $false
+
+                try {
+                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
+                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+
+                    if ($Data.id -ne 1) {
+                        Write-Log -Level Error  "Invalid response returned by miner ($($this.Name)). "
+                        $Failed = $true
+                    }
+
+                    if ($Data.error) {
+                        Write-Log -Level Error  "Error returned by miner ($($this.Name)): $($Data.error)"
+                        $Failed = $true
+                    }
+                }
+                catch {
+                    Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
+                    $Failed = $true
+                }
+
+                Sleep -Milliseconds 500
+                $this.ShutdownMiner()
+            }
+        }
+    }
+
     [DateTime]GetActiveLast() {
         if ($this.BeginTime.Ticks -and $this.EndTime.Ticks) {
             return $this.EndTime
