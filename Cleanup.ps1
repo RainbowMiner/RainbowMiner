@@ -2,6 +2,8 @@
 
 $Version = Get-Version $Version
 
+if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
+
 $ChangesTotal = 0
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
@@ -89,6 +91,14 @@ try {
             Remove-Item "Stats\*_Hashrate.txt"
             $ChangesTotal++
         } catch { }
+    }
+    if ($Version -le (Get-Version "3.8.5.15")) {
+        [hashtable]$DevicesToVendors = @{}
+        $AllDevices | Select-Object Vendor,Name,Type | Foreach-Object {
+            $Stat_Name = $_.Name
+            $Stat_Vendor = if ($_.Type -eq "GPU") {$_.Vendor}else{"CPU"}
+            Get-ChildItem "Stats\Miners" | Where-Object BaseName -notmatch "^(AMD|CPU|NVIDIA)-" | Where-Object BaseName -match "-$($Stat_Name)" | Foreach-Object {Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($Stat_Vendor)-$($_.Name)" -Force}
+        }
     }
     "Cleaned $ChangesTotal elements"
 }
