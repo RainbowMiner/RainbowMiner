@@ -10,7 +10,8 @@ param(
 $Path = ".\Bin\NeoScrypt-Claymore\NeoScryptMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-claymoreneoscrypt/claymore_neoscrypt_1.2.zip"
 $Port = "202{0:d2}"
-$DevFee = 1.0
+$DevFee = 2.0
+$ManualUri = "https://bitcointalk.org/index.php?topic=3012600.0"
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -42,7 +43,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+    $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
     $Commands | ForEach-Object {
 
@@ -54,7 +55,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-r -1 -mport $($Miner_Port) -zpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -psw $($Pools.$Algorithm_Norm.Pass) -di $($DeviceIDsAll) $($_.Params)"
+                Arguments = "-r -1 -mport -$($Miner_Port) -pool $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -psw $($Pools.$Algorithm_Norm.Pass) -di $($DeviceIDsAll) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week }
                 API = "Claymore"
                 Port = $Miner_Port
