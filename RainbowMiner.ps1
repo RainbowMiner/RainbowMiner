@@ -118,7 +118,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.5.15"
+$Version = "3.8.5.16"
 $Strikes = 3
 $SyncWindow = 5 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -2498,10 +2498,6 @@ while ($true) {
         }
     }
 
-    #Cleanup stopped miners
-    $StoppedMiners | Foreach-Object {$_.Cleanup()}
-    Remove-Variable "StoppedMiners"
-
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
@@ -2870,6 +2866,10 @@ while ($true) {
             }
         }
     }
+
+    #Cleanup stopped miners
+    $StoppedMiners | Foreach-Object {$_.Cleanup()}
+    Remove-Variable "StoppedMiners"
 
     if ($Stopp) {
         break
