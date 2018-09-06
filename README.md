@@ -206,6 +206,36 @@ There are two ways to adjust overclocking values in RainbowMiner:
 
 If you do not want to use the overclocking features in RainbowMiner: set both, "**EnableOCProfiles**" and "**MSIAprofile**", to "**0**" ([C]onfiguration->[C]ommon)
 
+**Frequently asked questions**
+
+> Just wondering what would happen if in miners.config I set the ocprofile to a clock and then set it different within AF under the same profile number. Would one trump the other? If so which one would override? 
+
+Only one of the two OC options can be enabled at a time:
+
+|config.txt|MSIAprofile|EnableOCprofiles|
+|---|:---:|:---:|
+|Use ocprofiles.config.txt|whatever|1|
+|Use Afterburner profiles|1-5|0|
+|No OC switching at all|0|0|
+
+The differences:
+
+|   |MSIAprofiles|ocprofiles| 
+|---|:---:|:---:|
+|Can handle parallel miners on different GPUs|no|yes|
+|Depends on Afterburner|yes|no|
+|Depends on nvidiaInspector|no|yes|
+|Speed with more than 6 GPU|slow|fast|
+|Works for Nvidia|yes|yes|
+|Works for AMD|yes|no|
+|max. number of profiles|5|unlimited|
+|Individual profile names|no|yes|
+
+> I set the ocprofile to a clock and then set it different within AF under the same profile number
+
+- MSI Afterburner profiles are fixed to a maximum of five and is being selected by their number 1 to 5 in parameter "MSIprofile" in miners.config.txt"
+- ocprofiles are unlimited in ammount, you decide what their names are. RainbowMiner comes with an example ocprofiles.config.txt, where the profiles are named "Profile1", "Profile", .. "Profile9". The profile is being selected by the full name in parameter "OCprofile" in miners.config.txt (for example "Profile2")
+
 
 ## OC OPTION1: MSI AFTERBURNER PROFILES
 
