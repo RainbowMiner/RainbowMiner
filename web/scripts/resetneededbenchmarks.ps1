@@ -21,14 +21,14 @@ $API.Miners | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-O
     $Miners_Key = "$($_.Name)-$($Algo)"
     if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
         $Miners_List[$Miners_Key] = $true                            
-        $Miners_Path = ".\Stats\Miners\$($_.Name)_$($Algo)_HashRate.txt"
+        $Miners_Path = Get-ChildItem ".\Stats\Miners\*$($_.Name)_$($Algo)_HashRate.txt"
 
-        if ((Test-Path $Miners_Path) -and (Get-ChildItem $Miners_Path).LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]) {
-            Remove-Item $Miners_Path -ErrorAction Ignore
+        if ($Miners_Path -and $Miners_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]) {
+            $Miners_Path | Remove-Item -ErrorAction Ignore
             $text += "$($_.Name -replace '-GPU.+$')/$($_.DeviceModel)/$($Algo)`n"
             $count++
             if ($SecondAlgo -ne '') {
-                Remove-Item ".\Stats\Miners\$($_.Name)_$($SecondAlgo)_HashRate.txt" -ErrorAction Ignore
+                Remove-Item ".\Stats\Miners\*$($_.Name)_$($SecondAlgo)_HashRate.txt" -ErrorAction Ignore
             }
         }
 
