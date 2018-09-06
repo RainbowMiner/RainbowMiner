@@ -216,16 +216,18 @@
                             $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
                             $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
                             $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
-                            $Out.Add([PSCustomObject]@{
-                                BaseName = $_.BaseName
-                                Name = $_.Name
-                                Algorithm = $Algo
-                                SecondaryAlgorithm = $SecondAlgo                                
-                                DeviceModel = $_.DeviceModel
-                                Benchmarking = -not $Miner_Path
-                                NeedsBenchmark = $Miner_NeedsBenchmark
-                                BenchmarkFailed = $Miner_Failed
-                            }) | Out-Null
+                            if ($_.DeviceModel -notmatch "-" -or $Miner_Path) {
+                                $Out.Add([PSCustomObject]@{
+                                    BaseName = $_.BaseName
+                                    Name = $_.Name
+                                    Algorithm = $Algo
+                                    SecondaryAlgorithm = $SecondAlgo                                
+                                    DeviceModel = $_.DeviceModel
+                                    Benchmarking = -not $Miner_Path
+                                    NeedsBenchmark = $Miner_NeedsBenchmark
+                                    BenchmarkFailed = $Miner_Failed
+                                }) | Out-Null
+                            }
                         }
                     }
                     $Data = ConvertTo-Json @($Out)
