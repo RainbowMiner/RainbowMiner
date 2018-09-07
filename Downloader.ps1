@@ -2,9 +2,7 @@
 
 $DownloadList = $args
 
-if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
-
-$Progress = 0
+if ($Script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
 
 $LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" | ConvertFrom-Json}).LocalAPIport
 if (-not $LocalAPIport) {$LocalAPIport = 4000}
@@ -31,9 +29,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     $Searchable = $_.Searchable
     $IsMiner = $_.IsMiner
 
-    $Progress += 100 / $DownloadList.Count
-
-
     if ($IsMiner) {
         $UriJson = (Split-Path $Path) + "\_uri.json"
         $UriJsonData = [PSCustomObject]@{URI = ""}
@@ -45,12 +40,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
 
     if (-not (Test-Path $Path) -or ($IsMiner -and ($URI -ne $UriJsonData.URI))) {
        
-        $ProgressPreferenceBackup = $ProgressPreference
         try {
-            $ProgressPreference = $ProgressPreferenceBackup
-            Write-Progress -Activity "Downloader" -Status $Path -CurrentOperation "Acquiring Online ($URI)" -PercentComplete $Progress
-
-            $ProgressPreference = "SilentlyContinue"
             if ($URI -and (Split-Path $URI -Leaf) -eq (Split-Path $Path -Leaf)) {
                 New-Item (Split-Path $Path) -ItemType "Directory" | Out-Null
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
@@ -61,10 +51,6 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
         catch {
-            $ProgressPreference = $ProgressPreferenceBackup
-            Write-Progress -Activity "Downloader" -Status $Path -CurrentOperation "Acquiring Offline (Computer)" -PercentComplete $Progress
-
-            $ProgressPreference = "SilentlyContinue"
             Write-Log -Level Warn "Downloader-error: $($_.Exception.Message)"
             if ($URI) {Write-Log -Level Warn "Cannot download $($Path) distributed at $($URI). "}
             else {Write-Log -Level Warn "Cannot download $($Path). "}
@@ -85,11 +71,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 else {Write-Log -Level Warn "Cannot find $($Path). "}
             }
         }
-        $ProgressPreference = $ProgressPreferenceBackup
     } elseif ($IsMiner -and -not (Test-Path $UriJson)) {
         [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
     }
-
 }
-
-Write-Progress -Activity "Downloader" -Completed

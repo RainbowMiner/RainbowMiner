@@ -1983,7 +1983,7 @@ while ($true) {
     #Update the active pools
     if ($AllPools.Count -eq 0) {
         Write-Log -Level Warn "No pools available. "
-        if ($Downloader) {$Downloader | Receive-Job}
+        if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
         Start-Sleep $Config.Interval
         continue
     }
@@ -2233,15 +2233,17 @@ while ($true) {
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
     }
+    $Miners_DownloadList = @()
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $_.VersionCheck}
-    $Miners_Downloading = $AllMiners.Count - $Miners.Count
-    if (($StartDownloader -or $Miners_Downloading -ne 0) -and $Downloader.State -ne "Running") {
-        $Miners_Downloading = (Compare-Object @($Miners.URI | Select-Object -Unique) @($AllMiners.URI | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Measure-Object).Count
-        Clear-Host
-        Write-Log "Starting downloader."
-        $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList (@($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Select-Object URI, Path, @{name = "Searchable"; expression = {$Miner = $_; ($AllMiners | Where-Object {(Split-Path $_.Path -Leaf) -eq (Split-Path $Miner.Path -Leaf) -and $_.URI -ne $Miner.URI}).Count -eq 0}}, @{name = "IsMiner"; expression = {$true}}) | Select-Object * -Unique) -FilePath .\Downloader.ps1
+    if (($AllMiners.Count -ne $Miners.Count) -or $StartDownloader) {
+        $Miners_DownloadList = @($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Where-Object {$_.VersionCheck -ne $true} | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "Searchable"; expression = {$true}}, @{name = "IsMiner"; expression = {$true}})        
+        if ($Miners_DownloadList.Count -gt 0 -and $Downloader.State -ne "Running") {
+            Clear-Host
+            Write-Log "Starting download of $($Miners_DownloadList.Count) files."
+            $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
+        }
         $StartDownloader = $false
-    }
+    }        
     $AllMiners_VersionCheck = $null
 
     # Open firewall ports for all miners
@@ -2279,11 +2281,11 @@ while ($true) {
     #Update the active miners
     if ($Miners.Count -eq 0) {
         Write-Log -Level Warn "No miners available. "
-        if ($Miners_Downloading -gt 0) {
+        if ($Miners_DownloadList.Count -gt 0) {
             Write-Host " "
-            Write-Host "Downloading first miners, mining operation will start in $($Config.Interval) seconds. Please be patient!" -ForegroundColor Black -BackgroundColor Yellow
+            Write-Host "Downloading first miners, mining operation will start in $($Config.Interval) seconds. Command windows will popup and close during extraction. Please be patient!" -ForegroundColor Black -BackgroundColor Yellow
         }
-        if ($Downloader) {$Downloader | Receive-Job}
+        if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
         Start-Sleep $Config.Interval
         continue
     }
@@ -2443,7 +2445,7 @@ while ($true) {
         $Running = @($ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ($_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0) {$_.GetProcessId()}})
         Get-Process | Where-Object {@($ActiveMiners | Foreach-Object {$_.GetExecNames()}) -contains $_.ProcessName} | Select-Object -ExpandProperty ProcessName | Compare-Object @($ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {$_.GetExecNames()}) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object {$Running -notcontains $_.Id} | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
-    if ($Downloader) {$Downloader | Receive-Job}
+    if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
     if ($Config.Delay -gt 0) {Start-Sleep $Config.Delay} #Wait to prevent BSOD
 
     $ActiveMiners | Where-Object Best -EQ $true | ForEach-Object {
@@ -2581,9 +2583,9 @@ while ($true) {
         }
     }
 
-    if ($Miners_Downloading) {
+    if ($Miners_DownloadList.Count -gt 0) {
         Write-Host " "
-        Write-Host "Currently downloading $Miners_Downloading miner$(if($Miners_Downloading -gt 1){"s"}) in the background." -ForegroundColor Yellow
+        Write-Host "Currently downloading $($AllMiners.Count - $Miners.Count) miner$(if(($AllMiners.Count - $Miners.Count) -gt 1){"s"}) in the background. Command windows will popup during extraction." -ForegroundColor Yellow
     }
 
     #Extend benchmarking interval to the maximum from running miners
@@ -2619,8 +2621,7 @@ while ($true) {
         ) | Out-Host
     }
 
-    #Display profit comparison
-    if ($Downloader.State -eq "Running") {$Downloader | Wait-Job -Timeout 10 > $null}
+    #Display profit comparison    
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
@@ -2730,7 +2731,7 @@ while ($true) {
         }
         if (($WaitMaxI-$i) % 5 -eq 0) {
             #get data from downloader every ten seconds, starting at once
-            if ($Downloader) {$Downloader | Receive-Job}
+            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
             #Give API access to computerstats
             $API.ComputerStats = $AsyncLoader.ComputerStats
         }
