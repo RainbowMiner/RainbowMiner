@@ -118,9 +118,9 @@ param(
 
 Clear-Host
 
-$Version = "3.8.5.16"
+$Version = "3.8.6.0"
 $Strikes = 3
-$SyncWindow = 5 #minutes
+$SyncWindow = 10 #minutes
 $OutofsyncWindow = 60 #minutes
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
