@@ -705,11 +705,11 @@ function Start-SubProcessInBackground {
     $wait_count = 0;
     do{
         Start-Sleep 1;
-        $Process = Get-Process | Where-Object { $_.Name -eq $ExecName -and $Running -notcontains $_.Id } | Select-Object -First 1
+        $Process = Get-Process | Where-Object {$_.Name -eq $ExecName -and $Running -notcontains $_.Id} | Select-Object -First 1
         $wait_count++
     } while ($Process -eq $null -and $wait_count -le 5)
 
-    if ( $Process ) {
+    if ($Process) {
         $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
         $Job | Add-Member MiningProcess $Process -Force -ErrorAction Ignore
     }
@@ -764,7 +764,7 @@ function Start-SubProcessInConsole {
             $wait_count = 0;
             do{
                 Start-Sleep 1;
-                $Process = Get-Process | Where-Object { $_.Name -eq $ProcessName -and $Running -notcontains $_.Id } | Select-Object -First 1
+                $Process = Get-Process | Where-Object {$_.Name -eq $ProcessName -and $Running -notcontains $_.Id} | Select-Object -First 1
                 $wait_count++;
             } while ($Process -eq $null -and $wait_count -le 5);
         }
@@ -1184,11 +1184,27 @@ function Update-DeviceInformation {
 
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
-                        [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0)
+                        [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0,'')
                         $i=0
                         foreach($v in @($_ -split ',')) {
-                            $v = $v -replace "[^\d\.]"
-                            if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
+                            if ($i -eq 8) {
+                                $AdlResultSplit[8] = $($v `
+                                        -replace 'ASUS' `
+                                        -replace 'AMD' `
+                                        -replace '\(?TM\)?' `
+                                        -replace 'Series' `
+                                        -replace 'Graphics' `
+                                        -replace "\s+", ' '
+                                ).Trim()
+
+                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
+                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
+                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
+                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
+                            } else {
+                                $v = $v -replace "[^\d\.]"
+                                if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
+                            }
                             $i++
                         }
                         if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
@@ -1201,7 +1217,7 @@ function Update-DeviceInformation {
                                     Utilization       = [int]$AdlResultSplit[5]
                                     Temperature       = [int]$AdlResultSplit[6] / 1000
                                     PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                    PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
+                                    PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
                                 }) -Force
                         }
                         $DeviceId++
@@ -1465,7 +1481,7 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {-1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
             if ($this.Process | Get-Job -ErrorAction Ignore) {
