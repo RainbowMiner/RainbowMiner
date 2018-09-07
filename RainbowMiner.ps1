@@ -1350,7 +1350,7 @@ while ($true) {
 
     if ($Miners_DownloadList.Count -gt 0) {
         Write-Host " "
-        Write-Host "Currently downloading $($AllMiners.Count - $Miners.Count) miner$(if(($AllMiners.Count - $Miners.Count) -gt 1){"s"}) in the background. Command windows will popup during extraction." -ForegroundColor Yellow
+        Write-Host "Currently downloading $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) in the background. Command windows will popup during extraction." -ForegroundColor Yellow
     }
 
     #Extend benchmarking interval to the maximum from running miners
