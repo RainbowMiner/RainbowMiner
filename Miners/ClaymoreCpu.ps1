@@ -10,7 +10,8 @@ param(
 $Path = ".\Bin\CryptoNight-Claymore-Cpu\NsCpuCNMiner64.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0-claymorecpu/claymore_cryptonight_cpu_4.0.zip"
 $Port = "520{0:d2}"
-$DevFee = 1.5
+$ManualURI = "https://bitcointalk.org/index.php?topic=647251.0"
+$DevFee = 0
 
 $Devices = $Devices.CPU
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
@@ -55,7 +56,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-r -1 -mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"            
+                Arguments = "-r -1 -mport -$($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"            
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port

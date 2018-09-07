@@ -55,6 +55,7 @@
 403	SgminerLyra2z
 404	SgminerSkein
 405	SgminerXevan
+406 Nsgminer
 
 500	CpuminerJayddeeSse2
 501	CpuminerJayddeeAessse42

@@ -10,7 +10,8 @@ param(
 $Path = ".\Bin\Equihash-Claymore\ZecMiner64.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.6-claymoreequihash/claymore_equihash_v12.6.zip"
 $Port = "201{0:d2}"
-$DevFee = 1.5
+$ManualURI = "https://bitcointalk.org/index.php?topic=1670733.0"
+$DevFee = 2.0
 
 $Devices = $Devices.AMD
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
@@ -42,7 +43,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+    $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
     $Commands | ForEach-Object {
 
@@ -54,7 +55,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-r -1 -mport -$($Miner_Port) -zpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -zwal $($Pools.$Algorithm_Norm.User) -zpsw $($Pools.$Algorithm_Norm.Pass) -allpools 1 -di $($DeviceIDsAll) $($_.Params)"
+                Arguments = "-r -1 -mport -$($Miner_Port) -zpool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -zwal $($Pools.$Algorithm_Norm.User) -zpsw $($Pools.$Algorithm_Norm.Pass) -allpools 1 -di $($DeviceIDsAll) -logfile $($Miner_Port)_log.txt $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week }
                 API = "Claymore"
                 Port = $Miner_Port

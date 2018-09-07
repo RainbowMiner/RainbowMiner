@@ -61,7 +61,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "--remoteaccess --remoteport $($Miner_Port) -S $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --forcecompute --fastjobswitch -G $($DeviceIDsAll) $($_.Params)"
+                Arguments = "--remoteaccess --remoteport $($Miner_Port) -S $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --forcecompute --fastjobswitch -G $($DeviceIDsAll) $($_.Params)" 
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "Cast"
                 Port      = $Miner_Port

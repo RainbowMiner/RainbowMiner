@@ -5,6 +5,16 @@
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
         )
+        "Cast" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightlite"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonighttubeheavy"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightv7lite"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightv7stellitev4"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightxhvheavy"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+        )
         "CcminerAlexis78" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = "-i 21"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "keccak"; SecondaryAlgorithm = ""; Params = "-m 2 -i 29"; OCprofile = ""; MSIAprofile = ""}
@@ -154,6 +164,37 @@
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
         )
+        "Nsgminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "--worksize 64 --intensity d"; OCprofile = ""; MSIAprofile = ""}
+        )
+        "Sgminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "groestlcoin"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 128 --intensity d"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 128 --intensity d"; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 64 --intensity d"; OCprofile = ""; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "skeincoin"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 256 --intensity d"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "yescrypt"; SecondaryAlgorithm = ""; Params = "--worksize 4 --rawintensity 256"; OCprofile = ""; MSIAprofile = ""}
+        )
+        "SgminerBitcore" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "timetravel10"; SecondaryAlgorithm = ""; Params = "--intensity 19"; OCprofile = ""; MSIAprofile = "4"}
+        )
+        "SgminerKl" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "aergo"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "phi"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2 -w 256"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "tribus"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "xevan"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
+        )
+        "SgminerLyra2z" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "--worksize 32 --intensity 18"; OCprofile = ""; MSIAprofile = "4"}
+        )
+        "SgminerSkein" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "skeincoin"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 256 --intensity d"; OCprofile = ""; MSIAprofile = ""}
+        )
+        "SgminerXevan" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "xevan-mod"; SecondaryAlgorithm = ""; Params = "--intensity 15"; OCprofile = ""; MSIAprofile = ""}
+        )        
         "Trex" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}

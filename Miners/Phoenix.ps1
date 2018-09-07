@@ -52,22 +52,23 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinMemGB = $_.MinMemGB
 
-        if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {
+        if ($Pools.$Algorithm_Norm.Host -and ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb}))) {
             $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
             $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
             $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
-            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f ($_.Type_Vendor_Index + 1)}) -join ''
+            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
 
-            $Miner_Protocol_Params = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"-proto 4 -stales 0"} else {"-proto 1"}
-            $Miner_Protocol        = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"stratum+tcp://"} else { "" }
+            $Miner_Protocol_Params = "-proto 4" 
+            #if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"-proto 4 -stales 0"} else {"-proto 1"}
+            #$Miner_Protocol        = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"stratum+tcp://"} else { "" }
 
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -coin auto -gpus $($DeviceIDsAll) -pool $($Miner_Protocol)$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
+                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -coin auto -di $($DeviceIDsAll) -pool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port

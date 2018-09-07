@@ -63,7 +63,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-    $Miner_PlatformId = $Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
+    $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
 
     $Commands | ForEach-Object {
 

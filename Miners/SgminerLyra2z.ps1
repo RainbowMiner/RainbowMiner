@@ -7,7 +7,7 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\Lyra2z-AMD\sgminer.exe"
+$Path = ".\Bin\AMD-Lyra2z\sgminer.exe"
 $Uri = "https://github.com/djm34/sgminer-msvc2015/releases/download/v0.3/kernel.rar"
 $Port = "403{0:d2}"
 $DevFee = 1.0

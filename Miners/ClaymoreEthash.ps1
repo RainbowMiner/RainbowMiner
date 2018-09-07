@@ -107,8 +107,8 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
 
     switch($_.Vendor) {
-        "NVIDIA" {$Arguments_Platform = " -platform 2"}
-        "AMD" {$Arguments_Platform = " -platform 1 -y 1"}
+        "NVIDIA" {$Arguments_Platform = "-platform 2"}
+        "AMD" {$Arguments_Platform = "-platform 1 -y 1"}
         Default {$Arguments_Platform = ""}
     }
     [hashtable]$Miner_Device_hash = @{}
@@ -139,13 +139,13 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
                     $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
                     $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
-                    $Arguments_Secondary = " -mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
+                    $Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
                     if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
                 }
                 else {
                     $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
                     $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
-                    $Arguments_Secondary = " -mode 1"
+                    $Arguments_Secondary = "-mode 1"
                     $Miner_Fee = $Fee
                 }
 
@@ -154,7 +154,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     DeviceName  = $Miner_Device.Name
                     DeviceModel = $Miner_Model
                     Path        = $Path               
-                    Arguments   = ("-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass) -allpools 1 -allcoins exp -esm $($EthereumStratumMode)$($Arguments_Secondary)$($_.Params)$($Arguments_Platform) -di $($DeviceIDsAll)" -replace "\s+", " ").trim()
+                    Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass) -allpools 1 -allcoins exp -esm $($EthereumStratumMode) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
                     HashRates   = $Miner_HashRates
                     API         = "Claymore"
                     Port        = $Miner_Port
