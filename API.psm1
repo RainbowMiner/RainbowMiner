@@ -39,7 +39,8 @@
     $API.Server = [PowerShell]::Create().AddScript({
 
         # Set the starting directory
-        Set-Location (Split-Path $MyInvocation.MyCommand.Path)
+        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+
         $BasePath = "$PWD\web"
 
         # List of possible mime types for files
