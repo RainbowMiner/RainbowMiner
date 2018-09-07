@@ -842,6 +842,7 @@ while ($true) {
     Write-Log "Calculating profit for each miner. "
 
     [hashtable]$AllMiners_VersionCheck = @{}
+    [System.Collections.ArrayList]$Miner_Arguments_List = @()
     foreach ($Miner in $AllMiners) {
         $Miner_HashRates = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
@@ -898,9 +899,25 @@ while ($true) {
                         if ($Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile.$p=$Config.Miners.$Miner_CommonCommands.OCprofile}
                     }
                 }
+            }           
+            if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {
+                $Miner_Arguments_List.Clear()
+                foreach ($p in @(" $Miner_Arguments" -split '\s+-')) {
+                    if (-not $p) {continue}
+                    $p="-$p"
+                    if ($p -match "([\s=]+)") {
+                        $pdiv = $matches[1].Trim()
+                        if ($pdiv -eq ''){$pdiv=" "}
+                        $q = $p -split "[\s=]+"
+                        $Miner.Arguments = $Miner.Arguments -replace "$($q[0])[\s=]+[^\s=]+\s*"
+                        $Miner_Arguments_List.Add($q -join $pdiv)>$null
+                    } else {
+                        $Miner_Arguments_List.Add($p)>$null
+                    }
+                }
+                $Miner | Add-Member -Name Arguments -Value "$($Miner.Arguments.Trim()) $($Miner_Arguments_List -join ' ')" -MemberType NoteProperty -Force
+                #$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force
             }
-
-            if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force}
             if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
             if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
             if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
