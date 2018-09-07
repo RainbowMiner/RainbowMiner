@@ -21,12 +21,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 1 thread
     [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 1 thread
     [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-B2N 1 thread
-    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-BittypeV2 1 thread
+    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 1 thread
     [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 1 thread
-    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Lite 1 thread
-    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-LiteV7 2 threads
-    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Haven 1 thread
-    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Heavy 1 thread
+    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Lite 1 thread
+    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
+    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Haven 1 thread
+    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 1 thread
     [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Italo 1 thread
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
     [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 1 thread
@@ -35,12 +35,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 2 threads
     [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-B2N 2 threads
-    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-BittypeV2 2 thread
+    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 2 thread
     [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads
-    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Lite 2 threads
-    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-LiteV7 2 threads
-    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Heavy 2 threads
-    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Haven 2 threads
+    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Lite 2 threads
+    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
+    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Haven 2 threads
+    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 2 threads
     [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 2 thread
@@ -84,7 +84,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
     $Commands | ForEach-Object {
         $Algorithm = $_.MainAlgorithm
-        $Algorithm_Norm = Get-Algorithm "cryptonight-$($Algorithm)"
+        $Algorithm_Norm = Get-Algorithm "cryptonight$($Algorithm)"
         $Threads = $_.Threads
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
@@ -125,21 +125,21 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                             nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
                         })
                     }
-                    Params = "--disablegpuwatchdog --sendallstales $($Params)".Trim()
+                    Params = "--disablegpuwatchdog $($Params)".Trim()
             }
 
             [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
+                Name        = $Miner_Name
+                DeviceName  = $Miner_Device.Name
                 DeviceModel = $Miner_Model
-                Path      = $Path
-                Arguments = $Arguments
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                API       = "SrbMiner"
-                Port      = $Miner_Port
-                Uri       = $Uri
-                DevFee    = $DevFee
-                ManualUri = $ManualUri
+                Path        = $Path
+                Arguments   = $Arguments
+                HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                API         = "SrbMiner"
+                Port        = $Miner_Port
+                Uri         = $Uri
+                DevFee      = $DevFee
+                ManualUri   = $ManualUri
             }
         }
     }
