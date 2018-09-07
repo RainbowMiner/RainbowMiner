@@ -1185,10 +1185,12 @@ function Update-DeviceInformation {
 
                 if ($null -ne $AdlResult) {
                     $AdlResult | ForEach-Object {
-                        [System.Collections.ArrayList]$AdlResultSplit = @(0,0,1,0,0,100,0,0,'')
+                        [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
                         $i=0
                         foreach($v in @($_ -split ',')) {
-                            if ($i -eq 8) {
+                            if ($i -eq 0) {
+                                $AdlResultSplit[0] = $v
+                            } elseif ($i -eq 8) {
                                 $AdlResultSplit[8] = $($v `
                                         -replace 'ASUS' `
                                         -replace 'AMD' `
@@ -1204,7 +1206,14 @@ function Update-DeviceInformation {
                                 $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
                             } else {
                                 $v = $v -replace "[^\d\.]"
-                                if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}}
+                                if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
+                                    $ibak = $AdlResultSplit[$i]
+                                    try {
+                                        if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
+                                    } catch {
+                                        $AdlResultSplit[$i] = $ibak
+                                    }
+                                }
                             }
                             $i++
                         }
