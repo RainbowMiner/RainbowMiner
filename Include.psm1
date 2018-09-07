@@ -366,7 +366,7 @@ function Set-Stat {
     }
     catch {
         if ($Error.Count -gt 1){$Error.RemoveAt($Error.Count - 1)}else{$Error.Clear()}
-        if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. $($error) "}
+        if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
 
         $Stat = [PSCustomObject]@{
             Live = $Value
@@ -1721,6 +1721,7 @@ class Miner {
             if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
 
             $Data_HashRates = $_.HashRate.$Algorithm
+            if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
 
             $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
             $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @(($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum) / $Data_Devices.Count)}
