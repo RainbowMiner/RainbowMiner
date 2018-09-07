@@ -1179,7 +1179,7 @@ function Update-DeviceInformation {
                 #AMD
                 $DeviceId = 0
                 $Command = ".\Includes\OverdriveN.exe"
-                $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed"}
+                $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
                 if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
 
                 if ($null -ne $AdlResult) {
