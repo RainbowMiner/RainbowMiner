@@ -1478,7 +1478,7 @@ while ($true) {
     [GC]::Collect()
     Sleep -Milliseconds 200
 
-    if ($Error.Count) {$Error | Out-File "Logs\errors.main.txt" -Append}
+    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
     $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status

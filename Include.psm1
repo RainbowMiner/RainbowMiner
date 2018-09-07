@@ -365,6 +365,7 @@ function Set-Stat {
         }
     }
     catch {
+        $Error.RemoveAt($Error.Count - 1)
         if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. $($error) "}
 
         $Stat = [PSCustomObject]@{
@@ -2808,7 +2809,7 @@ function Start-AsyncLoader {
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
-            if ($Error.Count) {$Error | Out-File "Logs\errors.asyncloader.txt" -Append}
+            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append}
             $Error.Clear()
         }
     });
