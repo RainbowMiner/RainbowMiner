@@ -23,6 +23,8 @@ catch {
     Write-Log -Level Warn "RainbowMiner API is down!"
 }
 
+$oldProgressPreference = $Global:ProgressPreference
+
 $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI
     $Path = $_.Path
@@ -41,6 +43,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     if (-not (Test-Path $Path) -or ($IsMiner -and ($URI -ne $UriJsonData.URI))) {
        
         try {
+            $Global:ProgressPreference = "SilentlyContinue"
             if ($URI -and (Split-Path $URI -Leaf) -eq (Split-Path $Path -Leaf)) {
                 New-Item (Split-Path $Path) -ItemType "Directory" | Out-Null
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
@@ -71,6 +74,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 else {Write-Log -Level Warn "Cannot find $($Path). "}
             }
         }
+        $Global:ProgressPreference = $oldProgressPreference
     } elseif ($IsMiner -and -not (Test-Path $UriJson)) {
         [PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8
     }

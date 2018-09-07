@@ -97,7 +97,7 @@ try {
         $AllDevices | Select-Object Vendor,Name,Type | Foreach-Object {
             $Stat_Name = $_.Name
             $Stat_Vendor = if ($_.Type -eq "GPU") {$_.Vendor}else{"CPU"}
-            Get-ChildItem "Stats\Miners" | Where-Object BaseName -notmatch "^(AMD|CPU|NVIDIA)-" | Where-Object BaseName -match "-$($Stat_Name)" | Foreach-Object {Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($Stat_Vendor)-$($_.Name)" -Force}
+            Get-ChildItem "Stats\Miners" | Where-Object BaseName -notmatch "^(AMD|CPU|NVIDIA)-" | Where-Object BaseName -match "-$($Stat_Name)" | Foreach-Object {Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($Stat_Vendor)-$($_.Name)" -Force;$ChangesTotal++}
         }
     }
     "Cleaned $ChangesTotal elements"
