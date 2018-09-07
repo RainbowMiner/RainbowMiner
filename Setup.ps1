@@ -531,8 +531,8 @@ do {
                         $ConfigActual | Add-Member DisableMSIAmonitor $(if (Get-Yes $Config.DisableMSIAmonitor){"1"}else{"0"}) -Force
 
                         if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
-                            $PoolsActual.NiceHash | Add-Member BTC (if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
-                            $PoolsActual.NiceHash | Add-Member Worker (if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){"`$WorkerName"}else{$NicehashWorkerName}) -Force
+                            $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
+                            $PoolsActual.NiceHash | Add-Member Worker $(if($NicehashWorkerName -eq $Config.WorkerName -or $NicehashWorkerName -eq ''){"`$WorkerName"}else{$NicehashWorkerName}) -Force
                         } else {
                             $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                     BTC = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
