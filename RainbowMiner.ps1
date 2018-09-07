@@ -1348,7 +1348,7 @@ while ($true) {
             }
         }
         if ($Miners_DownloadList.Count -gt 0) {
-            Write-Log -Level Warn "Download in progress: $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) left. Command windows will popup during extraction." -ForegroundColor Yellow
+            Write-Log -Level Warn "Download in progress: $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) left. Command windows will popup during extraction."
         }
     }
 
