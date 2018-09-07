@@ -1325,9 +1325,10 @@ while ($true) {
         Write-Host " (press P to resume)"
         Write-Host " "
     } else {
+        if ($MinersNeedingBenchmark.Count -gt 0 -or $Miners_DownloadList.Count -gt 0) {Write-Host " "}
         #Display benchmarking progres
         if ($MinersNeedingBenchmark.Count -gt 0) {
-            Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left to benchmark."
+            Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
             if (-not $Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
                 Write-Host " "
@@ -1346,11 +1347,9 @@ while ($true) {
                 [console]::ForegroundColor = $OldForegroundColor
             }
         }
-    }
-
-    if ($Miners_DownloadList.Count -gt 0) {
-        Write-Host " "
-        Write-Host "Currently downloading $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) in the background. Command windows will popup during extraction." -ForegroundColor Yellow
+        if ($Miners_DownloadList.Count -gt 0) {
+            Write-Log -Level Warn "Download in progress: $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) left. Command windows will popup during extraction." -ForegroundColor Yellow
+        }
     }
 
     #Extend benchmarking interval to the maximum from running miners
