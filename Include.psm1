@@ -365,7 +365,7 @@ function Set-Stat {
         }
     }
     catch {
-        $Error.RemoveAt($Error.Count - 1)
+        if ($Error.Count){$Error.RemoveAt($Error.Count - 1)}
         if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. $($error) "}
 
         $Stat = [PSCustomObject]@{
