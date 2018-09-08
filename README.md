@@ -164,9 +164,132 @@ The miner can be setup to mine any coin or currency, that is listed at the respe
 
 - The RainbowMiner contains a list of well approved miners in the directory "Miners"
 - The miner Excavator mines on NiceHash pool, only
-- Miners Excavator & Excavator1.4.4 run in their own miner window. Since these two miners are each being controlled through an own API, the miner windows will stay open idle, even after the mining has stopped. This does no harm nor does it cost CPU - the miner will wait until it is being called again. You may close these windows, if you want. RainbowMiner will restart them, if Excavator is needed again.
 - Each miner's algorithm can be fine tuned for each device in your mining rig
 
+RainbowMiner comes with a default miner parameter set, containing intensities and MSI Afterburner profile number values (which I found very stable running on overclocked GTX1070). If you start RainbowMiner for the first time, a configuration file (miners.config.txt) will be created, containing these presets.
+
+**Important:** if you do not want any presets in your miners.config.txt, please run "RemovePresets.bat" **before** starting RainbowMiner for the first time.
+
+To remove all presets after RainbowMiner has been started for the first time, exit RainbowMiner, delete "Config\miners.config.txt", run "RemovePresets.bat", restart RainbowMiner. Remember: all changes that you may have been made to miners.config.txt will be lost, after this. So write them down, first.
+
+<details><summary>The defaults are as follows - and my be a good starting point.</summary>
+
+|Miner|Algorithm|Params|MSIA Profile|
+|---|---|:---:|:---:|
+|Bminer|ethash||5|
+|Bminer|ethash-blake14r||5|
+|Bminer|ethash-blake2s||5|
+|Cast|cryptonightfast|--intensity=8||
+|Cast|cryptonightheavy|--intensity=8||
+|Cast|cryptonightlite|--intensity=8||
+|Cast|cryptonighttubeheavy|--intensity=8||
+|Cast|cryptonightv7|--intensity=8||
+|Cast|cryptonightv7lite|--intensity=8||
+|Cast|cryptonightv7stellitev4|--intensity=8||
+|Cast|cryptonightxhvheavy|--intensity=8||
+|CcminerAlexis78|c11|-i 21||
+|CcminerAlexis78|keccak|-m 2 -i 29||
+|CcminerAlexis78|keccakc|-i 29||
+|CcminerAlexis78|lyra2z||4|
+|CcminerAlexis78|lyra2v2||4|
+|CcminerAlexis78|veltor|-i 23||
+|CcminerAlexis78|x11evo|-i 21||
+|CcminerAlexis78|x13|-i 20||
+|CcminerAlexis78|x17|-i 20.5||
+|CcminerAlexis78x64|c11|-i 21||
+|CcminerAlexis78x64|keccak|-m 2 -i 29||
+|CcminerAlexis78x64|keccakc|-i 29||
+|CcminerAlexis78x64|lyra2z||4|
+|CcminerAlexis78x64|lyra2v2||4|
+|CcminerAlexis78x64|veltor|-i 23||
+|CcminerAlexis78x64|x11evo|-i 21||
+|CcminerAlexis78x64|x13|-i 20||
+|CcminerAlexis78x64|x17|-i 20.5||
+|CcminerBalloon|balloon||4|
+|CcminerCool|lyra2z|-i 20|4|
+|CcminerDumax|phi2|-i 19||
+|CcminerDumax|x16s||4|
+|CcminerKlausT|neoscrypt|-i 17.6|3|
+|CcminerPigeoncoin|x16s||4|
+|CcminerPolytimos|keccak|-i auto||
+|CcminerPolytimos|lyra2v2||4|
+|CcminerPolytimos|nist5||4|
+|CcminerPolytimos|x17|-i 20.5||
+|CcminerRaven|x16r|-i 20|4|
+|CcminerRavencoin|x16r||4|
+|CcminerSkunk|skunk|-i 25||
+|CcminerSpModSkunk|skunk|-i 25||
+|CcminerSpModTribus|tribus|-i auto||
+|CcminerSupr|x16r||4|
+|CcminerSupr|x16s||4|
+|CcminerTpruvot|lyra2z|-i 21|4|
+|CcminerTpruvot|x13|-i 20||
+|CcminerTpruvotx64|allium|-i 22.125||
+|CcminerTpruvotx64|hmq1725||3|
+|CcminerTpruvotx64|keccak|-i 29||
+|CcminerTpruvotx64|keccakc|-i 29||
+|CcminerTpruvotx64|lyra2z|-i 21|4|
+|CcminerTpruvotx64|sha256t|-i 29||
+|CcminerTpruvotx64|x13|-i 20||
+|CcminerX16r|x16r||4|
+|CcminerX16r|x16s||4|
+|CcminerX16s|hmq1725||3|
+|CcminerX16s|x16r||4|
+|CcminerX16s|x16s||4|
+|CcminerXevan|c11|-i 21||
+|CcminerXevan|skein|-i auto||
+|CcminerXevan|xevan|-i 21||
+|CcminerXevan75|skein|-i auto||
+|ClaymoreEthash|ethash-pascal||5|
+|ClaymoreEthash|ethash-keccak||3|
+|ClaymoreEthash|ethash-blake2s||5|
+|ClaymoreEthash9|ethash-pascal||5|
+|CryptoDredge|lyra2v2||4|
+|CryptoDredge|lyra2z||4|
+|CryptoDredge|phi2||1|
+|CryptoDredge|neoscrypt||3|
+|CryptoDredgeBeta|lyra2v2||4|
+|CryptoDredgeBeta|lyra2z||4|
+|CryptoDredgeBeta|phi2||1|
+|CryptoDredgeBeta|neoscrypt||3|
+|CuBalloon|balloon||4|
+|EnemyZealot|hex||4|
+|EnemyZealot|x16r||4|
+|EnemyZealot|x16s||4|
+|EWBF|equihash24x5||5|
+|EWBF|equihash24x7||5|
+|Excavator|lyra2v2||4|
+|Excavator|lyra2z||4|
+|Excavator|neoscrypt||3|
+|Excavator|x16r||4|
+|Excavator1.4.4|neoscrypt||3|
+|lolMiner|equihash16x5||4|
+|lolMiner|equihash24x5||5|
+|lolMiner|equihash24x7||5|
+|Nsgminer|neoscrypt|--worksize 64 --intensity d||
+|Sgminer|groestlcoin|--gpu-threads 2 --worksize 128 --intensity d||
+|Sgminer|lyra2rev2|--gpu-threads 2 --worksize 128 --intensity d|4|
+|Sgminer|neoscrypt|--gpu-threads 1 --worksize 64 --intensity d|5|
+|Sgminer|skeincoin|--gpu-threads 2 --worksize 256 --intensity d||
+|Sgminer|yescrypt|--worksize 4 --rawintensity 256||
+|SgminerBitcore|timetravel10|--intensity 19|4|
+|SgminerKl|aergo|-X 256 -g 2||
+|SgminerKl|phi|-X 256 -g 2 -w 256||
+|SgminerKl|tribus|-X 256 -g 2||
+|SgminerKl|x16s|-X 256 -g 2|4|
+|SgminerKl|x16r|-X 256 -g 2|4|
+|SgminerKl|x17|-X 256 -g 2||
+|SgminerKl|xevan|-X 256 -g 2||
+|SgminerLyra2z|lyra2z|--worksize 32 --intensity 18|4|
+|SgminerSkein|skeincoin|--gpu-threads 2 --worksize 256 --intensity d||
+|SgminerXevan|xevan-mod|--intensity 15||
+|Trex|balloon||4|
+|Trex|lyra2v2||4|
+|Trex|lyra2z||4|
+|Trex|phi2||4|
+|Trex|x16r||4|
+|Trex|x16s||4|
+</details>
 
 ## ALGORITHMS
 
