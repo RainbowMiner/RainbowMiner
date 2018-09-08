@@ -1142,185 +1142,197 @@ function Update-DeviceInformation {
         $Devices = $_.Group
         $Vendor = $_.Name
         
-        if ($UseAfterburner -and $Script:abMonitor -and $Vendor -eq "AMD") {
-            if ($abReload) {
-                if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-                if ($Script:abControl) {$Script:abControl.ReloadAll()}
-                $abReload = $false
-            }
-            $DeviceId = 0
-            $Pattern = @{
-                AMD    = '*Radeon*'
-                NVIDIA = '*GeForce*'
-                Intel  = '*Intel*'
-            }
-            @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
-                $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
-                $AdapterId = $_.Index
-
-                $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
-                    $_ | Add-Member Data ([PSCustomObject]@{
-                            AdapterId         = [int]$AdapterId
-                            Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
-                            UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
-                            Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
-                            ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
-                            FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
-                            Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                            PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
-                            PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
-                            #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
-                        }) -Force
+        try { #AMD
+            if ($UseAfterburner -and $Script:abMonitor -and $Vendor -eq "AMD") {
+                if ($abReload) {
+                    if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+                    if ($Script:abControl) {$Script:abControl.ReloadAll()}
+                    $abReload = $false
                 }
-                $DeviceId++
-            }
-        } else {
-
-            if ($Vendor -eq 'AMD') {
-                #AMD
                 $DeviceId = 0
-                $Command = ".\Includes\OverdriveN.exe"
-                $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
-                if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+                $Pattern = @{
+                    AMD    = '*Radeon*'
+                    NVIDIA = '*GeForce*'
+                    Intel  = '*Intel*'
+                }
+                @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                    $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
+                    $AdapterId = $_.Index
 
-                if ($null -ne $AdlResult) {
-                    $AdlResult | ForEach-Object {
-                        [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
-                        $i=0
-                        foreach($v in @($_ -split ',')) {
-                            if ($i -ge $AdlResultSplit.Count) {break}
-                            if ($i -eq 0) {
-                                $AdlResultSplit[0] = $v
-                            } elseif ($i -eq 8) {
-                                $AdlResultSplit[8] = $($v `
-                                        -replace 'ASUS' `
-                                        -replace 'AMD' `
-                                        -replace '\(?TM\)?' `
-                                        -replace 'Series' `
-                                        -replace 'Graphics' `
-                                        -replace "\s+", ' '
-                                ).Trim()
+                    $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
+                        $_ | Add-Member Data ([PSCustomObject]@{
+                                AdapterId         = [int]$AdapterId
+                                Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
+                                UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
+                                Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
+                                ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
+                                FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
+                                Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
+                                PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
+                                PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
+                                #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
+                            }) -Force
+                    }
+                    $DeviceId++
+                }
+            } else {
 
-                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
-                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
-                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
-                                $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
-                            } elseif ($i -lt 8) {
-                                $v = $v -replace "[^\d\.]"
-                                if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
-                                    $ibak = $AdlResultSplit[$i]
-                                    try {
-                                        if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
-                                    } catch {
-                                        $AdlResultSplit[$i] = $ibak
+                if ($Vendor -eq 'AMD') {
+                    #AMD
+                    $DeviceId = 0
+                    $Command = ".\Includes\OverdriveN.exe"
+                    $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                    if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+
+                    if ($null -ne $AdlResult) {
+                        $AdlResult | ForEach-Object {
+                            [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
+                            $i=0
+                            foreach($v in @($_ -split ',')) {
+                                if ($i -ge $AdlResultSplit.Count) {break}
+                                if ($i -eq 0) {
+                                    $AdlResultSplit[0] = $v
+                                } elseif ($i -eq 8) {
+                                    $AdlResultSplit[8] = $($v `
+                                            -replace 'ASUS' `
+                                            -replace 'AMD' `
+                                            -replace '\(?TM\)?' `
+                                            -replace 'Series' `
+                                            -replace 'Graphics' `
+                                            -replace "\s+", ' '
+                                    ).Trim()
+
+                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
+                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
+                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
+                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
+                                } elseif ($i -lt 8) {
+                                    $v = $v -replace "[^\d\.]"
+                                    if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
+                                        $ibak = $AdlResultSplit[$i]
+                                        try {
+                                            if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
+                                        } catch {
+                                            $AdlResultSplit[$i] = $ibak
+                                        }
                                     }
                                 }
+                                $i++
                             }
-                            $i++
+                            if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+                            $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                                $_ | Add-Member Data ([PSCustomObject]@{
+                                        AdapterId         = $AdlResultSplit[0]
+                                        FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
+                                        Clock             = [int]($AdlResultSplit[3] / 100)
+                                        ClockMem          = [int]($AdlResultSplit[4] / 100)
+                                        Utilization       = [int]$AdlResultSplit[5]
+                                        Temperature       = [int]$AdlResultSplit[6] / 1000
+                                        PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
+                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
+                                    }) -Force
+                            }
+                            $DeviceId++
                         }
-                        if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+                    }
+                }
+            }
+        } catch {
+            Write-Log -Level Warn "Could not read power data from AMD"
+        }
+
+        try { #NVIDIA        
+            if ($Vendor -eq 'NVIDIA') {
+                #NVIDIA
+                $DeviceId = 0
+                $Command = '.\includes\nvidia-smi.exe'
+                $Arguments = @(
+                    '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
+                    '--format=csv,noheader'
+                )
+                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
+                & $Command $Arguments | ForEach-Object {
+                    $SMIresultSplit = $_ -split ','
+                    if ($SMIresultSplit.count -gt 10) {
+                        for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
+                            $v = $SMIresultSplit[$i].Trim()
+                            if ($v -match '(error|supported)') {$v = "-"}
+                            elseif ($i -ne 7) {
+                                $v = $v -replace "[^\d\.]"
+                                if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = "-"}
+                            }
+                            $SMIresultSplit[$i] = $v                        
+                        }
                         $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                            $_ | Add-Member Data ([PSCustomObject]@{
-                                    AdapterId         = $AdlResultSplit[0]
-                                    FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
-                                    Clock             = [int]($AdlResultSplit[3] / 100)
-                                    ClockMem          = [int]($AdlResultSplit[4] / 100)
-                                    Utilization       = [int]$AdlResultSplit[5]
-                                    Temperature       = [int]$AdlResultSplit[6] / 1000
-                                    PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                    PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
-                                }) -Force
+                            $Data = [PSCustomObject]@{
+                                Utilization       = if ($SMIresultSplit[1] -eq "-") {100} else {[int]$SMIresultSplit[1]} #If we dont have real Utilization, at least make the watchdog happy
+                                UtilizationMem    = if ($SMIresultSplit[2] -eq "-") {$null} else {[int]$SMIresultSplit[2]}
+                                Temperature       = if ($SMIresultSplit[3] -eq "-") {$null} else {[int]$SMIresultSplit[3]}
+                                PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4]}
+                                PowerLimit        = if ($SMIresultSplit[5] -eq "-") {$null} else {[int]$SMIresultSplit[5]}
+                                FanSpeed          = if ($SMIresultSplit[6] -eq "-") {$null} else {[int]$SMIresultSplit[6]}
+                                Pstate            = $SMIresultSplit[7]
+                                Clock             = if ($SMIresultSplit[8] -eq "-") {$null} else {[int]$SMIresultSplit[8]}
+                                ClockMem          = if ($SMIresultSplit[9] -eq "-") {$null} else {[int]$SMIresultSplit[9]}
+                                PowerMaxLimit     = if ($SMIresultSplit[10] -eq "-") {$null} else {[int]$SMIresultSplit[10]}
+                                PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
+                            }
+                            if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
+                            if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
+                            $_ | Add-Member Data $Data -Force
                         }
                         $DeviceId++
                     }
                 }
             }
-        }
-        
-        if ($Vendor -eq 'NVIDIA') {
-            #NVIDIA
-            $DeviceId = 0
-            $Command = '.\includes\nvidia-smi.exe'
-            $Arguments = @(
-                '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
-                '--format=csv,noheader'
-            )
-            if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
-            & $Command $Arguments | ForEach-Object {
-                $SMIresultSplit = $_ -split ','
-                if ($SMIresultSplit.count -gt 10) {
-                    for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
-                        $v = $SMIresultSplit[$i].Trim()
-                        if ($v -match '(error|supported)') {$v = "-"}
-                        elseif ($i -ne 7) {
-                            $v = $v -replace "[^\d\.]"
-                            if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = "-"}
-                        }
-                        $SMIresultSplit[$i] = $v                        
-                    }
-                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                        $Data = [PSCustomObject]@{
-                            Utilization       = if ($SMIresultSplit[1] -eq "-") {100} else {[int]$SMIresultSplit[1]} #If we dont have real Utilization, at least make the watchdog happy
-                            UtilizationMem    = if ($SMIresultSplit[2] -eq "-") {$null} else {[int]$SMIresultSplit[2]}
-                            Temperature       = if ($SMIresultSplit[3] -eq "-") {$null} else {[int]$SMIresultSplit[3]}
-                            PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4]}
-                            PowerLimit        = if ($SMIresultSplit[5] -eq "-") {$null} else {[int]$SMIresultSplit[5]}
-                            FanSpeed          = if ($SMIresultSplit[6] -eq "-") {$null} else {[int]$SMIresultSplit[6]}
-                            Pstate            = $SMIresultSplit[7]
-                            Clock             = if ($SMIresultSplit[8] -eq "-") {$null} else {[int]$SMIresultSplit[8]}
-                            ClockMem          = if ($SMIresultSplit[9] -eq "-") {$null} else {[int]$SMIresultSplit[9]}
-                            PowerMaxLimit     = if ($SMIresultSplit[10] -eq "-") {$null} else {[int]$SMIresultSplit[10]}
-                            PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
-                        }
-                        if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
-                        if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
-                        $_ | Add-Member Data $Data -Force
-                    }
-                    $DeviceId++
-                }
-            }
+        } catch {
+            Write-Log -Level Warn "Could not read power data from NVIDIA"
         }
     }
 
-    if (-not $DeviceName -or $DeviceName -like "CPU*") {
-        $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-        if ($CPU_count -gt 0) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
-        $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-            $Device = $_
-            $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
-                if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
-                    $CpuData = @{
-                        Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
-                        Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
-                        PowerDraw   = $($Script:abMonitor.Entries | Where-Object SrcName -eq 'CPU power').Data
-                        Temperature = $($Script:abMonitor.Entries | Where-Object SrcName -match "^(CPU\d* )temperature" | Measure-Object -Property Data -Maximum).Maximum
+    try { #CPU
+        if (-not $DeviceName -or $DeviceName -like "CPU*") {
+            $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+            if ($CPU_count -gt 0) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+            $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Device = $_
+                $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+                    if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
+                        $CpuData = @{
+                            Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
+                            Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
+                            PowerDraw   = $($Script:abMonitor.Entries | Where-Object SrcName -eq 'CPU power').Data
+                            Temperature = $($Script:abMonitor.Entries | Where-Object SrcName -match "^(CPU\d* )temperature" | Measure-Object -Property Data -Maximum).Maximum
+                        }
+                    } else {
+                        $CpuData = @{}
                     }
-                } else {
-                    $CpuData = @{}
-                }
                 
-                if (-not $CpuData.Utilization) {
-                    $CpuData.Utilization = $_.LoadPercentage
-                }
-                if (-not $CpuData.PowerDraw) {
-                    if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
-                    if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
-                    $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
-                }
-                if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}
+                    if (-not $CpuData.Utilization) {
+                        $CpuData.Utilization = $_.LoadPercentage
+                    }
+                    if (-not $CpuData.PowerDraw) {
+                        if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
+                        if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
+                        $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
+                    }
+                    if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}
 
-                $Device | Add-Member Data ([PSCustomObject]@{
-                    Cores       = [int]$_.NumberOfCores
-                    Threads     = [int]$_.NumberOfLogicalProcessors
-                    CacheL3     = [int]($_.L3CacheSize / 1024)
-                    Clock       = [int]$CpuData.Clock
-                    Utilization = [int]$CpuData.Utilization
-                    PowerDraw   = [int]$CpuData.PowerDraw
-                    Temperature = [int]$CpuData.Temperature
-                }) -Force
+                    $Device | Add-Member Data ([PSCustomObject]@{
+                        Cores       = [int]$_.NumberOfCores
+                        Threads     = [int]$_.NumberOfLogicalProcessors
+                        CacheL3     = [int]($_.L3CacheSize / 1024)
+                        Clock       = [int]$CpuData.Clock
+                        Utilization = [int]$CpuData.Utilization
+                        PowerDraw   = [int]$CpuData.PowerDraw
+                        Temperature = [int]$CpuData.Temperature
+                    }) -Force
+                }
             }
         }
-    }    
+    } catch {
+        Write-Log -Level Warn "Could not read power data from CPU"
+    }
 }
 
 function Get-CoinName {
