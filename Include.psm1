@@ -1188,6 +1188,7 @@ function Update-DeviceInformation {
                         [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
                         $i=0
                         foreach($v in @($_ -split ',')) {
+                            if ($i -ge $AdlResultSplit.Count) {break}
                             if ($i -eq 0) {
                                 $AdlResultSplit[0] = $v
                             } elseif ($i -eq 8) {
@@ -1204,7 +1205,7 @@ function Update-DeviceInformation {
                                 $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
                                 $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
                                 $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
-                            } else {
+                            } elseif ($i -lt 8) {
                                 $v = $v -replace "[^\d\.]"
                                 if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
                                     $ibak = $AdlResultSplit[$i]
