@@ -43,7 +43,8 @@
         "CcminerCool" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 20"; OCprofile = ""; MSIAprofile = "4"}
         )
-        "CcminerDumax" = [PSCustomObject[]]@(        
+        "CcminerDumax" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = "-i 19"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
         "CcminerKlausT" = [PSCustomObject[]]@(
