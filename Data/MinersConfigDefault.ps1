@@ -7,6 +7,7 @@
         )
         "Cast" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "cryptonightfest"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "cryptonightlite"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "cryptonighttubeheavy"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
