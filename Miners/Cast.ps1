@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.30-cast/cast_xmr-vega-win64_130.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.40-cast/cast_xmr-vega-win64_140.zip"
 $Port = "306{0:d2}"
 $DevFee = 1.5
 
@@ -17,6 +17,7 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in syste
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; Params = "--algo=8 --intensity=8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonightfest"; Params = "--algo=9 --intensity=8"}
     [PSCustomObject]@{MainAlgorithm = "cryptonightheavy"; Params = "--algo=2 --intensity=8"}
     [PSCustomObject]@{MainAlgorithm = "cryptonightlite"; Params = "--algo=3 --intensity=8"}
     [PSCustomObject]@{MainAlgorithm = "cryptonighttubeheavy"; Params = "--algo=5 --intensity=8"}
