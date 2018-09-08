@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-Cool\coolMiner-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6-ccminercool/coolMiner-x64-v1-6.7z"
 $Port = "104{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4412370.0"
+$DevFee = 1.0
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -20,6 +21,20 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
+
+if ($Config.InfoOnly) {
+    [PSCustomObject]@{
+        Type      = @("NVIDIA")
+        Name      = $Name
+        Path      = $Path
+        Port      = $Miner_Port
+        Uri       = $Uri
+        DevFee    = $DevFee
+        ManualUri = $ManualUri
+        Commands  = $Commands
+    }
+    return
+}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
@@ -47,7 +62,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 URI = $Uri
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
-                DevFee = 1.0
+                DevFee = $DevFee
                 ManualUri = $ManualUri
             }
         }
