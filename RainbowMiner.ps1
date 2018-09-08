@@ -19,7 +19,7 @@ param(
     [Int]$Interval = 60, #seconds before reading hash rate from miners
     [Parameter(Mandatory = $false)]
     [Alias("Location")]
-    [String]$Region = "europe", #europe/us/asia
+    [String]$Region = "us", #europe/us/asia
     [Parameter(Mandatory = $false)]
     [Switch]$SSL = $false, 
     [Parameter(Mandatory = $false)]
