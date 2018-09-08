@@ -65,8 +65,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
         }
 
         $Commands | ForEach-Object {
-            $Algorithm = $_.MainAlgorithm
-            $Algorithm_Norm = Get-Algorithm $Algorithm
+            $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
             $MinMemGb = $_.MinMemGb
             $Params = $_.Params
         
@@ -92,7 +91,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
                                     rig_id = "$($Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
                                 }
                             )
-                            currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$Algorithm}
+                            currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$_.MainAlgorithm}
                             call_timeout    = 10
                             retry_time      = 10
                             giveup_limit    = 0
