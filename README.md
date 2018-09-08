@@ -172,7 +172,7 @@ RainbowMiner comes with a default miner parameter set, containing intensities an
 
 To remove all presets after RainbowMiner has been started for the first time, exit RainbowMiner, delete "Config\miners.config.txt", run "RemovePresets.bat", restart RainbowMiner. Remember: all changes that you may have been made to miners.config.txt will be lost, after this. So write them down, first.
 
-<details><summary>The defaults are as follows - and my be a good starting point.</summary>
+<details><summary>Click here for a list of all default parameters</summary>
 
 |Miner|Algorithm|Params|MSIA Profile|
 |---|---|:---:|:---:|
