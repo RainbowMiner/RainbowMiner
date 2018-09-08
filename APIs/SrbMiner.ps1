@@ -40,7 +40,9 @@ class SrbMiner : Miner {
         $HashRate_Value = [double]$Data.HashRate_total_5min
         if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.HashRate_total_now}
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        }
 
         $this.Data += [PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
