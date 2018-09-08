@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43-lolminer/lolMiner_v043_Win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.43b-lolminer/lolMiner_v043b_Win64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $DevFee = 2.0
@@ -22,13 +22,15 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Equihash16x5"; Coin = "MNX";   WorkBatch = "VERYHIGH"; MinMemGB = 6; Params = "-workbatch=VERYHIGH"; Fee=1}  #Equihash 96,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "";      WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "ASF";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BCRM";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTCZ";  WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "BTG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "CDY";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "HEPTA"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "LTZ";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "SAFE";  WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x5"; Coin = "XSG";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "SCASH"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "GENX"; WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; Coin = "ZER";   WorkBatch = ""; MinMemGB = 4; Params = ""; Fee=2} #Equihash 144,5
 )
 
