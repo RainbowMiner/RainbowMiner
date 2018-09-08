@@ -10,7 +10,7 @@ param(
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/xmr-stak/releases/download/v2.4.7-nodevfee/xmr-stak-2.4.7-nodevfee.zip"
 $Port = "309{0:d2}"
-$DevFee = 2.0
+$DevFee = 0.0
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight";            Threads = 1; MinMemGb = 2; Params = ""} #CryptoNight
@@ -55,7 +55,7 @@ if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not
 @($Devices.FullComboModels.PSObject.Properties.Name) | Foreach-Object {
     $Miner_Vendor = $_  
     @($Devices.$Miner_Vendor) | Where-Object {$_.Model -eq $Devices.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Device = $Devices.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+        $Device = $Devices.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
             
         switch($Miner_Vendor) {
