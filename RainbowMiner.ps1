@@ -642,10 +642,11 @@ while ($true) {
         Write-Log "Updating exchange rates from Coinbase. "
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {
-            $v=$($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})
-            $NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))))
-            $Rates[$_] = [Double]$NewRates.$_
+        $MissingCurrencies = @($Config.Currency | Where-Object {-not $NewRates.ContainsKey($_)})
+        if ($MissingCurrencies.Count -gt 0) {
+            if ($MissingCurrenciesTicker = Get-Ticker -Symbol $MissingCurrencies) {
+                $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))));$Rates[$_] = [Double]$NewRates.$_}                
+            }
         }
     }
     catch {

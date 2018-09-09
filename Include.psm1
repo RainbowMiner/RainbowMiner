@@ -157,32 +157,32 @@ function Get-CoinSymbol {
 
 function Get-Ticker {
     [CmdletBinding()]
-    param($Symbol, $Convert, [Switch]$PriceOnly)
+    param($Symbol, $Convert)
 
     if (-not $Convert) {$Convert="BTC"}
-
-    Get-CoinSymbol -Silent
-
-    if (-not $Global:GlobalCoinmarketCapList.ContainsKey($Symbol)) {
-        Write-Log -Level Warn "$($Symbol) not found on Coinmarketcap "
-        return
-    }
-    $Symbol_ID = $Global:GlobalCoinmarketCapList[$Symbol].id
+    $Convert = $Convert.ToUpper()
 
     try {
-        $Request = Invoke-RestMethodAsync "https://api.coinmarketcap.com/v2/ticker/$($Symbol_ID)/?convert=$($Convert)"
+        $Symbol = ($Symbol -join ',').ToUpper()
+        if ($Symbol -match ',') {
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner"
+            if ($RatesAPI.Response -eq "Error") {
+                Write-Log -Level Warn "Symbols $($Symbol) not found on Cryptocompare"
+            } else {
+                $RatesAPI
+            }
+        } else {
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner"
+            if ($RatesAPI.Response -eq "Error") {
+                Write-Log -Level Warn "Symbol $($Symbol) not found on Cryptocompare"
+            } else {
+                [PSCustomObject]@{$Symbol = $RatesAPI}
+            }
+        }
     }
     catch {
-        Write-Log -Level Warn "Coinmarketcap API (ticker) has failed. "
-        return
+        Write-Log -Level Warn "Cryptocompare API for $($Symbol) to $($Convert) has failed. "
     }
-
-    $Request = $Request.data.quotes
-    if ($Request -eq $null) {
-        Write-Log -Level Warn "Coinmarketcap API (ticker) returned nothing. "
-        return
-    }
-    if ($PriceOnly -and $Request.$Convert -ne $null) {$Request.$Convert.price} else {$Request}
 }
 
 Function Write-Log {
