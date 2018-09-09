@@ -53,65 +53,72 @@ function Confirm-Version {
 
 function Get-Balance {
     [CmdletBinding()]
-    param($Config, $Rates, $NewRates)
+    param($Config, $NewRates, [Bool]$Refresh = $false)
 
-    # If rates weren't specified, just use 1 BTC = 1 BTC
-    if ($Rates -eq $Null) {
-        [hashtable]$Rates = @{BTC = [Double]1}
-    }
-    if ($NewRates -eq $Null) {
-        try {
-            Write-Log "Updating exchange rates from Coinbase. "
-            [hashtable]$NewRates = @{}
-            Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}   
-            $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-            $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})}
-        }
-        catch {
-            Write-Log -Level Warn "Coinbase is down. "
-        }
+    $Data = [PSCustomObject]@{}
+    
+    if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
+        $Script:CachedPoolBalances = @(Get-ChildItem "Balances" -File | Where-Object {$Config.Pools.$($_.BaseName) -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
+            Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
+        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | Sort-Object Caption)
     }
 
-    $Balances = @()
+    $Balances = $Script:CachedPoolBalances | Where-Object Name -ne '*Total*'
 
+    #Get exchgange rates for all payout currencies
+    $CurrenciesWithBalances = @(@($Balances.currency) | Select-Object -Unique | Sort-Object)
+    $CurrenciesToExchange = @(@("BTC") + @($Config.Currency) | Select-Object -Unique | Sort-Object)
     try {
-        if (Test-Path "Balances") {        
-            $Balances = @(Get-ChildItem "Balances" -File | Where-Object {@($Config.Pools.PSObject.Properties.Name | Where-Object {$Config.ExcludePoolName -inotcontains $_}) -like "$($_.BaseName)*"} | ForEach-Object {
-                Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
-            } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru} | Select-Object)
-
-            $Balances.PSObject.Properties.Value.currency | Select-Object -Unique | Where-Object {-not $Rates.$_} | Foreach-Object {                    
-                    $Rates[$_] = $(if ($NewRates.$_) {$NewRates.$_} else {$Ticker=Get-Ticker -Symbol $_ -PriceOnly;if ($Ticker) {[Double]1/$Ticker} else {0}})
-            }
-
-            # Add total of totals
-            $Total = ($Balances | Where-Object {$_.total} | ForEach-Object {$_.total/$Rates[$_.currency]} | Measure-Object -Sum).Sum
-            $Balances += [PSCustomObject]@{
-                currency = "BTC"
-                total = $Total
-                Name  = "*Total*"
-            }
-
-            # Add local currency values
-            $Balances | Foreach-Object {
-                Foreach($RateSymbol in @($Rates.Keys | Sort-Object)) {
-                    $Value = $Rates[$RateSymbol]
-                    if ($_.currency -ne "BTC") {$Value = if ($RateSymbol -eq $_.currency){[Double]1}else{[Double]($Value/$Rates[$_.currency])}}
-                    # Round BTC to 8 decimals, everything else is based on BTC value
-                    if ($RateSymbol -eq "BTC") {
-                        $_ | Add-Member "Total_BTC" ("{0:N8}" -f ([Double]$Value * $_.total)) -Force
-                    } 
-                    else {
-                        $_ | Add-Member "Total_$($RateSymbol)" (ConvertTo-LocalCurrency $($_.total) $Value -Offset 4) -Force
-                    }
+        $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($CurrenciesWithBalances -join ",")&tsyms=$($CurrenciesToExchange -join ",")&extraParams=https://github.com/rainbowminer/RainbowMiner"
+    }
+    catch {
+        $RatesAPI = [PSCustomObject]@{}
+        $CurrenciesWithBalances | Foreach-Object {
+            $Currency = $_
+            $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
+            $CurrenciesToExchange | Foreach-Object {
+                if ($NewRates.ContainsKey($_)) {
+                    $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
                 }
             }
         }
     }
-    catch {
-        Write-Log -Level Warn "Trouble fetching Balances. "
+
+    #Add total of totals
+    $Totals = [PSCustomObject]@{
+        Name    = "*Total*"
+        Caption = "*Total*"
     }
-    $Balances
+    [hashtable]$Digits = @{}
+    @($RatesAPI.PSObject.Properties.Name)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {
+        if (-not $NewRates.ContainsKey($_) -and $RatesAPI.$_.BTC) {$v = 1/$RatesAPI.$_.BTC;$NewRates[$_] = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))))}
+        $Digits[$_] = if ($NewRates.ContainsKey($_)) {($($NewRates.$_).ToString().Split(".")[1]).length} else {8}
+    }
+
+    $RatesAPI.PSObject.Properties.Name | Sort-Object | ForEach-Object {
+        $Currency = $_.ToUpper()
+        $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force}
+        if (($Balances."Balance ($Currency)" | Measure-Object -Sum).sum) {$Totals | Add-Member "Balance ($Currency)" ($Balances."Balance ($Currency)" | Measure-Object -Sum).sum}
+    }
+
+    #Add converted values
+    $Config.Currency | Sort-Object | ForEach-Object {
+        $Currency = $_.ToUpper()
+        $Balances | Foreach-Object {$_ | Add-Member "Value in $Currency" $(if ($RatesAPI.$($_.Currency).$Currency -ne $null) {$_.Total * $RatesAPI.$($_.Currency).$Currency}elseif($RatesAPI.$Currency.$($_.Currency)) {$_.Total / $RatesAPI.$Currency.$($_.Currency)}else{"unknown"}) -Force}
+        if (($Balances."Value in $Currency" | Measure-Object -Sum -ErrorAction Ignore).sum)  {$Totals | Add-Member "Value in $Currency" ($Balances."Value in $Currency" | Measure-Object -Sum -ErrorAction Ignore).sum}
+    }
+
+    $Balances += $Totals
+
+    $Balances | Foreach-Object {
+        $Balance = $_
+        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {$Balance.$_ = "{0:N$($Digits[$Matches[2]])}" -f $Balance.$_}
+    }
+    
+    $Data | Add-Member Balances $Balances
+    $Data | Add-Member Rates $RatesAPI
+
+    Return $Data
 }
 
 function Get-CoinSymbol {
@@ -851,6 +858,7 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline
     )
+    $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {
@@ -885,6 +893,7 @@ function Invoke-TcpRead {
         [Parameter(Mandatory = $true)]
         [Int]$Timeout = 10 #seconds
     )
+    $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
     #try {$ipaddress = [ipaddress]$Server} catch {$ipaddress = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0}
     try {

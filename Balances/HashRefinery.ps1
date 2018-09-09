@@ -7,22 +7,20 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-$Request = [PSCustomObject]@{}
-
 if (!$PoolConfig.BTC) {
-    Write-Log -Level Verbose "Pool Balance API ($Name) has failed - no wallet address specified."
+    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified."
     return
 }
 
-$OldEAP = $ErrorActionPreference
-$ErrorActionPreference = "Stop"
+$Request = [PSCustomObject]@{}
+
 try {
     $Request = Invoke-RestMethod "http://pool.hashrefinery.com/api/walletEx?address=$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
+    return
 }
-$ErrorActionPreference = $OldEAP
 
 if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool Balance API ($Name) returned nothing. "
@@ -30,12 +28,13 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 }
 
 [PSCustomObject]@{
-    "currency" = $Request.currency
-    "balance" = $Request.balance
-    "pending" = $Request.unsold
-    "total" = $Request.unpaid
-    "payed" = $Request.total - $Request.unpaid
-    "earned" = $Request.total
-    "payouts" = @($Request.payouts | Select-Object)
-    "lastupdated" = (Get-Date).ToUniversalTime()
+    Caption     = "$($Name) ($($Request.currency))"
+    Currency    = $Request.currency
+    Balance     = $Request.balance
+    Pending     = $Request.unsold
+    Total       = $Request.unpaid
+    Payed       = $Request.total - $Request.unpaid
+    Earned      = $Request.total
+    Payouts     = @($Request.payouts | Select-Object)
+    Lastupdated = (Get-Date).ToUniversalTime()
 }

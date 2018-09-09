@@ -73,6 +73,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalances = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$ShowPoolBalancesExcludedPools = $false,
+    [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
     [int]$LocalAPIPort = 4000,
@@ -163,7 +165,6 @@ $PauseMiners = $false
 $RestartMiners = $false
 $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
-$LastBalances = $Timer
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
@@ -171,13 +172,14 @@ $IsInitialSetup = $false
 [hashtable]$Updatetracker = @{
     Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
     APIs = [hashtable]@{}
+    Balances = $Timer
 }
 
 if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor")
 }
 
 #Cleanup the log
@@ -484,7 +486,7 @@ while ($true) {
         $DonateDelayHours /= 2
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated) {$LastDonated = $Timer;Write-Log "Donation run finished. "}    
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$LastDonated = $Timer;Write-Log "Donation run finished. "}    
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
         if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","PGN":"PAH9NZow4ut9ewGCdv548V832EMU5PWKJL","Worker":"mpx","User":"rbm"}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["allium","balloon","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","equihash21x9","equihash24x5","equihash24x7","ethash","hmq1725","hodl","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","phi2","poly","skein","skunk","timetravel","tribus","x16r","x16s","x17","xevan","yescrypt","yescryptr16","yespower"]}' | ConvertFrom-Json}                                                                                                                                                                                                                                                                                                                                                                     
         $AvailPools | ForEach-Object {
@@ -514,10 +516,10 @@ while ($true) {
     $API.Config = $Config
 
     #Clear pool cache if the pool configuration has changed
-    if ($AllPools -ne $null -and ($ConfigBackup.Pools | ConvertTo-Json -Compress) -ne ($Config.Pools | ConvertTo-Json -Compress)) {Remove-Variable "AllPools"}
+    if ($AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {Remove-Variable "AllPools"}
 
     #Clear balances if pool configuration flag has changed
-    if ($Balances -ne $null -and $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances) {Remove-Variable "Balances"}
+    if ($BalancesData -ne $null -and ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
 
     #load device(s) informatino and device combos
     if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
@@ -640,7 +642,11 @@ while ($true) {
         Write-Log "Updating exchange rates from Coinbase. "
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {$Rates[$_] = $($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})}
+        $Config.Currency | Where-Object {-not $NewRates.$_} | Foreach-Object {
+            $v=$($Ticker=Get-Ticker -Symbol $_ -PriceOnly;if($Ticker){[Double]1/$Ticker}else{0})
+            $NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))))
+            $Rates[$_] = [Double]$NewRates.$_
+        }
     }
     catch {
         Write-Log -Level Warn "Coinbase is down. "
@@ -658,12 +664,15 @@ while ($true) {
 
     #Update the pool balances every 10 Minutes
     if ($Config.ShowPoolBalances) {
-        if (-not $Balances -or $LastBalances -lt $Timer.AddMinutes(-10)) {
+        $RefreshBalances = ($BalancesData -eq $null -or $Updatetracker.Balances -lt $Timer.AddMinutes(-10))
+        if ($RefreshBalances) {
             Write-Log "Getting pool balances. "
-            $Balances = Get-Balance -Config $UserConfig -Rates $Rates -NewRates $NewRates
-            $API.Balances = $Balances
-            $LastBalances = $Timer
+            $Updatetracker.Balances = $Timer
+        } else {
+            Write-Log "Updating pool balances. "
         }
+        $BalancesData = Get-Balance -Config $UserConfig -NewRates $NewRates -Refresh $RefreshBalances
+        $API.Balances = $BalancesData.Balances
     }
 
     Remove-Variable "UserConfig", "ConfigBackup"
@@ -1430,11 +1439,19 @@ while ($true) {
     }
 
     #Display pool balances, formatting it to show all the user specified currencies
-    if ($Config.ShowPoolBalances) {
-        $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$LastBalances).TotalMinutes
+    if ($Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Balances.Count -gt 1) {
+        $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
-        Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($LastBalances)) (next update $($NextBalances)): "
-        $Balances | Format-Table Name, Total_*
+        Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Updatetracker.Balances)) (next update $($NextBalances)): "
+        $Columns = @()
+        $ColumnFormat = [Array]@{Name = "Name"; Expression = "Name"}
+        if (($BalancesData.Balances.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
+            $ColumnFormat += @{Name = "Sym"; Expression = {$_.Currency}}
+            $ColumnFormat += @{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}            
+        }
+        $Columns += $BalancesData.Balances | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
+        $ColumnFormat += $Columns | Foreach-Object {@{Name = "$($_ -replace "Value in\s+")"; Expression = "$_"; Align = "right"}}
+        $BalancesData.Balances | Format-Table -Wrap -Property $ColumnFormat
     }
 
     #Display exchange rates

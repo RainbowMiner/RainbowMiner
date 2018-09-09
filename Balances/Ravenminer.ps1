@@ -9,22 +9,23 @@ $Ravenminer_Regions = "eu", "us"
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $PoolConfig = $Config.Pools.$Name
 
-$Request = [PSCustomObject]@{}
-
 if (!$PoolConfig.RVN) {
     Write-Log -Level Verbose "Pool Balance API ($Name) has failed - no wallet address specified."
     return
 }
 
+$Request = [PSCustomObject]@{}
+
 $Out = [PSCustomObject]@{
-            "currency" = 'RVN'
-            "balance" = 0
-            "pending" = 0
-            "total" = 0
-            "paid" = 0
-            "earned" = 0
-            "payouts" = @()
-            "lastupdated" = $null
+            Caption     = "$($Name) (RVN)"
+            Currency    = 'RVN'
+            Balance     = 0
+            Pending     = 0
+            Total       = 0
+            Paid        = 0
+            Earned      = 0
+            Payouts     = @()
+            LastUpdated = $null
         }
 
 $Ravenminer_Regions | ForEach-Object {
@@ -32,8 +33,6 @@ $Ravenminer_Regions | ForEach-Object {
     else {$Ravenminer_Host = "ravenminer.com"}
 
     $Success = $true
-    $OldEAP = $ErrorActionPreference
-    $ErrorActionPreference = "Stop"
     try {
         if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
     }
@@ -54,7 +53,6 @@ $Ravenminer_Regions | ForEach-Object {
         }
         catch {$Success=$false}
     }
-    $ErrorActionPreference = $OldEAP
 
     if (-not $Success) {
         Write-Log -Level Warn "Pool Balance API ($Name) for Region $($_) has failed. "
@@ -66,14 +64,14 @@ $Ravenminer_Regions | ForEach-Object {
     }
 
     if ($Request.total) {
-        $Out.currency = $Request.currency
-        $Out.balance += $Request.balance
-        $Out.pending += $Request.unsold
-        $Out.total += $Request.unpaid
-        $Out.paid += $Request.total - $Request.unpaid
-        $Out.earned += $Request.total
-        $Out.payouts += @($Request.payouts | Select-Object)
-        $Out.lastupdated = (Get-Date).ToUniversalTime()
+        $Out.Currency     = $Request.currency
+        $Out.Balance     += $Request.balance
+        $Out.Pending     += $Request.unsold
+        $Out.Total       += $Request.unpaid
+        $Out.Paid        += $Request.total - $Request.unpaid
+        $Out.Earned      += $Request.total
+        $Out.Payouts     += @($Request.payouts | Select-Object)
+        $Out.lastupdated  = (Get-Date).ToUniversalTime()
     }
 }
 

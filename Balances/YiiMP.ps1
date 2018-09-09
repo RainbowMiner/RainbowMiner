@@ -18,9 +18,9 @@ if (-not $Payout_Currencies) {
 
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-RestMethod "http://zerg.zergpool.com/api/walletEx?address=$($PoolConfig.$_)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Request = Invoke-RestMethod "http://api.yiimp.eu/api/wallet?address=$($PoolConfig.$_)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Warn "Pool Balance API ($Name) for $_ returned nothing. "
+            Write-Log -Level Warn "Pool Balance API ($Name) for $_ returned nothing. "            
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
@@ -28,8 +28,9 @@ $Payout_Currencies | Foreach-Object {
                 Balance     = $Request.balance
                 Pending     = $Request.unsold
                 Total       = $Request.unpaid
-                Earned      = $Request.paidtotal
-                Payouts     = @($Request.payouts)
+                Payed       = $Request.total - $Request.unpaid
+                Earned      = $Request.total
+                Payouts     = @($Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }
