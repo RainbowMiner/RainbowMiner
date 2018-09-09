@@ -58,10 +58,9 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
             $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
-
-            $Miner_Protocol_Params = "-proto 4" 
-            #if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"-proto 4 -stales 0"} else {"-proto 1"}
-            #$Miner_Protocol        = if ($Pools.$Algorithm_Norm.Protocol -eq "stratum+tcp") {"stratum+tcp://"} else { "" }
+           
+            if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {$Miner_Protocol_Params = "-proto 4 -stales 0"}
+            else {$Miner_Protocol_Params = "-proto 1"}          
 
             [PSCustomObject]@{
                 Name = $Miner_Name

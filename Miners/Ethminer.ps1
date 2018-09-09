@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.16.0rc1/ethminer-0.16.0rc1-windows-amd64.zip"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0/ethminer-0.15.0-Windows.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0

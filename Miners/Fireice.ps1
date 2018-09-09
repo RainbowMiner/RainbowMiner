@@ -10,6 +10,7 @@ param(
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/xmr-stak/releases/download/v2.4.7-nodevfee/xmr-stak-2.4.7-nodevfee.zip"
 $Port = "309{0:d2}"
+$ManualUri = "https://github.com/RainbowMiner/xmr-stak/releases"
 $DevFee = 0.0
 
 $Commands = [PSCustomObject[]]@(
