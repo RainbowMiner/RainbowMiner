@@ -48,6 +48,7 @@
 316	T-Rex
 317	lolMiner
 318	Eminer
+319	Funakoshi
 
 400	Sgminer
 401	SgminerBitcore
@@ -55,7 +56,7 @@
 403	SgminerLyra2z
 404	SgminerSkein
 405	SgminerXevan
-406 Nsgminer
+406	Nsgminer
 
 500	CpuminerJayddeeSse2
 501	CpuminerJayddeeAessse42
