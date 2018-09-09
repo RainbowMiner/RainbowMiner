@@ -384,6 +384,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **PoolName** = list of pool names, you want to use for mining [default=nicehash,blazepool,miningpoolhubmini]
 - **ExcludePoolName** = list of pool names, you want to exclude from mining
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
+- **ShowPoolBalancesExcludedPools** = set to 1 to let RainbowMiner try to fetch balances from not used pools in addition to the currently activated pools [default=0]
 
 #### Select mining mode ####
 
