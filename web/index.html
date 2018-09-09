@@ -72,7 +72,7 @@
                     $("#balanceboxes").empty();                    
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
-                        var currencies = properties.filter((properties) => properties.startsWith("Total_"));
+                        var currencies = properties.filter((properties) => properties.startsWith("Value in "));
 
                         if (item.Name == "*Total*") {
                             var data = { name: "Total Balance From All Pools", balances: {}, total: true };
@@ -80,7 +80,7 @@
                             var data = { name: item.Name, balances: {} };
                         }
                         $.each(currencies, function (cindex, currency) {
-                            var name = currency.replace("Total_", "");
+                            var name = currency.replace("Value in ", "");
                             data["balances"][name] = item[currency];
                         });
                         $("#balanceboxes").append(template(data));
