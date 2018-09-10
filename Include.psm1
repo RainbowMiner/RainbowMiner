@@ -51,6 +51,13 @@ function Confirm-Version {
     }
 }
 
+function Get-PoolPayoutCurrencies {
+    param($Pool)
+    $Payout_Currencies = [PSCustomObject]@{}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and $_.Value.Length -gt 10 -and @("API_Key","API_ID","User","Worker") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    $Payout_Currencies
+}
+
 function Get-Balance {
     [CmdletBinding()]
     param($Config, $NewRates, [Bool]$Refresh = $false)
@@ -81,9 +88,9 @@ function Get-Balance {
         $RatesAPI = [PSCustomObject]@{}
         $CurrenciesWithBalances | Foreach-Object {
             $Currency = $_
-            $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-            $CurrenciesToExchange | Foreach-Object {
-                if ($NewRates.ContainsKey($_)) {
+            if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
+                $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
+                $CurrenciesToExchange | Foreach-Object {
                     $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
                 }
             }
