@@ -15,8 +15,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/currencies"
-    $Pool_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/status"    
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/currencies" -retry 3 -retrywait 750
+    $Pool_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/status" -retry 3 -retrywait 500
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

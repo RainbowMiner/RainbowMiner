@@ -16,7 +16,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status" -retry 3 -retrywait 500
     #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies"
 }
 catch {
@@ -55,6 +55,10 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     if ($Pool_Symbol -and $Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Symbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
     $Divisor = 1e6 * [Double]$Pool_Request.$_.mbtc_mh_factor
+    if ($Divisor -eq 0) {
+        Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
+        return
+    }
 
     if (-not $InfoOnly) {
         if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}

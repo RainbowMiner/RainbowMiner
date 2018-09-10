@@ -17,7 +17,7 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -retry 5 -retrywait 750
-    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -retry 5 -retrywait 750
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -retry 5 -retrywait 500
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

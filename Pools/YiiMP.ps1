@@ -15,8 +15,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
-    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies" -retry 3 -retrywait 750
+    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status" -retry 3 -retrywait 500
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -50,7 +50,16 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
-    $Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+    if ($Pool_Request.$Pool_Algorithm.mbtc_mh_factor) {
+        $Divisor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+    } else {
+        Switch($Pool_Algorithm_Norm) {
+            "Blake2s" {$Divisor = 1000}
+            "KeccakC" {$Divisor = 1000}
+            default {$Divisor = 1}
+        }
+    }
+    $Divisor *= 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
