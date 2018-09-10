@@ -58,12 +58,16 @@ function Get-Balance {
     $Data = [PSCustomObject]@{}
     
     if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
-        $Script:CachedPoolBalances = @(Get-ChildItem "Balances" -File | Where-Object {$Config.Pools.$($_.BaseName) -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
+        $NewBalances = @(Get-ChildItem "Balances" -File | Where-Object {$Config.Pools.$($_.BaseName) -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
             Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
-        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | Sort-Object Caption)
+        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | Group-Object -Property Caption | Foreach-Object {
+            if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
+            $_.Group[0]
+        })
+        $Script:CachedPoolBalances = @($NewBalances) + @(Compare-Object @($NewBalances.Caption | Select-Object -Unique) @($Script:CachedPoolBalances.Caption | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:CachedPoolBalances | Where-Object Caption -EQ $_}) | Sort-Object Caption
     }
 
-    $Balances = $Script:CachedPoolBalances | Where-Object Name -ne '*Total*'
+    $Balances = $Script:CachedPoolBalances | Where-Object Name -ne '*Total*' | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"})) {$_.PSObject.Properties.Remove($p)};$_}
 
     #Get exchgange rates for all payout currencies
     $CurrenciesWithBalances = @(@($Balances.currency) | Select-Object -Unique | Sort-Object)
@@ -90,22 +94,22 @@ function Get-Balance {
         Caption = "*Total*"
     }
     [hashtable]$Digits = @{}
-    @($RatesAPI.PSObject.Properties.Name)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {
+    @($CurrenciesWithBalances)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {
         if (-not $NewRates.ContainsKey($_) -and $RatesAPI.$_.BTC) {$v = 1/$RatesAPI.$_.BTC;$NewRates[$_] = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))))}
         $Digits[$_] = if ($NewRates.ContainsKey($_)) {($($NewRates.$_).ToString().Split(".")[1]).length} else {8}
     }
 
-    $RatesAPI.PSObject.Properties.Name | Sort-Object | ForEach-Object {
+    $CurrenciesWithBalances | Sort-Object | ForEach-Object {
         $Currency = $_.ToUpper()
         $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force}
-        if (($Balances."Balance ($Currency)" | Measure-Object -Sum).sum) {$Totals | Add-Member "Balance ($Currency)" ($Balances."Balance ($Currency)" | Measure-Object -Sum).sum}
+        if (($Balances."Balance ($Currency)" | Measure-Object -Sum).sum) {$Totals | Add-Member "Balance ($Currency)" ($Balances."Balance ($Currency)" | Measure-Object -Sum).sum -Force}
     }
 
     #Add converted values
     $Config.Currency | Sort-Object | ForEach-Object {
         $Currency = $_.ToUpper()
-        $Balances | Foreach-Object {$_ | Add-Member "Value in $Currency" $(if ($RatesAPI.$($_.Currency).$Currency -ne $null) {$_.Total * $RatesAPI.$($_.Currency).$Currency}elseif($RatesAPI.$Currency.$($_.Currency)) {$_.Total / $RatesAPI.$Currency.$($_.Currency)}else{"unknown"}) -Force}
-        if (($Balances."Value in $Currency" | Measure-Object -Sum -ErrorAction Ignore).sum)  {$Totals | Add-Member "Value in $Currency" ($Balances."Value in $Currency" | Measure-Object -Sum -ErrorAction Ignore).sum}
+        $Balances | Foreach-Object {$_ | Add-Member "Value in $Currency" $(if ($RatesAPI.$($_.Currency).$Currency -ne $null) {$_.Total * $RatesAPI.$($_.Currency).$Currency}elseif($RatesAPI.$Currency.$($_.Currency)) {$_.Total / $RatesAPI.$Currency.$($_.Currency)}else{"-"}) -Force}
+        if (($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum)  {$Totals | Add-Member "Value in $Currency" ($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum -Force}
     }
 
     $Balances += $Totals

@@ -68,22 +68,37 @@
         (function updatePoolBalances() {
             $.ajax({
                 url: '/balances', success: function (result) {
-                    console.log(result);
-                    $("#balanceboxes").empty();                    
+                    //console.log(result);
+                    $("#balanceboxes").empty();
+                    var boxes = [], boxes_ix = {};
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Value in "));
 
-                        if (item.Name == "*Total*") {
-                            var data = { name: "Total Balance From All Pools", balances: {}, total: true };
-                        } else {
-                            var data = { name: item.Name, balances: {} };
+                        if (boxes_ix[item.Name] === undefined) {
+                            boxes_ix[item.Name] = boxes.length;
+                            if (item.Name == "*Total*") {
+                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: 0, total: true });
+                            } else {
+                                boxes.push({ name: item.Name, balances: {}, digits: {} });
+                            }
                         }
                         $.each(currencies, function (cindex, currency) {
                             var name = currency.replace("Value in ", "");
-                            data["balances"][name] = item[currency];
+                            var csplit = item[currency].replace(".","").split(",");
+                            var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+                            item[currency] = item[currency].replace(",", ".");
+                            if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
+                            else if (digits != -1) {
+                                if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
+                                boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                            }
                         });
-                        $("#balanceboxes").append(template(data));
+                    });
+                    $.each(boxes, function (index, item) {
+                        $.each(item["balances"], function (bindex, bitem) {if (item["digits"][bindex] != -1) item["balances"][bindex] = bitem.toFixed(item["digits"][bindex]).replace(".", ",");});
+                        $("#balanceboxes").append(template(item));
                     });
                     window.setTimeout(updatePoolBalances, 60000);
                 }
@@ -109,8 +124,8 @@
       // that is easier to display and manipulate in a table
       $.each(data, function (index, item) {
           // Format the type(s)
-          console.log(data);
-          console.log(item);
+          //console.log(data);
+          //console.log(item);
           item.tDevices = item.DeviceModel.toString();
           item.Name = item.Name.split(/\-/)[0];
 
