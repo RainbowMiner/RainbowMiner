@@ -168,6 +168,7 @@ $ShowTimer = $false
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
+$IsDonationRun = $false
 
 [hashtable]$Updatetracker = @{
     Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
@@ -313,7 +314,7 @@ while ($true) {
     [string[]]$AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
     if (Test-Path $ConfigFile) {
-        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {        
+        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {
 
             do {
                 if ($Config -eq $null) {Write-Host "Read configuration .."}
@@ -473,12 +474,7 @@ while ($true) {
         )
     }
     
-    # Copy the user's config before changing anything for donation runs
-    # This is used when getting pool balances so it doesn't get pool balances of the donation address instead
-    $UserConfig = $Config.PSObject.Copy()
-
     #Activate or deactivate donation  
-    $DonateNow = $false
     $DonateMinutes = if ($Config.Donate -lt 10) {10} else {$Config.Donate}
     $DonateDelayHours = 24
     if ($DonateMinutes -gt 15) {
@@ -486,15 +482,22 @@ while ($true) {
         $DonateDelayHours /= 2
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$LastDonated = $Timer;Write-Log "Donation run finished. "}    
-    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {    
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$Updatetracker["Config"]["ConfigFile"] = 0;$IsDonationRun = $false;$LastDonated = $Timer;Remove-Variable "UserConfig";Write-Log "Donation run finished. "}
+    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {
         if (-not $DonationData) {$DonationData = '{"Wallets":{"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["allium","balloon","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","equihash21x9","equihash24x5","equihash24x7","ethash","hmq1725","hodl","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","phi2","poly","skein","skunk","timetravel","tribus","x16r","x16s","x17","xevan","yescrypt","yescryptr16","yespower"]}' | ConvertFrom-Json}                                                                                                                                                                                                                                                                                                                                                                     
+        $DonateNow = $false
         $AvailPools | ForEach-Object {
             $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
             $Config.Pools | Add-Member $_ $DonationData1 -Force
             $DonateNow = $true
         }
         if ($DonateNow) {
+            if (-not $IsDonationRun) {
+                $UserConfig = $Config.PSObject.Copy()                
+                Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
+                $IsDonationRun = $true
+            }
+
             $Updatetracker["Config"]["ConfigFile"] = 0
             $DonationAlgorithmAvail = $AllPools.Algorithm | Foreach-Object {$_ -replace '\-.*$'} | Select-Object -Unique
             $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
@@ -506,7 +509,6 @@ while ($true) {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
                 $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
-            Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
@@ -521,7 +523,7 @@ while ($true) {
     #Clear balances if pool configuration flag has changed
     if ($BalancesData -ne $null -and ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
 
-    #load device(s) informatino and device combos
+    #load device(s) information and device combos
     if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
         Write-Log "Device configuration changed. Refreshing now. "
 
@@ -672,11 +674,11 @@ while ($true) {
         } else {
             Write-Log "Updating pool balances. "
         }
-        $BalancesData = Get-Balance -Config $UserConfig -NewRates $NewRates -Refresh $RefreshBalances
+        $BalancesData = Get-Balance -Config $(if ($IsDonationRun) {$UserConfig} else {$Config}) -NewRates $NewRates -Refresh $RefreshBalances
         $API.Balances = $BalancesData.Balances
     }
 
-    Remove-Variable "UserConfig", "ConfigBackup"
+    Remove-Variable "ConfigBackup"
 
     #Give API access to the current rates
     $API.Rates = $Rates
@@ -712,7 +714,7 @@ while ($true) {
     }
 
     #Remove stats from pools & miners not longer in use
-    if (-not $DonateNow -and (Test-Path "Stats")) {
+    if (-not $IsDonationRun -and (Test-Path "Stats")) {
         if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
         if ($AvailMiners -and $AvailMiners.Count -gt 0) {Compare-Object @($AvailMiners | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Miners\$($_.InputObject)-*_Hashrate.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
     }
@@ -1297,7 +1299,7 @@ while ($true) {
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
 
     #Move donation run into the future, if benchmarks are ongoing
-    if ($MinersNeedingBenchmark.Count -gt 0) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
 
     #Give API access to WatchdogTimers information
     $API.WatchdogTimers = $WatchdogTimers
@@ -1456,19 +1458,21 @@ while ($true) {
     }
 
     #Display exchange rates
-    $CurrentProfitTotal = $($RunningMiners | Measure-Object -Sum -Property Profit).Sum
+    $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = $($RunningMiners | Measure-Object -Sum -Property Profit).Sum
+    if ($Config.UsePowerPrice) {$CurrentProfitWithoutCostTotal += $($RunningMiners | Measure-Object -Sum -Property Profit_Cost).Sum}
     [System.Collections.ArrayList]$StatusLine = @()
     foreach($Miner_Currency in @($Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
             $CurrentProfitTotal_Out = $CurrentProfitTotal
+            $CurrentProfitWithoutCostTotal_Out = $CurrentProfitWithoutCostTotal
             if ($Miner_Currency -eq "BTC" -and $CurrentProfitTotal -gt 0) {
                 switch ([math]::truncate([math]::log($CurrentProfitTotal, 1000))) {
-                    -1 {$Miner_Currency_Out = "mBTC";$CurrentProfitTotal_Out*=1e3}
-                    -2 {$Miner_Currency_Out = "µBTC";$CurrentProfitTotal_Out*=1e6}
-                    -3 {$Miner_Currency_Out = "sat";$CurrentProfitTotal_Out*=1e8}
+                    -1 {$Miner_Currency_Out = "mBTC";$CurrentProfitTotal_Out*=1e3;$CurrentProfitWithoutCostTotal_Out*=1e3}
+                    -2 {$Miner_Currency_Out = "µBTC";$CurrentProfitTotal_Out*=1e6;$CurrentProfitWithoutCostTotal_Out*=1e6}
+                    -3 {$Miner_Currency_Out = "sat";$CurrentProfitTotal_Out*=1e8;$CurrentProfitWithoutCostTotal_Out*=1e8}
                 }
             }
-            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2) $Miner_Currency_Out/Day") > $null
+            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2)$(if ($Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Rates.$Miner_Currency) -Offset 2)"}) $Miner_Currency_Out/Day") > $null
     }
     if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
     #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") > $null
