@@ -69,6 +69,8 @@ function Get-Balance {
 
     $Balances = $Script:CachedPoolBalances | Where-Object Name -ne '*Total*' | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"})) {$_.PSObject.Properties.Remove($p)};$_}
 
+    if (-not $Balances) {return}
+
     #Get exchgange rates for all payout currencies
     $CurrenciesWithBalances = @(@($Balances.currency) | Select-Object -Unique | Sort-Object)
     $CurrenciesToExchange = @(@("BTC") + @($Config.Currency) | Select-Object -Unique | Sort-Object)
