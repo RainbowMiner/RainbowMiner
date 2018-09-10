@@ -458,6 +458,7 @@ while ($true) {
                     if ($Config.Pools.$p.$q -is [string]) {$Config.Pools.$p.$q = @(($Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
                     $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                 }
+                $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
             }
         }
     }    
@@ -508,7 +509,11 @@ while ($true) {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
                 $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
+            foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
+                $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+            }
             $Config | Add-Member DisableExtendInterval $true -Force
+
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
