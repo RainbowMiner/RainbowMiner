@@ -120,7 +120,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.6.8"
+$Version = "3.8.6.9"
 $Strikes = 3
 $SyncWindow = 10 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -509,6 +509,7 @@ while ($true) {
                 $Config | Add-Member PoolName $DonationPoolsAvail -Force
                 $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
+            $Config | Add-Member DisableExtendInterval $true -Force
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
