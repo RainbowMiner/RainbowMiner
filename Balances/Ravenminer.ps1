@@ -34,7 +34,7 @@ $Ravenminer_Regions | ForEach-Object {
 
     $Success = $true
     try {
-        if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){throw}
+        if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){$Success = $false}
     }
     catch {$Success=$false}
 
@@ -42,14 +42,16 @@ $Ravenminer_Regions | ForEach-Object {
         $Success = $true
         try {
             $Request = Invoke-WebRequest -UseBasicParsing "https://$($Ravenminer_Host)/site/wallet_results?address=$($PoolConfig.RVN)" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
-            if (-not ($Values = ([regex]'([\d\.]+?)\s+RVN').Matches($Request.Content).Groups | Where-Object Name -eq 1)){throw}
-            $Request = [PSCustomObject]@{
-                "currency" = "RVN"
-                "balance" = [Double]($Values | Select-Object -Index 1).Value
-                "unsold"  = [Double]($Values | Select-Object -Index 0).Value
-                "unpaid"  = [Double]($Values | Select-Object -Index 2).Value                
-                "total"  = [Double]($Values | Select-Object -Index 4).Value
-            }        
+            if (-not ($Values = ([regex]'([\d\.]+?)\s+RVN').Matches($Request.Content).Groups | Where-Object Name -eq 1)){$Success=$false}
+            else {
+                $Request = [PSCustomObject]@{
+                    "currency" = "RVN"
+                    "balance" = [Double]($Values | Select-Object -Index 1).Value
+                    "unsold"  = [Double]($Values | Select-Object -Index 0).Value
+                    "unpaid"  = [Double]($Values | Select-Object -Index 2).Value                
+                    "total"  = [Double]($Values | Select-Object -Index 4).Value
+                }
+            }
         }
         catch {$Success=$false}
     }
