@@ -67,7 +67,7 @@ function Get-Balance {
         $Script:CachedPoolBalances = @($NewBalances) + @(Compare-Object @($NewBalances.Caption | Select-Object -Unique) @($Script:CachedPoolBalances.Caption | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:CachedPoolBalances | Where-Object Caption -EQ $_}) | Sort-Object Caption
     }
 
-    $Balances = $Script:CachedPoolBalances | Where-Object Name -ne '*Total*' | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"})) {$_.PSObject.Properties.Remove($p)};$_}
+    $Balances = @($Script:CachedPoolBalances | Where-Object Name -ne '*Total*' | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"})) {$_.PSObject.Properties.Remove($p)};$_})
 
     if (-not $Balances) {return}
 
