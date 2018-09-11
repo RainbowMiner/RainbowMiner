@@ -63,10 +63,10 @@ do {
 
         Switch ($SetupType) {
             "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
             "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","usepowerprice","checkprofitability")) > $null}
             "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
+            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","usepowerprice","checkprofitability","donate")) > $null}
         }
         $GlobalSetupSteps.Add("save") > $null                            
 
@@ -393,6 +393,13 @@ do {
                     "showpoolbalances" {
                         $Config.ShowPoolBalances = Read-HostBool -Prompt "Show all available pool balances" -Default $Config.ShowPoolBalances | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     }
+                    "showpoolbalancesdetails" {
+                        if ($Config.ShowPoolBalances) {
+                            $Config.ShowPoolBalancesDetails = Read-HostBool -Prompt "Show all at a pool mined coins as one extra row" -Default $Config.ShowPoolBalancesDetails | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        } else {
+                            $GlobalSetupStepStore = $false
+                        }
+                    }
                     "showpoolbalancesexcludedpools" {
                         if ($Config.ShowPoolBalances -and $Config.ExcludePoolName) {
                             $Config.ShowPoolBalancesExcludedPools = Read-HostBool -Prompt "Show balances from excluded pools, too" -Default $Config.ShowPoolBalancesExcludedPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -510,6 +517,7 @@ do {
                         $ConfigActual | Add-Member ExcludeCoinSymbol $($Config.ExcludeCoinSymbol -join ",") -Force
                         $ConfigActual | Add-Member MiningMode $Config.MiningMode -Force
                         $ConfigActual | Add-Member ShowPoolBalances $(if (Get-Yes $Config.ShowPoolBalances){"1"}else{"0"}) -Force
+                        $ConfigActual | Add-Member ShowPoolBalancesDetails $(if (Get-Yes $Config.ShowPoolBalancesDetails){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member ShowPoolBalancesExcludedPools $(if (Get-Yes $Config.ShowPoolBalancesExcludedPools){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member ShowMinerWindow $(if (Get-Yes $Config.ShowMinerWindow){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member FastestMinerOnly $(if (Get-Yes $Config.FastestMinerOnly){"1"}else{"0"}) -Force
@@ -775,7 +783,8 @@ do {
 
                 [hashtable]$Pool_Config = @{Name = $Pool_Name}
                 [hashtable]$Pool_Parameters = @{StatSpan = [TimeSpan]::FromSeconds(0);InfoOnly = $true}
-                foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}                                        
+                foreach($p in @($Config.Pools.PSObject.Properties.Name)) {$Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force}
+                foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
                 $Pool_Parameters.DataWindow = Get-YiiMPDataWindow $Pool_Parameters.DataWindow
                 $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty           
                 $Pool = Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru}
