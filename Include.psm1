@@ -125,14 +125,18 @@ function Get-Balance {
     }
 
     if (-not $Details) {
-        #consolidate result
+        #Consolidate result
         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
             $_.Group | Sort-Object @{Expression={$_.Currency -eq "BTC"};Descending=$true},Caption | Select-Object -First 1 | Foreach-Object {
-                $Balance = $_
-                if ($Balance.Name -ne "*Total*") {$Balance.Caption = "$($Balance.Name) ($($Balance.Currency))";$Balance.Currency = "BTC"}
-                $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^Value in"} | Foreach-Object {
+                $Balance = [PSCustomObject]@{
+                    Caption = $_.Caption
+                    Currency = "BTC"
+                    Name = $_.Name
+                    Payouts = @(if ($_.Currency -eq "BTC") {$_.Payouts})
+                }
+                $_.PSObject.Properties.Name | Where-Object {$_ -match "^Value in"} | Foreach-Object {
                     $Field = $_
-                    $Balance.$Field = ($Balances | Where-Object {$_.Name -eq $Balance.Name -and $_.$Field -and $_.$Field -ne "-"} | Measure-Object -Property $Field -Sum -ErrorAction Ignore).sum
+                    $Balance | Add-Member $Field ($Balances | Where-Object {$_.Name -eq $Balance.Name -and $_.$Field -and $_.$Field -ne "-"} | Measure-Object -Property $Field -Sum -ErrorAction Ignore).sum
                 }
                 $Balance
             }
