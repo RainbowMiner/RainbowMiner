@@ -60,7 +60,7 @@ function Get-PoolPayoutCurrencies {
 
 function Get-Balance {
     [CmdletBinding()]
-    param($Config, $NewRates, [Bool]$Refresh = $false)
+    param($Config, $NewRates, [Bool]$Refresh = $false, [Bool]$Details = $false)
 
     $Data = [PSCustomObject]@{}
     
@@ -117,15 +117,33 @@ function Get-Balance {
     #Add converted values
     $Config.Currency | Sort-Object | ForEach-Object {
         $Currency = $_.ToUpper()
-        $Balances | Foreach-Object {$_ | Add-Member "Value in $Currency" $(if ($RatesAPI.$($_.Currency).$Currency -ne $null) {$_.Total * $RatesAPI.$($_.Currency).$Currency}elseif($RatesAPI.$Currency.$($_.Currency)) {$_.Total / $RatesAPI.$Currency.$($_.Currency)}else{"-"}) -Force}
+        $Balances | Foreach-Object {
+            $Balance = $_
+            $Balance | Add-Member "Value in $Currency" $(if ($RatesAPI.$($Balance.Currency).$Currency -ne $null) {$Balance.Total * $RatesAPI.$($Balance.Currency).$Currency}elseif($RatesAPI.$Currency.$($Balance.Currency)) {$Balance.Total / $RatesAPI.$Currency.$($Balance.Currency)}else{"-"}) -Force
+        }
         if (($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum)  {$Totals | Add-Member "Value in $Currency" ($Balances."Value in $Currency" | Where-Object {$_ -ne "-"} | Measure-Object -Sum -ErrorAction Ignore).sum -Force}
+    }
+
+    if (-not $Details) {
+        #consolidate result
+        $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
+            $_.Group | Sort-Object @{Expression={$_.Currency -eq "BTC"};Descending=$true},Caption | Select-Object -First 1 | Foreach-Object {
+                $Balance = $_
+                if ($Balance.Name -ne "*Total*") {$Balance.Caption = "$($Balance.Name) ($($Balance.Currency))";$Balance.Currency = "BTC"}
+                $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^Value in"} | Foreach-Object {
+                    $Field = $_
+                    $Balance.$Field = ($Balances | Where-Object {$_.Name -eq $Balance.Name -and $_.$Field -and $_.$Field -ne "-"} | Measure-Object -Property $Field -Sum -ErrorAction Ignore).sum
+                }
+                $Balance
+            }
+        }
     }
 
     $Balances += $Totals
 
     $Balances | Foreach-Object {
         $Balance = $_
-        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {$Balance.$_ = "{0:N$($Digits[$Matches[2]])}" -f $Balance.$_}
+        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($Digits[$Matches[2]])}" -f $Balance.$_}
     }
     
     $Data | Add-Member Balances $Balances

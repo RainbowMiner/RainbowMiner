@@ -15,8 +15,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/status" -retry 3 -retrywait 500
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/currencies" -retry 3 -retrywait 750
+    $Pool_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/currencies"
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

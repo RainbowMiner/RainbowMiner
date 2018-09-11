@@ -73,6 +73,8 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalances = $false,
     [Parameter(Mandatory = $false)]
+    [Switch]$ShowPoolBalancesDetails = $false,
+    [Parameter(Mandatory = $false)]
     [Switch]$ShowPoolBalancesExcludedPools = $false,
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
@@ -120,7 +122,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.6.10"
+$Version = "3.8.6.11"
 $Strikes = 3
 $SyncWindow = 10 #minutes
 $OutofsyncWindow = 60 #minutes
@@ -180,7 +182,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor")
 }
 
 #Cleanup the log
@@ -526,7 +528,7 @@ while ($true) {
     if ($AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {Remove-Variable "AllPools"}
 
     #Clear balances if pool configuration flag has changed
-    if ($BalancesData -ne $null -and ($ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
+    if ($BalancesData -ne $null -and ($AllPools -eq $null -or $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesDetails -ne $Config.ShowPoolBalancesDetails -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
 
     #load device(s) information and device combos
     if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
@@ -679,7 +681,7 @@ while ($true) {
         } else {
             Write-Log "Updating pool balances. "
         }
-        $BalancesData = Get-Balance -Config $(if ($IsDonationRun) {$UserConfig} else {$Config}) -NewRates $NewRates -Refresh $RefreshBalances
+        $BalancesData = Get-Balance -Config $(if ($IsDonationRun) {$UserConfig} else {$Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Config.ShowPoolBalancesDetails
         $API.Balances = $BalancesData.Balances
     }
 
@@ -1345,7 +1347,7 @@ while ($true) {
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
         )) > $null
 
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-5 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-6 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
     }
 
     if ($RestartMiners) {
@@ -1450,7 +1452,7 @@ while ($true) {
     if ($Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Balances.Count -gt 1) {
         $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
-        Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Updatetracker.Balances)) (next update $($NextBalances)): "
+        Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Updatetracker.Balances)) (next update $($NextBalances)): "        
         $Columns = @()
         $ColumnFormat = [Array]@{Name = "Name"; Expression = "Name"}
         if (($BalancesData.Balances.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
