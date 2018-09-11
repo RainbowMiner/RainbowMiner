@@ -56,6 +56,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
         Switch($Pool_Algorithm_Norm) {
             "Blake2s" {$Divisor = 1000}
             "KeccakC" {$Divisor = 1000}
+            "Sha256" {$Divisor = 1000}
             default {$Divisor = 1}
         }
     }
