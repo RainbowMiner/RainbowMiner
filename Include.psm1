@@ -2306,11 +2306,11 @@ function Set-MinersConfigDefault {
     )
     $PathToFileCpu = "$(([IO.FileInfo]$PathToFile).DirectoryName)\cpu.$(([IO.FileInfo]$PathToFile).Name)"
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
-        try {
-            $Algo = [hashtable]@{}
-            $Done = [PSCustomObject]@{}
-            $ChangeTag = $null
-            if (Test-Path $PathToFile) {
+        $Algo = [hashtable]@{}
+        $Done = [PSCustomObject]@{}
+        $ChangeTag = $null
+        if (Test-Path $PathToFile) {
+            try {
                 $PresetTmp = Get-Content $PathToFile -Raw | ConvertFrom-Json
                 $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
                 #cleanup duplicates in algorithm lists
@@ -2327,6 +2327,10 @@ function Set-MinersConfigDefault {
                         }) -Force
                 }
             }
+            catch {Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it."; return}
+        }
+
+        try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content}
             $AllDevices = Get-Device "cpu","gpu"
@@ -2403,8 +2407,11 @@ function Set-DevicesConfigDefault {
         [Switch]$Force = $false
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
-        try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it."; return}
+        }
+        try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining","DefaultOCprofile")
@@ -2438,8 +2445,11 @@ function Set-PoolsConfigDefault {
         [Switch]$Force = $false
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it."; return}
+        }
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
@@ -2488,8 +2498,12 @@ function Set-OCProfilesConfigDefault {
         [Switch]$Force = $false
     )
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it."; return}
+        }
+
         try {
-            if (Test-Path $PathToFile) {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
