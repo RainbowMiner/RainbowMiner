@@ -35,7 +35,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_Currencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore)}
+$Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore)}
 $Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
@@ -112,9 +112,3 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
         }
     }
 }
-
-
-
-
-
-
