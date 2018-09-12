@@ -126,6 +126,7 @@ $Version = "3.8.6.12"
 $Strikes = 3
 $SyncWindow = 10 #minutes
 $OutofsyncWindow = 60 #minutes
+$DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
@@ -156,6 +157,7 @@ $DecayBase = 1 - 0.1 #decimal percentage
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
 [System.Collections.ArrayList]$SelectedPoolNames = @()
+[System.Collections.ArrayList]$RunningPools = @()
 [hashtable]$Rates = @{BTC = [Double]1}
 [hashtable]$NewRates = @{}
 
@@ -701,6 +703,8 @@ while ($true) {
     #Load information about the pools
     Write-Log "Loading pool information. "
     $SelectedPoolNames.Clear()
+    $RunningPools.Clear()
+    if ($RunningMiners -and $RunningMiners.Count) {$RunningMiners | Foreach-Object {$RunningPools.Add("$($_.Pool)-$($_.Algorithm[0])")>$null}}
     if (Test-Path "Pools") {        
         $NewPools = @($AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
             $Pool_Name = $_
@@ -713,8 +717,10 @@ while ($true) {
             $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool_Config.PoolFee}))/100
             foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
                 $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
+                $Pool_Config.SwitchingHysteresis = 0
+                if (-not $RunningPools.Contains("$($Pool_Name)-$($Pool.Algorithm)")) {$Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}}
                 $Pool.Price *= $Pool_Factor
-                $Pool.StablePrice *= $Pool_Factor
+                $Pool.StablePrice *= $Pool_Factor                
                 $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
             }
         })
@@ -786,13 +792,9 @@ while ($true) {
     }
 
     $Pools = [PSCustomObject]@{}
-
-    #add switching hysteresis to avoid rapid switching between pools
-    $RunningMiners | Foreach-Object {
-    }
-
+      
     Write-Log "Selecting best pool for each algorithm. "
-    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.StablePrice * (1 - $_.MarginOfError)}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
+    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.StablePrice * (1 - ($_.MarginOfError + $_.SwitchingHysteresis))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
     if (($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes) -gt $SyncWindow) {
         Write-Log -Level Warn "Pool prices are out of sync ($([Int]($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_} | Measure-Object Updated -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)) minutes). "
         $PoolsPrice = "StablePrice"

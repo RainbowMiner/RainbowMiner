@@ -80,6 +80,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    SwitchingHysteresis = 0
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -eq "Equihash") {
@@ -99,6 +100,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
+                        SwitchingHysteresis = 0
                     }
                 }
             }
