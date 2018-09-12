@@ -78,7 +78,7 @@
                         if (boxes_ix[item.Name] === undefined) {
                             boxes_ix[item.Name] = boxes.length;
                             if (item.Name == "*Total*") {
-                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: 0, total: true });
+                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true });
                             } else {
                                 boxes.push({ name: item.Name, balances: {}, digits: {} });
                             }
