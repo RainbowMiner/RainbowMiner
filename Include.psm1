@@ -2283,7 +2283,7 @@ function Set-ContentJson {
             if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
                 $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
             } else {
-                Write-Log -Level Verbose "No changes in $PathToFile"
+                Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
             }
             return $true
         } catch { }
@@ -2389,7 +2389,7 @@ function Set-MinersConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{
-            Write-Log -Level Error "Could not create $($PathToFile): $($_.Exception.Message) "
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
 }
@@ -2423,7 +2423,7 @@ function Set-DevicesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
-            Write-Log -Level Error "Could not create $($PathToFile) "
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
 }
@@ -2474,7 +2474,7 @@ function Set-PoolsConfigDefault {
             }
         }
         catch{
-            Write-Log -Level Error "Could not create $($PathToFile) "
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
 }
@@ -2497,7 +2497,7 @@ function Set-OCProfilesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
-            Write-Log -Level Error "Could not create $($PathToFile) "
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
     
