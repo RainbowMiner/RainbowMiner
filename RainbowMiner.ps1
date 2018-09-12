@@ -766,13 +766,30 @@ while ($true) {
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
-        Write-Log -Level Warn "No pools available. "
-        if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
-        Start-Sleep $Config.Interval
+        Write-Log -Level Warn "No pools available. Press [X] to exit."
+
+        $i = 0
+        $keyPressedValue = $false
+        do {
+            if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+            else {Start-Sleep 2; $i+=2}
+            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+        } until ($keyPressedValue -or ($i -gt $Config.Interval))
+
+        if ($keyPressedValue -eq "X") {
+            Write-Log "User requests to stop script. "
+            Write-Host "[X] pressed - stopping script."
+            break
+        }
+
         continue
     }
 
     $Pools = [PSCustomObject]@{}
+
+    #add switching hysteresis to avoid rapid switching between pools
+    $RunningMiners | Foreach-Object {
+    }
 
     Write-Log "Selecting best pool for each algorithm. "
     $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.StablePrice * (1 - $_.MarginOfError)}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
@@ -1081,13 +1098,26 @@ while ($true) {
 
     #Update the active miners
     if ($Miners.Count -eq 0) {
-        Write-Log -Level Warn "No miners available. "
+        Write-Log -Level Warn "No miners available. Press [X] to exit."
         if ($Miners_DownloadList.Count -gt 0) {
             Write-Host " "
             Write-Host "Downloading first miners, mining operation will start in $($Config.Interval) seconds. Command windows will popup and close during extraction. Please be patient!" -ForegroundColor Black -BackgroundColor Yellow
         }
-        if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
-        Start-Sleep $Config.Interval
+
+        $i = 0
+        $keyPressedValue = $false
+        do {
+            if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+            else {Start-Sleep 2; $i+=2}
+            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+        } until ($keyPressedValue -or ($i -gt $Config.Interval))
+
+        if ($keyPressedValue -eq "X") {
+            Write-Log "User requests to stop script. "
+            Write-Host "[X] pressed - stopping script."
+            break
+        }
+
         continue
     }
 
