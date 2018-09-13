@@ -765,7 +765,7 @@ function Start-SubProcessInBackground {
     $Job
 }
 
-function Start-SubProcessInConsole {
+function Start-SubProcessInConsoleOld {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -843,6 +843,208 @@ function Start-SubProcessInConsole {
 
     $Job
 }
+
+function Start-SubProcessInConsole {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$LogPath = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "", 
+        [ValidateRange(-2, 3)]
+        [Parameter(Mandatory = $false)]
+        [Int]$Priority = 0,
+        [Parameter(Mandatory = $false)]
+        [String]$ProcessName = ""
+    )
+
+    $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
+    if ( $ProcessName -eq $ExecName ) { $ProcessName = "" }
+
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName {
+        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName)
+
+        $ControllerProcess = Get-Process -Id $ControllerProcessID
+        if ($ControllerProcess -eq $null) {return}
+
+        if ($ProcessName -ne "") {
+            $Running = @(Get-Process | Where-Object { $_.Name -eq $ProcessName } | Select-Object -ExpandProperty Id)
+        }
+
+        Add-Type -TypeDefinition @"
+            // http://www.daveamenta.com/2013-08/powershell-start-process-without-taking-focus/
+            using System;
+            using System.Diagnostics;
+            using System.Runtime.InteropServices;
+             
+            [StructLayout(LayoutKind.Sequential)]
+            public struct PROCESS_INFORMATION {
+                public IntPtr hProcess;
+                public IntPtr hThread;
+                public uint dwProcessId;
+                public uint dwThreadId;
+            }
+             
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            public struct STARTUPINFO {
+                public uint cb;
+                public string lpReserved;
+                public string lpDesktop;
+                public string lpTitle;
+                public uint dwX;
+                public uint dwY;
+                public uint dwXSize;
+                public uint dwYSize;
+                public uint dwXCountChars;
+                public uint dwYCountChars;
+                public uint dwFillAttribute;
+                public STARTF dwFlags;
+                public ShowWindow wShowWindow;
+                public short cbReserved2;
+                public IntPtr lpReserved2;
+                public IntPtr hStdInput;
+                public IntPtr hStdOutput;
+                public IntPtr hStdError;
+            }
+             
+            [StructLayout(LayoutKind.Sequential)]
+            public struct SECURITY_ATTRIBUTES {
+                public int length;
+                public IntPtr lpSecurityDescriptor;
+                public bool bInheritHandle;
+            }
+             
+            [Flags]
+            public enum CreationFlags : int {
+                NONE = 0,
+                DEBUG_PROCESS = 0x00000001,
+                DEBUG_ONLY_THIS_PROCESS = 0x00000002,
+                CREATE_SUSPENDED = 0x00000004,
+                DETACHED_PROCESS = 0x00000008,
+                CREATE_NEW_CONSOLE = 0x00000010,
+                CREATE_NEW_PROCESS_GROUP = 0x00000200,
+                CREATE_UNICODE_ENVIRONMENT = 0x00000400,
+                CREATE_SEPARATE_WOW_VDM = 0x00000800,
+                CREATE_SHARED_WOW_VDM = 0x00001000,
+                CREATE_PROTECTED_PROCESS = 0x00040000,
+                EXTENDED_STARTUPINFO_PRESENT = 0x00080000,
+                CREATE_BREAKAWAY_FROM_JOB = 0x01000000,
+                CREATE_PRESERVE_CODE_AUTHZ_LEVEL = 0x02000000,
+                CREATE_DEFAULT_ERROR_MODE = 0x04000000,
+                CREATE_NO_WINDOW = 0x08000000,
+            }
+             
+            [Flags]
+            public enum STARTF : uint {
+                STARTF_USESHOWWINDOW = 0x00000001,
+                STARTF_USESIZE = 0x00000002,
+                STARTF_USEPOSITION = 0x00000004,
+                STARTF_USECOUNTCHARS = 0x00000008,
+                STARTF_USEFILLATTRIBUTE = 0x00000010,
+                STARTF_RUNFULLSCREEN = 0x00000020,  // ignored for non-x86 platforms
+                STARTF_FORCEONFEEDBACK = 0x00000040,
+                STARTF_FORCEOFFFEEDBACK = 0x00000080,
+                STARTF_USESTDHANDLES = 0x00000100,
+            }
+             
+            public enum ShowWindow : short {
+                SW_HIDE = 0,
+                SW_SHOWNORMAL = 1,
+                SW_NORMAL = 1,
+                SW_SHOWMINIMIZED = 2,
+                SW_SHOWMAXIMIZED = 3,
+                SW_MAXIMIZE = 3,
+                SW_SHOWNOACTIVATE = 4,
+                SW_SHOW = 5,
+                SW_MINIMIZE = 6,
+                SW_SHOWMINNOACTIVE = 7,
+                SW_SHOWNA = 8,
+                SW_RESTORE = 9,
+                SW_SHOWDEFAULT = 10,
+                SW_FORCEMINIMIZE = 11,
+                SW_MAX = 11
+            }
+             
+            public static class Kernel32 {
+                [DllImport("kernel32.dll", SetLastError=true)]
+                public static extern bool CreateProcess(
+                    string lpApplicationName, 
+                    string lpCommandLine, 
+                    ref SECURITY_ATTRIBUTES lpProcessAttributes, 
+                    ref SECURITY_ATTRIBUTES lpThreadAttributes,
+                    bool bInheritHandles, 
+                    CreationFlags dwCreationFlags, 
+                    IntPtr lpEnvironment,
+                    string lpCurrentDirectory, 
+                    ref STARTUPINFO lpStartupInfo, 
+                    out PROCESS_INFORMATION lpProcessInformation);
+            }
+"@
+        $lpApplicationName = $FilePath;
+        $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
+        if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
+        $lpProcessAttributes = New-Object SECURITY_ATTRIBUTES
+        $lpProcessAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpProcessAttributes)
+        $lpThreadAttributes = New-Object SECURITY_ATTRIBUTES
+        $lpThreadAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpThreadAttributes)
+        $bInheritHandles = $false
+        $dwCreationFlags = [CreationFlags]::CREATE_NEW_CONSOLE
+        $lpEnvironment = [IntPtr]::Zero
+        if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $pwd}
+        $lpStartupInfo = New-Object STARTUPINFO
+        $lpStartupInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($lpStartupInfo)
+        $lpStartupInfo.wShowWindow = [ShowWindow]::SW_SHOWMINNOACTIVE
+        $lpStartupInfo.dwFlags = [STARTF]::STARTF_USESHOWWINDOW
+        $lpProcessInformation = New-Object PROCESS_INFORMATION
+
+        [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
+        $x = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+        Write-Host "Last error $x"
+        $Process = Get-Process -Id $lpProcessInformation.dwProcessID
+        if ($Process -eq $null) {
+            [PSCustomObject]@{ProcessId = $null}
+            return
+        }
+
+       if ( $ProcessName -ne "" ) {
+            $wait_count = 0;
+            do{
+                Start-Sleep 1;
+                $Process = Get-Process | Where-Object {$_.Name -eq $ProcessName -and $Running -notcontains $_.Id} | Select-Object -First 1
+                $wait_count++;
+            } while ($Process -eq $null -and $wait_count -le 5);
+        }
+        if ($Process -eq $null) {
+            [PSCustomObject]@{ProcessId = $null}
+            return
+        }
+
+        [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
+
+        $ControllerProcess.Handle | Out-Null
+        $Process.Handle | Out-Null
+
+        do {if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}}
+        while ($Process.HasExited -eq $false)
+    }
+
+    do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
+    while ($JobOutput -eq $null)
+
+    $Process = Get-Process | Where-Object Id -EQ $JobOutput.ProcessId
+    if ($Process) {
+        $Process.Handle | Out-Null
+        $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+        $Job | Add-Member MiningProcess $Process -Force -ErrorAction Ignore
+    }
+
+    $Job
+}
+
 
 function Expand-WebRequest {
     [CmdletBinding()]
