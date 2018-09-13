@@ -2780,12 +2780,8 @@ function Invoke-GetUrlAsync {
     ConfirmImpact = 'low'   
 )]   
 Param(   
-    [Parameter(   
-        Mandatory = $True,   
-        Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
-        [string]$url,
+    [Parameter(Mandatory = $False)]   
+        [string]$url = "",
     [Parameter(Mandatory = $False)]   
         [string]$method = "REST",
     [Parameter(Mandatory = $False)]   
@@ -2797,54 +2793,48 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
     [Parameter(Mandatory = $False)]
-        [int]$retrywait = 250
+        [int]$retrywait = 250,
+    [Parameter(Mandatory = $False)]   
+        [string]$Jobkey = $null
 )
-    $Jobkey = Get-MD5Hash $url
+    if (-not $url -and -not $Jobkey) {return}
 
-    if ($force -or
-        -not $AsyncLoader.Jobs.$Jobkey -or (
-            -not $AsyncLoader.Jobs.$Jobkey.Running -and (
-                $AsyncLoader.Jobs.$Jobkey.CycleTime -ne $cycletime -or
-                $AsyncLoader.Jobs.$Jobkey.Retry -ne $retry -or
-                $AsyncLoader.Jobs.$Jobkey.RetryWait -ne $retrywait
-            )
-        )
-    ) {
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
+
+    if ($force -or -not $AsyncLoader.Jobs.$Jobkey) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Method=$method;Success=0;Fail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
-            $AsyncLoader.Jobs.$Jobkey.CycleTime = $cycletime
-            $AsyncLoader.Jobs.$Jobkey.Retry = $retry
-            $AsyncLoader.Jobs.$Jobkey.RetryWait = $retrywait
-        }        
-                
-        $retry++
+        }
 
-        $OldEAP = $ErrorActionPreference
-        $ErrorActionPreference = "Stop"
+        $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
+
         do {
             $Request = $RequestError = $null
-            $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
             try {    
-                if ($method -eq "REST") {
+                if ($AsyncLoader.Jobs.$Jobkey.Method -eq "REST") {
                     $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
                 } else {
                     $Request = Invoke-WebRequest -UseBasicParsing $RequestUrl -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
                 }
+                $AsyncLoader.Jobs.$Jobkey.Success++
             }
             catch {
-                $RequestError = "$($RequestUrl)`r`n$($_.Exception.Message)"
+                $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($RequestUrl) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
+                $AsyncLoader.Jobs.$Jobkey.Fail++
             }
+
+            $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
 
             $retry--
             if ($retry) {
-                if (-not $RequestError -and $Request -and ($Request -isnot [string] -or $Request.trim().Length)) {$retry = 0}
-                else {Sleep -Milliseconds $retrywait}
+                if (-not $RequestError) {$retry = 0}
+                else {Sleep -Milliseconds $AsyncLoader.Jobs.$Jobkey.RetryWait}
             }
         } until ($retry -le 0)
-        $ErrorActionPreference = $OldEAP
 
         $AsyncLoader.Jobs.$Jobkey.Request = $Request
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
@@ -2872,26 +2862,31 @@ function Start-AsyncLoader {
         $AsyncLoader.Stop = $false
         $AsyncLoader.Cycle = -1
         [hashtable]$AsyncLoader.Jobs = @{}
-        [System.Collections.ArrayList]$AsyncLoader.Errors = @()
+        [System.Collections.ArrayList]$AsyncLoader.Error = @()
         $AsyncLoader.CycleTime = 10
 
         while (-not $AsyncLoader.Stop) {
+            $Error.Clear()
+            $AsyncLoader.Error.Clear()
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {
-                $AsyncLoader.ComputerStats = Get-ComputerStats
-            }
-            try {
-                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime) -and -not $_.Value.Running} | Foreach-Object {Invoke-GetUrlAsync -url $_.Value.Url -method $_.Value.Method -cycletime $_.Value.CycleTime -retry $_.Value.Retry -retrywait $_.Value.RetryWait -force -quiet}
+            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats}
+            try {                
+                foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
+                    $Job = $AsyncLoader.Jobs.$Jobkey
+                    if ($Job -and -not $Job.Running -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$AsyncLoader.Error.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                    }
+                }
             }
             catch {
-                $AsyncLoader.Errors.Add($_.Exception.Message) > $null                
-                if ($AsyncLoader.Errors.Count -gt 50) {$AsyncLoader.Errors.RemoveRange(0,[math]::max(1,$AsyncLoader.Errors.Count - 50))}
+                $AsyncLoader.Error.Add("$($Job.Url)`r`n$($_.Exception.Message)") > $null                
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
-            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append}
-            $Error.Clear()
+            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append}            
+            if ($AsyncLoader.Error.Count) {$AsyncLoader.Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append}            
         }
     });
 
