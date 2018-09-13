@@ -16,8 +16,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies"
-    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -tag $Name
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

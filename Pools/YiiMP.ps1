@@ -15,8 +15,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies"
-    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status"
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status" -tag $Name
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

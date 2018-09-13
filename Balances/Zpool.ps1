@@ -35,6 +35,7 @@ $Payout_Currencies | Foreach-Object {
         }
     }
     catch {
+        $Error.Remove($Error[$Error.Count - 1])
         Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
     }
 }

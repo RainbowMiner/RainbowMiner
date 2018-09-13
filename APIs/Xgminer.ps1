@@ -45,7 +45,7 @@ class Xgminer : Miner {
             Device   = @()
         }
 
-        $this.Data = @($this.Data | Select-Object -Last 10000)
+        $this.Data = @($this.Data | Select-Object -Last 1000)
 
         return @($Request, $Data | ConvertTo-Json -Compress)
     }

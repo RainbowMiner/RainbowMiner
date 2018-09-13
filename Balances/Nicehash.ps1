@@ -22,6 +22,7 @@ try {
     $UnpaidRequest.result.stats.balance | Foreach {$Sum += $_}
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }

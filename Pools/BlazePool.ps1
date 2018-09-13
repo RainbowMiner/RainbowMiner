@@ -16,8 +16,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status" -retry 3 -retrywait 500
-    #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status" -retry 3 -retrywait 500 -tag $Name
+    #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies" -tag $Name
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

@@ -16,8 +16,8 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/status"
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/currencies"
+    $Pool_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/status" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://pool.hashrefinery.com/api/currencies" -tag $Name
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "

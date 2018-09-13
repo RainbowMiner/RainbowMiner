@@ -18,6 +18,7 @@ try {
     $Request = Invoke-RestMethod "http://api.blazepool.com/wallet/$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
     return
 }

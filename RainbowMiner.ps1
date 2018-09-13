@@ -124,9 +124,8 @@ Clear-Host
 
 $Version = "3.8.6.13"
 $Strikes = 3
-$SyncWindow = 10 #minutes
-$OutofsyncWindow = 60 #minutes
-$DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
+$SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
+$OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
@@ -153,6 +152,8 @@ $StatEnd = $Timer
 $DecayStart = $Timer
 $DecayPeriod = 60 #seconds
 $DecayBase = 1 - 0.1 #decimal percentage
+$DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
+$OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow) #precalc for sync decay method
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
@@ -402,6 +403,18 @@ while ($true) {
     if ($StartAPI) {
         Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
         $API.Version = Confirm-Version $Version
+        if ($API.Version.RemoteVersion -gt $API.Version.Version) {
+            if ($Config.EnableAutoUpdate) {
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
+                $AutoUpdate = $Stopp = $API.Update = $true
+                for($i=0;$i -le 10;$i++) {
+                    Write-Host "." -NoNewline
+                    Sleep -Milliseconds 500
+                }
+                Write-Host " "
+                break
+            }            
+        }
     }
 
     #Give API access to computerstats
@@ -491,6 +504,7 @@ while ($true) {
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {
         if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm"}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["allium","balloon","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","equihash21x9","equihash24x5","equihash24x7","ethash","hmq1725","hodl","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","phi2","poly","skein","skunk","timetravel","tribus","x16r","x16s","x17","xevan","yescrypt","yescryptr16","yespower"]}' | ConvertFrom-Json}
         $DonateNow = $false
+        $UserConfig = $Config.PSObject.Copy()
         $AvailPools | ForEach-Object {
             $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
             $Config.Pools | Add-Member $_ $DonationData1 -Force
@@ -498,7 +512,6 @@ while ($true) {
         }
         if ($DonateNow) {
             if (-not $IsDonationRun) {
-                $UserConfig = $Config.PSObject.Copy()                
                 Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
                 $IsDonationRun = $true
             }            
@@ -517,7 +530,8 @@ while ($true) {
                 $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
             }
             $Config | Add-Member DisableExtendInterval $true -Force
-
+        } else {
+            Remove-Variable "UserConfig"
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
@@ -723,6 +737,9 @@ while ($true) {
         })
     }
 
+    #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
+    $AvailPools | Where-Object {-not $Config.Pools.$_ -or -not (($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
+
     #Remove stats from pools & miners not longer in use
     if (-not $IsDonationRun -and (Test-Path "Stats")) {
         if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
@@ -790,19 +807,16 @@ while ($true) {
     
     #Decrease compare prices, if out of sync window
     # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
-    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated
-    $OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow)
+    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated   
     $OutOfSyncTime = $OutOfSyncTimer.AddMinutes(-$OutOfSyncWindow)
     Write-Log "Selecting best pool for each algorithm. "
-    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.StablePrice * (1 - $_.MarginOfError) * ([Math]::min(1,([Math]::Log($OutOfSyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes)/$OutOfSyncDivisor + 1)/2))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
+    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.StablePrice * (1 - $_.MarginOfError) * ([Math]::min(1,([Math]::Log([Math]::max(1,$OutOfSyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
     if (($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes) -gt $SyncWindow) {
         Write-Log -Level Warn "Pool prices are out of sync ($([Int]($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_} | Measure-Object Updated -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)) minutes). "
-        $PoolsPrice = "Price" #$PoolsPrice = "StablePrice"
-    } else {
-        $PoolsPrice = "Price"
     }
     $Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
-        $Pool_Price = $Pools.$_.$PoolsPrice * ([Math]::min(1,([Math]::Log($OutOfSyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes)/$OutOfSyncDivisor + 1)/2))
+        $Pools.$_ | Add-Member Price_SyncDecay ([Math]::min(1,([Math]::Log([Math]::max(1,$OutOfSyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2)) -Force
+        $Pool_Price = $Pools.$_.Price * $Pools.$_.Price_SyncDecay
         $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Config.SwitchingPrevention,1) * [Math]::Pow($DecayBase, $DecayExponent / ([Math]::Max($Config.SwitchingPrevention,1)))) * 100.00) / 100.00))) -Force
         $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
     }

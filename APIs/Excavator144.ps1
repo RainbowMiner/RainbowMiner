@@ -635,6 +635,8 @@ class Excavator144 : Miner {
             Device   = @()
         }
 
+        $this.Data = @($this.Data | Select-Object -Last 1000)
+
         return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }

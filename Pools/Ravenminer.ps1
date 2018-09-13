@@ -14,7 +14,7 @@ $Pool_Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status")){throw}
+    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name)){throw}
 }
 catch {
     $Success = $false
@@ -23,7 +23,7 @@ catch {
 if ( -not $Success ) { 
     $Success = $true
     try {
-        if (-not ($Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status")){throw}
+        if (-not ($Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name)){throw}
     }
     catch {
         $Success = $false
@@ -33,7 +33,7 @@ if ( -not $Success ) {
 if ( -not $Success ) {
     $Success = $true
     try {
-        $Pool_Request = Invoke-WebRequestAsync "https://eu.ravenminer.com/site/current_results"
+        $Pool_Request = Invoke-WebRequestAsync "https://eu.ravenminer.com/site/current_results" -tag $Name
         if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Pool_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
         $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0.5;name = "x16r"}}
         $DataWindow = "actual_last24h"

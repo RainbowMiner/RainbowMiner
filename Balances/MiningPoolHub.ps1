@@ -19,6 +19,7 @@ try {
     $Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Warning "Pool Balance API ($Name) has failed. "
     return
 }

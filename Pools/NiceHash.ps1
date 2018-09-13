@@ -14,7 +14,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info"
+    $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info" -tag $Name
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
