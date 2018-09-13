@@ -2835,7 +2835,7 @@ Param(
                 }
             }
             catch {
-                $RequestError = $_.Exception    
+                $RequestError = "$($RequestUrl)`r`n$($_.Exception.Message)"
             }
 
             $retry--
