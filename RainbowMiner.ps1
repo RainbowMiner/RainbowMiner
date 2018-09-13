@@ -734,7 +734,6 @@ while ($true) {
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.    
-    $OutofsyncTime = (Get-Date).ToUniversalTime().AddMinutes(-$OutofsyncWindow)
     $AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) |
         Where-Object {
             $Pool = $_
@@ -752,8 +751,7 @@ while ($true) {
                 ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
                 ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-                ($Pool.Updated -lt $OutofsyncTime)
+                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
             )
         }
 
@@ -789,18 +787,24 @@ while ($true) {
     }
 
     $Pools = [PSCustomObject]@{}
-      
+    
+    #Decrease compare prices, if out of sync window
+    # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
+    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated
+    $OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow)
+    $OutOfSyncTime = $OutOfSyncTimer.AddMinutes(-$OutOfSyncWindow)
     Write-Log "Selecting best pool for each algorithm. "
-    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {($Timer - $_.Updated).TotalMinutes -le ($SyncWindow * $Strikes)}, {$_.StablePrice * (1 - $_.MarginOfError)}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
+    $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.StablePrice * (1 - $_.MarginOfError) * ([Math]::min(1,([Math]::Log($OutOfSyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes)/$OutOfSyncDivisor + 1)/2))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
     if (($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes) -gt $SyncWindow) {
         Write-Log -Level Warn "Pool prices are out of sync ($([Int]($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_} | Measure-Object Updated -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)) minutes). "
-        $PoolsPrice = "StablePrice"
+        $PoolsPrice = "Price" #$PoolsPrice = "StablePrice"
     } else {
         $PoolsPrice = "Price"
     }
     $Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
-        $Pools.$_ | Add-Member Price_Bias ($Pools.$_.$PoolsPrice * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Config.SwitchingPrevention,1) * [Math]::Pow($DecayBase, $DecayExponent / ([Math]::Max($Config.SwitchingPrevention,1)))) * 100.00) / 100.00))) -Force
-        $Pools.$_ | Add-Member Price_Unbias $Pools.$_.$PoolsPrice -Force
+        $Pool_Price = $Pools.$_.$PoolsPrice * ([Math]::min(1,([Math]::Log($OutOfSyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes)/$OutOfSyncDivisor + 1)/2))
+        $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Config.SwitchingPrevention,1) * [Math]::Pow($DecayBase, $DecayExponent / ([Math]::Max($Config.SwitchingPrevention,1)))) * 100.00) / 100.00))) -Force
+        $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
     }
 
     #Give API access to the pools information
