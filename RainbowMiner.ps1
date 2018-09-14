@@ -1535,11 +1535,6 @@ while ($true) {
     #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") > $null
     #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") > $null
 
-    if ($IsDonationRun) {
-        Write-Host " Donation round active. Thank you so much for supporting my work :) " -BackgroundColor DarkBlue
-        Write-Host " "
-    }
-
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
 
