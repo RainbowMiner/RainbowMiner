@@ -405,7 +405,7 @@ while ($true) {
         $API.Version = Confirm-Version $Version
         if ($API.Version.RemoteVersion -gt $API.Version.Version) {
             if ($Config.EnableAutoUpdate) {
-                Write-Host "Automatic update to v$($API.Version.Version) will begin in some seconds" -ForegroundColor Yellow            
+                Write-Host "Automatic update to v$($API.Version.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
                 $AutoUpdate = $Stopp = $API.Update = $true
                 for($i=0;$i -le 20;$i++) {
                     Write-Host "." -NoNewline
