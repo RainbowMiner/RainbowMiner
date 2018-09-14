@@ -48,6 +48,13 @@ do {
         Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
         Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
         Write-Host " "
+        if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
+            Write-Host " WARNING: without the following data, RainbowMiner is not able to start mining. " -BackgroundColor Yellow -ForegroundColor Black
+            if (-not $Config.Wallet)     {Write-Host "- No BTC-wallet defined! Please go to [W]allets and input your wallet! " -ForegroundColor Yellow}
+            if (-not $Config.WorkerName) {Write-Host "- No workername defined! Please go to [W]allets and input a workername! " -ForegroundColor Yellow}
+            if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
+            Write-Host " "
+        }
         $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDOX"
     }
 
