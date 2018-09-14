@@ -40,7 +40,7 @@ class Lol : Miner {
             }
         }
 
-        $this.Data = @($this.Data | Select-Object -Last 1000)
+        $this.CleanupMinerData()
 
         return @("", $Data | ConvertTo-Json -Compress)
     }

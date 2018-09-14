@@ -1717,6 +1717,7 @@ class Miner {
     $Penalty = 0
     $ManualUri
     [String]$EthPillEnable = "disable"
+    $DataInterval
     hidden [System.Management.Automation.Job]$Process = $null
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
@@ -1986,10 +1987,15 @@ class Miner {
                 }
             }
 
-            $this.Data = @($this.Data | Select-Object -Last 10000)
+            $this.CleanupMinerData()
         }
 
         return $Lines
+    }
+
+    CleanupMinerData() {
+        if ($this.New) {$this.Data = @($this.Data | Select-Object -Last 1000)}
+        else {$this.Data = @($this.Data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)))}
     }
 
     [Int64]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {

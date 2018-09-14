@@ -155,6 +155,10 @@
                     $Data = $API.Config | ConvertTo-Json
                     Break
                 }
+                "/userconfig" {
+                    $Data = $API.UserConfig | ConvertTo-Json
+                    Break
+                }
                 "/debug" {
                     $Data = $API | ConvertTo-Json
                     Break

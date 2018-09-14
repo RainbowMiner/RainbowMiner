@@ -37,7 +37,7 @@ class Prospector : Miner {
             Device   = @()
         }
 
-        $this.Data = @($this.Data | Select-Object -Last 1000)
+        $this.CleanupMinerData()
 
         return @($Request, $Data | ConvertTo-Json -Compress)
     }

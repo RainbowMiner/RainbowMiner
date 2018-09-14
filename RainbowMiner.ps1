@@ -312,7 +312,7 @@ if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpC
 
 while ($true) {
     #Load the config    
-    $ConfigBackup = if ($Config -is [object]){$Config.PSObject.Copy()}else{$null}
+    $ConfigBackup = if ($Config -is [object]){$Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json}else{$null}
     $ConfigCheckFields = $true
     
     [string[]]$AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
@@ -500,45 +500,46 @@ while ($true) {
         $DonateDelayHours /= 2
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$Updatetracker["Config"]["ConfigFile"] = 0;$IsDonationRun = $false;$LastDonated = $Timer;Remove-Variable "UserConfig";Write-Log "Donation run finished. "}
-    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated) {
-        if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx"},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","User":"rbm"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm"}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["allium","balloon","blake2s","c11","cryptonightheavy","cryptonightv7","equihash","equihash21x9","equihash24x5","equihash24x7","ethash","hmq1725","hodl","hsr","keccak","keccakc","lyra2re2","lyra2z","neoscrypt","pascal","phi","phi2","poly","skein","skunk","timetravel","tribus","x16r","x16s","x17","xevan","yescrypt","yescryptr16","yespower"]}' | ConvertFrom-Json}
-        $DonateNow = $false
-        $UserConfig = $Config.PSObject.Copy()
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$Updatetracker["Config"]["ConfigFile"] = 0;$IsDonationRun = $false;$LastDonated = $Timer;if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"};Write-Log "Donation run finished. "}
+    if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated -and $AvailPools.Count -gt 0) {
+        if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"average-2e","Penalty":0}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["balloon","bitcore","c11","ethash","equihash24x5","equihash24x7","hmq1725","lyra2re2","lyra2z","neoscrypt","phi2","sonoa","x16r","x16s","x17"]}' | ConvertFrom-Json}
+        if (-not $IsDonationRun) {
+            Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
+            $UserConfig = $Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+            $IsDonationRun = $true            
+        }
         $AvailPools | ForEach-Object {
             $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
             $Config.Pools | Add-Member $_ $DonationData1 -Force
-            $DonateNow = $true
         }
-        if ($DonateNow) {
-            if (-not $IsDonationRun) {
-                Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
-                $IsDonationRun = $true
-            }            
-            $Updatetracker["Config"]["ConfigFile"] = 0
-            $DonationAlgorithmAvail = $AllPools.Algorithm | Foreach-Object {$_ -replace '\-.*$'} | Select-Object -Unique
-            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
-            $Config | Add-Member Algorithm $($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_}) -Force
-            if ($DonationAlgorithmAvail -inotcontains "x16r") {$Config.Algorithm = $Config.Algorithm | Where-Object {$_ -ne "x16r"}}
-            if (-not $DonationPoolsAvail.Count) {            
-                $Config | Add-Member ExcludePoolName @() -Force
-            } else {
-                $Config | Add-Member PoolName $DonationPoolsAvail -Force
-                $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
-            }
-            foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
-                $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
-            }
-            $Config | Add-Member DisableExtendInterval $true -Force
+        $Updatetracker["Config"]["ConfigFile"] = 0
+        $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+        $DonationAlgorithm = @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object)
+        if ($UserConfig.Algorithm.Count -gt 0) {$Config | Add-Member Algorithm @(@($UserConfig.Algorithm | Select-Object) + @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object) | Sort-Object -Unique)  -Force}
+        if ($UserConfig.ExcludeAlgorithm.Count -gt 0) {$Config | Add-Member ExcludeAlgorithm @(Compare-Object @($UserConfig.ExcludeAlgorithm | Select-Object) @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject | Sort-Object -Unique) -Force}
+        $Config | Add-Member ExcludeCoin @() -Force
+        $Config | Add-Member ExcludeCoinSymbol @() -Force        
+        if (-not $DonationPoolsAvail.Count) {
+            $Config | Add-Member ExcludePoolName @() -Force
         } else {
-            Remove-Variable "UserConfig"
+            $Config | Add-Member PoolName $DonationPoolsAvail -Force
+            $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
         }
+        foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
+            foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
+                if ($Config.Pools.$p.$q -is [string]) {$Config.Pools.$p.$q = @(($Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
+                $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+            }
+            $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+        }
+        $Config | Add-Member DisableExtendInterval $true -Force
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
     }
 
     #Give API access to the current running configuration
     $API.Config = $Config
+    $API.UserConfig = $UserConfig
 
     #Clear pool cache if the pool configuration has changed
     if ($AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {Remove-Variable "AllPools"}
@@ -785,7 +786,6 @@ while ($true) {
     #Update the active pools
     if ($AllPools.Count -eq 0) {
         Write-Log -Level Warn "No pools available. Press [X] to exit."
-
         $i = 0
         $keyPressedValue = $false
         do {
@@ -1215,6 +1215,7 @@ while ($true) {
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Config.EthPillEnable
+                DataInterval         = $Config.Interval
             }
             $ActiveMiners.Add($NewMiner) > $null
         }
@@ -1368,7 +1369,7 @@ while ($true) {
     #
     Clear-Host
 
-    $LimitMiners = if ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0) {100} else {3}
+    $LimitMiners = if ($Config.UIstyle -eq "full" -or (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {100} else {3}
 
     #Display mining information
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
@@ -1394,7 +1395,7 @@ while ($true) {
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
         )) > $null
 
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-6 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-6 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host
     }
 
     if ($RestartMiners) {
@@ -1408,9 +1409,9 @@ while ($true) {
         Write-Host " (press P to resume)"
         Write-Host " "
     } else {
-        if ($MinersNeedingBenchmark.Count -gt 0 -or $Miners_DownloadList.Count -gt 0) {Write-Host " "}
+        if ((-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Miners_DownloadList.Count -gt 0) {Write-Host " "}
         #Display benchmarking progres
-        if ($MinersNeedingBenchmark.Count -gt 0) {
+        if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
             if (-not $Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
@@ -1447,7 +1448,7 @@ while ($true) {
     }
 
     #Display active miners list
-    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
+    $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Config.UIstyle -eq "full" -or (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
@@ -1457,7 +1458,7 @@ while ($true) {
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
     ) | Out-Host
 
-    if ( $Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0 ) {
+    if ($Config.UIstyle -eq "full" -or (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {
         #Display watchdog timers
         $WatchdogTimers | Where-Object Kicked -gt $Timer.AddSeconds( - $WatchdogResetOld) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
@@ -1485,7 +1486,7 @@ while ($true) {
             $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
         }
 
-        if ($Config.UIstyle -eq "full" -or $MinersNeedingBenchmark.Count -gt 0) {
+        if ($Config.UIstyle -eq "full" -or (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {
             if ([Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
                 $MinerComparisons_Range = ($MinerComparisons_MarginOfError | Measure-Object -Average | Select-Object -ExpandProperty Average), (($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1]) | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
                 Write-Host -BackgroundColor Yellow -ForegroundColor Black "RainbowMiner is between $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])-$MinerComparisons_Range)*100)))% and $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])+$MinerComparisons_Range)*100)))% more profitable than the fastest miner: "
@@ -1533,6 +1534,11 @@ while ($true) {
     #$StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") > $null
     #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") > $null
     #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") > $null
+
+    if ($IsDonationRun) {
+        Write-Host " Donation round active. Thank you so much for supporting my work :) " -BackgroundColor DarkBlue
+        Write-Host " "
+    }
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
@@ -1613,9 +1619,7 @@ while ($true) {
                 if ($Miner.Speed -contains $null) {
                     $Miner.Algorithm | ForEach-Object {
                         $HashRate_Name = $_
-                        $Miner.Data | Where-Object {$_.HashRate.PSObject.Properties.Value} | Sort-Object -Unique | Foreach-Object {
-                            Write-Log -Level Verbose (("Benchmarking $($Miner.Name) $($HashRate_Name): $($Miner.Data.HashRate.$HashRate_Name | Select-Object -last 10 | ForEach-Object {$_ | ConvertTo-Hash}) (Avg: $(($Miner.Data.HashRate.$HashRate_Name | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) | ConvertTo-Hash)) (ExtendInterval $($Miner.ExtendInterval))") -replace "\s+", " ")
-                        }
+                        if ($Miner.Data.Count -gt 0) {Write-Log -Level Verbose (("Benchmarking $($Miner.Name) $($HashRate_Name): $($Miner.Data.HashRate.$HashRate_Name | Select-Object -last 10 | ForEach-Object {$_ | ConvertTo-Hash}) (Avg: $(($Miner.Data.HashRate.$HashRate_Name | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) | ConvertTo-Hash))$(if ($Miner.ExtendInterval -gt 1){" (ExtendInterval $($Miner.ExtendInterval))"})") -replace "\s+", " ")}
                     }
                 }
             }
