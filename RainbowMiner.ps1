@@ -790,9 +790,11 @@ while ($true) {
         $keyPressedValue = $false
         do {
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
-            else {Start-Sleep 2; $i+=2}
+            else {Write-Host "." -NoNewline;Start-Sleep 2;$i+=2}
             if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
         } until ($keyPressedValue -or ($i -gt $Config.Interval))
+
+        Write-Host " "
 
         if ($keyPressedValue -eq "X") {
             Write-Log "User requests to stop script. "
@@ -1125,10 +1127,11 @@ while ($true) {
         $keyPressedValue = $false
         do {
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
-            else {Start-Sleep 2; $i+=2}
+            else {Write-Host "." -NoNewline;Start-Sleep 2;$i+=2}
             if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
         } until ($keyPressedValue -or ($i -gt $Config.Interval))
 
+        Write-Host " "
         if ($keyPressedValue -eq "X") {
             Write-Log "User requests to stop script. "
             Write-Host "[X] pressed - stopping script."
