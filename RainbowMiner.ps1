@@ -122,7 +122,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.6.15"
+$Version = "3.8.6.16"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
