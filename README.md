@@ -397,6 +397,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 #### Set electricity cost handling ####
 
 - **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
+- **PowerOffset** = power offset to allow consideration for overhead power [default=0]
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **UsePowerPrice** = set to (1), if electricity cost should be substracted from profits [default=0]
 - **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
