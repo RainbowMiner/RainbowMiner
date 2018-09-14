@@ -415,7 +415,7 @@ do {
                         }
                     }
                     "showminerwindow" {
-                        $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows (will steal your focus, not recommended)" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        $Config.ShowMinerWindow = Read-HostBool -Prompt "Show miner in own windows" -Default $Config.ShowMinerWindow | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     }
                     "ignorefees" {
                         if ($SetupType -eq "A") {
