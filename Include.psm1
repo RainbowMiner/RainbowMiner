@@ -1350,6 +1350,7 @@ function Update-DeviceInformation {
                                 PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
                                 PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
                                 #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
+                                Method            = "ab"
                             }) -Force
                     }
                     $DeviceId++
@@ -1409,7 +1410,8 @@ function Update-DeviceInformation {
                                         Utilization       = [int]$AdlResultSplit[5]
                                         Temperature       = [int]$AdlResultSplit[6] / 1000
                                         PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)                                
+                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
+                                        Method            = "tdp"
                                     }) -Force
                             }
                             $DeviceId++
@@ -1457,6 +1459,7 @@ function Update-DeviceInformation {
                                 ClockMem          = if ($SMIresultSplit[9] -eq "-") {$null} else {[int]$SMIresultSplit[9]}
                                 PowerMaxLimit     = if ($SMIresultSplit[10] -eq "-") {$null} else {[int]$SMIresultSplit[10]}
                                 PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
+                                Method            = "smi"
                             }
                             if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
                             if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
@@ -1479,15 +1482,20 @@ function Update-DeviceInformation {
             $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $Device = $_
                 $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
-                    if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
-                        $CpuData = @{
+                    if ($UseAfterburner -and $GPU_count -eq 1 -and $abReload) {
+                        if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+                        $abReload = $false
+                    }
+                    if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {                        
+                        $CpuData = @{                            
                             Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
                             Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
                             PowerDraw   = $($Script:abMonitor.Entries | Where-Object SrcName -eq 'CPU power').Data
                             Temperature = $($Script:abMonitor.Entries | Where-Object SrcName -match "^(CPU\d* )temperature" | Measure-Object -Property Data -Maximum).Maximum
+                            Method      = "ab"
                         }
                     } else {
-                        $CpuData = @{}
+                        $CpuData = @{Method = "tdp"}
                     }
                 
                     if (-not $CpuData.Utilization) {
@@ -1508,6 +1516,7 @@ function Update-DeviceInformation {
                         Utilization = [int]$CpuData.Utilization
                         PowerDraw   = [int]$CpuData.PowerDraw
                         Temperature = [int]$CpuData.Temperature
+                        Method      = $CpuData.Method
                     }) -Force
                 }
             }
