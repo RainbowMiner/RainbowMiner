@@ -18,6 +18,7 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in sy
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-N 1"} #AeriumX, new in 1.11
+    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = "-N 1"} #Bcd, new in 1.20
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
     [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; FaultTolerance = 0.5} #HEX/XDNA, new in 1.15a
