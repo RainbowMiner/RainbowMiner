@@ -66,7 +66,7 @@ function Get-Balance {
     $Data = [PSCustomObject]@{}
     
     if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
-        $NewBalances = @(Get-ChildItem "Balances" -File | Where-Object {$Config.Pools.$($_.BaseName) -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
+        $NewBalances = @(Get-ChildItem "Balances" -File | Where-Object {($Config.Pools.$($_.BaseName) -or $Config.Pools."$($_.BaseName)Coins") -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
             Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
         } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
