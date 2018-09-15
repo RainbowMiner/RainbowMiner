@@ -96,7 +96,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
 - if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to disable "Force P2 State", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
 - Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupate. If you want to add tools to the batch, make a copy of the Start.bat and edit and use this to start RainbowMiner.
-- the root directory of RainbowMiner contains the follwing, additional batch files:
+- the root directory of RainbowMiner contains the following, additional batch files:
   - **ListDevices.bat**: if clicked, a window will popup and list all available devices
   - **MinerLog.bat**: it reopens the window to show the output of the miners. Useful, if you unintentionally closed this log window.
   - **RemoveLogs.bat**: delete all log files to save some disk space
