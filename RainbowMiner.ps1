@@ -124,7 +124,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.6.16"
+$Version = "3.8.6.17"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -390,33 +390,37 @@ while ($true) {
         if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
     }
 
-    #Initialize the API and Get-Device
-    $StartAPI = $false
-    if(!(Test-Path Variable:API)) {
-        Import-Module .\API.psm1
-        $StartAPI = $true
-    } elseif ($Config.LocalAPIport -and ($API.LocalAPIport -ne $Config.LocalAPIport)) {
-        #restart API server
-        Write-Log -Level Warn "Restarting API at new port $($Config.LocalAPIport)"
-        Stop-APIServer
-        Sleep 2
-        $StartAPI = $true
-    }
-    if ($StartAPI) {
-        Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
-        $API.Version = Confirm-Version $Version
-        if ($API.Version.RemoteVersion -gt $API.Version.Version) {
-            if ($Config.EnableAutoUpdate) {
-                Write-Host "Automatic update to v$($API.Version.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
-                $AutoUpdate = $Stopp = $API.Update = $true
-                for($i=0;$i -le 20;$i++) {
-                    Write-Host "." -NoNewline
-                    Sleep -Milliseconds 500
-                }
-                Write-Host " "
-                break
-            }            
+    if (-not $psISE) {
+        #Initialize the API and Get-Device
+        $StartAPI = $false
+        if(!(Test-Path Variable:API)) {
+            Import-Module .\API.psm1
+            $StartAPI = $true
+        } elseif ($Config.LocalAPIport -and ($API.LocalAPIport -ne $Config.LocalAPIport)) {
+            #restart API server
+            Write-Log -Level Warn "Restarting API at new port $($Config.LocalAPIport)"
+            Stop-APIServer
+            Sleep 2
+            $StartAPI = $true
         }
+        if ($StartAPI) {
+            Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
+            $API.Version = Confirm-Version $Version
+            if ($API.Version.RemoteVersion -gt $API.Version.Version) {
+                if ($Config.EnableAutoUpdate) {
+                    Write-Host "Automatic update to v$($API.Version.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
+                    $AutoUpdate = $Stopp = $API.Update = $true
+                    for($i=0;$i -le 20;$i++) {
+                        Write-Host "." -NoNewline
+                        Sleep -Milliseconds 500
+                    }
+                    Write-Host " "
+                    break
+                }            
+            }
+        }
+    } else {
+        $API = [hashtable]@{}
     }
 
     #Give API access to computerstats
@@ -1007,7 +1011,7 @@ while ($true) {
 
         $Miner_Profit_MarginOfError = [Double]($Miner_Profits_MarginOfError.PSObject.Properties.Value | Measure-Object -Sum).Sum
 
-        $Miner_Profit_Cost = [Double](($Miner.PowerDraw + $Config.PowerOffset)*24/1000 * $PowerPriceBTC)
+        $Miner_Profit_Cost = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
 
         $Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
             if (-not [String]$Miner.HashRates.$_) {
@@ -1256,10 +1260,15 @@ while ($true) {
     $BestMiners_Combo = $BestMiners_Combos | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Bias -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
 
+    #apply PowerOffset and check for remaining profitability
     $BestMiners_Profitable = $true
-    if ($Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0 -and ($ActiveMiners | Where-Object Profit -gt 0 | Measure-Object).Count -eq 0) {
-        Write-Log -Level Warn "No more miners are profitable. $(if ($Config.CheckProfitability) {" Waiting for profitability."})"
-        if ($Config.CheckProfitability) {$BestMiners_Profitable = $false}
+    $PowerOffset_Cost = [Double]0
+    if ($Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
+        $PowerOffset_Cost = [Double]($Config.PowerOffset*24/1000 * $PowerPriceBTC)
+        if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
+            Write-Log -Level Warn "No more miners are profitable. $(if ($Config.CheckProfitability) {" Waiting for profitability."})"
+            if ($Config.CheckProfitability) {$BestMiners_Profitable = $false}
+        }
     }
 
     if (-not $PauseMiners -and $BestMiners_Profitable) {
@@ -1389,7 +1398,7 @@ while ($true) {
             @{Label = "Fee"; Expression = {($_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {'{0:p2}' -f ($_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
             @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}},
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"}else {"Benchmarking"}}}; Align = 'right'},
-            @{Label = "Power$(if ($Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
+            @{Label = "Power$(if ($Config.UsePowerPrice -and $Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Config.Currency | Sort-Object)) {
             $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit) {ConvertTo-LocalCurrency `$(`$_.Profit) $($Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
@@ -1412,6 +1421,11 @@ while ($true) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED" -ForegroundColor Red
         Write-Host " (press P to resume)"
+        Write-Host " "
+    } elseif (-not $BestMiners_Profitable) {
+        Write-Host -NoNewline "Status: "
+        Write-Host -NoNewLine "WAITING FOR PROFITABILITY" -ForegroundColor Red
+        Write-Host " (be patient or set CheckProfitability to 0 to resume)"
         Write-Host " "
     } else {
         if ((-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Miners_DownloadList.Count -gt 0) {Write-Host " "}
@@ -1459,7 +1473,7 @@ while ($true) {
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
         @{Label = "Miner"; Expression = {$_.Name -replace '\-.*$'}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Devices -Name @($_.DeviceName) -Short) -join ','}},
-        @{Label = "Power$(if ($Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
+        @{Label = "Power$(if ($Config.UsePowerPrice -and $Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
     ) | Out-Host
 
@@ -1474,7 +1488,7 @@ while ($true) {
         ) | Out-Host
     }
 
-    if ($Config.PowerOffset -gt 0) {Write-Host "* net power consumption. A base power offset of $("{0:d}" -f [int]$Config.PowerOffset)W is being added to calculate the profit."; Write-Host " "}
+    if ($Config.UsePowerPrice -and $Config.PowerOffset -gt 0) {Write-Host "* net power consumption. A base power offset of $("{0:d}" -f [int]$Config.PowerOffset)W is being added to calculate the final profit."; Write-Host " "}
 
     #Display profit comparison    
     if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
@@ -1485,16 +1499,20 @@ while ($true) {
         $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
 
         $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
-
         $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
 
+        if ($Config.UsePowerPrice) {
+            $MinerComparisons_Profit[0] -= $PowerOffset_Cost
+            $MinerComparisons_Profit[1] -= $PowerOffset_Cost
+        }
+        
         $Config.Currency | ForEach-Object {
             $MinerComparisons[0] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[0] * $Rates.$_), $MinerComparisons_MarginOfError[0], (($MinerComparisons_Profit[0] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[0])), (($MinerComparisons_Profit[0] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[0])))
             $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
         }
 
         if ($Config.UIstyle -eq "full" -or (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {
-            if ([Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
+            if ($MinerComparisons_Profit[1] -ne 0 -and [Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
                 $MinerComparisons_Range = ($MinerComparisons_MarginOfError | Measure-Object -Average | Select-Object -ExpandProperty Average), (($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1]) | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
                 Write-Host -BackgroundColor Yellow -ForegroundColor Black "RainbowMiner is between $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])-$MinerComparisons_Range)*100)))% and $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])+$MinerComparisons_Range)*100)))% more profitable than the fastest miner: "
             }
@@ -1521,20 +1539,22 @@ while ($true) {
 
     #Display exchange rates
     $CurrentProfitTotal = $CurrentProfitWithoutCostTotal = $($RunningMiners | Measure-Object -Sum -Property Profit).Sum
-    if ($Config.UsePowerPrice) {$CurrentProfitWithoutCostTotal += $($RunningMiners | Measure-Object -Sum -Property Profit_Cost).Sum}
+    if ($Config.UsePowerPrice) {$CurrentProfitTotal -= $PowerOffset_Cost;$CurrentProfitWithoutCostTotal += $($RunningMiners | Measure-Object -Sum -Property Profit_Cost).Sum}
     [System.Collections.ArrayList]$StatusLine = @()
     foreach($Miner_Currency in @($Config.Currency | Sort-Object)) {
             $Miner_Currency_Out = $Miner_Currency
             $CurrentProfitTotal_Out = $CurrentProfitTotal
             $CurrentProfitWithoutCostTotal_Out = $CurrentProfitWithoutCostTotal
-            if ($Miner_Currency -eq "BTC" -and $CurrentProfitTotal -gt 0) {
-                switch ([math]::truncate([math]::log($CurrentProfitTotal, 1000))) {
+            $CurrentProfit_Offset = 2
+            if ($Miner_Currency -eq "BTC" -and $CurrentProfitWithoutCostTotal -ne 0) {
+                switch ([math]::truncate([math]::log([math]::Abs($CurrentProfitWithoutCostTotal), 1000))) {
                     -1 {$Miner_Currency_Out = "mBTC";$CurrentProfitTotal_Out*=1e3;$CurrentProfitWithoutCostTotal_Out*=1e3}
                     -2 {$Miner_Currency_Out = "µBTC";$CurrentProfitTotal_Out*=1e6;$CurrentProfitWithoutCostTotal_Out*=1e6}
                     -3 {$Miner_Currency_Out = "sat";$CurrentProfitTotal_Out*=1e8;$CurrentProfitWithoutCostTotal_Out*=1e8}
                 }
+                $CurrentProfit_Offset = 6
             }
-            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset 2)$(if ($Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Rates.$Miner_Currency) -Offset 2)"}) $Miner_Currency_Out/Day") > $null
+            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null
     }
     if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
     #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") > $null
