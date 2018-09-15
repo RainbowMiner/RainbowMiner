@@ -8,10 +8,10 @@
 
 where pwsh.exe >nul 2>nul
 if %errorlevel%==1 (
-    powershell -version 5.0 -command "%command%"
+    powershell -version 5.0 -windowstyle maximized -command "%command%"
     goto end
 )
-pwsh -command "%command%"
+pwsh -windowstyle maximized -command "%command%"
 
 :end
 
