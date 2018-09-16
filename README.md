@@ -169,8 +169,20 @@ The miner can be setup to mine any coin or currency, that is listed at the respe
 
 - The RainbowMiner contains a list of well approved miners in the directory "Miners"
 - The miner Excavator mines on NiceHash pool, only
-- Miners Excavator & Excavator1.4.4 run in their own miner window. Since these two miners are each being controlled through an own API, the miner windows will stay open idle, even after the mining has stopped. This does no harm nor does it cost CPU - the miner will wait until it is being called again. You may close these windows, if you want. RainbowMiner will restart them, if Excavator is needed again.
+- Miners Excavator & Excavator1.4.4 run in their own miner window, even if you select to hide miner windows.
 - Each miner's algorithm can be fine tuned for each device in your mining rig
+
+### Special finetuning
+
+The following miners can be fine tuned, using config files. Most of the config files are being generated upon the first start of the miner. All config files will be written once, only, and kept through miner updates. To let Rainbowminer recreate those files, they will have to be deleted.
+
+|Minername|Type|Path|Configfile(s)|Documentation Link|
+|---|---|---|---|---|
+|FireIce/XMR-Stak|AMD|Bin\Cryptonight-FireIce|amd.txt|https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md|
+|FireIce/XMR-Stak|CPU|Bin\Cryptonight-FireIce|cpu.txt|https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md|
+|FireIce/XMR-Stak|NVIDIA|Bin\Cryptonight-FireIce|nvidia.txt|https://github.com/fireice-uk/xmr-stak/blob/master/doc/tuning.md|
+|JceminerCpu|CPU|Bin\CPU-Jceminer|config_[algorithm]-CPU.txt|https://bitcointalk.org/index.php?topic=3281187.0|
+|SrbMiner|AMD|Bin\Cryptonight-Srbminer|config_[algorithm]-[devicemodel].txt|https://bitcointalk.org/index.php?topic=3167363.0|
 
 
 ## ALGORITHMS
@@ -361,6 +373,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
     - "gtx1070,gtx1080,cpu"
     - "cpu,gpu"
     - "gpu#01,gpu#03"
+- **CPUMiningThreads** = enter the number of threads being used by CPU miners. For all cpuminer-opt derivates, the parameters "**-t [threads] --cpu-affinity [affinity]**" will be added to the miner's commandline. You may change this by adding your own "-t" and "--cpu-affinity" to the Params for the resp. miner in miners.config.txt. It affects all cpu miners, except FireIce and JceminerCpu (which can only be configured by editing config files)
 
 #### Select algorithms ####
 
@@ -482,7 +495,7 @@ Example:
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": 0,
         "DataWindow": "minimum3"
     }
 
