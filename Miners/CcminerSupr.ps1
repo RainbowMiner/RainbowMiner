@@ -19,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 1; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S PigeonCoin
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #x17 (new in git11)
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"; ExtendInterval = 2} #x17 (new in git11)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
