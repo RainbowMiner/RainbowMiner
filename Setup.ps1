@@ -70,10 +70,10 @@ do {
 
         Switch ($SetupType) {
             "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","cpuminingthreads","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
             "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
             "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardcpu2","devicenamewizardend","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","cpuminingthreads","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
         }
         $GlobalSetupSteps.Add("save") > $null                            
 
@@ -352,15 +352,8 @@ do {
                     }
                     "devicenamewizardcpu1" {
                         $NewDeviceName["CPU"] = @()
-                        if (Read-HostBool -Prompt "Do you want to mine on $(if ($AvailDeviceCounts["cpu"] -gt 1){"all CPUs"}else{"your CPU"})" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                        if (Read-HostBool -Prompt "Do you want to mine on your $(if ($AvailDeviceCounts["cpu"] -gt 1){"s"})" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                             $NewDeviceName["CPU"] = @("CPU")
-                        }
-                    }
-                    "devicenamewizardcpu2" {
-                        if ($AvailDeviceCounts["CPU"] -gt 1 -and $NewDeviceName["CPU"].Count -eq 0) {
-                            $NewDeviceName["CPU"] = Read-HostArray -Prompt "Enter the CPUs you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Type -eq "CPU"} | Select-Object -ExpandProperty Name -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                        } else {
-                            $GlobalSetupStepStore = $false
                         }
                     }
                     "devicenamewizardend" {
@@ -378,6 +371,13 @@ do {
                             Write-Host "Since you plan to mine on AMD, the minimum delay between miner change will be set to 2 seconds" -ForegroundColor Yellow
                             Write-Host " "
                             $Config.Delay = 2
+                        }
+                    }
+                    "cpuminingthreads" {
+                        if ($Config.DeviceName -icontains "CPU") {
+                            $Config.CPUMiningThreads = Read-HostInt -Prompt "How many threads should be used for CPU mining? (leave empty for auto, max. $($Global:GlobalCPUInfo.Threads))" -Default $Config.CPUMiningThreads -Min 0 -Max $($Global:GlobalCPUInfo.Threads) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        } else {
+                            $GlobalSetupStepStore = $false
                         }
                     }
                     "devicenameend" {
@@ -556,6 +556,7 @@ do {
                         $ConfigActual | Add-Member LocalAPIport $Config.LocalAPIport -Force
                         $ConfigActual | Add-Member EnableAutoMinerPorts $(if (Get-Yes $Config.EnableAutoMinerPorts){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member DisableMSIAmonitor $(if (Get-Yes $Config.DisableMSIAmonitor){"1"}else{"0"}) -Force
+                        $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
 
                         if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                             $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force

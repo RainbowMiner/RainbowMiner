@@ -966,14 +966,15 @@ function Start-SubProcessInConsole {
     $Job
 }
 
-
 function Expand-WebRequest {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [String]$Uri, 
         [Parameter(Mandatory = $false)]
-        [String]$Path = ""
+        [String]$Path = "",
+        [Parameter(Mandatory = $false)]
+        [String[]]$ProtectedFiles = @()
     )
 
     # Set current path used by .net methods to the same as the script's path
@@ -993,17 +994,23 @@ function Expand-WebRequest {
     else {
         $Path_Old = (Join-Path (Split-Path $Path) ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName)
         $Path_New = (Join-Path (Split-Path $Path) (Split-Path $Path -Leaf))
+        $Path_Bak = (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).bak")
 
         if (Test-Path $Path_Old) {Remove-Item $Path_Old -Recurse -Force}
         Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath($Path_Old))`" -y -spe" -Wait -WindowStyle Minimized
 
-        if (Test-Path $Path_New) {Remove-Item $Path_New -Recurse -Force}
+        if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
+        if (Test-Path $Path_New) {Move-Item $Path_New $Path_Bak}
         if (Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $false) {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
         else {
             Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $true | ForEach-Object {Move-Item (Join-Path $Path_Old $_) $Path_New}
             Remove-Item $Path_Old
+        }
+        if (Test-Path $Path_Bak) {
+            $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore | Where-Object PSIsContainer -EQ $false | Foreach-Object {Move-Item $_ $Path_New -Force}}
+            Remove-Item $Path_Bak -Recurse -Force
         }
     }
 }
@@ -1163,6 +1170,7 @@ function Get-Device {
 
                 if ($Device.Type -ne "Cpu" -and ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_}))) {
                     $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+                    $Index++
                 }
 
                 if (-not $Type_PlatformId_Index."$($Device_OpenCL.Type)") {
@@ -1171,8 +1179,7 @@ function Get-Device {
                 if (-not $Type_Vendor_Index."$($Device_OpenCL.Type)") {
                     $Type_Vendor_Index."$($Device_OpenCL.Type)" = @{}
                 }
-
-                $Index++
+                
                 $PlatformId_Index."$($PlatformId)"++
                 $Type_PlatformId_Index."$($Device_OpenCL.Type)"."$($PlatformId)"++
                 $Vendor_Index."$($Device_OpenCL.Vendor)"++
@@ -1189,17 +1196,46 @@ function Get-Device {
         Write-Log -Level Warn "OpenCL device detection has failed: $($_.Exception.Message)"
     }
 
+    #CPU detection
+    try {
+        if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+        if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
+            $Global:GlobalCPUInfo = [PSCustomObject]@{}
+            try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {$Error.Remove($Error[$Error.Count - 1])}
+        }
+        if ($Global:GlobalCPUInfo.Features -eq $null) {
+             $Global:GlobalCPUInfo | Add-Member Features ([PSCustomObject]@{
+                physical_cpus = $Global:GlobalGetDeviceCacheCIM.Count
+                cores = ($Global:GlobalGetDeviceCacheCIM.NumberOfCores | Measure-Object -Sum).Sum
+                threads = ($Global:GlobalGetDeviceCacheCIM.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                tryall = 1
+            }) -Force
+        }
+        if ($Global:GlobalCPUInfo.Vendor -eq $null) {
+            $Global:GlobalCPUInfo | Add-Member Name $Global:GlobalGetDeviceCacheCIM[0].Name
+            $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalGetDeviceCacheCIM[0].Manufacturer){"INTEL"}else{$Global:GlobalGetDeviceCacheCIM[0].Manufacturer.ToUpper()}) -Force
+            $Global:GlobalCPUInfo | Add-Member Cores $Global:GlobalCPUInfo.Features.cores
+            $Global:GlobalCPUInfo | Add-Member Threads $Global:GlobalCPUInfo.Features.threads
+            $Global:GlobalCPUInfo | Add-Member PhysicalCPUs $Global:GlobalCPUInfo.Features.physical_cpus
+            $Global:GlobalCPUInfo | Add-Member L3CacheSize $Global:GlobalGetDeviceCacheCIM[0].L3CacheSize
+            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $Global:GlobalGetDeviceCacheCIM[0].MaxClockSpeed
+            $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+            if ($Global:GlobalCPUInfo.Vendor -eq "INTEL" -and $Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+        }        
+    }
+    catch {
+        $Error.Remove($Error[$Error.Count - 1])
+        Write-Log -Level Warn "CIM CPU detection has failed. "
+    }
+   
     try {
         $CPUIndex = 0
-        if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {
-            $Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor
-        }
         $Global:GlobalGetDeviceCacheCIM | Foreach-Object {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
             $CPUInfo = $_ | ConvertTo-Json | ConvertFrom-Json
             $Device = [PSCustomObject]@{
                 Index = [Int]$Index
-                Vendor = if ($GPUVendorLists.INTEL -icontains $CPUInfo.Manufacturer){"INTEL"}else{$CPUInfo.Manufacturer}
+                Vendor = $Global:GlobalCPUInfo.Vendor
                 Vendor_Name = $CPUInfo.Manufacturer
                 Type_PlatformId_Index = $CPUIndex
                 Type_Vendor_Index = $CPUIndex
@@ -1482,11 +1518,8 @@ function Update-DeviceInformation {
             $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $Device = $_
                 $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
-                    if ($UseAfterburner -and $GPU_count -eq 1 -and $abReload) {
-                        if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-                        $abReload = $false
-                    }
-                    if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {                        
+                    if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
+                        if ($Script:abMonitor -and $abReload) {$Script:abMonitor.ReloadAll();$abReload=$false}
                         $CpuData = @{                            
                             Clock       = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )clock' | Measure-Object -Property Data -Maximum).Maximum
                             Utilization = $($Script:abMonitor.Entries | Where-Object SrcName -match '^(CPU\d* )usage'| Measure-Object -Property Data -Average).Average
@@ -1495,18 +1528,15 @@ function Update-DeviceInformation {
                             Method      = "ab"
                         }
                     } else {
-                        $CpuData = @{Method = "tdp"}
+                        $CpuData = @{Clock=0;Utilization=0;PowerDraw=0;Temperature=0;Method="tdp"}
                     }
-                
-                    if (-not $CpuData.Utilization) {
-                        $CpuData.Utilization = $_.LoadPercentage
-                    }
+                    if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}                
+                    if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
                     if (-not $CpuData.PowerDraw) {
                         if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
                         if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
                         $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
-                    }
-                    if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}
+                    }                    
 
                     $Device | Add-Member Data ([PSCustomObject]@{
                         Cores       = [int]$_.NumberOfCores
@@ -2678,6 +2708,23 @@ function Set-OCProfilesConfigDefault {
         }
     }
     
+}
+
+function Get-CPUAffinity {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [int]$Threads = 0,
+        [Parameter(Mandatory = $False)]
+        [switch]$Hex
+    )
+    if ($Hex) {$a=0;foreach($b in @(Get-CPUAffinity $Threads)){$a+=1 -shl $b};"0x{0:x$(if($a -lt 65536){4}else{8})}" -f $a}
+    else {
+        @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
+            $a = $r = 0; $b = [Math]::max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
+            for($i=0;$i -lt [Math]::min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
+        } else {$Global:GlobalCPUInfo.RealCores}) | Sort-Object
+    }
 }
 
 function Get-YiiMPDataWindow {

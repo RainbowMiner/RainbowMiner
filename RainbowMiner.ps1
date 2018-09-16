@@ -119,12 +119,14 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableAutoMinerPorts = $false,
     [Parameter(Mandatory = $false)]
-    [Switch]$DisableMSIAmonitor = $false
+    [Switch]$DisableMSIAmonitor = $false,
+    [Parameter(Mandatory = $false)]
+    [int]$CPUMiningThreads = 0
 )
 
 Clear-Host
 
-$Version = "3.8.6.17"
+$Version = "3.8.7.0"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -187,7 +189,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads")
 }
 
 #Cleanup the log
@@ -210,6 +212,8 @@ if (-not $psISE) {(Get-Process -Id $PID).PriorityClass = "BelowNormal"}
 
 Write-Host "Detecting devices .."
 $AllDevices = Get-Device "cpu","gpu"
+
+if (-not $CPUMiningThreads)  {$CPUMiningThreads  = $Global:GlobalCPUInfo.RealCores.Count}
 
 if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
 
