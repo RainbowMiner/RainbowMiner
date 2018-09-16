@@ -21,7 +21,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
     #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
