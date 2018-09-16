@@ -7,6 +7,8 @@ if ($Script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 $LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" | ConvertFrom-Json}).LocalAPIport
 if (-not $LocalAPIport) {$LocalAPIport = 4000}
 
+$ProtectedMinerFiles = if (Test-Path ".\Data\protectedminerfiles.json") {Get-Content ".\Data\protectedminerfiles.json" | ConvertFrom-Json}
+
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
     $RunningMiners_Request = Invoke-RestMethod "http://localhost:$($LocalAPIport)/runningminers" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
@@ -49,7 +51,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
             }
             else {
-                Expand-WebRequest $URI (Split-Path $Path) -ErrorAction Stop
+                Expand-WebRequest $URI (Split-Path $Path) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -ErrorAction Stop
             }
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
