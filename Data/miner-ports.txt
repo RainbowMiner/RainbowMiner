@@ -49,6 +49,8 @@
 317	lolMiner
 318	Eminer
 319	Funakoshi
+320 JceminerCpu
+321 JceminerAmd
 
 400	Sgminer
 401	SgminerBitcore
