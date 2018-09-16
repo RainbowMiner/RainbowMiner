@@ -6,11 +6,13 @@ class SrbMiner : Miner {
         $Parameters = $this.Arguments | ConvertFrom-Json
 
         #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
-        $ConfigFile = "Config_$($this.Name)-$($this.Algorithm -join '-')-$($this.Port).txt"
-        $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8
+        $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
+        if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile")) {
+            $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8
+        }
 
         #Write pool file. Keep separate files
-        $PoolFile = "Pools_$($this.Pool)-$($this.Algorithm -join '-').txt"
+        $PoolFile = "pools_$($this.Pool)-$($this.Algorithm -join '-').txt"
         $Parameters.Pools | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$PoolFile" -Force -ErrorAction Ignore -Encoding UTF8
 
         return "--config $ConfigFile --pools $PoolFile $($Parameters.Params)".Trim()
