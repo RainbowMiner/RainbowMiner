@@ -70,10 +70,10 @@ do {
 
         Switch ($SetupType) {
             "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","cpuminingthreads","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+            "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","cpuminingthreads","enablecpuaffinity","devicenameend","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
             "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
             "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","cpuminingthreads","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+            "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","cpuminingthreads","enablecpuaffinity","devicenameend","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
         }
         $GlobalSetupSteps.Add("save") > $null                            
 
@@ -380,6 +380,13 @@ do {
                             $GlobalSetupStepStore = $false
                         }
                     }
+                    "enablecpuaffinity" {
+                        if ($Config.DeviceName -icontains "CPU" -and $Config.CPUMiningThreads) {
+                            $Config.EnableCPUAffinity = Read-HostBool -Prompt "Add `"--cpu-affinity $(Get-CPUAffinity $CPUMiningThreads -Hex)`" to cpu miner commandlines" -Default $Config.EnableCPUAffinity | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        } else {
+                            $GlobalSetupStepStore = $false
+                        }
+                    }
                     "devicenameend" {
                         $GlobalSetupStepStore = $false
                         if ($IsInitialSetup) {throw "Goto save"}
@@ -557,6 +564,7 @@ do {
                         $ConfigActual | Add-Member EnableAutoMinerPorts $(if (Get-Yes $Config.EnableAutoMinerPorts){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member DisableMSIAmonitor $(if (Get-Yes $Config.DisableMSIAmonitor){"1"}else{"0"}) -Force
                         $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
+                        $ConfigActual | Add-Member EnableCPUAffinity $(if (Get-Yes $Config.EnableCPUAffinity){"1"}else{"0"}) -Force
 
                         if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                             $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
