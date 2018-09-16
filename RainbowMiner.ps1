@@ -215,7 +215,7 @@ if (-not $psISE) {(Get-Process -Id $PID).PriorityClass = "BelowNormal"}
 Write-Host "Detecting devices .."
 $AllDevices = Get-Device "cpu","gpu"
 
-if (-not $CPUMiningThreads)  {$CPUMiningThreads  = $Global:GlobalCPUInfo.RealCores.Count}
+if (-not $CPUMiningThreads)  {$CPUMiningThreads = $Global:GlobalCPUInfo.RealCores.Count;$EnableCPUAffinity = $true}
 
 if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
 
