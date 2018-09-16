@@ -21,7 +21,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
@@ -53,7 +52,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+    $DeviceParams = "$(if ($Config.CPUMiningThreads){" -t $($Config.CPUMiningThreads) --cpu-affinity $(Get-CPUAffinity $Config.CPUMiningThreads -hex)"})"
 
     $Commands | ForEach-Object {
 
@@ -65,7 +64,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "-R 1 --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1 $($_.Params)"
+                Arguments = "-R 1 --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=1 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
