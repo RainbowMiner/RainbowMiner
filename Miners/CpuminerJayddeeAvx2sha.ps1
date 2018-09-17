@@ -15,7 +15,7 @@ $DevFee = 0.0
 
 $Devices = $Devices.CPU
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
-if (-not $Global:GlobalCPUInfo.Features.tryall -and -not $Global:GlobalCPUInfo.Features.avx2) {return}
+if (-not $Global:GlobalCPUInfo.Features.tryall -and -not $Global:GlobalCPUInfo.Features.avx -and -not $Global:GlobalCPUInfo.Features.avx2) {return}
 
 $Commands = [PSCustomObject[]]@(
     ### CPU PROFITABLE ALGOS AS OF 06/03/2018
