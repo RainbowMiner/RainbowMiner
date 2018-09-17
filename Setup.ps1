@@ -285,7 +285,7 @@ do {
                     }
                     "devicenamewizard" {
                         $GlobalSetupStepStore = $false
-                        $Config.DeviceName = @("GPU")                                            
+                        $Config.DeviceName = @("GPU")
                         [hashtable]$NewDeviceName = @{}
                         [hashtable]$AvailDeviceCounts = @{}
                         $AvailDeviceGPUVendors = @($AllDevices | Where-Object {$_.Type -eq "gpu" -and @("nvidia","amd") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
