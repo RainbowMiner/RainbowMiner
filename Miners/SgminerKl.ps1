@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-SgminerKl\sgminer.exe"
-$Uri = "https://github.com/KL0nLutiy/sgminer-kl/releases/download/kl-1.0.5fix/sgminer-kl-1.0.5_fix-windows_x64.zip"
+$Uri = "https://github.com/KL0nLutiy/sgminer-kl/releases/download/kl-1.0.6/sgminer-kl-1.0.6-windows.zip"
 $ManualUri = "https://github.com/KL0nLutiy"
 $Port = "402{0:d2}"
 $DevFee = 1.0
@@ -18,19 +18,15 @@ if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in syste
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"} #Aergo
-    [PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #Blake
-    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #Bmw
-    [PSCustomObject]@{MainAlgorithm = "echo"; Params = ""} #Echo
-    [PSCustomObject]@{MainAlgorithm = "hamsi"; Params = ""} #Hamsi
-    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-X 256 -g 2"} #C11
+    [PSCustomObject]@{MainAlgorithm = "geek"; Params = "-X 256 -g 2"} #Geek
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-X 256 -g 2 -w 256"} # Phi
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-X 256 -g 2"} #Polytimos
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-X 256 -g 2"} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-X 256 -g 2"} #Xevan
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-X 256 -g 2"} #X16S Pigeoncoin
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-X 256 -g 2"} #X16R Ravencoin
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-X 256 -g 2"}
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-X 256 -g 2"} #X17
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
