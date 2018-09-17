@@ -11,6 +11,7 @@ $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.9-claymoredual/claymoredual_v11.9.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "203{0:d2}"
+$Cuda = "6.5"
 
 $DevFee = 1.0
 $DevFeeDual = 1.5
@@ -100,7 +101,9 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
+if ($Devices | Where-Object Vendor -eq "NVIDIA") {$Cuda = Confirm-Cuda $Cuda $Name}
+
+$Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
     $Fee = 0

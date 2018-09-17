@@ -12,6 +12,7 @@ $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.3.0
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
 $DevFee = 2.0
+$Cuda = "6.5"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -52,6 +53,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

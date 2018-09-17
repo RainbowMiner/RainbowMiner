@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-SpModPhi\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-ccminerphi/ccminerphi_spmod_1.0.7z"
 $Port = "111{0:d2}"
 $DevFee = 0.0
+$Cuda = "7.5"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -34,6 +35,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5-ew
 $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"
 $Port = "311{0:d2}"
 $DevFee = 0.0
+$Cuda = "8.0"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -36,6 +37,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Coins = [PSCustomObject]@{
     default     = ""

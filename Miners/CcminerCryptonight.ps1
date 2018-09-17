@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-CryptoNight\ccminer-cryptonight.exe"
 $Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.05/ccminer-cryptonight-305-x64-cuda92.zip"
 $Port = "105{0:d2}"
 $DevFee = 0.0
+$Cuda = "9.2"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -36,6 +37,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

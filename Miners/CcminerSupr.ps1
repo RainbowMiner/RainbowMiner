@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-CcminerSupr\ccminer.exe"
 $Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git11/spmodgit11.7z"
 $Port = "116{0:d2}"
 $DevFee = 0.0
+$Cuda = "9.2"
 
 $Devices = $Devices.NVIDIA
 if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
@@ -37,6 +38,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

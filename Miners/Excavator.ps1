@@ -12,6 +12,7 @@ $Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.11a/excavat
 $ManualUri = "https://github.com/nicehash/excavator/releases"
 $Port = "31100"
 $DevFee = 0.0
+$Cuda = "6.5"
 
 if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
@@ -60,6 +61,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices = $Devices.NVIDIA
 

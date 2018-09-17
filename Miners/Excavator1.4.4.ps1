@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-Excavator1.4.4\excavator.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4.4a-excavator/excavator_v1.4.4a_NVIDIA_Win64.zip"
 $Port = "31000"
 $DevFee = 0.0
+$Cuda = "6.5"
 
 if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
@@ -56,6 +57,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+if (-not (Confirm-Cuda $Cuda $Name)) {return}
 
 $Devices = $Devices.NVIDIA
 

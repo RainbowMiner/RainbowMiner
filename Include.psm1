@@ -52,6 +52,13 @@ function Confirm-Version {
     }
 }
 
+function Confirm-Cuda {
+   [CmdletBinding()]
+   param($Version,$Warning = "")
+   try {if (($Global:GlobalCachedDevices | Where-Object Vendor -eq "NVIDIA" | Select-Object -First 1).OpenCL.Platform.Version -notmatch "CUDA\s+([\d\.]+)" -or (Get-Version $Matches[1]) -lt (Get-Version $Version)) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($Version) or above (installed version is $($Matches[1])). Please update your Nvidia drivers."};$false} else {$true}}
+   catch {$Error.Remove($Error[$Error.Count - 1]);$true}
+}
+
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
