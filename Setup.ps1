@@ -352,7 +352,7 @@ do {
                     }
                     "devicenamewizardcpu1" {
                         $NewDeviceName["CPU"] = @()
-                        if (Read-HostBool -Prompt "Do you want to mine on your $(if ($AvailDeviceCounts["cpu"] -gt 1){"s"})" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                        if (Read-HostBool -Prompt "Do you want to mine on your CPU$(if ($AvailDeviceCounts["cpu"] -gt 1){"s"})" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                             $NewDeviceName["CPU"] = @("CPU")
                         }
                     }
