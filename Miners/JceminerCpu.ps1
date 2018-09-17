@@ -70,9 +70,12 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Model = $_.Model
-    $Miner_Threads = @(Get-CPUAffinity $Config.CPUMiningThreads | Select-Object)
 
-    $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $GLobal:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
+    $Miner_Threads = @()
+    if ($Config.CPUMiningAffinity -ne '') {$Miner_Threads = ConvertFrom-CPUAffinity $Config.CPUMiningAffinity}
+    if (-not $Miner_Threads) {$Miner_Threads = $Global:GlobalCPUInfo.RealCores}
+
+    $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $Global:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
 
     $Commands | ForEach-Object {        
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
