@@ -418,6 +418,8 @@ Update-DeviceInformationDebug @(Get-DeviceDebug @("cpu","gpu") | Select-Object -
                                 @{Name="CPU Name"; Expression={$_.Model_Name}})
 
 @(Get-DeviceDebug @("gpu") | Format-Table -Property Name,Vendor,Model,
+                                @{Name="Driver";    Expression={$_.OpenCL.DriverVersion};                                                                                  Alignment="Right"},
+                                @{Name="CL/CUDA";   Expression={if ($_.OpenCL.Platform.Version -match "CUDA") {$_.OpenCL.Platform.Version -replace "^.*CUDA\s+"}else{$_.OpenCL.Platform.Version -replace "^.*OpenCL\s+"}}; Alignment="Right"},
                                 @{Name="Mem";       Expression={$(if ($_.OpenCL.GlobalMemSize -ne $null) {"$([math]::round($_.OpenCL.GlobalMemSize/1gb,3))GB"}else{"-"})}; Alignment="Right"},
                                 @{Name="PS";        Expression={$(if ($_.Data.Pstate -ne $null) {$_.Data.Pstate}else{"-"})};                                               Alignment="Right"},
                                 @{Name="Gpu Clock"; Expression={$(if ($_.Data.Clock -ne $null) {"$([math]::round($_.Data.Clock/1000,3))GHz"}else{"-"})};                   Alignment="Right"},
