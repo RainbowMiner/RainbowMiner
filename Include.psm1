@@ -2706,8 +2706,7 @@ function Set-OCProfilesConfigDefault {
             $Error.Remove($Error[$Error.Count - 1])
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
-    }
-    
+    }    
 }
 
 function Get-CPUAffinity {

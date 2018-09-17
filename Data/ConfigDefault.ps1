@@ -13,6 +13,5 @@
     EnableOCProfiles = $false
     EnableOCVoltage = $false
     EnableAutoUpdate = $false
-    EnableCPUAffinity = $true
     Delay = 1
 }

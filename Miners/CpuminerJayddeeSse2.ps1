@@ -125,7 +125,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceParams = "$(if ($Config.CPUMiningThreads){"-t $($Config.CPUMiningThreads)$(if ($Config.EnableCPUAffinity){" --cpu-affinity $(Get-CPUAffinity $Config.CPUMiningThreads -hex)"})"})"
+    $DeviceParams = "$(if ($Config.CPUMiningThreads){"-t $($Config.CPUMiningThreads)"}) $(if ($Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Config.CPUMiningAffinity)"})"
 
     $Commands | ForEach-Object {
 
