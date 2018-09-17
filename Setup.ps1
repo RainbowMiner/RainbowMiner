@@ -389,19 +389,23 @@ do {
                             for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
                                 Write-Host " $thr " -BackgroundColor $(if ($thr -in $CurrentAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
                             }
-                            Write-Host " = $($Config.CPUMiningAffinity)"
+                            if ($CurrentAffinity.Count) {
+                                Write-Host " = $($Config.CPUMiningAffinity)"
+                            } else {
+                                Write-Host " (no affinity set)"
+                            }
                             Write-Host " "
                             $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, leave empty for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             $Config.CPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
-                            if (Compare-Object $NewAffinity $CurrentAffinity) {
+                            if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                 Write-Host "Now mining on the green threads: " -ForegroundColor Yellow -NoNewline
-                                if ($Config.CPUMiningAffinity -eq "") {
-                                    Write-Host "no affinity"
-                                } else {
-                                    for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
-                                        Write-Host " $thr " -BackgroundColor $(if ($thr -in $NewAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
-                                    }
+                                for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
+                                    Write-Host " $thr " -BackgroundColor $(if ($thr -in $NewAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
+                                }
+                                if ($NewAffinity.Count) {
                                     Write-Host " = $($Config.CPUMiningAffinity)"
+                                } else {
+                                    Write-Host " (no affinity set)" 
                                 }
                             }
                         } else {
