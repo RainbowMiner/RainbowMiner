@@ -373,7 +373,11 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
     - "gtx1070,gtx1080,cpu"
     - "cpu,gpu"
     - "gpu#01,gpu#03"
-- **CPUMiningThreads** = enter the number of threads being used by CPU miners. For all cpuminer-opt derivates, the parameters "**-t [threads] --cpu-affinity [affinity]**" will be added to the miner's commandline. You may change this by adding your own "-t" and "--cpu-affinity" to the Params for the resp. miner in miners.config.txt. It affects all cpu miners, except FireIce and JceminerCpu (which can only be configured by editing config files)
+- **CPUMiningThreads** = enter the number of softwarethreads being used by CPU miners. Adds "-t [threads]" to commandline of cpuminer forks
+- **CPUMiningAffinity** = enter a hex number to define CPU mining core affinity (e.g. 0xAAAA). Adds "--cpu-affinity [affinity]" to commandline of cpuminer forks
+
+If you defined CPUMiningThreads or CPUMiningAffinity, you may override the values for single miner, by adding your own "-t" and "--cpu-affinity" to the field Params in miners.config.txt. 
+ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They can be finetuned by editing config files (see section MINERS)
 
 #### Select algorithms ####
 
