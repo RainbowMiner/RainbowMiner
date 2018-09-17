@@ -13,5 +13,7 @@
     EnableOCProfiles = $false
     EnableOCVoltage = $false
     EnableAutoUpdate = $false
+    CPUMiningThreads = $Global:GlobalCPUInfo.Cores
+    CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex
     Delay = 1
 }
