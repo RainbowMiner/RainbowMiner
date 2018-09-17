@@ -375,15 +375,24 @@ do {
                     }
                     "cpuminingthreads" {
                         if ($Config.DeviceName -icontains "CPU") {
-                            $Config.CPUMiningThreads = Read-HostInt -Prompt "How many threads should be used for CPU mining? (leave empty for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.CPUMiningThreads = Read-HostInt -Prompt "How many softwarethreads should be used for CPU mining? (leave empty for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         } else {
                             $GlobalSetupStepStore = $false
                         }
                     }
                     "cpuminingaffinity" {
                         if ($Config.DeviceName -icontains "CPU") {
-                            $Config.CPUMiningAffinity = Read-HostString -Prompt "Add --cpu-affinity to CPU miner commandlines (hexadecimal 0x.., leave empty for none)" -Default $Config.CPUMiningAffinity -Characters "A-F0-9x" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                            if ($Config.CPUMiningAffinity -notmatch "^0x") {$Config.CPUMiningAffinity = "0x$($Config.CPUMiningAffinity)"}
+                            $CurrentAffinity = ConvertFrom-CPUAffinity $Config.CPUMiningAffinity
+                            Write-Host " "
+                            Write-Host "Your CPU has $($Global:GlobalCPUInfo.Threads) threads on $($Global:GlobalCPUInfo.Cores) cores available. " -ForegroundColor Yellow
+                            Write-Host "Currently mining on the green threads: " -ForegroundColor Yellow -NoNewline
+                            for($thr=0;$thr -lt $Global:GlobalCPUInfo.Threads;$thr++) {
+                                Write-Host " $thr " -BackgroundColor $(if ($thr -in $CurrentAffinity){"Green"}else{"DarkGray"}) -ForegroundColor Black -NoNewline
+                            }
+                            Write-Host " "
+                            Write-Host " "
+                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, leave empty for no assignment)" -Default $CurrentAffinity -Valid @(0..($Global:GlobalCPUInfo.Threads-1)) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.CPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                         } else {
                             $GlobalSetupStepStore = $false
                         }
