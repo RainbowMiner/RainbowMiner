@@ -2376,11 +2376,11 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Switch]$AllowDuplicates = $False
     )
-    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = [regex]::split($Default[0].Trim(),"\s*[,;:]+\s*")}
-    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
+    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = @([regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
     do{
         $Repeat = $false
-        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
+        $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default.Count){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
         if ("exit","cancel","back","<" -icontains $Result){$Result;return}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}        
         if ("help","list" -icontains $Result) {
@@ -2394,7 +2394,7 @@ function Read-HostArray {
                 $Result = $Matches[2]
             }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
-            [Array]$Result = $Result -replace "[^$($Characters),;:]+","" -split "\s*[,;:]+\s*"
+            [Array]$Result = @($Result -replace "[^$($Characters),;:]+","" -split "\s*[,;:]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
             Switch ($Mode) {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
                 "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
@@ -2709,6 +2709,31 @@ function Set-OCProfilesConfigDefault {
     }    
 }
 
+function ConvertFrom-CPUAffinity {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [string]$Affinity = '',
+        [Parameter(Mandatory = $False)]
+        [switch]$ToInt
+    )
+    try {$AffinityInt = [Convert]::ToInt32($Affinity,16)}catch{$Error.Remove($Error[$Error.Count - 1]);$AffinityInt=0}
+    if ($ToInt) {$AffinityInt}
+    else {@(for($a=0;$AffinityInt -gt 0;$a++) {if ($AffinityInt -band 1){$a};$AffinityInt=$AffinityInt -shr 1})}
+}
+
+function ConvertTo-CPUAffinity {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [int[]]$Threads = @(),
+        [Parameter(Mandatory = $False)]
+        [switch]$ToHex
+    )
+    $a=0;foreach($b in $Threads){$a+=1 -shl $b};
+    if ($ToHex) {"0x{0:x$(if($a -lt 65536){4}else{8})}" -f $a}else{$a}
+}
+
 function Get-CPUAffinity {
     [CmdletBinding()]
     param(
@@ -2717,7 +2742,7 @@ function Get-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$Hex
     )
-    if ($Hex) {$a=0;foreach($b in @(Get-CPUAffinity $Threads)){$a+=1 -shl $b};"0x{0:x$(if($a -lt 65536){4}else{8})}" -f $a}
+    if ($Hex) {ConvertTo-CPUAffinity @(Get-CPUAffinity $Threads) -ToHex}
     else {
         @(if ($Threads -and $Threads -ne $Global:GlobalCPUInfo.RealCores.Count) {
             $a = $r = 0; $b = [Math]::max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
