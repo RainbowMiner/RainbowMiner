@@ -375,7 +375,7 @@ do {
                     }
                     "cpuminingthreads" {
                         if ($Config.DeviceName -icontains "CPU") {
-                            $Config.CPUMiningThreads = Read-HostInt -Prompt "How many threads should be used for CPU mining? (leave empty for auto, max. $($Global:GlobalCPUInfo.Threads))" -Default $Config.CPUMiningThreads -Min 0 -Max $($Global:GlobalCPUInfo.Threads) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.CPUMiningThreads = Read-HostInt -Prompt "How many threads should be used for CPU mining? (leave empty for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         } else {
                             $GlobalSetupStepStore = $false
                         }
