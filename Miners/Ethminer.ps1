@@ -39,9 +39,9 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda $Cuda $Name)) {return}
+if ($Devices | Where-Object Vendor -eq "NVIDIA") {$Cuda = Confirm-Cuda $Cuda $Name}
 
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
+$Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
