@@ -1639,17 +1639,7 @@ while ($true) {
             }
             Update-DeviceInformation @($ActiveMiners.DeviceName | Select-Object -Unique) -UseAfterburner (-not $Config.DisableMSIAmonitor)
 
-            $ActiveMiners | ForEach-Object {
-                $Miner = $_
-                $Miner.UpdateMinerData() > $null # | ForEach-Object {Write-Log -Level Verbose "$($Miner.Name): $_"}
-            
-                if ($Miner.Speed -contains $null) {
-                    $Miner.Algorithm | ForEach-Object {
-                        $HashRate_Name = $_
-                        if ($Miner.Data.Count -gt 0) {Write-Log -Level Verbose (("Benchmarking $($Miner.Name) $($HashRate_Name): $($Miner.Data.HashRate.$HashRate_Name | Select-Object -last 10 | ForEach-Object {$_ | ConvertTo-Hash}) (Avg: $(($Miner.Data.HashRate.$HashRate_Name | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) | ConvertTo-Hash))$(if ($Miner.ExtendInterval -gt 1){" (ExtendInterval $($Miner.ExtendInterval))"})") -replace "\s+", " ")}
-                    }
-                }
-            }
+            $ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | ForEach-Object {$_.UpdateMinerData() > $null}
         }
 
         $Timer = (Get-Date).ToUniversalTime()
@@ -1732,7 +1722,7 @@ while ($true) {
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
-        if ($Miner.GetStatus() -eq "Running" -or $Miner.New) {
+        if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
             $Miner_PowerDraw = $Miner.GetPowerDraw($Config.Interval * $ExtendInterval)
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Speed = $Miner.GetHashRate($_, $Config.Interval * $ExtendInterval, $Miner.New)
@@ -1753,11 +1743,12 @@ while ($true) {
                 }
                 $Miner_PowerDraw = 0
             }
+            $Miner.EndOfRoundCleanup()
         }
     }
 
     #Cleanup stopped miners
-    $StoppedMiners | Foreach-Object {$_.Cleanup()}
+    $StoppedMiners | Foreach-Object {$_.StopMiningPostCleanup()}
     Remove-Variable "StoppedMiners"
 
     if ($Stopp) {

@@ -1784,7 +1784,7 @@ class Miner {
                     Sleep -Milliseconds 250 #Sleep for 1/4 second
                 }
             }
-        }    
+        }
     }
 
     hidden StartMiningPreProcess() { }
@@ -1799,7 +1799,12 @@ class Miner {
         Sleep -Milliseconds 500
     }
 
-    cleanup() { }
+    StopMiningPostCleanup() {}
+
+    EndOfRoundCleanup() {
+        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}
+    }
+
 
     [DateTime]GetActiveStart() {
         $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime}
@@ -1965,7 +1970,7 @@ class Miner {
         return $Lines
     }
 
-    CleanupMinerData() {
+    CleanupMinerData() {        
         if ($this.New) {$this.Data = @($this.Data | Select-Object -Last 1000)}
         else {$this.Data = @($this.Data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)))}
     }

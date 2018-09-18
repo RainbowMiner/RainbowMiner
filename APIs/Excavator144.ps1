@@ -272,6 +272,8 @@ class Excavator144 : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
+        $this.Data = @()
+
         if ($this.Status -ne [MinerStatus]::Running) {
             return
         }
@@ -379,7 +381,7 @@ class Excavator144 : Miner {
         }
     }
 
-    cleanup() {
+    StopMiningPostCleanup() {
         $Server = "localhost"
         $Timeout = 10
        
@@ -438,6 +440,10 @@ class Excavator144 : Miner {
                 $this.ShutdownMiner()
             }
         }
+    }
+
+    EndOfRoundCleanup() {
+        if ([Excavator144]::Service.HasMoreData) {[Excavator144]::Service | Receive-Job > $null}
     }
 
     [DateTime]GetActiveLast() {
