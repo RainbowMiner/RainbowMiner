@@ -26,8 +26,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Finetune miner- and pool-configuration during runtime**
 - **Bind/exclude devices to/from specific algorithm and miners**
 - **Define pool's algorithms and coins**
-- **Switch MSI Afterburner profiles per miner/algorithm**
 - **Use unlimited custom overclocking profiles per miner/algorithm**
+- **Easy overclocking of gpus (memory, core, powerlimit and voltage)**
+- **Switch MSI Afterburner profiles per miner/algorithm**
 - **Includes [OhGodAnETHlargementPill](https://bitcointalk.org/index.php?topic=3370685.0)**
 - **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
