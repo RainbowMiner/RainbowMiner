@@ -769,7 +769,7 @@ function Start-SubProcessInBackground {
 
     if ($Process) {
         $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $Job | Add-Member MiningProcess $Process -Force -ErrorAction Ignore
+        $Job | Add-Member MiningProcessId $Process.Id -Force -ErrorAction Ignore
     }
     $Job
 }
@@ -933,7 +933,6 @@ function Start-SubProcessInConsole {
 
         [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
         $x = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        Write-Host "Last error $x"
         $Process = Get-Process -Id $lpProcessInformation.dwProcessID
         if ($Process -eq $null) {
             [PSCustomObject]@{ProcessId = $null}
@@ -969,7 +968,7 @@ function Start-SubProcessInConsole {
     if ($Process) {
         $Process.Handle | Out-Null
         $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $Job | Add-Member MiningProcess $Process -Force -ErrorAction Ignore
+        $Job | Add-Member MiningProcessId $Process.Id -Force -ErrorAction Ignore
     }
 
     $Job
@@ -1692,9 +1691,9 @@ class Miner {
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [Array]$Data = @()
-    hidden [Bool]$HasOwnMinerWindow = $false
-    hidden $EthPill = $null
+    hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [System.Collections.ArrayList]$OCprofileBackup = @()
+    hidden [Int]$EthPill = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -1729,8 +1728,8 @@ class Miner {
                     "RevB" {$Prescription = "revB"}
                 }
                 if ($Prescription -ne "" -and $Prescription_Device) {
-                    Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
-                    $this.EthPill = Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')"
+                    Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"                    
+                    $this.EthPill = [int](Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
                     Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
@@ -1751,17 +1750,19 @@ class Miner {
         $this.Data = @()
 
         if ($this.Process) {
-            if ($this.HasOwnMinerWindow -and $this.Process.MiningProcess) {
-                $this.Process.MiningProcess.CloseMainWindow() > $null
-                # Wait up to 10 seconds for the miner to close gracefully
-                $closedgracefully = $this.Process.MiningProcess.WaitForExit(10000)
-                if($closedgracefully) { 
-                    Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
-                } else {
-                    Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
-                    if(!$this.Process.MiningProcess.HasExited) {
-                        Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
-                        $this.Process.MiningProcess.Kill()
+            if ($this.HasOwnMinerWindow -and $this.Process.MiningProcessId) {
+                if ($MiningProcess = Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore) {
+                    $MiningProcess.CloseMainWindow() > $null
+                    # Wait up to 10 seconds for the miner to close gracefully
+                    $closedgracefully = $MiningProcess.WaitForExit(10000)
+                    if($closedgracefully) { 
+                        Write-Log "Miner $($this.Name) closed gracefully" 
+                    } else {
+                        Write-Log -Level Warn "Miner $($this.Name) failed to close within 10 seconds"
+                        if(-not $MiningProcess.HasExited) {
+                            Write-Log -Level Warn "Attempting to kill miner $($this.Name) PID $($this.Process.Id)"
+                            $MiningProcess.Kill()
+                        }
                     }
                 }
             }
@@ -1774,12 +1775,14 @@ class Miner {
                 $this.Process = $null
                 $this.Status = [MinerStatus]::Idle
             }
-            if ($this.EthPill -ne $null) {
-                Write-Log "Stopping OhGodAnETHlargementPill"
-                $this.EthPill.CloseMainWindow() > $null
-                if(-not $this.EthPill.WaitForExit(1000)) {if(-not $this.EthPill.HasExited) {$this.EthPill.Kill()}}
-                $this.EthPill = $null
-                Sleep -Milliseconds 250 #Sleep for 1/4 second
+            if ($this.EthPill) {
+                if ($EthPillProcess = Get-Process -Id $this.EthPill) {
+                    Write-Log "Stopping OhGodAnETHlargementPill"
+                    $EthPillProcess.CloseMainWindow() > $null
+                    if(-not $EthPillProcess.WaitForExit(1000)) {if(-not $EthPillProcess.HasExited) {$EthPillProcess.Kill()}}
+                    $this.EthPill = 0
+                    Sleep -Milliseconds 250 #Sleep for 1/4 second
+                }
             }
         }    
     }
@@ -1799,7 +1802,8 @@ class Miner {
     cleanup() { }
 
     [DateTime]GetActiveStart() {
-        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
 
         if ($Begin) {
             return $Begin
@@ -1810,8 +1814,9 @@ class Miner {
     }
 
     [DateTime]GetActiveLast() {
-        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
-        $End   = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
 
         if ($Begin -and $End) {
             return $End
@@ -1825,8 +1830,9 @@ class Miner {
     }
 
     [TimeSpan]GetActiveTime() {
-        $Begin = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.StartTime} else {$this.Process.PSBeginTime}
-        $End   = if ($this.Process.MiningProcess) {$this.Process.MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         
         if ($Begin -and $End) {
             return $this.Active + ($End - $Begin)
@@ -1844,7 +1850,8 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        if ((-not $this.Process.MiningProcess -and $this.Process.State -eq "Running") -or ($this.Process.MiningProcess -and -not $this.Process.MiningProcess.HasExited) ) {
+        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object HasExited}
+        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited) ) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
@@ -1856,11 +1863,7 @@ class Miner {
     }
 
     [Int]GetProcessId() {
-        if ( $this.Process.MiningProcess ) {
-            return $this.Process.MiningProcess.Id;
-        } else {
-            return 0;
-        }
+        return $this.Process.MiningProcessId
     }
 
     SetStatus([MinerStatus]$Status) {

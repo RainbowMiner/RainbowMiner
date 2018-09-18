@@ -511,11 +511,7 @@ class Excavator : Miner {
     }
 
     [Int]GetProcessId() {
-        if ([Excavator]::Service.MiningProcess) {
-            return [Excavator]::Service.MiningProcess.Id;
-        } else {
-            return 0;
-        }
+        return [Excavator]::Service.MiningProcessId;
     }
 
     SetStatus([MinerStatus]$Status) {
@@ -577,17 +573,19 @@ class Excavator : Miner {
     }
 
     ShutdownMiner() {
-        if ([Excavator]::Service.MiningProcess) {
-            [Excavator]::Service.MiningProcess.CloseMainWindow() | Out-Null
-            # Wait up to 10 seconds for the miner to close gracefully
-            $closedgracefully = [Excavator]::Service.MiningProcess.WaitForExit(10000)
-            if($closedgracefully) { 
-                Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
-            } else {
-                Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
-                if(![Excavator]::Service.MiningProcess.HasExited) {
-                    Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
-                    [Excavator]::Service.MiningProcess.Kill()
+        if ([Excavator]::Service.MiningProcessId) {
+            if ($MiningProcess = Get-Process -Id ([Excavator]::Service.MiningProcessId) -ErrorAction Ignore) {
+                $MiningProcess.CloseMainWindow() | Out-Null
+                # Wait up to 10 seconds for the miner to close gracefully
+                $closedgracefully = $MiningProcess.WaitForExit(10000)
+                if($closedgracefully) { 
+                    Write-Log "Miner $($this.Name) closed gracefully" 
+                } else {
+                    Write-Log -Level Warn "Miner $($this.Name) failed to close within 10 seconds"
+                    if(-not $MiningProcess.HasExited) {
+                        Write-Log -Level Warn "Attempting to kill miner $($this.Name) PID $($this.Process.Id)"
+                        $MiningProcess.Kill()
+                    }
                 }
             }
         }

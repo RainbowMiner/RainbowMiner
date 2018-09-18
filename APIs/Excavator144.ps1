@@ -472,12 +472,8 @@ class Excavator144 : Miner {
         return $this.Status
     }
 
-    [Int]GetProcessId() {
-        if ([Excavator144]::Service.MiningProcess) {
-            return [Excavator144]::Service.MiningProcess.Id;
-        } else {
-            return 0;
-        }
+    [Int]GetProcessId() {        
+        return [Excavator144]::Service.MiningProcessId;
     }
 
     SetStatus([MinerStatus]$Status) {
@@ -540,20 +536,23 @@ class Excavator144 : Miner {
     }
 
     ShutDownMiner() {
-        if ([Excavator144]::Service.MiningProcess) {
-            [Excavator144]::Service.MiningProcess.CloseMainWindow() | Out-Null
-            # Wait up to 10 seconds for the miner to close gracefully
-            $closedgracefully = [Excavator144]::Service.MiningProcess.WaitForExit(10000)
-            if($closedgracefully) { 
-                Write-Log "$($this.Type) miner $($this.Name) closed gracefully" 
-            } else {
-                Write-Log -Level Warn "$($this.Type) miner $($this.Name) failed to close within 10 seconds"
-                if(![Excavator144]::Service.MiningProcess.HasExited) {
-                    Write-Log -Level Warn "Attempting to kill $($this.Type) miner $($this.Name) PID $($this.Process.Id)"
-                    [Excavator144]::Service.MiningProcess.Kill()
+        if ([Excavator144]::Service.MiningProcessId) {
+            if ($MiningProcess = Get-Process -Id ([Excavator144]::Service.MiningProcessId) -ErrorAction Ignore) {
+                $MiningProcess.CloseMainWindow() | Out-Null
+                # Wait up to 10 seconds for the miner to close gracefully
+                $closedgracefully = $MiningProcess.WaitForExit(10000)
+                if($closedgracefully) { 
+                    Write-Log "Miner $($this.Name) closed gracefully" 
+                } else {
+                    Write-Log -Level Warn "Miner $($this.Name) failed to close within 10 seconds"
+                    if(-not $MiningProcess.HasExited) {
+                        Write-Log -Level Warn "Attempting to kill miner $($this.Name) PID $($this.Process.Id)"
+                        $MiningProcess.Kill()
+                    }
                 }
             }
         }
+
         if ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue) {
             [Excavator144]::Service | Remove-Job -Force
         }
