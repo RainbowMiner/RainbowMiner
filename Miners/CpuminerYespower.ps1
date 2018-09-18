@@ -12,8 +12,7 @@ $Uri = "https://github.com/bubasik/cpuminer-opt-yespower/releases/download/v3.8.
 $Port = "530{0:d2}"
 $DevFee = 0.0
 
-$Devices = $Devices.CPU
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
+if (-not $Devices.CPU -and -not $Config.InfoOnly) {return} # No CPU present in system
 if (-not $Global:GlobalCPUInfo.Features.tryall -and -not $Global:GlobalCPUInfo.Features.sse2) {return}
 
 $Commands = [PSCustomObject[]]@(
@@ -87,6 +86,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+$Devices = $Devices.CPU
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

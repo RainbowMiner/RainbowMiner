@@ -14,8 +14,7 @@ $Port = "301{0:d2}"
 $DevFee = 0.0
 $Cuda = "6.5"
 
-$Devices = @($Devices.NVIDIA) + @($Devices.AMD) 
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No GPU present in system
+if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Config.InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @()} #Ethash2GB
@@ -39,7 +38,9 @@ if ($Config.InfoOnly) {
     return
 }
 
-if ($Devices | Where-Object Vendor -eq "NVIDIA") {$Cuda = Confirm-Cuda $Cuda $Name}
+if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+
+$Devices = @($Devices.AMD | Select-Object) + @($Devices.NVIDIA | Select-Object)
 
 $Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

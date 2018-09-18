@@ -14,6 +14,8 @@ $ManualUri = "https://github.com/RainbowMiner/xmr-stak/releases"
 $DevFee = 0.0
 $Cuda = "9.1"
 
+if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not $Config.InfoOnly) {return} # No GPU present in system
+
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight";            Threads = 1; MinMemGb = 2; Params = ""} #CryptoNight
     [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2";    Threads = 1; MinMemGb = 4; Params = ""} # CryptoNightBittube2
@@ -43,18 +45,7 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not $Config.InfoOnly) {return} # No GPU present in system
-
-if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda $Cuda $Name}
-
-#$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-#    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-#    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-#    $Miner_Vendor = $_.Vendor
-#    $Miner_Model = $_.Model
-#    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-
-#    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index
+if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
 @($Devices.FullComboModels.PSObject.Properties.Name) | Where-Object {$_ -ne "NVIDIA" -or $Cuda} | Foreach-Object {
     $Miner_Vendor = $_  

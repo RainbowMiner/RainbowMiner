@@ -62,7 +62,7 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda $Cuda $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
 $Devices = $Devices.NVIDIA
 

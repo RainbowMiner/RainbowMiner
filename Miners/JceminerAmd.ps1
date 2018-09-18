@@ -13,8 +13,7 @@ $Port = "321{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 0.9
 
-$Devices = $Devices.AMD
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Params = "--variation 3"}
@@ -63,6 +62,7 @@ if ($Config.InfoOnly) {
     return
 }
 
+$Devices = $Devices.AMD
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

@@ -12,8 +12,7 @@ $Uri = "https://github.com/tpruvot/cpuminer-multi/releases/download/v1.3.1-multi
 $Port = "512{0:d2}"
 $DevFee = 0.0
 
-$Devices = $Devices.CPU
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No CPU present in system
+if (-not $Devices.CPU -and -not $Config.InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     # CPU Only algos 3/27/2018
@@ -85,6 +84,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+$Devices = $Devices.CPU
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

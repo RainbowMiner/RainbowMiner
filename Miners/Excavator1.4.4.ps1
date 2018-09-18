@@ -58,12 +58,12 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda $Cuda $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
 $Devices = $Devices.NVIDIA
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = @($Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model)
+    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Port = Get-MinerPort -MinerName $Name -Port $Miner_Port

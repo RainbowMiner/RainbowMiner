@@ -14,8 +14,7 @@ $Port = "311{0:d2}"
 $DevFee = 0.0
 $Cuda = "8.0"
 
-$Devices = $Devices.NVIDIA
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2.5; Params = "--algo 96_5"}  #Equihash 96,5
@@ -23,6 +22,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 2.5; Params = "--algo 192_7"} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9"} #Equihash 210,9 (beta)
 )
+
+$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
@@ -38,8 +39,6 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda $Cuda $Name)) {return}
-
 $Coins = [PSCustomObject]@{
     default     = ""
     AION        = "--pers AION0PoW"
@@ -51,7 +50,9 @@ $Coins = [PSCustomObject]@{
     ZER         = "--pers ZERO_PoW"
 }
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+
+$Devices = $Devices.NVIDIA
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

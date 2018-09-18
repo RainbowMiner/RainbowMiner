@@ -13,8 +13,7 @@ $ManualUri = "https://github.com/KL0nLutiy"
 $Port = "402{0:d2}"
 $DevFee = 1.0
 
-$Devices = $Devices.AMD
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo"; Params = "-X 256 -g 2"} #Aergo
@@ -44,6 +43,8 @@ if ($Config.InfoOnly) {
     }
     return
 }
+
+$Devices = $Devices.AMD
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

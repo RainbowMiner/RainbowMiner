@@ -7,7 +7,7 @@ function Get-Version {
     param($Version)
     # System.Version objects can be compared with -gt and -lt properly
     # This strips out anything that doens't belong in a version, eg. v at the beginning, or -preview1 at the end, and returns a version object
-    Return [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
+    [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
 }
 
 function Confirm-Version {
@@ -54,9 +54,11 @@ function Confirm-Version {
 
 function Confirm-Cuda {
    [CmdletBinding()]
-   param($Version,$Warning = "")
-   try {if (($Global:GlobalCachedDevices | Where-Object Vendor -eq "NVIDIA" | Select-Object -First 1).OpenCL.Platform.Version -notmatch "CUDA\s+([\d\.]+)" -or (Get-Version $Matches[1]) -lt (Get-Version $Version)) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($Version) or above (installed version is $($Matches[1])). Please update your Nvidia drivers."};$false} else {$true}}
-   catch {$Error.Remove($Error[$Error.Count - 1]);$true}
+   param($ActualVersion,$RequiredVersion,$Warning = "")
+   if (-not $RequiredVersion) {return $true}
+   if ($ActualVersion -eq [string]) {$ActualVersion = Get-Version $ActualVersion}
+   if ($RequiredVersion -eq [string]) {$RequiredVersion = Get-Version $RequiredVersion}
+   if ($ActualVersion -lt $RequiredVersion) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};$false} else {$true}
 }
 
 function Get-PoolPayoutCurrencies {

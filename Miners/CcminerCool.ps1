@@ -14,8 +14,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=4412370.0"
 $DevFee = 1.0
 $Cuda = "9.2"
 
-$Devices = $Devices.NVIDIA
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z
@@ -37,7 +36,9 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda $Cuda $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+
+$Devices = $Devices.NVIDIA
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model

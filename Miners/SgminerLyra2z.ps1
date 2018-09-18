@@ -12,12 +12,13 @@ $Uri = "https://github.com/djm34/sgminer-msvc2015/releases/download/v0.3/kernel.
 $Port = "403{0:d2}"
 $DevFee = 1.0
 
-$Devices = $Devices.AMD
-if (-not $Devices -and -not $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--worksize 32 --intensity 18"}
 )
+
+$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($Config.InfoOnly) {
     [PSCustomObject]@{
@@ -33,7 +34,7 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+$Devices = $Devices.AMD
 
 $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
