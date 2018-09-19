@@ -17,9 +17,9 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status" -retry 3 -retrywait 500 -tag $Name
-    #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -28,6 +28,15 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
 }
+
+try {
+    #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies" -tag $Name
+}
+catch {
+    $Error.Remove($Error[$Error.Count - 1])
+    Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
+}
+
 
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_Coins = @{}
@@ -54,15 +63,15 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
 
     if ($Pool_Symbol -and $Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Symbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
-    $Divisor = 1e6 * [Double]$Pool_Request.$_.mbtc_mh_factor
-    if ($Divisor -eq 0) {
+    $Pool_Factor = [Double]$Pool_Request.$_.mbtc_mh_factor
+    if ($Pool_Factor -le 0) {
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
     }
 
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factorr) -Duration $StatSpan -ChangeDetection $true}
     }
 
     foreach($Pool_Region in $Pool_Regions) {

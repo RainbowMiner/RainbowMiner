@@ -16,9 +16,9 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies" -tag $Name
-    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -26,6 +26,14 @@ catch {
 if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
+}
+
+try {
+    $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status" -tag $Name
+}
+catch {
+    $Error.Remove($Error[$Error.Count - 1])
+    Write-Log -Level Warn "Pool status API ($Name) has failed. "
 }
 
 [hashtable]$Pool_Algorithms = @{}
@@ -51,16 +59,16 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
     if ($Pool_Request.$Pool_Algorithm.mbtc_mh_factor) {
-        $Divisor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+        $Pool_Factor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     } else {
-        Switch($Pool_Algorithm_Norm) {
-            "Blake2s" {$Divisor = 1000}
-            "KeccakC" {$Divisor = 1000}
-            "Sha256" {$Divisor = 1000}
-            default {$Divisor = 1}
-        }
+        $Pool_Factor = [Double]$(Switch($Pool_Algorithm_Norm) {
+            "Blake2s" {1000}
+            "KeccakC" {1000}
+            "Sha256" {1000}
+            default {$Pool_Factor = 1}
+        })
     }
-    $Divisor *= 1e9
+    $Divisor = $Pool_Factor * 1e9
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true

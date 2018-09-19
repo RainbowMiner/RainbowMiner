@@ -17,10 +17,10 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {    
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -retry 3 -retrywait 750 -tag $Name
-    $Pool_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/status" -retry 3 -retrywait 500 -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -28,6 +28,14 @@ catch {
 if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
+}
+
+try {    
+    $Pool_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/status" -retry 3 -retrywait 500 -tag $Name
+}
+catch {
+    $Error.Remove($Error[$Error.Count - 1])
+    Write-Log -Level Warn "Pool status API ($Name) has failed. "
 }
 
 [hashtable]$Pool_Algorithms = @{}
@@ -53,11 +61,25 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
-    $Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
-    if ($Divisor -eq 0) {
+    if ($Pool_Request.$Pool_Algorithm.mbtc_mh_factor) {
+        $Pool_Factor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+    } else {
+        $Pool_Factor = $(
+            Switch ($Pool_Algorithm_Norm) {
+                "Blake2s" {1000}
+                "Sha256"  {1000}
+                "Sha256t" {1000}
+                "X11"     {1000}
+                default   {1}
+            })
+    }
+
+    if ($Pool_Factor -le 0) {
         Write-Log -Level Info "Unable to determine divisor for $Pool_Coin using $Pool_Algorithm_Norm algorithm"
         return
     }
+
+    $Divisor = 1e9 * $Pool_Factor
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true

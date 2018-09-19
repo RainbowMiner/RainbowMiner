@@ -18,9 +18,9 @@ if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA presen
 
 $Commands = [PSCustomObject[]]@(
     #1 Thread
-    [PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV7
+    #[PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV7
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Threads = 1; MinMemGB = 4; ExtendInterval = 1; Params = @()} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Equihash
     #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt

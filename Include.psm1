@@ -2790,7 +2790,7 @@ function Get-YiiMPDataWindow {
         {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h"}
         {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h"}
         {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h"}
-        default {"average-2e"}
+        default {"estimate_current"}
     }
 }
 
@@ -2800,24 +2800,30 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $True)]
         [PSCustomObject]$Request,
         [Parameter(Mandatory = $False)]
+        [Double]$Factor = 1,
+        [Parameter(Mandatory = $False)]
         [String]$DataWindow = '',
         [Parameter(Mandatory = $False)]
         [Switch]$CheckDataWindow = $false
     )    
     [Double]$Value = 0
-    [hashtable]$div = @{"actual_last24h"=1000}
+    [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
+    [hashtable]$values = @{}
+    [bool]$hasdetails=$false
+     foreach ($field in $allfields) {
+        if ($Request.$field -ne $null) {
+            $values[$field] = if ($Request."$($field)_in_btc_per_hash_per_day" -ne $null){$hasdetails=$true;[double]$Request."$($field)_in_btc_per_hash_per_day"}else{[double]$Request.$field}
+        }
+    }
+    if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
+    if ($values.count -eq 3 -and -not $values.ContainsValue(0)) {
+        if ($values["estimate_last24h"]/$values["estimate_current"] -gt 10) {
+            $values["estimate_last24h"] = ($values["estimate_current"]+$values["actual_last24h"])/2
+        }
+    }
+
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
     if ($DataWindow -match '^(.+)-(.+)$') {
-        [System.Collections.ArrayList]$allfields = @("actual_last24h","estimate_current","estimate_last24h")
-        #[hashtable]$values = @{}
-        #$minf = '';$maxf='';$min=-1;$max=0;$sum=0
-        #foreach ($field in $allfields) {if ($Request.$field -ne $null) {
-        #    $values[$field] = $Request.$field
-        #    if ($values[$field] -gt $max) {$max = $values[$field];$maxf=$field}
-        #    if ($min -eq -1 -or $values[$field] -lt $min) {$min = $values[$field];$minf=$field}
-        #    $sum+=$values[$field]
-        #}}
-        #if ($values.count -eq 3 -and ($sum/3
         Switch ($Matches[2]) {
             "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
             "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
@@ -2828,41 +2834,34 @@ function Get-YiiMPValue {
             "minimum" {
                 $set = $true
                 foreach ($field in $fields) {
-                    if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field
-                    if ($div[$field]) {$v /= $div[$field]}
+                    if(-not $values.ContainsKey($field)) {continue}
+                    $v = $values[$field]
                     if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
                 }
             }
             "maximum" {
                 $set = $true
                 foreach ($field in $fields) {
-                    if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field
-                    if ($div[$field]) {$v /= $div[$field]}
+                    if(-not $values.ContainsKey($field)) {continue}
+                    $v = $values[$field]
                     if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
                 }
             }
             "average" {
                 $c=0
                 foreach ($field in $fields) {                
-                    if($Request.$field -eq $null) {continue}
-                    $v = [Double]$Request.$field
-                    if ($div[$field]) {$v /= $div[$field]}
-                    $Value+=$v
+                    if(-not $values.ContainsKey($field)) {continue}
+                    $Value+=$values[$field]
                     $c++
                 }
                 if ($c) {$Value/=$c}
             }
         }
     } else {
-        if (-not $DataWindow) {foreach ($field in [System.Collections.ArrayList]@("estimate_current","estimate_last24h","actual_last24h")) {if ($Request.$field -ne $null) {$DataWindow = $field;break}}}
-        if ($DataWindow -and $Request.$DataWindow -ne $null) {
-            $Value = $Request.$DataWindow
-            if ($div[$DataWindow]) {$Value /= $div[$DataWindow]}
-        }
+        if (-not $DataWindow -or -not $values.ContainsKey($DataWindow)) {foreach ($field in $allfields) {if ($values.ContainsKey($field)) {$DataWindow = $field;break}}}
+        if ($DataWindow -and $values.ContainsKey($DataWindow)) {$Value = $values[$DataWindow]}
     }
-    $Value
+    if ($hasdetails){$Value}else{$Value*1e-6/$Factor}
 }
 
 function Get-DeviceSubsets($Device) {
@@ -3073,14 +3072,16 @@ Param(
 
         $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
 
+        $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+
         do {
             $Request = $RequestError = $null
-            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
-            try {    
+            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")            
+            try {                
                 if ($AsyncLoader.Jobs.$Jobkey.Method -eq "REST") {
-                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -DisableKeepAlive -Method Get
                 } else {
-                    $Request = Invoke-WebRequest -UseBasicParsing $RequestUrl -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" -TimeoutSec 10 -ErrorAction Stop
+                    $Request = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -DisableKeepAlive -Method Get
                 }
                 $AsyncLoader.Jobs.$Jobkey.Success++
             }

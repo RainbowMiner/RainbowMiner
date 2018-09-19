@@ -17,9 +17,9 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -tag $Name
-    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -27,6 +27,14 @@ catch {
 if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
     Write-Log -Level Warn "Pool API ($Name) returned nothing. "
     return
+}
+
+try {
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -tag $Name
+}
+catch {
+    $Error.Remove($Error[$Error.Count - 1])
+    Write-Log -Level Warn "Pool status API ($Name) has failed. "
 }
 
 [hashtable]$Pool_Algorithms = @{}
@@ -52,20 +60,19 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
     #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
-    $Divisor = 1
 
-    switch ($Pool_Algorithm) {
-        "blake2s" {$Divisor *= 1000}
-        "sha256d" {$Divisor *= 1000}
-    }
+    $Pool_Factor = [Double]$(switch ($Pool_Algorithm) {
+        "blake2s" {1000}
+        "sha256d" {1000}
+        default {1}
+    })
 
     if (-not $InfoOnly) {
         if ($Pool_Request -and $Pool_Request.$Pool_Key) {
-            $Divisor *= 1e6
-            if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$Pool_Key.estimate_last24h / $Divisor) -Duration (New-TimeSpan -Days 1)}
-            else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$Pool_Key $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $true}
+            if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
+            else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $true}
         } else {
-            $Divisor *= 1e9
+            $Divisor = $Pool_Factor * 1e9
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
             $Pool_DataWindow = $null
         }

@@ -17,6 +17,7 @@ try {
     if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name)){throw}
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     $Success = $false
 }
 
@@ -26,6 +27,7 @@ if ( -not $Success ) {
         if (-not ($Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name)){throw}
     }
     catch {
+        $Error.Remove($Error[$Error.Count - 1])
         $Success = $false
     }
 }
@@ -39,11 +41,12 @@ if ( -not $Success ) {
         $DataWindow = "actual_last24h"
     }
     catch {
+        $Error.Remove($Error[$Error.Count - 1])
         $Success = $false
     }
 }
 
-if ( -not $Success ) {
+if (-not $Success) {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -65,14 +68,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Currency = "RVN"
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
 
-    $Divisor = 1e6
-
-    switch ($Pool_Algorithm_Norm) {
-        "x16r" {$Divisor *= 1}
-    }
+    $Pool_Factor = 1
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ((Get-YiiMPValue $Pool_Request.$_ $DataWindow) / $Divisor) -Duration $StatSpan -ChangeDetection $false
+        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $false}
     }
 
     foreach($Pool_Region in $Pool_Regions) {

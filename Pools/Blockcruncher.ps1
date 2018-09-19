@@ -16,9 +16,9 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/currencies" -tag $Name
-    $Pool_Request = Invoke-RestMethodAsync "https://blockcruncher.com/api/status" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -49,7 +49,6 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
-    #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     $Divisor = 1e9
 
     if (-not $InfoOnly) {

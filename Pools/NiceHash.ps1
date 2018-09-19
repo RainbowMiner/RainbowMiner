@@ -17,6 +17,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info" -tag $Name
 }
 catch {
+    $Error.Remove($Error[$Error.Count - 1])
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
