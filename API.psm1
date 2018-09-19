@@ -231,7 +231,7 @@
                                     Benchmarking = -not $Miner_Path
                                     NeedsBenchmark = $Miner_NeedsBenchmark
                                     BenchmarkFailed = $Miner_Failed
-                                }) | Out-Null
+                                })>$null
                             }
                         }
                     }
@@ -332,6 +332,7 @@
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append}
             $Error.Clear()
+            [GC]::Collect()
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()

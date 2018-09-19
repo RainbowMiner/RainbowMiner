@@ -2808,11 +2808,21 @@ function Get-YiiMPValue {
     [hashtable]$div = @{"actual_last24h"=1000}
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
     if ($DataWindow -match '^(.+)-(.+)$') {
+        [System.Collections.ArrayList]$allfields = @("actual_last24h","estimate_current","estimate_last24h")
+        #[hashtable]$values = @{}
+        #$minf = '';$maxf='';$min=-1;$max=0;$sum=0
+        #foreach ($field in $allfields) {if ($Request.$field -ne $null) {
+        #    $values[$field] = $Request.$field
+        #    if ($values[$field] -gt $max) {$max = $values[$field];$maxf=$field}
+        #    if ($min -eq -1 -or $values[$field] -lt $min) {$min = $values[$field];$minf=$field}
+        #    $sum+=$values[$field]
+        #}}
+        #if ($values.count -eq 3 -and ($sum/3
         Switch ($Matches[2]) {
             "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
             "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
             "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h")}
-            "3"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current","estimate_last24h")}
+            "3"  {[System.Collections.ArrayList]$fields = $allfields}
         }
         Switch ($Matches[1]) {
             "minimum" {
@@ -3130,7 +3140,7 @@ function Start-AsyncLoader {
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats}
+            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[GC]::Collect()}
             try {                
                 foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
                     $Job = $AsyncLoader.Jobs.$Jobkey
