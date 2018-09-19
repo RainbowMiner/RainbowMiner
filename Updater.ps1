@@ -30,8 +30,9 @@ try {
 
         if (-not (Test-Path $FileName) -or (Get-Item $FileName).Length -lt 2MB) {throw}
 
-        Write-Host " (2/3) Deleting old files .."
+        Write-Host " (2/3) Deleting and backup old files .."
 
+        @("Start.bat") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
         @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}
 
         Write-Host " (3/3) Extracting new files .."

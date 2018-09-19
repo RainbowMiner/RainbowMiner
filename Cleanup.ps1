@@ -4,6 +4,8 @@ $Version = Get-Version $Version
 
 if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
 
+$SavedFiles = @("Start.bat")
+
 $ChangesTotal = 0
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
@@ -100,6 +102,9 @@ try {
             Get-ChildItem "Stats\Miners" | Where-Object BaseName -notmatch "^(AMD|CPU|NVIDIA)-" | Where-Object BaseName -match "-$($Stat_Name)" | Foreach-Object {Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($Stat_Vendor)-$($_.Name)" -Force;$ChangesTotal++}
         }
     }
+
+    $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
+
     "Cleaned $ChangesTotal elements"
 }
 catch {

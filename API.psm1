@@ -207,7 +207,7 @@
                         
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = "$(Split-Path $_.Path)\_uri.json"
-                            $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri).LastWriteTime.ToUniversalTime()} else {$null}
+                            $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
                         }
                         [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
                         [String]$SecondAlgo = ''
@@ -236,6 +236,9 @@
                         }
                     }
                     $Data = ConvertTo-Json @($Out)
+                    $Out.Clear()
+                    $JsonUri_Dates.Clear()
+                    $Miners_List.Clear()
                     Break
                 }
                 "/computerstats" {
@@ -280,12 +283,12 @@
                     if (Test-Path $Filename -PathType Leaf) {
                         # If the file is a powershell script, execute it and return the output. A $Parameters parameter is sent built from the query string
                         # Otherwise, just return the contents of the file
-                        $File = Get-ChildItem $Filename
+                        $File = Get-ChildItem $Filename -ErrorAction Ignore
 
                         If ($File.Extension -eq ".ps1") {
                             $Data = & $File.FullName -Parameters $Parameters
                         } else {
-                            $Data = Get-Content $Filename -Raw
+                            $Data = Get-Content $Filename -Raw -ErrorAction Ignore
 
                             # Process server side includes for html files
                             # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
@@ -294,7 +297,7 @@
                                 $IncludeRegex.Matches($Data) | Foreach-Object {
                                     $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
                                     If (Test-Path $IncludeFile -PathType Leaf) {
-                                        $IncludeData = Get-Content $IncludeFile -Raw
+                                        $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
                                         $Data = $Data -Replace $_.Value, $IncludeData
                                     }
                                 }
