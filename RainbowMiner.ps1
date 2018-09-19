@@ -183,6 +183,8 @@ $RunSetup = $false
 $IsInitialSetup = $false
 $IsDonationRun = $false
 
+$MaximumErrorCount = 4
+
 [hashtable]$Updatetracker = @{
     Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
     APIs = [hashtable]@{}
@@ -1592,7 +1594,7 @@ while ($true) {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it RainbowMiner, [S]kip switching prevention, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
     if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
     $keyPressed = $false

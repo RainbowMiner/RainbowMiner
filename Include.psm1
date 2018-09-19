@@ -3137,6 +3137,8 @@ function Start-AsyncLoader {
         [System.Collections.ArrayList]$AsyncLoader.Error = @()
         $AsyncLoader.CycleTime = 10
 
+        $MaximumErrorCount = 4
+
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
