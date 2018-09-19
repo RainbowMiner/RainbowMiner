@@ -174,6 +174,8 @@ $SkipSwitchingPrevention = $false
 $StartDownloader = $false
 $PauseMiners = $false
 $RestartMiners = $false
+$Restart = $false
+$AutoUpdate = $false
 $Readers = [PSCustomObject]@{}
 $ShowTimer = $false
 $MSIAcurrentprofile = -1
@@ -410,18 +412,7 @@ while ($true) {
         if ($StartAPI) {
             Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
             $API.Version = Confirm-Version $Version
-            if ($API.Version.RemoteVersion -gt $API.Version.Version) {
-                if ($Config.EnableAutoUpdate) {
-                    Write-Host "Automatic update to v$($API.Version.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
-                    $AutoUpdate = $Stopp = $API.Update = $true
-                    for($i=0;$i -le 20;$i++) {
-                        Write-Host "." -NoNewline
-                        Sleep -Milliseconds 500
-                    }
-                    Write-Host " "
-                    break
-                }            
-            }
+            if ($API.Version.RemoteVersion -gt $API.Version.Version -and $Config.EnableAutoUpdate) {$AutoUpdate = $API.Update = $true}
         }
     } else {
         $API = [hashtable]@{}
@@ -1276,7 +1267,7 @@ while ($true) {
         }
     }
 
-    if (-not $PauseMiners -and $BestMiners_Profitable) {
+    if (-not $PauseMiners -and -not $AutoUpdate -and $BestMiners_Profitable) {
         $BestMiners_Combo | ForEach-Object {$_.Best = $true}
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
@@ -1695,9 +1686,15 @@ while ($true) {
                     $keyPressed = $true
                 }
                 "U" {
-                    $AutoUpdate = $Stopp = $true
+                    $AutoUpdate = $true
                     Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
                     Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
+                    $keyPressed = $true
+                }
+                "R" {
+                    $Restart = $true
+                    Write-Log "User requests to restart RainbowMiner."
+                    Write-Host -NoNewline "[R] pressed - restarting RainbowMiner."
                     $keyPressed = $true
                 }
             }
@@ -1750,6 +1747,23 @@ while ($true) {
     #Cleanup stopped miners
     $StoppedMiners | Foreach-Object {$_.StopMiningPostCleanup()}
     Remove-Variable "StoppedMiners"
+
+    if ($Restart -or $AutoUpdate) {
+        if ($AutoUpdate) {& .\Updater.ps1}
+        $StartCommand = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object -ExpandProperty CommandLine
+        $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}
+        Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black
+        $wait = 0;while ($wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
+        $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
+        Write-Host " "
+        if (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {
+            Write-Log -Level Warn "Failed to start new instance of RainbowMiner"
+            if ($AutoUpdate) {Write-Log -Level Warn "RainbowMiner autoupdated to version $($ConfirmedVersion.RemoteVersion) but failed to restart."}
+        } else {
+            $Stopp = $true
+        }
+        $AutoUpdate = $false
+    }
 
     if ($Stopp) {
         break
