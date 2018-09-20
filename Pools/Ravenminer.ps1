@@ -17,7 +17,7 @@ try {
     if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name)){throw}
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     $Success = $false
 }
 
@@ -27,7 +27,7 @@ if ( -not $Success ) {
         if (-not ($Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name)){throw}
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         $Success = $false
     }
 }
@@ -41,7 +41,7 @@ if ( -not $Success ) {
         $DataWindow = "actual_last24h"
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         $Success = $false
     }
 }

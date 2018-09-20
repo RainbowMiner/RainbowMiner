@@ -19,7 +19,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://api.blazepool.com/status" -retry 3 -retrywait 500 -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -33,7 +33,7 @@ try {
     #$PoolCoins_Request = Invoke-RestMethodAsync "http://api.blazepool.com/currencies" -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
 }
 

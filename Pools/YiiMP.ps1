@@ -18,7 +18,7 @@ try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/currencies" -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -32,7 +32,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://api.yiimp.eu/api/status" -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool status API ($Name) has failed. "
 }
 

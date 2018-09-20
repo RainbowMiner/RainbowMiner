@@ -43,8 +43,6 @@
 
         $BasePath = "$PWD\web"
 
-        $MaximumErrorCount = 4
-
         # List of possible mime types for files
         $MIMETypes = @{
             ".js" = "application/x-javascript"

@@ -623,7 +623,7 @@ do {
                 $GlobalSetupStep++
             }
             catch {
-                $Error.Remove($Error[$Error.Count - 1])
+                if ($Error.Count){$Error.RemoveAt(0)}
                 if (@("back","<") -icontains $_.Exception.Message) {
                     if ($GlobalSetupStepBack.Count) {$GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)}
                 }
@@ -770,7 +770,7 @@ do {
                     $MinerSetupStep++
                 }
                 catch {
-                    $Error.Remove($Error[$Error.Count - 1])
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     if (@("back","<") -icontains $_.Exception.Message) {
                         if ($MinerSetupStepBack.Count) {$MinerSetupStep = $MinerSetupStepBack[$MinerSetupStepBack.Count-1];$MinerSetupStepBack.RemoveAt($MinerSetupStepBack.Count-1)}
                     }
@@ -999,7 +999,7 @@ do {
                             $PoolSetupStep++
                         }
                         catch {
-                            $Error.Remove($Error[$Error.Count - 1])
+                            if ($Error.Count){$Error.RemoveAt(0)}
                             if (@("back","<") -icontains $_.Exception.Message) {
                                 if ($PoolSetupStepBack.Count) {$PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)}
                             }
@@ -1031,7 +1031,7 @@ do {
                 Write-Host " "
                 if (-not (Read-HostBool "Edit another pool?")){throw}
                         
-            } catch {$Error.Remove($Error[$Error.Count - 1]);$PoolSetupDone = $true}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$PoolSetupDone = $true}
         } until ($PoolSetupDone)
     }
     elseif ($SetupType -eq "D") {
@@ -1114,7 +1114,7 @@ do {
                             $DeviceSetupStep++
                         }
                         catch {
-                            $Error.Remove($Error[$Error.Count - 1])
+                            if ($Error.Count){$Error.RemoveAt(0)}
                             if (@("back","<") -icontains $_.Exception.Message) {
                                 if ($DeviceSetupStepBack.Count) {$DeviceSetupStep = $DeviceSetupStepBack[$DeviceSetupStepBack.Count-1];$DeviceSetupStepBack.RemoveAt($DeviceSetupStepBack.Count-1)}
                             }
@@ -1146,7 +1146,7 @@ do {
                 Write-Host " "
                 if (-not (Read-HostBool "Edit another device?")){throw}
                         
-            } catch {$Error.Remove($Error[$Error.Count - 1]);$DeviceSetupDone = $true}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$DeviceSetupDone = $true}
         } until ($DeviceSetupDone)
     }
     elseif ($SetupType -eq "O") {
@@ -1267,7 +1267,7 @@ do {
                             $OCProfileSetupStep++
                         }
                         catch {
-                            $Error.Remove($Error[$Error.Count - 1])
+                            if ($Error.Count){$Error.RemoveAt(0)}
                             if (@("back","<") -icontains $_.Exception.Message) {
                                 if ($OCProfileSetupStepBack.Count) {$OCProfileSetupStep = $OCProfileSetupStepBack[$OCProfileSetupStepBack.Count-1];$OCProfileSetupStepBack.RemoveAt($OCProfileSetupStepBack.Count-1)}
                             }
@@ -1299,7 +1299,7 @@ do {
                 Write-Host " "
                 if (-not (Read-HostBool "Edit another device?")){throw}
                         
-            } catch {$Error.Remove($Error[$Error.Count - 1]);$OCProfileSetupDone = $true}
+            } catch {if ($Error.Count){$Error.RemoveAt(0)};$OCProfileSetupDone = $true}
         } until ($OCProfileSetupDone)
     }
 } until (-not $RunSetup)

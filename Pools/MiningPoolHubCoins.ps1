@@ -24,7 +24,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getminingandprofitsstatistics&{timestamp}" -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }

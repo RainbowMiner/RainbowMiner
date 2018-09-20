@@ -41,7 +41,7 @@ function Confirm-Version {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Github could not be reached. "
     }
     [PSCustomObject]@{
@@ -95,7 +95,8 @@ function Get-Balance {
         $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($CurrenciesWithBalances -join ",")&tsyms=$($CurrenciesToExchange -join ",")&extraParams=https://github.com/rainbowminer/RainbowMiner"
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        Write-Log -Level Warn "Cryptocompare API for $($CurrenciesWithBalances -join ",") to $($CurrenciesToExchange -join ",") has failed. "
+        if ($Error.Count){$Error.RemoveAt(0)}
         $RatesAPI = [PSCustomObject]@{}
         $CurrenciesWithBalances | Foreach-Object {
             $Currency = $_
@@ -172,16 +173,13 @@ function Get-CoinSymbol {
     param($CoinName = "Bitcoin",[Switch]$Silent)
     
     if (-not (Test-Path Variable:Global:GlobalCoinmarketCapList) -or -not $Global:GlobalCoinmarketCapList.Count) {
-        $OldEAP = $ErrorActionPreference
-        $ErrorActionPreference = "Stop"
         try {
             $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
         catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Coinmarketcap API (listings) has failed. "
         }
-        $ErrorActionPreference = $OldEAP
 
         if ($Request.data -eq $null -or $Request.data.Count -le 100) {
             Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
@@ -228,7 +226,7 @@ function Get-Ticker {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Cryptocompare API for $($Symbol) to $($Convert) has failed. "
     }
 }
@@ -245,8 +243,8 @@ Function Write-Log {
         # Inherit the same verbosity settings as the script importing this
         if (-not $PSBoundParameters.ContainsKey('InformationPreference')) { $InformationPreference = $PSCmdlet.GetVariableValue('InformationPreference') }
         if (-not $PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
-        if (-not $PSBoundParameters.ContainsKey('Debug')) { $DebugPreference = $PSCmdlet.GetVariableValue('DebugPreference') }
-
+        if (-not $PSBoundParameters.ContainsKey('Debug')) {$DebugPreference = $PSCmdlet.GetVariableValue('DebugPreference')}
+        
         # Get mutex named MPMWriteLog. Mutexes are shared across all threads and processes.
         # This lets us ensure only one thread is trying to write to the file at a time.
         $mutex = New-Object System.Threading.Mutex($false, "MPMWriteLog")
@@ -283,7 +281,8 @@ Function Write-Log {
 
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
-            "$date $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
+            $p = get-process -id $PID | select PM,WS
+            "$date [$("{0:f2}" -f ($p.WS/1048576)) $("{0:f2}" -f ($p.PM/1048576))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -420,7 +419,7 @@ function Set-Stat {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
 
         $Stat = [PSCustomObject]@{
@@ -517,7 +516,7 @@ function Get-Stat {
                 $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }
             catch {
-                $Error.Remove($Error[$Error.Count - 1])
+                if ($Error.Count){$Error.RemoveAt(0)}
                 #Remove broken stat file
                 Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
                 if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
@@ -542,7 +541,7 @@ function Get-ChildItemContent {
         if ($Expression -is [String]) {
             if ($Expression -match '(\$|")') {
                 try {$Expression = Invoke-Expression $Expression}
-                catch {$Error.Remove($Error[$Error.Count - 1]);$Expression = Invoke-Expression "`"$Expression`""}
+                catch {if ($Error.Count){$Error.RemoveAt(0)};$Expression = Invoke-Expression "`"$Expression`""}
             }
         }
         elseif ($Expression -is [PSCustomObject]) {
@@ -570,7 +569,7 @@ function Get-ChildItemContent {
                     ($_ | Get-Content | ConvertFrom-Json) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
                 catch [ArgumentException] {
-                    $Error.Remove($Error[$Error.Count - 1])
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     $null
                 }
                 foreach ($k in $Parameters.Keys) {Remove-Variable $k -ErrorAction Ignore}
@@ -585,7 +584,7 @@ function Get-ChildItemContent {
                 [PSCustomObject]@{Name = $Name; BaseName = $Name; Content = $c}
             }
         }
-        if ($Force) {
+        if ($Force -and $Content) {
             foreach ($k in $Parameters.Keys) {
                 if (-not (Get-Member -InputObject $Content -Name $k -Membertype Properties)) {
                     $Content | Add-Member $k $Parameters.$k -Force 
@@ -1052,6 +1051,10 @@ function Invoke-TcpRequest {
         if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}
         $Response = $Reader.ReadLine()
     }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Could not request from $($Server):$($Port)"
+    }
     finally {
         if ($Reader) {$Reader.Close()}
         if ($Writer) {$Writer.Close()}
@@ -1082,6 +1085,10 @@ function Invoke-TcpRead {
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Response = $Reader.ReadToEnd()
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Could not read from $($Server):$($Port)"
     }
     finally {
         if ($Reader) {$Reader.Close()}
@@ -1200,7 +1207,7 @@ function Get-Device {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "OpenCL device detection has failed: $($_.Exception.Message)"
     }
 
@@ -1209,7 +1216,7 @@ function Get-Device {
         if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
         if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
-            try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {$Error.Remove($Error[$Error.Count - 1])}
+            try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
         if ($Global:GlobalCPUInfo.Features -eq $null) {
              $Global:GlobalCPUInfo | Add-Member Features ([PSCustomObject]@{
@@ -1232,7 +1239,7 @@ function Get-Device {
         }        
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "CIM CPU detection has failed. "
     }
    
@@ -1264,7 +1271,7 @@ function Get-Device {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "CIM CPU detection has failed. "
     }
 
@@ -1285,7 +1292,7 @@ function Start-Afterburner {
     try {
         Add-Type -Path ".\Includes\MSIAfterburner.NET.dll"
     } catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log "Failed to load Afterburner interface library"
         $Script:abMonitor = $false
         $Script:abControl = $false
@@ -1295,14 +1302,14 @@ function Start-Afterburner {
     try {
         $Script:abMonitor = New-Object MSI.Afterburner.HardwareMonitor
     } catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log "Failed to create MSI Afterburner Monitor object. Falling back to standard monitoring."
         $Script:abMonitor = $false
     }
     try {
         $Script:abControl = New-Object MSI.Afterburner.ControlMemory
     } catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log "Failed to create MSI Afterburner Control object. Overclocking non-NVIDIA devices will not be available."
         $Script:abControl = $false
     }
@@ -1322,7 +1329,7 @@ function Get-AfterburnerDevices ($Type) {
     try {
         $Script:abControl.ReloadAll()
     } catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
         return
     }
@@ -1437,7 +1444,7 @@ function Update-DeviceInformation {
                                         try {
                                             if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
                                         } catch {
-                                            $Error.Remove($Error[$Error.Count - 1])
+                                            if ($Error.Count){$Error.RemoveAt(0)}
                                             $AdlResultSplit[$i] = $ibak
                                         }
                                     }
@@ -1464,7 +1471,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from AMD"
         }
 
@@ -1514,7 +1521,7 @@ function Update-DeviceInformation {
                 }
             }
         } catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from NVIDIA"
         }
     }
@@ -1560,7 +1567,7 @@ function Update-DeviceInformation {
             }
         }
     } catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not read power data from CPU"
     }
 }
@@ -2031,7 +2038,7 @@ class Miner {
             $Script:abMonitor.ReloadAll()
             $Script:abControl.ReloadAll()
         } catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
             return
         }
@@ -2055,7 +2062,7 @@ class Miner {
                 $Script:abMonitor.ReloadAll()
                 $Script:abControl.ReloadAll()
             } catch {
-                $Error.Remove($Error[$Error.Count - 1])
+                if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
                 return
             }
@@ -2092,10 +2099,10 @@ class Miner {
                         if ($DeviceId -in $DeviceIds) {
                             $GpuEntry = $Script:abControl.GpuEntries[$_]
                             $ProfileBackup = [hashtable]@{}
-                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$ProfileBackup.PowerLimitCur = $GpuEntry.PowerLimitCur;$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}} catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}} catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$ProfileBackup.PowerLimitCur = $GpuEntry.PowerLimitCur;$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                             if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
                             if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null;$applied_any=$true}
                         }
@@ -2200,7 +2207,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] W32Time Service is not running and could not be started!"
         return
     }
@@ -2237,7 +2244,7 @@ function Test-TimeSync {
         }
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] No configured nameservers found in registry"
         return
     }
@@ -2256,7 +2263,7 @@ function Test-TimeSync {
         }
     }
     catch { 
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "[Test-TimeSync] Something went wrong"
     }
 
@@ -2492,7 +2499,7 @@ function Set-ContentJson {
                 Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
             }
             return $true
-        } catch {$Error.Remove($Error[$Error.Count - 1])}
+        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         $retry--
         Sleep -Seconds 1
     } until ($retry -le 0)
@@ -2533,7 +2540,7 @@ function Set-MinersConfigDefault {
                         }) -Force
                 }
             }
-            catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
         }
 
         try {
@@ -2599,7 +2606,7 @@ function Set-MinersConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -2616,7 +2623,7 @@ function Set-DevicesConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
             try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
@@ -2637,7 +2644,7 @@ function Set-DevicesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -2655,7 +2662,7 @@ function Set-PoolsConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
             try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
@@ -2692,7 +2699,7 @@ function Set-PoolsConfigDefault {
             }
         }
         catch{
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
@@ -2709,7 +2716,7 @@ function Set-OCProfilesConfigDefault {
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
             try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {$Error.Remove($Error[$Error.Count - 1]);Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
         }
 
         try {
@@ -2720,7 +2727,7 @@ function Set-OCProfilesConfigDefault {
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }    
@@ -2734,7 +2741,7 @@ function ConvertFrom-CPUAffinity {
         [Parameter(Mandatory = $False)]
         [switch]$ToInt
     )
-    try {$AffinityInt = [Convert]::ToInt32($Affinity,16)}catch{$Error.Remove($Error[$Error.Count - 1]);$AffinityInt=0}
+    try {$AffinityInt = [Convert]::ToInt32($Affinity,16)}catch{if ($Error.Count){$Error.RemoveAt(0)};$AffinityInt=0}
     if ($ToInt) {$AffinityInt}
     else {@(for($a=0;$AffinityInt -gt 0;$a++) {if ($AffinityInt -band 1){$a};$AffinityInt=$AffinityInt -shr 1})}
 }
@@ -2931,7 +2938,7 @@ function Set-ActiveTcpPorts {
         $NewPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
         if ($NewPorts.Count -gt 0 ) {$Global:GlobalActiveTcpPorts.AddRange($NewPorts)>$null}
         $NewPorts = $null
-    } catch {$Error.Remove($Error[$Error.Count - 1]);$Global:GlobalActiveTcpPorts=$null}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};$Global:GlobalActiveTcpPorts=$null}
 }
 
 function Get-MinerPort{
@@ -3076,21 +3083,20 @@ Param(
 
         do {
             $Request = $RequestError = $null
-            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")            
-            try {                
+            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+            try {
                 if ($AsyncLoader.Jobs.$Jobkey.Method -eq "REST") {
-                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -DisableKeepAlive -Method Get
+                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get 2>$null
                 } else {
-                    $Request = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -DisableKeepAlive -Method Get
+                    $Request = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get 2>$null
                 }
                 $AsyncLoader.Jobs.$Jobkey.Success++
             }
             catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($RequestUrl) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
-                $AsyncLoader.Jobs.$Jobkey.Fail++
-                $Error.Remove($Error[$Error.Count - 1])
+                $AsyncLoader.Jobs.$Jobkey.Fail++                
             }
-
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
 
             $retry--
@@ -3128,39 +3134,41 @@ function Start-AsyncLoader {
     $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
-    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
-        
+    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({        
         Import-Module ".\Include.psm1"
+
+        # Set the starting directory
+        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
         $AsyncLoader.Stop = $false
         $AsyncLoader.Cycle = -1
         [hashtable]$AsyncLoader.Jobs = @{}
-        [System.Collections.ArrayList]$AsyncLoader.Error = @()
+        [System.Collections.ArrayList]$AsyncLoader.Errors = @()
         $AsyncLoader.CycleTime = 10
-
-        $MaximumErrorCount = 4
+        $ProgressPreference = "SilentlyContinue"
+        $ErrorActionPreference = "SilentlyContinue"
 
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
             if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[GC]::Collect()}
-            try {                
-                foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
-                    $Job = $AsyncLoader.Jobs.$Jobkey
-                    if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+            foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
+                $Job = $AsyncLoader.Jobs.$Jobkey
+                if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+                    try {
                         Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$AsyncLoader.Error.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$AsyncLoader.Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                    }
+                    catch {
+                        $AsyncLoader.Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
+                        if ($Error.Count){$Error.RemoveAt(0)}
                     }
                 }
-            }
-            catch {
-                $AsyncLoader.Error.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                $Error.Remove($Error[$Error.Count - 1])
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append;$Error.Clear()}            
-            if ($AsyncLoader.Error.Count) {$AsyncLoader.Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append;$AsyncLoader.Error.Clear()}            
+            if ($AsyncLoader.Errors.Count) {$AsyncLoader.Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append;$AsyncLoader.Errors.Clear()}            
         }
     });
 

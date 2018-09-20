@@ -184,8 +184,6 @@ $RunSetup = $false
 $IsInitialSetup = $false
 $IsDonationRun = $false
 
-$MaximumErrorCount = 4
-
 [hashtable]$Updatetracker = @{
     Config = [hashtable]@{ConfigFile=0;PoolsConfigFile=0;MinersConfigFile=0}
     APIs = [hashtable]@{}

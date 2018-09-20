@@ -56,7 +56,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
         catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Downloader-error: $($_.Exception.Message)"
             if ($URI) {Write-Log -Level Warn "Cannot download $($Path) distributed at $($URI). "}
             else {Write-Log -Level Warn "Cannot download $($Path). "}

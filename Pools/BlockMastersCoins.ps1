@@ -20,7 +20,7 @@ try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
     return
 }
@@ -34,7 +34,7 @@ try {
     $Pool_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/status" -retry 3 -retrywait 500 -tag $Name
 }
 catch {
-    $Error.Remove($Error[$Error.Count - 1])
+    if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool status API ($Name) has failed. "
 }
 

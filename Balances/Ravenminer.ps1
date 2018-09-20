@@ -37,7 +37,7 @@ $Ravenminer_Regions | ForEach-Object {
         if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){$Success = $false}
     }
     catch {
-        $Error.Remove($Error[$Error.Count - 1])
+        if ($Error.Count){$Error.RemoveAt(0)}
         $Success=$false
     }
 
@@ -57,7 +57,7 @@ $Ravenminer_Regions | ForEach-Object {
             }
         }
         catch {
-            $Error.Remove($Error[$Error.Count - 1])
+            if ($Error.Count){$Error.RemoveAt(0)}
             $Success=$false
         }
     }
