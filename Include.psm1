@@ -3147,6 +3147,8 @@ function Start-AsyncLoader {
         $AsyncLoader.CycleTime = 10
         $ProgressPreference = "SilentlyContinue"
         $ErrorActionPreference = "SilentlyContinue"
+        $WarningPreference = "SilentlyContinue"
+        $InformationPreference = "SilentlyContinue"
 
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
