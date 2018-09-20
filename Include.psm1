@@ -2824,9 +2824,8 @@ function Get-YiiMPValue {
     }
     if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
     if ($values.count -eq 3 -and -not $values.ContainsValue(0)) {
-        if ($values["estimate_last24h"]/$values["estimate_current"] -gt 10) {
-            $values["estimate_last24h"] = ($values["estimate_current"]+$values["actual_last24h"])/2
-        }
+        if ($values["estimate_last24h"]/$values["estimate_current"] -gt 10) {$values["estimate_last24h"] = ($values["estimate_current"]+$values["actual_last24h"])/2}
+        elseif ($values["estimate_current"]/$values["estimate_last24h"] -gt 10) {$values["estimate_current"] = ($values["estimate_last24h"]+$values["actual_last24h"])/2}
     }
 
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
@@ -3180,6 +3179,7 @@ function Start-AsyncLoader {
 
 function Stop-AsyncLoader {
     $Global:AsyncLoader.Stop = $true
+    $Global:AsyncLoader.Loader.EndInvoke($AsyncLoader.Handle)
     $Global:AsyncLoader.Loader.dispose()
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 }
