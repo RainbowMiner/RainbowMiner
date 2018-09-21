@@ -128,7 +128,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.7.4"
+$Version = "3.8.7.5"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -301,6 +301,9 @@ try {
         }
         Remove-Item ".\Cleanup.ps1" -Force
     }
+
+    #Remove stuck update
+    if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force}
 
     #write version to data
     Set-ContentJson -PathToFile ".\Data\Version.json" -Data ([PSCustomObject]@{Version=$Version}) > $null
@@ -754,7 +757,8 @@ while ($true) {
     $API.NewPools = $NewPools
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
-    #since mining is probably still working.  Then it filters out any algorithms that aren't being used.    
+    #since mining is probably still working.  Then it filters out any algorithms that aren't being used. 
+    if ($Readdding = Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject) {Write-Log "Readding pools $($Readding -join ", ")"}
     $AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) |
         Where-Object {
             $Pool = $_
@@ -1756,21 +1760,32 @@ while ($true) {
     $StoppedMiners | Foreach-Object {$_.StopMiningPostCleanup()}
     Remove-Variable "StoppedMiners"
 
+
     if ($Restart -or $AutoUpdate) {
-        if ($AutoUpdate) {& .\Updater.ps1}
-        $StartCommand = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object -ExpandProperty CommandLine
-        $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}
-        Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black
-        $wait = 0;while ($wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
-        $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
-        Write-Host " "
-        if (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {
-            Write-Log -Level Warn "Failed to start new instance of RainbowMiner"
-            if ($AutoUpdate) {Write-Log -Level Warn "RainbowMiner autoupdated to version $($ConfirmedVersion.RemoteVersion) but failed to restart."}
-        } else {
-            $Stopp = $true
+        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+        if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            if ($AutoUpdate) {& .\Updater.ps1}
+            try {
+                $StartCommand = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object -ExpandProperty CommandLine
+                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}
+                Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black
+                $wait = 0;while ($wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
+                $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
+                Write-Host " "
+                if (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) {$Stopp = $true;$AutoUpdate = $false}
+            }
+            catch {
+            }
         }
-        $AutoUpdate = $false
+        if (-not $Stopp) { #fallback to old updater           
+            if ($AutoUpdate) {
+                Write-Log -Level Warn "Failed to start new instance of RainbowMiner. Switching to legacy update."                
+                $Stopp = $true
+            } else {
+                Write-Log -Level Warn "Restart not possible, since RainbowMiner has not been started with administrator rights"
+                $Restart = $false
+            }
+        }
     }
 
     if ($Stopp) {

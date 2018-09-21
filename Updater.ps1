@@ -12,6 +12,10 @@ if (-not (Test-Path ".\Data\Version.json")) {
     exit
 }
 
+if (Test-Path "Start.bat.saved") {
+    exit
+}
+
 $RBMVersion = Confirm-Version (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version -Force -Silent
 
 $Name = "RainbowMiner"
