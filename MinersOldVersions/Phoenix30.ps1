@@ -7,10 +7,10 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5d-phoenixminer/PhoenixMiner_3.5d_Windows.zip"
+$Path = ".\Bin\Ethash-Phoenix30\PhoenixMiner.exe"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0c-phoenixminer/PhoenixMiner_3.0c.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
-$Port = "308{0:d2}"
+$Port = "323{0:d2}"
 $DevFee = 0.65
 $Cuda = "6.5"
 
@@ -42,7 +42,7 @@ if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -R
 
 $Devices = @($Devices.AMD | Select-Object) + @($Devices.NVIDIA | Select-Object)
 
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
+$Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
@@ -62,7 +62,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
 
             $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
-
+           
             if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {$Miner_Protocol_Params = "-proto 4 -stales 0"}
             else {$Miner_Protocol_Params = "-proto 1"}          
 
@@ -71,7 +71,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -leaveoc -coin auto -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
+                Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -coin auto -di $($DeviceIDsAll) -pool $($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port
