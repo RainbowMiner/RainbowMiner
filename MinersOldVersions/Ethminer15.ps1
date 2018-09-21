@@ -7,10 +7,10 @@ param(
     [PSCustomObject]$Devices
 )
 
-$Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.16.0/ethminer-0.16.0-windows-amd64.zip"
+$Path = ".\Bin\Ethash-Ethminer15\ethminer.exe"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.15.0/ethminer-0.15.0-Windows.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
-$Port = "301{0:d2}"
+$Port = "322{0:d2}"
 $DevFee = 0.0
 $Cuda = "6.5"
 
