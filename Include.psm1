@@ -10,6 +10,20 @@ function Get-Version {
     [System.Version]($Version -Split '-' -Replace "[^0-9.]")[0]
 }
 
+function Compare-Version {
+    [CmdletBinding()]
+    param($Version1,$Version2)
+    $ver1 = $Version1 -split '\.'
+    $ver2 = $Version2 -split '\.'
+    $max = [Math]::min($ver1.Count,$ver2.Count)
+
+    for($i=0;$i -lt $max;$i++) {
+        if ($ver1[$i] -lt $ver2[$i]) {return -1}
+        if ($ver1[$i] -gt $ver2[$i]) {return 1}
+    }
+    return 0
+}
+
 function Confirm-Version {
     [CmdletBinding()]
     param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
@@ -56,9 +70,15 @@ function Confirm-Cuda {
    [CmdletBinding()]
    param($ActualVersion,$RequiredVersion,$Warning = "")
    if (-not $RequiredVersion) {return $true}
-   if ($ActualVersion -eq [string]) {$ActualVersion = Get-Version $ActualVersion}
-   if ($RequiredVersion -eq [string]) {$RequiredVersion = Get-Version $RequiredVersion}
-   if ($ActualVersion -lt $RequiredVersion) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};$false} else {$true}
+    $ver1 = $ActualVersion -split '\.'
+    $ver2 = $RequiredVersion -split '\.'
+    $max = [Math]::min($ver1.Count,$ver2.Count)
+
+    for($i=0;$i -lt $max;$i++) {
+        if ($ver1[$i] -lt $ver2[$i]) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
+        if ($ver1[$i] -gt $ver2[$i]) {return $true}
+    }
+    $true
 }
 
 function Get-PoolPayoutCurrencies {

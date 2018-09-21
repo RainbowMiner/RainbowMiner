@@ -566,7 +566,7 @@ while ($true) {
         [hashtable]$DevicesToVendors = @{}
 
         $Config | Add-Member DeviceModel @($Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
-        $Config | Add-Member CUDAVersion $(if (($DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {Get-Version $Matches[1]}else{$false})
+        $Config | Add-Member CUDAVersion $(if (($DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false})
 
         #Create combos
         @($DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
