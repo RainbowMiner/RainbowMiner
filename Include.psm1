@@ -2824,8 +2824,7 @@ function Get-YiiMPValue {
     }
     if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
     if ($values.count -eq 3 -and -not $values.ContainsValue(0)) {
-        if ($values["estimate_last24h"]/$values["estimate_current"] -gt 10) {$values["estimate_last24h"] = ($values["estimate_current"]+$values["actual_last24h"])/2}
-        elseif ($values["estimate_current"]/$values["estimate_last24h"] -gt 10) {$values["estimate_current"] = ($values["estimate_last24h"]+$values["actual_last24h"])/2}
+        if ($DataWindow -ne "actual_last24h" -and ($values["estimate_last24h"]/$values["actual_last24h"] -gt 5 -or $values["estimate_current"]/$values["actual_last24h"] -gt 5)) {$DataWindow = "minimum-3"}
     }
 
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
@@ -3092,9 +3091,11 @@ Param(
                 $AsyncLoader.Jobs.$Jobkey.Success++
             }
             catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($RequestUrl) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
                 $AsyncLoader.Jobs.$Jobkey.Fail++                
+            }
+            finally {
+                $Error.Clear()
             }
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
 
@@ -3108,6 +3109,7 @@ Param(
         $AsyncLoader.Jobs.$Jobkey.Request = $Request
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
+        $Error.Clear()
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
@@ -3162,7 +3164,9 @@ function Start-AsyncLoader {
                     }
                     catch {
                         $AsyncLoader.Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                        if ($Error.Count){$Error.RemoveAt(0)}
+                    }
+                    finally {
+                        $Error.Clear()
                     }
                 }
             }
