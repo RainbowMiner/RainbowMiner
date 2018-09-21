@@ -128,7 +128,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.7.1"
+$Version = "3.8.7.2"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -161,6 +161,7 @@ $DecayBase = 1 - 0.1 #decimal percentage
 $DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
 $OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow) #precalc for sync decay method
 $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
+$NextAsyncloaderYank = $Timer.AddHours(6)
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
@@ -1576,12 +1577,18 @@ while ($true) {
     }
 
     #Reduce Memory
+    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
+    $Error.Clear()
+    if ($NextAsyncLoaderYank -lt $Timer) {
+        Write-Log "Yank asyncloader"
+        Stop-AsyncLoader
+        Sleep 1
+        Start-Asyncloader
+        $NextAsyncloaderYank = $Timer.AddHours(6)
+    }
     Get-Job -State Completed | Remove-Job -Force
     [GC]::Collect()
     Sleep -Milliseconds 200
-
-    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
-    $Error.Clear()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
@@ -1698,6 +1705,13 @@ while ($true) {
                     Write-Log "User requests to restart RainbowMiner."
                     Write-Host -NoNewline "[R] pressed - restarting RainbowMiner."
                     $keyPressed = $true
+                }
+                "Y" {
+                    Stop-AsyncLoader
+                    Sleep 2
+                    Start-Asyncloader
+                    Write-Host -NoNewline "[Y] pressed - Asyncloader yanked."
+                    Write-Log "Asyncloader yanked."
                 }
             }
         }

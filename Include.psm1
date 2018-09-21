@@ -3183,9 +3183,10 @@ function Start-AsyncLoader {
 
 function Stop-AsyncLoader {
     $Global:AsyncLoader.Stop = $true
-    $Global:AsyncLoader.Loader.EndInvoke($AsyncLoader.Handle)
     $Global:AsyncLoader.Loader.dispose()
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
+    $Global:AsyncLoader.Loader = $null
+    $Global:AsyncLoader.Handle = $null
 }
 
 function Write-HostSetupHints {
