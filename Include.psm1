@@ -185,7 +185,7 @@ function Get-Balance {
     $Data | Add-Member Balances $Balances
     $Data | Add-Member Rates $RatesAPI
 
-    Return $Data
+    $Data
 }
 
 function Get-CoinSymbol {
@@ -395,7 +395,7 @@ function Set-Stat {
         if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live) {$Updated = $Stat.updated}
 
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-            Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Int]$ToleranceMin) to $([Int]$ToleranceMax)). "
+            Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Int64]$ToleranceMin) to $([Int64]$ToleranceMax)). "
         }
         else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
@@ -817,6 +817,8 @@ function Start-SubProcessInConsole {
     $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName {
         param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName)
 
+        $CurrentPwd = $pwd
+
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
 
@@ -958,7 +960,7 @@ function Start-SubProcessInConsole {
             return
         }
 
-       if ( $ProcessName -ne "" ) {
+       if ($ProcessName -ne "") {
             $wait_count = 0;
             do{
                 Start-Sleep 1;
@@ -976,7 +978,11 @@ function Start-SubProcessInConsole {
         $ControllerProcess.Handle | Out-Null
         $Process.Handle | Out-Null
 
-        do {if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}}
+        do {
+            if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}
+            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append}
+            $Error.Clear()
+        }
         while ($Process.HasExited -eq $false)
     }
 
@@ -1829,7 +1835,7 @@ class Miner {
     StopMiningPostCleanup() {}
 
     EndOfRoundCleanup() {
-        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}
+        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}        
     }
 
 
