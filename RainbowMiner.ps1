@@ -161,7 +161,6 @@ $DecayBase = 1 - 0.1 #decimal percentage
 $DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
 $OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow) #precalc for sync decay method
 $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
-$NextAsyncloaderYank = $Timer.AddHours(6)
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
@@ -1579,13 +1578,6 @@ while ($true) {
     #Reduce Memory
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
     $Error.Clear()
-    if ($NextAsyncLoaderYank -lt $Timer) {
-        Write-Log "Yank asyncloader"
-        Stop-AsyncLoader
-        Sleep 1
-        Start-Asyncloader
-        $NextAsyncloaderYank = $Timer.AddHours(6)
-    }
     Get-Job -State Completed | Remove-Job -Force
     [GC]::Collect()
     Sleep -Milliseconds 200
