@@ -440,6 +440,7 @@ class Excavator144 : Miner {
                 $this.ShutdownMiner()
             }
         }
+        ([Miner]$this).StopMiningPostCleanup()
     }
 
     EndOfRoundCleanup() {

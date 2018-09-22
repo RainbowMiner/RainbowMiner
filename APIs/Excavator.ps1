@@ -420,6 +420,7 @@ class Excavator : Miner {
     }
 
     StopMiningPostCleanup() {
+
         $Server = "localhost"
         $Timeout = 10
        
@@ -478,6 +479,7 @@ class Excavator : Miner {
                 $this.ShutdownMiner()
             }
         }
+        ([Miner]$this).StopMiningPostCleanup()
     }
 
     EndOfRoundCleanup() {

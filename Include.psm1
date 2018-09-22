@@ -1832,7 +1832,9 @@ class Miner {
         Sleep -Milliseconds 500
     }
 
-    StopMiningPostCleanup() {}
+    StopMiningPostCleanup() {
+        $this.Stopped = $false
+    }
 
     EndOfRoundCleanup() {
         if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}        

@@ -512,8 +512,9 @@ while ($true) {
         $IsDonationRun = $false
         $LastDonated = $Timer
         $Config = $UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
-        if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"}
-        $TemporaryArray.Clear(); foreach($Miner in $ActiveMiners) {if ($Miner.Donator) {$TemporaryArray.Add($Miner)>$null}}
+        Remove-Variable "UserConfig" -ErrorAction Ignore
+        $TemporaryArray.Clear(); 
+        if ($ActiveMiners.Count)   {foreach($Miner in $ActiveMiners) {if ($Miner.Donator) {$TemporaryArray.Add($Miner)>$null}}}
         if ($TemporaryArray.Count) {foreach($Miner in $TemporaryArray){$ActiveMiners.Remove($Miner);$Miner=$null}}
         $TemporaryArray.Clear()
         Write-Log "Donation run finished. "
@@ -720,8 +721,6 @@ while ($true) {
         $API.Balances = $BalancesData.Balances
     }
 
-    Remove-Variable "ConfigBackup"
-
     #Give API access to the current rates
     $API.Rates = $Rates
 
@@ -802,6 +801,7 @@ while ($true) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
         if (-not (($Pool_WatchdogTimers | Measure-Object).Count -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -lt <#statge#>2)) {$TemporaryArray.Add($Pool)>$null}
     }
+
     if ($TemporaryArray.Count) {foreach($Pool in $TemporaryArray) {$AllPools.Remove($Pool)}}
 
     #Update the active pools
@@ -899,17 +899,17 @@ while ($true) {
 
             #Gather mining statistics for fresh combos
             $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -match '-'} | Foreach-Object {
-                $ComboMiner = $_
-                $ComboAlgos = $ComboMiner.HashRates.PSObject.Properties.Name
+                $Miner = $_
+                $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
-                    Where-Object {$_.BaseName -eq $ComboMiner.BaseName -and $_.DeviceModel -notmatch '-' -and $($ComboMiner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($ComboMiner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
+                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Select-Object -ExpandProperty HashRates |
                     Measure-Object -Sum @($ComboAlgos) |
-                    Foreach-Object {$ComboMiner.HashRates."$($_.Property)" = $_.Sum * 1.001} 
+                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.001} 
                     #we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
 
-                $ComboMiner.PowerDraw = ($AllMiners | 
-                    Where-Object {$_.BaseName -eq $ComboMiner.BaseName -and $_.DeviceModel -notmatch '-' -and $($ComboMiner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($ComboMiner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
+                $Miner.PowerDraw = ($AllMiners | 
+                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Select-Object -ExpandProperty PowerDraw |
                     Measure-Object -Sum).Sum 
             }
@@ -1105,7 +1105,6 @@ while ($true) {
     }        
     $AllMiners_VersionCheck = $null
     $Miners_Downloading = $Miners_DownloadList.Count
-    Remove-Variable "Miners_DownloadList"
 
     #Open firewall ports for all miners
     if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
@@ -1119,8 +1118,6 @@ while ($true) {
             }
         }
     }
-
-    Remove-Variable "AllMiners"
 
     #Remove miners with developer fee
     if ($Config.ExcludeMinersWithFee) {$Miners = $Miners | Where-Object {($_.DevFee.PSObject.Properties.Value | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum -eq 0}}
@@ -1601,18 +1598,13 @@ while ($true) {
     }
 
     #Reduce Memory
-    Remove-Variable "Miners_Device_Combos"
-    Remove-Variable "BestMiners_Combo"
-    Remove-Variable "BestMiners_Combo_Comparison"
+    @("AllMiners","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner","Miners_Device_Combos","Miners_DownloadList","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
     [System.GC]::GetTotalMemory($true)>$null
     Sleep -Milliseconds 200
-
-    #Give API access to computerstats
-    $API.ComputerStats = $AsyncLoader.ComputerStats
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
@@ -1645,20 +1637,14 @@ while ($true) {
             }
         }
 
+        [System.GC]::GetTotalMemory($true)>$null
+
         Start-Sleep 2
 
         if (($WaitMaxI-$i) % 5 -eq 0) {
             #pick up a sample every ten seconds
-
-            if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
-                if ($Timer -gt $NextReport) {
-                    & .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL
-                    $NextReport = $Timer.AddSeconds($Config.Interval)
-                }
-            }
             Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
-            foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
-            [System.GC]::GetTotalMemory($true)>$null
+            foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}            
         }
 
         $Timer = (Get-Date).ToUniversalTime()
@@ -1736,6 +1722,13 @@ while ($true) {
         }
     }
 
+    if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
+        if ($Timer -gt $NextReport) {
+            & .\ReportStatus.ps1 -Key $Config.MinerStatusKey -WorkerName $Config.WorkerName -ActiveMiners $ActiveMiners -MinerStatusURL $Config.MinerStatusURL
+            $NextReport = $Timer.AddSeconds($Config.Interval)
+        }
+    }
+
     if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
 
     if (-not $keyPressed) {
@@ -1782,7 +1775,6 @@ while ($true) {
 
     #Cleanup stopped miners
     foreach ($Miner in $ActiveMiners) {if ($Miner.Stopped) {$Miner.StopMiningPostCleanup()}}
-
     if ($Restart -or $AutoUpdate) {
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
         if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
