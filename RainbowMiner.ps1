@@ -1101,6 +1101,8 @@ while ($true) {
         $StartDownloader = $false
     }        
     $AllMiners_VersionCheck = $null
+    $Miners_Downloading = $Miners_DownloadList.Count
+    Remove-Variable "Miners_DownloadList"
 
     #Open firewall ports for all miners
     if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
@@ -1139,7 +1141,7 @@ while ($true) {
     #Update the active miners
     if ($Miners.Count -eq 0) {
         Write-Log -Level Warn "No miners available. Press [X] to exit."
-        if ($Miners_DownloadList.Count -gt 0) {
+        if ($Miners_Downloading -gt 0) {
             Write-Host " "
             Write-Host "Downloading first miners, mining operation will start in $($Config.Interval) seconds. Command windows will popup and close during extraction. Please be patient!" -ForegroundColor Black -BackgroundColor Yellow
         }
@@ -1171,6 +1173,7 @@ while ($true) {
         $Miner.Profit_Cost = 0
         $Miner.Best = $false
         $Miner.Best_Comparison = $false
+        $Miner.Stopped = $false
     }
     $Miners | ForEach-Object {
         $Miner = $_
@@ -1294,8 +1297,6 @@ while ($true) {
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
 
-    $StoppedMiners = @()
-
     #Stop or start miners in the active list depending on if they are the most profitable
     $ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0} | Where-Object {($_.Best -EQ $false) -or $RestartMiners} | ForEach-Object {
         $Miner = $_
@@ -1318,7 +1319,7 @@ while ($true) {
                     }
                 }
             }
-            $StoppedMiners += $Miner
+            $Miner.Stopped = $true
         }
     }
 
@@ -1446,7 +1447,7 @@ while ($true) {
         Write-Host " (be patient or set CheckProfitability to 0 to resume)"
         Write-Host " "
     } else {
-        if ((-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Miners_DownloadList.Count -gt 0) {Write-Host " "}
+        if ((-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Miners_Downloading -gt 0) {Write-Host " "}
         #Display benchmarking progres
         if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left."
@@ -1468,8 +1469,8 @@ while ($true) {
                 [console]::ForegroundColor = $OldForegroundColor
             }
         }
-        if ($Miners_DownloadList.Count -gt 0) {
-            Write-Log -Level Warn "Download in progress: $($Miners_DownloadList.Count) miner$(if($Miners_DownloadList.Count -gt 1){"s"}) left. Command windows will popup during extraction."
+        if ($Miners_Downloading -gt 0) {
+            Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows will popup during extraction."
         }
     }
 
@@ -1596,17 +1597,24 @@ while ($true) {
     }
 
     #Reduce Memory
+    Remove-Variable "Miners_Device_Combos"
+    Remove-Variable "BestMiners_Combo"
+    Remove-Variable "BestMiners_Combo_Comparison"
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
     [System.GC]::GetTotalMemory($true)>$null
     Sleep -Milliseconds 200
+
+    #Give API access to computerstats
+    $API.ComputerStats = $AsyncLoader.ComputerStats
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
 
     $WaitTimer = (Get-Date).ToUniversalTime()
+    if ($StatEnd.AddSeconds(-10) -le $WaitTimer) {$StatEnd = $WaitTimer.AddSeconds(10)}
     $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
 
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
@@ -1632,15 +1640,11 @@ while ($true) {
                 Write-Host -Verbose -NoNewline "[$("*" * ($WaitMaxI - $i))$("." * $i)]"
             }
         }
-        if (($WaitMaxI-$i) % 5 -eq 0) {
-            #Give API access to computerstats
-            $API.ComputerStats = $AsyncLoader.ComputerStats
-        }
 
         Start-Sleep 2
 
-        if (($WaitMaxI-$i+1) % 5 -eq 0) {
-            #pick up a sample every ten seconds, starting after ten seconds
+        if (($WaitMaxI-$i) % 5 -eq 0) {
+            #pick up a sample every ten seconds
 
             if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
                 if ($Timer -gt $NextReport) {
@@ -1649,8 +1653,8 @@ while ($true) {
                 }
             }
             Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
-
             foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
+            [System.GC]::GetTotalMemory($true)>$null
         }
 
         $Timer = (Get-Date).ToUniversalTime()
@@ -1740,8 +1744,7 @@ while ($true) {
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
-    $ActiveMiners | ForEach-Object {
-        $Miner = $_
+    foreach ($Miner in $ActiveMiners) {
         $Miner.Speed_Live = [Double[]]@()
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $DevicesToVendors[$Miner.DeviceModel])})}
@@ -1774,9 +1777,7 @@ while ($true) {
     }
 
     #Cleanup stopped miners
-    $StoppedMiners | Foreach-Object {$_.StopMiningPostCleanup()}
-    Remove-Variable "StoppedMiners"
-
+    foreach ($Miner in $ActiveMiners) {if ($Miner.Stopped) {$Miner.StopMiningPostCleanup()}}
 
     if ($Restart -or $AutoUpdate) {
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())

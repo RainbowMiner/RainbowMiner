@@ -1719,6 +1719,7 @@ class Miner {
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
+    [Bool]$Stopped = $false
     hidden [System.Management.Automation.Job]$Process = $null
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
