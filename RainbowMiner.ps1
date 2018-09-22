@@ -513,6 +513,9 @@ while ($true) {
         $LastDonated = $Timer
         $Config = $UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"}
+        $TemporaryArray.Clear(); foreach($Miner in $ActiveMiners) {if ($Miner.Donator) {$TemporaryArray.Add($Miner)>$null}}
+        if ($TemporaryArray.Count) {foreach($Miner in $TemporaryArray){$ActiveMiners.Remove($Miner);$Miner=$null}}
+        $TemporaryArray.Clear()
         Write-Log "Donation run finished. "
     }
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated -and $AvailPools.Count -gt 0) {
@@ -1244,6 +1247,7 @@ while ($true) {
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Config.EthPillEnable
                 DataInterval         = $Config.Interval
+                Donator              = $IsDonationRun
             }
             $ActiveMiners.Add($NewMiner) > $null
         }

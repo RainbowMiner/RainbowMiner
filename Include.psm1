@@ -183,9 +183,7 @@ function Get-Balance {
     }
     
     $Data | Add-Member Balances $Balances
-    $Data | Add-Member Rates $RatesAPI
-
-    $Data
+    $Data | Add-Member Rates $RatesAPI -PassThru
 }
 
 function Get-CoinSymbol {
@@ -1720,6 +1718,7 @@ class Miner {
     [String]$EthPillEnable = "disable"
     $DataInterval
     [Bool]$Stopped = $false
+    [Bool]$Donator = $false
     hidden [System.Management.Automation.Job]$Process = $null
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
@@ -1788,8 +1787,7 @@ class Miner {
                 if ($MiningProcess = Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore) {
                     $MiningProcess.CloseMainWindow() > $null
                     # Wait up to 10 seconds for the miner to close gracefully
-                    $closedgracefully = $MiningProcess.WaitForExit(10000)
-                    if($closedgracefully) { 
+                    if($MiningProcess.WaitForExit(10000)) { 
                         Write-Log "Miner $($this.Name) closed gracefully" 
                     } else {
                         Write-Log -Level Warn "Miner $($this.Name) failed to close within 10 seconds"
@@ -1799,6 +1797,7 @@ class Miner {
                         }
                     }
                 }
+                $this.Process.MiningProcessId = 0
             }
             if ($this.Process | Get-Job -ErrorAction Ignore) {
                 $this.Process | Remove-Job -Force
