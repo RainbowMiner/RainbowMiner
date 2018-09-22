@@ -251,7 +251,7 @@ class Excavator : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $this.Data = @()
+        $this.Data.Clear()
 
         if ($this.Status -ne [MinerStatus]::Running) {
             return
@@ -670,13 +670,13 @@ class Excavator : Miner {
             $this.SetStatus([MinerStatus]::Failed)
         }
 
-        $this.Data += [PSCustomObject]@{
+        $this.Data.Add([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
-        }
+        })>$null
 
         $this.CleanupMinerData()
 

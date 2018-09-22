@@ -166,6 +166,9 @@ $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
 [System.Collections.ArrayList]$ActiveMiners = @()
 [System.Collections.ArrayList]$SelectedPoolNames = @()
 [System.Collections.ArrayList]$RunningPools = @()
+[System.Collections.ArrayList]$AllPools = @()
+[System.Collections.ArrayList]$NewPools = @()
+[System.Collections.ArrayList]$TemporaryArray = @()
 [hashtable]$Rates = @{BTC = [Double]1}
 [hashtable]$NewRates = @{}
 
@@ -505,52 +508,58 @@ while ($true) {
         $DonateDelayHours /= 2
     }
     if (-not $LastDonated) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
-    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {$Updatetracker["Config"]["ConfigFile"] = 0;$IsDonationRun = $false;$LastDonated = $Timer;if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"};Write-Log "Donation run finished. "}
+    if ($Timer.AddHours(-$DonateDelayHours) -ge $LastDonated.AddSeconds(59)) {
+        $IsDonationRun = $false
+        $LastDonated = $Timer
+        $Config = $UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+        if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"}
+        Write-Log "Donation run finished. "
+    }
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated -and $AvailPools.Count -gt 0) {
-        if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":0},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"average-2e","Penalty":0}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["balloon","bitcore","c11","ethash","equihash24x5","equihash24x7","hmq1725","lyra2re2","lyra2z","neoscrypt","phi2","sonoa","tribus","x16r","x16s","x17"]}' | ConvertFrom-Json}
-        if (-not $IsDonationRun) {
-            Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "
+        if (-not $IsDonationRun -or $ConfigCheckFields) {
+            if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":0},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"average-2e","Penalty":0}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["balloon","bitcore","c11","ethash","equihash24x5","equihash24x7","hmq1725","lyra2re2","lyra2z","neoscrypt","phi2","sonoa","tribus","x16r","x16s","x17"]}' | ConvertFrom-Json}
+            if (-not $IsDonationRun) {Write-Log "Donation run started for the next $(($LastDonated-($Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
+            if (Test-Path Variable:UserConfig) {Remove-Variable "UserConfig"}
             $UserConfig = $Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
             $IsDonationRun = $true            
-        }
-        $AvailPools | ForEach-Object {
-            $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
-            $Config.Pools | Add-Member $_ $DonationData1 -Force
-        }
-        $Updatetracker["Config"]["ConfigFile"] = 0
-        $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
-        $DonationAlgorithm = @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object)
-        if ($UserConfig.Algorithm.Count -gt 0) {$Config | Add-Member Algorithm @(@($UserConfig.Algorithm | Select-Object) + @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object) | Sort-Object -Unique)  -Force}
-        if ($UserConfig.ExcludeAlgorithm.Count -gt 0) {$Config | Add-Member ExcludeAlgorithm @(Compare-Object @($UserConfig.ExcludeAlgorithm | Select-Object) @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject | Sort-Object -Unique) -Force}
-        $Config | Add-Member ExcludeCoin @() -Force
-        $Config | Add-Member ExcludeCoinSymbol @() -Force        
-        if (-not $DonationPoolsAvail.Count) {
-            $Config | Add-Member ExcludePoolName @() -Force
-        } else {
-            $Config | Add-Member PoolName $DonationPoolsAvail -Force
-            $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
-        }
-        foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
-            foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
-                if ($Config.Pools.$p.$q -is [string]) {$Config.Pools.$p.$q = @(($Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
-                $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+            $AvailPools | ForEach-Object {
+                $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
+                $Config.Pools | Add-Member $_ $DonationData1 -Force
             }
-            $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+            #$Updatetracker["Config"]["ConfigFile"] = 0
+            $DonationPoolsAvail = Compare-Object @($DonationData.Pools) @($AvailPools) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject
+            $DonationAlgorithm = @($DonationData.Algorithm | ForEach-Object {Get-Algorithm $_} | Select-Object)
+            if ($UserConfig.Algorithm.Count -gt 0) {$Config | Add-Member Algorithm @(@($UserConfig.Algorithm | Select-Object) + @($DonationAlgorithm) | Sort-Object -Unique)  -Force}
+            if ($UserConfig.ExcludeAlgorithm.Count -gt 0) {$Config | Add-Member ExcludeAlgorithm @(Compare-Object @($UserConfig.ExcludeAlgorithm | Select-Object) @($DonationAlgorithm) | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject | Sort-Object -Unique) -Force}
+            $Config | Add-Member ExcludeCoin @() -Force
+            $Config | Add-Member ExcludeCoinSymbol @() -Force        
+            if (-not $DonationPoolsAvail.Count) {
+                $Config | Add-Member ExcludePoolName @() -Force
+            } else {
+                $Config | Add-Member PoolName $DonationPoolsAvail -Force
+                $Config | Add-Member ExcludePoolName @(Compare-Object @($AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
+            }
+            foreach ($p in @($Config.Pools.PSObject.Properties.Name)) {
+                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
+                    if ($Config.Pools.$p.$q -is [string]) {$Config.Pools.$p.$q = @(($Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
+                    $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+                }
+                $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+            }
+            $Config | Add-Member DisableExtendInterval $true -Force
         }
-        $Config | Add-Member DisableExtendInterval $true -Force
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
     }
 
     #Give API access to the current running configuration
     $API.Config = $Config
-    $API.UserConfig = $UserConfig
 
     #Clear pool cache if the pool configuration has changed
-    if ($AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {Remove-Variable "AllPools"}
+    if ($AllPools.Count -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {$AllPools.Clear()}
 
     #Clear balances if pool configuration flag has changed
-    if ($BalancesData -ne $null -and ($AllPools -eq $null -or $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesDetails -ne $Config.ShowPoolBalancesDetails -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
+    if ($BalancesData -ne $null -and ($AllPools.Count -eq 0 -or $ConfigBackup.ShowPoolBalances -ne $Config.ShowPoolBalances -or $ConfigBackup.ShowPoolBalancesDetails -ne $Config.ShowPoolBalancesDetails -or $ConfigBackup.ShowPoolBalancesExcludedPools -ne $Config.ShowPoolBalancesExcludedPools)) {Remove-Variable "BalancesData"}
 
     #load device(s) information and device combos
     if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Config.MiningMode -or (Compare-Object $Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
@@ -724,8 +733,9 @@ while ($true) {
     #Load information about the pools
     Write-Log "Loading pool information. "
     $SelectedPoolNames.Clear()
-    if (Test-Path "Pools") {        
-        $NewPools = @($AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
+    if (Test-Path "Pools") {
+        $NewPools.Clear()
+        $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
             $Pool_Name = $_
             $SelectedPoolNames.Add($Pool_Name) > $null
             [hashtable]$Pool_Config = @{Name = $Pool_Name}
@@ -739,9 +749,10 @@ while ($true) {
                 $Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor                
-                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
+                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
+                $NewPools.Add($Pool)>$null
             }
-        })
+        }
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
@@ -758,37 +769,37 @@ while ($true) {
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used. 
-    if ($Readdding = Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject) {Write-Log "Readding pools $($Readding -join ", ")"}
-    $AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_}) |
-        Where-Object {
-            $Pool = $_
-            $Pool_Name = $_.Name
-            -not (
-                (-not $Config.Pools.$Pool_Name) -or
-                ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
-                ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool_Name) -or
-                ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool_Name) -or
-                ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
-                ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-                ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
-                ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
-                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
-            )
-        }
+    Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Foreach-Object {$NewPools.Add($_)>$null}}
+    $AllPools.Clear()
+    foreach ($Pool in $NewPools) {
+        $Pool_Name = $Pool.Name
+        if (-not (
+            (-not $Config.Pools.$Pool_Name) -or
+            ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
+            ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool_Name) -or
+            ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool_Name) -or
+            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
+            ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+            ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+            ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
+            ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
+            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
+            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+        )) {$AllPools.Add($Pool)>$null}
+    }
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
 
     #Apply watchdog to pools
-    $AllPools = $AllPools | Where-Object {
-        $Pool = $_
+    $TemporaryArray.Clear()
+    foreach($Pool in $AllPools) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
-        ($Pool_WatchdogTimers | Measure-Object).Count -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -lt <#statge#>2
+        if (-not (($Pool_WatchdogTimers | Measure-Object).Count -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -lt <#statge#>2)) {$TemporaryArray.Add($Pool)>$null}
     }
+    if ($TemporaryArray.Count) {foreach($Pool in $TemporaryArray) {$AllPools.Remove($Pool)}}
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
@@ -816,7 +827,7 @@ while ($true) {
     
     #Decrease compare prices, if out of sync window
     # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
-    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated   
+    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated
     $OutOfSyncTime = $OutOfSyncTimer.AddMinutes(-$OutOfSyncWindow)
     Write-Log "Selecting best pool for each algorithm. "
     $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.StablePrice * (1 - $_.MarginOfError) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$OutOfSyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
@@ -1104,6 +1115,8 @@ while ($true) {
         }
     }
 
+    Remove-Variable "AllMiners"
+
     #Remove miners with developer fee
     if ($Config.ExcludeMinersWithFee) {$Miners = $Miners | Where-Object {($_.DevFee.PSObject.Properties.Value | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum -eq 0}}
 
@@ -1162,10 +1175,10 @@ while ($true) {
     $Miners | ForEach-Object {
         $Miner = $_
         $ActiveMiner = $ActiveMiners | Where-Object {
-            $_.Name -eq $Miner.Name -and 
-            $_.Path -eq $Miner.Path -and 
-            $_.Arguments -eq $Miner.Arguments -and 
-            $_.API -eq $Miner.API -and 
+            $_.Name -eq $Miner.Name -and
+            $_.Path -eq $Miner.Path -and
+            $_.Arguments -eq $Miner.Arguments -and
+            $_.API -eq $Miner.API -and
             $_.Port -eq $Miner.Port -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
@@ -1191,6 +1204,7 @@ while ($true) {
             $ActiveMiner.EthPillEnable = $Config.EthPillEnable
         }
         else {
+            Write-Log "New miner object for $($Miner.BaseName)"
             $NewMiner = New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 BaseName             = $Miner.BaseName
@@ -1231,6 +1245,8 @@ while ($true) {
             $ActiveMiners.Add($NewMiner) > $null
         }
     }
+
+    $ActiveMiners_DeviceNames = @($ActiveMiners.DeviceName | Select-Object -Unique | Sort-Object)
 
     #Don't penalize active miners
     foreach($Miner in $ActiveMiners) {if ($SkipSwitchingPrevention -or ($Miner.GetStatus() -eq [MinerStatus]::Running)) {$Miner.Profit_Bias = $Miner.Profit_Unbias}}
@@ -1582,8 +1598,9 @@ while ($true) {
     #Reduce Memory
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
     $Error.Clear()
+    $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
-    [GC]::Collect()
+    [System.GC]::GetTotalMemory($true)>$null
     Sleep -Milliseconds 200
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
@@ -1616,8 +1633,6 @@ while ($true) {
             }
         }
         if (($WaitMaxI-$i) % 5 -eq 0) {
-            #get data from downloader every ten seconds, starting at once
-            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
             #Give API access to computerstats
             $API.ComputerStats = $AsyncLoader.ComputerStats
         }
@@ -1633,9 +1648,9 @@ while ($true) {
                     $NextReport = $Timer.AddSeconds($Config.Interval)
                 }
             }
-            Update-DeviceInformation @($ActiveMiners.DeviceName | Select-Object -Unique) -UseAfterburner (-not $Config.DisableMSIAmonitor)
+            Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
 
-            $ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | ForEach-Object {$_.UpdateMinerData() > $null}
+            foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
         }
 
         $Timer = (Get-Date).ToUniversalTime()
@@ -1712,6 +1727,8 @@ while ($true) {
             }
         }
     }
+
+    if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
 
     if (-not $keyPressed) {
         $host.UI.RawUI.CursorPosition = $CursorPosition

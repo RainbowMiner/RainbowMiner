@@ -31,13 +31,13 @@ class Lol : Miner {
         $HashRate_Value = [Int64]$HashRate_Value
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $this.Data += [PSCustomObject]@{
+            $this.Data.Add([PSCustomObject]@{
                 Date     = (Get-Date).ToUniversalTime()
                 Raw      = $Response
                 HashRate = $HashRate
                 PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
                 Device   = @()
-            }
+            })>$null
         }
 
         $this.CleanupMinerData()

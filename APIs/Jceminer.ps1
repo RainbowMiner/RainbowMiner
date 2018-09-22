@@ -49,13 +49,13 @@ class Jceminer : Miner {
 
         $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
 
-        $this.Data += [PSCustomObject]@{
+        $this.Data.Add([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
-        }
+        })>$null
 
         $this.CleanupMinerData()
 

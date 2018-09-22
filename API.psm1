@@ -335,7 +335,7 @@
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append}
             $Error.Clear()
-            [GC]::Collect()
+            [System.GC]::GetTotalMemory($true)>$null
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()

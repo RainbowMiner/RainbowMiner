@@ -36,13 +36,13 @@ class BMiner : Miner {
             }
         }
 
-        $this.Data += [PSCustomObject]@{
+        $this.Data.Add([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
-        }
+        })>$null
 
         $this.CleanupMinerData()
 

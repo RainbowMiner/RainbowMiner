@@ -1723,7 +1723,7 @@ class Miner {
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
-    hidden [Array]$Data = @()
+    hidden [System.Collections.ArrayList]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [System.Collections.ArrayList]$OCprofileBackup = @()
     hidden [Int]$EthPill = 0
@@ -1780,7 +1780,7 @@ class Miner {
     hidden StopMining() {
         $this.Status = [MinerStatus]::Failed
 
-        $this.Data = @()
+        $this.Data.Clear()
 
         if ($this.Process) {
             if ($this.HasOwnMinerWindow -and $this.Process.MiningProcessId) {
@@ -1984,13 +1984,13 @@ class Miner {
                             }
                         }
 
-                        $this.Data += [PSCustomObject]@{
+                        $this.Data.Add([PSCustomObject]@{
                             Date = $Date
                             Raw = $Line_Simple
                             HashRate = [PSCustomObject]@{[String]$this.Algorithm = $HashRates} 
                             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName                           
                             Device = $Devices
-                        }
+                        })>$null
                     }
 
                     $Lines += $Line
@@ -2004,8 +2004,8 @@ class Miner {
     }
 
     CleanupMinerData() {        
-        if ($this.New) {$this.Data = @($this.Data | Select-Object -Last 1000)}
-        else {$this.Data = @($this.Data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)))}
+        if ($this.New) {if ($this.Data.Count -gt 1000){$this.Data.RemoveRange(0,$this.Data.Count-1000)}}
+        else {foreach($data in @($this.Data | Where-Object Date -lt (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)))) {$this.Data.Remove($data)}}
     }
 
     [Int64]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {
@@ -3180,7 +3180,7 @@ function Start-AsyncLoader {
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
             $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[GC]::Collect()}
+            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[System.GC]::GetTotalMemory($true)>$null}
             foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
                 $Job = $AsyncLoader.Jobs.$Jobkey
                 if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {

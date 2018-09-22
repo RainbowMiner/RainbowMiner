@@ -17,9 +17,9 @@ $Cuda = "6.5"
 if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Config.InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @()} #Ethash2GB
-    [PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; Params = @()} #Ethash3GB
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 4; Params = @()} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @(); ExtendInterval = 2} #Ethash2GB
+    [PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; Params = @(); ExtendInterval = 2} #Ethash3GB
+    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 4; Params = @(); ExtendInterval = 2} #Ethash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -55,6 +55,7 @@ $Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendo
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinMemGB = $_.MinMemGB
+        $Miner_ExtendInterval = $_.ExtendInterval
 
         if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {            
             $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -77,6 +78,7 @@ $Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendo
                 Port = $Miner_Port
                 Uri = $Uri
                 ManualUri = $ManualUri
+                ExtendInterval = $Miner_ExtendInterval
             }
         }
     }
