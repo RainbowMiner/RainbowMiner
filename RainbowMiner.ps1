@@ -1785,13 +1785,12 @@ while ($true) {
             if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
                 if ($AutoUpdate) {& .\Updater.ps1}
                 $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
-                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}                
-                Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black
-                $wait = 0;while ($wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
-                if ($NewKid.ReturnValue -eq 0 -and $NewKid.ProcessId) {
-                    $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
+                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}
+                if ($NewKid -and $NewKid.ReturnValue -eq 0) {
+                    Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
+                    $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
                     Write-Host " "
-                    if (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) {$Stopp = $true;$AutoUpdate = $false}
+                    if ($NewKid.ProcessId -and (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {$Stopp = $true;$AutoUpdate = $false}
                 }
             }
         }
