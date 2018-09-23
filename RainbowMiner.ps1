@@ -753,7 +753,7 @@ while ($true) {
                     $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
                     $Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}
                     $Pool.Price *= $Pool_Factor
-                    $Pool.StablePrice *= $Pool_Factor                
+                    $Pool.StablePrice *= $Pool_Factor
                     $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
                 }
             })
@@ -1605,6 +1605,7 @@ while ($true) {
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
+    [System.GC]::Collect()
     [System.GC]::GetTotalMemory($true)>$null
     Sleep -Milliseconds 200
     
@@ -1778,20 +1779,23 @@ while ($true) {
     #Cleanup stopped miners
     foreach ($Miner in $ActiveMiners) {if ($Miner.Stopped) {$Miner.StopMiningPostCleanup()}}
     if ($Restart -or $AutoUpdate) {
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-        if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            if ($AutoUpdate) {& .\Updater.ps1}
-            try {
-                $StartCommand = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object -ExpandProperty CommandLine
-                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}
+        $Stop = $false
+        try {
+            $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
+            if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
+                if ($AutoUpdate) {& .\Updater.ps1}
+                $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
+                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path)}                
                 Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black
                 $wait = 0;while ($wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
-                $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
-                Write-Host " "
-                if (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) {$Stopp = $true;$AutoUpdate = $false}
+                if ($NewKid.ReturnValue -eq 0 -and $NewKid.ProcessId) {
+                    $wait = 0;While (-not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop) -and ($wait -le 10)) {Write-Host -NoNewline ".";sleep 1;$wait++}
+                    Write-Host " "
+                    if (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore) {$Stopp = $true;$AutoUpdate = $false}
+                }
             }
-            catch {
-            }
+        }
+        catch {
         }
         if (-not $Stopp) { #fallback to old updater           
             if ($AutoUpdate) {
