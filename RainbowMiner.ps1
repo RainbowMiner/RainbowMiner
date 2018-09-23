@@ -519,6 +519,7 @@ while ($true) {
         if ($ActiveMiners.Count)   {foreach($Miner in $ActiveMiners) {if ($Miner.Donator) {$TemporaryArray.Add($Miner)>$null}}}
         if ($TemporaryArray.Count) {foreach($Miner in $TemporaryArray){$ActiveMiners.Remove($Miner);$Miner=$null}}
         $TemporaryArray.Clear()
+        $AllPools.Clear()
         Write-Log "Donation run finished. "
     }
     if ($Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $LastDonated -and $AvailPools.Count -gt 0) {
@@ -555,6 +556,7 @@ while ($true) {
                 $Config.Pools.$p | Add-Member Penalty ([double]($Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             }
             $Config | Add-Member DisableExtendInterval $true -Force
+            $AllPools.Clear()
         }
     } else {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($LastDonated.AddHours($DonateDelayHours) - ($Timer.AddMinutes($DonateMinutes))))
@@ -772,7 +774,7 @@ while ($true) {
     $API.NewPools = $NewPools
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
-    #since mining is probably still working.  Then it filters out any algorithms that aren't being used. 
+    #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Foreach-Object {$NewPools.Add($_)>$null}}
     $AllPools = @($NewPools | Foreach-Object {
         $Pool = $_
