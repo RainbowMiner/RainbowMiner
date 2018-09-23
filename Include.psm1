@@ -1046,6 +1046,42 @@ function Expand-WebRequest {
     }
 }
 
+function Invoke-Exe {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "", 
+        [Parameter(Mandatory = $false)]
+        [Int]$WaitForExit = 5,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExpandLines,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExcludeEmptyLines
+        )
+    try {
+        $psi = New-object System.Diagnostics.ProcessStartInfo
+        $psi.CreateNoWindow = $true
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.FileName = $FilePath
+        $psi.Arguments = $ArgumentList
+        if ($WorkingDirectory -ne '') {$psi.WorkingDirectory = $WorkingDirectory}
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $psi
+        [void]$process.Start()
+        $out = $process.StandardOutput.ReadToEnd()
+        $process.WaitForExit($WaitForExit*1000)>$null
+        if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
+        $psi = $null
+        $process = $null
+    } catch {Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
+}
+
 function Invoke-TcpRequest {
     [CmdletBinding()]
     param(
@@ -1389,7 +1425,6 @@ function Update-DeviceInformation {
         [Parameter(Mandatory = $false)]
         [Bool]$UseAfterburner = $true        
     )
-    
     $abReload = $true
 
     $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
@@ -1435,8 +1470,9 @@ function Update-DeviceInformation {
                 if ($Vendor -eq 'AMD') {
                     #AMD
                     $DeviceId = 0
-                    $Command = ".\Includes\OverdriveN.exe"
-                    $AdlResult = & $Command | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+
+                    $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+
                     if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
 
                     if ($null -ne $AdlResult) {
@@ -1503,13 +1539,13 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                $Command = '.\includes\nvidia-smi.exe'
                 $Arguments = @(
                     '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
                     '--format=csv,noheader'
                 )
                 if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
-                & $Command $Arguments | ForEach-Object {
+
+                Invoke-Exe '.\includes\nvidia-smi.exe' -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
                     $SMIresultSplit = $_ -split ','
                     if ($SMIresultSplit.count -gt 10) {
                         for($i = 1; $i -lt $SMIresultSplit.count; $i++) {

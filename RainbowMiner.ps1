@@ -484,6 +484,8 @@ while ($true) {
                     $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                 }
                 $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+                $Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Config.Pools.$p.DataWindow) -Force
+                $Config.Pools.$p | Add-Member Penalty ([double]($Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             }
         }
     }    
@@ -549,6 +551,8 @@ while ($true) {
                     $Config.Pools.$p | Add-Member $q @(($Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                 }
                 $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+                $Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Config.Pools.$p.DataWindow) -Force
+                $Config.Pools.$p | Add-Member Penalty ([double]($Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             }
             $Config | Add-Member DisableExtendInterval $true -Force
         }
@@ -736,25 +740,23 @@ while ($true) {
     Write-Log "Loading pool information. "
     $SelectedPoolNames.Clear()
     if (Test-Path "Pools") {
-        $NewPools.Clear()
-        $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
-            $Pool_Name = $_
-            $SelectedPoolNames.Add($Pool_Name) > $null
-            [hashtable]$Pool_Config = @{Name = $Pool_Name}
-            [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
-            foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
-            $Pool_Parameters.DataWindow = Get-YiiMPDataWindow $Pool_Parameters.DataWindow
-            $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty
-            $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool_Config.PoolFee}))/100
-            foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {            
-                $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
-                $Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}
-                $Pool.Price *= $Pool_Factor
-                $Pool.StablePrice *= $Pool_Factor                
-                $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force
-                $NewPools.Add($Pool)>$null
-            }
-        }
+        $NewPools = @(
+            $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
+                $Pool_Name = $_
+                $SelectedPoolNames.Add($Pool_Name) > $null
+                [hashtable]$Pool_Config = @{Name = $Pool_Name}
+                [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
+                foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
+                $Pool_Config.Penalty = $Pool_Parameters.Penalty
+                foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {
+                    $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
+                    $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
+                    $Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}
+                    $Pool.Price *= $Pool_Factor
+                    $Pool.StablePrice *= $Pool_Factor                
+                    $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
+                }
+            })
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
@@ -772,8 +774,8 @@ while ($true) {
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used. 
     Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Foreach-Object {$NewPools.Add($_)>$null}}
-    $AllPools.Clear()
-    foreach ($Pool in $NewPools) {
+    $AllPools = @($NewPools | Foreach-Object {
+        $Pool = $_
         $Pool_Name = $Pool.Name
         if (-not (
             (-not $Config.Pools.$Pool_Name) -or
@@ -789,8 +791,8 @@ while ($true) {
             ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
             ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
             ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
-        )) {$AllPools.Add($Pool)>$null}
-    }
+        )) {$Pool}
+    })
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
