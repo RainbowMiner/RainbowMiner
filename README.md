@@ -42,7 +42,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 3. Update GPU drivers: [Nvidia 411.63](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.8.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
-Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6.0.4" has to be added manually to the PATH environement variable after installing Powershell 6.0.4. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
+Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 
 ## INSTALLATION
