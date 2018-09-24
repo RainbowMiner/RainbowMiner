@@ -6,7 +6,7 @@ $count = 0
 
 [hashtable]$JsonUri_Dates = @{}
 [hashtable]$Miners_List = @{}
-$API.Miners | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {                                
+($API.Miners | ConvertFrom-Json) | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {                                
                         
     if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
         $JsonUri = (Split-Path $_.Path) + "\_uri.json"
