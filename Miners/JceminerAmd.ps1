@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Jceminer\jce_cn_gpu_miner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.35m-jceminer/jce_cn_gpu_miner.prototype.032m.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.32q-jceminer/jce_cn_gpu_miner.032q.zip"
 $Port = "321{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 0.9
