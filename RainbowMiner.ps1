@@ -170,6 +170,7 @@ $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
 [System.Collections.ArrayList]$TemporaryArray = @()
 [hashtable]$Rates = @{BTC = [Double]1}
 [hashtable]$NewRates = @{}
+[hashtable]$ConfigFiles = @{Config=$ConfigFile}
 
 $LastDonated = 0
 
@@ -242,52 +243,52 @@ try {
         }
         if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
     }
-    $ConfigFile = Get-Item $ConfigFile | Foreach-Object {
+    $ConfigFiles["Config"] = Get-Item $ConfigFile | Foreach-Object {
         $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
         $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
-        $PoolsConfigFile = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
-        $MinersConfigFile = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
-        $DevicesConfigFile = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
-        $OCProfilesConfigFile = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
+        $ConfigFiles["Pools"] = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
+        $ConfigFiles["Miners"] = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
+        $ConfigFiles["Devices"] = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
+        $ConfigFiles["OCProfiles"] = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
 
         if (-not $psISE) {
             $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
             if (Test-Path $ConfigFile) {Copy-Item $ConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_$($ConfigFile_Name)"}
-            if (Test-Path $PoolsConfigFile) {Copy-Item $PoolsConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_pools.$($ConfigFile_Name)"}
-            if (Test-Path $MinersConfigFile) {Copy-Item $MinersConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_miners.$($ConfigFile_Name)"}
-            if (Test-Path $DevicesConfigFile) {Copy-Item $DevicesConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
-            if (Test-Path $OCProfilesConfigFile) {Copy-Item $OCProfilesConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
+            if (Test-Path $ConfigFiles["Pools"]) {Copy-Item $ConfigFiles["Pools"] -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_pools.$($ConfigFile_Name)"}
+            if (Test-Path $ConfigFiles["Miners"]) {Copy-Item $ConfigFiles["Miners"] -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_miners.$($ConfigFile_Name)"}
+            if (Test-Path $ConfigFiles["Devices"]) {Copy-Item $ConfigFiles["Devices"] -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
+            if (Test-Path $ConfigFiles["OCProfiles"]) {Copy-Item $ConfigFiles["OCProfiles"] -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
         }
         
         # Create pools.config.txt if it is missing
-        Set-PoolsConfigDefault -PathToFile $PoolsConfigFile -Force
-        $PoolsConfigFile = $PoolsConfigFile | Resolve-Path -Relative
+        Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"] -Force
+        $ConfigFiles["Pools"] = $ConfigFiles["Pools"] | Resolve-Path -Relative
 
         # Create miners.config.txt and cpu.miners.config.txt, if they are missing
-        Set-MinersConfigDefault -PathToFile $MinersConfigFile -Force
-        $MinersConfigFile = $MinersConfigFile | Resolve-Path -Relative
+        Set-MinersConfigDefault -PathToFile $ConfigFiles["Miners"] -Force
+        $ConfigFiles["Miners"] = $ConfigFiles["Miners"] | Resolve-Path -Relative
 
         # Create devices.config.txt if it is missing
-        Set-DevicesConfigDefault -PathToFile $DevicesConfigFile -Force
-        $DevicesConfigFile = $DevicesConfigFile | Resolve-Path -Relative
+        Set-DevicesConfigDefault -PathToFile $ConfigFiles["Devices"] -Force
+        $ConfigFiles["Devices"] = $ConfigFiles["Devices"] | Resolve-Path -Relative
 
         # Create ocprofiles.config.txt if it is missing
-        Set-OCProfilesConfigDefault -PathToFile $OCProfilesConfigFile -Force
-        $OCProfilesConfigFile = $OCProfilesConfigFile | Resolve-Path -Relative
+        Set-OCProfilesConfigDefault -PathToFile $ConfigFiles["OCProfiles"] -Force
+        $ConfigFiles["OCProfiles"] = $ConfigFiles["OCProfiles"] | Resolve-Path -Relative
 
         $_ | Resolve-Path -Relative
     }
-
+    
     #cleanup legacy data
     if (Test-Path ".\Cleanup.ps1") {
         if ($RunCleanup) {
             Write-Host "Cleanup legacy data .."
             [hashtable]$Cleanup_Parameters = @{
-                ConfigFile = $ConfigFile
-                PoolsConfigFile = $PoolsConfigFile
-                MinersConfigFile = $MinersConfigFile
-                DevicesConfigFile = $DevicesConfigFile
-                OCProfilesConfigFile = $OCProfilesConfigFile
+                ConfigFile = $ConfigFiles["Config"]
+                PoolsConfigFile = $ConfigFiles["Pools"]
+                MinersConfigFile = $ConfigFiles["Miners"]
+                DevicesConfigFile = $ConfigFiles["Devices"]
+                OCProfilesConfigFile = $ConfigFiles["OCProfiles"]
                 AllDevices = $AllDevices
                 MyCommandParameters = $MyCommandParameters
                 Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
@@ -331,19 +332,19 @@ while ($true) {
     [string[]]$AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
     [string[]]$AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
-    if (Test-Path $ConfigFile) {
-        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {
+    if (Test-Path $ConfigFiles["Config"]) {
+        if (-not $Config -or $RunSetup -or (Get-ChildItem $ConfigFiles["Config"]).LastWriteTime.ToUniversalTime() -gt $UpdateTracker["Config"]["ConfigFile"]) {
 
             do {
                 if ($Config -eq $null) {Write-Host "Read configuration .."}
-                $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFile).LastWriteTime.ToUniversalTime()
+                $UpdateTracker["Config"]["ConfigFile"] = (Get-ChildItem $ConfigFiles["Config"]).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $MyCommandParameters | ForEach-Object {
                     $val = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
                 }                
-                $Config = Get-ChildItemContent $ConfigFile -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
+                $Config = Get-ChildItemContent $ConfigFiles["Config"] -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
                 $Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force
@@ -354,8 +355,14 @@ while ($true) {
                 }
 
                 $ReReadConfig = $false
-
-                if ($RunSetup) {. ".\Setup.ps1"}
+                if ($RunSetup) {
+                    Import-Module .\Setup.psm1
+                    Start-Setup -Config $Config -ConfigFiles $ConfigFiles -IsInitialSetup $IsInitialSetup
+                    Remove-Module "Setup" -ErrorAction Ignore
+                    $RestartMiners = $true
+                    $ReReadConfig = $true
+                    $RunSetup = $false
+                }
 
             } until (-not $ReReadConfig)
         } else {
@@ -365,7 +372,7 @@ while ($true) {
     
     #Error in Config.txt
     if ($Config -isnot [PSCustomObject]) {
-        Write-Log -Level Error "$($ConfigFile) is invalid. Cannot continue. "
+        Write-Log -Level Error "$($ConfigFiles["Config"]) is invalid. Cannot continue. "
         Start-Sleep 10
         Break
     }
@@ -432,20 +439,20 @@ while ($true) {
     $MSIAenabled = -not $Config.EnableOCProfiles -and $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
     #Check for oc profile config
-    Set-OCProfilesConfigDefault $OCProfilesConfigFile
-    if (Test-Path $OCProfilesConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.OCProfiles -or (Get-ChildItem $OCProfilesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["OCProfilesConfigFile"]) {        
-            $Updatetracker["Config"]["OCProfilesConfigFile"] = (Get-ChildItem $OCProfilesConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member OCProfiles (Get-ChildItemContent $OCProfilesConfigFile).Content -Force
+    Set-OCProfilesConfigDefault $ConfigFiles["OCProfiles"]
+    if (Test-Path $ConfigFiles["OCProfiles"]) {
+        if ($ConfigCheckFields -or -not $Config.OCProfiles -or (Get-ChildItem $ConfigFiles["OCProfiles"]).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["OCProfilesConfigFile"]) {        
+            $Updatetracker["Config"]["OCProfilesConfigFile"] = (Get-ChildItem $ConfigFiles["OCProfiles"]).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member OCProfiles (Get-ChildItemContent $ConfigFiles["OCProfiles"]).Content -Force
         }
     }   
 
     #Check for devices config
-    Set-DevicesConfigDefault $DevicesConfigFile
-    if (Test-Path $DevicesConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Devices -or (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["DevicesConfigFile"]) {        
-            $Updatetracker["Config"]["DevicesConfigFile"] = (Get-ChildItem $DevicesConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Devices (Get-ChildItemContent $DevicesConfigFile).Content -Force
+    Set-DevicesConfigDefault $ConfigFiles["Devices"]
+    if (Test-Path $ConfigFiles["Devices"]) {
+        if ($ConfigCheckFields -or -not $Config.Devices -or (Get-ChildItem $ConfigFiles["Devices"]).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["DevicesConfigFile"]) {        
+            $Updatetracker["Config"]["DevicesConfigFile"] = (Get-ChildItem $ConfigFiles["Devices"]).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Devices (Get-ChildItemContent $ConfigFiles["Devices"]).Content -Force
             $OCprofileFirst = $Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
             foreach ($p in @($Config.Devices.PSObject.Properties.Name)) {
                 $Config.Devices.$p | Add-Member Algorithm @(($Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
@@ -457,7 +464,7 @@ while ($true) {
                 if ($p -ne "CPU" -and -not $Config.Devices.$p.DefaultOCprofile) {
                     $Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
                     if ($Config.EnableOCprofiles) {
-                        Write-Log -Level Warn "No default overclocking profile defined for `"$p`" in $($OCProfilesConfigFile). Using `"$OCprofileFirst`" for now!"
+                        Write-Log -Level Warn "No default overclocking profile defined for `"$p`" in $($ConfigFiles["OCProfiles"]). Using `"$OCprofileFirst`" for now!"
                     }
                 }
             }
@@ -465,11 +472,11 @@ while ($true) {
     }
 
     #Check for pool config
-    Set-PoolsConfigDefault $PoolsConfigFile
-    if (Test-Path $PoolsConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["PoolsConfigFile"]) {        
-            $Updatetracker["Config"]["PoolsConfigFile"] = (Get-ChildItem $PoolsConfigFile).LastWriteTime.ToUniversalTime()
-            $Config | Add-Member Pools (Get-ChildItemContent $PoolsConfigFile -Parameters @{
+    Set-PoolsConfigDefault $ConfigFiles["Pools"]
+    if (Test-Path $ConfigFiles["Pools"]) {
+        if ($ConfigCheckFields -or -not $Config.Pools -or (Get-ChildItem $ConfigFiles["Pools"]).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["PoolsConfigFile"]) {        
+            $Updatetracker["Config"]["PoolsConfigFile"] = (Get-ChildItem $ConfigFiles["Pools"]).LastWriteTime.ToUniversalTime()
+            $Config | Add-Member Pools (Get-ChildItemContent $ConfigFiles["Pools"] -Parameters @{
                 Wallet              = $Config.Wallet
                 UserName            = $Config.UserName
                 WorkerName          = $Config.WorkerName
@@ -628,13 +635,13 @@ while ($true) {
     }
 
     #Check for miner config
-    Set-MinersConfigDefault -PathToFile $MinersConfigFile
-    if (Test-Path $MinersConfigFile) {
-        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
-            $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $MinersConfigFile).LastWriteTime.ToUniversalTime()
+    Set-MinersConfigDefault -PathToFile $ConfigFiles["Miners"]
+    if (Test-Path $ConfigFiles["Miners"]) {
+        if ($ConfigCheckFields -or -not $Config.Miners -or (Get-ChildItem $ConfigFiles["Miners"]).LastWriteTime.ToUniversalTime() -gt $Updatetracker["Config"]["MinersConfigFile"]) {        
+            $Updatetracker["Config"]["MinersConfigFile"] = (Get-ChildItem $ConfigFiles["Miners"]).LastWriteTime.ToUniversalTime()
             $Config | Add-Member Miners ([PSCustomObject]@{}) -Force
             $ConfigFullComboModelNames = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name)
-            foreach ($CcMiner in @((Get-ChildItemContent -Path $MinersConfigFile).Content.PSObject.Properties)) {
+            foreach ($CcMiner in @((Get-ChildItemContent -Path $ConfigFiles["Miners"]).Content.PSObject.Properties)) {
                 $CcMinerName = $CcMiner.Name
                 [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
                 if ($CcMinerName_Array.Count -gt 1 -and ($ConfigFullComboModelNames -icontains $CcMinerName_Array[1]) -and ($DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")) {$CcMinerName = "$($CcMinerName_Array[0])-$($DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")";$CcMinerName_Array = @($CcMinerName -split '-')}                

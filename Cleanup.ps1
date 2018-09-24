@@ -103,6 +103,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "3.8.7.5")) {
+        if (Test-Path "Setup.ps1") {Remove-Item "Setup.ps1" -Force -ErrorAction Ignore;$ChangesTotal++}
+    }
+
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
 
     "Cleaned $ChangesTotal elements"
