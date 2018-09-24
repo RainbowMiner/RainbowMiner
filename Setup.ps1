@@ -828,12 +828,7 @@ do {
                     Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                 }
 
-                foreach($p in @($Config.Pools.PSObject.Properties.Name)) {
-                    $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
-                    $Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Config.Pools.$p.DataWindow) -Force
-                    $Config.Pools.$p | Add-Member Penalty ([double]$Config.Pools.$p.Penalty) -Force
-                }
-                $Pool = Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config $Config.Pools.$Pool_Name -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true -IgnoreFees $Config.IgnoreFees
+                $Pool = Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config @{DataWindow="estimate_current"} -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true
 
                 if ($Pool) {
                     $PoolSetupStepsDone = $false
