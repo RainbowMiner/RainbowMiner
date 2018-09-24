@@ -828,13 +828,12 @@ do {
                     Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
                 }
 
-                [hashtable]$Pool_Config = @{Name = $Pool_Name}
-                [hashtable]$Pool_Parameters = @{StatSpan = [TimeSpan]::FromSeconds(0);InfoOnly = $true}
-                foreach($p in @($Config.Pools.PSObject.Properties.Name)) {$Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force}
-                foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
-                $Pool_Parameters.DataWindow = Get-YiiMPDataWindow $Pool_Parameters.DataWindow
-                $Pool_Config.Penalty = $Pool_Parameters.Penalty = [double]$Pool_Parameters.Penalty           
-                $Pool = Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters | Foreach-Object {$_.Content | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru}
+                foreach($p in @($Config.Pools.PSObject.Properties.Name)) {
+                    $Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Config.Pools.$p) -Force
+                    $Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Config.Pools.$p.DataWindow) -Force
+                    $Config.Pools.$p | Add-Member Penalty ([double]$Config.Pools.$p.Penalty) -Force
+                }
+                $Pool = Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config $Config.Pools.$Pool_Name -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true -IgnoreFees $Config.IgnoreFees
 
                 if ($Pool) {
                     $PoolSetupStepsDone = $false
@@ -846,12 +845,12 @@ do {
 
                     if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
                     $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
-                    if (($Pool.Content.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null} 
+                    if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null} 
                     $PoolSetupSteps.Add("save") > $null                                        
                                                                                 
-                    $Pool_Avail_Currency = @($Pool.Content.Currency | Select-Object -Unique | Sort-Object)
-                    $Pool_Avail_CoinName = @($Pool.Content | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
-                    $Pool_Avail_CoinSymbol = @($Pool.Content | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
+                    $Pool_Avail_Currency = @($Pool.Currency | Select-Object -Unique | Sort-Object)
+                    $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
+                    $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
 
                     if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
                     if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
