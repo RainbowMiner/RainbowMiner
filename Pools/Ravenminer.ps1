@@ -1,6 +1,7 @@
 ﻿using module ..\Include.psm1
 
 param(
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
@@ -67,6 +68,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Coin = "Ravencoin"
     $Pool_Currency = "RVN"
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
+    $Pool_User = $Wallets.$Pool_Currency
 
     $Pool_Factor = 1
 
@@ -79,24 +81,26 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         if ($Pool_Region -eq "eu") {$Pool_Host = "eu.ravenminer.com";$Pool_Port = 1111}
         else {$Pool_Host = "ravenminer.com";$Pool_Port = 6666}
 
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = $Stat.Hour # instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = $Pool_Host
-            Port          = $Pool_Port
-            User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
-            Pass          = "$Worker,c=$Pool_Currency"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_PoolFee
-            DataWindow    = $DataWindow
+        if ($Pool_User -or $InfoOnly) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = $Stat.Hour # instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = $Pool_Host
+                Port          = $Pool_Port
+                User          = $Pool_User
+                Pass          = "$Worker,c=$Pool_Currency"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_PoolFee
+                DataWindow    = $DataWindow
+            }
         }
     }
 }

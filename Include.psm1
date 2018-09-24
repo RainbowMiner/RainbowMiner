@@ -612,6 +612,43 @@ function Get-ChildItemContent {
     }
 }
 
+function Get-PoolsContent {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Path, 
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Config,
+        [Parameter(Mandatory = $true)]
+        [TimeSpan]$StatSpan,
+        [Parameter(Mandatory = $false)]
+        [Bool]$InfoOnly = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$IgnoreFees = $false
+    )
+        
+    Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
+        $Pool_Name = $_.BaseName
+
+        [Hashtable]$Parameters = @{
+            StatSpan = $StatSpan
+            InfoOnly = $InfoOnly
+        }
+        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
+
+        foreach($Pool in @(& $_.FullName @Parameters)) {
+            $Pool_Factor = 1-[Double]($Config.Penalty + $(if (-not $IgnoreFees){$Pool.PoolFee}))/100
+            $Pool.Price *= $Pool_Factor
+            $Pool.StablePrice *= $Pool_Factor
+            $Pool | Add-Member -NotePropertyMembers @{
+                AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
+                Name =$Pool_Name
+                Penalty = $Config.Penalty
+            } -Force -PassThru
+        }
+    }
+}
+
 function Get-MinersContent {
     [CmdletBinding()]
     param(
@@ -625,30 +662,23 @@ function Get-MinersContent {
         [PSCustomObject]$Stats       
     )
 
-    $MinerStats = [hashtable]@{}
-    $Stats.PSObject.Properties.Name | Where-Object {$_ -match "^(.+?)-"} | Foreach-Object {
-        if (-not $MinerStats[$matches[1]]) {$MinerStats[$matches[1]] = [PSCustomObject]@{}}
-        $MinerStats[$matches[1]] | Add-Member $_ ($Stats.$_)
-    }
- 
-    $Parameters = @{
-        Config = $Config
+    [Hashtable]$Parameters = @{
+        Config  = $Config
         Devices = $DevicesByTypes
-        Pools = $Pools
+        Pools   = $Pools
+        Stats   = $Stats
     }
-    
-    Get-ChildItem "Miners\*.ps1" -File -ErrorAction Ignore | ForEach-Object {
-        $Miner = $_
-        $Name = $Miner.BaseName
- 
-        $Parameters.Stats = $MinerStats[$Name]
-                
-        & $Miner.FullName @Parameters | ForEach-Object {
-            $_ | Add-Member -NotePropertyMembers @{
-                Name = if ($_.Name) {$_.Name} else {$Name}
+
+    foreach($Miner in @(Get-ChildItem "Miners\*.ps1" -File -ErrorAction Ignore)) {
+        $Name = $Miner.BaseName 
+        foreach($c in @(& $Miner.FullName @Parameters)) {
+            $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
+            $c | Add-Member -NotePropertyMembers @{
+                Name = if ($c.Name) {$c.Name} else {$Name}
                 BaseName = $Name
-                Algorithm = @($_.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
-                DeviceModel = if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.DeviceModel) {$DevicesByTypes.FullComboModels."$($_.DeviceModel)"} else {$_.DeviceModel}
+                BaseAlgorithm = $p
+                DeviceModel = if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
+                PowerDraw = $Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
             } -Force -PassThru
         }
     }
@@ -1169,13 +1199,13 @@ function Get-Device {
     )
 
     if ($Name) {
-        if (-not (Test-Path Variable:Global:GlobalDataDeviceList) -or -not $Global:GlobalDataDeviceList) {$Global:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
+        if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
             $Name_Split += @("*") * (100 - $Name_Split.Count)
 
-            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
 
             $Name_Device
@@ -1183,8 +1213,8 @@ function Get-Device {
     }
 
     # Try to get cached devices first to improve performance
-    if ((Test-Path Variable:Global:GlobalCachedDevices) -and -not $Refresh) {
-        $Global:GlobalCachedDevices | Foreach-Object {
+    if ((Test-Path Variable:Script:GlobalCachedDevices) -and -not $Refresh) {
+        $Script:GlobalCachedDevices | Foreach-Object {
             $Device = $_
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
                 $Device
@@ -1273,27 +1303,27 @@ function Get-Device {
 
     #CPU detection
     try {
-        if (-not (Test-Path Variable:Global:GlobalGetDeviceCacheCIM)) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+        if (-not (Test-Path Variable:Script:GlobalGetDeviceCacheCIM)) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
         if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
             try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
         if ($Global:GlobalCPUInfo.Features -eq $null) {
              $Global:GlobalCPUInfo | Add-Member Features ([PSCustomObject]@{
-                physical_cpus = $Global:GlobalGetDeviceCacheCIM.Count
-                cores = ($Global:GlobalGetDeviceCacheCIM.NumberOfCores | Measure-Object -Sum).Sum
-                threads = ($Global:GlobalGetDeviceCacheCIM.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                physical_cpus = $Script:GlobalGetDeviceCacheCIM.Count
+                cores = ($Script:GlobalGetDeviceCacheCIM.NumberOfCores | Measure-Object -Sum).Sum
+                threads = ($Script:GlobalGetDeviceCacheCIM.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
                 tryall = 1
             }) -Force
         }
         if ($Global:GlobalCPUInfo.Vendor -eq $null) {
-            $Global:GlobalCPUInfo | Add-Member Name $Global:GlobalGetDeviceCacheCIM[0].Name
-            $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalGetDeviceCacheCIM[0].Manufacturer){"INTEL"}else{$Global:GlobalGetDeviceCacheCIM[0].Manufacturer.ToUpper()}) -Force
+            $Global:GlobalCPUInfo | Add-Member Name $Script:GlobalGetDeviceCacheCIM[0].Name
+            $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Script:GlobalGetDeviceCacheCIM[0].Manufacturer){"INTEL"}else{$Script:GlobalGetDeviceCacheCIM[0].Manufacturer.ToUpper()}) -Force
             $Global:GlobalCPUInfo | Add-Member Cores $Global:GlobalCPUInfo.Features.cores
             $Global:GlobalCPUInfo | Add-Member Threads $Global:GlobalCPUInfo.Features.threads
             $Global:GlobalCPUInfo | Add-Member PhysicalCPUs $Global:GlobalCPUInfo.Features.physical_cpus
-            $Global:GlobalCPUInfo | Add-Member L3CacheSize $Global:GlobalGetDeviceCacheCIM[0].L3CacheSize
-            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $Global:GlobalGetDeviceCacheCIM[0].MaxClockSpeed
+            $Global:GlobalCPUInfo | Add-Member L3CacheSize $Script:GlobalGetDeviceCacheCIM[0].L3CacheSize
+            $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $Script:GlobalGetDeviceCacheCIM[0].MaxClockSpeed
             $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
             if ($Global:GlobalCPUInfo.Vendor -eq "INTEL" -and $Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
         }        
@@ -1305,7 +1335,7 @@ function Get-Device {
    
     try {
         $CPUIndex = 0
-        $Global:GlobalGetDeviceCacheCIM | Foreach-Object {
+        $Script:GlobalGetDeviceCacheCIM | Foreach-Object {
             # Vendor and type the same for all CPUs, so there is no need to actually track the extra indexes.  Include them only for compatibility.
             $CPUInfo = $_ | ConvertTo-Json | ConvertFrom-Json
             $Device = [PSCustomObject]@{
@@ -1335,7 +1365,7 @@ function Get-Device {
         Write-Log -Level Warn "CIM CPU detection has failed. "
     }
 
-    $Global:GlobalCachedDevices = $Devices
+    $Script:GlobalCachedDevices = $Devices
     $Devices
 }
 
@@ -1345,7 +1375,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Global:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Script:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -1427,7 +1457,7 @@ function Update-DeviceInformation {
     )
     $abReload = $true
 
-    $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
         
@@ -1588,11 +1618,11 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-            if ($CPU_count -gt 0) {$Global:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
-            $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+            $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+            if ($CPU_count -gt 0) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+            $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $Device = $_
-                $Global:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+                $Script:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
                     if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
                         if ($Script:abMonitor -and $abReload) {$Script:abMonitor.ReloadAll();$abReload=$false}
                         $CpuData = @{                            
@@ -2119,7 +2149,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
 
         $this.OCprofileBackup.Clear()
-        $Vendor = $Global:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
             try {
@@ -2140,7 +2170,7 @@ class Miner {
 
         foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
             if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
-                $DeviceIds = @($Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
+                $DeviceIds = @($Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
                 $Profile = $Config.OCprofiles."$($this.OCprofile.$DeviceModel)"
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'

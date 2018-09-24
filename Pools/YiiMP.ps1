@@ -1,9 +1,11 @@
 ﻿using module ..\Include.psm1
 
 param(
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false
 )
 
@@ -41,7 +43,7 @@ catch {
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_MiningCurrencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore) -or $InfoOnly}
+$Pool_MiningCurrencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 $Pool_PoolFee = 2.0
 
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
@@ -54,7 +56,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
     $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
     $Pool_PoolFee = if($Pool_Request.$Pool_Algorithm) {[Double]$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
-    $Pool_User = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
+    $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 

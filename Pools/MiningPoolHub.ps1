@@ -1,10 +1,11 @@
 ﻿using module ..\Include.psm1
 
 param(
+    [PSCustomObject]$Wallets,
     [alias("UserName")]
     [String]$User, 
     [alias("WorkerName")]
-    [String]$Worker, 
+    [String]$Worker,
     [TimeSpan]$StatSpan
 )
 

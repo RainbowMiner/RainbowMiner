@@ -1,11 +1,11 @@
 ﻿using module ..\Include.psm1
 
 param(
-    [alias("Wallet")]
-    [String]$BTC, 
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
+    [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false
 )
 
@@ -43,7 +43,7 @@ catch {
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore)}
+$Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$Wallets.$_}
 $Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
@@ -57,7 +57,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
-    $Pool_User = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
+    $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
@@ -122,7 +122,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                         Protocol      = "stratum+tcp"
                         Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                         Port          = $Pool_Port
-                        User          = Get-Variable $Pool_ExCurrency -ValueOnly -ErrorAction Ignore
+                        User          = $Wallets.$Pool_ExCurrency
                         Pass          = "$Worker,c=$Pool_ExCurrency,mc=$Pool_Currency"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $false

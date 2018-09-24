@@ -1,8 +1,7 @@
 ﻿using module ..\Include.psm1
 
 param(
-    [alias("Wallet")]
-    [String]$BTC, 
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
@@ -55,7 +54,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
     $Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$($Pool_Algorithm_Norm)-NHMP")
 
     foreach($Pool_Region in $Pool_Regions) {
-        if ($BTC -or $InfoOnly) {
+        if ($Wallets.BTC -or $InfoOnly) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                 if ($Pool_Algorithm_Norm -match "-NHMP") {
                     $This_Port = 3200
@@ -75,7 +74,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     Protocol      = "stratum+tcp"
                     Host          = $This_Host
                     Port          = $This_Port
-                    User          = "$BTC.$Worker"
+                    User          = "$($Wallets.BTC).$Worker"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
@@ -95,7 +94,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         Protocol      = "stratum+ssl"
                         Host          = $This_Host
                         Port          = $This_Port + 30000
-                        User          = "$BTC.$Worker"
+                        User          = "$($Wallets.BTC).$Worker"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true

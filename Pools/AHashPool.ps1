@@ -1,8 +1,7 @@
 ﻿using module ..\Include.psm1
 
 param(
-    [alias("Wallet")]
-    [String]$BTC, 
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
@@ -44,7 +43,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {(Get-Variable $_ -ValueOnly -ErrorAction Ignore) -or $InfoOnly}
+$Pool_Currencies = @("BTC") | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
@@ -88,7 +87,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Protocol      = "stratum+tcp"
                     Host          = "$Pool_Algorithm.$Pool_Host"
                     Port          = $Pool_Port
-                    User          = Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore
+                    User          = $Wallets.$Pool_Currency
                     Pass          = "$Worker,c=$Pool_Currency"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false

@@ -1,6 +1,7 @@
 ﻿using module ..\Include.psm1
 
 param(
+    [PSCustomObject]$Wallets,
     [alias("WorkerName")]
     [String]$Worker, 
     [TimeSpan]$StatSpan,
@@ -42,7 +43,7 @@ catch {
 
 $Pool_Regions = @("eu","us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$PoolCoins_Request.$_.symbol -and ((Get-Variable $PoolCoins_Request.$_.symbol -ValueOnly -ErrorAction Ignore) -or $InfoOnly)}
+$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$PoolCoins_Request.$_.symbol -and ($Wallets."$($PoolCoins_Request.$_.symbol)" -or $InfoOnly)}
 
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if (($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -or [Double]$PoolCoins_Request.$Pool_Currency.estimate -le 0) -and -not $InfoOnly) {continue}
@@ -94,7 +95,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                 Protocol      = "stratum+tcp"
                 Host          = "$($Pool_Region).bsod.pw"
                 Port          = $Pool_Port
-                User          = "$(Get-Variable $Pool_Currency -ValueOnly -ErrorAction Ignore).$($Worker)"
+                User          = "$($Wallets.$Pool_Currency).$($Worker)"
                 Pass          = "c=$Pool_Currency"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false

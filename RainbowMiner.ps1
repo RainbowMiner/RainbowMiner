@@ -128,7 +128,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.7.5"
+$Version = "3.8.7.6"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -158,7 +158,6 @@ $StatEnd = $Timer
 $DecayStart = $Timer
 $DecayPeriod = 60 #seconds
 $DecayBase = 1 - 0.1 #decimal percentage
-$DefaultPoolSwitchingHysteresis = 0.02 #error margin 0..1 / 0.02 means 2%
 $OutOfSyncDivisor = [Math]::Log($OutOfSyncWindow-$SyncWindow) #precalc for sync decay method
 $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
 
@@ -181,7 +180,6 @@ $RestartMiners = $false
 $Restart = $false
 $AutoUpdate = $false
 $Readers = [PSCustomObject]@{}
-$ShowTimer = $false
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
@@ -743,20 +741,10 @@ while ($true) {
     $SelectedPoolNames.Clear()
     if (Test-Path "Pools") {
         $NewPools = @(
-            $AvailPools | Where-Object {$Config.Pools.$_ -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_)} | ForEach-Object {
-                $Pool_Name = $_
-                $SelectedPoolNames.Add($Pool_Name) > $null
-                [hashtable]$Pool_Config = @{Name = $Pool_Name}
-                [hashtable]$Pool_Parameters = @{StatSpan = $StatSpan;InfoOnly = $false}
-                foreach($p in $Config.Pools.$Pool_Name.PSObject.Properties.Name) {$Pool_Parameters[$p] = $Config.Pools.$Pool_Name.$p}
-                $Pool_Config.Penalty = $Pool_Parameters.Penalty
-                foreach ($Pool in (Get-ChildItemContent "Pools\$($Pool_Name).ps1" -Parameters $Pool_Parameters).Content) {
-                    $Pool_Factor = 1-[Double]($Pool_Config.Penalty + $(if (-not $Config.IgnoreFees){$Pool.PoolFee}))/100
-                    $Pool_Config.AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}                                
-                    $Pool_Config.SwitchingHysteresis = if ($Pool.SwitchingHysteresis -eq $null){$DefaultPoolSwitchingHysteresis}else{$Pool.SwitchingHysteresis}
-                    $Pool.Price *= $Pool_Factor
-                    $Pool.StablePrice *= $Pool_Factor
-                    $Pool | Add-Member -NotePropertyMembers $Pool_Config -Force -PassThru
+            foreach($Pool_Name in $AvailPools) {                
+                if ($Config.Pools.$Pool_Name -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $Pool_Name) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $Pool_Name)) {
+                    $SelectedPoolNames.Add($Pool_Name) > $null
+                    Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config $Config.Pools.$Pool_Name -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Config.IgnoreFees
                 }
             })
     }
@@ -776,25 +764,25 @@ while ($true) {
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Foreach-Object {$NewPools.Add($_)>$null}}
-    $AllPools = @($NewPools | Foreach-Object {
-        $Pool = $_
-        $Pool_Name = $Pool.Name
-        if (-not (
-            (-not $Config.Pools.$Pool_Name) -or
-            ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
-            ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool_Name) -or
-            ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool_Name) -or
-            ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
-            ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-            ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-            ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
-            ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
-            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-            ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
-        )) {$Pool}
-    })
+    $AllPools = @(
+        foreach ($Pool in $NewPools) {
+            $Pool_Name = $Pool.Name
+            if (-not (
+                (-not $Config.Pools.$Pool_Name) -or
+                ($Config.Algorithm.Count -and -not (Compare-Object @($Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Config.ExcludeAlgorithm.Count -and (Compare-Object @($Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object)  -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or 
+                ($Config.PoolName.Count -and $Config.PoolName -inotcontains $Pool_Name) -or
+                ($Config.ExcludePoolName.Count -and $Config.ExcludePoolName -icontains $Pool_Name) -or
+                ($Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Config.ExcludeCoin) -icontains $Pool.CoinName) -or
+                ($Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+                ($Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                ($Pool.CoinName -and $Config.Pools.$Pool_Name.CoinName.Count -and @($Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
+                ($Pool.CoinName -and $Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
+                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
+                ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+            )) {$Pool}
+        })
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools
@@ -834,7 +822,7 @@ while ($true) {
     
     #Decrease compare prices, if out of sync window
     # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
-    $OutOfSyncTimer = $AllPools | Sort-Object -Descending Updated | Select-Object -First 1 | Select-Object -ExpandProperty Updated
+    $OutOfSyncTimer = ($AllPools | Select-Object -ExpandProperty Updated | Measure-Object -Maximum).Maximum
     $OutOfSyncTime = $OutOfSyncTimer.AddMinutes(-$OutOfSyncWindow)
     Write-Log "Selecting best pool for each algorithm. "
     $AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Config.PoolName.Count -eq 0 -or (Compare-Object $Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.StablePrice * (1 - $_.MarginOfError) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$OutOfSyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))}, {$_.Region -EQ $Config.Region}, {$_.SSL -EQ $Config.SSL} | Select-Object -First 1)}
@@ -858,11 +846,7 @@ while ($true) {
     # select only the miners that match $Config.MinerName, if specified, and don't match $Config.ExcludeMinerName    
     if ($Config.EnableAutoMinerPorts) {Set-ActiveMinerPorts @($ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object);Set-ActiveTcpPorts} else {Set-ActiveTcpPorts -Disable}
     $AllMiners = if (Test-Path "Miners") {
-        Get-ChildItemContent "Miners" -Parameters @{Pools = $Pools; Stats = $Stats; Config = $Config; Devices = $DevicesByTypes} | ForEach-Object {
-            if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $_.Content.DeviceModel) {$_.Content.DeviceModel = $($DevicesByTypes.FullComboModels."$($_.Content.DeviceModel)")}
-            $p = @($_.Content.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
-            $_.Content | Add-Member -NotePropertyMembers @{Name=$_.Name;BaseName=$_.BaseName;BaseAlgorithm=$p;PowerDraw=$Stats."$($_.Name)_$($p[0])_HashRate".PowerDraw_Average} -PassThru -Force
-        } | 
+        Get-MinersContent -Pools $Pools -Stats $Stats -Config $Config -Devices $DevicesByTypes | 
             Where-Object {$_.DeviceName} | #filter miners for non-present hardware
             Where-Object {-not $Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
@@ -1608,15 +1592,14 @@ while ($true) {
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
     [System.GC]::Collect()
-    [System.GC]::GetTotalMemory($true)>$null
     Sleep -Milliseconds 200
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
-    $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $false
+    $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $keyPressed = $false
 
-    $WaitTimer = (Get-Date).ToUniversalTime()
-    if ($StatEnd.AddSeconds(-10) -le $WaitTimer) {$StatEnd = $WaitTimer.AddSeconds(10)}
-    $WaitSeconds = [int]($StatEnd - $WaitTimer).TotalSeconds
+    $Timer = (Get-Date).ToUniversalTime()
+    if ($StatEnd.AddSeconds(-10) -le $Timer) {$StatEnd = $Timer.AddSeconds(10)}
+    $WaitSeconds = [int]($StatEnd - $Timer).TotalSeconds
 
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
@@ -1624,40 +1607,26 @@ while ($true) {
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
     Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($PauseMiners){" off"}))
-    if ($ShowTimer) {$cursorPosition = $host.UI.RawUI.CursorPosition}
 
-    $keyPressed = $false
-    $TimerBackup = $Timer
-    $WaitMaxI = $Strikes*5
-    $WaitTotalSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
-    for ($i = $WaitMaxI; -not $keyPressed -and -not $SkipSwitchingPrevention -and -not $StartDownloader -and -not $Stopp -and (($i -ge 0) -or ($Timer -lt $StatEnd)); $i--) {
-        if ($ShowTimer) {
-            $host.UI.RawUI.CursorPosition = $CursorPosition    
-            if ($WaitTotalSeconds -gt $WaitMaxI) {
-                $WaitRmgSeconds = [int](($StatEnd - $WaitTimer).TotalSeconds / 2 + 0.5)
-                if ($WaitRmgSeconds -gt $WaitTotalSeconds) {$WaitRmgSeconds = $WaitTotalSeconds}
-                Write-Host -Verbose -NoNewline "[$("*" * ($WaitTotalSeconds - $WaitRmgSeconds))$("." * $WaitRmgSeconds)]"
-            } else {
-                Write-Host -Verbose -NoNewline "[$("*" * ($WaitMaxI - $i))$("." * $i)]"
-            }
-        }
-
+    $SamplesPicked = 0
+    $WaitRound = 0
+    do {
+        $WaitRound++
         [System.GC]::GetTotalMemory($true)>$null
+
+        $TimerBackup = $Timer
 
         Start-Sleep 2
 
-        if (($WaitMaxI-$i) % 5 -eq 0) {
+        if ($WaitRound % 5 -eq 0) {
             #pick up a sample every ten seconds
             Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
-            foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}            
+            foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
+            $SamplesPicked++
         }
 
         $Timer = (Get-Date).ToUniversalTime()
-        if ( $Timer -le $TimerBackup ) {
-            if ($UseTimeSync) {Test-TimeSync}
-            $Timer = (Get-Date).ToUniversalTime()
-        }
-        $WaitTimer = $Timer
+        if ($UseTimeSync -and $Timer -le $TimerBackup) {Test-TimeSync;$Timer = (Get-Date).ToUniversalTime()}
         $keyPressedValue = $false
 
         if ((Test-Path ".\stopp.txt") -or $API.Stop) {$keyPressedValue = "X"}
@@ -1725,6 +1694,13 @@ while ($true) {
                 }
             }
         }
+    } until ($keyPressed -or $SkipSwitchingPrevention -or $StartDownloader -or $Stopp -or ($Timer -ge $StatEnd))
+
+    if ($SamplesPicked -eq 0) {
+        #pick at least one sample
+        Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
+        foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
+        $SamplesPicked++
     }
 
     if ($Config.MinerStatusURL -and $Config.MinerStatusKey) {
