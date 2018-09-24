@@ -427,14 +427,11 @@ while ($true) {
             if ($API.Version.RemoteVersion -gt $API.Version.Version -and $Config.EnableAutoUpdate) {$AutoUpdate = $API.Update = $true}
         }
     } else {
-        $API = [hashtable]@{}
+        $Global:API = [hashtable]@{}
     }
 
-    #Give API access to computerstats
-    $API.ComputerStats = $AsyncLoader.ComputerStats
-
     #Give API access to all possible devices
-    if ($API.AllDevices -eq $null) {$API.AllDevices = $AllDevices}
+    if ($API.AllDevices -eq $null) {$API.AllDevices = $AllDevices | ConvertTo-Json -Depth 10}
 
     $MSIAenabled = -not $Config.EnableOCProfiles -and $Config.MSIAprofile -gt 0 -and (Test-Path $Config.MSIApath)
 
@@ -568,7 +565,7 @@ while ($true) {
     }
 
     #Give API access to the current running configuration
-    $API.Config = $Config
+    $API.Config = $Config | ConvertTo-Json -Depth 10
 
     #Clear pool cache if the pool configuration has changed
     if ($AllPools.Count -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Config.ExcludePoolName)))) {$AllPools.Clear()}
@@ -621,12 +618,12 @@ while ($true) {
         }
 
         #Give API access to the device information
-        $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
+        $API.DeviceCombos = @($DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object | ConvertTo-Json -Depth 10
     }
 
     Update-DeviceInformation @($Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Config.DisableMSIAmonitor)
 
-    $API.Devices = $Devices
+    $API.Devices = $Devices | ConvertTo-Json -Depth 10
 
     if (-not $Devices) {
         Write-Log -Level Warn "No devices available. Please check your configuration. "
@@ -729,11 +726,11 @@ while ($true) {
             Write-Log "Updating pool balances. "
         }
         $BalancesData = Get-Balance -Config $(if ($IsDonationRun) {$UserConfig} else {$Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Config.ShowPoolBalancesDetails
-        $API.Balances = $BalancesData.Balances
+        $API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10
     }
 
     #Give API access to the current rates
-    $API.Rates = $Rates
+    $API.Rates = $Rates | ConvertTo-Json -Depth 10
 
     #Load the stats
     Write-Log "Loading saved statistics. "
@@ -741,7 +738,7 @@ while ($true) {
     [hashtable]$Stats = Get-Stat
 
     #Give API access to the current stats
-    $API.Stats = $Stats
+    $API.Stats = $Stats | ConvertTo-Json -Depth 10
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -766,7 +763,7 @@ while ($true) {
     }
 
     #Give API access to the current running configuration
-    $API.NewPools = $NewPools
+    $API.NewPools = $NewPools | ConvertTo-Json -Depth 10
 
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
@@ -792,7 +789,7 @@ while ($true) {
         })
 
     #Give API access to the current running configuration
-    $API.AllPools = $AllPools
+    $API.AllPools = $AllPools | ConvertTo-Json -Depth 10
 
     #Apply watchdog to pools
     $TemporaryArray.Clear()
@@ -845,7 +842,7 @@ while ($true) {
     }
 
     #Give API access to the pools information
-    $API.Pools = $Pools
+    $API.Pools = $Pools | ConvertTo-Json -Depth 10
  
     #Load information about the miners
     Write-Log "Getting miner information. "
@@ -1125,13 +1122,13 @@ while ($true) {
     }
 
     #Give API access to the miners information
-    $API.Miners = $Miners
+    $API.Miners = $Miners | ConvertTo-Json -Depth 10
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     if ($Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = $Miners
+    $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10
 
     #Update the active miners
     if ($Miners.Count -eq 0) {
@@ -1380,18 +1377,19 @@ while ($true) {
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
-    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
+    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10
 
     #Move donation run into the future, if benchmarks are ongoing
     if (-not $IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$LastDonated = $Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
 
     #Give API access to WatchdogTimers information
-    $API.WatchdogTimers = $WatchdogTimers
+    $API.WatchdogTimers = $WatchdogTimers | ConvertTo-Json -Depth 10
 
     #Update API miner information
-    $API.ActiveMiners = $ActiveMiners
-    $API.RunningMiners = $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
+    $RunningMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
+    $API.ActiveMiners = $ActiveMiners | ConvertTo-Json -Depth 10
+    $API.RunningMiners = $RunningMiners | ConvertTo-Json -Depth 10
+    $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | ConvertTo-Json -Depth 10
 
     #
     #Start output to host
@@ -1594,7 +1592,7 @@ while ($true) {
 
     #Reduce Memory
     @("AllMiners","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner","Miners_Device_Combos","Miners_DownloadList","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
-    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append}
+    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
@@ -1627,7 +1625,9 @@ while ($true) {
 
         if ($WaitRound % 5 -eq 0) {
             #pick up a sample every ten seconds
-            Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
+            if (-not $SamplesPicked) {
+                Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
+            }
             foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
             $SamplesPicked++
         }
@@ -1704,8 +1704,7 @@ while ($true) {
     } until ($keyPressed -or $SkipSwitchingPrevention -or $StartDownloader -or $Stopp -or ($Timer -ge $StatEnd))
 
     if ($SamplesPicked -eq 0) {
-        #pick at least one sample
-        Update-DeviceInformation $ActiveMiners_DeviceNames -UseAfterburner (-not $Config.DisableMSIAmonitor)
+        #pick at least one sample        
         foreach($Miner in $ActiveMiners) {if ($Miner.GetStatus() -eq [Minerstatus]::Running) {$Miner.UpdateMinerData() > $null}}
         $SamplesPicked++
     }

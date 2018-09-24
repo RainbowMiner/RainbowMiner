@@ -1008,7 +1008,7 @@ function Start-SubProcessInConsole {
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}
-            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append}
+            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
             $Error.Clear()
         }
         while ($Process.HasExited -eq $false)
@@ -3266,11 +3266,10 @@ function Start-AsyncLoader {
             }
             $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
             if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
-            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append;$Error.Clear()}            
-            if ($AsyncLoader.Errors.Count) {$AsyncLoader.Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append;$AsyncLoader.Errors.Clear()}            
+            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Error.Clear()}
+            if ($AsyncLoader.Errors.Count) {$AsyncLoader.Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$AsyncLoader.Errors.Clear()}            
         }
     });
-
     $AsyncLoader.Loader.Runspace = $newRunspace
     $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
 }
