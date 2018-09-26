@@ -292,7 +292,7 @@ function Start-Setup {
                             else {$Config.MiningMode="device"}
                         }
                         "devicename" {
-                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid @($AllDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             if ($GlobalSetupSteps.Contains("devicenameend")) {throw "Goto devicenameend"}
                         }
                         "devicenamewizard" {
@@ -300,15 +300,15 @@ function Start-Setup {
                             $Config.DeviceName = @("GPU")
                             [hashtable]$NewDeviceName = @{}
                             [hashtable]$AvailDeviceCounts = @{}
-                            $AvailDeviceGPUVendors = @($AllDevices | Where-Object {$_.Type -eq "gpu" -and @("nvidia","amd") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
-                            $AvailDevicecounts["CPU"] = @($AllDevices | Where-Object {$_.Type -eq "cpu"} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
+                            $AvailDeviceGPUVendors = @($SetupDevices | Where-Object {$_.Type -eq "gpu" -and @("nvidia","amd") -icontains $_.Vendor} | Select-Object -ExpandProperty Vendor -Unique | Sort-Object)
+                            $AvailDevicecounts["CPU"] = @($SetupDevices | Where-Object {$_.Type -eq "cpu"} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
                             $AvailDeviceCounts["GPU"] = 0
 
                             if ($AvailDeviceGPUVendors.Count -eq 0) {throw "Goto devicenamewizardcpu1"}  
                                                                                       
                             foreach ($p in $AvailDeviceGPUVendors) {
                                 $NewDeviceName[$p] = @()
-                                $AvailDevicecounts[$p] = @($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $p} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
+                                $AvailDevicecounts[$p] = @($SetupDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $p} | Select-Object -ExpandProperty Name -Unique | Sort-Object).Count
                                 $AvailDeviceCounts["GPU"] += $AvailDevicecounts[$p]
                             }
                         }
@@ -318,7 +318,7 @@ function Start-Setup {
                                 throw "Goto devicenamewizard$($AvailDeviceGPUVendors[0].ToLower())1"
                             }
                             if ($AvailDeviceCounts["GPU"] -eq 1) {
-                                if (Read-HostBool -Prompt "Mine on your $($AllDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $AvailDeviceGPUVendors[0]} | Select -ExpandProperty Model_Name -Unique)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                if (Read-HostBool -Prompt "Mine on your $($SetupDevices | Where-Object {$_.Type -eq "gpu" -and $_.Vendor -eq $AvailDeviceGPUVendors[0]} | Select -ExpandProperty Model_Name -Unique)" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
                                     $NewDeviceName[$AvailDeviceGPUVendors[0]] = $AvailDeviceGPUVendors[0]
                                 }
                                 throw "Goto devicenamewizardcpu1"
@@ -340,7 +340,7 @@ function Start-Setup {
                         }
                         "devicenamewizardamd2" {
                             if ($AvailDeviceCounts["AMD"] -gt 1 -and $NewDeviceName["AMD"].Count -eq 0) {
-                                $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -357,7 +357,7 @@ function Start-Setup {
                         }
                         "devicenamewizardnvidia2" {
                             if ($AvailDeviceCounts["NVIDIA"] -gt 1 -and $NewDeviceName["NVIDIA"].Count -eq 0) {
-                                $NewDeviceName["NVIDIA"] = Read-HostArray -Prompt "Enter the NVIDIA devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($AllDevices | Where-Object {$_.Vendor -eq "NVIDIA" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $NewDeviceName["NVIDIA"] = Read-HostArray -Prompt "Enter the NVIDIA devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "NVIDIA" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -638,7 +638,7 @@ function Start-Setup {
                     if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
                     $GlobalSetupStep++
                 }
-                catch {
+                catch {                    
                     if ($Error.Count){$Error.RemoveAt(0)}
                     if (@("back","<") -icontains $_.Exception.Message) {
                         if ($GlobalSetupStepBack.Count) {$GlobalSetupStep = $GlobalSetupStepBack[$GlobalSetupStepBack.Count-1];$GlobalSetupStepBack.RemoveAt($GlobalSetupStepBack.Count-1)}
@@ -659,6 +659,7 @@ function Start-Setup {
                     }
                     else {
                         Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                        Read-Hostkey "Any key to continue">$null
                     }
                 }
             } until ($GlobalSetupDone)
@@ -673,7 +674,7 @@ function Start-Setup {
             Write-Host " "
 
             [System.Collections.ArrayList]$AvailDeviceName = @("*")
-            $AvailDeviceName.AddRange(@($AllDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object))
+            $AvailDeviceName.AddRange(@($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object))
                             
             $MinerSetupDone = $false
             do {             
@@ -702,7 +703,7 @@ function Start-Setup {
                                     [String[]]$EditDeviceName_Array = Read-HostArray -Prompt ".. running on which device(s)? (enter `"*`" for all or leave empty to end miner config)" -Characters "A-Z0-9#\*" -Valid $AvailDeviceName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     ForEach ($EditDevice0 in @("nvidia","amd","cpu")) {
                                         if ($EditDeviceName_Array -icontains $EditDevice0) {
-                                            $EditDeviceName_Array = @($AllDevices | Where-Object {$_.Vendor -eq $EditDevice0 -and $_.Type -eq "gpu" -or $_.Type -eq $EditDevice0} | Select-Object -ExpandProperty Model -Unique | Sort-Object)
+                                            $EditDeviceName_Array = @($SetupDevices | Where-Object {$_.Vendor -eq $EditDevice0 -and $_.Type -eq "gpu" -or $_.Type -eq $EditDevice0} | Select-Object -ExpandProperty Model -Unique | Sort-Object)
                                             break
                                         }
                                     }
