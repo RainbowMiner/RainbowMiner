@@ -123,12 +123,14 @@ param(
     [Parameter(Mandatory = $false)]
     [int]$CPUMiningThreads = 0,
     [Parameter(Mandatory = $false)]
-    [String]$CPUMiningAffinity = ""
+    [String]$CPUMiningAffinity = "",
+    [Parameter(Mandatory = $false)]
+    [Switch]$DisableAPI = $false
 )
 
 Clear-Host
 
-$Version = "3.8.7.7"
+$Version = "3.8.7.8"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -165,11 +167,7 @@ $OutOfSyncLimit = 1/($OutOfSyncWindow-$SyncWindow)
 
 [System.Collections.ArrayList]$WatchdogTimers = @()
 [System.Collections.ArrayList]$ActiveMiners = @()
-[System.Collections.ArrayList]$SelectedPoolNames = @()
-[System.Collections.ArrayList]$RunningPools = @()
 [System.Collections.ArrayList]$AllPools = @()
-[System.Collections.ArrayList]$NewPools = @()
-[System.Collections.ArrayList]$TemporaryArray = @()
 [hashtable]$Rates = @{BTC = [Double]1}
 [hashtable]$NewRates = @{}
 [hashtable]$ConfigFiles = @{Config=$ConfigFile}
@@ -182,7 +180,6 @@ $PauseMiners = $false
 $RestartMiners = $false
 $Restart = $false
 $AutoUpdate = $false
-$Readers = [PSCustomObject]@{}
 $MSIAcurrentprofile = -1
 $RunSetup = $false
 $IsInitialSetup = $false
@@ -198,7 +195,7 @@ if (-not $psISE) {
     $MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}
 }
 if (-not $MyCommandParameters) {
-    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity")
+    $MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","SwitchingPrevention","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","DisableAPI")
 }
 
 #Cleanup the log
@@ -320,7 +317,7 @@ catch {
 Write-Host "Start afterburner library .."
 Start-Afterburner
 
-if ((Get-Command "Get-MpPreference" -ErrorAction SilentlyContinue) -and (Get-MpComputerStatus -ErrorAction Ignore) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
+if ((Get-Command "Get-MpPreference" -ErrorAction Ignore) -and (Get-MpComputerStatus -ErrorAction Ignore) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs
 }
 
@@ -410,7 +407,7 @@ while ($true) {
         if ($Config.LegacyMode -ne $null) {$Config.MiningMode = if (Get-Yes $Config.LegacyMode){"legacy"}else{"device"}}
     }
 
-    if (-not $psISE) {
+    if (-not $psISE -and -not $Config.DisableAPI) {
         #Initialize the API and Get-Device
         $StartAPI = $false
         if(-not (Test-Path Variable:API)) {
@@ -425,8 +422,13 @@ while ($true) {
         if ($StartAPI) {
             Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
         }
-    } else {
+    } elseif(-not (Test-Path Variable:API)) {
         $Global:API = [hashtable]@{}
+        $API.Stop = $false
+        $API.Pause = $false
+        $API.Update = $false
+        $API.RemoteAPI = $Config.RemoteAPI
+        $API.LocalAPIport = $Config.LocalAPIport
     }
 
     #Versioncheck
@@ -521,10 +523,11 @@ while ($true) {
         $LastDonated = $Timer
         $Config = $UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         Remove-Variable "UserConfig" -ErrorAction Ignore
-        $TemporaryArray.Clear(); 
+        [System.Collections.ArrayList]$TemporaryArray = @()
         if ($ActiveMiners.Count)   {foreach($Miner in $ActiveMiners) {if ($Miner.Donator) {$TemporaryArray.Add($Miner)>$null}}}
         if ($TemporaryArray.Count) {foreach($Miner in $TemporaryArray){$ActiveMiners.Remove($Miner);$Miner=$null}}
         $TemporaryArray.Clear()
+        Remove-Variable "TemporaryArray" -Force
         $AllPools.Clear()
         Write-Log "Donation run finished. "
     }
@@ -726,7 +729,7 @@ while ($true) {
 
     #Update the pool balances every 10 Minutes
     if ($Config.ShowPoolBalances) {
-        $RefreshBalances = ($BalancesData -eq $null -or $Updatetracker.Balances -lt $Timer.AddMinutes(-10))
+        $RefreshBalances = (-not $Updatetracker.Balances -or $Updatetracker.Balances -lt $Timer.AddMinutes(-10))
         if ($RefreshBalances) {
             Write-Log "Getting pool balances. "
             $Updatetracker.Balances = $Timer
@@ -734,7 +737,8 @@ while ($true) {
             Write-Log "Updating pool balances. "
         }
         $BalancesData = Get-Balance -Config $(if ($IsDonationRun) {$UserConfig} else {$Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Config.ShowPoolBalancesDetails
-        $API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10
+        if (-not $BalancesData) {$Updatetracker.Balances = 0}
+        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
     }
 
     #Give API access to the current rates
@@ -750,16 +754,15 @@ while ($true) {
 
     #Load information about the pools
     Write-Log "Loading pool information. "
-    $SelectedPoolNames.Clear()
-    if (Test-Path "Pools") {
-        $NewPools = @(
-            foreach($Pool_Name in $AvailPools) {                
-                if ($Config.Pools.$Pool_Name -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $Pool_Name) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $Pool_Name)) {
-                    $SelectedPoolNames.Add($Pool_Name) > $null
-                    Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config $Config.Pools.$Pool_Name -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Config.IgnoreFees
-                }
-            })
-    }
+    [System.Collections.ArrayList]$SelectedPoolNames = @()
+    [System.Collections.ArrayList]$NewPools = @(if (Test-Path "Pools") {
+        foreach($Pool_Name in $AvailPools) {                
+            if ($Config.Pools.$Pool_Name -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $Pool_Name) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $Pool_Name)) {
+                $SelectedPoolNames.Add($Pool_Name) > $null
+                Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config $Config.Pools.$Pool_Name -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Config.IgnoreFees
+            }
+        }
+    })
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
     $AvailPools | Where-Object {-not $Config.Pools.$_ -or -not (($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
@@ -776,6 +779,7 @@ while ($true) {
     #This finds any pools that were already in $AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
     Compare-Object @($NewPools.Name | Select-Object -Unique) @($AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$AllPools | Where-Object Name -EQ $_ | Foreach-Object {$NewPools.Add($_)>$null}}
+    $AllPools.Clear()
     $AllPools = @(
         foreach ($Pool in $NewPools) {
             $Pool_Name = $Pool.Name
@@ -795,18 +799,23 @@ while ($true) {
                 ($Pool.CoinSymbol -and $Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
             )) {$Pool}
         })
+    $NewPools.Clear()
+    $SelectedPoolNames.Clear()
+    Remove-Variable "NewPools" -Force
+    Remove-Variable "SelectedPoolNames" -Force
 
     #Give API access to the current running configuration
     $API.AllPools = $AllPools | ConvertTo-Json -Depth 10
 
     #Apply watchdog to pools
-    $TemporaryArray.Clear()
+    [System.Collections.ArrayList]$TemporaryArray = @()
     foreach($Pool in $AllPools) {
         $Pool_WatchdogTimers = $WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Timer.AddSeconds( - $WatchdogReset)
         if (-not (($Pool_WatchdogTimers | Measure-Object).Count -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object).Count -lt <#statge#>2)) {$TemporaryArray.Add($Pool)>$null}
     }
-
     if ($TemporaryArray.Count) {foreach($Pool in $TemporaryArray) {$AllPools.Remove($Pool)}}
+    $TemporaryArray.Clear()
+    Remove-Variable "TemporaryArray"
 
     #Update the active pools
     if ($AllPools.Count -eq 0) {
@@ -881,6 +890,8 @@ while ($true) {
                 if ($MinerOk) {$_}
             }
     }
+    $Stats = $null
+    Remove-Variable "Stats" -Force
 
     if ($Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
@@ -1118,6 +1129,7 @@ while ($true) {
             }
         }
     }
+    $AllMiners = $null
 
     #Remove miners with developer fee
     if ($Config.ExcludeMinersWithFee) {$Miners = $Miners | Where-Object {($_.DevFee.PSObject.Properties.Value | Foreach-Object {[Double]$_} | Measure-Object -Sum).Sum -eq 0}}
@@ -1579,10 +1591,6 @@ while ($true) {
             $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null
     }
     if ($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
-    #$StatusLine.Add("CPU = $($AsyncLoader.ComputerStats.CpuLoad) %") > $null
-    #$StatusLine.Add("Memory = $($AsyncLoader.ComputerStats.MemoryUsage) %") > $null
-    #$StatusLine.Add("VirtualMemory = $($AsyncLoader.ComputerStats.VirtualMemoryUsage) %") > $null
-    #$StatusLine.Add("DiskFree = $($AsyncLoader.ComputerStats.DriveFree) %") > $null
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
@@ -1599,13 +1607,16 @@ while ($true) {
     }
 
     #Reduce Memory
-    @("AllMiners","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner","Miners_Device_Combos","Miners_DownloadList","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
+    #if (-not $Config.DisableAPI -and $Config.LocalAPIport -gt 0) {try{invoke-restmethod "http://localhost:$($Config.LocalAPIport)/version" -TimeoutSec 10 -ErrorAction Stop >$null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "RainbowMiner API is down. Please restart."}}
+    @("AllMiners","BalancesData","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","Miners_DownloadList","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
-    try{invoke-restmethod "http://localhost:$($Config.LocalAPIport)/version" -TimeoutSec 10 -ErrorAction Stop >$null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "RainbowMiner API is down. Please restart."}
-    Write-Log (Get-MemoryUsage).MemText;[System.GC]::Collect()
+    
+    Write-Log (Get-MemoryUsage).MemText    
+    [System.GC]::Collect()
+    [System.GC]::GetTotalMemory('forcefullcollection') > $null
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $keyPressed = $false
@@ -1766,6 +1777,8 @@ while ($true) {
             $Miner.EndOfRoundCleanup()
         }
     }
+    $Pools = $null
+    Remove-Variable "Pools" -Force
 
     #Cleanup stopped miners
     foreach ($Miner in $ActiveMiners) {if ($Miner.Stopped) {$Miner.StopMiningPostCleanup()}}

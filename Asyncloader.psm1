@@ -1,6 +1,10 @@
 ﻿function Start-AsyncLoader {
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 
+    $AsyncLoader.Stop = $false
+    [hashtable]$AsyncLoader.Jobs = @{}
+    $AsyncLoader.CycleTime = 10
+
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
@@ -13,10 +17,6 @@
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-        $AsyncLoader.Stop = $false
-        $AsyncLoader.Cycle = -1
-        [hashtable]$AsyncLoader.Jobs = @{}
-        $AsyncLoader.CycleTime = 10
         $ProgressPreference = "SilentlyContinue"
         $ErrorActionPreference = "SilentlyContinue"
         $WarningPreference = "SilentlyContinue"
@@ -24,10 +24,12 @@
 
         [System.Collections.ArrayList]$Errors = @()
 
+        $Cycle = -1
+
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
-            $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {[System.GC]::GetTotalMemory("forcefullcollection")>$null;[System.GC]::Collect();Sleep -Milliseconds 500}
+            $Cycle++
+            if (-not ($Cycle % 6)) {[System.GC]::GetTotalMemory("forcefullcollection")>$null;[System.GC]::Collect();Sleep -Milliseconds 500}
             foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
                 $Job = $AsyncLoader.Jobs.$Jobkey
                 if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {

@@ -91,20 +91,15 @@ function Get-PoolPayoutCurrencies {
 function Get-Balance {
     [CmdletBinding()]
     param($Config, $NewRates, [Bool]$Refresh = $false, [Bool]$Details = $false)
-
-    $Data = [PSCustomObject]@{}
     
     if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
-        $NewBalances = @(Get-ChildItem "Balances" -File | Where-Object {($Config.Pools.$($_.BaseName) -or $Config.Pools."$($_.BaseName)Coins") -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)} | ForEach-Object {
-            Get-ChildItemContent "Balances\$($_.Name)" -Parameters @{Config = $Config}
-        } | Foreach-Object {$_.Content | Add-Member Name $_.Name -PassThru -Force} | Group-Object -Property Caption | Foreach-Object {
+        $Script:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
             $_.Group[0]
         })
-        $Script:CachedPoolBalances = @($NewBalances) + @(Compare-Object @($NewBalances.Caption | Select-Object -Unique) @($Script:CachedPoolBalances.Caption | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:CachedPoolBalances | Where-Object Caption -EQ $_}) | Sort-Object Caption
     }
 
-    $Balances = @($Script:CachedPoolBalances | Where-Object Name -ne '*Total*' | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"})) {$_.PSObject.Properties.Remove($p)};$_})
+    $Balances = $Script:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
 
     if (-not $Balances) {return}
 
@@ -182,8 +177,10 @@ function Get-Balance {
         $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($Digits[$Matches[2]])}" -f $Balance.$_}
     }
     
-    $Data | Add-Member Balances $Balances
-    $Data | Add-Member Rates $RatesAPI -PassThru
+    [PSCustomObject]@{
+        Balances = $Balances
+        Rates    = $RatesAPI
+    }
 }
 
 function Get-CoinSymbol {
@@ -683,6 +680,27 @@ function Get-MinersContent {
     }
 }
 
+function Get-BalancesContent {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Config
+    )
+
+    [Hashtable]$Parameters = @{
+        Config  = $Config
+    }
+
+    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {($Config.Pools.$($_.BaseName) -or $Config.Pools."$($_.BaseName)Coins") -and ($Config.ExcludePoolName -inotcontains $_.BaseName -or $Config.ShowPoolBalancesExcludedPools)})) {
+        $Name = $Balance.BaseName 
+        foreach($c in @(& $Balance.FullName @Parameters)) {
+            $c | Add-Member -NotePropertyMembers @{
+                Name = if ($c.Name) {$c.Name} else {$Name}
+                BaseName = $Name
+            } -Force -PassThru
+        }
+    }
+}
 
 filter ConvertTo-Hash { 
     [CmdletBinding()]
@@ -2742,7 +2760,6 @@ function Set-DevicesConfigDefault {
         }
     }
 }
-
 
 function Set-PoolsConfigDefault {
     [CmdletBinding()]
