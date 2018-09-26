@@ -1083,8 +1083,8 @@ function Expand-WebRequest {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
         else {
-            Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $true | ForEach-Object {Move-Item (Join-Path $Path_Old $_) $Path_New}
-            Remove-Item $Path_Old
+            Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $true | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
+            Remove-Item $Path_Old -Recurse -Force
         }
         if (Test-Path $Path_Bak) {
             $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore | Where-Object PSIsContainer -EQ $false | Foreach-Object {Move-Item $_ $Path_New -Force}}

@@ -34,7 +34,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     $IsMiner = $_.IsMiner
 
     if ($IsMiner) {
-        $UriJson = (Split-Path $Path) + "\_uri.json"
+        $UriJson = Join-Path (Split-Path $Path) "_uri.json"
         $UriJsonData = [PSCustomObject]@{URI = ""}
 
         if ((Test-Path $Path) -and (Test-Path $UriJson)) {
