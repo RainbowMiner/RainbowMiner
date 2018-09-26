@@ -8,7 +8,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.3.0/bminer-lite-v10.3.0-c1b9204-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.4.0-bminer/bminer-lite-v10.4.0-b73432a-amd64.zip"
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -27,6 +27,7 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Coins = [PSCustomObject]@{
+    default     = "--pers auto"
     AION        = "--pers AION0PoW"
     BTG         = "--pers BgoldPoW"
     BTCZ        = "--pers BitcoinZ"
@@ -69,7 +70,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
         $MainAlgorithm = $_.MainAlgorithm
         $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
 
-        if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
+        if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device) {
 
             $SecondAlgorithm = $_.SecondaryAlgorithm
             if ($SecondAlgorithm -ne '') {
@@ -90,19 +91,25 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 if ($MainAlgorithm -eq "equihash1445") {
                     @($Coins.PSObject.Properties.Name) | Foreach-Object {
                         $Miner_Coin = $_
-                        $Algorithm_Norm = "$MainAlgorithm_Norm-$Miner_Coin"
-                        [PSCustomObject]@{
-                            Name = $Miner_Name
-                            DeviceName = $Miner_Device.Name
-                            DeviceModel = $Miner_Model
-                            Path = $Path
-                            Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) $($Coins.$Miner_Coin) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
-                            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-                            API = "Bminer"
-                            Port = $Miner_Port
-                            Uri = $Uri
-                            DevFee = $_.DevFee
-                            ManualUri = $ManualUri
+                        if ($Miner_Coin -ne "default") {$Algorithm_Norm = "$MainAlgorithm_Norm-$Miner_Coin"}
+                        else {$Algorithm_Norm = $MainAlgorithm_Norm}
+
+                        $MinerCoin_Params = $Coins.$Miner_Coin
+
+                        if ($Pools.$Algorithm_Norm.Host) {
+                            [PSCustomObject]@{
+                                Name = $Miner_Name
+                                DeviceName = $Miner_Device.Name
+                                DeviceModel = $Miner_Model
+                                Path = $Path
+                                Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) $($MinerCoin_Params) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
+                                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+                                API = "Bminer"
+                                Port = $Miner_Port
+                                Uri = $Uri
+                                DevFee = $_.DevFee
+                                ManualUri = $ManualUri
+                            }
                         }
                     }
                 } else {               
