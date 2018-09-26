@@ -3160,7 +3160,7 @@ Param(
     
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
 
-    if ($true -or $force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
+    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
         } else {
