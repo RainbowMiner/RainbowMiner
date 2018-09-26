@@ -299,8 +299,7 @@ Function Write-Log {
 
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
-            $p = get-process -id $PID | select PM,WS
-            "$date [$("{0:f2}" -f ($p.WS/1048576)) $("{0:f2}" -f ($p.PM/1048576))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
+            "$date $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -3060,15 +3059,16 @@ function Get-MinerPort{
     $portin
 }
 
-function Get-ComputerStats {
+function Get-MemoryUsage
+{
+    $memusagebyte = [System.GC]::GetTotalMemory('forcefullcollection')
+    $memdiff = $memusagebyte - [int64]$script:last_memory_usage_byte
     [PSCustomObject]@{
-        CpuLoad = Get-CimInstance win32_processor | Measure-Object -property LoadPercentage -Average | ForEach-Object {$_.Average}
-        MemoryUsage = Get-CimInstance win32_operatingsystem | ForEach-Object {"{0:N2}" -f ((($_.TotalVisibleMemorySize - $_.FreePhysicalMemory) * 100) / $_.TotalVisibleMemorySize)}
-        VirtualMemoryUsage = Get-CimInstance win32_operatingsystem | ForEach-Object {"{0:N2}" -f ((($_.TotalVirtualMemorySize - $_.FreeVirtualMemory) * 100) / $_.TotalVirtualMemorySize)}
-        DriveFree = Get-CimInstance Win32_Volume -Filter "DriveLetter = '$($PWD.Drive.Name):'" | ForEach-Object {"{0:N2}" -f (($_.FreeSpace / $_.Capacity) * 100)}
-        Processes = (Get-Process).count
-        Connections = if (Get-Command "Get-NetTCPConnection" -ErrorAction Ignore) {(Get-NetTCPConnection).count}
+        MemUsage   = $memusagebyte
+        MemDiff    = $memdiff
+        MemText    = "Memory usage: {0:n1} MB ({1:n0} Bytes {2})" -f  ($memusagebyte/1MB), $memusagebyte, "$(if ($memdiff -gt 0){"+"})$($memdiff)"
     }
+    $script:last_memory_usage_byte = $memusagebyte
 }
 
 function Get-MD5Hash {
@@ -3160,7 +3160,7 @@ Param(
     
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
 
-    if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
+    if ($true -or $force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
         } else {
@@ -3200,14 +3200,14 @@ Param(
             }
         } until ($retry -le 0)
 
-        $AsyncLoader.Jobs.$Jobkey.Request = $Request
+        $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
         $Error.Clear()
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
-        $AsyncLoader.Jobs.$Jobkey.Request
+        $AsyncLoader.Jobs.$Jobkey.Request | ConvertFrom-Json
     }
 }
 
@@ -3218,68 +3218,6 @@ Param(
         [string]$tag
 )
     foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {if ($AsyncLoader.Jobs.$Jobkey.Tag -eq $tag) {$AsyncLoader.Jobs.$Jobkey.Paused=$true}}
-}
-
-function Start-AsyncLoader {
-    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
-
-     # Setup runspace to launch the AsyncLoader in a separate thread
-    $newRunspace = [runspacefactory]::CreateRunspace()
-    $newRunspace.Open()
-    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
-    $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
-
-    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({        
-        Import-Module ".\Include.psm1"
-
-        # Set the starting directory
-        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
-
-        $AsyncLoader.Stop = $false
-        $AsyncLoader.Cycle = -1
-        [hashtable]$AsyncLoader.Jobs = @{}
-        [System.Collections.ArrayList]$AsyncLoader.Errors = @()
-        $AsyncLoader.CycleTime = 10
-        $ProgressPreference = "SilentlyContinue"
-        $ErrorActionPreference = "SilentlyContinue"
-        $WarningPreference = "SilentlyContinue"
-        $InformationPreference = "SilentlyContinue"
-
-        while (-not $AsyncLoader.Stop) {
-            $Start = (Get-Date).ToUniversalTime()
-            $AsyncLoader.Cycle++
-            if (-not ($AsyncLoader.Cycle % 6)) {$AsyncLoader.ComputerStats = Get-ComputerStats;[System.GC]::GetTotalMemory($true)>$null}
-            foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
-                $Job = $AsyncLoader.Jobs.$Jobkey
-                if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
-                    try {
-                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$AsyncLoader.Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
-                    }
-                    catch {
-                        $AsyncLoader.Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                    }
-                    finally {
-                        $Error.Clear()
-                    }
-                }
-            }
-            $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
-            if ($Delta -gt 0) {Sleep -Milliseconds ($Delta*1000)}
-            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Error.Clear()}
-            if ($AsyncLoader.Errors.Count) {$AsyncLoader.Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$AsyncLoader.Errors.Clear()}            
-        }
-    });
-    $AsyncLoader.Loader.Runspace = $newRunspace
-    $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
-}
-
-function Stop-AsyncLoader {
-    $Global:AsyncLoader.Stop = $true
-    $Global:AsyncLoader.Loader.dispose()
-    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
-    $Global:AsyncLoader.Loader = $null
-    $Global:AsyncLoader.Handle = $null
 }
 
 function Write-HostSetupHints {

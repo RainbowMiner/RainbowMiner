@@ -33,7 +33,6 @@
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("API", $API)
-    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $API.Server = [PowerShell]::Create().AddScript({
@@ -108,7 +107,7 @@
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
                 "/version" {
-                    $Data = $API.Version | ConvertTo-Json
+                    $Data = $API.Version
                     break
                 }
                 "/activeminers" {
@@ -192,11 +191,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json @($AsyncLoader.Jobs | Select-Object)
-                    Break
-                }
-                "/asyncloadererrors" {
-                    $Data = ConvertTo-Json @($AsyncLoader.Errors | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Asyncloaderjobs | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/minerstats" {
@@ -242,7 +237,7 @@
                     Break
                 }
                 "/computerstats" {
-                    $Data = $Asyncloader.ComputerStats
+                    $Data = $API.ComputerStats
                     Break
                 }
                 "/minerports" {
@@ -335,7 +330,7 @@
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
-            [System.GC]::GetTotalMemory($true)>$null
+            [System.GC]::GetTotalMemory("forcefullcollection")>$null;[System.GC]::Collect();Sleep -Milliseconds 100
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()

@@ -128,7 +128,7 @@ param(
 
 Clear-Host
 
-$Version = "3.8.7.6"
+$Version = "3.8.7.7"
 $Strikes = 3
 $SyncWindow = 10 #minutes, after that time, the pools bias price will start to decay
 $OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
@@ -149,6 +149,8 @@ Import-Module NetSecurity -ErrorAction Ignore
 Import-Module Defender -ErrorAction Ignore
 Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
 Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
+Import-Module .\API.psm1
+Import-Module .\Asyncloader.psm1
 
 if ($UseTimeSync) {Test-TimeSync}
 
@@ -411,8 +413,7 @@ while ($true) {
     if (-not $psISE) {
         #Initialize the API and Get-Device
         $StartAPI = $false
-        if(!(Test-Path Variable:API)) {
-            Import-Module .\API.psm1
+        if(-not (Test-Path Variable:API)) {
             $StartAPI = $true
         } elseif ($Config.LocalAPIport -and ($API.LocalAPIport -ne $Config.LocalAPIport)) {
             #restart API server
@@ -423,12 +424,15 @@ while ($true) {
         }
         if ($StartAPI) {
             Start-APIServer -RemoteAPI:$Config.RemoteAPI -LocalAPIport:$Config.LocalAPIport
-            $API.Version = Confirm-Version $Version
-            if ($API.Version.RemoteVersion -gt $API.Version.Version -and $Config.EnableAutoUpdate) {$AutoUpdate = $API.Update = $true}
         }
     } else {
         $Global:API = [hashtable]@{}
     }
+
+    #Versioncheck
+    $ConfirmedVersion = Confirm-Version $Version
+    $API.Version = $ConfirmedVersion | ConvertTo-Json
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Config.EnableAutoUpdate) {$API.Update = $AutoUpdate = $true}
 
     #Give API access to all possible devices
     if ($API.AllDevices -eq $null) {$API.AllDevices = $AllDevices | ConvertTo-Json -Depth 10}
@@ -694,12 +698,16 @@ while ($true) {
     try {
         Write-Log "Updating exchange rates from Coinbase. "
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
-        $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
-        $MissingCurrencies = @($Config.Currency | Where-Object {-not $NewRates.ContainsKey($_)})
-        if ($MissingCurrencies.Count -gt 0) {
-            if ($MissingCurrenciesTicker = Get-Ticker -Symbol $MissingCurrencies) {
-                $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))));$Rates[$_] = [Double]$NewRates.$_}                
+        if ($NewRates.Count) {
+            $Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Rates[$_] = ([Double]$NewRates.$_)}
+            $MissingCurrencies = @($Config.Currency | Where-Object {-not $NewRates.ContainsKey($_)})
+            if ($MissingCurrencies.Count -gt 0) {
+                if ($MissingCurrenciesTicker = Get-Ticker -Symbol $MissingCurrencies) {
+                    $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))));$Rates[$_] = [Double]$NewRates.$_}                
+                }
             }
+        } else {
+            Write-Log -Level Warn "Coinbase is down. "
         }
     }
     catch {
@@ -1390,6 +1398,7 @@ while ($true) {
     $API.ActiveMiners = $ActiveMiners | ConvertTo-Json -Depth 10
     $API.RunningMiners = $RunningMiners | ConvertTo-Json -Depth 10
     $API.FailedMiners = $ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | ConvertTo-Json -Depth 10
+    $API.Asyncloaderjobs = $Asyncloader.Jobs | ConvertTo-Json -Depth 10
 
     #
     #Start output to host
@@ -1579,10 +1588,9 @@ while ($true) {
     Write-Host " "
 
     #Check for updated RainbowMiner
-    $API.Version = $ConfirmedVersion = Confirm-Version $Version
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Config.EnableAutoUpdate) {
-            Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow            
+            Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow
             $API.Update = $true
         } else {
             Write-Host "To start update, press key `"U`"" -ForegroundColor Yellow            
@@ -1596,8 +1604,8 @@ while ($true) {
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
-    [System.GC]::Collect()
-    Sleep -Milliseconds 200
+    try{invoke-restmethod "http://localhost:$($Config.LocalAPIport)/version" -TimeoutSec 10 -ErrorAction Stop >$null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "RainbowMiner API is down. Please restart."}
+    Write-Log (Get-MemoryUsage).MemText;[System.GC]::Collect()
     
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $AutoUpdate = $SkipSwitchingPrevention = $Stopp = $keyPressed = $false
@@ -1617,7 +1625,6 @@ while ($true) {
     $WaitRound = 0
     do {
         $WaitRound++
-        [System.GC]::GetTotalMemory($true)>$null
 
         $TimerBackup = $Timer
 
