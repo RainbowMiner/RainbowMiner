@@ -1110,7 +1110,7 @@ function Expand-WebRequest {
         $Path_Bak = (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).bak")
 
         if (Test-Path $Path_Old) {Remove-Item $Path_Old -Recurse -Force}
-        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath($Path_Old))`" -y -spe" -Wait -WindowStyle Minimized
+        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath($Path_Old))`" -y -spe" -Wait -WindowStyle Hidden
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Move-Item $Path_New $Path_Bak}
