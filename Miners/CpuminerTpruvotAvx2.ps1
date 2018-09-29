@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\CPU-TPruvot\cpuminer-gw64-avx2.exe"
@@ -12,7 +10,7 @@ $Uri = "https://github.com/tpruvot/cpuminer-multi/releases/download/v1.3.1-multi
 $Port = "510{0:d2}"
 $DevFee = 0.0
 
-if (-not $Devices.CPU -and -not $Config.InfoOnly) {return} # No CPU present in system
+if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 if (-not $Global:GlobalCPUInfo.Features.tryall -and -not $Global:GlobalCPUInfo.Features.avx -and -not $Global:GlobalCPUInfo.Features.avx2) {return}
 
 $Commands = [PSCustomObject[]]@(
@@ -72,7 +70,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("CPU")
         Name      = $Name
@@ -86,16 +84,14 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices = $Devices.CPU
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceParams = "$(if ($Config.CPUMiningThreads){"-t $($Config.CPUMiningThreads)"}) $(if ($Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Config.CPUMiningAffinity)"})"
+    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
 
     $Commands | ForEach-Object {
 
@@ -108,7 +104,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path = $Path
                 Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($DeviceParams) $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
                 Uri = $Uri

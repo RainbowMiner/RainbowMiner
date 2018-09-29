@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\NVIDIA-CcminerBalloon\ccminer.exe"
@@ -13,7 +11,7 @@ $Port = "104{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"
 
-if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "balloon"; Params = "--cuda_threads 256 --cuda_blocks 100"} #Balloon
@@ -21,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("NVIDIA")
         Name      = $Name
@@ -35,12 +33,10 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
-$Devices = $Devices.NVIDIA
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -58,7 +54,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
             DeviceModel = $Miner_Model
             Path = $Path
             Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
-            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+            HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
             API = "Ccminer"
             Port = $Miner_Port
             Uri = $Uri

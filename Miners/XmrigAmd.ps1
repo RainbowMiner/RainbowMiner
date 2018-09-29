@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
@@ -12,7 +10,7 @@ $Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.3-beta/xmrig-a
 $Port = "304{0:d2}"
 $DevFee = 1.0
 
-if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
@@ -30,7 +28,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD")
         Name      = $Name
@@ -44,10 +42,8 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices = $Devices.AMD
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -67,7 +63,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path      = $Path
                 Arguments = "-R 1 --opencl-devices=$($DeviceIDsAll) --opencl-platform=$($Miner_PlatformId) --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive --nicehash --donate-level=1 $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
                 Uri       = $Uri

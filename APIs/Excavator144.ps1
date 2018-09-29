@@ -2,6 +2,7 @@
 
 class Excavator144 : Miner {
     hidden static [System.Management.Automation.Job]$Service
+    hidden static [Int]$ServiceId = 0
     hidden [DateTime]$BeginTime = 0
     hidden [DateTime]$EndTime = 0
     hidden [Array]$Workers = @()
@@ -480,7 +481,7 @@ class Excavator144 : Miner {
     }
 
     [Int]GetProcessId() {        
-        return [Excavator144]::Service.MiningProcessId;
+        return [Excavator144]::ServiceId;
     }
 
     SetStatus([MinerStatus]$Status) {
@@ -498,8 +499,9 @@ class Excavator144 : Miner {
 
         if (-not [Excavator144]::Service) {
             $LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\Excavator-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            [Excavator144]::Service = Start-SubProcess -FilePath $this.Path -ArgumentList "-p $($this.Port) -f 0 -fn `"$($LogFile)`"" -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -ProcessName $this.ExecName
-
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList "-p $($this.Port) -f 0 -fn `"$($LogFile)`"" -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -ProcessName $this.ExecName
+            [Excavator144]::Service   = $Job.Process
+            [Excavator144]::ServiceId = $Job.ProcessId
             #Wait until excavator is ready, max 10 seconds
             $Server = "localhost"
             $Timeout = 1
@@ -543,8 +545,8 @@ class Excavator144 : Miner {
     }
 
     ShutDownMiner() {
-        if ([Excavator144]::Service.MiningProcessId) {
-            if ($MiningProcess = Get-Process -Id ([Excavator144]::Service.MiningProcessId) -ErrorAction Ignore) {
+        if ([Excavator144]::ServiceId) {
+            if ($MiningProcess = Get-Process -Id ([Excavator144]::ServiceId) -ErrorAction Ignore) {
                 $MiningProcess.CloseMainWindow() | Out-Null
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($MiningProcess.WaitForExit(10000)) { 
@@ -557,7 +559,7 @@ class Excavator144 : Miner {
                     }
                 }
             }
-            [Excavator144]::Service.MiningProcessId = 0
+            [Excavator144]::ServiceId = 0
         }
 
         if ([Excavator144]::Service | Get-Job -ErrorAction SilentlyContinue) {
@@ -633,13 +635,13 @@ class Excavator144 : Miner {
             Write-Log -Level Warn  "Failed to connect to miner ($($this.Name)). "
         }
 
-        $this.Data.Add([PSCustomObject]@{
+        $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
-        })>$null
+        })
 
         $this.CleanupMinerData()
 

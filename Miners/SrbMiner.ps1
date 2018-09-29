@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
@@ -13,7 +11,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
 
-if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No AMD present in system
+if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
     # Note: For fine tuning directly edit Config_[MinerName]-[Algorithm]-[Port].txt in the miner binary directory
@@ -63,7 +61,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type = @("AMD")
         Name      = $Name
@@ -77,10 +75,8 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices = $Devices.AMD
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
     $Commands | ForEach-Object {
@@ -101,7 +97,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                     Config = [PSCustomObject]@{
                         api_enabled      = $true
                         api_port         = [Int]$Miner_Port
-                        api_rig_name     = "$($Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker)"
+                        api_rig_name     = "$($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker)"
                         cryptonight_type = $Algorithm
                         intensity        = 0
                         double_threads   = $false
@@ -135,7 +131,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path        = $Path
                 Arguments   = $Arguments
-                HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API         = "SrbMiner"
                 Port        = $Miner_Port
                 Uri         = $Uri

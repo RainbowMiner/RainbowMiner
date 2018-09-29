@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\CryptoNight-Claymore-Cpu\NsCpuCNMiner64.exe"
@@ -13,7 +11,7 @@ $Port = "520{0:d2}"
 $ManualURI = "https://bitcointalk.org/index.php?topic=647251.0"
 $DevFee = 0
 
-if (-not $Devices.CPU -and -not $Config.InfoOnly) {return} # No CPU present in system
+if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = "-pow7 0"} #CryptoNight
@@ -22,7 +20,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("CPU")
         Name      = $Name
@@ -36,10 +34,8 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices = $Devices.CPU
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Miner_Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -58,7 +54,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path = $Path
                 Arguments = "-r -1 -mport -$($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"            
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Claymore"
                 Port = $Miner_Port
                 Uri = $Uri

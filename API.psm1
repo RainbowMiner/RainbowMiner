@@ -330,7 +330,6 @@
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
-            [System.GC]::GetTotalMemory("forcefullcollection")>$null;[System.GC]::Collect();Sleep -Milliseconds 100
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()
@@ -345,5 +344,8 @@ Function Stop-APIServer {
     if (-not $Global:API.Stop) {
         try {$result = Invoke-WebRequest -Uri "http://localhost:$($API.LocalAPIport)/stop" } catch { Write-Host "Listener ended"}
     }
-    $Global:API.Server.dispose()
+    if ($Global:API.Server) {$Global:API.Server.dispose()}
+    $Global:API.Server = $null
+    $Global:API.Handle = $null
+    Remove-Variable "API" -Force    
 }

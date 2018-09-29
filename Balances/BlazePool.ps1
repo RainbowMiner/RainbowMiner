@@ -1,6 +1,4 @@
-﻿using module ..\Include.psm1
-
-param(
+﻿param(
     $Config
 )
 

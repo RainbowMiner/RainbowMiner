@@ -15,11 +15,11 @@ function Start-Setup {
     [System.Collections.ArrayList]$SetupMessage = @()
 
     do {
-        $ConfigActual = Get-Content $ConfigFiles["Config"] | ConvertFrom-Json
-        $MinersActual = Get-Content $ConfigFiles["Miners"] | ConvertFrom-Json
-        $PoolsActual = Get-Content $ConfigFiles["Pools"] | ConvertFrom-Json
-        $DevicesActual = Get-Content $ConfigFiles["Devices"] | ConvertFrom-Json
-        $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"] | ConvertFrom-Json
+        $ConfigActual = Get-Content $ConfigFiles["Config"].Path | ConvertFrom-Json
+        $MinersActual = Get-Content $ConfigFiles["Miners"].Path | ConvertFrom-Json
+        $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+        $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
+        $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
         $SetupDevices = Get-Device "nvidia","amd","cpu"
 
         Clear-Host
@@ -85,7 +85,7 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","region","currency","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","disableapi","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -234,14 +234,14 @@ function Start-Setup {
                             if ($IsInitialSetup) {
                                 Write-Host " "
                                 Write-Host "Choose your mining pools from this list or accept the default for a head start (read the Pools section of our readme for more details): " -ForegroundColor Cyan
-                                $AvailPools | Foreach-Object {Write-Host " $($_)" -ForegroundColor Cyan}
+                                $Session.AvailPools | Foreach-Object {Write-Host " $($_)" -ForegroundColor Cyan}
                                 Write-Host " "
                             }
-                            $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                            $Config.ExcludePoolName = $AvailPools | Where-Object {$Config.PoolName -inotcontains $_}                                            
+                            $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludePoolName = $Session.AvailPools | Where-Object {$Config.PoolName -inotcontains $_}                                            
                         }
                         "excludepoolname" {
-                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "minername" {
                             if ($IsInitialSetup) {
@@ -251,10 +251,10 @@ function Start-Setup {
                                 $Skip = Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 if ($Skip) {throw "Goto devicenamebegin"}
                             }
-                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "excludeminername" {
-                            $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "algorithm" {
                             $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -532,6 +532,9 @@ function Start-Setup {
                         "disableapi" {
                             $Config.DisableAPI = Read-HostBool -Prompt "Disable localhost API" -Default $Config.DisableAPI | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
+                        "disableasyncloader" {
+                            $Config.DisableAsyncLoader = Read-HostBool -Prompt "Disable asynchronous loader" -Default $Config.DisableAsyncLoader | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
                         "powerpricecurrency" {
                             $Config.PowerPriceCurrency = Read-HostString -Prompt "Enter currency of power price (e.g. USD,EUR,CYN)" -Default $Config.PowerPriceCurrency -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
@@ -604,6 +607,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableAutoMinerPorts $(if (Get-Yes $Config.EnableAutoMinerPorts){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member DisableMSIAmonitor $(if (Get-Yes $Config.DisableMSIAmonitor){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member DisableAPI $(if (Get-Yes $Config.DisableAPI){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member DisableAsyncLoader $(if (Get-Yes $Config.DisableAsyncLoader){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
                             $ConfigActual | Add-Member CPUMiningAffinity $Config.CPUMiningAffinity -Force
 
@@ -619,8 +623,8 @@ function Start-Setup {
                                 foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {$PoolsActual.NiceHash | Add-Member $q "" -Force}
                             }
 
-                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"] -Encoding utf8                                             
-                            $PoolsActual | ConvertTo-Json | Out-File $ConfigFiles["Pools"] -Encoding utf8
+                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8                                             
+                            $PoolsActual | ConvertTo-Json | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
 
                             if ($IsInitialSetup) {
                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
@@ -678,7 +682,7 @@ function Start-Setup {
                             
             $MinerSetupDone = $false
             do {             
-                $MinersActual = Get-Content $ConfigFiles["Miners"] | ConvertFrom-Json                                                     
+                $MinersActual = Get-Content $ConfigFiles["Miners"].Path | ConvertFrom-Json                                                     
                 $MinerSetupStepsDone = $false
                 $MinerSetupStep = 0
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
@@ -692,7 +696,7 @@ function Start-Setup {
                         $MinerSetupStepStore = $true
                         Switch ($MinerSetupSteps[$MinerSetupStep]) {
                             "minername" {                                                    
-                                $Miner_Name = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Miner_Name = Read-HostString -Prompt "Which miner do you want to configure? (leave empty to end miner config)" -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 if ($Miner_Name -eq '') {throw "cancel"}
                             }
                             "devices" {
@@ -770,12 +774,12 @@ function Start-Setup {
                             }
                             "save" {
                                 Write-Host " "
-                                if (-not (Read-HostBool "Really write entered values to $($ConfigFiles["Miners"])?" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                if (-not (Read-HostBool "Really write entered values to $($ConfigFiles["Miners"].Path)?" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
                                 $MinersActual | Add-Member $EditMinerName -Force (@($MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -ne $EditAlgorithm -or $_.SecondaryAlgorithm -ne $EditSecondaryAlgorithm} | Select-Object)+@($EditMinerConfig))
 
                                 $MinersActualSave = [PSCustomObject]@{}
                                 $MinersActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersActual.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
-                                Set-ContentJson -PathToFile $ConfigFiles["Miners"] -Data $MinersActualSave > $null
+                                Set-ContentJson -PathToFile $ConfigFiles["Miners"].Path -Data $MinersActualSave > $null
 
                                 Write-Host " "
                                 Write-Host "Changes written to Miner configuration. " -ForegroundColor Cyan
@@ -828,8 +832,8 @@ function Start-Setup {
             $PoolSetupDone = $false
             do {
                 try {
-                    $PoolsActual = Get-Content $ConfigFiles["Pools"] | ConvertFrom-Json
-                    $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                    $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+                    $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     if ($Pool_Name -eq '') {throw}
 
                     if (-not $PoolsActual.$Pool_Name) {
@@ -842,7 +846,7 @@ function Start-Setup {
                                 API_Key = "`$API_Key"
                             }
                         ) -Force
-                        Set-ContentJson -PathToFile $ConfigFiles["Pools"] -Data $PoolsActual > $null
+                        Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActual > $null
                     }
 
                     $Pool = Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config @{DataWindow="estimate_current"} -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true
@@ -998,7 +1002,7 @@ function Start-Setup {
                                         $PoolsActualSave = [PSCustomObject]@{}
                                         $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$PoolsActualSave | Add-Member $_ ($PoolsActual.$_) -Force}
 
-                                        Set-ContentJson -PathToFile $ConfigFiles["Pools"] -Data $PoolsActualSave > $null
+                                        Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActualSave > $null
 
                                         Write-Host " "
                                         Write-Host "Changes written to pool configuration. " -ForegroundColor Cyan
@@ -1057,14 +1061,14 @@ function Start-Setup {
             $DeviceSetupDone = $false
             do {
                 try {
-                    $DevicesActual = Get-Content $ConfigFiles["Devices"] | ConvertFrom-Json
-                    $OCprofilesActual = Get-Content $ConfigFiles["OCProfiles"] | ConvertFrom-Json
+                    $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
+                    $OCprofilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
                     $Device_Name = Read-HostString -Prompt "Which device do you want to configure? (leave empty to end device config)" -Characters "A-Z0-9" -Valid @($SetupDevices.Model | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     if ($Device_Name -eq '') {throw}
 
                     if (-not $DevicesActual.$Device_Name) {
                         $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""}) -Force
-                        Set-ContentJson -PathToFile $ConfigFiles["Devices"] -Data $DevicesActual > $null
+                        Set-ContentJson -PathToFile $ConfigFiles["Devices"].Path -Data $DevicesActual > $null
                     }
 
                     if ($Device_Name) {
@@ -1088,10 +1092,10 @@ function Start-Setup {
                                         $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "minername" {
-                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludeminername" {
-                                        $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "disabledualmining" {
                                         $DeviceConfig.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $DeviceConfig.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1113,7 +1117,7 @@ function Start-Setup {
                                         $DevicesActualSave = [PSCustomObject]@{}
                                         $DevicesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ ($DevicesActual.$_) -Force}
                                                         
-                                        Set-ContentJson -PathToFile $ConfigFiles["Devices"] -Data $DevicesActualSave > $null
+                                        Set-ContentJson -PathToFile $ConfigFiles["Devices"].Path -Data $DevicesActualSave > $null
 
                                         Write-Host " "
                                         Write-Host "Changes written to device configuration. " -ForegroundColor Cyan
@@ -1174,7 +1178,7 @@ function Start-Setup {
                 try {
         
                     do {
-                        $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"] | ConvertFrom-Json
+                        $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
                         Write-Host " "
                         $p = [console]::ForegroundColor
                         [console]::ForegroundColor = "Cyan"
@@ -1194,7 +1198,7 @@ function Start-Setup {
                         if (-not $OCProfilesActual.$OCProfile_Name) {
                             if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
                                 $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*"}) -Force                                                
-                                Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"] -Data $OCProfilesActual > $null
+                                Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"].Path -Data $OCProfilesActual > $null
                             } else {
                                 $OCProfile_Name = ''
                             }
@@ -1205,7 +1209,7 @@ function Start-Setup {
                                 if ($What -eq "d") {
                                     $OCProfilesSave = [PSCustomObject]@{}
                                     $OCProfilesActual.PSObject.Properties | Where-Object {$_.Name -ne $OCProfile_Name} | Foreach-Object {$OCProfilesSave | Add-Member $_.Name $_.Value}                                                    
-                                    Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"] -Data $OCProfilesSave > $null
+                                    Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"].Path -Data $OCProfilesSave > $null
                                 }
                                 $OCProfile_Name = ""
                             }
@@ -1266,7 +1270,7 @@ function Start-Setup {
                                         $OCProfilesActualSave = [PSCustomObject]@{}
                                         $OCProfilesActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$OCProfilesActualSave | Add-Member $_ ($OCProfilesActual.$_) -Force}
 
-                                        Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"] -Data $OCProfilesActualSave > $null
+                                        Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"].Path -Data $OCProfilesActualSave > $null
 
                                         Write-Host " "
                                         Write-Host "Changes written to profiles configuration. " -ForegroundColor Cyan

@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\NVIDIA-Excavator\excavator.exe"
@@ -14,7 +12,7 @@ $Port = "31100"
 $DevFee = 0.0
 $Cuda = "6.5"
 
-if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #1 Thread
@@ -48,7 +46,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("NVIDIA")
         Name      = $Name
@@ -62,11 +60,9 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
-$Devices = $Devices.NVIDIA
-
-$Devices | Select-Object Model -Unique | ForEach-Object {
+$Session.DevicesByTypes.NVIDIA | Select-Object Model -Unique | ForEach-Object {
     $Device = @($Devices | Where-Object Model -EQ $_.Model)
     $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
@@ -100,7 +96,7 @@ $Devices | Select-Object Model -Unique | ForEach-Object {
                         [PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm")},`
                         [PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-$($Main_Algorithm)", "$_") + $Params} | Select-Object) * $Threads)}
                     )
-                    HashRates            = [PSCustomObject]@{$Main_Algorithm_Norm = $Stats."$($Miner_Name)_$($Main_Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+                    HashRates            = [PSCustomObject]@{$Main_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Main_Algorithm_Norm -replace '\-.*$')_HashRate".Week}
                     API                  = "Excavator"
                     Port                 = $Miner_Port
                     URI                  = $Uri
@@ -126,7 +122,7 @@ $Devices | Select-Object Model -Unique | ForEach-Object {
                             [PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm")};[PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Secondary_Algorithm")},`
                             [PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-$($Main_Algorithm)_$($Secondary_Algorithm)", "$_") + $Params} | Select-Object) * $Threads)}
                         )
-                        HashRates            = [PSCustomObject]@{$Main_Algorithm_Norm = $Stats."$($Miner_Name)_$($Main_Algorithm_Norm -replace '\-.*$')_HashRate".Week; $Secondary_Algorithm_Norm = $Stats."$($Miner_Name)_$($Secondary_Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+                        HashRates            = [PSCustomObject]@{$Main_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Main_Algorithm_Norm -replace '\-.*$')_HashRate".Week; $Secondary_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Secondary_Algorithm_Norm -replace '\-.*$')_HashRate".Week}
                         API                  = "Excavator"
                         Port                 = $Miner_Port
                         URI                  = $Uri

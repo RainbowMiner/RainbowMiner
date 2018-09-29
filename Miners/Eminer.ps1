@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\Ethash-Eminer\eminer.exe"
@@ -14,7 +12,7 @@ $Port = "318{0:d2}"
 $DevFee = 0.0
 $Cuda = "6.5"
 
-if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Config.InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @()} #Ethash2GB
@@ -34,7 +32,7 @@ $DevFeeCoin  = [PSCustomObject]@{
 
 $Name = "$(Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName)"
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD","NVIDIA")
         Name      = $Name
@@ -48,12 +46,10 @@ if ($Config.InfoOnly) {
     return
 }
 
-if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$Devices = @($Devices.AMD | Select-Object) + @($Devices.NVIDIA | Select-Object)
-
-$Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.Devices | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
     $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
@@ -74,8 +70,8 @@ $Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendo
                 DeviceName           = $Miner_Device.Name
                 DeviceModel          = $Miner_Model
                 Path                 = $Path
-                Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Config.WorkerName) {" -N $($Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
-                HashRates            = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Session.Config.WorkerName) {" -N $($Session.Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
+                HashRates            = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API                  = "Eminer"
                 Port                 = $Miner_Port
                 URI                  = $Uri

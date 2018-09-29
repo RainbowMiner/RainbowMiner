@@ -1,9 +1,17 @@
 ﻿function Start-AsyncLoader {
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
+    [int]$Interval = 60
+)
+    if ($Interval -lt 60) {return}
+
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 
     $AsyncLoader.Stop = $false
     [hashtable]$AsyncLoader.Jobs = @{}
     $AsyncLoader.CycleTime = 10
+    $AsyncLoader.Interval  = $Interval
 
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
@@ -28,8 +36,7 @@
 
         while (-not $AsyncLoader.Stop) {
             $Start = (Get-Date).ToUniversalTime()
-            $Cycle++
-            if (-not ($Cycle % 6)) {[System.GC]::GetTotalMemory("forcefullcollection")>$null;[System.GC]::Collect();Sleep -Milliseconds 500}
+            $Cycle++            
             foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
                 $Job = $AsyncLoader.Jobs.$Jobkey
                 if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
@@ -56,9 +63,20 @@
 }
 
 function Stop-AsyncLoader {
+    if (-not (Test-Path Variable:Global:Asyncloader)) {return}
     $Global:AsyncLoader.Stop = $true
-    $Global:AsyncLoader.Loader.dispose()
-    $Global:AsyncLoader = [hashtable]::Synchronized(@{})
+    if ($Global:AsyncLoader.Loader) {$Global:AsyncLoader.Loader.dispose()}
     $Global:AsyncLoader.Loader = $null
     $Global:AsyncLoader.Handle = $null
+    Remove-Variable "AsyncLoader" -Force
+}
+
+function Stop-AsyncJob {
+[cmdletbinding()]   
+Param(
+   [Parameter(Mandatory = $True)]   
+        [string]$tag
+)
+    if (-not (Test-Path Variable:Global:Asyncloader)) {return}
+    foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {if ($AsyncLoader.Jobs.$Jobkey.Tag -eq $tag) {$AsyncLoader.Jobs.$Jobkey.Paused=$true}}
 }

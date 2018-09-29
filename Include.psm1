@@ -28,42 +28,47 @@ function Confirm-Version {
     [CmdletBinding()]
     param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    if ($Force -or -not (Test-Path Variable:Script:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Script:GlobalVersion.NextCheck) {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $RBMVersion = $Version = Get-Version($RBMVersion)
-    $Uri = ""
+        $RBMVersion = $Version = Get-Version($RBMVersion)
+        $Uri = ""
+        $NextCheck = (Get-Date).ToUniversalTime()
 
-    $Name = "RainbowMiner"
-    try {
-        $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
-        if ($Force) {
-            $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-        } else {
-            $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600
-        }
-        $Version = ($Request.tag_name -replace '^v')
-        $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
-
-        $Version = Get-Version($Version)
-
-        if (-not $Silent) {
-            if ($Version -gt $RBMVersion) {
-                Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
-            } elseif ($Version -lt $RBMVersion) {
-                Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
+        $Name = "RainbowMiner"
+        try {
+            $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
+            if ($Force) {
+                $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            } else {
+                $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600
             }
+            $Version = ($Request.tag_name -replace '^v')
+            $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
+            $Version = Get-Version($Version)
+            $NextCheck = $NextCheck.AddHours(1)
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Github could not be reached. "
+        }
+        $Script:GlobalVersion = [PSCustomObject]@{
+            Version = $RBMVersion
+            RemoteVersion = $Version
+            DownloadURI = $Uri
+            ManualURI = "https://github.com/RainbowMiner/$Name/releases"
+            NextCheck = $NextCheck
         }
     }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Github could not be reached. "
+
+    if (-not $Silent) {
+        if ($Script:GlobalVersion.RemoteVersion -gt $Script:GlobalVersion.Version) {
+            Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
+        } elseif ($Script:GlobalVersion.RemoteVersion -lt $Script:GlobalVersion.Version) {
+            Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
+        }
     }
-    [PSCustomObject]@{
-        Version = $RBMVersion
-        RemoteVersion = $Version
-        DownloadURI = $Uri
-        ManualURI = "https://github.com/RainbowMiner/$Name/releases"
-    }
+    $Script:GlobalVersion
 }
 
 function Confirm-Cuda {
@@ -187,7 +192,7 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent)
     
-    if (-not (Test-Path Variable:Global:GlobalCoinmarketCapList) -or -not $Global:GlobalCoinmarketCapList.Count) {
+    if (-not (Test-Path Variable:Global:GlobalCoinmarketCapCoins) -or -not $Global:GlobalCoinmarketCapCoins.Count) {
         try {
             $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
@@ -199,11 +204,9 @@ function Get-CoinSymbol {
         if ($Request.data -eq $null -or $Request.data.Count -le 100) {
             Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
             return
-        }
-        [hashtable]$Global:GlobalCoinmarketCapList = @{}
+        }        
         [hashtable]$Global:GlobalCoinmarketCapCoins = @{}
         foreach ($data in $Request.data) {
-            $Global:GlobalCoinmarketCapList[$data.symbol] = $data
             $Global:GlobalCoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
         }
         if (Test-Path "Data\Coins.json") {
@@ -252,7 +255,7 @@ Function Write-Log {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()][Alias("LogContent")][string]$Message,
         [Parameter(Mandatory = $false)][ValidateSet("Error", "Warn", "Info", "Verbose", "Debug")][string]$Level = "Info"
     )
-    
+
     Begin { }
     Process {
         # Inherit the same verbosity settings as the script importing this
@@ -260,9 +263,9 @@ Function Write-Log {
         if (-not $PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
         if (-not $PSBoundParameters.ContainsKey('Debug')) {$DebugPreference = $PSCmdlet.GetVariableValue('DebugPreference')}
         
-        # Get mutex named MPMWriteLog. Mutexes are shared across all threads and processes.
+        # Get mutex named RBMWriteLog. Mutexes are shared across all threads and processes.
         # This lets us ensure only one thread is trying to write to the file at a time.
-        $mutex = New-Object System.Threading.Mutex($false, "MPMWriteLog")
+        $mutex = New-Object System.Threading.Mutex($false, "RBMWriteLog")
 
         $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -296,7 +299,8 @@ Function Write-Log {
 
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
-            "$date $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
+            $proc = Get-Process -id $PID
+            "$date [$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
@@ -349,10 +353,6 @@ function Set-Stat {
    
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
-        if ($Stat -and $PowerDraw -gt 0 -and $Stat.PowerDraw_Live -eq $null) {
-            #backward compatibility
-            $Stat | Add-Member -NotePropertyMembers ([PSCustomObject]@{PowerDraw_Live = $PowerDraw;PowerDraw_Average = $PowerDraw;PowerDraw_Fluctuation = 0})            
-        }
         $Stat = [PSCustomObject]@{
             Live = [Double]$Stat.Live
             Minute = [Double]$Stat.Minute
@@ -572,8 +572,7 @@ function Get-ChildItemContent {
         if ($_.Extension -eq ".ps1") {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
-                & $_.FullName @Parameters
-                foreach ($k in $Parameters.Keys) {Remove-Variable $k -ErrorAction Ignore}
+                & $_.FullName @Parameters                
             }
         }
         else {
@@ -586,7 +585,6 @@ function Get-ChildItemContent {
                     if ($Error.Count){$Error.RemoveAt(0)}
                     $null
                 }
-                foreach ($k in $Parameters.Keys) {Remove-Variable $k -ErrorAction Ignore}
             }
             if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
@@ -604,6 +602,43 @@ function Get-ChildItemContent {
                     $Content | Add-Member $k $Parameters.$k -Force 
                 }
             }
+        }
+    }
+}
+
+function Get-PoolsContentTest {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Path, 
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Config,
+        [Parameter(Mandatory = $true)]
+        [TimeSpan]$StatSpan,
+        [Parameter(Mandatory = $false)]
+        [Bool]$InfoOnly = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$IgnoreFees = $false
+    )
+        
+    Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
+        $Pool_Name = $_.BaseName
+
+        [Hashtable]$Parameters = @{
+            StatSpan = $StatSpan
+            InfoOnly = $InfoOnly
+        }
+        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
+
+        & {$Parameters.Keys | ForEach-Object {Set-Variable $_ $Parameters.$_};& $_.FullName @Parameters} | Foreach-Object {
+            $Pool_Factor = 1-[Double]($Config.Penalty + $(if (-not $IgnoreFees){$_.PoolFee}))/100
+            $_.Price *= $Pool_Factor
+            $_.StablePrice *= $Pool_Factor
+            $_ | Add-Member -NotePropertyMembers @{
+                AlgorithmList = if ($_.Algorithm -match "-") {@((Get-Algorithm $_.Algorithm), ($_.Algorithm -replace '\-.*$'))}else{@($_.Algorithm)}
+                Name =$Pool_Name
+                Penalty = $Config.Penalty
+            } -Force -PassThru
         }
     }
 }
@@ -648,33 +683,27 @@ function Get-PoolsContent {
 function Get-MinersContent {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Pools,
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Config,
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$DevicesByTypes,
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Stats       
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Pools = @{},
+        [Parameter(Mandatory = $false)]
+        [Switch]$InfoOnly
     )
 
     [Hashtable]$Parameters = @{
-        Config  = $Config
-        Devices = $DevicesByTypes
-        Pools   = $Pools
-        Stats   = $Stats
+        Pools    = $Pools
+        InfoOnly = $InfoOnly
     }
 
     foreach($Miner in @(Get-ChildItem "Miners\*.ps1" -File -ErrorAction Ignore)) {
-        $Name = $Miner.BaseName 
+        $Name = $Miner.BaseName
         foreach($c in @(& $Miner.FullName @Parameters)) {
             $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
             $c | Add-Member -NotePropertyMembers @{
                 Name = if ($c.Name) {$c.Name} else {$Name}
                 BaseName = $Name
                 BaseAlgorithm = $p
-                DeviceModel = if (@($DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
-                PowerDraw = $Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
+                DeviceModel = if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
+                PowerDraw = $Session.Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
             } -Force -PassThru
         }
     }
@@ -833,9 +862,12 @@ function Start-SubProcessInBackground {
 
     if ($Process) {
         $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $Job | Add-Member MiningProcessId $Process.Id -Force -ErrorAction Ignore
+        $ProcessId = $Process.Id
     }
-    $Job
+    [PSCustomObject]@{
+        Process   = $Job
+        ProcessId = [int]$ProcessId
+    }
 }
 
 function Start-SubProcessInConsole {
@@ -1020,11 +1052,11 @@ function Start-SubProcessInConsole {
 
         [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
 
-        $ControllerProcess.Handle | Out-Null
-        $Process.Handle | Out-Null
+        $ControllerProcess.Handle >$null
+        $Process.Handle >$null
 
         do {
-            if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow() | Out-Null}
+            if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow()>$null}
             if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
             $Error.Clear()
         }
@@ -1038,10 +1070,13 @@ function Start-SubProcessInConsole {
     if ($Process) {
         $Process.Handle | Out-Null
         $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $Job | Add-Member MiningProcessId $Process.Id -Force -ErrorAction Ignore
+        $ProcessId = $JobOutput.ProcessId
     }
-
-    $Job
+    
+    [PSCustomObject]@{
+        Process   = $Job
+        ProcessId = [Int]$ProcessId
+    }
 }
 
 function Expand-WebRequest {
@@ -1125,6 +1160,7 @@ function Invoke-Exe {
         $process.WaitForExit($WaitForExit*1000)>$null
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
         $psi = $null
+        $process.Dispose()
         $process = $null
     } catch {Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
 }
@@ -1163,10 +1199,10 @@ function Invoke-TcpRequest {
         Write-Log -Level Warn "Could not request from $($Server):$($Port)"
     }
     finally {
-        if ($Reader) {$Reader.Close()}
-        if ($Writer) {$Writer.Close()}
-        if ($Stream) {$Stream.Close()}
-        if ($Client) {$Client.Close()}
+        if ($Reader) {$Reader.Close();$Reader.Dispose()}
+        if ($Writer) {$Writer.Close();$Writer.Dispose()}
+        if ($Stream) {$Stream.Close();$Stream.Dispose()}
+        if ($Client) {$Client.Close();$Client.Dispose()}
     }
 
     $Response
@@ -1198,9 +1234,9 @@ function Invoke-TcpRead {
         Write-Log -Level Warn "Could not read from $($Server):$($Port)"
     }
     finally {
-        if ($Reader) {$Reader.Close()}
-        if ($Stream) {$Stream.Close()}
-        if ($Client) {$Client.Close()}
+        if ($Reader) {$Reader.Close();$Reader.Dispose()}
+        if ($Stream) {$Stream.Close();$Stream.Dispose()}
+        if ($Client) {$Client.Close();$Client.Dispose()}
     }
 
     $Response
@@ -1285,7 +1321,7 @@ function Get-Device {
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
                     Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
-                    OpenCL = $Device_OpenCL
+                    OpenCL = [PSCustomObject]@{GlobalMemsize = $Device_OpenCL.GlobalMemsize;Name = $Device_OpenCl.Name;Vendor = $Device_OpenCL.Vendor;PlatformVersion = $Device_OpenCL.Platform.Version}
                     Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
                     Model_Name = [String]$Device_Name
                 }
@@ -1320,7 +1356,7 @@ function Get-Device {
 
     #CPU detection
     try {
-        if (-not (Test-Path Variable:Script:GlobalGetDeviceCacheCIM)) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+        if (-not (Test-Path Variable:Script:GlobalGetDeviceCacheCIM)) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor | ConvertTo-Json -Depth 1 | ConvertFrom-Json}
         if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
             try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
@@ -1636,7 +1672,7 @@ function Update-DeviceInformation {
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-            if ($CPU_count -gt 0) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor}
+            if ($CPU_count -gt 0) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor | ConvertTo-Json -Depth 1 | ConvertFrom-Json}
             $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $Device = $_
                 $Script:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
@@ -1699,7 +1735,7 @@ function Get-Algorithm {
     [CmdletBinding()]
     param(
         [Parameter(
-            Position = 0,   
+            Position = 0,
             ParameterSetName = '',   
             ValueFromPipeline = $True,
             Mandatory = $false)]
@@ -1717,11 +1753,7 @@ function Get-Algorithm {
 function Get-Region {
     [CmdletBinding()]
     param(
-        [Parameter(
-            Position = 0,   
-            ParameterSetName = '',   
-            ValueFromPipeline = $True,
-            Mandatory = $false)]
+        [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
     if (-not (Test-Path Variable:Global:GlobalRegions)) {Get-Regions -Silent}
@@ -1803,12 +1835,13 @@ class Miner {
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
     hidden [System.Management.Automation.Job]$Process = $null
+    hidden [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
-    hidden [System.Collections.ArrayList]$Data = @()
+    hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
-    hidden [System.Collections.ArrayList]$OCprofileBackup = @()
+    hidden [Array]$OCprofileBackup = @()
     hidden [Int]$EthPill = 0
 
     [String[]]GetProcessNames() {
@@ -1851,7 +1884,9 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $this.Process = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {-1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {-1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $this.Process   = $Job.Process
+            $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
             if ($this.Process | Get-Job -ErrorAction Ignore) {
@@ -1863,11 +1898,11 @@ class Miner {
     hidden StopMining() {
         $this.Status = [MinerStatus]::Failed
 
-        $this.Data.Clear()
+        $this.ClearHashRate()
 
         if ($this.Process) {
-            if ($this.HasOwnMinerWindow -and $this.Process.MiningProcessId) {
-                if ($MiningProcess = Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore) {
+            if ($this.HasOwnMinerWindow -and $this.ProcessId) {
+                if ($MiningProcess = Get-Process -Id $this.ProcessId -ErrorAction Ignore) {
                     $MiningProcess.CloseMainWindow() > $null
                     # Wait up to 10 seconds for the miner to close gracefully
                     if($MiningProcess.WaitForExit(10000)) { 
@@ -1880,7 +1915,7 @@ class Miner {
                         }
                     }
                 }
-                $this.Process.MiningProcessId = 0
+                $this.ProcessId = 0
             }
             if ($this.Process | Get-Job -ErrorAction Ignore) {
                 $this.Process | Remove-Job -Force
@@ -1925,7 +1960,7 @@ class Miner {
 
 
     [DateTime]GetActiveStart() {
-        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
 
         if ($Begin) {
@@ -1937,7 +1972,7 @@ class Miner {
     }
 
     [DateTime]GetActiveLast() {
-        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
 
@@ -1953,7 +1988,7 @@ class Miner {
     }
 
     [TimeSpan]GetActiveTime() {
-        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         
@@ -1973,7 +2008,7 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = if ($this.Process.MiningProcessId) {Get-Process -Id $this.Process.MiningProcessId -ErrorAction Ignore | Select-Object HasExited}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object HasExited}
         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited) ) {
             return [MinerStatus]::Running
         }
@@ -1986,7 +2021,7 @@ class Miner {
     }
 
     [Int]GetProcessId() {
-        return $this.Process.MiningProcessId
+        return $this.ProcessId
     }
 
     SetStatus([MinerStatus]$Status) {
@@ -2069,13 +2104,13 @@ class Miner {
                             }
                         }
 
-                        $this.Data.Add([PSCustomObject]@{
+                        $this.AddMinerData([PSCustomObject]@{
                             Date = $Date
                             Raw = $Line_Simple
                             HashRate = [PSCustomObject]@{[String]$this.Algorithm = $HashRates} 
                             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName                           
                             Device = $Devices
-                        })>$null
+                        })
                     }
 
                     $Lines += $Line
@@ -2088,9 +2123,18 @@ class Miner {
         return $Lines
     }
 
-    CleanupMinerData() {        
-        if ($this.New) {if ($this.Data.Count -gt 1000){$this.Data.RemoveRange(0,$this.Data.Count-1000)}}
-        else {foreach($data in @($this.Data | Where-Object Date -lt (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)))) {$this.Data.Remove($data)}}
+    AddMinerData($data) {
+        if ($this.New) {$this.Data = @($this.Data) + $data | Select-Object -Last 1000}
+        else {$this.Data = @(@($this.Data) + $data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)) | Select-Object)}
+    }
+
+    CleanupMinerData() {
+        #if ($this.New) {$this.Data = @($this.Data | Select-Object -Last 1000)}
+        #else {$this.Data = @($this.Data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)) | Select-Object)}
+    }
+
+    ClearHashRate() {
+        $this.Data = @()
     }
 
     [Int64]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {
@@ -2155,7 +2199,7 @@ class Miner {
         }
         foreach($Profile in $this.OCprofileBackup) {foreach($Name in $Profile.Keys) {if ($Name -ne "Index") {$Script:abControl.GpuEntries[$Profile.Index].$Name = $Profile.$Name}}}
         $Script:abControl.CommitChanges()
-        $this.OCprofileBackup.Clear()
+        $this.OCprofileBackup = @()
         Write-Log "OC reset for $($this.BaseName)"
     }
 
@@ -2165,7 +2209,7 @@ class Miner {
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
 
-        $this.OCprofileBackup.Clear()
+        $this.OCprofileBackup = @()
         $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
@@ -2215,7 +2259,7 @@ class Miner {
                             try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                             try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                             if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
-                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null;$applied_any=$true}
+                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup > $null;$applied_any=$true}
                         }
                         $DeviceId++
                     }                 
@@ -2603,10 +2647,15 @@ function Set-ContentJson {
     $retry = 3
     do {
         try {
-            if (Test-Path $PathToFile) {[io.file]::OpenWrite($PathToFile).close()}
+            if ([System.IO.File]::Exists($PathToFile)) {
+                    $FileStream = [System.IO.File]::Open($PathToFile,'Open','Write')
+                    $FileStream.Close()
+                    $FileStream.Dispose()
+            }
             if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
                 $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
             } else {
+                (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
                 Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
             }
             return $true
@@ -2628,7 +2677,6 @@ function Set-MinersConfigDefault {
         [Parameter(Mandatory = $False)]
         [Switch]$UseDefaultParams = $false
     )
-    $PathToFileCpu = "$(([IO.FileInfo]$PathToFile).DirectoryName)\cpu.$(([IO.FileInfo]$PathToFile).Name)"
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         $Algo = [hashtable]@{}
         $Done = [PSCustomObject]@{}
@@ -2658,7 +2706,7 @@ function Set-MinersConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content}
             $AllDevices = Get-Device "cpu","gpu"
-            $AllMiners = if (Test-Path "Miners") {@(Get-ChildItemContent "Miners" -Parameters @{Pools = @{}; Stats = @{}; Config = @{InfoOnly=$true}; Devices = @{}} | Select-Object -ExpandProperty Content)}
+            $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -InfoOnly)}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
                 else {
@@ -3078,7 +3126,12 @@ function Get-MinerPort{
 
 function Get-MemoryUsage
 {
-    $memusagebyte = [System.GC]::GetTotalMemory('forcefullcollection')
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]
+    [Switch]$ForceFullCollection
+)
+    $memusagebyte = [System.GC]::GetTotalMemory($ForceFullCollection)
     $memdiff = $memusagebyte - [int64]$script:last_memory_usage_byte
     [PSCustomObject]@{
         MemUsage   = $memusagebyte
@@ -3089,10 +3142,7 @@ function Get-MemoryUsage
 }
 
 function Get-MD5Hash {
-[cmdletbinding(   
-    DefaultParameterSetName = '',   
-    ConfirmImpact = 'low'   
-)]   
+[cmdletbinding()]
 Param(   
     [Parameter(
         Mandatory = $True,   
@@ -3106,17 +3156,31 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
+function Invoke-GetUrl {
+[cmdletbinding()]
+Param(   
+    [Parameter(Mandatory = $False)]   
+        [string]$url = "",
+    [Parameter(Mandatory = $False)]   
+        [string]$method = "REST"
+)
+    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+
+    $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+    if ($method -eq "REST") {
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get
+    } else {
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get
+    }
+}
+
 function Invoke-RestMethodAsync {
 [cmdletbinding()]   
 Param(   
-    [Parameter(   
-        Mandatory = $True,   
-        Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
+    [Parameter(Mandatory = $True)]
         [string]$url,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60,
+        [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
     [Parameter(Mandatory = $False)]
@@ -3130,14 +3194,10 @@ Param(
 function Invoke-WebRequestAsync {
 [cmdletbinding()]   
 Param(   
-    [Parameter(   
-        Mandatory = $True,   
-        Position = 0,   
-        ParameterSetName = '',   
-        ValueFromPipeline = $True)]   
+    [Parameter(Mandatory = $True)]
         [string]$url,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60,
+        [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
     [Parameter(Mandatory = $False)]
@@ -3149,10 +3209,7 @@ Param(
 }
 
 function Invoke-GetUrlAsync {
-[cmdletbinding(   
-    DefaultParameterSetName = '',   
-    ConfirmImpact = 'low'   
-)]   
+[cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]   
         [string]$url = "",
@@ -3163,7 +3220,7 @@ Param(
     [Parameter(Mandatory = $False)]   
         [switch]$quiet = $false,
     [Parameter(Mandatory = $False)]   
-        [int]$cycletime = 60,
+        [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
     [Parameter(Mandatory = $False)]
@@ -3173,9 +3230,16 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$tag = ""
 )
+    if (-not (Test-Path Variable:Global:Asyncloader)) {
+        Invoke-GetUrl $url -method $method
+        return
+    }
+
     if (-not $url -and -not $Jobkey) {return}
     
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
+
+    if ($cycletime -le 0) {$cycletime = $AsyncLoader.Interval}
 
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
@@ -3191,18 +3255,13 @@ Param(
         $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
 
         do {
-            $Request = $RequestError = $null
-            $RequestUrl = $AsyncLoader.Jobs.$Jobkey.Url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+            $Request = $RequestError = $null            
             try {
-                if ($AsyncLoader.Jobs.$Jobkey.Method -eq "REST") {
-                    $Request = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get 2>$null
-                } else {
-                    $Request = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get 2>$null
-                }
+                $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method
                 $AsyncLoader.Jobs.$Jobkey.Success++
             }
             catch {
-                $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($RequestUrl) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
+                $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
                 $AsyncLoader.Jobs.$Jobkey.Fail++                
             }
             finally {
@@ -3226,15 +3285,6 @@ Param(
         if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
         $AsyncLoader.Jobs.$Jobkey.Request | ConvertFrom-Json
     }
-}
-
-function Stop-AsyncJob {
-[cmdletbinding()]   
-Param(
-   [Parameter(Mandatory = $True)]   
-        [string]$tag
-)
-    foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {if ($AsyncLoader.Jobs.$Jobkey.Tag -eq $tag) {$AsyncLoader.Jobs.$Jobkey.Paused=$true}}
 }
 
 function Write-HostSetupHints {

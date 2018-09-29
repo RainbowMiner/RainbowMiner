@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
@@ -14,7 +12,7 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.0"
 
-if (-not $Devices.NVIDIA -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
@@ -41,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("NVIDIA")
         Name      = $Name
@@ -55,12 +53,10 @@ if ($Config.InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
-$Devices = $Devices.NVIDIA
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model    
 
     $Commands | ForEach-Object {
@@ -83,7 +79,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path = $Path
                 Arguments = "--retry-pause 1 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) --no-watchdog -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --log log_$($Miner_Port).txt $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "CryptoDredge"
                 Port = $Miner_Port
                 Uri = $Uri

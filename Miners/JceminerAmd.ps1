@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\AMD-Jceminer\jce_cn_gpu_miner64.exe"
@@ -13,7 +11,7 @@ $Port = "321{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 0.9
 
-if (-not $Devices.AMD -and -not $Config.InfoOnly) {return} # No NVIDIA present in system
+if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Params = "--variation 3"}
@@ -48,7 +46,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD")
         Name      = $Name
@@ -62,10 +60,8 @@ if ($Config.InfoOnly) {
     return
 }
 
-$Devices = $Devices.AMD
-
-$Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
     $DevFee = 0.9
@@ -86,7 +82,7 @@ $Devices | Select-Object Vendor, Model -Unique | ForEach-Object {
                 DeviceModel = $Miner_Model
                 Path      = $Path
                 Arguments = "-g $($DeviceIDsAll) --auto --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
                 Uri       = $Uri

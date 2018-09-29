@@ -1,6 +1,4 @@
-﻿using module ..\Include.psm1
-
-param(
+﻿param(
     $Config
 )
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

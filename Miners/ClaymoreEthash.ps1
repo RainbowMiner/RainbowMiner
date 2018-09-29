@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
@@ -16,7 +14,7 @@ $Cuda = "6.5"
 $DevFee = 1.0
 $DevFeeDual = 1.5
 
-if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Config.InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = ""; SecondaryIntensity = 00; Params = ""} #Ethash
@@ -86,7 +84,7 @@ $Coins = [PSCustomObject]@{
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD","NVIDIA")
         Name      = $Name
@@ -100,12 +98,10 @@ if ($Config.InfoOnly) {
     return
 }
 
-if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$Devices = @($Devices.AMD | Select-Object) + @($Devices.NVIDIA | Select-Object)
-
-$Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+$Session.Devices | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
     $Fee = 0
     if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
@@ -142,13 +138,13 @@ $Devices | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendo
                     $SecondaryAlgorithm_Norm = Get-Algorithm $SecondaryAlgorithm
 
                     $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
+                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
                     $Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
                     if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
                 }
                 else {
                     $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
+                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
                     $Arguments_Secondary = "-mode 1"
                     $Miner_Fee = $Fee
                 }

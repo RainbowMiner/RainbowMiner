@@ -27,13 +27,13 @@ class CryptoDredge : Miner {
 
         $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
 
-        $this.Data.Add([PSCustomObject]@{
+        $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
-        })>$null
+        })
 
         $this.CleanupMinerData()
 

@@ -2,9 +2,7 @@
 
 param(
     [PSCustomObject]$Pools,
-    [PSCustomObject]$Stats,
-    [PSCustomObject]$Config,
-    [PSCustomObject]$Devices
+    [Bool]$InfoOnly
 )
 
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
@@ -14,7 +12,7 @@ $ManualUri = "https://github.com/RainbowMiner/xmr-stak/releases"
 $DevFee = 0.0
 $Cuda = "9.1"
 
-if (-not $Devices.NVIDIA -and -not $Devices.AMD -and -not $Devices.CPU -and -not $Config.InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight";            Threads = 1; MinMemGb = 2; Params = ""} #CryptoNight
@@ -31,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-if ($Config.InfoOnly) {
+if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("AMD","CPU","NVIDIA")
         Name      = $Name
@@ -45,12 +43,12 @@ if ($Config.InfoOnly) {
     return
 }
 
-if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-@($Devices.FullComboModels.PSObject.Properties.Name) | Where-Object {$_ -ne "NVIDIA" -or $Cuda} | Foreach-Object {
+@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | Where-Object {$_ -ne "NVIDIA" -or $Cuda} | Foreach-Object {
     $Miner_Vendor = $_  
-    @($Devices.$Miner_Vendor) | Where-Object {$_.Model -eq $Devices.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Device = $Devices.$Miner_Vendor | Where-Object Model -EQ $_.Model
+    @($Session.DevicesByTypes.$Miner_Vendor) | Where-Object {$_.Model -eq $Session.DevicesByTypes.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
+        $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
             
         switch($Miner_Vendor) {
@@ -83,7 +81,7 @@ if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -R
                                     use_tls         = $Pools.$Algorithm_Norm.SSL
                                     tls_fingerprint = ""
                                     pool_weight     = 1
-                                    rig_id = "$($Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
+                                    rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
                                 }
                             )
                             currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$_.MainAlgorithm}
@@ -112,7 +110,7 @@ if ($Devices.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Config.CUDAVersion -R
                         DeviceModel=$Miner_Model
                         Path      = $Path
                         Arguments = $Arguments
-                        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                         API       = "Fireice"
                         Port      = $Miner_Port
                         Uri       = $Uri

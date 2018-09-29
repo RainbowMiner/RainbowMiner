@@ -1,5 +1,3 @@
-using module ..\Include.psm1
-
 param(
     $Config
 )
