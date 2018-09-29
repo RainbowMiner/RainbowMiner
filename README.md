@@ -421,8 +421,6 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **UsePowerPrice** = set to (1), if electricity cost should be substracted from profits [default=0]
 - **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
 
-#### Set output preference ####
-
 #### Technical/Other ####
 - **Interval** = timing interval in seconds of RainbowMiner [default=60]
 - **SSL** = set to 1, if only ssl connections wanted
@@ -439,6 +437,10 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
 - **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
+- **EnableAutoMinerPorts** = set to 1, if miners get into conflict with the ports in use
+- **DisableAPI** = set to 1, if no localhost API is needed
+- **DisableAsyncLoader** = set to 1, if all net access should happen synchronous (used for debugging)
+- **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
 
 ### Config\pools.config.txt
 
