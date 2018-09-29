@@ -1571,7 +1571,7 @@ function Invoke-Core {
         }
     }
 
-    $Pools = $null
+    Remove-Variable "Pools" -Force
 
     #Cleanup stopped miners    
     $Session.ActiveMiners | Where-Object {$_.Stopped} | Foreach-Object {$_.StopMiningPostCleanup()}
