@@ -1291,7 +1291,7 @@ function Get-Device {
     try {
         [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
             [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | ForEach-Object {
-                $Device_OpenCL = $_ | ConvertTo-Json | ConvertFrom-Json
+                $Device_OpenCL = $_ | ConvertTo-Json -Depth 1 | ConvertFrom-Json
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
@@ -1321,7 +1321,7 @@ function Get-Device {
                     Type = [String]$Device_OpenCL.Type
                     Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
                     Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
-                    OpenCL = [PSCustomObject]@{GlobalMemsize = $Device_OpenCL.GlobalMemsize;Name = $Device_OpenCl.Name;Vendor = $Device_OpenCL.Vendor;PlatformVersion = $Device_OpenCL.Platform.Version}
+                    OpenCL = $Device_OpenCL
                     Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
                     Model_Name = [String]$Device_Name
                 }
