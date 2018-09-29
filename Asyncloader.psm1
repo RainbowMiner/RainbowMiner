@@ -68,7 +68,7 @@ function Stop-AsyncLoader {
     if ($Global:AsyncLoader.Loader) {$Global:AsyncLoader.Loader.dispose()}
     $Global:AsyncLoader.Loader = $null
     $Global:AsyncLoader.Handle = $null
-    Remove-Variable "AsyncLoader" -Force
+    Remove-Variable "AsyncLoader" -Scope Global -Force
 }
 
 function Stop-AsyncJob {

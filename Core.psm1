@@ -150,7 +150,7 @@ function Invoke-Core {
 
     #Load the config    
     $ConfigBackup = if ($Session.Config -is [object]){$Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json}else{$null}
-    $ConfigCheckFields = $true
+    $CheckConfig = $true
     
     [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
@@ -189,7 +189,7 @@ function Invoke-Core {
 
             } until (-not $ReReadConfig)
         } else {
-            $ConfigCheckFields = $false
+            $CheckConfig = $false
         }
     }
     
@@ -201,7 +201,7 @@ function Invoke-Core {
     }
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
-    if ($ConfigCheckFields) {
+    if ($CheckConfig) {
         #for backwards compatibility
         if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force}
         if ($Session.Config.GPUs -ne $null -and $Session.Config.GPUs) {
@@ -261,7 +261,7 @@ function Invoke-Core {
     #Check for oc profile config
     Set-OCProfilesConfigDefault $Session.ConfigFiles["OCProfiles"].Path
     if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {
-        if ($ConfigCheckFields -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime) {        
+        if ($CheckConfig -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime) {        
             $Session.ConfigFiles["OCProfiles"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member OCProfiles (Get-ChildItemContent $Session.ConfigFiles["OCProfiles"].Path).Content -Force
         }
@@ -270,7 +270,7 @@ function Invoke-Core {
     #Check for devices config
     Set-DevicesConfigDefault $Session.ConfigFiles["Devices"].Path
     if (Test-Path $Session.ConfigFiles["Devices"].Path) {
-        if ($ConfigCheckFields -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime) {        
+        if ($CheckConfig -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime) {        
             $Session.ConfigFiles["Devices"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Devices (Get-ChildItemContent $Session.ConfigFiles["Devices"].Path).Content -Force
             $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
@@ -292,9 +292,10 @@ function Invoke-Core {
     }
 
     #Check for pool config
+    $CheckPools = $false
     Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
-        if ($ConfigCheckFields -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime) {        
+        if ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime) {        
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters @{
                 Wallet              = $Session.Config.Wallet
@@ -303,15 +304,7 @@ function Invoke-Core {
                 API_ID              = $Session.Config.API_ID
                 API_Key             = $Session.Config.API_Key
             } | Select-Object -ExpandProperty Content) -Force
-            foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
-                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
-                    if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @(($Session.Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
-                    $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
-                }
-                $Session.Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
-                $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
-                $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
-            }
+            $CheckPools = $true
         }
     }    
 
@@ -325,6 +318,19 @@ function Invoke-Core {
                 API_Key = $Session.Config.API_Key
             }
         )
+        $CheckPools = $true
+    }
+
+    if ($CheckPools) {
+        foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
+            foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol")) {
+                if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @(($Session.Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
+                $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+            }
+            $Session.Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
+            $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
+            $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
+        }
     }
     
     #Activate or deactivate donation  
@@ -344,7 +350,7 @@ function Invoke-Core {
         Write-Log "Donation run finished. "        
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
-        if (-not $Session.IsDonationRun -or $ConfigCheckFields) {
+        if (-not $Session.IsDonationRun -or $CheckConfig) {
             if (-not $DonationData) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":0},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"average-2e","Penalty":0}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","ZergPool"],"Algorithm":["balloon","bitcore","c11","ethash","equihash24x5","equihash24x7","hmq1725","lyra2re2","lyra2z","neoscrypt","phi2","sonoa","tribus","x16r","x16s","x17"]}' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
@@ -389,7 +395,7 @@ function Invoke-Core {
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
 
     #load device(s) information and device combos
-    if ($ConfigCheckFields -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
+    if ($CheckConfig -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
         Write-Log "Device configuration changed. Refreshing now. "
 
         #Load information about the devices
@@ -449,7 +455,7 @@ function Invoke-Core {
     #Check for miner config
     Set-MinersConfigDefault -PathToFile $Session.ConfigFiles["Miners"].Path
     if (Test-Path $Session.ConfigFiles["Miners"].Path) {
-        if ($ConfigCheckFields -or -not $Session.Config.Miners -or (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Miners"].LastWriteTime) {        
+        if ($CheckConfig -or -not $Session.Config.Miners -or (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Miners"].LastWriteTime) {        
             $Session.ConfigFiles["Miners"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
             $Session.ConfigFullComboModelNames = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name)

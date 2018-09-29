@@ -347,5 +347,5 @@ Function Stop-APIServer {
     if ($Global:API.Server) {$Global:API.Server.dispose()}
     $Global:API.Server = $null
     $Global:API.Handle = $null
-    Remove-Variable "API" -Force    
+    Remove-Variable "API" -Scope Global -Force    
 }
