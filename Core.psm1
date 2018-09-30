@@ -226,8 +226,7 @@ function Invoke-Core {
         if (-not $Session.Config.LocalAPIport) {$Session.Config | Add-Member LocalAPIport 4000 -Force}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.LocalAPIport} > $null
 
-        #For backwards compatibility
-        if ($Session.Config.Wallet -and -not $Session.Config.MinerStatusKey) {$Session.Config.MinerStatusKey = $Session.Config.Wallet}      
+        #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
     }
 
@@ -1527,9 +1526,9 @@ function Invoke-Core {
         $SamplesPicked++
     }
 
-    if ($Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
+    if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
-            & .\ReportStatus.ps1 -Key $Session.Config.MinerStatusKey -WorkerName $Session.Config.WorkerName -ActiveMiners $Session.ActiveMiners -MinerStatusURL $Session.Config.MinerStatusURL
+            Update-MinerStatus            
             $Session.NextReport = $Session.Timer.AddSeconds($Session.Config.Interval)
         }
     }
