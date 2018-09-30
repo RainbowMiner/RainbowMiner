@@ -3,6 +3,8 @@
 
 ###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
+###### **Cenral monitoring of all your rigs: [https://rbminer.net](https://rbminer.net)**
+
 
 ## INTRODUCTION
 
@@ -34,6 +36,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Pause mining without exiting the RainbowMiner**
 - **Full automatic update**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
+- **Central monitoring of all your rigs at [https://rbminer.net](https://rbminer.net)**
 
 ## REQUIRED PRE-REQUESITES
 
@@ -144,6 +147,7 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
+<details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
@@ -359,6 +363,10 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **LocalAPIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
+- **EnableMinerStatus** = set to 1 to enable central monitoring
+- **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]
+- **MinerStatusKey** = your unique miner status key (get one at https://rbminer.net, you can reuse MPM keys)
+
 
 #### Select devices ####
 
