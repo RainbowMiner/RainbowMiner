@@ -3287,6 +3287,58 @@ Param(
     }
 }
 
+function Get-MinerStatusKey {    
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    try {
+        Invoke-RestMethod -Uri "https://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        Write-Log "Miner Status key created: $Response"
+    }
+    catch {
+        Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
+    }
+}
+
+function Update-MinerStatus {
+    if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
+
+    $Version = "RainbowMiner $($Session.Version.ToString())"
+    $Profit = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object Profit -Sum).Sum, 8) | ConvertTo-Json
+    $Status = if ($Session.Paused) {"Paused"} else {"Running"}
+
+    Write-Log "Pinging monitoring server. "
+
+    $minerreport = ConvertTo-Json @(
+        $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
+            # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
+            [PSCustomObject]@{
+                Name           = $_.BaseName
+                Path           = Resolve-Path -Relative $_.Path
+                Type           = @($_.DeviceModel)
+                Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()
+                Algorithm      = @($_.BaseAlgorithm)
+                Pool           = @($_.Pool)
+                CurrentSpeed   = @($_.Speed_Live)
+                EstimatedSpeed = @($_.Speed)
+                'BTC/day'      = $_.Profit
+                Profit         = $_.Profit
+            }
+        }
+    )
+       
+    # Send the request
+    try {
+        if ($Session.Config.MinerStatusURL -match "rbminer.net") {
+            $Response = Invoke-RestMethod -Uri "https://rbminer.net/api/report.php" -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        } else {
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        }
+        Write-Log "Miner Status $($Session.Config.MinerStatusURL): $Response"
+    }
+    catch {
+        Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
+    }
+}
+
 function Write-HostSetupHints {
 [cmdletbinding()]   
 Param(   
