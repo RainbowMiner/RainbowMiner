@@ -3290,8 +3290,10 @@ Param(
 function Get-MinerStatusKey {    
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     try {
-        Invoke-RestMethod -Uri "https://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Response = Invoke-RestMethod -Uri "https://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1}
         Write-Log "Miner Status key created: $Response"
+        $Response
     }
     catch {
         Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
@@ -3324,7 +3326,9 @@ function Update-MinerStatus {
             }
         }
     )
-       
+     
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
     # Send the request
     try {
         $ReportUrl = $Session.Config.MinerStatusURL
