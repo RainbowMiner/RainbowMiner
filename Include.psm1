@@ -3327,15 +3327,18 @@ function Update-MinerStatus {
        
     # Send the request
     try {
-        if ($Session.Config.MinerStatusURL -match "rbminer.net") {
-            $Response = Invoke-RestMethod -Uri "https://rbminer.net/api/report.php" -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $ReportUrl = $Session.Config.MinerStatusURL
+        if ($ReportUrl -match "rbminer.net") {
+            $ReportUrl = "https://rbminer.net/api/report.php"
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         } else {
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
-        Write-Log "Miner Status $($Session.Config.MinerStatusURL): $Response"
+        if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1} 
+        Write-Log "Miner Status $($ReportUrl): $($Response)"
     }
     catch {
-        Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
+        Write-Log -Level Warn "Miner Status $($ReportUrl) has failed. "
     }
 }
 
