@@ -795,6 +795,17 @@ function Get-Combination {
     }
 }
 
+function Get-FilteredMinerObject {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        $Miner
+    )
+    $Out = [PSCustomObject]@{}
+    $Miner.PSObject.Properties.Name | Where-Object {$_ -ne 'Process'} | Foreach-Object {$Out | Add-Member $_ $Miner.$_ -Force}
+    $Out
+}
+
 function Start-SubProcess {
     [CmdletBinding()]
     param(
