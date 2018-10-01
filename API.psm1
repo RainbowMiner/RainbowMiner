@@ -245,11 +245,11 @@
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                         $AvgPowerDraw  = ($_.Group | Measure-Object Profit -Average).PowerDraw
                         $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
-                        $Active        = ((Get-Date $One.ActiveLast)-(Get-Date $One.ActiveStart)).TotalSeconds
+                        $Active        = ((Get-Date $One.ActiveLast)-(Get-Date $One.ActiveStart)).TotalMinutes
                         $One.Profit    = $AvgProfit
                         if ($One.PowerDraw -eq $null) {$One | Add-Member PowerDraw $AvgPowerDraw} else {$One.PowerDraw = $AvgPowerDraw}
-                        $One | Add-Member TotalPowerDraw ($AvgPowerDraw * $Active / (24*3600))
-                        $One | Add-Member TotalProfit ($AvgProfit * $Active / (24*3600))
+                        $One | Add-Member TotalPowerDraw ($AvgPowerDraw * $Active / 60000) #kWh
+                        $One | Add-Member TotalProfit ($AvgProfit * $Active / 1440)
                         $One | Add-Member Active $Active -PassThru
                     } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json
                     Break
