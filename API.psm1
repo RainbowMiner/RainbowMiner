@@ -241,7 +241,17 @@
                     $BigJson = ''
                     Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw | Foreach-Object {$BigJson += $_}
                     $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json
-                    $Data = $GroupedData | Group-Object ActiveStart,Name,Device | Foreach-Object {$_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1} | Sort-Object ActiveStart,Name,Device | Foreach-Object {$_ | Add-Member Active ((Get-Date $_.ActiveLast)-(Get-Date $_.ActiveStart)).TotalSeconds -PassThru -Force} | ConvertTo-Json
+                    $Data = $GroupedData | Group-Object ActiveStart,Name,Device | Foreach-Object {
+                        $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
+                        $AvgPowerDraw  = ($_.Group | Measure-Object Profit -Average).PowerDraw
+                        $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
+                        $Active        = ((Get-Date $One.ActiveLast)-(Get-Date $One.ActiveStart)).TotalSeconds
+                        $One.Profit    = $AvgProfit
+                        if ($One.PowerDraw -eq $null) {$One | Add-Member PowerDraw $AvgPowerDraw} else {$One.PowerDraw = $AvgPowerDraw}
+                        $One | Add-Member TotalPowerDraw ($AvgPowerDraw * $Active / (24*3600))
+                        $One | Add-Member TotalProfit ($AvgProfit * $Active / (24*3600))
+                        $One | Add-Member Active $Active -PassThru
+                    } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json
                     Break
                 }
                 "/computerstats" {

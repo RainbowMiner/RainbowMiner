@@ -333,6 +333,7 @@ Function Write-ActivityLog {
                 Pool           = @($Miner.Pool)
                 Speed          = @($Miner.Speed_Live)
                 Profit         = $Miner.Profit
+                PowerDraw      = $Miner.PowerDraw
             } | ConvertTo-Json -Compress)," | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
