@@ -1100,17 +1100,17 @@ function Invoke-Core {
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum}, {($_.Combination | Where-Object Profit -NE 0 | Measure-Object).Count} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
 
     #apply PowerOffset and check for remaining profitability
-    $BestMiners_Profitable = $true
+    $Session.Profitable = $true
     $PowerOffset_Cost = [Double]0
     if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
         $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
         if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
             Write-Log -Level Warn "No more miners are profitable. $(if ($Session.Config.CheckProfitability) {" Waiting for profitability."})"
-            if ($Session.Config.CheckProfitability) {$BestMiners_Profitable = $false}
+            if ($Session.Config.CheckProfitability) {$Session.Profitable = $false}
         }
     }
 
-    if (-not $Session.PauseMiners -and -not $Session.AutoUpdate -and $BestMiners_Profitable) {
+    if (-not $Session.PauseMiners -and -not $Session.AutoUpdate -and $Session.Profitable) {
         $BestMiners_Combo | ForEach-Object {$_.Best = $true}
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
@@ -1257,7 +1257,7 @@ function Invoke-Core {
         Write-Host -NoNewLine "PAUSED" -ForegroundColor Red
         Write-Host " (press P to resume)"
         Write-Host " "
-    } elseif (-not $BestMiners_Profitable) {
+    } elseif (-not $Session.Profitable) {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "WAITING FOR PROFITABILITY" -ForegroundColor Red
         Write-Host " (be patient or set CheckProfitability to 0 to resume)"
@@ -1528,7 +1528,7 @@ function Invoke-Core {
 
     if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
-            Update-MinerStatus            
+            Update-MinerStatus
             $Session.NextReport = $Session.Timer.AddSeconds($Session.Config.Interval)
         }
     }
@@ -1575,6 +1575,7 @@ function Invoke-Core {
                 $Miner_PowerDraw = 0
             }
             $Miner.EndOfRoundCleanup()
+            Write-ActivityLog $Miner
         }
     }
 

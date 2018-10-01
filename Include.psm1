@@ -310,6 +310,39 @@ Function Write-Log {
     End {}
 }
 
+Function Write-ActivityLog {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()]$Miner
+    )
+
+    Begin { }
+    Process {
+        $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
+
+        $filename = ".\Logs\Activity_$(Get-Date -Format "yyyy-MM-dd").txt"
+
+        # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
+        if ($mutex.WaitOne(1000)) {
+            "$([PSCustomObject]@{
+                ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveStart()
+                ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
+                Name           = $Miner.BaseName
+                Device         = @($Miner.DeviceModel)
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Pool           = @($Miner.Pool)
+                Speed          = @($Miner.Speed_Live)
+                Profit         = $Miner.Profit
+            } | ConvertTo-Json -Compress)," | Out-File -FilePath $filename -Append -Encoding utf8
+            $mutex.ReleaseMutex()
+        }
+        else {
+            Write-Error -Message "Activity log file is locked, unable to write message to $FileName."
+        }
+    }
+    End {}
+}
+
 function Set-Stat {
     [CmdletBinding()]
     param(
