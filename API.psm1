@@ -243,7 +243,7 @@
                     $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json
                     $Data = $GroupedData | Group-Object ActiveStart,Name,Device | Foreach-Object {
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
-                        $AvgPowerDraw  = ($_.Group | Measure-Object Profit -Average).PowerDraw
+                        $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
                         $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
                         $Active        = ((Get-Date $One.ActiveLast)-(Get-Date $One.ActiveStart)).TotalMinutes
                         $One.Profit    = $AvgProfit
