@@ -1,0 +1,68 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" class="h2" data-navbaractive="navactivity">Active Miners over the past 3 days</h1>
+</div>
+<table id="miners" class="table"
+  data-toggle="table"
+  data-url="/activity"
+  data-response-handler="formatActivity"
+  data-filter-control="true"
+  data-filter-show-clear="true"
+  data-sort-order="desc"
+  data-sort-name="ActiveLast"
+  data-cache="false"
+  data-show-columns="true"
+  data-show-toggle="true"
+  data-show-refresh="true"
+  data-icons-prefix="fa"
+  data-icons="icons"
+  data-detail-view="true"
+  data-detail-formatter="detailFormatter"
+>
+  <thead>
+      <tr>
+          <th data-field="ActiveStart" data-sortable="true">Started</th>
+          <th data-field="ActiveLast" data-sortable="true">Last Seen</th>
+          <th data-field="tActive" data-align="right" data-sortable="true">Minutes</th>
+          <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="tAlgorithms" data-sortable="true" data-filter-control="select">Algorithms</th>
+          <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+          <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+          <th data-field="tProfit" data-align="right" data-sortable="true">Earned</th>
+          <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+      </tr>
+  </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+    function formatActivity(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+            // Format the algorithm(s)
+            item.tPrimaryAlgorithm = item.Algorithm[0];
+            item.tSecondaryAlgorithm = item.Algorithm[1];
+            item.tAlgorithms = item.Algorithm.join(",");
+
+            // Format the speed(s)
+            if (Array.isArray(item.Speed)) {
+                item.tPrimarySpeed = item.Speed[0];
+                item.tSecondarySpeed = item.Speed[1];
+            } else {
+                item.tPrimarySpeed = item.Speed;
+            }
+
+            // Format the device(s)
+            item.tDevices = item.Device.toString();
+            item.Name = item.Name.split(/\-/)[0];
+
+            item.tPowerDraw = item.TotalPowerDraw? Math.round(parseFloat(item.TotalPowerDraw)*1000)/1000 + ' kWh':'-.---';
+            item.tProfit = item.TotalProfit ? Math.round(parseFloat(item.TotalProfit) * 1e6) / 1000 + ' mBTC' : '-.---';
+            item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
+        });
+        return data;
+    }
+</script>
+<!--#include file="/parts/foot.html" -->
