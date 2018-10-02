@@ -194,6 +194,10 @@
                     $Data = ConvertTo-Json @(($API.Asyncloaderjobs | ConvertFrom-Json) | Select-Object)
                     Break
                 }
+                "/decsep" {
+                    $Data = (Get-Culture).NumberFormat.NumberDecimalSeparator | ConvertTo-Json
+                    Break
+                }
                 "/minerstats" {
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}

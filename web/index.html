@@ -65,6 +65,14 @@
                 }
             })
         });
+        var nDecimalSeparator = ".", tDecimalSeparator = ",";
+        $.ajax({
+            url: '/decsep', success: function (result) {
+                nDecimalSeparator = result
+                tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
+            }
+        });
+
         (function updatePoolBalances() {
             $.ajax({
                 url: '/balances', success: function (result) {
@@ -85,9 +93,9 @@
                         }
                         $.each(currencies, function (cindex, currency) {
                             var name = currency.replace("Value in ", "");
-                            var csplit = item[currency].replace(".","").split(",");
+                            item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                            var csplit = item[currency].split(".");
                             var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
-                            item[currency] = item[currency].replace(",", ".");
                             if (digits != -1) { item[currency] = parseFloat(item[currency]) }
                             if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
                             else if (digits != -1) {
