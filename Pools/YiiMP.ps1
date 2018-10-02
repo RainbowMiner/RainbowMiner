@@ -47,7 +47,9 @@ $Pool_MiningCurrencies = @($Wallets.PSObject.Properties.Name | Select-Object) + 
 $Pool_PoolFee = 2.0
 
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
-    if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
+    if (($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -or 
+         $PoolCoins_Request.$Pool_Currency.workers  -le 0 -or
+         $PoolCoins_Request.$Pool_Currency.'24h_blocks' -le 0) -and -not $InfoOnly) {continue}
     
     $Pool_Host = "yiimp.eu"
     $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
@@ -64,10 +66,13 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
         $Pool_Factor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
     } else {
         $Pool_Factor = [Double]$(Switch($Pool_Algorithm_Norm) {
-            "Blake2s" {1000}
-            "KeccakC" {1000}
-            "Sha256" {1000}
-            default {1}
+            "Blake2s"   {1000}
+            "Blakecoin" {1000}
+            "Equihash"  {1/1000}
+            "KeccakC"   {1000}
+            "Scrypt"    {1000}
+            "Sha256"    {1000}
+            default     {1}
         })
     }
     $Divisor = $Pool_Factor * 1e9
