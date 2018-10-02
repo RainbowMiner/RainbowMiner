@@ -67,7 +67,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
             "Blake2s" {1000}
             "KeccakC" {1000}
             "Sha256" {1000}
-            default {$Pool_Factor = 1}
+            default {1}
         })
     }
     $Divisor = $Pool_Factor * 1e9
