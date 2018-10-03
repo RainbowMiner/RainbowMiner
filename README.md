@@ -140,11 +140,11 @@ https://www.blockmasters.co/ auto-exchange and payout in BTC
 </details>
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
-<details><summary>MiningPoolHub / MiningPooHubCoins</summary> <p>
+<details><summary>MiningPoolHub / MiningPooHubCoins</summary>
 
 https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
   - 'miningpoolhub' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
-  - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).</p>
+  - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
 <details><summary>NanoPool</summary> https://www.nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
