@@ -267,7 +267,7 @@
                     Break
                 }
                 "/currentprofit" {
-                    $Data = [PSCustomObject]@{ProfitBTC=($API.RunningMiners | ConvertFrom-Json | Measure-Object -Sum -Property Profit).Sum;Rates=$API.Rates | ConvertFrom-Json} | ConvertTo-Json
+                    $Data = [PSCustomObject]@{ProfitBTC=(($API.RunningMiners | ConvertFrom-Json) | Measure-Object -Sum -Property Profit).Sum;Rates=$API.Rates | ConvertFrom-Json} | ConvertTo-Json
                     Break
                 }
                 "/stop" {
