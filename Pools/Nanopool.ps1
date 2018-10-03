@@ -19,12 +19,13 @@ $Pool_Request = [PSCustomObject]@{}
     "asia" = "-asia1.nanopool.org"
 }
 
-$Pools_Data = @()
-$Pools_Data += [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC"; port = 19999; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"};
-$Pools_Data += [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH"; port = 9999;  fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"};
-$Pools_Data += [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC"; port = 6666;  fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"};
-$Pools_Data += [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightV7"; symbol = "XMR"; port = 14444; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"};
-$Pools_Data += [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN"; port = 13333; fee = 2; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"};
+$Pools_Data = @(
+    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC"; port = 19999; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH"; port = 9999;  fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC"; port = 6666;  fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightV7"; symbol = "XMR"; port = 14444; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN"; port = 13333; fee = 2; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+)
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
