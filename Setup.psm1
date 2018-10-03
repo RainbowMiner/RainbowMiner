@@ -215,14 +215,14 @@ function Start-Setup {
                         }
                         "minerstatusurl" {
                             if (Get-Yes $Config.EnableMinerStatus) {                                
-                                $Config.MinerStatusURL = Read-HostString -Prompt "Enter the miner monitoring url" -Default $Config.MinerStatusUrl | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusURL = Read-HostString -Prompt "Enter the miner monitoring url" -Default $Config.MinerStatusUrl -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "minerstatuskey" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey -Characters "A-F0-9\-" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 $Config.MinerStatusKey = $Config.MinerStatusKey.Trim()
                                 if ($Config.MinerStatusKey -eq "new" -or $Config.MinerStatusKey -eq "") {
                                     $Config.MinerStatusKey = Get-MinerStatusKey
@@ -542,7 +542,7 @@ function Start-Setup {
                             $Config.EnableAutoUpdate = Read-HostBool -Prompt "Enable automatic update, as soon as a new release is published" -Default $Config.EnableAutoUpdate | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "proxy" {
-                            $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9:/\.%-_" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "interval" {
                             $Config.Interval = Read-HostInt -Prompt "Enter the script's loop interval in seconds" -Default $Config.Interval -Mandatory -Min 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
