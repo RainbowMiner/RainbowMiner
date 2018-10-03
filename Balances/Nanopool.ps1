@@ -15,16 +15,16 @@ if (-not $Payout_Currencies) {
 
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-RestMethod "https://api.nanopool.org/v1/$($_.Name.ToLower())/balance/$($_.Value)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-        if ($false -and $Request.status -eq "OK") {
+        $Request = Invoke-RestMethod "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        if ($Request.status -ne "OK") {
             Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
                 Currency    = $_.Name
-                Balance     = $Request.data
-                Pending     = 0
-                Total       = $Request.data
+                Balance     = [Math]::Max([double]$Request.data.balance,0)
+                Pending     = [double]$Request.data.unconfirmed_balance
+                Total       = [Math]::Max([double]$Request.data.balance,0) + [double]$Request.data.unconfirmed_balance
                 Payed       = 0
                 Earned      = 0
                 Payouts     = @()
