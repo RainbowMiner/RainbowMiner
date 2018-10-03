@@ -111,6 +111,21 @@ try {
         if (Test-Path "Includes\nvml.dll") {Remove-Item "Includes\nvml.dll" -Force -ErrorAction Ignore;$ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "3.8.8.7")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.MinerStatusUrl -and $ConfigActual.MinerStatusUrl -match "httpsrbminernet") {$ConfigActual.MinerStatusUrl = "https://rbminer.net";$Changes++}
+        if ($ConfigActual.MinerStatusKey -and $ConfigActual.MinerStatusKey -match "^[0-9a-f]{32}$") {
+            $ConfigActual.MinerStatusKey = "$($ConfigActual.MinerStatusKey.Substring(0,8))-$($ConfigActual.MinerStatusKey.Substring(8,4))-$($ConfigActual.MinerStatusKey.Substring(12,4))-$($ConfigActual.MinerStatusKey.Substring(16,4))-$($ConfigActual.MinerStatusKey.Substring(20,12))"
+            $Changes++
+        }
+
+        if ($Changes) {       
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
+    }
+
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
 
     "Cleaned $ChangesTotal elements"
