@@ -19,10 +19,11 @@ $Pool_Request = [PSCustomObject]@{}
     "asia" = Get-Region "asia"
 }
 
-$Pools_Data = @()
-$Pools_Data += [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; coin = "EthereumClassic"; algo = "Ethash";   symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"};
-$Pools_Data += [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     coin = "Ethereum";        algo = "Ethash";   symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"};
-$Pools_Data += [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-zcash.flypool.org"; coin = "Zcash";           algo = "Equihash"; symbol = "ZEC"; port = 3443; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"};
+$Pools_Data = @(
+    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; coin = "EthereumClassic"; algo = "Ethash";   symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     coin = "Ethereum";        algo = "Ethash";   symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-zcash.flypool.org"; coin = "Zcash";           algo = "Equihash"; symbol = "ZEC"; port = 3443; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+)
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if (-not $Pool_Currencies -and -not $InfoOnly) {return}
