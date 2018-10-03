@@ -77,7 +77,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nicehash, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, hashrefinery, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nanopool, nicehash, nlpool, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
 
 
@@ -146,6 +146,7 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
   - 'miningpoolhub' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
+<details><summary>NanoPool</summary> https://www.nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
 <details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
