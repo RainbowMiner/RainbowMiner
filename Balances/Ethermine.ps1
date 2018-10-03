@@ -21,7 +21,6 @@ $API_Hosts = @{
 
 $Payout_Currencies | Foreach-Object {
     try {
-        "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard"
         $Request = Invoke-RestMethod "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         if ($Request.status -ne "OK") {
             Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
