@@ -1060,6 +1060,7 @@ function Start-Setup {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                                 if (@("back","<") -icontains $_.Exception.Message) {
                                     if ($PoolSetupStepBack.Count) {$PoolSetupStep = $PoolSetupStepBack[$PoolSetupStepBack.Count-1];$PoolSetupStepBack.RemoveAt($PoolSetupStepBack.Count-1)}
+                                    else {$PoolSetupStepsDone = $true}
                                 }
                                 elseif ($_.Exception.Message -like "Goto*") {
                                     if ($PoolSetupSteps[$PoolSetupStep] -notmatch "title") {$PoolSetupStepBack.Add($PoolSetupStep) > $null}
