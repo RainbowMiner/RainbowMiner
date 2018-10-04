@@ -89,7 +89,7 @@ function Confirm-Cuda {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and $_.Value.Length -gt 10 -and @("API_Key","API_ID","User","Worker","DataWindow") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and $_.Value.Length -gt 10 -and @("API_Key","API_ID","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -1848,6 +1848,7 @@ class Miner {
     $Type
     [string[]]$Algorithm = @()
     [string[]]$BaseAlgorithm = @()
+    $Currency
     $DeviceName
     $DeviceModel
     $Profit
@@ -2894,6 +2895,7 @@ function Set-PoolsConfigDefault {
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "CoinSymbol") {$Setup_Content | Add-Member CoinSymbol "" -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$Setup_Content | Add-Member ExcludeCoinSymbol "" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "FocusWallet") {$Setup_Content | Add-Member FocusWallet "" -Force}
                     $Done | Add-Member $_ $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null

@@ -895,15 +895,16 @@ function Start-Setup {
 
                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
-                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
-                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
-                        if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null} 
-                        $PoolSetupSteps.Add("save") > $null                                        
-                                                                                
                         $Pool_Avail_Currency = @($Pool.Currency | Select-Object -Unique | Sort-Object)
                         $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
                         $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
 
+                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
+                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
+                        if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
+                        if ($Pool_Name -notlike "MiningPoolHub*" -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
+                        $PoolSetupSteps.Add("save") > $null                                        
+                                                                                
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_Key") {$PoolConfig | Add-Member API_Key "`$API_Key" -Force}
@@ -915,6 +916,7 @@ function Start-Setup {
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$PoolConfig | Add-Member ExcludeCoin "" -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinSymbol") {$PoolConfig | Add-Member CoinSymbol "" -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$PoolConfig | Add-Member ExcludeCoinSymbol "" -Force}
+                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "FocusWallet") {$PoolConfig | Add-Member FocusWallet "" -Force}
                         if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
                                         
                         do { 
@@ -972,7 +974,7 @@ function Start-Setup {
                                         Write-Host " "
                                         Write-Host "*** Define your wallets for this pool ***" -ForegroundColor Green
                                         do {
-                                            $Pool_Actual_Currency = @(Compare-Object @($Pool_Avail_Currency) @($PoolConfig.PSObject.Properties.Name) -ExcludeDifferent -IncludeEqual | Select-Object -ExpandProperty InputObject | Sort-Object)
+                                            $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
                                             Write-Host " "
                                             if ($Pool_Actual_Currency.Count -gt 0) {
                                                 Write-Host "Currently defined wallets:" -ForegroundColor Cyan
@@ -1023,6 +1025,10 @@ function Start-Setup {
                                         $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool" -Default (Get-YiiMPDataWindow $PoolConfig.DataWindow) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                         $PoolConfig.DataWindow = Get-YiiMPDataWindow $PoolConfig.DataWindow
                                     }
+                                    "focuswallet" {
+                                        $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
+                                        $PoolConfig.FocusWallet = Read-HostArray -Prompt "Force mining for one or more of this pool's wallets" -Default $PoolConfig.FocusWallet -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -1033,6 +1039,7 @@ function Start-Setup {
                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
                                         $PoolConfig | Add-Member CoinSymbol $($PoolConfig.CoinSymbol -join ",") -Force
                                         $PoolConfig | Add-Member ExcludeCoinSymbol $($PoolConfig.ExcludeCoinSymbol -join ",") -Force
+                                        $PoolConfig | Add-Member FocusWallet $($PoolConfig.FocusWallet -join ",") -Force
 
                                         $PoolsActual | Add-Member $Pool_Name $PoolConfig -Force
                                         $PoolsActualSave = [PSCustomObject]@{}
