@@ -44,11 +44,13 @@ catch {
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC", "DASH", "LTC") + @($Wallets.PSObject.Properties.Name | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
-$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
+$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
+
+    $Pool_Symbol = if ($PoolCoins_Request.$Pool_Currency.Symbol) {$PoolCoins_Request.$Pool_Currency.Symbol} else {$Pool_Currency}
 
     $Pool_Host = "$($PoolCoins_Request.$Pool_Currency.algo).mine.zergpool.com"
     $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
@@ -57,7 +59,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
-    $Pool_User = $Wallets.$Pool_Currency
+    $Pool_User = $Wallets.$Pool_Symbol
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
@@ -128,8 +130,8 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
+                    CoinSymbol    = $Pool_Symbol
+                    Currency      = $Pool_Symbol
                     Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
@@ -137,7 +139,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                     Port          = $Pool_Port
                     User          = $Pool_User
-                    Pass          = "$Worker,c=$Pool_Currency,mc=$Pool_Currency"
+                    Pass          = "$Worker,c=$Pool_Symbol,mc=$Pool_Symbol"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
@@ -150,7 +152,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
-                        CoinSymbol    = $Pool_Currency
+                        CoinSymbol    = $Pool_Symbol
                         Currency      = $Pool_ExCurrency
                         Price         = $Stat.Hour #instead of .Live
                         StablePrice   = $Stat.Week
@@ -159,7 +161,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                         Host          = if ($Pool_Region -eq "us") {$Pool_Host}else {"$Pool_Region.$Pool_Host"}
                         Port          = $Pool_Port
                         User          = $Wallets.$Pool_ExCurrency
-                        Pass          = "$Worker,c=$Pool_ExCurrency,mc=$Pool_Currency"
+                        Pass          = "$Worker,c=$Pool_ExCurrency,mc=$Pool_Symbol"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $false
                         Updated       = $Stat.Updated
