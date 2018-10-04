@@ -59,8 +59,12 @@ $Session.Devices | Where-Object Type -eq "GPU" | Select-Object Vendor, Model -Un
             $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
             $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
 
-            if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {$Miner_Protocol_Params = "-proto 4 -stales 0"}
-            else {$Miner_Protocol_Params = "-proto 1"}          
+            switch($Pools.$Algorithm_Norm.Name) {
+                "Ethermine" {$Miner_Protocol_Params = "-proto 3"}
+                "Nanopool"  {$Miner_Protocol_Params = "-proto 2"}
+                "NiceHash"  {$Miner_Protocol_Params = "-proto 4 -stales 0"}
+                default {$Miner_Protocol_Params = "-proto 1"}
+            }
 
             [PSCustomObject]@{
                 Name = $Miner_Name
