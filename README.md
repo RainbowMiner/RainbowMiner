@@ -522,7 +522,10 @@ Example:
 Per default all algorithms of a pool will be used. To define your own set of algorithm, there are two additional fields:
 - Algorithm: a comma separated list of all pool's algorithm, you want RainbowMiner to use (leave empty for all)
 - ExcludeAlgorithm: a comma separated list of all pool's algorithm, you explicitly do not want RainbowMiner to use (leave empty for no exception)
-- ExcludeCoin: a comma separated list of coins, you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
+- CoinName: a comma separated list of coin names, you want RainbowMiner to use (leave empty for all). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
+- ExcludeCoin: a comma separated list of coin names, you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
+- CoinSymbol: a comma separated list of coin symbols, you want RainbowMiner to use (leave empty for all). Better alternative to "CoinName"
+- ExcludeCoinSymbol: a comma separated list of coin's, you want RainbowMiner to use (leave empty for all). Better alternative to "ExcludeCoin"
 
 Example:
 
@@ -533,9 +536,36 @@ Example:
         "API_Key": "$API_Key",
         "Algorithm": "lyra2z,skein,myriadgroestl,groestl,neoscrypt,equihash-btg",
         "ExcludeAlgorithm": "",
-        "ExcludeCoin": "BitcoinGold,MaxCoin"
+        "CoinName": "",
+        "ExcludeCoin": "",
+        "CoinSymbol": "",
+        "ExcludeCoinSymbol": "BTG,XTC",
+        "FocusWallet": ""
+    }
+    
+#### Force mining to a pool's wallet
+
+To force mining to pool's wallets, you may add the wallet's currencies to field "FocusWallet". RainbowMiner will mine into the the focused pool/wallets, only.
+
+Example:
+
+    "Ethermine": {
+        "ETH": "0x012031012301230123012301230",
+        "ZEC": "t012301230123012301230",
+        "User": "$UserName",
+        "Worker": "$WorkerName",
+        "API_ID": "$API_ID",
+        "API_Key": "$API_Key",
+        "Algorithm": "",
+        "ExcludeAlgorithm": "",
+        "CoinName": "",
+        "ExcludeCoin": "",
+        "CoinSymbol": "",
+        "ExcludeCoinSymbol": "",
+        "FocusWallet": "ETH,ZEC"
     }
 
+This example will focus mining operations to pool Ethermine, comparing this pool's profitability of ETH and ZEC, only. No other pool will be mined.
 
 ### Config\miners.config.txt
 
