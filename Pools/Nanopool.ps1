@@ -31,22 +31,23 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Currency = $_.symbol
 
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync $("https://api.nanopool.org/v1/" + $_.symbol.ToLower() + "/approximated_earnings/1000") -cycletime ([Math]::Min(120,$Session.Config.Interval)) -tag $Name
+            $Pool_Request = Invoke-RestMethodAsync $("https://api.nanopool.org/v1/" + $Pool_Currency.ToLower() + "/approximated_earnings/1000") -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name
             if ($Pool_Request.status -ne "OK") {throw}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $($_.symbol) has failed. "
+            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
             $ok = $false
         }
 
         if ($ok) {
             $Pool_ExpectedEarning = [double]($Pool_Request | Select-Object -ExpandProperty data | Select-Object -ExpandProperty day | Select-Object -ExpandProperty bitcoins) / $_.divisor / 1000    
-            $Stat = Set-Stat -Name "$($Name)_$($_.symbol)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -ChangeDetection $true
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -ChangeDetection $true
         }
     }
 
@@ -55,8 +56,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $_.coin
-                CoinSymbol    = $_.symbol
-                Currency      = $_.symbol
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
