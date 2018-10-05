@@ -1851,6 +1851,7 @@ class Miner {
     $Currency
     $DeviceName
     $DeviceModel
+    [Bool]$Enabled = $false
     $Profit
     $Profit_Comparison
     $Profit_MarginOfError
