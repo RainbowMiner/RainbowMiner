@@ -46,6 +46,9 @@ function Start-Setup {
                 if ($val -is [array]) {$val = $val -join ','}
                 if ($val -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $val -Force}
             }
+            if (($Session.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
+                $Config | Add-Member DisableMSIAmonitor $true -Force
+            }
 
         } else {
             Write-Host "Please choose, what to configure:" -ForegroundColor Yellow
