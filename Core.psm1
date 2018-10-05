@@ -722,7 +722,7 @@ function Invoke-Core {
                     Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Select-Object -ExpandProperty HashRates |
                     Measure-Object -Sum @($ComboAlgos) |
-                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.001} 
+                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.01} 
                     #we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
 
                 $Miner.PowerDraw = ($AllMiners | 
@@ -1082,9 +1082,19 @@ function Invoke-Core {
     $Session.ActiveMiners | Where-Object {$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.GetStatus() -eq [MinerStatus]::Running)} | Foreach-Object {$_.Profit_Bias = $_.Profit_Unbias}
 
     #Get most profitable miner combination
-    $BestMiners            = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-    $BestMiners_Comparison = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)} ,{($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}    
-    $Miners_Device_Combos  = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $Session.ActiveMiners_DeviceNames | Measure-Object).Count -eq 0})
+    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)} ,{($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+
+    $Check_Profitability = $false
+    if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
+        #Remove no longer profitable miners
+        if ($Session.Config.CheckProfitability) {$BestMiners = $BestMiners | Where Profit -gt 0}
+        $Check_Profitability = $true
+    }
+
+    $BestMiners_DeviceNames = @($BestMiners | Select-Object -ExpandProperty DeviceName -Unique | Sort-Object)
+
+    $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames | Measure-Object).Count -eq 0})
     $BestMiners_Combos = $Miners_Device_Combos | ForEach-Object {
         $Miner_Device_Combo = $_.Combination
         [PSCustomObject]@{
@@ -1108,15 +1118,10 @@ function Invoke-Core {
     $BestMiners_Combo = $BestMiners_Combos | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Bias -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
 
-    #apply PowerOffset and check for remaining profitability
     $Session.Profitable = $true
     $PowerOffset_Cost = [Double]0
-    if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
+    if ($Check_Profitability) {
         $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
-        if ($Session.Config.CheckProfitability) {
-            $BestMiners_Combo = $BestMiners_Combo | Where Profit -gt 0
-            $BestMiners_Combo_Comparison = $BestMiners_Combo_Comparison | Where Profit -gt 0
-        }
         if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
             Write-Log -Level Warn "No more miners are profitable. $(if ($Session.Config.CheckProfitability) {" Waiting for profitability."})"
             if ($Session.Config.CheckProfitability) {$Session.Profitable = $false}
@@ -1256,7 +1261,7 @@ function Invoke-Core {
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
         )) > $null
 
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$_.Profit -ge 1E-6 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if (-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if (-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {$Session.Config.UIstyle -ne "full" -or $_.Profit -ge 1E-7 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if (-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if (-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
     }
     Remove-Variable "Miner_Table"
 
@@ -1408,6 +1413,8 @@ function Invoke-Core {
             $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null
     }
     if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
+
+    $API.CurrentProfit = $CurrentProfitTotal
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "

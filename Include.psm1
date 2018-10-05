@@ -28,6 +28,7 @@ function Confirm-Version {
     [CmdletBinding()]
     param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
 
+    $Name = "RainbowMiner"
     if ($Force -or -not (Test-Path Variable:Script:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Script:GlobalVersion.NextCheck) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -35,7 +36,6 @@ function Confirm-Version {
         $Uri = ""
         $NextCheck = (Get-Date).ToUniversalTime()
 
-        $Name = "RainbowMiner"
         try {
             $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
             if ($Force) {
