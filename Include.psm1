@@ -1486,7 +1486,7 @@ function Start-Afterburner {
         $Script:abControl = $false
         return
     }
-    
+   
     try {
         $Script:abMonitor = New-Object MSI.Afterburner.HardwareMonitor
     } catch {
@@ -1508,7 +1508,8 @@ function Start-Afterburner {
 }
 
 function Test-Afterburner {
-    return $Script:abMonitor -and $Script:abControl
+    if (-not (Test-Path Variable:Script:abMonitor)) {return -1}
+    if ($Script:abMonitor -and $Script:abControl) {1} else {0}
 }
 
 function Get-AfterburnerDevices ($Type) {
