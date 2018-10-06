@@ -156,7 +156,7 @@ function Invoke-Core {
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
-        if (-not $Session.Config -or $Session.RunSetup -or (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Config"].LastWriteTime) {
+        if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Config"].LastWriteTime)) {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
@@ -260,7 +260,7 @@ function Invoke-Core {
     #Check for oc profile config
     Set-OCProfilesConfigDefault $Session.ConfigFiles["OCProfiles"].Path
     if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {
-        if ($CheckConfig -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime) {        
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime)) {
             $Session.ConfigFiles["OCProfiles"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member OCProfiles (Get-ChildItemContent $Session.ConfigFiles["OCProfiles"].Path).Content -Force
         }
@@ -269,7 +269,7 @@ function Invoke-Core {
     #Check for devices config
     Set-DevicesConfigDefault $Session.ConfigFiles["Devices"].Path
     if (Test-Path $Session.ConfigFiles["Devices"].Path) {
-        if ($CheckConfig -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime) {        
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime)) {
             $Session.ConfigFiles["Devices"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Devices (Get-ChildItemContent $Session.ConfigFiles["Devices"].Path).Content -Force
             $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
@@ -294,7 +294,7 @@ function Invoke-Core {
     $CheckPools = $false
     Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
-        if ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime) {        
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters @{
                 Wallet              = $Session.Config.Wallet
@@ -1450,7 +1450,7 @@ function Invoke-Core {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, [C]onfiguration, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
 
     $SamplesPicked = 0
     $WaitRound = 0
@@ -1512,9 +1512,11 @@ function Invoke-Core {
                     $keyPressed = $true
                 }
                 "C" {
-                    $Session.RunSetup = $true
-                    Write-Host -NoNewline "[C] pressed - configuration setup will be started"
-                    $keyPressed = $true
+                    if (-not $Session.IsDonationRun) {
+                        $Session.RunSetup = $true
+                        Write-Host -NoNewline "[C] pressed - configuration setup will be started"
+                        $keyPressed = $true
+                    }
                 }
                 "U" {
                     $Session.AutoUpdate = $true
