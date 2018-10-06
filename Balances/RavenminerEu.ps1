@@ -12,7 +12,7 @@ if (!$PoolConfig.RVN) {
 
 $Request = [PSCustomObject]@{}
 
-$Ravenminer_Host = "ravenminer.com"
+$Ravenminer_Host = "eu.ravenminer.com"
 
 $Success = $true
 try {

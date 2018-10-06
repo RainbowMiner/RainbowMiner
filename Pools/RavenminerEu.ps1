@@ -15,7 +15,7 @@ $Pool_Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://ravenminer.com/api/status" -tag $Name)){throw}
+    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name)){throw}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -25,9 +25,9 @@ catch {
 if (-not $Success) {
     $Success = $true
     try {
-        $Pool_Request = Invoke-GetUrl "https://ravenminer.com/site/current_results" -method "WEB"
+        $Pool_Request = Invoke-GetUrl "https://eu.ravenminer.com/site/current_results" -method "WEB"
         if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Pool_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
-        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0.5;name = "x16r";port = 6666}}
+        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0.5;name = "x16r";port = 1111}}
         $DataWindow = "actual_last24h"
     }
     catch {
@@ -48,15 +48,15 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 
 $Pool_Coin = "Ravencoin"
 $Pool_Currency = "RVN"
-$Pool_Host = "ravenminer.com"
-$Pool_Region = Get-Region "us"
+$Pool_Host = "eu.ravenminer.com"
+$Pool_Region = Get-Region "eu"
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     $Pool_User = $Wallets.$Pool_Currency
-    $Pool_Port = 6666
+    $Pool_Port = $Pool_Request.$_.port
 
     $Pool_Factor = 1
 
