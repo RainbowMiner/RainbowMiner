@@ -43,20 +43,21 @@ catch {
 
 $Pool_Regions = @("eu","us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$PoolCoins_Request.$_.symbol -and ($Wallets."$($PoolCoins_Request.$_.symbol)" -or $InfoOnly)}
 
-foreach($Pool_Currency in $Pool_MiningCurrencies) {
-    if (($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -or [Double]$PoolCoins_Request.$Pool_Currency.estimate -le 0) -and -not $InfoOnly) {continue}
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {($PoolCoins_Request.$_.hashrate -gt 0 -and [Double]$PoolCoins_Request.$_.estimate -gt 0 -and $PoolCoins_Request.$_.symbol -and $Wallets."$($PoolCoins_Request.$_.symbol)") -or $InfoOnly} | ForEach-Object {
+    $Pool_CoinSymbol = $_
 
     $Pool_Host = "bsod.pw"
-    $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_Currency.algo
+    $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
+    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
-    $Pool_Key = "$($Pool_Algorithm)_$($Pool_Currency)".ToLower()
+    $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
+    $Pool_Key = "$($Pool_Algorithm)_$($Pool_CoinSymbol)".ToLower()
     $Pool_PoolFee = if ($Pool_Request -and $Pool_Request.$Pool_Key) {$Pool_Request.$Pool_Key.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
+    $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
+    $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
@@ -70,24 +71,21 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
 
     if (-not $InfoOnly) {
         if ($Pool_Request -and $Pool_Request.$Pool_Key) {
-            if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
-            else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $true}
+            if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_CoinSymbol)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
+            else {$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $true}
         } else {
             $Divisor = $Pool_Factor * 1e9
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
             $Pool_DataWindow = $null
         }
     }
-
-    #Bsod is different for some coins
-    $Pool_Currency = $PoolCoins_Request.$Pool_Currency.symbol
 
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Currency
+                CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
                 Price         = $Stat.Hour #instead of .Live
                 StablePrice   = $Stat.Week
@@ -95,7 +93,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                 Protocol      = "stratum+tcp"
                 Host          = "$($Pool_Region).bsod.pw"
                 Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).$($Worker)"
+                User          = "$($Pool_User).$($Worker)"
                 Pass          = "c=$Pool_Currency"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
