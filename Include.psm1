@@ -3381,14 +3381,32 @@ function Update-MinerStatus {
     # Send the request
     try {
         $ReportUrl = $Session.Config.MinerStatusURL
+        $ReportStatus = "Error"
         if ($ReportUrl -match "rbminer.net") {
             $ReportUrl = "https://rbminer.net/api/report.php"
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
+            else {
+                $ReportStatus = $Response.Status
+                if ($Response.Actions -ne $null) {
+                    $Response.Actions | Foreach-Object {
+                        $Action = $_
+                        # do something :)
+                        Write-Log "Executing action `"$($Action.Action)`""
+                        Switch($Action.Action) {
+                            "resetneededbenchmarks" {
+                                $Action_Response = & ".\web\scripts\resetneededbenchmarks"
+                                $Action_Response = $Action_Response | Where-Object {$_ -and $_ -notmatch "<.+?>"}
+                             }
+                        }                        
+                    }
+                }
+            }
         } else {
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            if ($Response) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1} 
         }
-        if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1} 
-        Write-Log "Miner Status $($ReportUrl): $($Response)"
+        Write-Log "Miner Status $($ReportUrl): $($ReportStatus)"
     }
     catch {
         Write-Log -Level Warn "Miner Status $($ReportUrl) has failed. "
