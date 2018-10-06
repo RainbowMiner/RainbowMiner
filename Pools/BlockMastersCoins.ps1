@@ -44,19 +44,19 @@ catch {
 $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$Wallets.$_}
-$Pool_MiningCurrencies = @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Foreach-Object {if ($PoolCoins_Request.$_.Symbol) {$PoolCoins_Request.$_.Symbol} else {$_}} | Select-Object -Unique
 $Pool_PoolFee = 0.5
 
-foreach($Pool_Currency in $Pool_MiningCurrencies) {
-    if ($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -and -not $InfoOnly) {continue}
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly} | ForEach-Object {
+    $Pool_CoinSymbol = $_
 
     $Pool_Host = "blockmasters.co"
-    $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_Currency.algo
+    $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
+    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
-    $Pool_Coin = $PoolCoins_Request.$Pool_Currency.name
+    $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
     $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
@@ -82,7 +82,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
     $Divisor = 1e9 * $Pool_Factor
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -92,7 +92,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
-                    CoinSymbol    = $Pool_Currency
+                    CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
                     Price         = $Stat.Hour #instead of .Live
                     StablePrice   = $Stat.Week
@@ -114,7 +114,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
-                        CoinSymbol    = $Pool_Currency
+                        CoinSymbol    = $Pool_CoinSymbol
                         Currency      = $Pool_ExCurrency
                         Price         = $Stat.Hour #instead of .Live
                         StablePrice   = $Stat.Week
