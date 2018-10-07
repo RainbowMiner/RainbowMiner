@@ -101,6 +101,9 @@
             [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
+        "CcminerX22i" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "x22i"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
+        )
         "CcminerXevan" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = "-i 21"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "skein"; SecondaryAlgorithm = ""; Params = "-i auto"; OCprofile = ""; MSIAprofile = ""}
