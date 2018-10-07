@@ -1882,6 +1882,7 @@ class Miner {
     $DataInterval
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
+    [Bool]$IsFocusWalletMiner = $false
     hidden [System.Management.Automation.Job]$Process = $null
     hidden [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero

@@ -902,14 +902,15 @@ function Invoke-Core {
   
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
         else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress}
-        
-        
+                
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 0 -Force}
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
+
+        $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
     }
     Remove-Variable "Miner_Arguments_List" -Force
 
@@ -998,6 +999,7 @@ function Invoke-Core {
         $_.Best_Comparison = $false
         $_.Stopped = $false
         $_.Enabled = $false
+        $_.IsFocusWalletMiner = $false
     }
     $Miners | ForEach-Object {
         $Miner = $_
@@ -1009,7 +1011,7 @@ function Invoke-Core {
             $_.Port -eq $Miner.Port -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
-        
+
         if ($ActiveMiner) {
             $ActiveMiner.Profit = $Miner.Profit
             $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
@@ -1030,6 +1032,7 @@ function Invoke-Core {
             $ActiveMiner.ManualUri = $Miner.ManualUri
             $ActiveMiner.EthPillEnable = $Session.Config.EthPillEnable
             $ActiveMiner.Enabled = $true
+            $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1072,6 +1075,7 @@ function Invoke-Core {
                 DataInterval         = $Session.Config.Interval
                 Donator              = $Session.IsDonationRun
                 Enabled              = $true
+                IsFocusWalletMiner   = $Miner.IsFocusWalletMiner
             }
         }
     }
@@ -1082,8 +1086,8 @@ function Invoke-Core {
     $Session.ActiveMiners | Where-Object {$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.GetStatus() -eq [MinerStatus]::Running)} | Foreach-Object {$_.Profit_Bias = $_.Profit_Unbias}
 
     #Get most profitable miner combination
-    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)} ,{($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner} ,{($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
     $Check_Profitability = $false
     if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
@@ -1324,7 +1328,7 @@ function Invoke-Core {
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()}}, 
         @{Label = "Launched"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
-        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($Session.Config.Pools."$($_.Pool)".FocusWallet -and $Session.Config.Pools."$($_.Pool)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($_.Pool)".FocusWallet $_.Currency -IncludeEqual -ExcludeDifferent)) {"(!)"})"}},
+        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner) {"(!)"})"}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}},
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
