@@ -6,11 +6,24 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.10-trex/t-rex-0.6.10-win-cuda9.1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
-$Cuda = "9.1"
+
+$UriCuda = @(
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda10.0.zip"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda9.2.zip"
+        Cuda = "9.2"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda9.1.zip"
+        Cuda = "9.1"
+    }
+)
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -42,7 +55,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda[0].Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
@@ -50,7 +63,14 @@ if ($InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+$Uri = ""
+for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        $Uri = $UriCuda[$i].Uri
+        $Cuda= $UriCuda[$i].Cuda
+    }
+}
+if (-not $Uri) {return}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
