@@ -6,18 +6,55 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3/ccminer-yescryptv3.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
 $Port = "106{0:d2}"
 $DevFee = 0.0
-$Cuda = "8.0"
+$Cuda = "9.2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"},
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
+    #GPU - profitable 20/04/2018
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
+    #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
+    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
+    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
+    #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
+    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
+    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #Jackpot
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-N 1"} #NeoScrypt
+    #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
+    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
+    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
+    #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
+    #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
+    #[PSCustomObject]@{MainAlgorithm = "X17"; Params = ""} #X17 Verge
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
+    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"},
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
+
+    # ASIC - never profitable 20/04/2018
+    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
+    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blakecoin
+    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
+    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
+    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
+    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
+    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""} #BlakeVanilla
+    #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""} #sha256d
+    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""} #SiaCoin
+    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #X11
+    #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
+    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
+    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -43,7 +80,6 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
@@ -61,8 +97,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
-                Uri = $Uri
-				DevFee = $DevFee
+                URI = $Uri
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
                 ManualUri = $ManualUri
