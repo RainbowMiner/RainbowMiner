@@ -26,8 +26,10 @@ if (-not $Success) {
     $Success = $true
     try {
         $Pool_Request = Invoke-GetUrl "https://eu.ravenminer.com/site/current_results" -method "WEB"
-        if (-not ($Value = ([regex]'data="([\d\.]+?)"').Matches($Pool_Request.Content).Groups | Where-Object Name -eq 1 | Select-Object -Last 1 -ExpandProperty Value)){throw}
-        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;fees = 0.5;name = "x16r";port = 1111}}
+        $Value_Group = ([regex]'data="([\d\.]+?)"').Matches($Pool_Request.Content).Groups | Where-Object Name -eq 1
+        if (-not ($Value = $Value_Group | Select-Object -Last 1 -ExpandProperty Value)){throw}
+        $Hashrate = $Value_Group | Select-Object -First 1 -ExpandProperty Value
+        $Pool_Request = [PSCustomObject]@{'x16r'=[PSCustomObject]@{actual_last24h = $Value;hashrate = $Hashrate;fees = 0.5;name = "x16r";port = 1111}}
         $DataWindow = "actual_last24h"
     }
     catch {
@@ -84,6 +86,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Updated       = $Stat.Updated
             PoolFee       = $Pool_PoolFee
             DataWindow    = $DataWindow
+            Hashrate      = $Pool_Request.$_.hashrate
         }
     }
 }

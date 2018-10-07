@@ -43,7 +43,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
 
-$Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach-Object {
+$Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -or $InfoOnly} | ForEach-Object {
     $Pool_Host = $_.host
     $Pool_Hosts = $_.host_list.split(";")
     $Pool_Port = $_.port
@@ -66,6 +66,19 @@ $Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
+    $Pool_Hashrate = $_.pool_hash
+    if ($Pool_Hashrate -match "^([\d\.]+)([KMGTP])$") {
+        $Pool_Hashrate = [double]$Matches[1]
+        Switch($Matches[2]) {
+            "K" {$Pool_Hashrate *= 1e3}
+            "M" {$Pool_Hashrate *= 1e6}
+            "G" {$Pool_Hashrate *= 1e9}
+            "T" {$Pool_Hashrate *= 1e12}
+            "P" {$Pool_Hashrate *= 1e15}
+        }
+    }
+    $Pool_Hashrate = [int64]$Pool_Hashrate
+
     foreach($Pool_Region in $Pool_Regions) {
         if ($User -or $InfoOnly) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
@@ -85,6 +98,7 @@ $Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
+                    Hashrate      = $Pool_Hashrate
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
@@ -104,6 +118,7 @@ $Pool_Request.return | Where-Object {$_.pool_hash -gt 0 -or $InfoOnly} | ForEach
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated
+                        Hashrate      = $Pool_Hashrate
                     }
                 }
             }

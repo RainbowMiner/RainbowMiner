@@ -142,6 +142,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    Hashrate      = $PoolCoins_Request.$_.hashrate
                 }
             }
             if (($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0 -and -not $Pool_User) -or $InfoOnly) {
@@ -164,6 +165,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         SSL           = $false
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
+                        Hashrate      = $PoolCoins_Request.$_.hashrate
                     }
                 }
             }

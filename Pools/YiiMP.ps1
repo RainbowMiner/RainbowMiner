@@ -101,6 +101,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    Hashrate      = $PoolCoins_Request.$Pool_Currency.hashrate
                 }
             }
         }

@@ -93,6 +93,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
+                    Hashrate      = $Pool_Request.$_.hashrate
                 }
             }
         }

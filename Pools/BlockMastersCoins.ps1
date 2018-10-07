@@ -106,6 +106,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    Hashrate      = $PoolCoins_Request.$_.hashrate
                 }
             }
             if (-not $Pool_User -or $InfoOnly) {
