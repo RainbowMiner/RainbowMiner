@@ -6,11 +6,11 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Excavator\excavator.exe"
-$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.11a/excavator_v1.5.11a_Win64.zip"
+$Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.12a/excavator_v1.5.12a_Win64_CUDA_10.zip"
 $ManualUri = "https://github.com/nicehash/excavator/releases"
 $Port = "31100"
 $DevFee = 0.0
-$Cuda = "6.5"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -19,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV7
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Threads = 1; MinMemGB = 4; ExtendInterval = 1; Params = @()} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Threads = 1; MinMemGB = 2; ExtendInterval = 4; FaultTolerance = 0.5; Params = @()} #X16R
@@ -62,8 +62,8 @@ if ($InfoOnly) {
 
 if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
-$Session.DevicesByTypes.NVIDIA | Select-Object Model -Unique | ForEach-Object {
-    $Device = @($Devices | Where-Object Model -EQ $_.Model)
+$Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
     $Miner_Port = $Port -f ($Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
     $Miner_Port = Get-MinerPort -MinerName $Name -Port $Miner_Port
