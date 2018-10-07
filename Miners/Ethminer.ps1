@@ -6,11 +6,11 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.16.1/ethminer-0.16.1-windows-amd64.zip"
+$URI = "https://github.com/ethereum-mining/ethminer/releases/download/v0.17.0-alpha.1/ethminer-0.17.0-alpha.1-cuda10.0-windows-amd64.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
-$Cuda = "6.5"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
