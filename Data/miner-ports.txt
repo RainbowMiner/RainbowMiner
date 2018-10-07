@@ -62,6 +62,7 @@
 404	SgminerSkein
 405	SgminerXevan
 406	Nsgminer
+407	WildRig
 
 500	CpuminerJayddeeSse2
 501	CpuminerJayddeeAessse42
