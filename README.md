@@ -3,7 +3,7 @@
 
 ###### **Actual master.zip: [Developer Version master.zip](https://github.com/RainbowMiner/RainbowMiner/archive/master.zip)**
 
-###### **Cenral monitoring of all your rigs: [https://rbminer.net](https://rbminer.net)**
+###### **Central monitoring for all of your rigs: [https://rbminer.net](https://rbminer.net)**
 
 
 ## INTRODUCTION
