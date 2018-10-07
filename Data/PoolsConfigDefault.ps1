@@ -7,7 +7,7 @@
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
-            Currencies=@("PGN")            
+            Currencies=@("RVN","PGN")            
         }
         "Blockmasters" = [PSCustomObject]@{
             Currencies=@("BTC")
@@ -16,10 +16,16 @@
             Currencies=@("BTC")
         }
         "Bsod" = [PSCustomObject]@{
-            Currencies=@("RVN","PGN")
+            Currencies=@("RVN","SUQA")
+        }
+        "Ethermine" = [PSCustomObject]@{
+            Currencies=@("ETH")
         }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
+        }
+        "Icemining" = [PSCustomObject]@{
+            Currencies=@("BCD","RVN","SUQA")
         }
         "MiningPoolHub" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
@@ -29,13 +35,22 @@
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
             Currencies=@()
         }
+        "Nanopool" = [PSCustomObject]@{
+            Currencies=@("ETH")
+        }
         "NiceHash" = [PSCustomObject]@{
+            Currencies=@("BTC")
+        }
+        "NLPool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
         "PhiPhiPool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
         "Ravenminer" = [PSCustomObject]@{
+            Currencies=@("RVN")
+        }
+        "RavenminerEu" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
         "YiiMP" = [PSCustomObject]@{
