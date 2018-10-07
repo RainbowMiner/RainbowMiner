@@ -6,10 +6,10 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
+$Uri = "https://github.com/KlausT/ccminer/releases/download/8.23/ccminer-823-cuda10-x64.zip"
 $Port = "106{0:d2}"
 $DevFee = 0.0
-$Cuda = "9.2"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -24,21 +24,21 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #Jackpot
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-N 1"} #NeoScrypt
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-N 1"} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
+    [PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
     #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
     #[PSCustomObject]@{MainAlgorithm = "X17"; Params = ""} #X17 Verge
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"},
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
+    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
+    #[PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"},
+    #[PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
+    #[PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
 
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
