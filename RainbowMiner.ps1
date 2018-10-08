@@ -149,6 +149,8 @@ $Session.OutofsyncWindow = 60 #minutes, after that time, the pools price bias wi
 $Session.DecayPeriod     = 60 #seconds
 $Session.DecayBase       = 1 - 0.1 #decimal percentage
 
+$host.ui.RawUI.WindowTitle = "RainbowMiner v$($Session.Version)"
+
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
 Write-Host " |       _/\__  \ |  |/    \| __ \ /  _ \ \/ \/ /  \ /  \|  |/    \_/ __ \_  __ \" -ForegroundColor Yellow
