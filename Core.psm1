@@ -830,9 +830,9 @@ function Invoke-Core {
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Pools_Comparison | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Profits | Add-Member $_ ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
-            $Miner_Profits_Comparison | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.StablePrice+1e-8) * $Miner_DevFeeFactor)
-            $Miner_Profits_Bias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-8) * $Miner_DevFeeFactor)
-            $Miner_Profits_Unbias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-8) * $Miner_DevFeeFactor)
+            $Miner_Profits_Comparison | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.StablePrice+1e-32) * $Miner_DevFeeFactor)
+            $Miner_Profits_Bias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
+            $Miner_Profits_Unbias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
         }
 
         $Miner_Profit = [Double]($Miner_Profits.PSObject.Properties.Value | Measure-Object -Sum).Sum
