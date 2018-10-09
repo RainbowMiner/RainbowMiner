@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.7-srbminer/SRBMiner-CN-V1-6-7.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.8-srbminer/SRBMiner-CN-V1-6-8-Maxi.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -28,6 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
     [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 1 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV7 1 thread
+    [PSCustomObject]@{MainAlgorithm = "normalv8"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV8 1 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 1 thread
     [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 2 threads
     [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 2 threads
@@ -42,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
+    [PSCustomObject]@{MainAlgorithm = "normalv8"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV8 2 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 2 threads
 )
 #- Cryptonight Lite [lite]
@@ -95,9 +97,6 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 
             $Arguments = [PSCustomObject]@{
                     Config = [PSCustomObject]@{
-                        api_enabled      = $true
-                        api_port         = [Int]$Miner_Port
-                        api_rig_name     = "$($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker)"
                         cryptonight_type = $Algorithm
                         intensity        = 0
                         double_threads   = $false
@@ -122,7 +121,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                             nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
                         })
                     }
-                    Params = "--disablegpuwatchdog $($Params)".Trim()
+                    Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disablegpuwatchdog $($Params)".Trim()
             }
 
             [PSCustomObject]@{
