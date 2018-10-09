@@ -19,8 +19,9 @@ $UriCuda = @(
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckoo"; Params = ""} #Cuckoo
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #X22i
+    [PSCustomObject]@{MainAlgorithm = "bitcash"; CoinSymbol = "BITC";  Params = ""} #Cuckoo/Bitcash
+    [PSCustomObject]@{MainAlgorithm = "merit";   CoinSymbol = "MERIT"; Params = ""} #Cuckoo/Merit
+    [PSCustomObject]@{MainAlgorithm = "x22i";    CoinSymbol = "";      Params = ""} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -61,7 +62,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.CoinSymbol -eq "" -or $_.CoinSymbol -eq $Pools.$Algorithm_Norm.CoinSymbol)) {
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
