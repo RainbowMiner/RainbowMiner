@@ -14,18 +14,18 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = ""} #BCD
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
-    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
+    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = "--opencl-threads 3 --opencl-launch 512x128"} #BCD
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "--opencl-threads 3 --opencl-launch 128x128"} #C11
+    [PSCustomObject]@{MainAlgorithm = "geek"; Params = "--opencl-threads 2 --opencl-launch 1024x128"} #Geek
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "--opencl-threads 3 --opencl-launch 1024x128"} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "--opencl-threads 3 --opencl-launch 256x128"} #PHI
+    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "--opencl-threads 3 --opencl-launch 2048x128"} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "--opencl-threads 3 --opencl-launch 512x0"} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "--opencl-threads 3 --opencl-launch 512x128"} #Timetravel
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "--opencl-threads 3 --opencl-launch 2048x0"} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "--opencl-threads 3 --opencl-launch 512x128"} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "--opencl-threads 3 --opencl-launch 512x128"} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "--opencl-threads 3 --opencl-launch 1024x0"} #X17
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
