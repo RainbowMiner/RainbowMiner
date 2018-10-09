@@ -26,7 +26,8 @@
           <th data-field="CoinName" data-sortable="true" data-filter-control="select">Coin</th>
           <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
           <th data-field="Hashrate" data-align="right" data-sortable="true" data-formatter="formatHashRate">Hashrate</th>
-          <th data-field="TTF" data-align="right" data-sortable="true" data-formatter="formatTTF">TTF (min)</th>
+          <th data-field="BLK" data-align="right" data-sortable="true" data-formatter="formatBLK">TTF (min)</th>
+          <th data-field="TSL" data-align="right" data-sortable="true" data-formatter="formatTSL">Last (min)</th>
           <th data-field="Host" data-sortable="true" data-filter-control="select">Host</th>
           <th data-field="Updated" data-sortable="true" data-formatter="formatDate">Last Updated</th>
       </tr>
@@ -61,8 +62,17 @@
         return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
     }
 
-    function formatTTF(data) {
-        return typeof data == "undefined" ? data : data.toFixed(1);
+    function formatBLK(data) {
+        if (typeof data == "undefined") return data;
+        if (!data) return "Infinity"
+        data = 24/data*60
+        return data.toFixed(1)
+    }
+
+    function formatTSL(data) {
+        if (typeof data == "undefined") return data;
+        data = data / 60
+        return data.toFixed(1)
     }
 </script>
 <!--#include file="/parts/foot.html" -->

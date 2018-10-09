@@ -369,7 +369,7 @@ function Set-Stat {
 
     $Updated = $Updated.ToUniversalTime()
 
-    if ($Name -match '_(Profit|HSR|TTF)$') {$Path = "Stats\Pools"}
+    if ($Name -match '_(Profit|HSR|TTF|BLK)$') {$Path = "Stats\Pools"}
     elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
     else {$Path = "Stats"}
 
@@ -543,7 +543,7 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        if ($Name -match '_(Profit|HSR|TTF)$') {$Path = "Stats\Pools"}
+        if ($Name -match '_(Profit|HSR|TTF|BLK)$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
         else {$Path = "Stats"}
 
@@ -562,7 +562,7 @@ function Get-Stat {
         foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
-            if ($NoPools -and $BaseName -match '_(Profit|HSR|TTF)$') {continue}
+            if ($NoPools -and $BaseName -match '_(Profit|HSR|TTF|BLK)$') {continue}
             try {
                 $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }

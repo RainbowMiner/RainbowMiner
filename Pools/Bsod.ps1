@@ -69,6 +69,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         default {1}
     })
 
+    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
+
     if (-not $InfoOnly) {
         if ($Pool_Request -and $Pool_Request.$Pool_Key) {
             if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_CoinSymbol)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value (Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
@@ -79,7 +81,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             $Pool_DataWindow = $null
         }
         $StatHSR = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_HSR" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol.hashrate) -Duration $StatSpan -ChangeDetection $false
-        $StatTTF = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_TTF" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / 24 * 60) -Duration $StatSpan -ChangeDetection $false
+        $StatBLK = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_BLK" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks") -Duration $StatSpan -ChangeDetection $false
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -103,7 +105,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 PoolFee       = $Pool_PoolFee
                 DataWindow    = $Pool_DataWindow
                 Hashrate      = $StatHSR.Hour
-                TTF           = $StatTTF.Hour
+                BLK           = $StatBLK.Hour
+                TSL           = $Pool_TSL
             }
         }
     }

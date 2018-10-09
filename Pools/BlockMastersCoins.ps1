@@ -81,10 +81,12 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9 * $Pool_Factor
 
+    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
+
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
         $StatHSR = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_HSR" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol.hashrate) -Duration $StatSpan -ChangeDetection $false
-        $StatTTF = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_TTF" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / 24 * 60) -Duration $StatSpan -ChangeDetection $false
+        $StatBLK = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_BLK" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks") -Duration $StatSpan -ChangeDetection $false
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -109,7 +111,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     Hashrate      = $StatHSR.Hour
-                    TTF           = $StatTTF.Hour
+                    BLK           = $StatBLK.Hour
+                    TSL           = $Pool_TSL
                 }
             }
             if (-not $Pool_User -or $InfoOnly) {
@@ -133,7 +136,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
                         Hashrate      = $StatHSR.Hour
-                        TTF           = $StatTTF.Hour
+                        BLK           = $StatBLK.Hour
+                        TSL           = $Pool_TSL
                     }
                 }
             }
