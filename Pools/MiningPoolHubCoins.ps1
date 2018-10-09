@@ -62,10 +62,6 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
 
     $Divisor = 1e9
 
-    if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true
-    }
-
     $Pool_Hashrate = $_.pool_hash
     if ($Pool_Hashrate -match "^([\d\.]+)([KMGTP])$") {
         $Pool_Hashrate = [double]$Matches[1]
@@ -78,6 +74,11 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
         }
     }
     $Pool_Hashrate = [int64]$Pool_Hashrate
+
+    if (-not $InfoOnly) {
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $StatHSR = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_HSR" -Value ([Int64]$Pool_Hashrate) -Duration $StatSpan -ChangeDetection $false
+    }
 
     foreach($Pool_Region in $Pool_Regions) {
         if ($User -or $InfoOnly) {
@@ -98,7 +99,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
-                    Hashrate      = $Pool_Hashrate
+                    Hashrate      = $StatHSR.Hour
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
@@ -118,7 +119,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated
-                        Hashrate      = $Pool_Hashrate
+                        Hashrate      = $StatHSR.Hour
                     }
                 }
             }

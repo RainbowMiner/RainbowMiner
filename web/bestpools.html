@@ -20,14 +20,16 @@
   data-detail-formatter="detailFormatter"
 >
   <thead>
-    <tr>
-      <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
-      <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
-      <th data-field="CoinName" data-sortable="true" data-filter-control="select">Coin</th>
-      <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
-      <th data-field="Host" data-sortable="true" data-filter-control="select">Host</th>
-      <th data-field="Updated" data-sortable="true" data-formatter="formatDate">Last Updated</th>
-    </tr>
+      <tr>
+          <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
+          <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="CoinName" data-sortable="true" data-filter-control="select">Coin</th>
+          <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
+          <th data-field="Hashrate" data-align="right" data-sortable="true" data-formatter="formatHashRate">Hashrate</th>
+          <th data-field="TTF" data-align="right" data-sortable="true" data-formatter="formatTTF">TTF (min)</th>
+          <th data-field="Host" data-sortable="true" data-filter-control="select">Host</th>
+          <th data-field="Updated" data-sortable="true" data-formatter="formatDate">Last Updated</th>
+      </tr>
   </thead>
 </table>
 
@@ -57,6 +59,10 @@
     function formatDate(data) {
         return timeSince(new Date(data));
         return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
+    }
+
+    function formatTTF(data) {
+        return typeof data == "undefined" ? data : data.toFixed(1);
     }
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -560,7 +560,7 @@ function Invoke-Core {
     #Load the stats
     Write-Log "Loading saved statistics. "
 
-    [hashtable]$Session.Stats = Get-Stat
+    [hashtable]$Session.Stats = Get-Stat -NoPools
 
     #Give API access to the current stats
     $API.Stats = $Session.Stats | ConvertTo-Json -Depth 10

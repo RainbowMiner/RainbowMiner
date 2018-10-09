@@ -51,6 +51,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
          $PoolCoins_Request.$Pool_Currency.workers  -le 0 -or
          $PoolCoins_Request.$Pool_Currency.'24h_blocks' -le 0) -and -not $InfoOnly) {continue}
     
+    $Pool_CoinSymbol = $Pool_Currency
     $Pool_Host = "yiimp.eu"
     $Pool_Port = $PoolCoins_Request.$Pool_Currency.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_Currency.algo
@@ -79,6 +80,8 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_Currency.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $StatHSR = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_HSR" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol.hashrate) -Duration $StatSpan -ChangeDetection $false
+        $StatTTF = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_TTF" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" / 24 * 60) -Duration $StatSpan -ChangeDetection $false
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -101,8 +104,8 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    Hashrate      = $PoolCoins_Request.$Pool_Currency.hashrate
-                }
+                    Hashrate      = $StatHSR.Hour
+                    TTF           = $StatTTF.Hour                }
             }
         }
     }

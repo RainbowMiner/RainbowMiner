@@ -70,6 +70,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     if (-not $InfoOnly) {
         if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
         else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $true}
+        $StatHSR = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_HSR" -Value ([Int64]$Pool_Request.$_.hashrate) -Duration $StatSpan -ChangeDetection $false
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -93,7 +94,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
-                    Hashrate      = $Pool_Request.$_.hashrate
+                    Hashrate      = $StatHSR.Hour
                 }
             }
         }
