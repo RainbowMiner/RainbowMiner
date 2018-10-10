@@ -209,18 +209,4 @@
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
-        "WildRig" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "bcd"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 512x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "c11"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 128x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "geek"; SecondaryAlgorithm = ""; Params = "--opencl-threads 2 --opencl-launch 1024x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "hmq1725"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 1024x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "phi"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 256x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "renesis"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 2048x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "sonoa"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 512x0"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "timetravel"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 512x128"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "tribus"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 2048x0"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 512x128"; OCprofile = ""; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 512x128"; OCprofile = ""; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = "--opencl-threads 3 --opencl-launch 1024x0"; OCprofile = ""; MSIAprofile = ""}
-        )
     }
