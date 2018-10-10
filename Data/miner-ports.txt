@@ -54,6 +54,7 @@
 321 JceminerAmd
 322 Ethminer15
 323 Phoenix30
+324 Zjazz
 
 400	Sgminer
 401	SgminerBitcore
