@@ -442,10 +442,10 @@ function Set-Stat {
                     }
                 } else {
                     $Stat | Add-Member -NotePropertyMembers @{
-                        HashRate_Live = [Double]$Stat.HashRate_Live
+                        HashRate_Live = [Int64]$Stat.HashRate_Live
                         HashRate_Average = [Double]$Stat.HashRate_Average
                         HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
-                        BlockRate_Live = [Double]$Stat.BlockRate_Live
+                        BlockRate_Live = [Int64]$Stat.BlockRate_Live
                         BlockRate_Average = [Double]$Stat.BlockRate_Average
                         BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
                     }
@@ -515,11 +515,11 @@ function Set-Stat {
                 "Pools" {
                     $Stat | Add-Member -NotePropertyMembers @{
                         HashRate_Live = $HashRate
-                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * $HashRate)
+                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
                         HashRate_Fluctuation = ((1 - $Span_Hour) * $Stat.HashRate_Fluctuation) + 
                         ($Span_Hour * ([Math]::Abs($HashRate - $Stat.HashRate_Average) / [Math]::Max([Math]::Abs($Stat.HashRate_Average), $SmallestValue)))
                         BlockRate_Live = $BlockRate
-                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * $BlockRate)
+                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
                         BlockRate_Fluctuation = ((1 - $Span_Hour) * $Stat.BlockRate_Fluctuation) + 
                         ($Span_Hour * ([Math]::Abs($BlockRate - $Stat.BlockRate_Average) / [Math]::Max([Math]::Abs($Stat.BlockRate_Average), $SmallestValue)))
                     }
