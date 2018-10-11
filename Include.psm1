@@ -402,13 +402,11 @@ function Set-Stat {
                     @{
                         PowerDraw_Live = $PowerDraw
                         PowerDraw_Average = $PowerDraw
-                        PowerDraw_Fluctuation = 0
                     }
                 } else {
                     @{
                         PowerDraw_Live = [Double]$Stat.PowerDraw_Live
                         PowerDraw_Average = [Double]$Stat.PowerDraw_Average
-                        PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
                     }
                 }
             }
@@ -417,19 +415,15 @@ function Set-Stat {
                     @{
                         HashRate_Live = $HashRate
                         HashRate_Average = [Double]$HashRate
-                        HashRate_Fluctuation = 0.0
                         BlockRate_Live = $BlockRate
                         BlockRate_Average = [Double]$BlockRate
-                        BlockRate_Fluctuation = 0.0
                     }
                 } else {
                     @{
                         HashRate_Live = [Int64]$Stat.HashRate_Live
                         HashRate_Average = [Double]$Stat.HashRate_Average
-                        HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
                         BlockRate_Live = [Int64]$Stat.BlockRate_Live
                         BlockRate_Average = [Double]$Stat.BlockRate_Average
-                        BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
                     }
                 }
             }
@@ -557,17 +551,14 @@ function Set-Stat {
                 $Stat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live = $PowerDraw
                     PowerDraw_Average = $PowerDraw
-                    PowerDraw_Fluctuation = 0
                 }
             }
             "Pools" {
                 $Stat | Add-Member -NotePropertyMembers @{
                     HashRate_Live = $HashRate
                     HashRate_Average = $HashRate
-                    HashRate_Fluctuation = 0
                     BlockRate_Live = $BlockRate
                     BlockRate_Average = $BlockRate
-                    BlockRate_Fluctuation = 0
                 }
             }
         }
@@ -602,17 +593,14 @@ function Set-Stat {
                 $OutStat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live = [Decimal]$Stat.PowerDraw_Live
                     PowerDraw_Average = [Decimal]$Stat.PowerDraw_Average
-                    PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
                 }
             }
             "Pools" {
                 $OutStat | Add-Member -NotePropertyMembers @{
                     HashRate_Live = [Int64]$Stat.HashRate_Live
                     HashRate_Average = [Decimal]$Stat.HashRate_Average
-                    HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
                     BlockRate_Live = [Int64]$Stat.BlockRate_Live
                     BlockRate_Average = [Decimal]$Stat.BlockRate_Average
-                    BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
                 }
             }
         }
