@@ -14,7 +14,7 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(    
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #Blakecoin
+    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = "-N 1"} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
