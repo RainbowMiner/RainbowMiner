@@ -487,20 +487,14 @@ function Set-Stat {
                     $AddStat = @{
                         PowerDraw_Live = $PowerDraw
                         PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
-                        PowerDraw_Fluctuation = ((1 - $Span_Week) * $Stat.PowerDraw_Fluctuation) + 
-                        ($Span_Week * ([Math]::Abs($PowerDraw - $AddStat.PowerDraw_Average) / [Math]::Max([Math]::Abs($AddStat.PowerDraw_Average), $SmallestValue)))
                     }
                 }
                 "Pools" {
                     $AddStat = @{
                         HashRate_Live = $HashRate
                         HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
-                        HashRate_Fluctuation = ((1 - $Span_Hour) * $Stat.HashRate_Fluctuation) + 
-                        ($Span_Hour * ([Math]::Abs($HashRate - $AddStat.HashRate_Average) / [Math]::Max([Math]::Abs($AddStat.HashRate_Average), $SmallestValue)))
                         BlockRate_Live = $BlockRate
                         BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
-                        BlockRate_Fluctuation = ((1 - $Span_Hour) * $Stat.BlockRate_Fluctuation) + 
-                        ($Span_Hour * ([Math]::Abs($BlockRate - $AddStat.BlockRate_Average) / [Math]::Max([Math]::Abs($AddStat.BlockRate_Average), $SmallestValue)))
                     }
                 }
             }
