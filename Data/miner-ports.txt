@@ -54,7 +54,7 @@
 321 JceminerAmd
 322 Ethminer15
 323 Phoenix30
-324 Zjazz
+324 ZjazzNvidia
 
 400	Sgminer
 401	SgminerBitcore
@@ -64,6 +64,7 @@
 405	SgminerXevan
 406	Nsgminer
 407	WildRig
+408	ZjazzAmd
 
 500	CpuminerJayddeeSse2
 501	CpuminerJayddeeAessse42
