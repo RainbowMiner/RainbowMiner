@@ -130,6 +130,12 @@ try {
         if (Test-Path "ReportStatus.ps1") {Remove-Item "ReportStatus.ps1" -Force -ErrorAction Ignore;$ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "3.8.9.1")) {
+        if (Test-Path "Stats\Pools") {
+            Get-ChildItem "Stats\Pools" | Where-Object BaseName -match "_(BLK|HSR|TTF)$" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force}
+        }
+    }
+
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
 
     "Cleaned $ChangesTotal elements"
