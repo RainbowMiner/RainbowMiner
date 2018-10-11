@@ -175,7 +175,7 @@ function Get-Balance {
         }
     }
 
-    $Balances += $Totals
+    $Balances = @($Balances | Select-Object) + $Totals
 
     $Balances | Foreach-Object {
         $Balance = $_
@@ -224,6 +224,8 @@ function Get-Ticker {
 
     if (-not $Convert) {$Convert="BTC"}
     $Convert = $Convert.ToUpper()
+    #eventually consult crypto-bridge: https://api.crypto-bridge.org/api/v1/ticker
+    #eventually consult crex24: https://api.crex24.com/CryptoExchangeService/BotPublic/ReturnTicker
 
     try {
         $Symbol = ($Symbol -join ',').ToUpper()
