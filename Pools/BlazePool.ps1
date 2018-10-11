@@ -72,10 +72,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks" -Maximum).Maximum
 
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1)}
-        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factorr) -Duration $StatSpan -ChangeDetection $true}
-        $StatHSR = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_HSR" -Value ([Int64]$Pool_Request.$_.hashrate) -Duration $StatSpan -ChangeDetection $false
-        if ($PoolCoins_Request) {$StatBLK = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_BLK" -Value $Pool_BLK -Duration $StatSpan -ChangeDetection $false}
+        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1) -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK}
+        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factorr) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK}
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -99,8 +97,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
-                    Hashrate      = $StatHSR.Hour
-                    BLK           = $StatBLK.Hour
+                    Hashrate      = $Stat.HashRate_Average
+                    BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }
             }

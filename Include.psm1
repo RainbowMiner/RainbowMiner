@@ -366,14 +366,20 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$PowerDraw = 0,
         [Parameter(Mandatory = $false)]
+        [Int64]$HashRate = 0,
+        [Parameter(Mandatory = $false)]
+        [Int64]$BlockRate = 0,
+        [Parameter(Mandatory = $false)]
         [String]$Sub = ""
     )
 
     $Updated = $Updated.ToUniversalTime()
 
-    if ($Name -match '_(Profit|HSR|TTF|BLK)$') {$Path = "Stats\Pools"}
-    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
-    else {$Path = "Stats"}
+    $Mode = ""
+
+    if ($Name -match '_Profit$') {$Path = "Stats\Pools";$Mode = "Pools"}
+    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners";$Mode = "Miners"}
+    else {$Path = "Stats";$Mode="Profit"}
 
     if ($Sub) {
         #legacy
@@ -405,11 +411,46 @@ function Set-Stat {
             ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
             Week = [Double]$Stat.Week
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-            PowerDraw_Live = [Double]$Stat.PowerDraw_Live
-            PowerDraw_Average = [Double]$Stat.PowerDraw_Average
-            PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
             Duration = [TimeSpan]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
+        }
+        Switch($Mode) {
+            "Miners" {
+                if (-not $Stat.PowerDraw_Average) {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        PowerDraw_Live = $PowerDraw
+                        PowerDraw_Average = $PowerDraw
+                        PowerDraw_Fluctuation = 0
+                    }
+                } else {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        PowerDraw_Live = [Double]$Stat.PowerDraw_Live
+                        PowerDraw_Average = [Double]$Stat.PowerDraw_Average
+                        PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
+                    }
+                }
+            }
+            "Pools" {
+                if (-not $Stat.HashRate_Average) {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        HashRate_Live = $HashRate
+                        HashRate_Average = $HashRate
+                        HashRate_Fluctuation = 0
+                        BlockRate_Live = $BlockRate
+                        BlockRate_Average = $BlockRate
+                        BlockRate_Fluctuation = 0
+                    }
+                } else {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        HashRate_Live = [Double]$Stat.HashRate_Live
+                        HashRate_Average = [Double]$Stat.HashRate_Average
+                        HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
+                        BlockRate_Live = [Double]$Stat.BlockRate_Live
+                        BlockRate_Average = [Double]$Stat.BlockRate_Average
+                        BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
+                    }
+                }
+            }
         }
         if ($Stat.Day -and -not $Stat.ThreeDay) {$Stat.ThreeDay=($Stat.Day+$Stat.Week)/2;$Stat.ThreeDay_Fluctuation=($Stat.Day_Fluctuation+$Stat.Week_Fluctuation)/2} #backward compatibility
 
@@ -459,12 +500,30 @@ function Set-Stat {
                 Week = ((1 - $Span_Week) * $Stat.Week) + ($Span_Week * $Value)
                 Week_Fluctuation = ((1 - $Span_Week) * $Stat.Week_Fluctuation) + 
                 ($Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue)))
-                PowerDraw_Live = $PowerDraw
-                PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
-                PowerDraw_Fluctuation = ((1 - $Span_Week) * $Stat.PowerDraw_Fluctuation) + 
-                ($Span_Week * ([Math]::Abs($PowerDraw - $Stat.PowerDraw_Average) / [Math]::Max([Math]::Abs($Stat.PowerDraw_Average), $SmallestValue)))
                 Duration = $Stat.Duration + $Duration
                 Updated = $Updated
+            }
+            Switch($Mode) {
+                "Miners" {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        PowerDraw_Live = $PowerDraw
+                        PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
+                        PowerDraw_Fluctuation = ((1 - $Span_Week) * $Stat.PowerDraw_Fluctuation) + 
+                        ($Span_Week * ([Math]::Abs($PowerDraw - $Stat.PowerDraw_Average) / [Math]::Max([Math]::Abs($Stat.PowerDraw_Average), $SmallestValue)))
+                    }
+                }
+                "Pools" {
+                    $Stat | Add-Member -NotePropertyMembers @{
+                        HashRate_Live = $HashRate
+                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * $HashRate)
+                        HashRate_Fluctuation = ((1 - $Span_Hour) * $Stat.HashRate_Fluctuation) + 
+                        ($Span_Hour * ([Math]::Abs($HashRate - $Stat.HashRate_Average) / [Math]::Max([Math]::Abs($Stat.HashRate_Average), $SmallestValue)))
+                        BlockRate_Live = $BlockRate
+                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * $BlockRate)
+                        BlockRate_Fluctuation = ((1 - $Span_Hour) * $Stat.BlockRate_Fluctuation) + 
+                        ($Span_Hour * ([Math]::Abs($BlockRate - $Stat.BlockRate_Average) / [Math]::Max([Math]::Abs($Stat.BlockRate_Average), $SmallestValue)))
+                    }
+                }
             }
         }
     }
@@ -488,11 +547,28 @@ function Set-Stat {
             ThreeDay_Fluctuation = 0
             Week = $Value
             Week_Fluctuation = 0
-            PowerDraw_Live = $PowerDraw
-            PowerDraw_Average = $PowerDraw
-            PowerDraw_Fluctuation = 0
             Duration = $Duration
             Updated = $Updated
+        }
+
+        Switch($Mode) {
+            "Miners" {
+                $Stat | Add-Member -NotePropertyMembers @{
+                    PowerDraw_Live = $PowerDraw
+                    PowerDraw_Average = $PowerDraw
+                    PowerDraw_Fluctuation = 0
+                }
+            }
+            "Pools" {
+                $Stat | Add-Member -NotePropertyMembers @{
+                    HashRate_Live = $HashRate
+                    HashRate_Average = $HashRate
+                    HashRate_Fluctuation = 0
+                    BlockRate_Live = $BlockRate
+                    BlockRate_Average = $BlockRate
+                    BlockRate_Fluctuation = 0
+                }
+            }
         }
     }
 
@@ -501,7 +577,7 @@ function Set-Stat {
     if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
 
     if ($Stat.Duration -ne 0) {
-        [PSCustomObject]@{
+        $OutStat = [PSCustomObject]@{
             Live = [Decimal]$Stat.Live
             Minute = [Decimal]$Stat.Minute
             Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
@@ -517,12 +593,29 @@ function Set-Stat {
             ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
             Week = [Decimal]$Stat.Week
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-            PowerDraw_Live = [Decimal]$Stat.PowerDraw_Live
-            PowerDraw_Average = [Decimal]$Stat.PowerDraw_Average
-            PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
             Duration = [String]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
-        } | ConvertTo-Json | Set-Content $Path
+        }
+        Switch($Mode) {
+            "Miners" {
+                $OutStat | Add-Member -NotePropertyMembers @{
+                    PowerDraw_Live = [Decimal]$Stat.PowerDraw_Live
+                    PowerDraw_Average = [Decimal]$Stat.PowerDraw_Average
+                    PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
+                }
+            }
+            "Pools" {
+                $OutStat | Add-Member -NotePropertyMembers @{
+                    HashRate_Live = [Int64]$Stat.HashRate_Live
+                    HashRate_Average = [Decimal]$Stat.HashRate_Average
+                    HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
+                    BlockRate_Live = [Int64]$Stat.BlockRate_Live
+                    BlockRate_Average = [Decimal]$Stat.BlockRate_Average
+                    BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
+                }
+            }
+        }
+        $OutStat | ConvertTo-Json | Set-Content $Path
     }
 
     $Stat
@@ -545,7 +638,7 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        if ($Name -match '_(Profit|HSR|TTF|BLK)$') {$Path = "Stats\Pools"}
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
         else {$Path = "Stats"}
 
@@ -564,7 +657,7 @@ function Get-Stat {
         foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
-            if ($NoPools -and $BaseName -match '_(Profit|HSR|TTF|BLK)$') {continue}
+            if ($NoPools -and $BaseName -match '_(Profit|BLK|HSR|TTF)$') {continue}
             try {
                 $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }

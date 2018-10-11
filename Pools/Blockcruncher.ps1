@@ -65,9 +65,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false
-        $StatHSR = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_HSR" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol.hashrate) -Duration $StatSpan -ChangeDetection $false
-        $StatBLK = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_BLK" -Value ([Int64]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks") -Duration $StatSpan -ChangeDetection $false
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks"
     }
 
     foreach($Pool_Region in $Pool_Regions) {
@@ -90,8 +88,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    Hashrate      = $StatHSR.Hour
-                    BLK           = $StatBLK.Hour
+                    Hashrate      = $Stat.HashRate_Average
+                    BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }
             }
