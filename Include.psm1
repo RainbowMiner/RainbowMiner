@@ -395,6 +395,8 @@ function Set-Stat {
    
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+        $ResetPowerDraw = -not $Stat.PowerDraw_Average
+        $ResetHashRate  = -not $Stat.HashRate_Average
         $Stat = [PSCustomObject]@{
             Live = [Double]$Stat.Live
             Minute = [Double]$Stat.Minute
@@ -416,7 +418,7 @@ function Set-Stat {
         }
         Switch($Mode) {
             "Miners" {
-                if (-not $Stat.PowerDraw_Average) {
+                if ($ResetPowerDraw) {
                     $Stat | Add-Member -NotePropertyMembers @{
                         PowerDraw_Live = $PowerDraw
                         PowerDraw_Average = $PowerDraw
@@ -431,7 +433,7 @@ function Set-Stat {
                 }
             }
             "Pools" {
-                if (-not $Stat.HashRate_Average) {
+                if ($ResetHashRate) {
                     $Stat | Add-Member -NotePropertyMembers @{
                         HashRate_Live = $HashRate
                         HashRate_Average = $HashRate
