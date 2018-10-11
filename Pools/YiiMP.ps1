@@ -92,7 +92,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
-                    Price         = $Stat.Hour #instead of .Live
+                    Price         = $Stat.Minute_10 #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -104,7 +104,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    Hashrate      = $Stat.HashRate_Average
+                    Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }

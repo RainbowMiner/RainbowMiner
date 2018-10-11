@@ -87,7 +87,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = ""
-                    Price         = $Stat.Hour #instead of .Live
+                    Price         = $Stat.Minute_10 #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -98,7 +98,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
-                    Hashrate      = $Stat.HashRate_Average
+                    Hashrate      = $Stat.HashRate_Live
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
@@ -107,7 +107,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
                         Currency      = ""
-                        Price         = $Stat.Hour #instead of .Live
+                        Price         = $Stat.Minute_10 #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"
@@ -118,7 +118,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated
-                        Hashrate      = $Stat.HashRate_Average
+                        Hashrate      = $Stat.HashRate_Live
                     }
                 }
             }

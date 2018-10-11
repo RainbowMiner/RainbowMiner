@@ -59,7 +59,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 CoinName      = $_.coin
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = $Stat.Hour #instead of .Live
+                Price         = $Stat.Minute_10 #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = $_.protocol

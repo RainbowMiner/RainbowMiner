@@ -83,7 +83,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = $Pool_Currency
-                    Price         = $Stat.Hour #instead of .Live
+                    Price         = $Stat.Minute_10 #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -96,7 +96,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
-                    Hashrate      = $Stat.HashRate_Average
+                    Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }

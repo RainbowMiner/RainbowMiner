@@ -132,7 +132,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
-                    Price         = $Stat.Hour #instead of .Live
+                    Price         = $Stat.Minute_10 #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -144,7 +144,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    Hashrate      = $Stat.HashRate_Average
+                    Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }
@@ -157,7 +157,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_CoinSymbol
                         Currency      = $Pool_ExCurrency
-                        Price         = $Stat.Hour #instead of .Live
+                        Price         = $Stat.Minute_10 #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+tcp"
@@ -169,7 +169,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         SSL           = $false
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
-                        Hashrate      = $Stat.HashRate_Average
+                        Hashrate      = $Stat.HashRate_Live
                         BLK           = $Stat.BlockRate_Average
                         TSL           = $Pool_TSL
                     }

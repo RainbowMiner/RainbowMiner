@@ -70,7 +70,7 @@ $Pool_Request.return | ForEach-Object {
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = ""
-                    Price         = $Stat.Hour #instead of .Live
+                    Price         = $Stat.Minute_10 #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -90,7 +90,7 @@ $Pool_Request.return | ForEach-Object {
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
                         Currency      = ""
-                        Price         = $Stat.Hour #instead of .Live
+                        Price         = $Stat.Minute_10 #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"
