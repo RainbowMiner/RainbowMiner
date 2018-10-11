@@ -445,7 +445,7 @@ function Invoke-Core {
         $API.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object | ConvertTo-Json -Depth 10
 
         #Update device information for the first time
-        Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor)
+        Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
     }
     
     $API.Devices = $Session.Devices | ConvertTo-Json -Depth 10
@@ -1467,7 +1467,7 @@ function Invoke-Core {
 
         if ($WaitRound % 5 -eq 0) {
             #pick up a sample every ten seconds
-            Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor)
+            Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
             $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null}
             $SamplesPicked++
         }
@@ -1547,7 +1547,7 @@ function Invoke-Core {
 
     if ($SamplesPicked -eq 0) {
         #pick at least one sample   
-        Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor)     
+        Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
         $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null}
         $SamplesPicked++
     }

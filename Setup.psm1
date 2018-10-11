@@ -85,10 +85,10 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -524,6 +524,14 @@ function Start-Setup {
                                 $GlobalSetupStepStore = $true
                             }
                         }
+                        "nvsmipath" {
+                            $GlobalSetupStepStore = $false
+                            if ($Config.EnableOCProfiles -and ($Session.AllDevices | where-object vendor -eq "nvidia" | measure-object).count -gt 0) {
+                                $Config.NVSMIpath = Read-HostString -Prompt "Enter path to Nvidia NVSMI" -Default $Config.NVSMIpath -Characters '' | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                if (-not (Test-Path $Config.NVSMIpath)) {Write-Host "Nvidia NVSMI not found at given path. RainbowMiner will use included nvsmi" -ForegroundColor Yellow}
+                                $GlobalSetupStepStore = $true
+                            }
+                        }
                         "ethpillenable" {
                             if ((Compare-Object @($SetupDevices.Model | Select-Object -Unique) @('GTX1080','GTX1080Ti','TITANXP') -ExcludeDifferent -IncludeEqual | Measure-Object).Count -gt 0) {
                                 $Config.EthPillEnable = Read-HostString -Prompt "Enable OhGodAnETHlargementPill https://bitcointalk.org/index.php?topic=3370685.0 (only when mining Ethash)" -Default $Config.EthPillEnable -Valid @('disable','RevA','RevB') | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -653,6 +661,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableMinerStatus $(if (Get-Yes $Config.EnableMinerStatus){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member MinerStatusUrl $Config.MinerStatusUrl -Force
                             $ConfigActual | Add-Member MinerStatusKey $Config.MinerStatusKey -Force
+                            $ConfigActual | Add-Member NVSMIpath $Config.NVSMIpath -Force
 
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force

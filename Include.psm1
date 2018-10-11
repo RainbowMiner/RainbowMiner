@@ -1557,7 +1557,9 @@ function Update-DeviceInformation {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @(),
         [Parameter(Mandatory = $false)]
-        [Bool]$UseAfterburner = $true        
+        [Bool]$UseAfterburner = $true,
+        [Parameter(Mandatory = $false)]
+        [String]$NVSMIpath = ".\Includes"        
     )
     $abReload = $true
 
@@ -1679,7 +1681,8 @@ function Update-DeviceInformation {
                 )
                 if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
 
-                Invoke-Exe '.\includes\nvidia-smi.exe' -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
+                $NVSMIpath = [IO.Path]::GetDirectoryName($NVSMIpath) + "\nvidia-smi.exe"
+                Invoke-Exe "$(if (Test-Path($NVSMIpath)) {$NVSMIpath} else {".\Includes\nvidia-smi.exe"})" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
                     $SMIresultSplit = $_ -split ','
                     if ($SMIresultSplit.count -gt 10) {
                         for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
