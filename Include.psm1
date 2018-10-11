@@ -395,8 +395,46 @@ function Set-Stat {
    
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
-        $ResetPowerDraw = -not $Stat.PowerDraw_Average
-        $ResetHashRate  = -not $Stat.HashRate_Average
+
+        $AddStat = Switch($Mode) {
+            "Miners" {
+                if (-not $Stat.PowerDraw_Average) {
+                    @{
+                        PowerDraw_Live = $PowerDraw
+                        PowerDraw_Average = $PowerDraw
+                        PowerDraw_Fluctuation = 0
+                    }
+                } else {
+                    @{
+                        PowerDraw_Live = [Double]$Stat.PowerDraw_Live
+                        PowerDraw_Average = [Double]$Stat.PowerDraw_Average
+                        PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
+                    }
+                }
+            }
+            "Pools" {
+                if (-not $Stat.HashRate_Average) {
+                    @{
+                        HashRate_Live = $HashRate
+                        HashRate_Average = [Double]$HashRate
+                        HashRate_Fluctuation = 0.0
+                        BlockRate_Live = $BlockRate
+                        BlockRate_Average = [Double]$BlockRate
+                        BlockRate_Fluctuation = 0.0
+                    }
+                } else {
+                    @{
+                        HashRate_Live = [Int64]$Stat.HashRate_Live
+                        HashRate_Average = [Double]$Stat.HashRate_Average
+                        HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
+                        BlockRate_Live = [Int64]$Stat.BlockRate_Live
+                        BlockRate_Average = [Double]$Stat.BlockRate_Average
+                        BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
+                    }
+                }
+            }
+        }
+
         $Stat = [PSCustomObject]@{
             Live = [Double]$Stat.Live
             Minute = [Double]$Stat.Minute
@@ -416,44 +454,8 @@ function Set-Stat {
             Duration = [TimeSpan]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
         }
-        Switch($Mode) {
-            "Miners" {
-                if ($ResetPowerDraw) {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        PowerDraw_Live = $PowerDraw
-                        PowerDraw_Average = $PowerDraw
-                        PowerDraw_Fluctuation = 0
-                    }
-                } else {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        PowerDraw_Live = [Double]$Stat.PowerDraw_Live
-                        PowerDraw_Average = [Double]$Stat.PowerDraw_Average
-                        PowerDraw_Fluctuation = [Double]$Stat.PowerDraw_Fluctuation
-                    }
-                }
-            }
-            "Pools" {
-                if ($ResetHashRate) {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        HashRate_Live = $HashRate
-                        HashRate_Average = $HashRate
-                        HashRate_Fluctuation = 0
-                        BlockRate_Live = $BlockRate
-                        BlockRate_Average = $BlockRate
-                        BlockRate_Fluctuation = 0
-                    }
-                } else {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        HashRate_Live = [Int64]$Stat.HashRate_Live
-                        HashRate_Average = [Double]$Stat.HashRate_Average
-                        HashRate_Fluctuation = [Double]$Stat.HashRate_Fluctuation
-                        BlockRate_Live = [Int64]$Stat.BlockRate_Live
-                        BlockRate_Average = [Double]$Stat.BlockRate_Average
-                        BlockRate_Fluctuation = [Double]$Stat.BlockRate_Fluctuation
-                    }
-                }
-            }
-        }
+        if ($AddStat) {$Stat | Add-Member -NotePropertyMembers $AddStat}
+
         if ($Stat.Day -and -not $Stat.ThreeDay) {$Stat.ThreeDay=($Stat.Day+$Stat.Week)/2;$Stat.ThreeDay_Fluctuation=($Stat.Day_Fluctuation+$Stat.Week_Fluctuation)/2} #backward compatibility
 
         $ToleranceMin = $Value
@@ -478,6 +480,30 @@ function Set-Stat {
             $Span_Day = [Math]::Min($Duration.TotalDays / [Math]::Min($Stat.Duration.TotalDays, 1), 1)
             $Span_ThreeDay = [Math]::Min(($Duration.TotalDays / 3) / [Math]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
             $Span_Week = [Math]::Min(($Duration.TotalDays / 7) / [Math]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
+
+            $AddStat = $null
+            Switch($Mode) {
+                "Miners" {
+                    $AddStat = @{
+                        PowerDraw_Live = $PowerDraw
+                        PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
+                        PowerDraw_Fluctuation = ((1 - $Span_Week) * $Stat.PowerDraw_Fluctuation) + 
+                        ($Span_Week * ([Math]::Abs($PowerDraw - $AddStat.PowerDraw_Average) / [Math]::Max([Math]::Abs($AddStat.PowerDraw_Average), $SmallestValue)))
+                    }
+                }
+                "Pools" {
+                    $AddStat = @{
+                        HashRate_Live = $HashRate
+                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
+                        HashRate_Fluctuation = ((1 - $Span_Hour) * $Stat.HashRate_Fluctuation) + 
+                        ($Span_Hour * ([Math]::Abs($HashRate - $AddStat.HashRate_Average) / [Math]::Max([Math]::Abs($AddStat.HashRate_Average), $SmallestValue)))
+                        BlockRate_Live = $BlockRate
+                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
+                        BlockRate_Fluctuation = ((1 - $Span_Hour) * $Stat.BlockRate_Fluctuation) + 
+                        ($Span_Hour * ([Math]::Abs($BlockRate - $AddStat.BlockRate_Average) / [Math]::Max([Math]::Abs($AddStat.BlockRate_Average), $SmallestValue)))
+                    }
+                }
+            }
 
             $Stat = [PSCustomObject]@{
                 Live = $Value
@@ -505,28 +531,7 @@ function Set-Stat {
                 Duration = $Stat.Duration + $Duration
                 Updated = $Updated
             }
-            Switch($Mode) {
-                "Miners" {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        PowerDraw_Live = $PowerDraw
-                        PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
-                        PowerDraw_Fluctuation = ((1 - $Span_Week) * $Stat.PowerDraw_Fluctuation) + 
-                        ($Span_Week * ([Math]::Abs($PowerDraw - $Stat.PowerDraw_Average) / [Math]::Max([Math]::Abs($Stat.PowerDraw_Average), $SmallestValue)))
-                    }
-                }
-                "Pools" {
-                    $Stat | Add-Member -NotePropertyMembers @{
-                        HashRate_Live = $HashRate
-                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
-                        HashRate_Fluctuation = ((1 - $Span_Hour) * $Stat.HashRate_Fluctuation) + 
-                        ($Span_Hour * ([Math]::Abs($HashRate - $Stat.HashRate_Average) / [Math]::Max([Math]::Abs($Stat.HashRate_Average), $SmallestValue)))
-                        BlockRate_Live = $BlockRate
-                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
-                        BlockRate_Fluctuation = ((1 - $Span_Hour) * $Stat.BlockRate_Fluctuation) + 
-                        ($Span_Hour * ([Math]::Abs($BlockRate - $Stat.BlockRate_Average) / [Math]::Max([Math]::Abs($Stat.BlockRate_Average), $SmallestValue)))
-                    }
-                }
-            }
+            if ($AddStat) {$Stat | Add-Member -NotePropertyMembers $AddStat}
         }
     }
     catch {
