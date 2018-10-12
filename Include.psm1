@@ -396,6 +396,8 @@ function Set-Stat {
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
+        if ($Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 1.0) {throw "Fluctuation out of range"}
+
         $AddStat = Switch($Mode) {
             "Miners" {
                 if (-not $Stat.PowerDraw_Average) {
