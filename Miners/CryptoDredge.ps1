@@ -6,11 +6,24 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_10.0_windows.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "313{0:d2}"
 $DevFee = 1.0
-$Cuda = "10.0"
+
+$UriCuda = @(
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_10.0_windows.zip"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_9.2_windows.zip"
+        Cuda = "9.2"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_9.1_windows.zip"
+        Cuda = "9.1"
+    }
+)
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -45,7 +58,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda[0].Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
@@ -53,7 +66,14 @@ if ($InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+$Uri = ""
+for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        $Uri = $UriCuda[$i].Uri
+        $Cuda= $UriCuda[$i].Cuda
+    }
+}
+if (-not $Uri) {return}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
