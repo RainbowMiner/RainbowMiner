@@ -56,12 +56,6 @@
         "YiiMP" = [PSCustomObject]@{
             Currencies=@()
         }
-        "ZergPool" = [PSCustomObject]@{
-            Currencies=@("BTC")
-        }
-        "ZergPoolCoins" = [PSCustomObject]@{
-            Currencies=@("BTC")
-        }
         "Zpool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
