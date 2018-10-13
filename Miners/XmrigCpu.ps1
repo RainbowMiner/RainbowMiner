@@ -6,9 +6,9 @@ param(
 )
 
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/xmrig/xmrig/releases/download/v2.8.1/xmrig-2.8.1-msvc-win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.1-xmrigcpu/xmrig-2.8.1-msvc-win64-rbm.zip"
 $Port = "521{0:d2}"
-$DevFee = 1.0
+$DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -62,7 +62,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "-R 1 --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=1 $($_.Params)"
+                Arguments = "-R 1 --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port

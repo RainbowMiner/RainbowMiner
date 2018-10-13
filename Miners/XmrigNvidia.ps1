@@ -6,9 +6,9 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.8.0-rc/xmrig-nvidia-2.8.0-cuda-9_2-win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.0rc-xmrignvidia/xmrig-nvidia-2.8.0-cuda-9_2-win64-rbm.zip"
 $Port = "303{0:d2}"
-$DevFee = 1.0
+$DevFee = 0.0
 $Cuda = "9.2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
@@ -66,7 +66,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "-R 1 --cuda-devices=$($DeviceIDsAll) --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) --donate-level=1 $($_.Params)"
+                Arguments = "-R 1 --cuda-devices=$($DeviceIDsAll) --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) --keepalive $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) --donate-level=0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port
