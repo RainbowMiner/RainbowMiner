@@ -6,25 +6,26 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-FireIce\xmr-stak.exe"
-$Uri = "https://github.com/RainbowMiner/xmr-stak/releases/download/v2.4.7-nodevfee/xmr-stak-2.4.7-nodevfee.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.5.0-fireice/xmr-stak-2.5.0-nodevfee.zip"
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/RainbowMiner/xmr-stak/releases"
 $DevFee = 0.0
-$Cuda = "9.1"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight";            Threads = 1; MinMemGb = 2; Params = ""} #CryptoNight
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2";    Threads = 1; MinMemGb = 4; Params = ""} # CryptoNightBittube2
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_haven";       Threads = 1; MinMemGb = 4; Params = ""} # CryptoNightHaven
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy";       Threads = 1; MinMemGb = 4; Params = ""} # CryptoNightHeavy
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite";        Threads = 1; MinMemGb = 1; Params = ""} # CryptoNightLite
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7";     Threads = 1; MinMemGb = 1; Params = ""} # CryptoNightLiteV7
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7_xor"; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNightLiteV7Xor
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_masari";      Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightMasari
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2";    Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightBittube2
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_haven";       Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightHaven
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy";       Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightHeavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite";        Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLite
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7";     Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7_xor"; Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7Xor
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_masari";      Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightMasari
     [PSCustomObject]@{MainAlgorithm = "cryptonight_v7";          Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "cryptonight_v7_stellite"; Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV7Stellite
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_v8";          Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV8
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
