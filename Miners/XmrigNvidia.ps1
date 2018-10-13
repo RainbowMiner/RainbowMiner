@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.7.0-beta/xmrig-nvidia-2.7.0-beta-cuda9-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig-nvidia/releases/download/v2.8.0-rc/xmrig-nvidia-2.8.0-cuda-9_2-win64.zip"
 $Port = "303{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
