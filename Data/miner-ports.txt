@@ -55,6 +55,7 @@
 322 Ethminer15
 323 Phoenix30
 324 ZjazzNvidia
+325 FireIce247
 
 400	Sgminer
 401	SgminerBitcore
