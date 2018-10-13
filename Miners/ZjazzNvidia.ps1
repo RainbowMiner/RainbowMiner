@@ -11,7 +11,7 @@ $DevFee = 2.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/zjazz/zjazz_cuda_miner_experimental/releases/download/x22i_0991/zjazz_cuda_win64_suqa_0.991.zip"
+        Uri = "https://github.com/zjazz/zjazz_cuda_miner/releases/download/1.0/zjazz_cuda_win64_1.0.zip"
         Cuda = "9.1"
     }
 )
@@ -68,7 +68,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -R 5 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
