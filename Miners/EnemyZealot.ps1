@@ -18,7 +18,11 @@ $UriCuda = @(
     [PSCustomObject]@{
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22-enemyzealot/z-enemy.1-22-cuda9.2_x64.zip"
         Cuda = "9.2"
-    }        
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22-enemyzealot/z-enemy.1-22-cuda9.1_x64.zip"
+        Cuda = "9.1"
+    }
 )
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
