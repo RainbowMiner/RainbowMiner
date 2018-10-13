@@ -14,6 +14,7 @@ if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD pres
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}

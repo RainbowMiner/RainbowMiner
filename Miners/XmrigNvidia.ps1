@@ -15,6 +15,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
