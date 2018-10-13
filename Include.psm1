@@ -3527,3 +3527,8 @@ Param(
     Write-Host "- enter `"exit`" or `"cancel`" to abort without any changes to the configuration" -ForegroundColor $Color
     Write-Host " "
 }
+
+function Confirm-IsAdmin {
+ # Returns true/false
+   ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+ }
