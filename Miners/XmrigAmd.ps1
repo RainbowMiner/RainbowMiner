@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.7.3-beta/xmrig-amd-2.7.3-beta-win64.zip"
+$Uri = "https://github.com/xmrig/xmrig-amd/releases/download/v2.8.1/xmrig-amd-2.8.1-win64.zip"
 $Port = "304{0:d2}"
 $DevFee = 1.0
 
