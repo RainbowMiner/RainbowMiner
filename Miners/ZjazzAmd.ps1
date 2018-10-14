@@ -6,14 +6,13 @@ param(
 )
 
 $Path = ".\Bin\AMD-Zjazz\zjazz_amd.exe"
-$Uri = "https://github.com/zjazz/zjazz_cuda_miner_experimental/releases/download/x22i_0994_amd/zjazz_amd_win64_0.994.zip"
+$Uri = "https://github.com/zjazz/zjazz_amd_miner/releases/download/v1.0/zjazz_amd_win64_1.0.zip"
 $Port = "408{0:d2}"
 $DevFee = 2.0
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "phi2"; CoinSymbol = ""; Params = ""} #Phi2
     [PSCustomObject]@{MainAlgorithm = "x22i"; CoinSymbol = ""; Params = ""} #X22i
 )
 
@@ -52,7 +51,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -R 5 --hide-hashrate-per-gpu $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
