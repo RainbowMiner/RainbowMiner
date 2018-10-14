@@ -1318,7 +1318,7 @@ function Invoke-Core {
     $WatchdogResetOld = $WatchdogReset
     $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
     if ($MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
-        $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval)
+        $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval - $Session.Config.Interval)
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
         $WatchdogInterval = ($WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
         $WatchdogReset = ($WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
