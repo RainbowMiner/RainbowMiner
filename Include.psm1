@@ -3546,10 +3546,10 @@ Param(
     [int64]$Id = $PID
 )
     try {
-        Add-Type –memberDefinition @”  
+        Add-Type –memberDefinition @"
 [DllImport("user32.dll")]
 public static extern int GetWindowLong(IntPtr hWnd, int nIndex);  
-“@ -name “User32GetWindowLong” -namespace User32
+"@ -name "User32GetWindowLong" -namespace User32
     } catch {}
 
     try {
@@ -3560,4 +3560,39 @@ public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
         elseif ($state -band 0x1000000) {"maximized"}
         else                            {"normal"}
     } catch {"maximized"}
+}
+
+function Set-WindowStyle {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    [ValidateSet('FORCEMINIMIZE', 'HIDE', 'MAXIMIZE', 'MINIMIZE', 'RESTORE', 
+                 'SHOW', 'SHOWDEFAULT', 'SHOWMAXIMIZED', 'SHOWMINIMIZED', 
+                 'SHOWMINNOACTIVE', 'SHOWNA', 'SHOWNOACTIVATE', 'SHOWNORMAL')]
+    $Style = 'SHOW',
+    [Parameter(Mandatory = $False)]
+    [int64]$Id = $PID
+
+)
+    $WindowStates = @{
+        FORCEMINIMIZE   = 11; HIDE            = 0
+        MAXIMIZE        = 3;  MINIMIZE        = 6
+        RESTORE         = 9;  SHOW            = 5
+        SHOWDEFAULT     = 10; SHOWMAXIMIZED   = 3
+        SHOWMINIMIZED   = 2;  SHOWMINNOACTIVE = 7
+        SHOWNA          = 8;  SHOWNOACTIVATE  = 4
+        SHOWNORMAL      = 1
+    }
+
+    try {
+        Add-Type –memberDefinition @"
+    [DllImport("user32.dll")] 
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+"@ -name "User32ShowWindowAsync" -namespace User32
+    } catch {}
+
+    try {
+        $hwnd = (ps -Id $Id)[0].MainWindowHandle
+        [User32.User32ShowWindowAsync]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
+    } catch {}
 }

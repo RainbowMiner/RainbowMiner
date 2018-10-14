@@ -1621,8 +1621,10 @@ function Invoke-Core {
             if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
                 if ($Session.AutoUpdate) {& .\Updater.ps1}
                 $StartWindowState = Get-WindowState
-                $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) " -replace "windowstyle (minimized|maximized|normal)","windowstyle $($StartWindowState)"
-                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "minimized"){0}else{1}} -Local}
+                $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
+                if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
+                else {$StartCommand = $StartCommand -replace "-command","-windowstyle $($StartWindowState) -command"}
+                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                 if ($NewKid -and $NewKid.ReturnValue -eq 0) {
                     Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
                     $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
