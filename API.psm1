@@ -111,47 +111,47 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @(($API.ActiveMiners | ConvertFrom-Json) | Where Profit | Select-Object)
+                    $Data = ConvertTo-Json @(($API.ActiveMiners | Select-Object | ConvertFrom-Json) | Where Profit | Select-Object)
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @(($API.RunningMiners | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.RunningMiners | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/remoteminers" {
-                    $Data = ConvertTo-Json @(($API.RemoteMiners | ConvertFrom-Json) | Select-Object) -Depth 10
+                    $Data = ConvertTo-Json @(($API.RemoteMiners | Select-Object | ConvertFrom-Json) | Select-Object) -Depth 10
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @(($API.FailedMiners | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.FailedMiners | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/pools" {
-                    $Data = ConvertTo-Json @(($API.Pools | ConvertFrom-Json).PSObject.Properties | Select-Object -ExpandProperty Value)
+                    $Data = ConvertTo-Json @(($API.Pools | Select-Object | ConvertFrom-Json).PSObject.Properties | Select-Object -ExpandProperty Value)
                     Break
                 }
                 "/newpools" {
-                    $Data = ConvertTo-Json @(($API.NewPools | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/allpools" {
-                    $Data = ConvertTo-Json @(($API.AllPools | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/algorithms" {
-                    $Data = ConvertTo-Json @(($API.AllPools | ConvertFrom-Json).Algorithm | Sort-Object -Unique)
+                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json).Algorithm | Sort-Object -Unique)
                     Break
                 }
                 "/miners" {
-                    $Data = ConvertTo-Json @(($API.Miners | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Miners | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/fastestminers" {
-                    $Data = ConvertTo-Json @(($API.FastestMiners | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.FastestMiners | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/config" {
@@ -167,35 +167,35 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = ConvertTo-Json @(($API.AllDevices | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.AllDevices | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/devices" {
-                    $Data = ConvertTo-Json @(($API.Devices | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Devices | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/devicecombos" {
-                    $Data = ConvertTo-Json @(($API.DeviceCombos | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.DeviceCombos | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/stats" {
-                    $Data = ConvertTo-Json @(($API.Stats | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Stats | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = ConvertTo-Json @(($API.WatchdogTimers | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.WatchdogTimers | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @(($API.Balances | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/rates" {
-                    $Data = ConvertTo-Json @(($API.Rates | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Rates | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json @(($API.Asyncloaderjobs | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Asyncloaderjobs | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/decsep" {
@@ -206,7 +206,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | ConvertFrom-Json) | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {                                
+                    ($API.Miners | Select-Object | ConvertFrom-Json) | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {                                
                         
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = "$(Split-Path $_.Path)\_uri.json"
