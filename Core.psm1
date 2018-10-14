@@ -454,7 +454,7 @@ function Invoke-Core {
 
     if (-not $Session.Devices) {
         Write-Log -Level Warn "No devices available. Please check your configuration. "
-        Start-Sleep $Session.Config.Interval
+        Start-Sleep $Session.BenchmarkInterval
         continue
     }
 
@@ -1317,12 +1317,14 @@ function Invoke-Core {
     #Extend benchmarking interval to the maximum from running miners
     $WatchdogResetOld = $WatchdogReset
     $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
-    if ($ExtendInterval -gt 1) {
-        $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.Config.Interval * $ExtendInterval)
+    if ($MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
+        $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval)
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
         $WatchdogInterval = ($WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
         $WatchdogReset = ($WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
-        Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.Config.Interval * $ExtendInterval) seconds). "
+        if ($ExtendInterval -gt 1 ) {
+            Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.BenchmarkInterval * $ExtendInterval) seconds). "
+        }
     }
 
     #Display active miners list

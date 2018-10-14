@@ -145,11 +145,12 @@ $Global:Session = [hashtable]::Synchronized(@{})
 
 $Session.Version = "3.8.9.7"
 
-$Session.Strikes         = 3
-$Session.SyncWindow      = 10 #minutes, after that time, the pools bias price will start to decay
-$Session.OutofsyncWindow = 60 #minutes, after that time, the pools price bias will be 0
-$Session.DecayPeriod     = 60 #seconds
-$Session.DecayBase       = 1 - 0.1 #decimal percentage
+$Session.Strikes           = 3
+$Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
+$Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias will be 0
+$Session.DecayPeriod       = 60 #seconds
+$Session.DecayBase         = 1 - 0.1 #decimal percentage
+$Session.BenchmarkInterval = 60 #seconds
 
 $host.ui.RawUI.WindowTitle = "RainbowMiner v$($Session.Version)"
 
