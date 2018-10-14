@@ -19,7 +19,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, Ethermine, HashRefinery, Icemining, MiningPoolHub, Nanopool, Nicehash, PhiPhiPool, Ravenminer, YiiMP, ZergPool and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, Ethermine, HashRefinery, Icemining, MiningPoolHub, Nanopool, Nicehash, PhiPhiPool, Ravenminer, StarPool, YiiMP and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer, T-Rex and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -77,7 +77,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, ethermine, hashrefinery, icemining, miningpoolhub, miningpoolhubcoins, miningpoolhubmini, nanopool, nicehash, nlpool, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, ethermine, hashrefinery, icemining, miningpoolhub, miningpoolhubcoins, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
 
 
@@ -154,13 +154,8 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
 <details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>RavenminerEu</summary> https://eu.ravenminer.com/ ravencoin-pool for eu region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
+<details><summary>StarPool</summary> https://www.starpool.biz/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>ZergPool / ZergPoolCoins</summary>
-
-https://zergpool.eu/ auto-exchange and payout in BTC
-  - 'zergpool' mine most profitable algorithm. Pool chooses coin or merged mining benefits
-  - 'zergpoolcoins' mine most profitable coin. Either with auto-exchange to BTC, LTC, DASH, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
-</details>
 <details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC</details>
 <br />	
   
