@@ -225,7 +225,7 @@ function Start-Setup {
                         }
                         "minerstatuskey" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey -Characters "A-F0-9\-" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey -Characters "nwA-F0-9\-" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 $Config.MinerStatusKey = $Config.MinerStatusKey.Trim()
                                 if ($Config.MinerStatusKey -eq "new" -or $Config.MinerStatusKey -eq "") {
                                     $Config.MinerStatusKey = Get-MinerStatusKey
