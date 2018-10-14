@@ -3538,3 +3538,26 @@ function Confirm-IsAdmin {
  # Returns true/false
    ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
  }
+
+function Get-WindowState {
+[cmdletbinding()]   
+Param(   
+    [Parameter(Mandatory = $False)]   
+    [int64]$Id = $PID
+)
+    try {
+        Add-Type –memberDefinition @”  
+[DllImport("user32.dll")]
+public static extern int GetWindowLong(IntPtr hWnd, int nIndex);  
+“@ -name “User32GetWindowLong” -namespace User32
+    } catch {}
+
+    try {
+        $hwnd = (ps -Id $Id)[0].MainWindowHandle
+        $state = [User32.User32GetWindowLong]::GetWindowLong($hwnd, -16)
+        # mask of 0x20000000 = minimized; 2 = minimize; 4 = restore
+        if ($state -band 0x20000000)    {"minimized"}
+        elseif ($state -band 0x1000000) {"maximized"}
+        else                            {"normal"}
+    } catch {"maximized"}
+}
