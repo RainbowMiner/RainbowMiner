@@ -46,7 +46,7 @@ function formatHashRate(value) {
     return formatHashRateValue(value);
   }
 }
-  
+ 
 function formatBTC(value) {
   return parseFloat(value).toFixed(8);
 };
