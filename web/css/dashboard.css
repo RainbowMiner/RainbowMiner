@@ -127,3 +127,15 @@
 
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
+
+.Running {
+    background-color: rgb(127,191,144);
+}
+
+.Offline {
+    background-color: rgb(213,142,176);
+}
+
+.Paused {
+    background-color: rgb(247,252,168);
+}

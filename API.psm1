@@ -118,6 +118,10 @@
                     $Data = ConvertTo-Json @(($API.RunningMiners | ConvertFrom-Json) | Select-Object)
                     Break
                 }
+                "/remoteminers" {
+                    $Data = ConvertTo-Json @(($API.RemoteMiners | ConvertFrom-Json) | Select-Object) -Depth 10
+                    Break
+                }
                 "/failedminers" {
                     $Data = ConvertTo-Json @(($API.FailedMiners | ConvertFrom-Json) | Select-Object)
                     Break

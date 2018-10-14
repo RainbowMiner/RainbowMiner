@@ -3448,7 +3448,9 @@ function Update-MinerStatus {
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
     $Profit = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object Profit -Sum).Sum, 8) | ConvertTo-Json
+    $PowerDraw = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object PowerDraw -Sum).Sum, 2) | ConvertTo-Json
     $Status = if ($Session.Paused) {"Paused"} else {"Running"}
+    $Rates  = $Session.Rates | ConvertTo-Json
 
     Write-Log "Pinging monitoring server. "
 
@@ -3464,6 +3466,7 @@ function Update-MinerStatus {
                 Pool           = @($_.Pool)
                 CurrentSpeed   = @($_.Speed_Live)
                 EstimatedSpeed = @($_.Speed)
+                PowerDraw      = $_.PowerDraw
                 'BTC/day'      = $_.Profit
                 Profit         = $_.Profit
             }
@@ -3478,7 +3481,7 @@ function Update-MinerStatus {
         $ReportStatus = "Error"
         if ($ReportUrl -match "rbminer.net") {
             $ReportUrl = "https://rbminer.net/api/report.php"
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = $Rates; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -3494,6 +3497,9 @@ function Update-MinerStatus {
                              }
                         }                        
                     }
+                }
+                if ($Response.Workers -ne $null) {
+                    $API.RemoteMiners = @($Response.Workers | Where-Object worker -ne $Session.Config.WorkerName | Select-Object) | ConvertTo-Json -Depth 10                    
                 }
             }
         } else {
