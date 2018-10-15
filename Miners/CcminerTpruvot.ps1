@@ -16,7 +16,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
+    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
