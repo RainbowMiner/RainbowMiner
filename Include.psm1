@@ -3539,7 +3539,7 @@ function Confirm-IsAdmin {
    ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 }
 
-function Init-User32Dll {
+function Initialize-User32Dll {
     try {
         Add-Type @"
 using System;
@@ -3569,7 +3569,7 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Title = ""
 )
-    Init-User32Dll
+    Initialize-User32Dll
     try {
         $hwnd = (ps -Id $Id)[0].MainWindowHandle
         if ($hwnd -eq 0) {
@@ -3606,7 +3606,7 @@ param(
         SHOWNA          = 8;  SHOWNOACTIVATE  = 4
         SHOWNORMAL      = 1
     }
-    Init-User32Dll
+    Initialize-User32Dll
     try {
         $hwnd = (ps -Id $Id)[0].MainWindowHandle
         if ($hwnd -eq 0) {
