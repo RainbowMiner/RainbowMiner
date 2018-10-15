@@ -3426,7 +3426,7 @@ Param(
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
-        $AsyncLoader.Jobs.$Jobkey.Request | ConvertFrom-Json
+        $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | ConvertFrom-Json
     }
 }
 
@@ -3537,24 +3537,46 @@ Param(
 function Confirm-IsAdmin {
  # Returns true/false
    ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
- }
+}
+
+function Init-User32Dll {
+    try {
+        Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+namespace User32
+{
+    public class WindowManagement {
+        [DllImport("user32.dll")]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        [DllImport("user32.dll")]
+        public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, IntPtr lclassName, string windowTitle);
+        [DllImport("user32.dll")] 
+        public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+    }
+}
+"@
+    } catch {
+        Write-Log -Level Warn "Error initializing User32.dll functions"
+    }
+}
 
 function Get-WindowState {
 [cmdletbinding()]   
-Param(   
-    [Parameter(Mandatory = $False)]   
-    [int64]$Id = $PID
+param(
+    [Parameter(Mandatory = $False)]
+    [int64]$Id = $PID,
+    [Parameter(Mandatory = $False)]
+    [String]$Title = ""
 )
-    try {
-        Add-Type –memberDefinition @"
-[DllImport("user32.dll")]
-public static extern int GetWindowLong(IntPtr hWnd, int nIndex);  
-"@ -name "User32GetWindowLong" -namespace User32
-    } catch {}
-
+    Init-User32Dll
     try {
         $hwnd = (ps -Id $Id)[0].MainWindowHandle
-        $state = [User32.User32GetWindowLong]::GetWindowLong($hwnd, -16)
+        if ($hwnd -eq 0) {
+            $zero = [IntPtr]::Zero
+            $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)
+        }
+        $state = [User32.WindowManagement]::GetWindowLong($hwnd, -16)
         # mask of 0x20000000 = minimized; 2 = minimize; 4 = restore
         if ($state -band 0x20000000)    {"minimized"}
         elseif ($state -band 0x1000000) {"maximized"}
@@ -3571,8 +3593,9 @@ param(
                  'SHOWMINNOACTIVE', 'SHOWNA', 'SHOWNOACTIVATE', 'SHOWNORMAL')]
     $Style = 'SHOW',
     [Parameter(Mandatory = $False)]
-    [int64]$Id = $PID
-
+    [int64]$Id = $PID,
+    [Parameter(Mandatory = $False)]
+    [String]$Title = ""
 )
     $WindowStates = @{
         FORCEMINIMIZE   = 11; HIDE            = 0
@@ -3583,16 +3606,13 @@ param(
         SHOWNA          = 8;  SHOWNOACTIVATE  = 4
         SHOWNORMAL      = 1
     }
-
-    try {
-        Add-Type –memberDefinition @"
-    [DllImport("user32.dll")] 
-    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-"@ -name "User32ShowWindowAsync" -namespace User32
-    } catch {}
-
+    Init-User32Dll
     try {
         $hwnd = (ps -Id $Id)[0].MainWindowHandle
-        [User32.User32ShowWindowAsync]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
+        if ($hwnd -eq 0) {
+            $zero = [IntPtr]::Zero
+            $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)
+        }
+        [User32.WindowManagement]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
     } catch {}
 }

@@ -1620,10 +1620,11 @@ function Invoke-Core {
             $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
             if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
                 if ($Session.AutoUpdate) {& .\Updater.ps1}
-                $StartWindowState = Get-WindowState
+                $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
                 $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
                 if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
                 else {$StartCommand = $StartCommand -replace "-command","-windowstyle $($StartWindowState) -command"}
+                Write-Log "Restarting $($StartWindowState) $($StartCommand)"
                 $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                 if ($NewKid -and $NewKid.ReturnValue -eq 0) {
                     Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
@@ -1635,7 +1636,7 @@ function Invoke-Core {
         }
         catch {
         }
-        if (-not $Session.Stopp) { #fallback to old updater           
+        if (-not $Session.Stopp) { #fallback to old updater
             if ($Session.AutoUpdate) {
                 Write-Log -Level Warn "Failed to start new instance of RainbowMiner. Switching to legacy update."                
                 $Session.Stopp = $true

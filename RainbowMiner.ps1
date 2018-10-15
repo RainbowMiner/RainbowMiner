@@ -152,7 +152,9 @@ $Session.DecayPeriod       = 60 #seconds
 $Session.DecayBase         = 1 - 0.1 #decimal percentage
 $Session.BenchmarkInterval = 60 #seconds
 
-$host.ui.RawUI.WindowTitle = "RainbowMiner v$($Session.Version)"
+$Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
+
+$host.ui.RawUI.WindowTitle = $Session.MainWindowTitle
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
