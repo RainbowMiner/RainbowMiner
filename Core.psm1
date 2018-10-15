@@ -1658,7 +1658,7 @@ function Stop-Core {
     Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
     Write-Log "Gracefully halting RainbowMiner"
     [System.Collections.ArrayList]$ExcavatorWindowsClosed = @()
-    $Session.ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0} | ForEach-Object {
+    $Session.ActiveMiners | Where-Object {$_.GetActivateCount() -gt 0 -or $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
             Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
