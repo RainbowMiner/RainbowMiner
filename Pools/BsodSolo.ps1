@@ -96,7 +96,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = "$($Pool_Region).bsod.pw"
                 Port          = $Pool_Port
                 User          = "$($Pool_User).$($Worker)"
-                Pass          = "c=$Pool_Currency"
+                Pass          = "m=solo,c=$Pool_Currency"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
