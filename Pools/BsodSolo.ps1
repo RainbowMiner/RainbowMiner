@@ -11,7 +11,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Fee = 0.9
+$Pool_Fee = 1.9
 
 $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
@@ -54,7 +54,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_Key = "$($Pool_Algorithm)_$($Pool_CoinSymbol)".ToLower()
-    $Pool_PoolFee = if ($Pool_Request -and $Pool_Request.$Pool_Key) {$Pool_Request.$Pool_Key.fees} else {$Pool_Fee}
+    $Pool_PoolFee = $Pool_Fee
     $Pool_DataWindow = $DataWindow
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
     $Pool_User = $Wallets.$Pool_Currency
