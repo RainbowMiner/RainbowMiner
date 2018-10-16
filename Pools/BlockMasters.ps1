@@ -41,7 +41,7 @@ catch {
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
+$Pool_Regions = @("eu","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC") + @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if ($PoolCoins_Request) {
@@ -88,7 +88,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = $Pool_Host
+                    Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                     Port          = $Pool_Port
                     User          = $Wallets.$Pool_Currency
                     Pass          = "$Worker,c=$Pool_Currency"
