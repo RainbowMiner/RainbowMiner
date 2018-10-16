@@ -1976,7 +1976,7 @@ class Miner {
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
     hidden [System.Management.Automation.Job]$Process = $null
-    hidden [Int]$ProcessId = 0
+    [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
