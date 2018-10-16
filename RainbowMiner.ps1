@@ -168,8 +168,13 @@ Write-Host " "
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
-Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
+if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
+    Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
+    Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
+} else {
+    Import-Module NetSecurity -ErrorAction Ignore
+    Import-Module Defender -ErrorAction Ignore
+}
 Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
 Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
 Import-Module .\API.psm1
