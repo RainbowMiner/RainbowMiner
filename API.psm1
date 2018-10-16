@@ -111,7 +111,7 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @(($API.ActiveMiners | Select-Object | ConvertFrom-Json) | Where Profit | Select-Object)
+                    $Data = ConvertTo-Json @(($API.ActiveMiners | Select-Object | ConvertFrom-Json) | Where {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object)
                     break
                 }
                 "/runningminers" {
