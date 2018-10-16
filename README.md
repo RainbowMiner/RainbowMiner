@@ -151,7 +151,7 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
 <details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC), you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Ethermine</details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
 <details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
-<details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com auto-exchangeand payout in BTC or any coin, that is listed at the pool</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>RavenminerEu</summary> https://eu.ravenminer.com/ ravencoin-pool for eu region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>StarPool</summary> https://www.starpool.biz/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
