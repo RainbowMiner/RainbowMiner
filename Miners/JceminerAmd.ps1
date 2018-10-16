@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Jceminer\jce_cn_gpu_miner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.32q-jceminer/jce_cn_gpu_miner.032q.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33a-jceminer/jce_cn_gpu_miner.033a.zip"
 $Port = "321{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 0.9
@@ -15,6 +15,7 @@ if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA p
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Params = "--variation 3"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Params = "--variation 15"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; MinMemGb = 2; Params = "--variation 9"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/msr";        Threads = 1; MinMemGb = 2; Params = "--variation 11"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; MinMemGb = 2; Params = "--variation 10"}
