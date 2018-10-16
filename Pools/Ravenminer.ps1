@@ -6,7 +6,8 @@ param(
     [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "avg",
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [Bool]$AllowZero = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -78,7 +79,7 @@ $Pool_Currency = "RVN"
 $Pool_Host = "ravenminer.com"
 $Pool_Region = Get-Region "us"
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly} | ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees

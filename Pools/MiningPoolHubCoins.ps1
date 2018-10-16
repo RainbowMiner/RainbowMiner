@@ -6,7 +6,8 @@ param(
     [String]$User, 
     [alias("WorkerName")]
     [String]$Worker,
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [Bool]$AllowZero = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -43,7 +44,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
 
-$Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Host = $_.host
     $Pool_Hosts = $_.host_list.split(";")
     $Pool_Port = $_.port

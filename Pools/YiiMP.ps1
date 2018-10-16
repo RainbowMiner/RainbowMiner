@@ -6,7 +6,8 @@ param(
     [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [Bool]$AllowZero = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -49,7 +50,7 @@ $Pool_PoolFee = 2.0
 foreach($Pool_Currency in $Pool_MiningCurrencies) {
     if (($PoolCoins_Request.$Pool_Currency.hashrate -le 0 -or 
          $PoolCoins_Request.$Pool_Currency.workers  -le 0 -or
-         $PoolCoins_Request.$Pool_Currency.'24h_blocks' -le 0) -and -not $InfoOnly) {continue}
+         $PoolCoins_Request.$Pool_Currency.'24h_blocks' -le 0) -and -not $InfoOnly -and -not $AllowZero) {continue}
     
     $Pool_CoinSymbol = $Pool_Currency
     $Pool_Host = "yiimp.eu"

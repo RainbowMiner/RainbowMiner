@@ -6,7 +6,8 @@ param(
     [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "average-2",
-    [Bool]$InfoOnly = $false
+    [Bool]$InfoOnly = $false,
+    [Bool]$AllowZero = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -44,7 +45,7 @@ catch {
 $Pool_Regions = @("eu","us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {($PoolCoins_Request.$_.hashrate -gt 0 -and $PoolCoins_Request.$_.symbol -and $Wallets."$($PoolCoins_Request.$_.symbol)") -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {(($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $PoolCoins_Request.$_.symbol -and $Wallets."$($PoolCoins_Request.$_.symbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_CoinSymbol = $_
 
     $Pool_Host = "bsod.pw"

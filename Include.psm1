@@ -89,7 +89,7 @@ function Confirm-Cuda {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet") -and @("API_Key","API_ID","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet") -and @("API_Key","API_ID","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -725,43 +725,6 @@ function Get-ChildItemContent {
                     $Content | Add-Member $k $Parameters.$k -Force 
                 }
             }
-        }
-    }
-}
-
-function Get-PoolsContentTest {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [String]$Path, 
-        [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Config,
-        [Parameter(Mandatory = $true)]
-        [TimeSpan]$StatSpan,
-        [Parameter(Mandatory = $false)]
-        [Bool]$InfoOnly = $false,
-        [Parameter(Mandatory = $false)]
-        [Bool]$IgnoreFees = $false
-    )
-        
-    Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
-        $Pool_Name = $_.BaseName
-
-        [Hashtable]$Parameters = @{
-            StatSpan = $StatSpan
-            InfoOnly = $InfoOnly
-        }
-        foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
-
-        & {$Parameters.Keys | ForEach-Object {Set-Variable $_ $Parameters.$_};& $_.FullName @Parameters} | Foreach-Object {
-            $Pool_Factor = 1-[Double]($Config.Penalty + $(if (-not $IgnoreFees){$_.PoolFee}))/100
-            $_.Price *= $Pool_Factor
-            $_.StablePrice *= $Pool_Factor
-            $_ | Add-Member -NotePropertyMembers @{
-                AlgorithmList = if ($_.Algorithm -match "-") {@((Get-Algorithm $_.Algorithm), ($_.Algorithm -replace '\-.*$'))}else{@($_.Algorithm)}
-                Name =$Pool_Name
-                Penalty = $Config.Penalty
-            } -Force -PassThru
         }
     }
 }
@@ -2991,6 +2954,7 @@ function Set-PoolsConfigDefault {
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "CoinSymbol") {$Setup_Content | Add-Member CoinSymbol "" -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$Setup_Content | Add-Member ExcludeCoinSymbol "" -Force}
                     if ($Setup_Content.PSObject.Properties.Name -inotcontains "FocusWallet") {$Setup_Content | Add-Member FocusWallet "" -Force}
+                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "AllowZero") {$Setup_Content | Add-Member AllowZero "0" -Force}
                     $Done | Add-Member $_ $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null

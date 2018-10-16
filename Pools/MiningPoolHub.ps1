@@ -6,7 +6,8 @@ param(
     [String]$User, 
     [alias("WorkerName")]
     [String]$Worker,
-    [TimeSpan]$StatSpan
+    [TimeSpan]$StatSpan,
+    [Bool]$AllowZero = $false
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
