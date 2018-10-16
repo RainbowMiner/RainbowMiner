@@ -565,6 +565,19 @@ Example:
 
 This example will focus mining operations to pool Ethermine, comparing this pool's profitability of ETH and ZEC, only. No other pool will be mined.
 
+#### Allow mining algorithm when pool hashrate equals to 0
+    
+All pool modules contain a check for an algorithm hashrate to be greater than 0. If you want to mine a special currency, even if you are the only miner (e.g. solo mining on BsodSolo), set field "AllowZero" to "1":
+
+Example:
+
+    "BsodSolo": {
+        "SUQA": "<YOUR_SUQA_ADDRESS>",
+        "Worker": "$WorkerName",
+        "FocusWallet": "SUQA",
+        "AllowZero": "1"
+    }
+
 ### Config\miners.config.txt
 
 Each miner can be configured by it's own section, in the miners.config.txt
