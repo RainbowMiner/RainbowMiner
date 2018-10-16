@@ -18,6 +18,10 @@
         "Bsod" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
         }
+        "BsodSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1"}
+            Currencies=@("RVN","SUQA")
+        }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
@@ -52,6 +56,9 @@
         }
         "RavenminerEu" = [PSCustomObject]@{
             Currencies=@("RVN")
+        }
+        "StarPool" = [PSCustomObject]@{
+            Currencies=@("BTC")
         }
         "YiiMP" = [PSCustomObject]@{
             Currencies=@()
