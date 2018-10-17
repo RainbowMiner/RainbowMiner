@@ -271,7 +271,7 @@
                     Break
                 }
                 "/currentprofit" {
-                    $Data = [PSCustomObject]@{ProfitBTC=$API.CurrentProfit;Rates=$API.Rates | ConvertFrom-Json} | ConvertTo-Json
+                    $Data = [PSCustomObject]@{ProfitBTC=$API.CurrentProfit;Rates=$API.Rates | Select-Object | ConvertFrom-Json} | ConvertTo-Json
                     Break
                 }
                 "/stop" {
