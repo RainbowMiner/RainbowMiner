@@ -748,7 +748,7 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 
 ## FAQ
 
-### How do I add RainbowMiner' Start.bat to the windows task sheduler for autostart?
+### How do I add RainbowMiner's Start.bat to the windows task sheduler for autostart?
 
 Press windows key and type `shedule`, click on `Task Sheduler`
 
