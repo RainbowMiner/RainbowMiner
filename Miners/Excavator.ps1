@@ -12,11 +12,11 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.12a/excavator_v1.5.12a_Win64_CUDA_10.zip"
+        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.13a/excavator_v1.5.13a_Win64_CUDA_10.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.12a/excavator_v1.5.12a_Win64.zip"
+        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.13a/excavator_v1.5.13a_Win64.zip"
         Cuda = "9.1"
     }
 )
@@ -26,6 +26,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     #1 Thread
     #[PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV7
+    [PSCustomObject]@{MainAlgorithm = "cryptonightV8"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV8
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Threads = 1; MinMemGB = 4; ExtendInterval = 1; Params = @()} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Equihash
     [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
@@ -37,6 +38,7 @@ $Commands = [PSCustomObject[]]@(
 
     #2 Threads
     #[PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 2; MinMemGB = 2*6; ExtendInterval = 1; Params = @()} #CryptonightV7
+    #[PSCustomObject]@{MainAlgorithm = "cryptonightV8"; Threads = 2; MinMemGB = 2*6; ExtendInterval = 1; Params = @()} #CryptonightV8
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Threads = 2; MinMemGB = 2*4; ExtendInterval = 1; Params = @()} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 2; MinMemGB = 2*2; ExtendInterval = 1; Params = @()} #Equihash
     #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 2; MinMemGB = 2*1; ExtendInterval = 1; Params = @()} #Lyra2RE2
