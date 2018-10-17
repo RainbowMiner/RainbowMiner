@@ -3383,7 +3383,7 @@ Param(
             }
         } until ($retry -le 0)
 
-        if ($RequestError) {
+        if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
         } else {
