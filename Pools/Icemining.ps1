@@ -32,7 +32,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://icemining.ca/api/status" -tag $Name
+    #$Pool_Request = Invoke-RestMethodAsync "https://icemining.ca/api/status" -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
