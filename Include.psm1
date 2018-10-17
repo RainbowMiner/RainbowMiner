@@ -3350,7 +3350,7 @@ Param(
 
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
@@ -3366,10 +3366,10 @@ Param(
             try {
                 $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method
                 $AsyncLoader.Jobs.$Jobkey.Success++
+                $AsyncLoader.Jobs.$Jobkey.Prefail=0
             }
             catch {
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
-                $AsyncLoader.Jobs.$Jobkey.Fail++                
             }
             finally {
                 $Error.Clear()
@@ -3383,13 +3383,18 @@ Param(
             }
         } until ($retry -le 0)
 
-        $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10
+        if ($RequestError) {
+            $AsyncLoader.Jobs.$Jobkey.Prefail++
+            if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
+        } else {
+            $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10
+        }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
         $Error.Clear()
     }
     if (-not $quiet) {
-        if ($AsyncLoader.Jobs.$Jobkey.Error) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {throw $AsyncLoader.Jobs.$Jobkey.Error}
         $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | ConvertFrom-Json
     }
 }
