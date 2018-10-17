@@ -746,6 +746,28 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 
+## FAQ
+
+### How do I add RainbowMiner' Start.bat to the windows task sheduler for autostart?
+
+Press windows key and type `shedule`, click on `Task Sheduler`
+
+`Create a basic task`
+
+Tab "General":
+- check `Run only when user is logged in`
+- check `Run with highest privileges`
+- Configure for: `Windows Vista, Windows Server 2008`
+
+Tab "Trigger":
+- check `When I log in`
+
+Tab "Actions": 
+- Action=`Start a program`
+- Program/Script=`cmd`
+- Add Arguments=`/c "C:\Users\RainbowMiner\Desktop\current-version\Start.bat"`
+- Start In=`C:\Users\RainbowMiner\Desktop\current-version\`
+
 
 ## CREDITS
 
