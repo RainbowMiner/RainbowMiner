@@ -42,7 +42,7 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("asia","eu","us")
+$Pool_Regions = @("hk","eu","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
@@ -70,7 +70,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     }
 
     foreach($Pool_Region in $Pool_Regions) {
-        $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}elseif($Pool_Region -eq "asia" -and $Pool_Algorithm -eq "x22i"){"hk"}else{$Pool_Region}).$Pool_Host"
+        $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}else{$Pool_Region}).$Pool_Host"
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             if (($Pool_Region -ne "asia" -or $Pool_CoinSymbol -eq "BCD") -and ($Pool_User -or $InfoOnly)) {
                 [PSCustomObject]@{
