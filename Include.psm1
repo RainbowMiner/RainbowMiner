@@ -806,7 +806,7 @@ function Get-BalancesContent {
         Config  = $Config
     }
 
-    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {(($Config.Pools.$($_.BaseName) -or $Config.Pools."$($_.BaseName)Coins") -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_.BaseName -or $Config.PoolName -icontains "$($_.BaseName)Coins") -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_.BaseName)) -or $Config.ShowPoolBalancesExcludedPools})) {
+    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {(($Config.Pools.$($_.BaseName -replace "Coins$") -or $Config.Pools."$($_.BaseName -replace "Coins$")Coins") -and ($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains ($_.BaseName -replace "Coins$") -or $Config.PoolName -icontains "$($_.BaseName -replace "Coins$")Coins") -and ($Config.ExcludePoolName.Count -eq 0 -or $Config.ExcludePoolName -inotcontains $_.BaseName)) -or $Config.ShowPoolBalancesExcludedPools})) {
         $Name = $Balance.BaseName 
         foreach($c in @(& $Balance.FullName @Parameters)) {
             $c | Add-Member -NotePropertyMembers @{
