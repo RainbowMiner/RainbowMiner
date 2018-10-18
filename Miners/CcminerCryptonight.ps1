@@ -48,7 +48,8 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
     $Commands | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        #fix until klaust release monero V8 variant
+        $Algorithm_Norm = if ($_.MainAlgorithm -eq "monero") {Get-Algorithm "CryptoNightV7"} else {Get-Algorithm $_.MainAlgorithm}
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash") {
