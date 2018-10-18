@@ -1935,6 +1935,7 @@ class Miner {
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
+    [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1}
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
@@ -1989,7 +1990,7 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {-2}else {-1}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -2127,6 +2128,13 @@ class Miner {
 
     [Int]GetProcessId() {
         return $this.ProcessId
+    }
+
+    SetPriorities([int]$cpu=-2,[int]$gpu=-1) {
+        if ($cpu -lt -2) {$cpu=-2} elseif ($cpu -gt 3) {$cpu=3}
+        if ($gpu -lt -2) {$gpu=-2} elseif ($gpu -gt 3) {$gpu=3}
+        $this.Priorities.CPU = $cpu
+        $this.Priorities.GPU = $gpu
     }
 
     SetStatus([MinerStatus]$Status) {
