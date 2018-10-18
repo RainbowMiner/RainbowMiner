@@ -70,7 +70,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     }
 
     foreach($Pool_Region in $Pool_Regions) {
-        $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}else{$Pool_Region}).$Pool_Host"
+        $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}elseif($Pool_Region -eq "asia" -and $Pool_Algorithm -eq "x22i"){"hk"}else{$Pool_Region}).$Pool_Host"
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             if (($Pool_Region -ne "asia" -or $Pool_CoinSymbol -eq "BCD") -and ($Pool_User -or $InfoOnly)) {
                 [PSCustomObject]@{
