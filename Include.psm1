@@ -2540,10 +2540,11 @@ function Test-TimeSync {
 function Get-Yes {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        $Argument
+        [Parameter(Mandatory = $False)]
+        $Argument = $false
     )
-    if ($Argument -is [bool]) {$Argument} else {[Bool](0,$false,"no","n","not","niet","non","nein","never","0" -inotcontains $Argument)}
+    if ($Argument -eq $null) {$false}
+    elseif ($Argument -is [bool]) {$Argument} else {[Bool](0,$false,"no","n","not","niet","non","nein","never","0" -inotcontains $Argument)}
 }
 
 function Read-HostString {
