@@ -1938,6 +1938,7 @@ class Miner {
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
+    [Bool]$IsExclusiveMiner = $false
     hidden [System.Management.Automation.Job]$Process = $null
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero

@@ -610,7 +610,8 @@ function Invoke-Core {
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and @($Session.Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+                ($Pool.Exclusive -and $SelectedPoolNames.Count -ne 1)
             )}
     Remove-Variable "NewPools" -Force
 
@@ -911,9 +912,10 @@ function Invoke-Core {
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
-        if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
+        if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}        
 
         $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
+        $Miner | Add-Member IsExclusiveMiner   (($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive | Measure-Object).Count -gt 0) -Force
     }
     Remove-Variable "Miner_Arguments_List" -Force
 
@@ -1003,6 +1005,7 @@ function Invoke-Core {
         $_.Stopped = $false
         $_.Enabled = $false
         $_.IsFocusWalletMiner = $false
+        $_.IsExclusiveMiner = $false
     }
     $Miners | ForEach-Object {
         $Miner = $_
@@ -1036,6 +1039,7 @@ function Invoke-Core {
             $ActiveMiner.EthPillEnable = $Session.Config.EthPillEnable
             $ActiveMiner.Enabled = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
+            $ActiveMiner.IsExclusiveMiner = $Miner.IsExclusiveMiner
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1079,6 +1083,7 @@ function Invoke-Core {
                 Donator              = $Session.IsDonationRun
                 Enabled              = $true
                 IsFocusWalletMiner   = $Miner.IsFocusWalletMiner
+                IsExclusiveMiner     = $Miner.IsExclusiveMiner
             }
         }
     }
@@ -1225,7 +1230,7 @@ function Invoke-Core {
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10
 
     #Move donation run into the future, if benchmarks are ongoing
-    if (-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$Session.LastDonated = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or (($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0)) {$Session.LastDonated = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
 
     #Give API access to WatchdogTimers information
     $API.WatchdogTimers = $Session.WatchdogTimers | ConvertTo-Json -Depth 10
