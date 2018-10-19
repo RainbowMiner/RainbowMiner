@@ -610,8 +610,7 @@ function Invoke-Core {
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and @($Session.Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-                ($Pool.Exclusive -and $SelectedPoolNames.Count -ne 1)
+                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
             )}
     Remove-Variable "NewPools" -Force
 
@@ -1502,7 +1501,7 @@ function Invoke-Core {
                     $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
                     $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed}  | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
                 }
-            }            
+            }
             $SamplesPicked++
         }
 
