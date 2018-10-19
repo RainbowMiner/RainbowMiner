@@ -1946,7 +1946,7 @@ class Miner {
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
-    hidden [MinerStatus]$Status = [MinerStatus]::Idle
+    [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [Array]$OCprofileBackup = @()
@@ -3604,4 +3604,10 @@ param(
         }
         [User32.WindowManagement]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
     } catch {}
+}
+
+function Get-UnixTimestamp {
+    $date1 = (Get-Date -Date "01/01/1970").ToUniversalTime()
+    $date2 = (Get-Date).ToUniversalTime()
+    [Math]::Floor((New-TimeSpan -Start $date1 -End $date2).TotalSeconds)
 }
