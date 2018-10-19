@@ -11,7 +11,7 @@ $DevFee = 2.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/zjazz/zjazz_cuda_miner/releases/download/1.0/zjazz_cuda_win64_1.0.zip"
+        Uri = "https://github.com/zjazz/zjazz_cuda_miner/releases/download/1.2/zjazz_cuda_win64_1.2.zip"
         Cuda = "9.1"
     }
 )
