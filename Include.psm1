@@ -950,17 +950,18 @@ function Start-SubProcessInBackground {
 
     $Job = Start-Job ([ScriptBlock]::Create($ScriptBlock))
 
-    $wait_count = 0;
-    do{
-        Start-Sleep 1;
-        $Process = Get-Process | Where-Object {$_.Name -eq $ExecName -and $Running -notcontains $_.Id} | Select-Object -First 1
-        $wait_count++
-    } while ($Process -eq $null -and $wait_count -le 5)
-
-    if ($Process) {
-        $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $ProcessId = $Process.Id
+    $ProcessId = 0
+    if ($Job) {
+        for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
+            if ($ProcessId = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like "*$($ArgumentList)*" -and $Running -inotcontains $_.ProcessId}).ProcessId) {break}
+            Start-Sleep -Milliseconds 100
+        }
     }
+
+    if ($ProcessId) {
+        (Get-Process -Id $ProcessId).PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+    }
+
     [PSCustomObject]@{
         Process   = $Job
         ProcessId = [int]$ProcessId
@@ -1932,6 +1933,7 @@ class Miner {
     $FaultTolerance = 0.1
     $ExtendInterval = 0
     $Penalty = 0
+    $MinSamples = 1
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2021,7 +2023,6 @@ class Miner {
                         }
                     }
                 }
-                $this.ProcessId = 0
             }
             if ($this.Process | Get-Job -ErrorAction Ignore) {
                 $this.Process | Remove-Job -Force
@@ -2042,6 +2043,7 @@ class Miner {
                 }
             }
         }
+        $this.ProcessId = 0
     }
 
     hidden StartMiningPreProcess() { }
@@ -2063,7 +2065,6 @@ class Miner {
     EndOfRoundCleanup() {
         if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}        
     }
-
 
     [DateTime]GetActiveStart() {
         $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime}
@@ -2237,13 +2238,22 @@ class Miner {
     }
 
     AddMinerData($data) {
-        if ($this.New) {$this.Data = @($this.Data) + $data | Select-Object -Last 1000}
-        else {$this.Data = @(@($this.Data) + $data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)) | Select-Object)}
+        if ($data.Hashrate -and $data.Hashrate.PSObject.Properties.Value -gt 0) {$this.Data = @($this.Data) + $data}
+        if ($this.Data.Count -gt $this.MinSamples) {            
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*(2+$this.Benchmarked*$this.New))
+            $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
+        }
+    }
+
+    [Int]GetMinerDataCount() {
+        return $this.Data.Count
+    }
+
+    [Bool]HasMinerData() {
+        return $this.Data -and $this.Data.Count -ge $this.MinSamples
     }
 
     CleanupMinerData() {
-        #if ($this.New) {$this.Data = @($this.Data | Select-Object -Last 1000)}
-        #else {$this.Data = @($this.Data | Where-Object Date -ge (Get-Date).ToUniversalTime().AddSeconds( - 2*$this.DataInterval*[Math]::max($this.ExtendInterval,1)) | Select-Object)}
     }
 
     ClearHashRate() {

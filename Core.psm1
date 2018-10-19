@@ -416,7 +416,7 @@ function Invoke-Core {
         [hashtable]$Session.DevicesToVendors = @{}
 
         $Session.Config | Add-Member DeviceModel @($Session.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
-        $Session.Config | Add-Member CUDAVersion $(if (($Session.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false})
+        $Session.Config | Add-Member CUDAVersion $(if (($Session.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
 
         #Create combos
         @($Session.DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
@@ -908,9 +908,10 @@ function Invoke-Core {
         else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress}
                 
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
-        if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 0 -Force}
+        if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 1 -Force}
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
+        if (-not $Miner.MinSamples) {$Miner | Add-Member MinSamples 3 -Force} #min. 10 seconds, 3 samples needed
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}        
 
@@ -1040,6 +1041,7 @@ function Invoke-Core {
             $ActiveMiner.Enabled = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
             $ActiveMiner.IsExclusiveMiner = $Miner.IsExclusiveMiner
+            $ActiveMiner.MinSamples = $Miner.MinSamples
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1084,6 +1086,7 @@ function Invoke-Core {
                 Enabled              = $true
                 IsFocusWalletMiner   = $Miner.IsFocusWalletMiner
                 IsExclusiveMiner     = $Miner.IsExclusiveMiner
+                MinSamples           = $Miner.MinSamples
             }
         }
     }
@@ -1145,6 +1148,12 @@ function Invoke-Core {
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
 
+    #Check for failed miner
+    $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Foreach-Object {
+        Write-Log -Level Warn "Miner ($($_.Name)) has failed. "
+        $_.SetStatus([MinerStatus]::Idle)
+    }
+
     #Stop or start miners in the active list depending on if they are the most profitable
     $Session.ActiveMiners | Where-Object {(($_.Best -EQ $false) -or $Session.RestartMiners) -and $_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
@@ -1200,6 +1209,9 @@ function Invoke-Core {
             Write-Log "Starting miner ($($_.Name)): '$($_.Path) $($_.Arguments)'"
         }            
         $Session.DecayStart = $Session.Timer
+
+        $_.SetPriorities($Session.Config.MiningPriorityCPU,$Session.Config.MiningPriorityGPU)
+
         $_.SetStatus([MinerStatus]::Running)
 
         #Add watchdog timer
@@ -1323,6 +1335,7 @@ function Invoke-Core {
     #Extend benchmarking interval to the maximum from running miners
     $WatchdogResetOld = $WatchdogReset
     $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
+    $CurrentInterval = $Session.Config.Interval
     if ($MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
         $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval - $Session.Config.Interval)
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
@@ -1331,6 +1344,7 @@ function Invoke-Core {
         if ($ExtendInterval -gt 1 ) {
             Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.BenchmarkInterval * $ExtendInterval) seconds). "
         }
+        $CurrentInterval = $Session.BenchmarkInterval
     }
 
     #Display active miners list
@@ -1475,15 +1489,28 @@ function Invoke-Core {
 
         Start-Sleep 2
 
-        if ($WaitRound % 5 -eq 0) {
-            #pick up a sample every ten seconds
+        if ($WaitRound % 2 -eq 0 -or @($Session.ActiveMiners | Where-Object Best | Where-Object New).Count) {
+            #pick up a sample every four seconds or faster, if benchmarking
             Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
-            $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null}
+            $Session.ActiveMiners | Where-Object Status -eq ([MinerStatus]::Running) | ForEach-Object {
+                if ($_.GetStatus() -eq [MinerStatus]::Running) {$_.UpdateMinerData() > $null}
+                else {
+                    Write-Log -Level Warn "Miner ($($_.Name)) is not responding. "
+                    $_.Status = [MinerStatus]::Failed
+                    if ($_.New) {$_.Benchmarked--;if ($_.Benchmarked -lt 0) {$_.Benchmarked=0}}
+                    $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+                    $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+                    $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed}  | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+                }
+            }            
             $SamplesPicked++
         }
 
         $Session.Timer = (Get-Date).ToUniversalTime()
         if ($UseTimeSync -and $Session.Timer -le $Session.TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
+
+        if (-not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})) {break}        
+ 
         $keyPressedValue = $false
 
         if ((Test-Path ".\stopp.txt") -or $API.Stop) {$keyPressedValue = "X"}
@@ -1590,14 +1617,14 @@ function Invoke-Core {
         if ($Miner.New) {$Miner.Benchmarked++}
 
         if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
-            $Miner_PowerDraw = $Miner.GetPowerDraw($Session.Config.Interval * $ExtendInterval)
+            $Miner_PowerDraw = $Miner.GetPowerDraw($CurrentInterval * $ExtendInterval)
             $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_, $Session.Config.Interval * $ExtendInterval, $Miner.New)
+                $Miner_Speed = $Miner.GetHashRate($_, $CurrentInterval * $ExtendInterval, $Miner.New)
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($CurrentInterval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Session.Strikes))}
+
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($Session.Config.Interval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Session.Strikes))}
-
-                if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
+                if (((-not $Miner.New -or $Miner_Speed) -and $Miner.HasMinerData()) -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]                    
                 }
 
