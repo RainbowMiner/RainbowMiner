@@ -62,7 +62,7 @@ if ($InfoOnly) {
 }
 
 $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
+    $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
     $DevFee = 0.9

@@ -100,70 +100,71 @@ if ($InfoOnly) {
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$Session.Devices | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Model = $_.Model
-    $Fee = 0
-    if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+		$Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+		$Miner_Model = $_.Model
+		$Fee = 0
+		if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
 
-    switch($_.Vendor) {
-        "NVIDIA" {$Arguments_Platform = "-platform 2"}
-        "AMD" {$Arguments_Platform = "-platform 1 -y 1"}
-        Default {$Arguments_Platform = ""}
-    }
-    [hashtable]$Miner_Device_hash = @{}
-    $Commands.MinMemGB | Select-Object -Unique | Foreach-Object {
-        $MinMemGB = $_
-        $Miner_Device_hash[$MinMemGB] = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
-    }
+		switch($_.Vendor) {
+			"NVIDIA" {$Arguments_Platform = "-platform 2"}
+			"AMD" {$Arguments_Platform = "-platform 1 -y 1"}
+			Default {$Arguments_Platform = ""}
+		}
+		[hashtable]$Miner_Device_hash = @{}
+		$Commands.MinMemGB | Select-Object -Unique | Foreach-Object {
+			$MinMemGB = $_
+			$Miner_Device_hash[$MinMemGB] = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
+		}
  
-    $Commands | ForEach-Object {
-        $MainAlgorithm = $_.MainAlgorithm
-        $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm        
-        $MinMemGB = $_.MinMemGB
-        $Miner_Device = $Miner_Device_hash[$MinMemGB]
+		$Commands | ForEach-Object {
+			$MainAlgorithm = $_.MainAlgorithm
+			$MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm        
+			$MinMemGB = $_.MinMemGB
+			$Miner_Device = $Miner_Device_hash[$MinMemGB]
 
-        if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
+			if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
-            $DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
+				$DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
-            if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
+				if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
 
-            if ($Arguments_Platform) {                
-                $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+				if ($Arguments_Platform) {                
+					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-                if ($_.SecondaryAlgorithm) {
-                    $SecondaryAlgorithm = $_.SecondaryAlgorithm
-                    $SecondaryAlgorithm_Norm = Get-Algorithm $SecondaryAlgorithm
+					if ($_.SecondaryAlgorithm) {
+						$SecondaryAlgorithm = $_.SecondaryAlgorithm
+						$SecondaryAlgorithm_Norm = Get-Algorithm $SecondaryAlgorithm
 
-                    $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
-                    $Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
-                    if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
-                }
-                else {
-                    $Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-                    $Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
-                    $Arguments_Secondary = "-mode 1"
-                    $Miner_Fee = $Fee
-                }
+						$Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
+						$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
+						$Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pools.$SecondaryAlgorithm_Norm.Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User) -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
+						if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
+					}
+					else {
+						$Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
+						$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week}
+						$Arguments_Secondary = "-mode 1"
+						$Miner_Fee = $Fee
+					}
 
-                [PSCustomObject]@{
-                    Name        = $Miner_Name
-                    DeviceName  = $Miner_Device.Name
-                    DeviceModel = $Miner_Model
-                    Path        = $Path               
-                    Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass) -allpools 1 -allcoins exp -esm $($EthereumStratumMode) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
-                    HashRates   = $Miner_HashRates
-                    API         = "Claymore"
-                    Port        = $Miner_Port
-                    Uri         = $Uri
-                    DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
-                    ManualUri   = $ManualUri
-                }
-            }
-        }
-    }
+					[PSCustomObject]@{
+						Name        = $Miner_Name
+						DeviceName  = $Miner_Device.Name
+						DeviceModel = $Miner_Model
+						Path        = $Path               
+						Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -ewal $($Pools.$MainAlgorithm_Norm.User) -epsw $($Pools.$MainAlgorithm_Norm.Pass) -allpools 1 -allcoins exp -esm $($EthereumStratumMode) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
+						HashRates   = $Miner_HashRates
+						API         = "Claymore"
+						Port        = $Miner_Port
+						Uri         = $Uri
+						DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
+						ManualUri   = $ManualUri
+					}
+				}
+			}
+		}
+	}
 }
-

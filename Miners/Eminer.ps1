@@ -48,36 +48,38 @@ if ($InfoOnly) {
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$Session.Devices | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Device = $Session.Devices | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
-    $Miner_Model = $_.Model
+foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+		$Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+		$Miner_Model = $_.Model
 
-    $Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
+		$Commands | Where-Object {$Pools.(Get-Algorithm $_.MainAlgorithm).Protocol -eq "stratum+tcp" <#temp fix#>} | ForEach-Object {
 
-        $Algorithm = $_.MainAlgorithm
-        $Algorithm_Norm = Get-Algorithm $Algorithm
-        $MinMemGB = $_.MinMemGB
+			$Algorithm = $_.MainAlgorithm
+			$Algorithm_Norm = Get-Algorithm $Algorithm
+			$MinMemGB = $_.MinMemGB
 
-        if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {            
-            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+			if ($Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb})) {            
+				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-            $Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
-            $DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f ($_.Type_Mineable_Index)}) -join ','
+				$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
+				$DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f ($_.Type_Mineable_Index)}) -join ','
 
-            [PSCustomObject]@{
-                Name                 = $Miner_Name
-                DeviceName           = $Miner_Device.Name
-                DeviceModel          = $Miner_Model
-                Path                 = $Path
-                Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Session.Config.WorkerName) {" -N $($Session.Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
-                HashRates            = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                API                  = "Eminer"
-                Port                 = $Miner_Port
-                URI                  = $Uri
-                DevFee               = $DevFee
-                ManualUri            = $ManualUri
-            }
-        }
-    }
+				[PSCustomObject]@{
+					Name                 = $Miner_Name
+					DeviceName           = $Miner_Device.Name
+					DeviceModel          = $Miner_Model
+					Path                 = $Path
+					Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Session.Config.WorkerName) {" -N $($Session.Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
+					HashRates            = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+					API                  = "Eminer"
+					Port                 = $Miner_Port
+					URI                  = $Uri
+					DevFee               = $DevFee
+					ManualUri            = $ManualUri
+				}
+			}
+		}
+	}
 }
