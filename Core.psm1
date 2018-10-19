@@ -1507,8 +1507,6 @@ function Invoke-Core {
 
         $Session.Timer = (Get-Date).ToUniversalTime()
         if ($UseTimeSync -and $Session.Timer -le $Session.TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
-
-        if (-not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})) {break}        
  
         $keyPressedValue = $false
 
@@ -1579,7 +1577,7 @@ function Invoke-Core {
                 }
             }
         }
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd))
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or (-not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})))
 
     if ($SamplesPicked -eq 0) {
         #pick at least one sample   
