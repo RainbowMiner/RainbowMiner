@@ -14,8 +14,8 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExtendInterval = 2} #CryptoNightV8
-    [PSCustomObject]@{MainAlgorithm = "monero"; Params = ""; ExtendInterval = 2} #CryptonightV7
+    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""; ExtendInterval = 2} #CryptoNightV7
+    #[PSCustomObject]@{MainAlgorithm = "monero"; Params = ""; ExtendInterval = 2} #CryptonightV8
     [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""; ExtendInterval = 2} # CryptoNightV3
 )
 
@@ -48,8 +48,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
     $Commands | ForEach-Object {
 
-        #fix until klaust release monero V8 variant
-        $Algorithm_Norm = if ($_.MainAlgorithm -eq "monero") {Get-Algorithm "CryptoNightV7"} else {Get-Algorithm $_.MainAlgorithm}
+        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash") {
