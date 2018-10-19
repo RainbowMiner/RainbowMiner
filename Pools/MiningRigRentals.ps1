@@ -78,6 +78,11 @@ if ($Rigs_Request) {
     $RigInfo_Request = Get-XRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_ID $API_Key
 }
 
+if (-not $Rigs_Request -or -not $RigInfo_Request) {
+    Write-Log -Level Warn "Pool API ($Name) rig request has failed. "
+    return
+}
+
 $Rigs_Request | Where-Object {@("available","rented") -icontains $_.available_status} | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
