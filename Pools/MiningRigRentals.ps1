@@ -8,11 +8,12 @@ param(
     [String]$DataWindow = "average-2",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$API_ID = "",
-    [String]$API_Key = ""
+    [String]$API_Key = "",
+    [String]$API_Secret = "",
+    [String]$User = ""
 )
 
-if (-not $API_ID -or -not $API_Key) {return}
+if (-not $API_Key -or -not $API_Secret) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -54,7 +55,11 @@ param(
     [Parameter(Mandatory = $True)]
     [String]$key,
     [Parameter(Mandatory = $True)]
-    [String]$secret
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET"
 )
     $nonce = Get-UnixTimestamp
     $str = "$key$nonce$endpoint"
@@ -67,27 +72,40 @@ param(
 	    'x-api-nonce'= $nonce
     }
     try {
-        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers
+        if ($params.Count) {
+            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body ($params | ConvertTo-Json -Depth 10)
+        } else {
+            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method
+        }
     } catch {
     }
     if ($Request -and $Request.success) {$Request.data}
 }
 
-$Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_ID $API_Key
+$Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
 if ($Rigs_Request) {
-    $RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_ID $API_Key
+    $RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_Key $API_Secret
 }
 
 if (-not $Rigs_Request -or -not $RigInfo_Request) {
-    Write-Log -Level Warn "Pool API ($Name) rig request has failed. "
+    Write-Log -Level Warn "Pool API ($Name) rig $Worker request has failed. "
     return
 }
 
-$Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
+if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
+    if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
+        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
+    }
+} else {
+    if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
+        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
+    }
+}
+
+$Rigs_Request | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
-    $Pool_User = $Wallets.$Pool_Algorithm_Norm
 
     $Pool_Price = $Pool_Request | Where-Object name -eq $Pool_Algorithm
 
@@ -117,7 +135,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             Protocol      = "stratum+tcp"
             Host          = $Pool_Rig.server
             Port          = $Pool_Rig.port
-            User          = $Worker
+            User          = "$($User).$($Pool_RigId)"
             Pass          = "x"
             Region        = $Pool_Regions."$($_.region)"
             SSL           = $false
