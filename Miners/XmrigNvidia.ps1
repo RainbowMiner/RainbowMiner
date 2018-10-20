@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.1-xmrignvidia/xmrig-nvidia-2.8.1-cuda-9_2-win64-rbm.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.3-xmrignvidia/xmrig-nvidia-2.8.3-cuda-9_2-win64-rbm.zip"
 $Port = "303{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"
