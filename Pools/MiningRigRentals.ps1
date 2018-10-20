@@ -83,7 +83,7 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
     return
 }
 
-$Rigs_Request | Where-Object {@("available","rented") -icontains $_.available_status} | ForEach-Object {
+$Rigs_Request | Where-Object {@("available","rented") -icontains $_.status.status} | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
@@ -123,7 +123,7 @@ $Rigs_Request | Where-Object {@("available","rented") -icontains $_.available_st
             SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
-            Exclusive     = $_.available_status -eq "rented"
+            Exclusive     = $_.status.status -eq "rented"
         }
     }
 }
