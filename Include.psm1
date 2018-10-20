@@ -1248,7 +1248,7 @@ function Invoke-Exe {
         $psi.UseShellExecute = $false
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
-        $psi.FileName = $FilePath
+        $psi.FileName = Resolve-Path $FilePath
         $psi.Arguments = $ArgumentList
         if ($WorkingDirectory -ne '') {$psi.WorkingDirectory = $WorkingDirectory}
         $process = New-Object System.Diagnostics.Process
