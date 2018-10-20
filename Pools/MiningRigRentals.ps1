@@ -109,9 +109,16 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
 
-    $Pool_Price = $Pool_Request | Where-Object name -eq $Pool_Algorithm
+    if ($_.status.status -eq "rented") {
+        $Pool_Price_Unit = $_.price.type
+        $Pool_Price      = $_.price.BTC.price
+    } else {
+        $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
+        $Pool_Price_Unit = $Pool_Price_Data.unit
+        $Pool_Price      = $Pool_Price_Data.amount
+    }
 
-    Switch (($Pool_Price.suggested_price.unit -split "\*")[0]) {
+    Switch (($Pool_Price_Unit -split "\*")[0]) {
         "kh" {$Divisor = 1e3}
         "mh" {$Divisor = 1e6}
         "gh" {$Divisor = 1e9}
@@ -120,7 +127,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price.suggested_price.amount / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $true
     }
 
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
@@ -128,7 +135,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     if ($Pool_Rig) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = ""
+            CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
             CoinSymbol    = ""
             Currency      = "BTC"
             Price         = $Stat.Minute_10 #instead of .Live
