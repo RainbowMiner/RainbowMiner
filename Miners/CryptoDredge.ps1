@@ -11,16 +11,16 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 
 $UriCuda = @(
+    #[PSCustomObject]@{
+    #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_10.0_windows.zip"
+    #    Cuda = "10.0"
+    #},
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_10.0_windows.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.3-cryptodredge/CryptoDredge_0.9.3_cuda_9.2_windows.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.3-cryptodredge/CryptoDredge_0.9.3_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
@@ -35,7 +35,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnhaven";   MinMemGb = 4; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cnheavy";   MinMemGb = 4; Params = ""} #Cryptonightheavy
     [PSCustomObject]@{MainAlgorithm = "cnsaber";   MinMemGb = 4; Params = ""} #Cryptonightheavytube
-    [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7 / Monero
+    [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
+    [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
     [PSCustomObject]@{MainAlgorithm = "lbk3";      MinMemGb = 1; Params = ""} #LBK3
     [PSCustomObject]@{MainAlgorithm = "lyra2v2";   MinMemGb = 1; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
