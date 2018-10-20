@@ -89,7 +89,7 @@ function Confirm-Cuda {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet") -and @("API_Key","API_ID","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet") -and @("API_Key","API_ID","API_Secret","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -2120,6 +2120,7 @@ class Miner {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
+            Write-Log -Level Warn "GetStatus::Failed"
             return [MinerStatus]::Failed
         }
         else {
@@ -3607,7 +3608,5 @@ param(
 }
 
 function Get-UnixTimestamp {
-    $date1 = (Get-Date -Date "01/01/1970").ToUniversalTime()
-    $date2 = (Get-Date).ToUniversalTime()
-    [Math]::Floor((New-TimeSpan -Start $date1 -End $date2).TotalSeconds)
+    [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)
 }
