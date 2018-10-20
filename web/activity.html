@@ -27,7 +27,7 @@
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="tAlgorithms" data-sortable="true" data-filter-control="select">Algorithms</th>
           <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
-          <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+          <th data-field="tPool" data-sortable="true" data-filter-control="select">Pool</th>
           <th data-field="tProfit" data-align="right" data-sortable="true">Earned</th>
           <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
       </tr>
@@ -45,6 +45,7 @@
             item.tPrimaryAlgorithm = item.Algorithm[0];
             item.tSecondaryAlgorithm = item.Algorithm[1];
             item.tAlgorithms = item.Algorithm.join(",");
+            item.tPool = item.Pool.join(",");
 
             // Format the speed(s)
             if (Array.isArray(item.Speed)) {
