@@ -44,7 +44,7 @@ $Pool_Request = $Pool_Request.data
     "ru"   = Get-Region "ru"
 }
 
-function Get-XRequest {
+function Invoke-MiningRigRentalRequest {
 [cmdletbinding()]   
 param(
     [Parameter(Mandatory = $True)]
@@ -73,9 +73,9 @@ param(
     if ($Request -and $Request.success) {$Request.data}
 }
 
-$Rigs_Request = Get-XRequest $Pool_ApiBase "/rig/mine" $API_ID $API_Key
+$Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_ID $API_Key
 if ($Rigs_Request) {
-    $RigInfo_Request = Get-XRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_ID $API_Key
+    $RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_ID $API_Key
 }
 
 if (-not $Rigs_Request -or -not $RigInfo_Request) {
@@ -83,7 +83,7 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
     return
 }
 
-$Rigs_Request | Where-Object {@("available","rented") -icontains $_.status.status} | ForEach-Object {
+$Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
