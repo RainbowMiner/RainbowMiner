@@ -30,6 +30,7 @@
           <th data-field="tPool" data-sortable="true" data-filter-control="select">Pool</th>
           <th data-field="tProfit" data-align="right" data-sortable="true">Earned</th>
           <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+          <th data-field="tEff" data-align="right" data-sortable="true">mBTC/kWh</th>
       </tr>
   </thead>
 </table>
@@ -59,9 +60,12 @@
             item.tDevices = item.Device.toString();
             item.Name = item.Name.split(/\-/)[0];
 
-            item.tPowerDraw = item.TotalPowerDraw? Math.round(parseFloat(item.TotalPowerDraw)*1000)/1000 + ' kWh':'-.---';
-            item.tProfit = item.TotalProfit ? Math.round(parseFloat(item.TotalProfit) * 1e6) / 1000 + ' mBTC' : '-.---';
+            var powerdraw = item.TotalPowerDraw? Math.round(parseFloat(item.TotalPowerDraw)*1000)/1000 : 0;
+            var profit    = item.TotalProfit ? Math.round(parseFloat(item.TotalProfit) * 1e6) / 1000 : 0;
+            item.tPowerDraw = item.TotalPowerDraw? powerdraw + ' kWh':'-.---';
+            item.tProfit = item.TotalProfit ? profit + ' mBTC' : '-.---';
             item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
+            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw ? Math.round(profit / powerdraw*1000)/1000 : '-.---';
         });
         return data;
     }
