@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.1.1b-wildrig/wildrig-multi-0.12.1.1-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.1.1b-wildrig/wildrig-x22i-preview2.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -28,6 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "--opencl-threads 3 --opencl-launch 20x0"} #X17
+    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
