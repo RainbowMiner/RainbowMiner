@@ -1488,6 +1488,8 @@ function Invoke-Core {
 
         Start-Sleep 2
 
+        $NoMoreMiners = $false
+
         if ($WaitRound % 2 -eq 0 -or @($Session.ActiveMiners | Where-Object Best | Where-Object New).Count) {
             #pick up a sample every four seconds or faster, if benchmarking
             Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
@@ -1500,6 +1502,7 @@ function Invoke-Core {
                     $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
                     $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
                     $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed}  | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+                    $NoMoreMiners = -not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})
                 }
             }
             $SamplesPicked++
@@ -1577,7 +1580,7 @@ function Invoke-Core {
                 }
             }
         }
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or (-not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})))
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or $NoMoreMiners)
 
     if ($SamplesPicked -eq 0) {
         #pick at least one sample   
