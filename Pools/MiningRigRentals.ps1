@@ -61,7 +61,7 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$method = "GET"
 )
-    $nonce = Get-UnixTimestamp
+    $nonce = (Get-UnixTimestamp)+5000
     $str = "$key$nonce$endpoint"
     $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
     $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
@@ -92,17 +92,19 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
     return
 }
 
-if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
+if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {    
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
+        $Rigs_Request | Where-Object $Disable_Rigs -contains id | Foreach-Object {$_.available_status="disabled"}
     }
 } else {
     if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
+        $Rigs_Request | Where-Object $Enable_Rigs -contains id | Foreach-Object {$_.available_status="available"}
     }
 }
 
-$Rigs_Request | ForEach-Object {
+$Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
