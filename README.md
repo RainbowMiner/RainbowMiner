@@ -19,9 +19,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, Ethermine, HashRefinery, Icemining, MiningPoolHub, Nanopool, Nicehash, PhiPhiPool, Ravenminer, StarPool, YiiMP and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, HashRefinery, Icemining, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, Ravenminer, StarPool, YiiMP and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, Dstm, EnemyZ, Ewbf, Sgminer, T-Rex and many more)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Sgminer, T-Rex and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Build-in automatic update**
 - **Mining devices freely selectable**
@@ -77,8 +77,8 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, ethermine, hashrefinery, icemining, miningpoolhub, miningpoolhubcoins, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
-<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, Yescrypt and many more</details>
+<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, hashrefinery, icemining, miningpoolhub, miningpoolhubcoins, mininigrigrentals, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
+<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV7, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X21i, Yescrypt and many more</details>
 
 
 ## HOTKEYS
@@ -139,6 +139,7 @@ https://www.blockmasters.co/ auto-exchange and payout in BTC
   - 'blockmasterscoins' mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine, set in pools configuration or edit pools.config.txt</details>
@@ -148,6 +149,7 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
   - 'miningpoolhub' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
   - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
+<details><summary>NanoPool</summary> https://www.miningrigrentals.com/ rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC), you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Ethermine</details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
 <details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
@@ -440,8 +442,11 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
-- **MSIApath** = absolute windows path to MSI Afterburner [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
+- **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
+- **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
+- **MiningPriorityCPU** = process priority for CPU miners (-2..2) [default=-2]
+- **MiningPriorityGPU** = process priority for GPU miners (-2..2) [default=-1]
 - **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
 - **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
@@ -768,6 +773,30 @@ Tab "Actions":
 - Add Arguments=`/c "C:\Users\RainbowMiner\Desktop\current-version\Start.bat"`
 - Start In=`C:\Users\RainbowMiner\Desktop\current-version\`
 
+### How can I rent my rig to someone at MiningRigRentals.com?
+
+#### 1. Signup and create a rig for rent
+- signup at https://www.miningrigrentals.com
+- create API keys with permission "Manage Rigs" checked
+- create a rig for an algorithm that you want to rent to an interested renter at the "MyRigs" section of the website
+- add pools on the "Pool Configuration" tab of the rig
+- set your rig's rentable status to "available"
+- edit your rig's description and add your RainbowMiner workername, enclosed with square brackets, somewhere into the text, e.g. ``[rbm]``. This is important, otherwise Rainbowminer will not find your rig, later.
+
+#### 2. Setup Rainbowminer
+- add "MiningRigRentals" to the PoolName list and make sure it is not in the ExcludePoolName list (config.txt or [C]onfiguration->[S]elections)
+- edit "Config\pools.config.txt", find the MiningRigRentals section and add (API_Secret, User) or edit the following data:
+
+  
+    "API_Key": "<put your MiningRigRentals API-key here>",
+    "API_Secret": "<put your MiningRigRentals API-secret key here>",
+    "User": "<put your MiningRigRentals username here>",
+    "Worker": "<put your RainbowMiner workername here or leave $WorkerName>",
+    "Algorithm": "<put a comma sep. list of all algorithm, you did setup a rig for>",
+  
+RainbowMiner will then read the actual average price being payed at MiningRigRentals for the setup algorithms. If this price triggers the profitability check, it will start to mine on the MiningRigRentals proxy, which will redirect to the pools, you have setup.
+If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on MiningRigRentals will be deactivated, for that time.
+  
 
 ## CREDITS
 
