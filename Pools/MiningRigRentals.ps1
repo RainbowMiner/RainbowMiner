@@ -127,7 +127,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $true
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false
     }
 
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
