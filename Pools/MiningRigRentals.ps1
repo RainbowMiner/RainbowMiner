@@ -13,11 +13,26 @@ param(
     [String]$User = ""
 )
 
-if (-not $API_Key -or -not $API_Secret) {return}
-
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Fee = 3
+
+if ($InfoOnly) {
+    [PSCustomObject]@{
+        Algorithm     = $Pool_Algorithm_Norm
+        CoinName      = ""
+        CoinSymbol    = ""
+        Currency      = "BTC"
+        Price         = 0
+        StablePrice   = 0
+        MarginOfError = 0
+        Protocol      = "stratum+tcp"
+        PoolFee       = $Pool_Fee
+    }
+    return
+}
+
+if (-not $API_Key -or -not $API_Secret) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 
@@ -92,17 +107,15 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
     return
 }
 
-if (-not $InfoOnly) {
-    if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {    
-        if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
-            Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
-            $Rigs_Request | Where-Object $Disable_Rigs -contains id | Foreach-Object {$_.available_status="disabled"}
-        }
-    } else {
-        if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
-            Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
-            $Rigs_Request | Where-Object $Enable_Rigs -contains id | Foreach-Object {$_.available_status="available"}
-        }
+if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {    
+    if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
+        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
+        $Rigs_Request | Where-Object $Disable_Rigs -contains id | Foreach-Object {$_.available_status="disabled"}
+    }
+} else {
+    if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
+        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
+        $Rigs_Request | Where-Object $Enable_Rigs -contains id | Foreach-Object {$_.available_status="available"}
     }
 }
 
