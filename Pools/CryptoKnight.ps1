@@ -27,7 +27,7 @@ if (-not $Pool_Ngix) {
     return
 }
 
-$Pool_Algorithms = ([regex]"\/rpc\/([a-z]+)\/").Matches($Pool_Ngix) | Foreach-Object {$_.Groups[1]} | Select-Object -ExpandProperty Value
+$Pool_Algorithms = ([regex]"\/rpc\/([a-z]+)\/").Matches($Pool_Ngix) | Foreach-Object {$_.Groups[1]} | Select-Object -ExpandProperty Value -Unique
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 5541; fee = 0.0; walletSymbol = "aeon"; host = "aeon.ingest.cryptoknight.cc"}
@@ -35,11 +35,9 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Arqma"; symbol = "ARQ"; algo = "CnLiteV7"; port = 3731; fee = 0.0; walletSymbol = "arq"; host = "arq.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Arto"; symbol = "ARTO"; algo = "CnArto"; port = 51201; fee = 0.0; walletSymbol = "arto"; host = "arto.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BBS"; symbol = "BBS"; algo = "CnV7"; port = 19931; fee = 0.0; walletSymbol = "bbs"; host = "bbs.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "B2BCoin"; symbol = "B2B"; algo = "Cn0"; port = 19931; fee = 0.0; walletSymbol = "b2b"; host = "b2b.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 4461; fee = 0.0; walletSymbol = "ipbc"; host = "tube.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BitcoinNote"; symbol = "BTCN"; algo = "CnLiteV7"; port = 4461; fee = 0.0; walletSymbol = "btcn"; host = "btcn.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "CitiCash"; symbol = "CCH"; algo = "CnLiteV7"; port = 4461; fee = 0.0; walletSymbol = "citi"; host = "citi.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "eDollar"; symbol = "EDL"; algo = "Cn0"; port = 50301; fee = 0.0; walletSymbol = "edl"; host = "edl.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Elya"; symbol = "ELYA"; algo = "CnV7"; port = 50201; fee = 0.0; walletSymbol = "elya"; host = "elya.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Graft"; symbol = "GRF"; algo = "CnV7"; port = 9111; fee = 0.0; walletSymbol = "graft"; host = "graft.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5531; fee = 0.0; walletSymbol = "haven"; host = "haven.ingest.cryptoknight.cc"}
@@ -65,8 +63,9 @@ $Pools_Data = @(
 
 $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $_.symbol
-    $Pool_Algorithm = $_.walletSymbol.ToLower()
-    $Pool_Algorithm_Norm = Get-Algorithm "cryptonight$Pool_Algorithm"
+    $Pool_RpcPath = $_.walletSymbol.ToLower()
+    $Pool_Algorithm = $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
     $Pool_Port = 0
     $Pool_Fee  = 0.0
@@ -76,7 +75,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_Algorithm)/live_stats" -tag $Name
+            $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/live_stats" -tag $Name
             $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(CPU|GPU)' | Select-Object -First 1 -ExpandProperty port
         }
         catch {
