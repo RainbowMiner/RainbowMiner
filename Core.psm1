@@ -153,9 +153,7 @@ function Update-ActiveMiners {
     $MinersUpdated = 0
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null;$MinersUpdated++}
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | ForEach-Object {
-        Write-Log -Level Warn "Miner ($($_.Name)) is not responding. "
-        if ($_.Speed -contains $null) {$_.Benchmarked--;if ($_.Benchmarked -lt 0) {$_.Benchmarked=0}}
-        $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+        Write-Log -Level Verbose "Miner ($($_.Name)) crashed during updates. "
         $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
     }
     return $MinersUpdated
