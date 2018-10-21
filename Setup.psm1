@@ -890,10 +890,13 @@ function Start-Setup {
 
             $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"\s*[,;:]+\s*")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
 
+            Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
+
             $PoolSetupDone = $false
             do {
                 try {
                     $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+                    $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
                     $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     if ($Pool_Name -eq '') {throw}
 
@@ -915,6 +918,7 @@ function Start-Setup {
                     if ($Pool) {
                         $PoolSetupStepsDone = $false
                         $PoolSetupStep = 0
+                        $PoolSetupFields = @{}
                         [System.Collections.ArrayList]$PoolSetupSteps = @()
                         [System.Collections.ArrayList]$PoolSetupStepBack = @()
 
@@ -924,15 +928,17 @@ function Start-Setup {
                         $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
                         $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
 
-                        if ($Pool_Name -notlike "MiningPoolHub*") {$PoolSetupSteps.Add("currency") > $null}
-                        $PoolSetupSteps.AddRange(@("basictitle","worker","user","apiid","apikey","penalty","allowzero","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
+                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
+                        $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
+                        $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
                         if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
-                        if ($Pool_Name -notlike "MiningPoolHub*" -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
+                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
-                                                                                
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "User") {$PoolConfig | Add-Member User "`$UserName" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_ID") {$PoolConfig | Add-Member API_ID "`$API_ID" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "API_Key") {$PoolConfig | Add-Member API_Key "`$API_Key" -Force}
+
+                        $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
+                            if ($PoolConfig.PSObject.Properties.Name -inotcontains $_) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
+                        }
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "Worker") {$PoolConfig | Add-Member Worker "`$WorkerName" -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "Penalty") {$PoolConfig | Add-Member Penalty 0 -Force}
                         if ($PoolConfig.PSObject.Properties.Name -inotcontains "Algorithm") {$PoolConfig | Add-Member Algorithm "" -Force}
@@ -963,16 +969,20 @@ function Start-Setup {
                                         if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
                                     }
                                     "user" {
-                                        $PoolConfig.User = Read-HostString -Prompt "Enter the pool's user name, if applicable (leave empty to use config.txt default)" -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = "`$UserName"}
+                                        $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = $PoolsSetup.$Pool_Name.Fields.User}
                                     }
                                     "apiid" {
-                                        $PoolConfig.API_ID = Read-HostString -Prompt "Enter the pool's API-ID, if applicable (for MPH this is the USER ID, leave empty to use config.txt default)" -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.API_ID.Trim() -eq '') {$PoolConfig.API_ID = "`$API_ID"}
+                                        $PoolConfig.API_ID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_ID -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.API_ID.Trim() -eq '') {$PoolConfig.API_ID = $PoolsSetup.$Pool_Name.Fields.API_ID}
                                     }
                                     "apikey" {
-                                        $PoolConfig.API_Key = Read-HostString -Prompt "Enter the pool's API-Key, if applicable (for MPH this is the API Key, leave empty to use config.txt default)" -Default ($PoolConfig.API_Key -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.API_Key.Trim() -eq '') {$PoolConfig.API_Key = "`$API_Key"}
+                                        $PoolConfig.API_Key = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_Key -Default ($PoolConfig.API_Key -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.API_Key.Trim() -eq '') {$PoolConfig.API_Key = $PoolsSetup.$Pool_Name.Fields.API_Key}
+                                    }
+                                    "apisecret" {
+                                        $PoolConfig.API_Secret = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_Secret -Default ($PoolConfig.API_Secret -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.API_Secret.Trim() -eq '') {$PoolConfig.API_Secret = $PoolsSetup.$Pool_Name.Fields.API_Secret}
                                     }
                                     "algorithm" {
                                         $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine (leave empty for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}

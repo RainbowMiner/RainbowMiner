@@ -22,6 +22,9 @@
             Fields=[PSCustomObject]@{AllowZero="1"}
             Currencies=@("RVN","SUQA")
         }
+        "CrypoKnight" = [PSCustomObject]@{
+            Currencies=@("WOW")
+        }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
@@ -33,10 +36,17 @@
         }
         "MiningPoolHub" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)"}
             Currencies=@()
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)"}
+            Currencies=@()
+        }
+        "MiningRigRentals" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{User="";API_Key="";API_Secret=""}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningRigRentals username";API_Key="Enter your MiningRigRentals API key";API_Secret = "Enter your MiningPoolHub API secret key"}
             Currencies=@()
         }
         "Nanopool" = [PSCustomObject]@{
@@ -61,7 +71,7 @@
             Currencies=@("BTC")
         }
         "YiiMP" = [PSCustomObject]@{
-            Currencies=@()
+            Currencies=@("RVN","SUQA")
         }
         "Zpool" = [PSCustomObject]@{
             Currencies=@("BTC")
