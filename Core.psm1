@@ -1158,9 +1158,9 @@ function Invoke-Core {
         $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
     }
 
-    #Check for failed miner
+    #Stop failed miners
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | Foreach-Object {
-        Write-Log -Level Warn "Miner ($($_.Name)) probably crashed. "
+        Write-Log -Level Warn "Stopping crashed miner ($($_.Name)) "
         $_.SetStatus([MinerStatus]::Idle)
     }
 
@@ -1344,7 +1344,7 @@ function Invoke-Core {
 
     #Extend benchmarking interval to the maximum from running miners
     $WatchdogResetOld = $WatchdogReset
-    $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -eq $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
+    $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
     $CurrentInterval = $Session.Config.Interval
     if ($MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
         $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval - $Session.Config.Interval)
@@ -1497,7 +1497,7 @@ function Invoke-Core {
 
         $Session.TimerBackup = $Session.Timer
 
-        Start-Sleep 1
+        Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
 
         $NoMoreMiners = $false
         if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
