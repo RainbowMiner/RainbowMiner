@@ -35,13 +35,13 @@
             Currencies=@("BCD","RVN","SUQA")
         }
         "MiningPoolHub" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key";AECurrency="BTC"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key"}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key";AECurrency="BTC"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
         }
         "MiningRigRentals" = [PSCustomObject]@{
