@@ -972,6 +972,10 @@ function Start-Setup {
                                         $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = $PoolsSetup.$Pool_Name.Fields.User}
                                     }
+                                    "aecurrency" {
+                                        $PoolConfig.AECurrency = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.AECurrency -Default $PoolConfig.AECurrency -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.AECurrency = $PoolsSetup.$Pool_Name.Fields.AECurrency}
+                                    }
                                     "apiid" {
                                         $PoolConfig.API_ID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_ID -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.API_ID.Trim() -eq '') {$PoolConfig.API_ID = $PoolsSetup.$Pool_Name.Fields.API_ID}

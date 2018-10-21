@@ -1414,13 +1414,14 @@ function Invoke-Core {
 
     #Display pool balances, formatting it to show all the user specified currencies
     if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Balances.Count -gt 1) {
+        $ColumnMark = if ($PSVersionTable.PSVersion -ge (Get-Version "5.1")) {"$([char]27)[93m{value}$([char]27)[0m"} else {"{value}"}
         $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
         $Columns = @()
         $ColumnFormat = [Array]@{Name = "Name"; Expression = "Name"}
         if (($BalancesData.Balances.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
-            $ColumnFormat += @{Name = "Sym"; Expression = {$_.Currency}}
+            $ColumnFormat += @{Name = "Sym"; Expression = {if ($_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}
             $ColumnFormat += @{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}            
         }
         $Columns += $BalancesData.Balances | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
