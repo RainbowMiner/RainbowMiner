@@ -148,6 +148,19 @@
     #[console]::TreatControlCAsInput = $true
 }
 
+function Update-ActiveMiners {
+    Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
+    $MinersUpdated = 0
+    $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null;$MinersUpdated++}
+    $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | ForEach-Object {
+        Write-Log -Level Warn "Miner ($($_.Name)) is not responding. "
+        if ($_.Speed -contains $null) {$_.Benchmarked--;if ($_.Benchmarked -lt 0) {$_.Benchmarked=0}}
+        $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+        $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+    }
+    return $MinersUpdated
+}
+
 function Invoke-Core {
 
     #Load the config    
@@ -1148,8 +1161,8 @@ function Invoke-Core {
     }
 
     #Check for failed miner
-    $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed} | Foreach-Object {
-        Write-Log -Level Warn "Miner ($($_.Name)) has failed. "
+    $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | Foreach-Object {
+        Write-Log -Level Warn "Miner ($($_.Name)) probably crashed. "
         $_.SetStatus([MinerStatus]::Idle)
     }
 
@@ -1486,25 +1499,11 @@ function Invoke-Core {
 
         $Session.TimerBackup = $Session.Timer
 
-        Start-Sleep 2
+        Start-Sleep 1
 
         $NoMoreMiners = $false
-
-        if ($WaitRound % 2 -eq 0 -or @($Session.ActiveMiners | Where-Object Best | Where-Object New).Count) {
-            #pick up a sample every four seconds or faster, if benchmarking
-            Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
-            $Session.ActiveMiners | Where-Object Status -eq ([MinerStatus]::Running) | ForEach-Object {
-                if ($_.GetStatus() -eq [MinerStatus]::Running) {$_.UpdateMinerData() > $null}
-                else {
-                    Write-Log -Level Warn "Miner ($($_.Name)) is not responding. "
-                    $_.Status = [MinerStatus]::Failed
-                    if ($_.New) {$_.Benchmarked--;if ($_.Benchmarked -lt 0) {$_.Benchmarked=0}}
-                    $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-                    $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-                    $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.Status -eq [MinerStatus]::Failed}  | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-                    $NoMoreMiners = -not ($Session.ActiveMiners | Where-Object {$_.Best -and $_.Status -eq [MinerStatus]::Running})
-                }
-            }
+        if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
+            $NoMoreMiners = -not (Update-ActiveMiners)
             $SamplesPicked++
         }
 
@@ -1582,12 +1581,7 @@ function Invoke-Core {
         }
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or $NoMoreMiners)
 
-    if ($SamplesPicked -eq 0) {
-        #pick at least one sample   
-        Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
-        $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null}
-        $SamplesPicked++
-    }
+    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
 
     if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
@@ -1624,8 +1618,9 @@ function Invoke-Core {
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
-                if (((-not $Miner.New -or $Miner_Speed) -and $Miner.HasMinerData()) -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]                    
+                $Stat = $null
+                if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
                 }
 
                 #Update watchdog timer

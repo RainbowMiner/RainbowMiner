@@ -1895,6 +1895,7 @@ enum MinerStatus {
     Running
     Idle
     Failed
+    RunningFailed
 }
 
 class Miner {
@@ -1947,7 +1948,7 @@ class Miner {
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
-    [MinerStatus]$Status = [MinerStatus]::Idle
+    hidden [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [Array]$OCprofileBackup = @()
@@ -2121,8 +2122,7 @@ class Miner {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
-            Write-Log -Level Warn "GetStatus::Failed"
-            return [MinerStatus]::Failed
+            return [MinerStatus]::RunningFailed
         }
         else {
             return $this.Status
@@ -2138,6 +2138,10 @@ class Miner {
         if ($gpu -lt -2) {$gpu=-2} elseif ($gpu -gt 3) {$gpu=3}
         $this.Priorities.CPU = $cpu
         $this.Priorities.GPU = $gpu
+    }
+
+    SetStatusRaw([MinerStatus]$Status) {
+        $this.Status = [MinerStatus]$Status
     }
 
     SetStatus([MinerStatus]$Status) {
@@ -2240,19 +2244,15 @@ class Miner {
     }
 
     AddMinerData($data) {
-        if ($data.Hashrate -and $data.Hashrate.PSObject.Properties.Value -gt 0) {$this.Data = @($this.Data) + $data}
-        if ($this.Data.Count -gt $this.MinSamples) {            
-            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*(2+$this.Benchmarked*$this.New))
+        $this.Data = @($this.Data) + $data
+        if ($this.Data.Count -gt $this.MinSamples) {
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*(2+$this.Benchmarked*($this.Speed -contains $null)))
             $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
         }
     }
 
     [Int]GetMinerDataCount() {
         return $this.Data.Count
-    }
-
-    [Bool]HasMinerData() {
-        return $this.Data -and $this.Data.Count -ge $this.MinSamples
     }
 
     CleanupMinerData() {
@@ -2287,7 +2287,7 @@ class Miner {
         $HashRates_Variance = $HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {$HashRates_Variances.$_ | Measure-Object -Average -Minimum -Maximum} | ForEach-Object {if ($_.Average) {($_.Maximum - $_.Minimum) / $_.Average}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
         if ($Safe) {
-            if ($HashRates_Count -lt 3 -or $HashRates_Variance -gt 0.05) {
+            if ($HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt 0.05) {
                 return 0
             }
             else {
