@@ -3434,7 +3434,7 @@ function Get-MinerStatusKey {
     }
 }
 
-function Update-MinerStatus {
+function Invoke-ReportMinerStatus {
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
@@ -3460,6 +3460,7 @@ function Update-MinerStatus {
                 PowerDraw      = $_.PowerDraw
                 'BTC/day'      = $_.Profit
                 Profit         = $_.Profit
+                Donator        = $_.Donator
             }
         }
     )

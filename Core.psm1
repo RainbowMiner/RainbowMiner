@@ -1585,7 +1585,7 @@ function Invoke-Core {
 
     if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
-            Update-MinerStatus
+            Invoke-ReportMinerStatus
             $Session.NextReport = $Session.Timer.AddSeconds($Session.Config.Interval)
         }
     }
