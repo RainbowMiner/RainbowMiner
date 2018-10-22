@@ -18,7 +18,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {    
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -retry 3 -retrywait 1000 -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,7 +32,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {    
-    $Pool_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/status" -retry 3 -retrywait 500 -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/status" -retry 3 -retrywait 1000 -delay 1000 -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
