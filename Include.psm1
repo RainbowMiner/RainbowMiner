@@ -3411,7 +3411,7 @@ Param(
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
         } else {
-            $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10
+            $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10 | Get-Zip
         }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
@@ -3419,7 +3419,7 @@ Param(
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {throw $AsyncLoader.Jobs.$Jobkey.Error}
-        $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | ConvertFrom-Json
+        $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | Get-Unzip | ConvertFrom-Json
     }
 }
 
@@ -3579,7 +3579,7 @@ param(
 }
 
 function Set-WindowStyle {
-[cmdletbinding()]   
+[cmdletbinding()]
 param(
     [Parameter(Mandatory = $False)]
     [ValidateSet('FORCEMINIMIZE', 'HIDE', 'MAXIMIZE', 'MINIMIZE', 'RESTORE', 
@@ -3613,4 +3613,39 @@ param(
 
 function Get-UnixTimestamp {
     [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)
+}
+
+function Get-Zip {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [String]$s = ""
+)
+    if (-not $s) {return ""}
+    try {
+        $ms = New-Object System.IO.MemoryStream
+        $cs = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Compress)
+        $sw = New-Object System.IO.StreamWriter($cs)
+        $sw.Write($s)
+        $sw.Close();
+        [System.Convert]::ToBase64String($ms.ToArray())
+    } catch {$s}
+}
+
+function Get-Unzip {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [String]$s = ""
+)
+    if (-not $s) {return ""}
+    try {
+        $data = [System.Convert]::FromBase64String($s)
+        $ms = New-Object System.IO.MemoryStream
+        $ms.Write($data, 0, $data.Length)
+        $ms.Seek(0,0) | Out-Null
+        $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress))
+        $sr.ReadToEnd()
+        $sr.Close()
+    } catch {$s}
 }
