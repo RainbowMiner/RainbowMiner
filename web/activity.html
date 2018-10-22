@@ -60,12 +60,12 @@
             item.tDevices = item.Device.toString();
             item.Name = item.Name.split(/\-/)[0];
 
-            var powerdraw = item.TotalPowerDraw? Math.round(parseFloat(item.TotalPowerDraw)*1000)/1000 : 0;
-            var profit    = item.TotalProfit ? Math.round(parseFloat(item.TotalProfit) * 1e6) / 1000 : 0;
-            item.tPowerDraw = item.TotalPowerDraw? powerdraw + ' kWh':'-.---';
-            item.tProfit = item.TotalProfit ? profit + ' mBTC' : '-.---';
+            var powerdraw = item.TotalPowerDraw? parseFloat(item.TotalPowerDraw) : 0;
+            var profit    = item.TotalProfit ? parseFloat(item.TotalProfit)*1000 : 0;
+            item.tPowerDraw = item.TotalPowerDraw? Math.round(powerdraw*1000)/1000 + ' kWh':'-.---';
+            item.tProfit = item.TotalProfit ? Math.round(profit*1000)/1000 + ' mBTC' : '-.---';
             item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
-            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw ? Math.round(profit / powerdraw*1000)/1000 : '-.---';
+            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0? Math.round(profit/powerdraw*1000)/1000 : '-.---';
         });
         return data;
     }
