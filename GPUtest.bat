@@ -8,10 +8,10 @@
 
 where pwsh.exe >nul 2>nul
 if %errorlevel%==1 (
-    powershell -version 5.0 -windowstyle normal -command "%command%"
+    powershell -version 5.0 -windowstyle normal -executionpolicy Bypass -command "%command%"
     goto end
 )
-pwsh -windowstyle normal -command "%command%"
+pwsh -windowstyle normal -executionpolicy Bypass -command "%command%"
 
 :end
 
