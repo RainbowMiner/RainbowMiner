@@ -20,6 +20,7 @@
         Miners     = @{Path='';LastWriteTime=0}
         OCProfiles = @{Path='';LastWriteTime=0}
         Pools      = @{Path='';LastWriteTime=0}
+        Algorithms = @{Path='';LastWriteTime=0}
     }
 
     $Session.LastDonated = 0
@@ -80,6 +81,7 @@
             $Session.ConfigFiles["Miners"].Path = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["Devices"].Path = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["OCProfiles"].Path = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
+            $Session.ConfigFiles["Algorithms"].Path = @($ConfigFile_Path,"\algorithms.",$ConfigFile_Name) -join ''
 
             if (-not $psISE) {
                 $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
@@ -88,6 +90,7 @@
                 if (Test-Path $Session.ConfigFiles["Miners"].Path) {Copy-Item $Session.ConfigFiles["Miners"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_miners.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["Devices"].Path) {Copy-Item $Session.ConfigFiles["Devices"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {Copy-Item $Session.ConfigFiles["OCProfiles"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
+                if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {Copy-Item $Session.ConfigFiles["Algorithms"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_algorithms.$($ConfigFile_Name)"}
             }
         
             # Create pools.config.txt if it is missing
@@ -106,6 +109,10 @@
             Set-OCProfilesConfigDefault -PathToFile $Session.ConfigFiles["OCProfiles"].Path -Force
             $Session.ConfigFiles["OCProfiles"].Path = $Session.ConfigFiles["OCProfiles"].Path | Resolve-Path -Relative
 
+            # Create algorithms.config.txt if it is missing
+            Set-AlgorithmsConfigDefault -PathToFile $Session.ConfigFiles["Algorithms"].Path -Force
+            $Session.ConfigFiles["Algorithms"].Path = $Session.ConfigFiles["Algorithms"].Path | Resolve-Path -Relative
+
             $_ | Resolve-Path -Relative
         }
     
@@ -119,6 +126,7 @@
                     MinersConfigFile = $Session.ConfigFiles["Miners"].Path
                     DevicesConfigFile = $Session.ConfigFiles["Devices"].Path
                     OCProfilesConfigFile = $Session.ConfigFiles["OCProfiles"].Path
+                    AlgorithmsConfigFile = $Session.ConfigFiles["Algorithms"].Path
                     AllDevices = $Session.AllDevices
                     MyCommandParameters = $Session.DefaultValues.Keys
                     Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
@@ -195,6 +203,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force
+                $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.IsInitialSetup = -not $Session.Config.Wallet -or -not $Session.Config.WorkerName
@@ -280,21 +289,32 @@ function Invoke-Core {
 
     $MSIAenabled = -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
 
+    #Check for algorithms config
+    Set-AlgorithmsConfigDefault $Session.ConfigFiles["Algorithms"].Path
+    if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {
+        if ($CheckConfig -or -not $Session.Config.Algorithms -or (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Algorithms"].LastWriteTime -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
+            $Session.ConfigFiles["Algorithms"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime()
+            $AllAlgorithms = (Get-ChildItemContent $Session.ConfigFiles["Algorithms"].Path -Quick).Content
+            $Session.Config | Add-Member Algorithms ([PSCustomObject]@{})  -Force
+            $Session.Config.Algorithm | Where-Object {$AllAlgorithms.$_ -ne $null} | Foreach-Object {$Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force}
+        }
+    }
+
     #Check for oc profile config
     Set-OCProfilesConfigDefault $Session.ConfigFiles["OCProfiles"].Path
     if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime)) {
             $Session.ConfigFiles["OCProfiles"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member OCProfiles (Get-ChildItemContent $Session.ConfigFiles["OCProfiles"].Path).Content -Force
+            $Session.Config | Add-Member OCProfiles (Get-ChildItemContent $Session.ConfigFiles["OCProfiles"].Path -Quick).Content -Force
         }
-    }   
+    }
 
     #Check for devices config
     Set-DevicesConfigDefault $Session.ConfigFiles["Devices"].Path
     if (Test-Path $Session.ConfigFiles["Devices"].Path) {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime)) {
             $Session.ConfigFiles["Devices"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member Devices (Get-ChildItemContent $Session.ConfigFiles["Devices"].Path).Content -Force
+            $Session.Config | Add-Member Devices (Get-ChildItemContent $Session.ConfigFiles["Devices"].Path -Quick).Content -Force
             $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
             foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
                 $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
@@ -488,7 +508,7 @@ function Invoke-Core {
             $Session.ConfigFiles["Miners"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime()
             $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
             $Session.ConfigFullComboModelNames = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name)
-            foreach ($CcMiner in @((Get-ChildItemContent -Path $Session.ConfigFiles["Miners"].Path).Content.PSObject.Properties)) {
+            foreach ($CcMiner in @((Get-ChildItemContent -Path $Session.ConfigFiles["Miners"].Path -Quick).Content.PSObject.Properties)) {
                 $CcMinerName = $CcMiner.Name
                 [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
                 if ($CcMinerName_Array.Count -gt 1 -and ($Session.ConfigFullComboModelNames -icontains $CcMinerName_Array[1]) -and ($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")) {$CcMinerName = "$($CcMinerName_Array[0])-$($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")";$CcMinerName_Array = @($CcMinerName -split '-')}                
@@ -598,7 +618,7 @@ function Invoke-Core {
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | WHere-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
-            Get-PoolsContent "Pools\$($_).ps1" -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees
+            Get-PoolsContent "Pools\$($_).ps1" -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
         }
     }
 

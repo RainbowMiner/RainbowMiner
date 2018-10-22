@@ -671,7 +671,9 @@ function Get-ChildItemContent {
         [Parameter(Mandatory = $false)]
         [Hashtable]$Parameters = @{},
         [Parameter(Mandatory = $false)]
-        [Switch]$Force = $false
+        [Switch]$Force = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quick = $false
     )
 
     function Invoke-ExpressionRecursive ($Expression) {
@@ -697,6 +699,10 @@ function Get-ChildItemContent {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
                 & $_.FullName @Parameters                
             }
+        }
+        elseif ($Quick) {
+            $Content = try {$_ | Get-Content | ConvertFrom-Json} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
+            if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
         else {
             $Content = & {
@@ -735,9 +741,11 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $true)]
         [String]$Path, 
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Config,
+        [PSCustomObject]$Config,        
         [Parameter(Mandatory = $true)]
         [TimeSpan]$StatSpan,
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Algorithms = $null,
         [Parameter(Mandatory = $false)]
         [Bool]$InfoOnly = $false,
         [Parameter(Mandatory = $false)]
@@ -754,7 +762,8 @@ function Get-PoolsContent {
         foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         foreach($Pool in @(& $_.FullName @Parameters)) {
-            $Pool_Factor = 1-[Double]($Config.Penalty + $(if (-not $IgnoreFees){$Pool.PoolFee}))/100
+            $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty)/100
+            if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
             $Pool.Price *= $Pool_Factor
             $Pool.StablePrice *= $Pool_Factor
             $Pool | Add-Member -NotePropertyMembers @{
@@ -1875,7 +1884,7 @@ function Get-Algorithms {
         (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
-    if (-not $Silent) {$Global:GlobalAlgorithms.Keys}
+    if (-not $Silent) {$Global:GlobalAlgorithms.Keys | Sort-Object}
 }
 
 function Get-Regions {
@@ -2889,6 +2898,45 @@ function Set-MinersConfigDefault {
             $DoneSave = [PSCustomObject]@{}
             $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ @($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+}
+
+function Set-AlgorithmsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $SetupNames = @("Penalty")
+            $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            Get-Algorithms -Silent
+            $AllAlgorithms = $Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object
+            foreach ($Algorithm in $AllAlgorithms) {
+                if (-not $Preset.$Algorithm) {
+                    if ($Setup.$Algorithm) {
+                        $Preset | Add-Member $Algorithm $Setup.$Algorithm
+                    } else {
+                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = 0})
+                    }
+                }
+                foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $Algorithm "" -Force}}
+            }
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
