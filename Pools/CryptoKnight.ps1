@@ -39,7 +39,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "BitcoinNote"; symbol = "BTCN"; algo = "CnLiteV7"; port = 4461; fee = 0.0; walletSymbol = "btcn"; host = "btcn.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "CitiCash"; symbol = "CCH"; algo = "CnLiteV7"; port = 4461; fee = 0.0; walletSymbol = "citi"; host = "citi.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Elya"; symbol = "ELYA"; algo = "CnV7"; port = 50201; fee = 0.0; walletSymbol = "elya"; host = "elya.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "Graft"; symbol = "GRF"; algo = "CnV7"; port = 9111; fee = 0.0; walletSymbol = "graft"; host = "graft.ingest.cryptoknight.cc"}
+    [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV7"; port = 9111; fee = 0.0; walletSymbol = "graft"; host = "graft.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5531; fee = 0.0; walletSymbol = "haven"; host = "haven.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "IntenseCoin"; symbol = "ITNS"; algo = "CnV7"; port = 8881; fee = 0.0; walletSymbol = "itns"; host = "intense.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "IPBC"; symbol = "IPBC"; algo = "CnSaber"; port = 4461; fee = 0.0; walletSymbol = "ipbc"; host = "ipbcrocks.ingest.cryptoknight.cc"}
