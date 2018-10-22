@@ -153,9 +153,10 @@ function Update-ActiveMiners {
     $MinersUpdated = 0
     $MinersFailed  = 0
     $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
-        Switch ($_.GetStatus()) {
-            "Running" {$_.UpdateMinerData() > $null;$MinersUpdated++}
-            "RunningFailed" {Write-Log -Level Verbose "Miner ($($_.Name)) crashed. ";$MinersFailed++}
+        $Miner = $_
+        Switch ($Miner.GetStatus()) {
+            "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
+            "RunningFailed" {Write-Log -Level Verbose "Miner ($($Miner.Name)) crashed. ";$MinersFailed++}
         }
     }
     if ($MinersFailed) {
