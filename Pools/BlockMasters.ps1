@@ -69,6 +69,9 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         return
     }
 
+    #temporary fix bcd calculation
+    if ($Pool_Algorithm_Norm -eq "Bcd" -and [double]$Pool_Request.$_.estimate_current -le 0.000001) {$Pool_Factor /= 10}
+
     $Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast -Minimum).Minimum
     $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks" -Maximum).Maximum
 
