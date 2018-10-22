@@ -3365,9 +3365,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$retrywait = 250,
     [Parameter(Mandatory = $False)]
-        [string]$tag = ""
+        [string]$tag = "",
+    [Parameter(Mandatory = $False)]
+        [int]$delay = 0
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay
 }
 
 function Invoke-WebRequestAsync {
@@ -3382,9 +3384,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$retrywait = 250,
     [Parameter(Mandatory = $False)]
-        [string]$tag = ""
+        [string]$tag = "",
+    [Parameter(Mandatory = $False)]
+        [int]$delay = 0
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay
 }
 
 function Invoke-GetUrlAsync {
@@ -3407,9 +3411,12 @@ Param(
     [Parameter(Mandatory = $False)]   
         [string]$Jobkey = $null,
     [Parameter(Mandatory = $False)]
-        [string]$tag = ""
+        [string]$tag = "",
+    [Parameter(Mandatory = $False)]
+        [int]$delay = 0
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
+        if ($delay) {Sleep -Milliseconds $delay}
         Invoke-GetUrl $url -method $method
         return
     }
@@ -3422,6 +3429,7 @@ Param(
 
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
+            if ($delay) {Sleep -Milliseconds $delay}
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
