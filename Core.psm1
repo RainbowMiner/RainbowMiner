@@ -156,7 +156,7 @@ function Update-ActiveMiners {
         $Miner = $_
         Switch ($Miner.GetStatus()) {
             "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
-            "RunningFailed" {Write-Log -Level Verbose "Miner ($($Miner.Name)) crashed. ";$MinersFailed++}
+            "RunningFailed" {$MinersFailed++}
         }
     }
     if ($MinersFailed) {
@@ -1510,6 +1510,10 @@ function Invoke-Core {
         $AllMinersFailed = $false
         if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
             $AllMinersFailed = -not (Update-ActiveMiners) -and ($Session.ActiveMiners | Where-Object Best | Measure-Object).Count
+            if ($AllMinersFailed) {
+                $host.UI.RawUI.CursorPosition = $CursorPosition
+                Write-Log -Level Warn "All miners crashed. Immediately restarting loop. "
+            }
             $SamplesPicked++
         }
 
