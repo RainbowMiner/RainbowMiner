@@ -3103,13 +3103,15 @@ function Get-YiiMPValue {
     [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
     [hashtable]$values = @{}
     [bool]$hasdetails=$false
+    [bool]$containszero = $false
      foreach ($field in $allfields) {
         if ($Request.$field -ne $null) {
             $values[$field] = if ($Request."$($field)_in_btc_per_hash_per_day" -ne $null){$hasdetails=$true;[double]$Request."$($field)_in_btc_per_hash_per_day"}else{[double]$Request.$field}
+            if ($values[$field] -eq [double]0) {$containszero=$true}
         }
     }
     if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
-    if ($values.count -eq 3 -and -not $values.ContainsValue(0)) {
+    if ($values.count -eq 3 -and -not $containszero) {
         if ($DataWindow -ne "actual_last24h" -and ($values["estimate_last24h"]/$values["actual_last24h"] -gt 5 -or $values["estimate_current"]/$values["actual_last24h"] -gt 5)) {$DataWindow = "minimum-3"}
     }
 
