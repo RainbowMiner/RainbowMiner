@@ -97,6 +97,21 @@ param(
     if ($Request -and $Request.success) {$Request.data}
 }
 
+function Get-MiningRigRentalsDivisor {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$unit
+)
+    Switch (($unit -split "\*")[0]) {
+        "kh" {1e3}
+        "mh" {1e6}
+        "gh" {1e9}
+        "th" {1e12}
+        default {1}
+    }
+}
+
 $Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
 if ($Rigs_Request) {
     $RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_Key $API_Secret
@@ -124,25 +139,12 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
 
-    if ($_.status.status -eq "rented") {
-        $Pool_Price_Unit = $_.price.type
-        $Pool_Price      = $_.price.BTC.price
-    } else {
-        $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
-        $Pool_Price_Unit = $Pool_Price_Data.unit
-        $Pool_Price      = $Pool_Price_Data.amount
-    }
+    $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
 
-    Switch (($Pool_Price_Unit -split "\*")[0]) {
-        "kh" {$Divisor = 1e3}
-        "mh" {$Divisor = 1e6}
-        "gh" {$Divisor = 1e9}
-        "th" {$Divisor = 1e12}
-        default {$Divisor = 1}
-    }
+    $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price_Data.amount / $Divisor) -Duration $StatSpan -ChangeDetection $false
     }
 
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
@@ -153,7 +155,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
             CoinSymbol    = ""
             Currency      = "BTC"
-            Price         = $Stat.Minute_10 #instead of .Live
+            Price         = if ($_.status.status -eq "rented") {$_.price.BTC.price/(Get-MiningRigRentalsDivisor $_.price.type)} else {$Stat.Minute_10} #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
