@@ -1501,9 +1501,9 @@ function Invoke-Core {
 
         Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
 
-        $NoMoreMiners = $false
+        $AllMinersFailed = $false
         if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
-            $NoMoreMiners = -not (Update-ActiveMiners)
+            $AllMinersFailed = -not (Update-ActiveMiners) -and ($Session.ActiveMiners | Where-Object Best | Measure-Object).Count
             $SamplesPicked++
         }
 
@@ -1579,7 +1579,7 @@ function Invoke-Core {
                 }
             }
         }
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or $NoMoreMiners)
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
 
