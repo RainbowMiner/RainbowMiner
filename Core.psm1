@@ -152,17 +152,22 @@ function Update-ActiveMiners {
     Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
     $MinersUpdated = 0
     $MinersFailed  = 0
+    $ExclusiveMinersFailed = 0
     $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
         $Miner = $_
         Switch ($Miner.GetStatus()) {
             "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
-            "RunningFailed" {$MinersFailed++}
+            "RunningFailed" {$Session.MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }
     }
     if ($MinersFailed) {
         $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
     }
-    return $MinersUpdated
+    [PSCustomObject]@{
+        MinersUpdated = $MinersUpdated
+        MinersFailed  = $MinersFailed
+        ExclusiveMinersFailed = $ExclusiveMinersFailed
+    }
 }
 
 function Invoke-Core {
@@ -1509,10 +1514,11 @@ function Invoke-Core {
 
         $AllMinersFailed = $false
         if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
-            $AllMinersFailed = -not (Update-ActiveMiners) -and ($Session.ActiveMiners | Where-Object Best | Measure-Object).Count
-            if ($AllMinersFailed) {
+            $MinersUpdateStatus = Update-ActiveMiners
+            if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
+                $AllMinersFailed = $true
                 $host.UI.RawUI.CursorPosition = $CursorPosition
-                Write-Log -Level Warn "All miners crashed. Immediately restarting loop. "
+                Write-Log -Level Warn "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             }
             $SamplesPicked++
         }
