@@ -861,6 +861,7 @@ function Invoke-Core {
         $Miner_Profit_MarginOfError = [Double]($Miner_Profits_MarginOfError.PSObject.Properties.Value | Measure-Object -Sum).Sum
 
         $Miner_Profit_Cost = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
+        if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
 
         $Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
             if (-not [String]$Miner.HashRates.$_) {
@@ -1225,7 +1226,7 @@ function Invoke-Core {
         $_.SetStatus([MinerStatus]::Running)
 
         #Add watchdog timer
-        if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
+        if ($Session.Config.Watchdog -and $_.Profit -ne $null -and -not $_.IsExclusiveMiner) {
             $Miner_Name = $_.Name
             $Miner_DeviceModel = $_.DeviceModel
             $_.Algorithm | ForEach-Object {
