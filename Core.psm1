@@ -151,9 +151,14 @@
 function Update-ActiveMiners {
     Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath
     $MinersUpdated = 0
-    $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [Minerstatus]::Running} | Foreach-Object {$_.UpdateMinerData() > $null;$MinersUpdated++}
-    $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | ForEach-Object {
-        Write-Log -Level Verbose "Miner ($($_.Name)) crashed during updates. "
+    $MinersFailed  = 0
+    $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
+        Switch ($_.GetStatus()) {
+            "Running" {$_.UpdateMinerData() > $null;$MinersUpdated++}
+            "RunningFailed" {Write-Log -Level Verbose "Miner ($($_.Name)) crashed. ";$MinersFailed++}
+        }
+    }
+    if ($MinersFailed) {
         $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
     }
     return $MinersUpdated
