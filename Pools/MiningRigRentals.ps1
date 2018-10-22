@@ -87,11 +87,11 @@ param(
 	    'x-api-nonce'= $nonce
     }
     try {
-        if ($params.Count) {
-            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body ($params | ConvertTo-Json -Depth 10)
-        } else {
-            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method
+        $body = Switch($method) {
+            "PUT" {$params | ConvertTo-Json -Depth 10}
+            "GET" {if ($params.Count) {$params} else {$null}}
         }
+        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
     } catch {
     }
     if ($Request -and $Request.success) {$Request.data}
@@ -155,7 +155,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
             CoinSymbol    = ""
             Currency      = "BTC"
-            Price         = if ($_.status.status -eq "rented") {$_.price.BTC.price/(Get-MiningRigRentalsDivisor $_.price.type)} else {$Stat.Minute_10} #instead of .Live
+            Price         = $Stat.Minute_10 #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+tcp"
