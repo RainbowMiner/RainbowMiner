@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda10.0.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.1-trex/t-rex-0.7.1-win-cuda10.0.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda9.2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.1-trex/t-rex-0.7.1-win-cuda9.2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.0-trex/t-rex-0.7.0-win-cuda9.1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.1-trex/t-rex-0.7.1-win-cuda9.1.zip"
         Cuda = "9.1"
     }
 )
@@ -39,8 +39,10 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r (fastest)
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
@@ -91,7 +93,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if (-not $Session.Config.ShowMinerWindow){"--no-color"}) --quiet --api-bind-http 0 $($_.Params)"
+                Arguments = "-r 0 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if (-not $Session.Config.ShowMinerWindow){"--no-color"}) --quiet --api-bind-http 0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
