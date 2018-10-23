@@ -30,7 +30,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -retry 3 -retrywait 1000 -delay 1000 -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -delay 1000 -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

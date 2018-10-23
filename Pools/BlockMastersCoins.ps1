@@ -18,7 +18,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {    
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -retry 3 -retrywait 1000 -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://blockmasters.co/api/currencies" -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
