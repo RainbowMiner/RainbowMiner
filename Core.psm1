@@ -1562,6 +1562,12 @@ function Invoke-Core {
                     Write-Host -NoNewline "[S] pressed - skip switching prevention in next run. "
                     $keyPressed = $true
                 }
+                "N" {                     
+                    $host.UI.RawUI.CursorPosition = $CursorPosition
+                    Write-Log "User requests to start next round immediatly. "
+                    Write-Host -NoNewline "[N] pressed - next run will start immediatly. "
+                    $keyPressed = $true
+                }
                 "X" {
                     $Session.Stopp = $true
                     $host.UI.RawUI.CursorPosition = $CursorPosition
