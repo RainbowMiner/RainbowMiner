@@ -1409,7 +1409,7 @@ function Get-Device {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                     $Vendor_Name = "AMD"
-                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $false}
+                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $true}
                     if ($Device_Name_Tmp = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -ExpandProperty DeviceName) {$Device_Name = $Device_Name_Tmp}
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
@@ -1691,6 +1691,7 @@ function Get-DeviceName {
                         Index = $DeviceId
                         DeviceName = $_.Trim()
                     }
+                    $DeviceId++
                 }
             }
         }
@@ -1733,7 +1734,7 @@ function Update-DeviceInformation {
                     $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
                     $AdapterId = $_.Index
 
-                    $DeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
+                    $NormDeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
 
                     if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
 
@@ -1741,7 +1742,7 @@ function Update-DeviceInformation {
                         $PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $_ | Add-Member Data ([PSCustomObject]@{
-                                DeviceName        = $DeviceName
+                                DeviceName        = $NormDeviceName
                                 AdapterId         = [int]$AdapterId
                                 Utilization       = $Utilization
                                 UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
@@ -1749,7 +1750,7 @@ function Update-DeviceInformation {
                                 ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                                 FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                                 Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                PowerDraw         = $Script:AmdCardsTDP."$(if ($DeviceName){$DeviceName}else{$_.Model_Name})" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                PowerDraw         = $Script:AmdCardsTDP."$(if ($NormDeviceName){$NormDeviceName}else{$_.Model_Name})" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
                                 PowerLimitPercent = $PowerLimitPercent
                                 #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                                 Method            = "ab"
@@ -1790,11 +1791,11 @@ function Update-DeviceInformation {
                             }
                             if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
 
-                            $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+                            $NormDeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
 
                             $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                                 $_ | Add-Member Data ([PSCustomObject]@{
-                                        DeviceName        = $DeviceName
+                                        DeviceName        = $NormDeviceName
                                         AdapterId         = $AdlResultSplit[0]
                                         FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
                                         Clock             = [int]($AdlResultSplit[3] / 100)
@@ -1802,7 +1803,7 @@ function Update-DeviceInformation {
                                         Utilization       = [int]$AdlResultSplit[5]
                                         Temperature       = [int]$AdlResultSplit[6] / 1000
                                         PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($DeviceName){$DeviceName}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
+                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($NormDeviceName){$NormDeviceName}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
                                         Method            = "tdp"
                                     }) -Force
                             }
@@ -2947,7 +2948,7 @@ function Set-MinersConfigDefault {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
                                 $k = "$m-$s"                                
-                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = ""};$MinerCheck.Add($k)>$null}
+                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty=""};$MinerCheck.Add($k)>$null}
                             }
                         )
                     }
