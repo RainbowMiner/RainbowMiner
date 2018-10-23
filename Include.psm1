@@ -1394,6 +1394,7 @@ function Get-Device {
     $Type_Index = @{}
     $Type_Mineable_Index = @{}
     $GPUVendorLists = @{}
+    $GPUDeviceNames = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
 
     try {
@@ -1407,12 +1408,9 @@ function Get-Device {
                 if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
-                    $Device_Name = $($Device_Name -replace 'ASUS|AMD|Series|Graphics' -replace "\s+", ' ').Trim()
-                    $Device_Name = $Device_Name -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
-                    $Device_Name = $Device_Name -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
-                    $Device_Name = $Device_Name -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
-                    $Device_Name = $Device_Name -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
                     $Vendor_Name = "AMD"
+                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $false}
+                    if ($Device_Name_Tmp = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -ExpandProperty DeviceName) {$Device_Name = $Device_Name_Tmp}
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
                 }
@@ -1599,13 +1597,106 @@ function Get-AfterburnerDevices ($Type) {
                 $_.SrcName -match "(GPU\d+ )?" -and
                 $_.SrcName -notmatch "CPU"
             } | Format-Table
-            @($Script:abControl.GpuEntries)[$abIndex]
+            @($Script:abControl.GpuEntries)[$abIndex]            
         }
+        @($Script:abMonitor.GpuEntries)
     } elseif ($Type -eq 'CPU') {
         $Script:abMonitor.Entries | Where-Object {
             $_.GPU -eq [uint32]"0xffffffff" -and
             $_.SrcName -match "CPU"
         } | Format-Table
+    }
+}
+
+function Get-NormalizedDeviceName {
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$DeviceName,
+        [Parameter(Mandatory = $false)]
+        [String]$Vendor = "AMD"
+    )
+    if ($Vendor -ne "AMD") {return $DeviceName}
+
+    $DeviceName = $($DeviceName `
+            -replace 'ASUS' `
+            -replace 'AMD' `
+            -replace '\(?TM\)?' `
+            -replace 'Series' `
+            -replace 'Graphics' `
+            -replace "\s+", ' '
+    ).Trim()
+
+    $DeviceName = $DeviceName -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
+    $DeviceName = $DeviceName -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
+    $DeviceName = $DeviceName -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
+    $DeviceName -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'                       # HD series
+}
+
+function Get-DeviceName {
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Vendor = "AMD",
+        [Parameter(Mandatory = $false)]
+        [Bool]$UseAfterburner = $true,
+        [Parameter(Mandatory = $false)]
+        [String]$NVSMIpath = ".\Includes"
+    )
+
+    try {
+        if ($UseAfterburner -and $Script:abMonitor) {
+            if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
+            if ($Script:abControl) {$Script:abControl.ReloadAll()}
+            $DeviceId = 0
+            $Pattern = @{
+                AMD    = '*Radeon*'
+                NVIDIA = '*GeForce*'
+                Intel  = '*Intel*'
+            }
+            @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                [PSCustomObject]@{
+                    Index = $DeviceId
+                    DeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
+                }
+                $DeviceId++
+            }
+        } else {
+            if ($Vendor -eq 'AMD') {
+                $DeviceId = 0
+                
+                $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                $AdlResult | Foreach-Object {
+                    $AdlResultSplit = @($_ -split ',' | Select-Object)
+                    if ($AdlResultSplit.Count -ge 9) {
+                        [PSCustomObject]@{
+                            Index = $DeviceId
+                            DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+                        }
+                        $DeviceId++
+                    }
+                }
+            }
+
+            if ($Vendor -eq "NVIDIA") {
+                $DeviceId = 0
+                $Arguments = @(
+                    '--query-gpu=gpu_name'
+                    '--format=csv,noheader'
+                )
+
+                $NVSMIpath = [IO.Path]::GetDirectoryName($NVSMIpath) + "\nvidia-smi.exe"
+                Invoke-Exe "$(if (Test-Path($NVSMIpath)) {$NVSMIpath} else {".\Includes\nvidia-smi.exe"})" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
+                    [PSCustomObject]@{
+                        Index = $DeviceId
+                        DeviceName = $_.Trim()
+                    }
+                }
+            }
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Info "Could not read GPU data for vendor $($Vendor). "
     }
 }
 
@@ -1642,17 +1733,24 @@ function Update-DeviceInformation {
                     $CardData = $Script:abMonitor.Entries | Where-Object GPU -eq $_.Index
                     $AdapterId = $_.Index
 
+                    $DeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
+
+                    if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+
                     $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
+                        $PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
+                        $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $_ | Add-Member Data ([PSCustomObject]@{
+                                DeviceName        = $DeviceName
                                 AdapterId         = [int]$AdapterId
-                                Utilization       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
+                                Utilization       = $Utilization
                                 UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
                                 Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
                                 ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                                 FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                                 Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                PowerDraw         = [int]$($CardData | Where-Object {$_.SrcName -match "^(GPU\d* )?power$" -and $_.SrcUnits -eq 'W'}).Data
-                                PowerLimitPercent = [int]$($abControl.GpuEntries[$_.Index].PowerLimitCur)
+                                PowerDraw         = $Script:AmdCardsTDP."$(if ($DeviceName){$DeviceName}else{$_.Model_Name})" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                PowerLimitPercent = $PowerLimitPercent
                                 #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                                 Method            = "ab"
                             }) -Force
@@ -1662,7 +1760,6 @@ function Update-DeviceInformation {
             } else {
 
                 if ($Vendor -eq 'AMD') {
-                    #AMD
                     $DeviceId = 0
 
                     $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
@@ -1677,20 +1774,6 @@ function Update-DeviceInformation {
                                 if ($i -ge $AdlResultSplit.Count) {break}
                                 if ($i -eq 0) {
                                     $AdlResultSplit[0] = $v
-                                } elseif ($i -eq 8) {
-                                    $AdlResultSplit[8] = $($v `
-                                            -replace 'ASUS' `
-                                            -replace 'AMD' `
-                                            -replace '\(?TM\)?' `
-                                            -replace 'Series' `
-                                            -replace 'Graphics' `
-                                            -replace "\s+", ' '
-                                    ).Trim()
-
-                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*Radeon.*([4-5]\d0).*', 'Radeon RX $1'     # RX 400/500 series
-                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(Vega).*(56|64).*', 'Radeon Vega $2'    # Vega series
-                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(R\d)\s(\w+).*', 'Radeon $1 $2'         # R3/R5/R7/R9 series
-                                    $AdlResultSplit[8] = $AdlResultSplit[8] -replace '.*\s(HD)\s?(\w+).*', 'Radeon HD $2'         # HD series
                                 } elseif ($i -lt 8) {
                                     $v = $v -replace "[^\d\.]"
                                     if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
@@ -1706,8 +1789,12 @@ function Update-DeviceInformation {
                                 $i++
                             }
                             if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+
+                            $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+
                             $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                                 $_ | Add-Member Data ([PSCustomObject]@{
+                                        DeviceName        = $DeviceName
                                         AdapterId         = $AdlResultSplit[0]
                                         FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
                                         Clock             = [int]($AdlResultSplit[3] / 100)
@@ -1715,7 +1802,7 @@ function Update-DeviceInformation {
                                         Utilization       = [int]$AdlResultSplit[5]
                                         Temperature       = [int]$AdlResultSplit[6] / 1000
                                         PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($AdlResultSplit[8]){$AdlResultSplit[8]}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
+                                        PowerDraw         = $Script:AmdCardsTDP."$(if ($DeviceName){$DeviceName}else{$_.Model_Name})" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
                                         Method            = "tdp"
                                     }) -Force
                             }
