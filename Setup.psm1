@@ -85,10 +85,10 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -464,6 +464,15 @@ function Start-Setup {
                             $GlobalSetupStepStore = $false
                             if ($IsInitialSetup) {throw "Goto save"}
                         }
+                        "hashrateweight" {
+                            Write-Host " "
+                            Write-Host "Adjust hashrate weight"
+                            Write-Host "Formula: price * (1-(hashrate weight/100)*(1-(rel. hashrate)^(hashrate weight strength/100))" -ForegroundColor Yellow
+                            $Config.HashrateWeight = Read-HostInt -Prompt "Adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable)" -Default $Config.HashrateWeight -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+                        "hashrateweightstrength" {
+                            $Config.HashrateWeightStrength = Read-HostInt -Prompt "Adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square)" -Default $Config.HashrateWeightStrength -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
                         "uistyle" {
                             if ($SetupType -eq "A") {
                                 Write-Host ' '
@@ -666,6 +675,8 @@ function Start-Setup {
                             $ConfigActual | Add-Member DisableAsyncLoader $(if (Get-Yes $Config.DisableAsyncLoader){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
                             $ConfigActual | Add-Member CPUMiningAffinity $Config.CPUMiningAffinity -Force
+                            $ConfigActual | Add-Member HashrateWeight $Config.HashrateWeight -Force
+                            $ConfigActual | Add-Member HashrateWeightStrength $Config.HashrateWeightStrength -Force
                             $ConfigActual | Add-Member EnableMinerStatus $(if (Get-Yes $Config.EnableMinerStatus){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member MinerStatusUrl $Config.MinerStatusUrl -Force
                             $ConfigActual | Add-Member MinerStatusKey $Config.MinerStatusKey -Force
