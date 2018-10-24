@@ -799,7 +799,7 @@ function Invoke-Core {
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile | Add-Member $p ""}
 
         if ($Session.Config.Miners) {
-            $Miner_CommonCommands = $Miner_Arguments = ''
+            $Miner_CommonCommands = $Miner_Arguments = $Miner_PoolOptions = ''
             $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
@@ -809,6 +809,7 @@ function Invoke-Core {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
                     if ($Session.Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Session.Config.Miners.$Miner_CommonCommands.Params}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.Difficulty -and $Miner_Difficulty -eq '') {$Miner_Difficulty = $Session.Config.Miners.$Miner_CommonCommands.Difficulty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -eq 0) {$Miner_MSIAprofile = [int]$Session.Config.Miners.$Miner_CommonCommands.MSIAprofile}
                     if ($Session.Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
@@ -823,6 +824,7 @@ function Invoke-Core {
                     $Miner_CommonCommands_array[1] = $p
                     $Miner_CommonCommands = $Miner_CommonCommands_array -join '-'
                     if ($Session.Config.Miners.$Miner_CommonCommands.Params -and $Miner_Arguments -eq '') {$Miner_Arguments = $Session.Config.Miners.$Miner_CommonCommands.Params}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.Difficulty -and $Miner_Difficulty -eq '') {$Miner_Difficulty = $Session.Config.Miners.$Miner_CommonCommands.Difficulty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -and $Miner_MSIAprofile -ge 0 -and $Session.Config.Miners.$Miner_CommonCommands.MSIAprofile -ne $Miner_MSIAprofile) {$Miner_MSIAprofile = if (-not $Miner_MSIAprofile){[int]$Session.Config.Miners.$Miner_CommonCommands.MSIAprofile}else{-1}}
                     if ($Session.Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty -gt $Miner_Penalty) {$Miner_Penalty = [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -gt $Miner_ExtendInterval) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
@@ -840,25 +842,32 @@ function Invoke-Core {
                         if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile.$p=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}
                     }
                 }
-            }           
-            if ($Miner_Arguments -ne '' -and $Miner.Arguments -is [string]) {
-                $Miner_Arguments_List.Clear()
-                foreach ($p in @(" $Miner_Arguments" -split '\s+-')) {
-                    if (-not $p) {continue}
-                    $p="-$p"
-                    if ($p -match "([\s=]+)") {
-                        $pdiv = $matches[1].Trim()
-                        if ($pdiv -eq ''){$pdiv=" "}
-                        $q = $p -split "[\s=]+"
-                        $Miner.Arguments = $Miner.Arguments -replace "$($q[0])[\s=]+[^\s=]+\s*"
-                        $Miner_Arguments_List.Add($q -join $pdiv)>$null
-                    } else {
-                        $Miner_Arguments_List.Add($p)>$null
-                    }
-                }
-                $Miner | Add-Member -Name Arguments -Value "$($Miner.Arguments.Trim()) $($Miner_Arguments_List -join ' ')" -MemberType NoteProperty -Force
-                #$Miner | Add-Member -Name Arguments -Value (@($Miner.Arguments,$Miner_Arguments) -join ' ') -MemberType NoteProperty -Force
             }
+
+            if ($Miner.Arguments -is [string] -or $Miner.Arguments.Params -is [string]) {
+                if ($Miner_Arguments -ne '') {
+                    $Miner_Arguments_List.Clear()
+                    foreach ($p in @(" $Miner_Arguments" -split '\s+-')) {
+                        if (-not $p) {continue}
+                        $p="-$p"
+                        if ($p -match "([\s=]+)") {
+                            $pdiv = $matches[1].Trim()
+                            if ($pdiv -eq ''){$pdiv=" "}
+                            $q = $p -split "[\s=]+"
+                            if ($Miner.Arguments -is [string]) {$Miner.Arguments = $Miner.Arguments -replace "$($q[0])[\s=]+[^\s=]+\s*"}
+                            else {$Miner.Arguments.Params = $Miner.Arguments.Params -replace "$($q[0])[\s=]+[^\s=]+\s*"}
+                            $Miner_Arguments_List.Add($q -join $pdiv)>$null
+                        } else {
+                            $Miner_Arguments_List.Add($p)>$null
+                        }
+                    }
+                    if ($Miner.Arguments -is [string]) {$Miner.Arguments = "$($Miner.Arguments.Trim()) $($Miner_Arguments_List -join ' ')"}
+                    else {$Miner.Arguments.Params = "$($Miner.Arguments.Params.Trim()) $($Miner_Arguments_List -join ' ')"}                
+                }
+                try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {$Miner_Difficulty=0.0}
+                if ($Miner.Arguments -is [string]) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})"}
+                else {$Miner.Arguments.Params = $Miner.Arguments.Params -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})"}
+            }            
             if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
             if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
             if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
@@ -947,7 +956,10 @@ function Invoke-Core {
         $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
   
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
-        else {$Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress}
+        else {
+            if ($Miners.Arguments.Params -is [string]) {$Miners.Arguments.Params = ($Miner.Arguments.Params -replace "\s+"," ").trim()}
+            $Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress
+        }
                 
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 1 -Force}

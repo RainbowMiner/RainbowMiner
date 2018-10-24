@@ -749,7 +749,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","extendinterval","faulttolerance","penalty")) > $null                                    
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty")) > $null                                    
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -800,6 +800,7 @@ function Start-Setup {
                                     ExtendInterval = ""
                                     FaultTolerance = ""
                                     Penalty = ""
+                                    Difficulty = ""
                                 }
                         
                                 if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
@@ -822,6 +823,10 @@ function Start-Setup {
                                     if ($EditMinerConfig.MSIAprofile -eq "0") {$EditMinerConfig.MSIAprofile = ""}
                                     $MinerSetupStepStore = $true
                                 }
+                            }
+                            "difficulty" {
+                                $EditMinerConfig.Difficulty = Read-HostDouble -Prompt "Set static difficulty (leave empty or set to 0 for automatic)" -Default $EditMinerConfig.Difficulty | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $EditMinerConfig.Difficulty = $EditMinerConfig.Difficulty -replace ",","." -replace "[^\d\.]+"
                             }
                             "extendinterval" {
                                 $EditMinerConfig.ExtendInterval = Read-HostInt -Prompt "Extend interval for X times" -Default ([int]$EditMinerConfig.ExtendInterval) -Min 0 -Max 10 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}

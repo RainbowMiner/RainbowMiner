@@ -95,7 +95,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
                     Port          = $Pool_Port
                     User          = "$User.$Worker"
-                    Pass          = "x"
+                    Pass          = "x{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
@@ -115,7 +115,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
                         Port          = $Pool_Port
                         User          = "$User.$Worker"
-                        Pass          = "x"
+                        Pass          = "x{diff:,d=`$difficulty}"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
                         Updated       = $Stat.Updated

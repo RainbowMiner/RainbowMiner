@@ -105,7 +105,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Protocol      = "stratum+tcp"
             Host          = ""
             Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
-            User          = $Wallets.$($_.symbol)
+            User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
             Pass          = "w=$($Worker)"
             Region        = ""
             SSL           = $False

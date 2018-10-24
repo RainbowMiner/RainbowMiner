@@ -92,7 +92,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Host          = "$Pool_Algorithm.$Pool_Host"
                     Port          = $Pool_Port
                     User          = $Wallets.$Pool_Currency
-                    Pass          = "c=$Pool_Currency,ID=$Worker"
+                    Pass          = "c=$Pool_Currency,ID=$Worker{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated

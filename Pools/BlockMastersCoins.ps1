@@ -104,7 +104,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                     Port          = $Pool_Port
                     User          = $Pool_User
-                    Pass          = "$Worker,c=$Pool_Currency,mc=$Pool_Currency"
+                    Pass          = "$Worker,c=$Pool_Currency,mc=$Pool_Currency{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
@@ -129,7 +129,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                         Port          = $Pool_Port
                         User          = $Wallets.$Pool_ExCurrency
-                        Pass          = "$Worker,c=$Pool_ExCurrency,mc=$Pool_Currency"
+                        Pass          = "$Worker,c=$Pool_ExCurrency,mc=$Pool_Currency{diff:,d=`$difficulty}"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $false
                         Updated       = $Stat.Updated

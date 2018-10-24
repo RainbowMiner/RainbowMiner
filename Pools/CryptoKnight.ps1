@@ -137,7 +137,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
             Protocol      = "stratum+tcp"
             Host          = $_.host
             Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
-            User          = $Wallets.$($_.symbol)
+            User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
             Pass          = $Worker
             Region        = $Pool_Region
             SSL           = $False
