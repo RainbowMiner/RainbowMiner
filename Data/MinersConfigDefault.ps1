@@ -112,6 +112,9 @@
         "CcminerXevan75" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "skein"; SecondaryAlgorithm = ""; Params = "-i auto"; OCprofile = ""; MSIAprofile = ""}
         )
+        "CcminerYescrypt" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "yescryptR32"; SecondaryAlgorithm = ""; Params = "-i 12.406"; OCprofile = ""; MSIAprofile = ""}
+        )
         "ClaymoreEthash" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "pascal"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "keccak"; Params = ""; OCprofile = ""; MSIAprofile = "3"}
