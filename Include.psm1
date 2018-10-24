@@ -1409,7 +1409,7 @@ function Get-Device {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                     $Vendor_Name = "AMD"
-                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner $true}
+                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner (([OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All)).Count -lt 7)}
                     if ($Device_Name_Tmp = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -ExpandProperty DeviceName) {$Device_Name = $Device_Name_Tmp}
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
@@ -1643,7 +1643,6 @@ function Get-DeviceName {
         [Parameter(Mandatory = $false)]
         [String]$NVSMIpath = ".\Includes"
     )
-
     try {
         if ($UseAfterburner -and $Script:abMonitor) {
             if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
