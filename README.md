@@ -440,6 +440,8 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **EnableFastSwitching** = set to 1 to remove switching prevention completly. Expect a lot of switching [default=0]
+- **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=10]
+- **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
@@ -455,6 +457,13 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **DisableAPI** = set to 1, if no localhost API is needed
 - **DisableAsyncLoader** = set to 1, if all net access should happen synchronous (used for debugging)
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
+
+**Notes for HashrateWeight**
+
+The comparison prices of the pools will be scaled with the following formula:
+
+    compare price = price x (1-(HashrateWeight/100)x(1-(rel. hashrate)^(HashrateWeightStrength/100))
+
 
 ### Config\pools.config.txt
 
@@ -597,14 +606,16 @@ Example:
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-i 21",
                                     "MSIAprofile":  "",
-                                    "OCprofile": ""
+                                    "OCprofile": "",
+                                    "Difficulty": ""
                                 },
                                 {
                                     "MainAlgorithm":  "keccak",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-m 2 -i 19,29",
                                     "MSIAprofile":  "",
-                                    "OCprofile": ""
+                                    "OCprofile": "",
+                                    "Difficulty": ""
                                 }
                             ],
        "CcminerAlexis78-GTX1070":  [
@@ -613,14 +624,16 @@ Example:
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-i 21",
                                     "MSIAprofile":  "",
-                                    "OCprofile": "Profile1"
+                                    "OCprofile": "Profile1",
+                                    "Difficulty": ""
                                 },
                                 {
                                     "MainAlgorithm":  "keccak",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "-m 2 -i 19,29",
                                     "MSIAprofile":  "",
-                                    "OCprofile": ""
+                                    "OCprofile": "",
+                                    "Difficulty": ""
                                 }
                             ],
         "Sgminer-AMD":  [
@@ -629,14 +642,16 @@ Example:
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "--gpu-threads 2 --worksize 128 --intensity d",
                                     "MSIAprofile":  "",
-                                    "OCprofile": ""
+                                    "OCprofile": "",
+                                    "Difficulty": ""
                                 },
                                 {
                                     "MainAlgorithm":  "neoscrypt",
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "--gpu-threads 1 --worksize 64 --intensity 15",
                                     "MSIAprofile":  "",
-                                    "OCprofile": ""
+                                    "OCprofile": "",
+                                    "Difficulty": "1000"
                                 }
                             ],
         "Trex":  [
@@ -645,7 +660,8 @@ Example:
                                     "SecondaryAlgorithm":  "",
                                     "Params":  "",
                                     "MSIAprofile":  "",
-                                    "Penalty": "12.5"
+                                    "Penalty": "12.5",
+                                    "Difficulty": ""
                                 }
                             ]                                                                
     }
@@ -661,6 +677,8 @@ Example:
 - "MSIAprofile": desired MSI Afterburner profile
 
 .. this adds a Penalty of 12.5% to all algorithms used by Trex
+
+.. this adds a static pool difficulty of 1000 to Sgminer's Neoscrypt
 
 
 ### Config\devices.config.txt
