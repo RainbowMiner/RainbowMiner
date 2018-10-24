@@ -43,9 +43,11 @@ function Confirm-Version {
             } else {
                 $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600
             }
-            $Version = ($Request.tag_name -replace '^v')
-            $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
-            if ($Version) {$Version = Get-Version($Version)} else {$Version = $RBMVersion}
+            $RemoteVersion = ($Request.tag_name -replace '^v')
+            if ($RemoteVersion) {
+                $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion).zip" | Select-Object -ExpandProperty browser_download_url
+                $Version = Get-Version($RemoteVersion)
+            }
             $NextCheck = $NextCheck.AddHours(1)
         }
         catch {
