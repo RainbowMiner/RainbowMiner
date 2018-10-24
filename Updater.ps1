@@ -1,5 +1,11 @@
 ﻿using module .\Include.psm1
 
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [String]$calledfrom = "bat"
+)
+
 if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
 
 #[Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
@@ -13,7 +19,8 @@ if (-not (Test-Path ".\Data\version.json")) {
 }
 
 if (Test-Path "Start.bat.saved") {
-    exit
+    if ($calledfrom -ne "core") {exit}
+    Remove-Item "Start.bat.saved" -Force    
 }
 
 $RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
@@ -53,18 +60,22 @@ try {
 }
 catch {
     Write-Host "$Name failed to update. Please download manually at $($RBMVersion.ManuaURI)" -ForegroundColor Yellow
-    $message = "Press any key to return to $name"
-    if ($psISE)
-    {
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.MessageBox]::Show("$message")
+    if ($calledfrom -ne "core") {
+        $message = "Press any key to return to $name"
+        if ($psISE)
+        {
+            Add-Type -AssemblyName System.Windows.Forms
+            [System.Windows.Forms.MessageBox]::Show("$message")
+        }
+        else
+        {
+            Write-Host "$message" -ForegroundColor Yellow
+            [void]($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown'))
+        }
+    } else {
+        Sleep 2
     }
-    else
-    {
-        Write-Host "$message" -ForegroundColor Yellow
-        [void]($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown'))
-        exit 0
-    }
+    exit 0
 }
 
 if (-not $psISE) {

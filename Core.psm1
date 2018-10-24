@@ -282,7 +282,24 @@ function Invoke-Core {
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
     $API.Version = $ConfirmedVersion | ConvertTo-Json
-    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate) {$API.Update = $Session.AutoUpdate = $true}
+    $Session.AutoUpdate = $false
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate) {
+        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-Content ".\Logs\autoupdate.txt" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Last_Autoupdate = $null}}
+        if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
+            $Last_Autoupdate = [PSCustomObject]@{
+                                    RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
+                                    Version = $ConfirmedVersion.Version.ToString()
+                                    Timestamp = (Get-Date).ToUniversalTime().ToString()
+                                    Attempts = 0
+                                }
+        }
+        if ($Last_Autoupdate.Attempts -lt 3) {
+            $Last_Autoupdate.Timestamp = (Get-Date).ToUniversalTime().ToString()
+            $Last_Autoupdate.Attempts++
+            $Last_Autoupdate | ConvertTo-Json -Depth 10 | Out-File ".\Logs\autoupdate.txt"
+            $Session.AutoUpdate = $true
+        }
+    }
 
     #Give API access to all possible devices
     if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices | ConvertTo-Json -Depth 10}
@@ -1508,8 +1525,11 @@ function Invoke-Core {
     #Check for updated RainbowMiner
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Session.Config.EnableAutoUpdate) {
-            Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow
-            $API.Update = $true
+            if ($Session.AutoUpdate) {
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow
+            } else {
+                Write-Host "Automatic update failed! Please exit RainbowMiner and start Updater.bat manually to proceed" -ForegroundColor Yellow
+            }
         } else {
             Write-Host "To start update, press key `"U`"" -ForegroundColor Yellow            
         }
@@ -1524,7 +1544,7 @@ function Invoke-Core {
     Get-Job -State Completed | Remove-Job -Force
          
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
-    $Session.AutoUpdate = $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
+    $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
     $Session.Timer = (Get-Date).ToUniversalTime()
     if ($Session.StatEnd.AddSeconds(-10) -le $Session.Timer) {$Session.StatEnd = $Session.Timer.AddSeconds(10)}
@@ -1616,6 +1636,7 @@ function Invoke-Core {
                 }
                 "U" {
                     $Session.AutoUpdate = $true
+                    $API.Update = $false
                     Write-Log "User requests to update to v$($ConfirmedVersion.RemoteVersion)"
                     Write-Host -NoNewline "[U] pressed - automatic update of Rainbowminer will be started "
                     $keyPressed = $true
@@ -1635,7 +1656,7 @@ function Invoke-Core {
                 }
             }
         }
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
 
@@ -1703,7 +1724,7 @@ function Invoke-Core {
         try {
             $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
             if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
-                if ($Session.AutoUpdate) {& .\Updater.ps1}
+                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
                 $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
                 $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
                 if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}

@@ -45,7 +45,7 @@ function Confirm-Version {
             }
             $Version = ($Request.tag_name -replace '^v')
             $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($Version).zip" | Select-Object -ExpandProperty browser_download_url
-            $Version = Get-Version($Version)
+            if ($Version) {$Version = Get-Version($Version)} else {$Version = $RBMVersion}
             $NextCheck = $NextCheck.AddHours(1)
         }
         catch {
