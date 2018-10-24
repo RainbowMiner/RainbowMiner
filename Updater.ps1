@@ -2,12 +2,12 @@
 
 if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
 
-[Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
+#[Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
 
 # Support SSL connection
 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 
-if (-not (Test-Path ".\Data\Version.json")) {
+if (-not (Test-Path ".\Data\version.json")) {
     Write-Host "No version info found. Update will be stopped"
     exit
 }
@@ -16,7 +16,7 @@ if (Test-Path "Start.bat.saved") {
     exit
 }
 
-$RBMVersion = Confirm-Version (Get-Content ".\Data\Version.json" | ConvertFrom-Json).Version -Force -Silent
+$RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
 
 $Name = "RainbowMiner"
 try {
