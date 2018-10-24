@@ -1645,9 +1645,9 @@ function Get-DeviceName {
         [String]$NVSMIpath = ".\Includes"
     )
     try {
+        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-Content ".\Data\$($Vendor.ToLower())-cards.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}catch{}}
         if ($UseAfterburner -and $Script:abMonitor) {
             if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
-            if ($Script:abControl) {$Script:abControl.ReloadAll()}
             $DeviceId = 0
             $Pattern = @{
                 AMD    = '*Radeon*'
@@ -1655,9 +1655,13 @@ function Get-DeviceName {
                 Intel  = '*Intel*'
             }
             @($Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor) | ForEach-Object {
+                $DeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
+                $SubId = if ($_.GpuId -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
+                if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                 [PSCustomObject]@{
                     Index = $DeviceId
-                    DeviceName = Get-NormalizedDeviceName $_.Device -Vendor $Vendor
+                    DeviceName = $DeviceName
+                    SubId = $SubId
                 }
                 $DeviceId++
             }
@@ -1669,9 +1673,13 @@ function Get-DeviceName {
                 $AdlResult | Foreach-Object {
                     $AdlResultSplit = @($_ -split ',' | Select-Object)
                     if ($AdlResultSplit.Count -ge 9) {
+                        $DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+                        $SubId = if ($AdlResultSplit.Count -ge 10 -and $AdlResultSplit[9] -match "&DEV_([0-9A-F]+?)&") {$Matches[1]} else {"noid"}
+                        if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                         [PSCustomObject]@{
                             Index = $DeviceId
-                            DeviceName = Get-NormalizedDeviceName $AdlResultSplit[8] -Vendor $Vendor
+                            DeviceName = $DeviceName
+                            SubId = $SubId
                         }
                         $DeviceId++
                     }
@@ -1681,15 +1689,20 @@ function Get-DeviceName {
             if ($Vendor -eq "NVIDIA") {
                 $DeviceId = 0
                 $Arguments = @(
-                    '--query-gpu=gpu_name'
+                    '--query-gpu=gpu_name,pci.device_id'
                     '--format=csv,noheader'
                 )
 
                 $NVSMIpath = [IO.Path]::GetDirectoryName($NVSMIpath) + "\nvidia-smi.exe"
                 Invoke-Exe "$(if (Test-Path($NVSMIpath)) {$NVSMIpath} else {".\Includes\nvidia-smi.exe"})" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
+                    $AdlResultSplit = @($_ -split ',' | Select-Object)
+                    $DeviceName = $AdlResultSplit[0].Trim()
+                    $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
+                    if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                     [PSCustomObject]@{
                         Index = $DeviceId
-                        DeviceName = $_.Trim()
+                        DeviceName = $DeviceName
+                        SubId = $SubId
                     }
                     $DeviceId++
                 }
