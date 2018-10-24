@@ -1,0 +1,14 @@
+﻿[
+    {
+        "match":  "rbminer.net",
+        "apiurl":  "https://rbminer.net/api/report.php",
+        "web":  "https://rbminer.net",
+        "desc":  "RainbowMiner ~ most versatile multipool mining"
+    },
+    {
+        "match":  "brucomining.com",
+        "apiurl":  "https://api.brucomining.com/v1.0/workers/reportRBM",
+        "web":  "https://www.brucomining.com",
+        "desc":  "Brucomining ~ SOLUTIONS FOR CRYPTOCURRENCIES MINING AND MONITORING"
+    }
+]

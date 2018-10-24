@@ -3613,12 +3613,16 @@ function Invoke-ReportMinerStatus {
      
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
+    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
+
     # Send the request
     try {
         $ReportUrl = $Session.Config.MinerStatusURL
         $ReportStatus = "Error"
-        if ($ReportUrl -match "rbminer.net") {
-            $ReportUrl = "https://rbminer.net/api/report.php"
+        $ReportDone = $false
+        $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
+            $ReportUrl = $_.apiurl
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = $Rates; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
@@ -3640,7 +3644,9 @@ function Invoke-ReportMinerStatus {
                     $API.RemoteMiners = @($Response.Workers | Where-Object worker -ne $Session.Config.WorkerName | Select-Object) | ConvertTo-Json -Depth 10                    
                 }
             }
-        } else {
+            $ReportDone = $true
+        }
+        if (-not $ReportDone) {
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1} 
         }
