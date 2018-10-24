@@ -6,6 +6,7 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 $SavedFiles = @("Start.bat")
 
+$MinersConfigCleanup = $true
 $ChangesTotal = 0
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
@@ -134,6 +135,30 @@ try {
         if (Test-Path "Stats\Pools") {
             Get-ChildItem "Stats\Pools" | Where-Object BaseName -match "_(BLK|HSR|TTF)$" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force}
         }
+    }
+
+    if ($Version -le (Get-Version "3.8.10.1")) {
+        $MinersConfigCleanup = $true
+    }
+
+    if ($MinersConfigCleanup) {
+        $MinersSave = [PSCustomObject]@{}
+        $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $MinersActual.PSObject.Properties | Where-Object {$_.MemberType -eq "NoteProperty"} | Foreach-Object {
+            $MinerSaveArray = [PSCustomObject[]]@()
+            @($_.Value) | Foreach-Object {
+                if ($(foreach($q in $_.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($_.$q -isnot [string] -or $_.$q.Trim() -ne "")) {$true;break}})) {
+                    $MinerSaveArray += $_
+                }
+            }
+            if ($MinerSaveArray.Count) {
+                $MinersSave | Add-Member $_.Name $MinerSaveArray
+            }
+        }
+        $MinersActualSave = [PSCustomObject]@{}
+        $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+        Set-ContentJson -PathToFile $MinersConfigFile -Data $MinersActualSave > $null
+        $ChangesTotal++
     }
 
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
