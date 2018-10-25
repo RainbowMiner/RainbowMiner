@@ -69,7 +69,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     CoinName      = $Pool_Coin
                     CoinSymbol    = ""
                     Currency      = "BTC"
-                    Price         = $Stat.Live
+                    Price         = $Stat.Minute_5
                     StablePrice   = $Stat.Day #instead of .Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -84,11 +84,12 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     PPS           = $true
                 }
 
-                if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -eq "Equihash") {
+                if ($Pool_Algorithm_Norm -eq "CryptonightV7" -or $Pool_Algorithm_Norm -eq "Equihash") {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = ""
+                        Currency      = "BTC"
                         Price         = $Stat.Minute_5
                         StablePrice   = $Stat.Day #instead of .Week
                         MarginOfError = $Stat.Week_Fluctuation
