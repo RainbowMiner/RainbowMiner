@@ -81,7 +81,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    SwitchingHysteresis = 0
+                    PPS           = $true
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -eq "Equihash") {
@@ -89,7 +89,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = ""
-                        Price         = $Stat.Live
+                        Price         = $Stat.Minute_5
                         StablePrice   = $Stat.Day #instead of .Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"
@@ -101,7 +101,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
-                        SwitchingHysteresis = 0
+                        PPS           = $true
                     }
                 }
             }
