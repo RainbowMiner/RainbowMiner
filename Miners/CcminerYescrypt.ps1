@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"}, #YesctyptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
     [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
-    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-i 12.406 -N 1"} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-N 1"} #YescryptR32
  
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
