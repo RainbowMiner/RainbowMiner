@@ -12,7 +12,7 @@ $Port = "503{0:d2}"
 $DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
-if (-not $Global:GlobalCPUInfo.Features.tryall -and -not $Global:GlobalCPUInfo.Features.avx -and -not $Global:GlobalCPUInfo.Features.avx2) {return}
+if (-not ($Global:GlobalCPUInfo.Features.tryall -or ($Global:GlobalCPUInfo.Features.sha -and $Global:GlobalCPUInfo.Features.avx2)) -and -not $InfoOnly) {return}
 
 $Commands = [PSCustomObject[]]@(
     ### CPU PROFITABLE ALGOS AS OF 06/03/2018
