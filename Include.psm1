@@ -1468,7 +1468,7 @@ function Get-Device {
         if (-not (Test-Path Variable:Script:GlobalGetDeviceCacheCIM)) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor | ConvertTo-Json -Depth 1 | ConvertFrom-Json}
         if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
-            try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((& .\Includes\CHKCPU32.exe /x) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; switch -regex ((Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines) -split "</\w+>") {"^\s*<_?(\w+)>(\d+).*" {if ($feat.($matches[1]) -eq $null) {$feat.($matches[1]) = [int]$matches[2]}}}; $feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
         if ($Global:GlobalCPUInfo.Features -eq $null) {
              $Global:GlobalCPUInfo | Add-Member Features ([PSCustomObject]@{
