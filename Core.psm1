@@ -296,7 +296,7 @@ function Invoke-Core {
         if ($Last_Autoupdate.Attempts -lt 3) {
             $Last_Autoupdate.Timestamp = (Get-Date).ToUniversalTime().ToString()
             $Last_Autoupdate.Attempts++
-            $Last_Autoupdate | ConvertTo-Json -Depth 10 | Out-File ".\Logs\autoupdate.txt"
+            Set-ContentJson -PathToFile ".\Logs\autoupdate.txt" -Data $Last_Autoupdate > $null
             $Session.AutoUpdate = $true
         }
     }
@@ -819,7 +819,7 @@ function Invoke-Core {
         foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile | Add-Member $p ""}
 
         if ($Session.Config.Miners) {
-            $Miner_CommonCommands = $Miner_Arguments = $Miner_PoolOptions = ''
+            $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
             $Miner_MSIAprofile = 0
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
