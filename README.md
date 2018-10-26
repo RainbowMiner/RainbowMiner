@@ -440,7 +440,7 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
 - **EnableFastSwitching** = set to 1 to remove switching prevention completly. Expect a lot of switching [default=0]
-- **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=10]
+- **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
@@ -704,6 +704,26 @@ This configuration would:
 - bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
 - setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
 - for custom overclocking Profile1 is used as default for this GPU type
+
+
+### Config\algorithms.config.txt
+
+Globally define parameters for algorithms:
+
+Example:
+
+    {
+      "X17": {
+          "Penalty": 10,
+          "MinHashrate": 20000,
+          "MinWorkers": 300
+        }
+    }
+
+This configuration would:
+- reduce all X17 pool prices by a "Penalty" of 10%
+- set a minimum X17 pool hashrate of 20000 H/s for a pool to be selected
+- set the mimimum pool workers mining X17 to 300 for a pool to be selected
 
 
 ### Config\ocprofiles.config.txt
