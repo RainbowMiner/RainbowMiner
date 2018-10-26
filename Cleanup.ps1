@@ -141,6 +141,15 @@ try {
         $MinersConfigCleanup = $true
     }
 
+    if ($Version -le (Get-Version "3.8.10.3")) {
+        if ($AlgorithmsConfigFile -and (Test-Path $AlgorithmsConfigFile)) {
+            $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            $AlgorithmsActualSave = [PSCustomObject]@{}
+            $AlgorithmsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$AlgorithmsActualSave | Add-Member $_ ([PSCustomObject]@{Penalty = "$($AlgorithmsActual.$_.Penalty)";MinHashrate = "$($AlgorithmsActual.$_.MinHashrate)";MinWorkers = "$($AlgorithmsActual.$_.MinWorkers)"}) -Force}
+            Set-ContentJson -PathToFile $AlgorithmsConfigFile -Data $AlgorithmsActualSave > $null
+        }
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop

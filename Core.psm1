@@ -316,8 +316,8 @@ function Invoke-Core {
             $Session.Config.Algorithm | Where-Object {$AllAlgorithms.$_ -ne $null} | Foreach-Object {
                 $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
                 $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MinHashrate ([int]$Session.Config.Algorithms.$_.MinHashrate) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MinWorkers ([int]$Session.Config.Algorithms.$_.MinWorkers) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
             }
         }
     }

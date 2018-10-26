@@ -843,6 +843,22 @@ filter ConvertTo-Hash {
     }
 }
 
+function ConvertFrom-Hash {
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [string]$Hash
+    )
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {$Num=0}
+    [int64]$(switch (($Hash -replace "[^kMGHTP]")[0]) {
+        "k" {$Num*1e3}
+        "M" {$Num*1e6}
+        "G" {$Num*1e9}
+        "T" {$Num*1e12}
+        "P" {$Num*1e15}
+        default {$Num}
+    })
+}
+
 function ConvertTo-LocalCurrency { 
     [CmdletBinding()]
     # To get same numbering scheme regardless of value BTC value (size) to determine formatting
@@ -3031,10 +3047,10 @@ function Set-AlgorithmsConfigDefault {
                     if ($Setup.$Algorithm) {
                         $Preset | Add-Member $Algorithm $Setup.$Algorithm
                     } else {
-                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = 0;MinHashrate = 0;MinWorkers = 0})
+                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0"})
                     }
                 }
-                foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName 0 -Force}}
+                foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName "0" -Force}}
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }

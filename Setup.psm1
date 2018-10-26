@@ -1287,7 +1287,7 @@ function Start-Setup {
                     if ($Algorithm_Name -eq '') {throw}
 
                     if (-not $AlgorithmsActual.$Algorithm_Name) {
-                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty=0;MinHashrate=0;MinWorkers=0}) -Force
+                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty="0";MinHashrate="0";MinWorkers="0"}) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActual > $null
                     }
 
@@ -1309,18 +1309,20 @@ function Start-Setup {
                                         $AlgorithmConfig.Penalty = Read-HostInt -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $AlgorithmConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "minhashrate" {
-                                        $AlgorithmConfig.MinHashrate = Read-HostInt -Prompt "Enter minimum hashrate in H/s at a pool." -Default $AlgorithmConfig.MinHashrate -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MinHashrate = Read-HostString -Prompt "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)" -Default $AlgorithmConfig.MinHashrate -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MinHashrate = $AlgorithmConfig.MinHashrate -replace "([A-Z]{2})[A-Z]+","`$1"
                                     }
                                     "minworkers" {
-                                        $AlgorithmConfig.MinWorkers = Read-HostInt -Prompt "Enter minimum amount of workers at a pool." -Default $AlgorithmConfig.MinWorkers -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MinWorkers = Read-HostString -Prompt "Enter minimum amount of workers at a pool (inits allowed, e.g. 5k)" -Default $AlgorithmConfig.MinWorkers -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MinWorkers = $AlgorithmConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
                                                         
-                                        $AlgorithmConfig | Add-Member Penalty ([int]$AlgorithmConfig.Penalty) -Force
-                                        $AlgorithmConfig | Add-Member MinHashrate ([int]$AlgorithmConfig.MinHashrate) -Force
-                                        $AlgorithmConfig | Add-Member MinWorkers ([int]$AlgorithmConfig.MinWorkers) -Force
+                                        $AlgorithmConfig | Add-Member Penalty "$($AlgorithmConfig.Penalty)" -Force
+                                        $AlgorithmConfig | Add-Member MinHashrate $AlgorithmConfig.MinHashrate -Force
+                                        $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}
