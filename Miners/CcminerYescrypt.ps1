@@ -88,13 +88,16 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
+        $Miner_Params = $_.Params
+        if ($Miner_Model -match "GTX1080" -and $Algorithm_Norm -eq "YescryptR32") {$Miner_Params = "$($Miner_Params) -i 12.406"}
+
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($MinerParams)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
