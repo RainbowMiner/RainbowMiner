@@ -313,7 +313,12 @@ function Invoke-Core {
             $Session.ConfigFiles["Algorithms"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime()
             $AllAlgorithms = (Get-ChildItemContent $Session.ConfigFiles["Algorithms"].Path -Quick).Content
             $Session.Config | Add-Member Algorithms ([PSCustomObject]@{})  -Force
-            $Session.Config.Algorithm | Where-Object {$AllAlgorithms.$_ -ne $null} | Foreach-Object {$Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force}
+            $Session.Config.Algorithm | Where-Object {$AllAlgorithms.$_ -ne $null} | Foreach-Object {
+                $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
+                $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MinHashrate ([int]$Session.Config.Algorithms.$_.MinHashrate) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MinWorkers ([int]$Session.Config.Algorithms.$_.MinWorkers) -Force
+            }
         }
     }
 
@@ -669,7 +674,9 @@ function Invoke-Core {
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and @($Session.Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
+                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
+                ($Pool.Hashrate -ne $null -and $Session.Config.Algorithms.MinHashrate -and $Pool.Hashrate -lt $Session.Config.Algorithms.MinHashrate) -or
+                ($Pool.Workers -ne $null -and $Session.Config.Algorithms.MinWorkers -and $Pool.Workers -lt $Session.Config.Algorithms.MinWorkers)
             )}
     Remove-Variable "NewPools" -Force
 

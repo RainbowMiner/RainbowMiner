@@ -1973,14 +1973,19 @@ function Get-Algorithms {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Switch]$Silent = $false
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Values = $false
     )
     if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
         [hashtable]$Global:GlobalAlgorithms = @{}
         (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
-    if (-not $Silent) {$Global:GlobalAlgorithms.Keys | Sort-Object}
+    if (-not $Silent) {
+        if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
+        else {$Global:GlobalAlgorithms.Keys | Sort-Object}
+    }
 }
 
 function Get-Regions {
@@ -3018,19 +3023,18 @@ function Set-AlgorithmsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $SetupNames = @("Penalty")
+            $SetupNames = @("Penalty","MinHashrate","MinWorkers")
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            Get-Algorithms -Silent
-            $AllAlgorithms = $Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object
+            $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
                 if (-not $Preset.$Algorithm) {
                     if ($Setup.$Algorithm) {
                         $Preset | Add-Member $Algorithm $Setup.$Algorithm
                     } else {
-                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = 0})
+                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = 0;MinHashrate = 0;MinWorkers = 0})
                     }
                 }
-                foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $Algorithm "" -Force}}
+                foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName 0 -Force}}
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
@@ -3443,9 +3447,9 @@ Param(
 
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
     } else {
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
     }
 }
 
