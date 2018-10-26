@@ -695,15 +695,28 @@ Example:
           "MinerName": "",
           "ExcludeMinerName": "ClaymoreEthash",
           "DisableDualMining": "1",
-          "DefaultOCprofile": "Profile1"
+          "DefaultOCprofile": "Profile1",
+          "PowerAdjust": "100"
         }
-      ]
+      ],
+      "R290X": [
+        {
+          "Algorithm": "",
+          "ExcludeAlgorithm": "",
+          "MinerName": "",
+          "ExcludeMinerName": "",
+          "DisableDualMining": "1",
+          "DefaultOCprofile": "Profile1",
+          "PowerAdjust": "87.5"
+        }
+      ]      
     }
 
 This configuration would:
 - bind all GTX1050Ti in the system to Ethash and X16R mining, only, excluding the ClaymoreEthash miner
 - setting the flag "DisableDualMining" to "1", all dual-algorithm miners will be removed from this device's list.
 - for custom overclocking Profile1 is used as default for this GPU type
+- set a power adjust factor of 87.5% to the Radeon R290X (if RainbowMiner reported 250W with factor 100%, it will now show 250W x 87.5 / 100 = 175W)
 
 
 ### Config\algorithms.config.txt
