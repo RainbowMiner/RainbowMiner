@@ -90,6 +90,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
                     Hashrate      = $Stat.HashRate_Live
                     #BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL

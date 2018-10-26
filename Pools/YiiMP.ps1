@@ -105,6 +105,7 @@ foreach($Pool_Currency in $Pool_MiningCurrencies) {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
+                    Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL

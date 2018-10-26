@@ -111,6 +111,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             SSL           = $False
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
+            Workers       = $Pool_Request.pool.workers
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average

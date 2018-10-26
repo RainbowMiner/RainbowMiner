@@ -143,6 +143,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
             SSL           = $False
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee
+            Workers       = $Pool_Request.pool.miners
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average

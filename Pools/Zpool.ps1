@@ -98,6 +98,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     PoolFee       = $Pool_PoolFee
                     DataWindow    = $DataWindow
                     Hashrate      = $Stat.HashRate_Live
+                    Workers       = $Pool_Request.$_.workers
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }
