@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.4-wildrig/wildrig-multi-0.12.4.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.5.1b-wildrig/wildrig-multi-0.12.5.1-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -14,23 +14,23 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = "--opencl-threads 3 --opencl-launch 19x128"} #BCD
-    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "--opencl-threads 3 --opencl-launch 16x128"} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "--opencl-threads 3 --opencl-launch 17x128"} #C11
-    [PSCustomObject]@{MainAlgorithm = "exosis"; Params = "--opencl-threads 2 --opencl-launch 20x128"} #Exosis
-    [PSCustomObject]@{MainAlgorithm = "geek"; Params = "--opencl-threads 2 --opencl-launch 18x128"} #Geek
-    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "--opencl-threads 3 --opencl-launch 20x128"} #Hex
-    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #HMQ1725
-    [PSCustomObject]@{MainAlgorithm = "phi"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #PHI
-    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "--opencl-threads 3 --opencl-launch 21x128"} #Renesis
-    [PSCustomObject]@{MainAlgorithm = "skunkhash"; Params = "--opencl-threads 2 --opencl-launch 19x128"} #Skunk
-    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "--opencl-threads 3 --opencl-launch 19x128"} #Sonoa
-    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "--opencl-threads 3 --opencl-launch 16x128"} #Timetravel
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "--opencl-threads 3 --opencl-launch 20x0"} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "--opencl-threads 3 --opencl-launch 18x128"} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "--opencl-threads 3 --opencl-launch 20x0"} #X17
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = "--opencl-threads 2 --opencl-launch 19x128"} #X22i
+    [PSCustomObject]@{MainAlgorithm = "bcd"; Params = @("--opencl-threads 3 --opencl-launch 19x128","--opencl-threads 3 --opencl-launch 19x128")} #BCD
+    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = @("--opencl-threads 3 --opencl-launch 16x128","--opencl-threads 3 --opencl-launch 19x128")} #BitCore
+    [PSCustomObject]@{MainAlgorithm = "c11"; Params = @("--opencl-threads 3 --opencl-launch 17x128","--opencl-threads 3 --opencl-launch 17x128")} #C11
+    [PSCustomObject]@{MainAlgorithm = "exosis"; Params = @("--opencl-threads 2 --opencl-launch 20x128","--opencl-threads 2 --opencl-launch 20x128")} #Exosis
+    [PSCustomObject]@{MainAlgorithm = "geek"; Params = @("--opencl-threads 2 --opencl-launch 18x128","--opencl-threads 2 --opencl-launch 20x128")} #Geek
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = @("--opencl-threads 3 --opencl-launch 20x128","--opencl-threads 3 --opencl-launch 22x128")} #Hex
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 20x128")} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 18x128")} #PHI
+    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = @("--opencl-threads 3 --opencl-launch 21x128","--opencl-threads 3 --opencl-launch 21x128")} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "skunkhash"; Params = @("--opencl-threads 2 --opencl-launch 20x0","--opencl-threads 2 --opencl-launch 20x0")} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = @("--opencl-threads 3 --opencl-launch 19x128","--opencl-threads 3 --opencl-launch 19x0")} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = @("--opencl-threads 3 --opencl-launch 16x128","--opencl-threads 3 --opencl-launch 20x128")} #Timetravel
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = @("--opencl-threads 3 --opencl-launch 20x0","--opencl-threads 3 --opencl-launch 21x0")} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 20x128")} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 20x128")} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = @("--opencl-threads 3 --opencl-launch 20x0","--opencl-threads 3 --opencl-launch 20x0")} #X17
+    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = @("--opencl-threads 2 --opencl-launch 18x0","--opencl-threads 2 --opencl-launch 19x128")} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -55,12 +55,12 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Miner_Model = $_.Model
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+    $Miner_Params = if (@("RX570","RX580") -icontains $Miner_Model) {1} else {0}
 
     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
     $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
 
     $Commands | ForEach-Object {
-
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -69,7 +69,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "--api-port $($Miner_Port) --algo $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -r 4 -R 10 --send-stale --donate-level 1 --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) $($_.Params)"
+                Arguments = "--api-port $($Miner_Port) --algo $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) -r 4 -R 10 --send-stale --donate-level 1 --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) $($_.Params[$Miner_Params])"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "XMRig"
                 Port = $Miner_Port
