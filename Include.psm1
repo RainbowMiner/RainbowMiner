@@ -1745,16 +1745,17 @@ function Update-DeviceInformation {
         [PSCustomObject]$DeviceConfig = @{}        
     )
     $abReload = $true
+
+    $PowerAdjust = @{}
+    $Script:GlobalCachedDevices | Foreach-Object {
+        $Model = $_.Model
+        $PowerAdjust[$Model] = 100
+        if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
+    }
+
     $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
-
-        $PowerAdjust = @{}
-        $Devices | Foreach-Object {
-            $Model = $_.Model
-            $PowerAdjust[$Model] = 100
-            if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
-        }
 
         try { #AMD
             if ($UseAfterburner -and $Script:abMonitor -and $Script:abControl -and $Vendor -eq "AMD") {
