@@ -139,7 +139,7 @@ param(
     [Parameter(Mandatory = $false)]
     [int]$MiningPriorityGPU = -1,
     [Parameter(Mandatory = $false)]
-    [int]$HashrateWeight = 10, #Adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) 
+    [int]$HashrateWeight = 20, #Adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) 
     [Parameter(Mandatory = $false)]
     [int]$HashrateWeightStrength = 50 #Adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square)
 )
