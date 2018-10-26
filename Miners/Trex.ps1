@@ -93,7 +93,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-r 0 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if (-not $Session.Config.ShowMinerWindow){"--no-color"}) --quiet --api-bind-http 0 $($_.Params)"
+                Arguments = "-r 5 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if (-not $Session.Config.ShowMinerWindow){"--no-color"}) --quiet --api-bind-http 0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
                 Port = $Miner_Port
