@@ -714,15 +714,15 @@ Example:
 
     {
       "X17": {
-          "Penalty": 10,
-          "MinHashrate": 20000,
-          "MinWorkers": 300
+          "Penalty": "10",
+          "MinHashrate": "50GH",
+          "MinWorkers": "300"
         }
     }
 
 This configuration would:
 - reduce all X17 pool prices by a "Penalty" of 10%
-- set a minimum X17 pool hashrate of 20000 H/s for a pool to be selected
+- set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected
 - set the mimimum pool workers mining X17 to 300 for a pool to be selected
 
 
