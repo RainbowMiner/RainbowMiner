@@ -676,8 +676,8 @@ function Invoke-Core {
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-                ($Pool.Hashrate -ne $null -and $Session.Config.Algorithms.MinHashrate -and $Pool.Hashrate -lt $Session.Config.Algorithms.MinHashrate) -or
-                ($Pool.Workers -ne $null -and $Session.Config.Algorithms.MinWorkers -and $Pool.Workers -lt $Session.Config.Algorithms.MinWorkers)
+                ($Pool.Hashrate -ne $null -and $Session.Config.Algorithms."$($Pool.Algorithm)".MinHashrate -and $Pool.Hashrate -lt $Session.Config.Algorithms."$($Pool.Algorithm)".MinHashrate) -or
+                ($Pool.Workers -ne $null -and $Session.Config.Algorithms."$($Pool.Algorithm)".MinWorkers -and $Pool.Workers -lt $Session.Config.Algorithms."$($Pool.Algorithm)".MinWorkers)
             )}
     Remove-Variable "NewPools" -Force
 
