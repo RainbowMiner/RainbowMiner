@@ -1172,7 +1172,7 @@ function Start-Setup {
                     if ($Device_Name -eq '') {throw}
 
                     if (-not $DevicesActual.$Device_Name) {
-                        $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining=""}) -Force
+                        $DevicesActual | Add-Member $Device_Name ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";PowerAdjust="100"}) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Devices"].Path -Data $DevicesActual > $null
                     }
 
@@ -1184,7 +1184,7 @@ function Start-Setup {
 
                         $DeviceConfig = $DevicesActual.$Device_Name.PSObject.Copy()
 
-                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile")) > $null
+                        $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile","poweradjust")) > $null
                         $DeviceSetupSteps.Add("save") > $null
                                         
                         do { 
@@ -1208,6 +1208,9 @@ function Start-Setup {
                                     "defaultocprofile" {                                                        
                                         $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device (leave empty for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
+                                    "poweradjust" {                                                        
+                                        $DeviceConfig.PowerAdjust = Read-HostDouble -Prompt "Adjust power consumption to this value in percent, e.g. 75 would result in Power x 0.75 (enter 100 for original value)" -Default $DeviceConfig.PowerAdjust -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -1217,6 +1220,7 @@ function Start-Setup {
                                         $DeviceConfig | Add-Member MinerName $($DeviceConfig.MinerName -join ",") -Force
                                         $DeviceConfig | Add-Member ExcludeMinerName $($DeviceConfig.ExcludeMinerName -join ",") -Force
                                         $DeviceConfig | Add-Member DisableDualMining $(if (Get-Yes $DeviceConfig.DisableDualMining){"1"}else{"0"}) -Force
+                                        $DeviceConfig | Add-Member PowerAdjust "$($DeviceConfig.PowerAdjust)" -Force
 
                                         $DevicesActual | Add-Member $Device_Name $DeviceConfig -Force
                                         $DevicesActualSave = [PSCustomObject]@{}

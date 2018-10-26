@@ -1740,12 +1740,21 @@ function Update-DeviceInformation {
         [Parameter(Mandatory = $false)]
         [Bool]$UseAfterburner = $true,
         [Parameter(Mandatory = $false)]
-        [String]$NVSMIpath = ".\Includes"        
+        [String]$NVSMIpath = ".\Includes",
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$DeviceConfig = @{}        
     )
     $abReload = $true
     $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
+
+        $PowerAdjust = @{}
+        $Devices | Foreach-Object {
+            $Model = $_.Model
+            $PowerAdjust[$Model] = 100
+            if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
+        }
 
         try { #AMD
             if ($UseAfterburner -and $Script:abMonitor -and $Script:abControl -and $Vendor -eq "AMD") {
@@ -1777,7 +1786,7 @@ function Update-DeviceInformation {
                                 ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                                 FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                                 Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100)
+                                PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
                                 PowerLimitPercent = $PowerLimitPercent
                                 #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                                 Method            = "ab"
@@ -1827,7 +1836,7 @@ function Update-DeviceInformation {
                                         Utilization       = [int]$AdlResultSplit[5]
                                         Temperature       = [int]$AdlResultSplit[6] / 1000
                                         PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100)
+                                        PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
                                         Method            = "tdp"
                                     }) -Force
                             }
@@ -1869,7 +1878,7 @@ function Update-DeviceInformation {
                                 Utilization       = if ($SMIresultSplit[1] -eq "-") {100} else {[int]$SMIresultSplit[1]} #If we dont have real Utilization, at least make the watchdog happy
                                 UtilizationMem    = if ($SMIresultSplit[2] -eq "-") {$null} else {[int]$SMIresultSplit[2]}
                                 Temperature       = if ($SMIresultSplit[3] -eq "-") {$null} else {[int]$SMIresultSplit[3]}
-                                PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4]}
+                                PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4] * ($PowerAdjust[$_.Model] / 100)}
                                 PowerLimit        = if ($SMIresultSplit[5] -eq "-") {$null} else {[int]$SMIresultSplit[5]}
                                 FanSpeed          = if ($SMIresultSplit[6] -eq "-") {$null} else {[int]$SMIresultSplit[6]}
                                 Pstate            = $SMIresultSplit[7]
@@ -1880,7 +1889,7 @@ function Update-DeviceInformation {
                                 Method            = "smi"
                             }
                             if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
-                            if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
+                            if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100) * ($PowerAdjust[$_.Model] / 100)}
                             $_ | Add-Member Data $Data -Force
                         }
                         $DeviceId++
@@ -1917,7 +1926,7 @@ function Update-DeviceInformation {
                     if (-not $CpuData.PowerDraw) {
                         if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
                         if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
-                        $CpuData.PowerDraw = $CPU_tdp * $CpuData.Utilization / 100
+                        $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
                     }                    
 
                     $Device | Add-Member Data ([PSCustomObject]@{
@@ -3077,7 +3086,7 @@ function Set-DevicesConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining","DefaultOCprofile")
+            $SetupNames = @("Algorithm","ExcludeAlgorithm","MinerName","ExcludeMinerName","DisableDualMining","DefaultOCprofile","PowerAdjust")
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllDevices = Get-Device "cpu","nvidia","amd" | Select-Object -ExpandProperty Model -Unique
             foreach ($DeviceModel in $AllDevices) {
@@ -3085,10 +3094,10 @@ function Set-DevicesConfigDefault {
                     if ($Setup.$DeviceModel) {
                         $Preset | Add-Member $DeviceModel $Setup.$DeviceModel
                     } else {
-                        $Preset | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile=""})
+                        $Preset | Add-Member $DeviceModel ([PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100"})
                     }
                 }
-                foreach($SetupName in $SetupNames) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName "" -Force}}
+                foreach($SetupName in $SetupNames) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName "$(if ($SetupName -eq "PowerAdjust") {"100"})" -Force}}
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
