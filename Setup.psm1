@@ -61,6 +61,7 @@ function Start-Setup {
             Write-Host "- Miners: finetune miners, add commandline arguments, penalty values and more (only for the technical savy user)" -ForegroundColor Yellow
             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
+            Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             Write-Host " "
             if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
@@ -70,7 +71,7 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDOX"
+            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDOX"
         }
 
         if ($SetupType -eq "X") {
@@ -1267,6 +1268,110 @@ function Start-Setup {
                         
                 } catch {if ($Error.Count){$Error.RemoveAt(0)};$DeviceSetupDone = $true}
             } until ($DeviceSetupDone)
+        }
+        elseif ($SetupType -eq "L") {
+
+            Clear-Host
+
+            Write-Host " "
+            Write-Host "*** Algorithm Configuration ***" -BackgroundColor Green -ForegroundColor Black
+            Write-HostSetupHints
+            Write-Host " "
+
+            $AlgorithmSetupDone = $false
+            do {
+                try {
+                    $AllAlgorithms = Get-Algorithms -Values
+                    $AlgorithmsActual = Get-Content $ConfigFiles["Algorithms"].Path | ConvertFrom-Json
+                    $Algorithm_Name = Read-HostString -Prompt "Which algorithm do you want to configure? (leave empty to end algorithm config)" -Characters "A-Z0-9" -Valid $AllAlgorithms | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                    if ($Algorithm_Name -eq '') {throw}
+
+                    if (-not $AlgorithmsActual.$Algorithm_Name) {
+                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty=0;MinHashrate=0;MinWorkers=0}) -Force
+                        Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActual > $null
+                    }
+
+                    if ($Algorithm_Name) {
+                        $AlgorithmSetupStepsDone = $false
+                        $AlgorithmSetupStep = 0
+                        [System.Collections.ArrayList]$AlgorithmSetupSteps = @()
+                        [System.Collections.ArrayList]$AlgorithmSetupStepBack = @()
+
+                        $AlgorithmConfig = $AlgorithmsActual.$Algorithm_Name.PSObject.Copy()
+
+                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers")) > $null
+                        $AlgorithmSetupSteps.Add("save") > $null
+                                        
+                        do { 
+                            try {
+                                Switch ($AlgorithmSetupSteps[$AlgorithmSetupStep]) {
+                                    "penalty" {
+                                        $AlgorithmConfig.Penalty = Read-HostInt -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $AlgorithmConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "minhashrate" {
+                                        $AlgorithmConfig.MinHashrate = Read-HostInt -Prompt "Enter minimum hashrate in H/s at a pool." -Default $AlgorithmConfig.MinHashrate -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "minworkers" {
+                                        $AlgorithmConfig.MinWorkers = Read-HostInt -Prompt "Enter minimum amount of workers at a pool." -Default $AlgorithmConfig.MinWorkers -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "save" {
+                                        Write-Host " "
+                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                                        
+                                        $AlgorithmConfig | Add-Member Penalty ([int]$AlgorithmConfig.Penalty) -Force
+                                        $AlgorithmConfig | Add-Member MinHashrate ([int]$AlgorithmConfig.MinHashrate) -Force
+                                        $AlgorithmConfig | Add-Member MinWorkers ([int]$AlgorithmConfig.MinWorkers) -Force
+
+                                        $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
+                                        $AlgorithmsActualSave = [PSCustomObject]@{}
+                                        $AlgorithmsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$AlgorithmsActualSave | Add-Member $_ ($AlgorithmsActual.$_) -Force}
+                                                        
+                                        Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActualSave > $null
+
+                                        Write-Host " "
+                                        Write-Host "Changes written to algorithm configuration. " -ForegroundColor Cyan
+                                                    
+                                        $AlgorithmSetupStepsDone = $true
+                                    }
+                                }
+                                $AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null
+                                $AlgorithmSetupStep++
+                            }
+                            catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if (@("back","<") -icontains $_.Exception.Message) {
+                                    if ($AlgorithmSetupStepBack.Count) {$AlgorithmSetupStep = $AlgorithmSetupStepBack[$AlgorithmSetupStepBack.Count-1];$AlgorithmSetupStepBack.RemoveAt($AlgorithmSetupStepBack.Count-1)}
+                                }
+                                elseif ($_.Exception.Message -like "Goto*") {
+                                    $AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null
+                                    $AlgorithmSetupStep = $AlgorithmSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                    if ($AlgorithmSetupStep -lt 0) {
+                                        Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                        $AlgorithmSetupStep = $AlgorithmSetupStepBack[$AlgorithmSetupStepBack.Count-1];$AlgorithmSetupStepBack.RemoveAt($AlgorithmSetupStepBack.Count-1)
+                                    }
+                                }
+                                elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                    Write-Host " "
+                                    Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                    Write-Host " "
+                                    $AlgorithmSetupStepsDone = $true                                               
+                                }
+                                else {
+                                    Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                    $AlgorithmSetupStepsDone = $true
+                                }
+                            }
+                        } until ($AlgorithmSetupStepsDone)                                                                        
+
+                    } else {
+                        Write-Host "Please try again later" -ForegroundColor Yellow
+                    }
+
+                    Write-Host " "
+                    if (-not (Read-HostBool "Edit another algorithm?")){throw}
+                        
+                } catch {if ($Error.Count){$Error.RemoveAt(0)};$AlgorithmSetupDone = $true}
+            } until ($AlgorithmSetupDone)
         }
         elseif ($SetupType -eq "O") {
 
