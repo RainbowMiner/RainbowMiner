@@ -14,7 +14,7 @@ $Request = [PSCustomObject]@{}
 
 # Get user balances
 try {
-    $Request = Invoke-RestMethod "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-GetUrl "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)"
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,7 +32,7 @@ $Request.getuserallbalances.data | Foreach-Object {
     #Define currency
     $Currency = $_.coin
     try {
-        $Currency = Invoke-RestMethod "http://$($_.coin).miningpoolhub.com/index.php?page=api&action=getpoolinfo&api_key=$($PoolConfig.API_Key)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Select-Object -ExpandProperty getpoolinfo | Select-Object -ExpandProperty data | Select-Object -ExpandProperty currency 
+        $Currency = Invoke-GetUrl "http://$($_.coin).miningpoolhub.com/index.php?page=api&action=getpoolinfo&api_key=$($PoolConfig.API_Key)" | Select-Object -ExpandProperty getpoolinfo | Select-Object -ExpandProperty data | Select-Object -ExpandProperty currency 
     }
     catch {
         Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "

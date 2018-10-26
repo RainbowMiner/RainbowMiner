@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-RestMethod "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Request = Invoke-GetUrl "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)"
         if ($Request.status -ne "OK") {
             Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {

@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-RestMethod "http://api.bsod.pw/api/walletEx?address=$($_.Value)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Request = Invoke-GetUrl "http://api.bsod.pw/api/walletEx?address=$($_.Value)"
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {

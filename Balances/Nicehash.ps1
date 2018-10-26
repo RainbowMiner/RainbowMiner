@@ -14,7 +14,7 @@ $Request = [PSCustomObject]@{}
 
 try {
     #NH API does not total all of your balances for each algo up, so you have to do it with another call then total them manually.
-    $UnpaidRequest = Invoke-RestMethod "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)"  -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $UnpaidRequest = Invoke-GetUrl "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)"
 
     $Sum = 0
     $UnpaidRequest.result.stats.balance | Foreach {$Sum += $_}

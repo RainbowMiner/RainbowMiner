@@ -13,7 +13,7 @@ if (!$PoolConfig.BTC) {
 $Request = [PSCustomObject]@{}
 
 try {
-    $Request = Invoke-RestMethod "http://api.blazepool.com/wallet/$($PoolConfig.BTC)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    $Request = Invoke-GetUrl "http://api.blazepool.com/wallet/$($PoolConfig.BTC)"
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

@@ -16,7 +16,7 @@ $Ravenminer_Host = "ravenminer.com"
 
 $Success = $true
 try {
-    if (-not ($Request = Invoke-RestMethod "https://$($Ravenminer_Host)/api/walletEx?address=$($PoolConfig.RVN)" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop)){$Success = $false}
+    if (-not ($Request = Invoke-GetUrl "https://$($Ravenminer_Host)/api/walletEx?address=$($PoolConfig.RVN)")){$Success = $false}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

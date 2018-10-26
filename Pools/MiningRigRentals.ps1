@@ -85,13 +85,15 @@ param(
 	    'x-api-sign' = ($sign -replace '\-').ToLower()
 	    'x-api-key'  = $key
 	    'x-api-nonce'= $nonce
+        'Cache-Control' = 'no-cache'
     }
+    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
     try {
         $body = Switch($method) {
             "PUT" {$params | ConvertTo-Json -Depth 10}
             "GET" {if ($params.Count) {$params} else {$null}}
         }
-        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
+        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
     } catch {
     }
     if ($Request -and $Request.success) {$Request.data}
