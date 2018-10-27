@@ -4,10 +4,22 @@ class Fireice : Miner {
 
     [String]GetArguments() {
         $Parameters = $this.Arguments | ConvertFrom-Json        
-        $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
+        $ConfigFile = "config_$($this.Name)-$($this.BaseAlgorithm -join '-')$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
         ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$" | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8 -Force
 
-        return "-C $ConfigFile $($Parameters.Params)".Trim()
+        if ($this.DeviceModel -ne "CPU") {
+            $Vendor = Get-Device $this.DeviceName[0] | Select-Object -ExpandProperty Vendor
+            $DCFile = "$($Vendor.ToLower())-$($this.BaseAlgorithm -join '-').txt"
+            $DCPath = Join-Path $(Split-Path $this.Path) $DCFile
+            $DCFile0= "$($Vendor.ToLower()).txt"
+            $DCPath0= Join-Path $(Split-Path $this.Path) $DCFile0
+            if (-not (Test-Path $DCPath) -and (Test-Path $DCPath0)) {Copy-Item $DCPath0 $DCPath -Force} #legacy
+            $DCFile = "-$($Vendor.ToLower()) $DCFile "
+        } else {
+            $DCFile = ""
+        }
+
+        return "-C $ConfigFile $DCFile$($Parameters.Params)".Trim()
     }
 
     [String[]]UpdateMinerData () {
