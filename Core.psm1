@@ -165,8 +165,8 @@ function Update-ActiveMiners {
         $Miner = $_
         Switch ($Miner.GetStatus()) {
             "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
-            {"RunningFailed","Failed" -icontains $_} {$Session.MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
-        }
+            "RunningFailed" {$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
+        }        
     }
     if ($MinersFailed) {
         $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
