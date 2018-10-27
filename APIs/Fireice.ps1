@@ -14,7 +14,7 @@ class Fireice : Miner {
             $DCFile0= "$($Vendor.ToLower()).txt"
             $DCPath0= Join-Path $(Split-Path $this.Path) $DCFile0
             if (-not (Test-Path $DCPath) -and (Test-Path $DCPath0)) {Copy-Item $DCPath0 $DCPath -Force} #legacy
-            $DCFile = "-$($Vendor.ToLower()) $DCFile "
+            $DCFile = "--$($Vendor.ToLower()) $DCFile "
         } else {
             $DCFile = ""
         }
