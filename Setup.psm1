@@ -1321,7 +1321,7 @@ function Start-Setup {
                                         $AlgorithmConfig.MinWorkers = $AlgorithmConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "maxtimetofind" {
-                                        $AlgorithmConfig.MaxTimeToFind = Read-HostDouble -Prompt "Enter maximum average time to find a block in minutes" -Default $AlgorithmConfig.MaxTimeToFind -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MaxTimeToFind = Read-HostInt -Prompt "Enter maximum average time to find a block in seconds" -Default $AlgorithmConfig.MaxTimeToFind -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "save" {
                                         Write-Host " "

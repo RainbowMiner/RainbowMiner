@@ -318,7 +318,7 @@ function Invoke-Core {
                 $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MinTimeToFind (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinTimeToFind) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind ([int]($Session.Config.Algorithms.$_.MaxTimeToFind -replace "[^0-9]+")) -Force
             }
         }
     }
@@ -690,7 +690,7 @@ function Invoke-Core {
     $Session.AllPools = $Session.AllPools | Where-Object {-not (
                 ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                 ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
-                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*60) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind)))
+                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind)))
             )}
 
     #Apply watchdog to pools
