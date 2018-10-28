@@ -318,6 +318,7 @@ function Invoke-Core {
                 $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
+                $Session.Config.Algorithms.$_ | Add-Member MinTimeToFind (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinTimeToFind) -Force
             }
         }
     }
@@ -678,14 +679,19 @@ function Invoke-Core {
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and @($Session.Config.Pools.$Pool_Name.CoinName) -inotcontains $Pool.CoinName) -or
                 ($Pool.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $Pool.CoinSymbol) -or
-                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
-                ($Pool.Hashrate -ne $null -and $Session.Config.Algorithms."$($Pool.Algorithm)".MinHashrate -and $Pool.Hashrate -lt $Session.Config.Algorithms."$($Pool.Algorithm)".MinHashrate) -or
-                ($Pool.Workers -ne $null -and $Session.Config.Algorithms."$($Pool.Algorithm)".MinWorkers -and $Pool.Workers -lt $Session.Config.Algorithms."$($Pool.Algorithm)".MinWorkers)
+                ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
             )}
     Remove-Variable "NewPools" -Force
 
     #Give API access to the current running configuration
     $API.AllPools = $Session.AllPools | ConvertTo-Json -Depth 10
+
+    #Blend out pools, that do not pass minimum algorithm settings
+    $Session.AllPools = $Session.AllPools | Where-Object {-not (
+                ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
+                ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
+                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*60) -lt $Session.Config.Algorithms."$($_.Algorithm)".MinTimeToFind)))
+            )}
 
     #Apply watchdog to pools
     $Session.AllPools = $Session.AllPools | Where-Object {

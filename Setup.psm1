@@ -1291,7 +1291,7 @@ function Start-Setup {
                     if ($Algorithm_Name -eq '') {throw}
 
                     if (-not $AlgorithmsActual.$Algorithm_Name) {
-                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty="0";MinHashrate="0";MinWorkers="0"}) -Force
+                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty="0";MinHashrate="0";MinWorkers="0";MinTimeToFind="0"}) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActual > $null
                     }
 
@@ -1303,7 +1303,7 @@ function Start-Setup {
 
                         $AlgorithmConfig = $AlgorithmsActual.$Algorithm_Name.PSObject.Copy()
 
-                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers")) > $null
+                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","mintimetofind")) > $null
                         $AlgorithmSetupSteps.Add("save") > $null
                                         
                         do { 
@@ -1317,8 +1317,11 @@ function Start-Setup {
                                         $AlgorithmConfig.MinHashrate = $AlgorithmConfig.MinHashrate -replace "([A-Z]{2})[A-Z]+","`$1"
                                     }
                                     "minworkers" {
-                                        $AlgorithmConfig.MinWorkers = Read-HostString -Prompt "Enter minimum amount of workers at a pool (inits allowed, e.g. 5k)" -Default $AlgorithmConfig.MinWorkers -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MinWorkers = Read-HostString -Prompt "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)" -Default $AlgorithmConfig.MinWorkers -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $AlgorithmConfig.MinWorkers = $AlgorithmConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "mintimetofind" {
+                                        $AlgorithmConfig.MinTimeToFind = Read-HostDouble -Prompt "Enter minimum average time to find a block in minutes" -Default $AlgorithmConfig.MinTimeToFind -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "save" {
                                         Write-Host " "
@@ -1327,6 +1330,7 @@ function Start-Setup {
                                         $AlgorithmConfig | Add-Member Penalty "$($AlgorithmConfig.Penalty)" -Force
                                         $AlgorithmConfig | Add-Member MinHashrate $AlgorithmConfig.MinHashrate -Force
                                         $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
+                                        $AlgorithmConfig | Add-Member MinTimeToFind "$($AlgorithmConfig.MinTimeToFind)" -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}
