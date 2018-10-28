@@ -1321,7 +1321,8 @@ function Start-Setup {
                                         $AlgorithmConfig.MinWorkers = $AlgorithmConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "maxtimetofind" {
-                                        $AlgorithmConfig.MaxTimeToFind = Read-HostInt -Prompt "Enter maximum average time to find a block in seconds" -Default $AlgorithmConfig.MaxTimeToFind -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MaxTimeToFind = Read-HostInt -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $AlgorithmConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MaxTimeToFind = $AlgorithmConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "save" {
                                         Write-Host " "
@@ -1330,7 +1331,7 @@ function Start-Setup {
                                         $AlgorithmConfig | Add-Member Penalty "$($AlgorithmConfig.Penalty)" -Force
                                         $AlgorithmConfig | Add-Member MinHashrate $AlgorithmConfig.MinHashrate -Force
                                         $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
-                                        $AlgorithmConfig | Add-Member MaxTimeToFind "$($AlgorithmConfig.MaxTimeToFind)" -Force
+                                        $AlgorithmConfig | Add-Member MaxTimeToFind $AlgorithmConfig.MaxTimeToFind -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}

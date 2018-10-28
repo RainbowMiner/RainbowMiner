@@ -859,6 +859,21 @@ function ConvertFrom-Hash {
     })
 }
 
+function ConvertFrom-Time {
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [string]$Time
+    )
+    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {$Num=0}
+    [int64]$(switch (($Time -replace "[^mhdw]")[0]) {
+        "m" {$Num*60}
+        "h" {$Num*3600}
+        "d" {$Num*86400}
+        "w" {$Num*604800}
+        default {$Num}
+    })
+}
+
 function ConvertTo-LocalCurrency { 
     [CmdletBinding()]
     # To get same numbering scheme regardless of value BTC value (size) to determine formatting
