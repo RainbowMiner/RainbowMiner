@@ -412,7 +412,8 @@ function Invoke-Core {
     }
     if (-not $Session.LastDonated) {
         $Session.LastDonated = Get-LastDrun
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $Session.Timer.AddHours(-$DonateDelayHours)) {$Session.LastDonated = Set-LastDrun $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)        
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
         $Session.IsDonationRun = $false
