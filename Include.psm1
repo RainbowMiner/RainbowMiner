@@ -3049,7 +3049,7 @@ function Set-AlgorithmsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $SetupNames = @("Penalty","MinHashrate","MinWorkers","MinTimeToFind")
+            $SetupNames = @("Penalty","MinHashrate","MinWorkers","MaxTimeToFind")
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
@@ -3057,7 +3057,7 @@ function Set-AlgorithmsConfigDefault {
                     if ($Setup.$Algorithm) {
                         $Preset | Add-Member $Algorithm $Setup.$Algorithm
                     } else {
-                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MinTimeToFind="0"})
+                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0"})
                     }
                 }
                 foreach($SetupName in $SetupNames) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName "0" -Force}}

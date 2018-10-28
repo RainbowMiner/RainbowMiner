@@ -690,7 +690,7 @@ function Invoke-Core {
     $Session.AllPools = $Session.AllPools | Where-Object {-not (
                 ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                 ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
-                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*60) -lt $Session.Config.Algorithms."$($_.Algorithm)".MinTimeToFind)))
+                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*60) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind)))
             )}
 
     #Apply watchdog to pools
