@@ -50,7 +50,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            $Pool_RegionParams = Switch ($Pool.$Algorithm_Norm.Region) {
+            $Pool_RegionParams = Switch ($Pools.$Algorithm_Norm.Region) {
                 "Europe" {" --FeeServer 0"}
                 "US"     {" --FeeServer 1"}
                 "Asia"   {" --FeeServer 2"}
