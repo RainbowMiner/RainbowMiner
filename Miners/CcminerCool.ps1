@@ -6,11 +6,11 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Cool\coolMiner-x64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6-ccminercool/coolMiner-x64-v1-6.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7-ccminercool/coolMiner-x64-v1-7.7z"
 $Port = "104{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4412370.0"
 $DevFee = 1.0
-$Cuda = "9.2"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -50,12 +50,17 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+            $Pool_RegionParams = Switch ($Pool.$Algorithm_Norm.Region) {
+                "Europe" {" --FeeServer 0"}
+                "US"     {" --FeeServer 1"}
+                "Asia"   {" --FeeServer 2"}
+            }
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Pool_RegionParams) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                 API = "Ccminer"
                 Port = $Miner_Port
