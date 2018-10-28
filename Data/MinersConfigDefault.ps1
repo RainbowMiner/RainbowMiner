@@ -113,7 +113,7 @@
             [PSCustomObject]@{MainAlgorithm = "skein"; SecondaryAlgorithm = ""; Params = "-i auto"; OCprofile = ""; MSIAprofile = ""}
         )
         "CcminerYescrypt" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "yescryptR32"; SecondaryAlgorithm = ""; Params = "-i 12.406"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "yescryptR32"; SecondaryAlgorithm = ""; Params = "-i 12.25"; OCprofile = ""; MSIAprofile = ""}
         )
         "ClaymoreEthash" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "pascal"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
