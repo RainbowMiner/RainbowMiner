@@ -14,7 +14,7 @@ $DevFee = 0
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = "-pow7 0"} #CryptoNight
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = "-pow7 0"} #CryptoNight
     [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = "-pow7 1"} #CryptoNightV7
 )
 
