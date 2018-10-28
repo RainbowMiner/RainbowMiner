@@ -3837,3 +3837,16 @@ param(
         $sr.Close()
     } catch {$s}
 }
+
+function Get-LastDrun {
+    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-Content ".\Data\lastdrun.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {}}
+}
+
+function Set-LastDrun {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [DateTime]$Timer = (Get-Date).ToUniversalTime()
+)
+    $Timer = $Timer.ToUniversalTime();Set-ContentJson -Data ([PSCustomObject]@{lastdrun=[DateTime]$Timer}) -PathToFile ".\Data\lastdrun.json" > $null;$Timer
+}

@@ -409,10 +409,13 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if (-not $Session.LastDonated) {$Session.LastDonated = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    if (-not $Session.LastDonated) {
+        $Session.LastDonated = Get-LastDrun
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $Session.Timer.AddHours(-$DonateDelayHours)) {$Session.LastDonated = Set-LastDrun $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
         $Session.IsDonationRun = $false
-        $Session.LastDonated = $Session.Timer
+        $Session.LastDonated = Set-LastDrun $Session.Timer
         $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         $Session.UserConfig = $null
         $Session.AllPools = $null
