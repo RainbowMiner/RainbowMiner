@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"}, #YesctyptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
     [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
-    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-N 1"} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-N 1 -i 12.25"} #YescryptR32
  
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
@@ -89,7 +89,6 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         $Miner_Params = $_.Params
-        if ($Miner_Model -match "GTX1080" -and $Algorithm_Norm -eq "YescryptR32") {$Miner_Params = "$($Miner_Params) -i 12.406"}
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             [PSCustomObject]@{
