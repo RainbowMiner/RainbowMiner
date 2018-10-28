@@ -92,7 +92,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     PoolFee       = $Pool_PoolFee
                     Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
                     Hashrate      = $Stat.HashRate_Live
-                    #BLK           = $Stat.BlockRate_Average
+                    BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
                 }
             }
