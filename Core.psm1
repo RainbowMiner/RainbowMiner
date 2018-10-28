@@ -1332,7 +1332,10 @@ function Invoke-Core {
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10
 
     #Move donation run into the future, if benchmarks are ongoing
-    if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or (($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0)) {$Session.LastDonated = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)}
+    if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or (($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0)) {
+        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
+        if ($Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+    }
 
     #Give API access to WatchdogTimers information
     $API.WatchdogTimers = $Session.WatchdogTimers | ConvertTo-Json -Depth 10
