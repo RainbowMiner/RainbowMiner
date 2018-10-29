@@ -3920,7 +3920,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Int]$Priority = 0
 )
-    if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Config\autoexec.default.txt")) {Copy-Item ".\Config\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
+    if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
     [System.Collections.ArrayList]$Script:AutoexecCommands = @()
     foreach($cmd in @(Get-Content ".\Config\autoexec.txt" -ErrorAction Ignore | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
