@@ -146,7 +146,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price_Data.amount / $Divisor) -Duration $StatSpan -ChangeDetection $false
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price_Data.amount / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
     }
 
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId

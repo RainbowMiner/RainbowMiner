@@ -360,7 +360,7 @@ function Set-Stat {
         [Parameter(Mandatory = $true)]
         [TimeSpan]$Duration, 
         [Parameter(Mandatory = $false)]
-        [Bool]$FaultDetection = $false, 
+        [Bool]$FaultDetection = $false,
         [Parameter(Mandatory = $false)]
         [Bool]$ChangeDetection = $false,
         [Parameter(Mandatory = $false)]
@@ -372,7 +372,9 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Int64]$BlockRate = 0,
         [Parameter(Mandatory = $false)]
-        [String]$Sub = ""
+        [String]$Sub = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     $Updated = $Updated.ToUniversalTime()
@@ -461,14 +463,20 @@ function Set-Stat {
 
         if ($FaultDetection) {
             if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
-            $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
-            $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1), 0.9))
+            if ($FaultTolerance -lt 1) {
+                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
+                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1), 0.9))
+            } elseif ($Stat.Hour -gt 0) {
+                if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
+                $ToleranceMin = $Stat.Hour / $FaultTolerance
+                $ToleranceMax = $Stat.Hour * $FaultTolerance
+            }
         }
 
         if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live) {$Updated = $Stat.updated}
 
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-            Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Int64]$ToleranceMin) to $([Int64]$ToleranceMax)). "
+            if (-not $Quiet) {Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Int64]$ToleranceMin) to $([Int64]$ToleranceMax)). "}
         }
         else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
@@ -528,7 +536,7 @@ function Set-Stat {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        if (Test-Path $Path) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
+        if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
 
         $Stat = [PSCustomObject]@{
             Live = $Value
