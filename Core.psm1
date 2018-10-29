@@ -21,9 +21,11 @@
         OCProfiles = @{Path='';LastWriteTime=0}
         Pools      = @{Path='';LastWriteTime=0}
         Algorithms = @{Path='';LastWriteTime=0}
+        Coins      = @{Path='';LastWriteTime=0}
     }
 
     $Session.LastDonated = 0
+    $Session.RoundCounter = 0
 
     $Session.SkipSwitchingPrevention = $false
     $Session.StartDownloader = $false
@@ -82,6 +84,7 @@
             $Session.ConfigFiles["Devices"].Path = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["OCProfiles"].Path = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["Algorithms"].Path = @($ConfigFile_Path,"\algorithms.",$ConfigFile_Name) -join ''
+            $Session.ConfigFiles["Coins"].Path = @($ConfigFile_Path,"\coins.",$ConfigFile_Name) -join ''
 
             if (-not $psISE) {
                 $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
@@ -91,6 +94,7 @@
                 if (Test-Path $Session.ConfigFiles["Devices"].Path) {Copy-Item $Session.ConfigFiles["Devices"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {Copy-Item $Session.ConfigFiles["OCProfiles"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {Copy-Item $Session.ConfigFiles["Algorithms"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_algorithms.$($ConfigFile_Name)"}
+                if (Test-Path $Session.ConfigFiles["Coins"].Path) {Copy-Item $Session.ConfigFiles["Coins"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_coins.$($ConfigFile_Name)"}
             }
         
             # Create pools.config.txt if it is missing
@@ -113,9 +117,13 @@
             Set-AlgorithmsConfigDefault -PathToFile $Session.ConfigFiles["Algorithms"].Path -Force
             $Session.ConfigFiles["Algorithms"].Path = $Session.ConfigFiles["Algorithms"].Path | Resolve-Path -Relative
 
+            # Create algorithms.config.txt if it is missing
+            Set-CoinsConfigDefault -PathToFile $Session.ConfigFiles["Coins"].Path -Force
+            $Session.ConfigFiles["Coins"].Path = $Session.ConfigFiles["Coins"].Path | Resolve-Path -Relative
+
             $_ | Resolve-Path -Relative
         }
-    
+
         #cleanup legacy data
         if (Test-Path ".\Cleanup.ps1") {
             if ($RunCleanup) {
@@ -127,6 +135,7 @@
                     DevicesConfigFile = $Session.ConfigFiles["Devices"].Path
                     OCProfilesConfigFile = $Session.ConfigFiles["OCProfiles"].Path
                     AlgorithmsConfigFile = $Session.ConfigFiles["Algorithms"].Path
+                    CoinsConfigFile = $Session.ConfigFiles["Coins"].Path
                     AllDevices = $Session.AllDevices
                     MyCommandParameters = $Session.DefaultValues.Keys
                     Version = if (Test-Path ".\Data\Version.json") {(Get-Content ".\Data\Version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
@@ -204,6 +213,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
+                $Session.Config | Add-Member Coins ([PSCustomObject]@{}) -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.IsInitialSetup = -not $Session.Config.Wallet -or -not $Session.Config.WorkerName
@@ -263,9 +273,10 @@ function Invoke-Core {
     }
 
     #Start/stop services
+    if ($Session.RoundCounter -eq 0) {Start-Autoexec -Priority $Session.Config.AutoexecPriority}
     if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval}
-    if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1)   {Start-Afterburner}
+    if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor))   {Start-Afterburner}
     if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.LocalAPIport -ne $ConfigBackup.LocalAPIport) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {
         Start-APIServer -RemoteAPI:$Session.Config.RemoteAPI -LocalAPIport:$Session.Config.LocalAPIport
@@ -319,6 +330,23 @@ function Invoke-Core {
                 $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
+            }
+        }
+    }
+
+    #Check for coins config
+    Set-CoinsConfigDefault $Session.ConfigFiles["Coins"].Path
+    if (Test-Path $Session.ConfigFiles["Coins"].Path) {
+        if ($CheckConfig -or -not $Session.Config.Coins -or (Get-ChildItem $Session.ConfigFiles["Coins"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Coins"].LastWriteTime -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
+            $Session.ConfigFiles["Coins"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Coins"].Path).LastWriteTime.ToUniversalTime()
+            $AllCoins = (Get-ChildItemContent $Session.ConfigFiles["Coins"].Path -Quick).Content
+            $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
+            $AllCoins.PSObject.Properties.Name | Foreach-Object {
+                $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
+                $Session.Config.Coins.$_ | Add-Member Penalty ([int]$Session.Config.Coins.$_.Penalty) -Force
+                $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
+                $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
+                $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
             }
         }
     }
@@ -691,7 +719,10 @@ function Invoke-Core {
     $Session.AllPools = $Session.AllPools | Where-Object {-not (
                 ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                 ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
-                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind)))
+                ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind))) -or
+                ($_.CoinSymbol -and $_.Hashrate -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate -and $_.Hashrate -lt $Session.Config.Coins."$($_.CoinSymbol)".MinHashrate) -or
+                ($_.CoinSymbol -and $_.Workers -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers -and $_.Workers -lt $Session.Config.Coins."$($_.CoinSymbol)".MinWorkers) -or
+                ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind)))
             )}
 
     #Apply watchdog to pools
@@ -1772,6 +1803,8 @@ function Invoke-Core {
             }
         }
     }
+
+    $Session.RoundCounter++
 }
 
 function Stop-Core {
@@ -1795,4 +1828,5 @@ function Stop-Core {
             $ExcavatorWindowsClosed.Add($Miner.BaseName) > $null
         }
     }
+    Stop-Autoexec
 }

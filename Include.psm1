@@ -3094,6 +3094,45 @@ function Set-AlgorithmsConfigDefault {
     }
 }
 
+function Set-CoinsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $SetupNames = @("Penalty","MinHashrate","MinWorkers","MaxTimeToFind")
+            $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            
+            foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
+                if (-not $Preset.$Coin) {
+                    if ($Setup.$Coin) {
+                        $Preset | Add-Member $Coin $Setup.$Coin
+                    } else {
+                        $Preset | Add-Member $Coin ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0"})
+                    }
+                }
+                foreach($SetupName in $SetupNames) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName "0" -Force}}
+            }
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+}
+
+
 function Set-DevicesConfigDefault {
     [CmdletBinding()]
     param(
@@ -3875,12 +3914,18 @@ param(
 }
 
 function Start-Autoexec {
+[cmdletbinding()]
+param(
+    [ValidateRange(-2, 3)]
+    [Parameter(Mandatory = $false)]
+    [Int]$Priority = 0
+)
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Config\autoexec.default.txt")) {Copy-Item ".\Config\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
     [System.Collections.ArrayList]$Script:AutoexecCommands = @()
     foreach($cmd in @(Get-Content ".\Config\autoexec.txt" -ErrorAction Ignore | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             try {
-                $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true
+                $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true -Priority $Priority
                 if ($Job) {
                     $Job | Add-Member FilePath "$($Matches[1])" -Force
                     $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force

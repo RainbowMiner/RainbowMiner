@@ -62,6 +62,7 @@ function Start-Setup {
             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
             Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
+            Write-Host "- Coins: finetune global settings for dedicated coins, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             Write-Host " "
             if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
@@ -71,7 +72,7 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDOX"
+            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDLIOX"
         }
 
         if ($SetupType -eq "X") {
@@ -89,7 +90,7 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -589,6 +590,9 @@ function Start-Setup {
                         "miningprioritygpu" {
                             $Config.MiningPriorityGPU = Read-HostInt -Prompt "Adjust GPU mining process priority (-2..3)" -Default $Config.MiningPriorityGPU -Min -2 -Max 3 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
+                        "autoexecpriority" {
+                            $Config.AutoexecPriority = Read-HostInt -Prompt "Adjust autoexec command's process priority (-2..3)" -Default $Config.AutoexecPriority -Min -2 -Max 3 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
                         "disablemsiamonitor" {
                             $Config.DisableMSIAmonitor = Read-HostBool -Prompt "Disable MSI Afterburner monitor/control" -Default $Config.DisableMSIAmonitor | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
@@ -659,6 +663,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member UseTimeSync $(if (Get-Yes $Config.UseTimeSync){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member MiningPriorityCPU $Config.MiningPriorityCPU -Force
                             $ConfigActual | Add-Member MiningPriorityGPU $Config.MiningPriorityGPU -Force
+                            $ConfigActual | Add-Member AutoexecPriority $Config.AutoexecPriority -Force
                             $ConfigActual | Add-Member PowerPrice $Config.PowerPrice -Force
                             $ConfigActual | Add-Member PowerOffset $Config.PowerOffset -Force
                             $ConfigActual | Add-Member PowerPriceCurrency $Config.PowerPriceCurrency -Force
@@ -1321,7 +1326,7 @@ function Start-Setup {
                                         $AlgorithmConfig.MinWorkers = $AlgorithmConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "maxtimetofind" {
-                                        $AlgorithmConfig.MaxTimeToFind = Read-HostInt -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $AlgorithmConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $AlgorithmConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $AlgorithmConfig.MaxTimeToFind = $AlgorithmConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "save" {
@@ -1383,6 +1388,143 @@ function Start-Setup {
                         
                 } catch {if ($Error.Count){$Error.RemoveAt(0)};$AlgorithmSetupDone = $true}
             } until ($AlgorithmSetupDone)
+        }
+        elseif ($SetupType -eq "I") {
+
+            Clear-Host
+
+            Write-Host " "
+            Write-Host "*** Coins Configuration ***" -BackgroundColor Green -ForegroundColor Black
+            Write-HostSetupHints
+            Write-Host " "
+
+            $CoinSetupDone = $false
+            do {
+                try {
+        
+                    do {
+                        $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
+                        Write-Host " "
+                        $p = [console]::ForegroundColor
+                        [console]::ForegroundColor = "Cyan"
+                        Write-Host "Current Coins:"
+                        $CoinsActual.PSObject.Properties | Format-Table @(
+                            @{Label="Symbol"; Expression={"$($_.Name)"}}
+                            @{Label="Penalty"; Expression={"$($_.Value.Penalty)"}; Align="center"}
+                            @{Label="MinHashrate"; Expression={"$($_.Value.MinHashrate)"}; Align="center"}
+                            @{Label="MinWorkers"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
+                            @{Label="MaxTimeToFind"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
+                        )
+                        [console]::ForegroundColor = $p
+
+                        $Coin_Symbol = Read-HostString -Prompt "Which coinsymbol do you want to edit/create/delete? (leave empty to end coin config)" -Characters "`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        if ($Coin_Symbol -eq '') {throw}
+
+                        if (-not $CoinsActual.$Coin_Symbol) {
+                            if (Read-HostBool "Do you want to add a new coin `"$($Coin_Symbol)`"?" -Default $true) {
+                                $CoinsActual | Add-Member $Coin_Symbol ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0"}) -Force
+                                Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActual > $null
+                            } else {
+                                $Coin_Symbol = ''
+                            }
+                        } else {
+                            $Coin_Symbol = $CoinsActual.PSObject.Properties.Name | Where-Object {$_ -eq $Coin_Symbol}
+                            $What = Read-HostString "Do you want to [e]dit or [d]elete `"$Coin_Symbol`"? (or enter [b]ack, to choose another)" -Characters "edb" -Mandatory -Default "e"                                            
+                            if ($What -ne "e") {                                                
+                                if ($What -eq "d") {
+                                    $CoinsSave = [PSCustomObject]@{}
+                                    $CoinsActual.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol} | Foreach-Object {$CoinsSave | Add-Member $_.Name $_.Value}                                                    
+                                    Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsSave > $null
+                                }
+                                $Coin_Symbol = ""
+                            }
+                        }
+                        if ($Coin_Symbol -eq '') {Clear-Host}
+                    } until ($Coin_Symbol -ne '')
+
+                    if ($Coin_Symbol) {
+                        $CoinSetupStepsDone = $false
+                        $CoinSetupStep = 0
+                        [System.Collections.ArrayList]$CoinSetupSteps = @()
+                        [System.Collections.ArrayList]$CoinSetupStepBack = @()
+
+                        $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
+
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind")) > $null
+                        $CoinSetupSteps.Add("save") > $null
+                                        
+                        do { 
+                            try {
+                                Switch ($CoinSetupSteps[$CoinSetupStep]) {
+                                    "penalty" {
+                                        $CoinConfig.Penalty = Read-HostInt -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $CoinConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "minhashrate" {
+                                        $CoinConfig.MinHashrate = Read-HostString -Prompt "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)" -Default $CoinConfig.MinHashrate -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.MinHashrate = $CoinConfig.MinHashrate -replace "([A-Z]{2})[A-Z]+","`$1"
+                                    }
+                                    "minworkers" {
+                                        $CoinConfig.MinWorkers = Read-HostString -Prompt "Enter minimum amount of workers at a pool (units allowed, e.g. 5k)" -Default $CoinConfig.MinWorkers -Characters "0-9kMGTPH`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.MinWorkers = $CoinConfig.MinWorkers -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "maxtimetofind" {
+                                        $CoinConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $CoinConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.MaxTimeToFind = $CoinConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "save" {
+                                        Write-Host " "
+                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                                        
+                                        $CoinsActual | Add-Member $Coin_Symbol $CoinConfig -Force
+                                        $CoinsActualSave = [PSCustomObject]@{}
+                                        $CoinsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$CoinsActualSave | Add-Member $_ ($CoinsActual.$_) -Force}
+
+                                        Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActualSave > $null
+
+                                        Write-Host " "
+                                        Write-Host "Changes written to coins configuration. " -ForegroundColor Cyan
+                                                    
+                                        $CoinSetupStepsDone = $true
+                                    }
+                                }
+                                $CoinSetupStepBack.Add($CoinSetupStep) > $null
+                                $CoinSetupStep++
+                            }
+                            catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                                if (@("back","<") -icontains $_.Exception.Message) {
+                                    if ($CoinSetupStepBack.Count) {$CoinSetupStep = $CoinSetupStepBack[$CoinSetupStepBack.Count-1];$CoinSetupStepBack.RemoveAt($CoinSetupStepBack.Count-1)}
+                                }
+                                elseif ($_.Exception.Message -like "Goto*") {
+                                    $CoinSetupStepBack.Add($CoinSetupStep) > $null
+                                    $CoinSetupStep = $CoinSetupSteps.IndexOf(($_.Exception.Message -split "\s+")[1])
+                                    if ($CoinSetupStep -lt 0) {
+                                        Write-Log -Level Error "Unknown goto command `"$(($_.Exception.Message -split "\s+")[1])`". You should never reach here. Please open an issue on github.com"
+                                        $CoinSetupStep = $CoinSetupStepBack[$CoinSetupStepBack.Count-1];$CoinSetupStepBack.RemoveAt($CoinSetupStepBack.Count-1)
+                                    }
+                                }
+                                elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                    Write-Host " "
+                                    Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                    Write-Host " "
+                                    $CoinSetupStepsDone = $true                                               
+                                }
+                                else {
+                                    Write-Log -Level Warn "`"$($_.Exception.Message)`". You should never reach here. Please open an issue on github.com"
+                                    $CoinSetupStepsDone = $true
+                                }
+                            }
+                        } until ($CoinSetupStepsDone)                                                                        
+
+                    } else {
+                        Write-Host "Please try again later" -ForegroundColor Yellow
+                    }
+
+                    Write-Host " "
+                    if (-not (Read-HostBool "Edit another coin?")){throw}
+                        
+                } catch {if ($Error.Count){$Error.RemoveAt(0)};$CoinSetupDone = $true}
+            } until ($CoinSetupDone)
         }
         elseif ($SetupType -eq "O") {
 
@@ -1532,7 +1674,7 @@ function Start-Setup {
                     }
 
                     Write-Host " "
-                    if (-not (Read-HostBool "Edit another device?")){throw}
+                    if (-not (Read-HostBool "Edit another profile?")){throw}
                         
                 } catch {if ($Error.Count){$Error.RemoveAt(0)};$OCProfileSetupDone = $true}
             } until ($OCProfileSetupDone)
