@@ -276,7 +276,7 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0) {Start-Autoexec -Priority $Session.Config.AutoexecPriority}
     if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval}
-    if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor))   {Start-Afterburner}
+    if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
     if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.LocalAPIport -ne $ConfigBackup.LocalAPIport) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {
         Start-APIServer -RemoteAPI:$Session.Config.RemoteAPI -LocalAPIport:$Session.Config.LocalAPIport
