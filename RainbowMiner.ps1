@@ -215,6 +215,8 @@ if ((Get-Command "Get-MpPreference" -ErrorAction Ignore) -and (Get-MpComputerSta
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1' -SkipEditionCheck; Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
 }
 
+Start-Autoexec
+
 while (-not $Session.Stopp) {
 
     Invoke-Core
@@ -232,6 +234,7 @@ while (-not $Session.Stopp) {
 }
 
 Stop-Core
+Stop-Autoexec
 
 #Stop the log
 Stop-Transcript

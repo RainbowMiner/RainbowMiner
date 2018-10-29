@@ -1,0 +1,12 @@
+﻿#
+# RainbowMiner autoexec
+# =====================
+# 
+# put commands to be executed at the startup of RainbowMiner here:
+# - one line, one command
+# - command and path must be enclosed with doublequotes (")
+# - arguments (if any) must follow after the closing doublequote if the command
+# - hashtag marks a comment
+#
+
+#"C:\Qbundle\BlagoMiner\Blagominer_avx.exe" --argument1 whatsoever1

@@ -3873,3 +3873,45 @@ param(
 )
     $Timer = $Timer.ToUniversalTime();Set-ContentJson -Data ([PSCustomObject]@{lastdrun=[DateTime]$Timer}) -PathToFile ".\Data\lastdrun.json" > $null;$Timer
 }
+
+function Start-Autoexec {
+    if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Config\autoexec.default.txt")) {Copy-Item ".\Config\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
+    [System.Collections.ArrayList]$Script:AutoexecCommands = @()
+    foreach($cmd in @(Get-Content ".\Config\autoexec.txt" -ErrorAction Ignore | Select-Object)) {
+        if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
+            try {
+                $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true
+                if ($Job) {
+                    $Job | Add-Member FilePath "$($Matches[1])" -Force
+                    $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
+                    Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
+                    $Script:AutoexecCommands.Add($Job) >$null
+                }
+            } catch {}
+        }
+    }
+}
+
+function Stop-Autoexec {
+    $Script:AutoexecCommands | Where-Object Process | Foreach-Object {
+        $CompleteName = "$($_.FilePath) $($_.Arguments)"
+        if ($_.ProcessId) {
+            if ($Process = Get-Process -Id $_.ProcessId -ErrorAction Ignore) {
+                $Process.CloseMainWindow() > $null
+                # Wait up to 10 seconds for the miner to close gracefully
+                if($Process.WaitForExit(10000)) { 
+                    Write-Log "Autoexec command closed gracefully: $($CompleteName)" 
+                } else {
+                    Write-Log -Level Warn "Autoexec command failed to close within 10 seconds: $($CompleteName)"
+                    if(-not $Process.HasExited) {
+                        Write-Log -Level Warn "Attempting to kill autoexec command PID $($this.Process.Id): $($CompleteName)"
+                        $Process.Kill()
+                    }
+                }
+            }
+        }
+        if ($_.Process | Get-Job -ErrorAction Ignore) {
+            $_.Process | Remove-Job -Force
+        }
+    }
+}
