@@ -450,6 +450,7 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
 - **MiningPriorityCPU** = process priority for CPU miners (-2..2) [default=-2]
 - **MiningPriorityGPU** = process priority for GPU miners (-2..2) [default=-1]
+- **AutoexecPriority** = process priority for commands started via autoexec.txt (-2..2) [default=0]
 - **EthPillEnable** = set to "revA" or "revB" (read [Wiki](https://github.com/OhGodACompany/OhGodAnETHlargementPill/wiki) for more information on revA/revB), or "disable" to stop using the EthPill for Ethereum mining [default=disable]
 - **RemoteAPI** = set to 1 to enable accessability of API within your network [default=0]
 - **Donate** = set the minutes, you want RainbowMiner to work for the developer (min. is 10 minutes, equals to 0.7%) [default=24]
@@ -729,14 +730,38 @@ Example:
       "X17": {
           "Penalty": "10",
           "MinHashrate": "50GH",
-          "MinWorkers": "300"
+          "MinWorkers": "300",
+          "MaxTimeToFind": "1.5h"
         }
     }
 
 This configuration would:
 - reduce all X17 pool prices by a "Penalty" of 10%
-- set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected
+- set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
 - set the mimimum pool workers mining X17 to 300 for a pool to be selected
+- set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
+
+
+### Config\coins.config.txt
+
+Globally define parameters for coins:
+
+Example:
+
+    {
+      "RVN": {
+          "Penalty": "10",
+          "MinHashrate": "50GH",
+          "MinWorkers": "300",
+          "MaxTimeToFind": "1.5h"
+        }
+    }
+
+This configuration would:
+- reduce all RVN pool coin prices by a "Penalty" of 10%
+- set a minimum RVN pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
+- set the mimimum pool workers mining RVN to 300 for a pool to be selected
+- set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 
 
 ### Config\ocprofiles.config.txt
@@ -802,6 +827,26 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+
+
+### Config\autoexec.config.txt
+
+If you want RainbowMiner to start other commands before the mining begins, you may add them to file Config\autoexec.config.txt by following the following rules:
+- one line, one command
+- command and path must be enclosed with doublequotes (")
+- arguments (if any) must follow after the closing doublequote if the command
+- a hashtag (#) marks the beginning of a comment, everything behind this within the line, will be ignored
+
+Example:
+
+    #
+    # RainbowMiner autoexec
+    # =====================
+    # 
+
+    "C:\Qbundle\BlagoMiner\Blagominer_avx.exe" --argument1 whatsoever1
+
+.. would start Blagominer_avx.exe with commands ""--argument1 whatsoever1", setting the working directory to "C:\Qbundle\BlagoMiner"
 
 ## FAQ
 
