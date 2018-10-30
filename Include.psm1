@@ -194,30 +194,24 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent)
     
-    if (-not (Test-Path Variable:Global:GlobalCoinmarketCapCoins) -or -not $Global:GlobalCoinmarketCapCoins.Count) {
+    if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-RestMethod "https://api.coinmarketcap.com/v2/listings/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Request = Invoke-RestMethod "https://rbminer.net/api/coins.php" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Coinmarketcap API (listings) has failed. "
+            Write-Log -Level Warn "Coins API failed. "
         }
 
-        if ($Request.data -eq $null -or $Request.data.Count -le 100) {
-            Write-Log -Level Warn "Coinmarketcap API (listings) returned nothing. "
+        if (-not $Request -or $Request.PSObject.Properties.Name.Count -le 100) {
+            Write-Log -Level Warn "Coins API return empty string. "
             return
-        }        
-        [hashtable]$Global:GlobalCoinmarketCapCoins = @{}
-        foreach ($data in $Request.data) {
-            $Global:GlobalCoinmarketCapCoins[$data.name.ToLower() -replace "[^a-z0-9]+"] = $data.symbol
         }
-        if (Test-Path "Data\Coins.json") {
-            $NewCoins = Get-Content "Data\Coins.json" -Raw | ConvertFrom-Json
-            $NewCoins.PSObject.Properties.Name | Foreach-Object {$name = $_.ToLower() -replace "[^a-z0-9]+";if (-not $Global:GlobalCoinmarketCapCoins.ContainsKey($name)) {$Global:GlobalCoinmarketCapCoins[$name] = $NewCoins.$_}}
-        }        
+        [hashtable]$Global:GlobalCoinNames = @{}
+        $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
 
-    if (-not $Silent) {$Global:GlobalCoinmarketCapCoins[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
+    if (-not $Silent) {$Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
 }
 
 function Get-Ticker {
