@@ -128,12 +128,12 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
 if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
-        $Rigs_Request | Where-Object $Disable_Rigs -contains id | Foreach-Object {$_.available_status="disabled"}
+        $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
     }
 } else {
     if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
-        $Rigs_Request | Where-Object $Enable_Rigs -contains id | Foreach-Object {$_.available_status="available"}
+        $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
     }
 }
 
@@ -142,12 +142,17 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Algorithm = $_.type
     $Pool_Algorithm_Norm = Get-Algorithm $_.type
 
-    $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
-
-    $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
+    if ($false) {
+        $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
+        $Divisor = Get-MiningRigRentalsDivisor $Pool_Price_Data.unit
+        $Pool_Price = $Pool_Price_Data.amount
+    } else {
+        $Divisor = Get-MiningRigRentalsDivisor $_.price.type
+        $Pool_Price = $_.price.BTC.price
+    }
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price_Data.amount / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
     }
 
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
