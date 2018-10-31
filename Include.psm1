@@ -3953,3 +3953,21 @@ function Stop-Autoexec {
         }
     }
 }
+
+function Invoke-PingStratum {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$Server,
+    [Parameter(Mandatory = $True)]
+    [Int]$Port,
+    [Parameter(Mandatory = $False)]
+    [String]$User="",
+    [Parameter(Mandatory = $False)]
+    [String]$Pass="x"
+)
+    try {
+        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout 10 | ConvertFrom-Json -ErrorAction Stop
+        if ($User -and $Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout 10 > $null}
+    } catch {}
+}

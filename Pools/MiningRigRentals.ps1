@@ -124,7 +124,7 @@ if (-not $Rigs_Request -or -not $RigInfo_Request) {
     return
 }
 
-if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {    
+if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
         $Rigs_Request | Where-Object $Disable_Rigs -contains id | Foreach-Object {$_.available_status="disabled"}
@@ -171,5 +171,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             PoolFee       = $Pool_Fee
             Exclusive     = $_.status.status -eq "rented"
         }
+
+        if ($_.status.status -ne "rented") {Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port}
     }
 }
