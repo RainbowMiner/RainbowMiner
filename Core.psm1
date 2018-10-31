@@ -1166,6 +1166,8 @@ function Invoke-Core {
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
             $ActiveMiner.IsExclusiveMiner = $Miner.IsExclusiveMiner
             $ActiveMiner.MinSamples = $Miner.MinSamples
+            $ActiveMiner.CoinName   = $Miner.Pools.PSObject.Properties.Value.CoinName
+            $ActiveMiner.CoinSymbol = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1179,6 +1181,8 @@ function Invoke-Core {
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
                 BaseAlgorithm        = $Miner.BaseAlgorithm
                 Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
+                CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
+                CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
                 DeviceName           = $Miner.DeviceName
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit

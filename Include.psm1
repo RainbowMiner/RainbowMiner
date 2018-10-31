@@ -2091,6 +2091,8 @@ class Miner {
     [string[]]$Algorithm = @()
     [string[]]$BaseAlgorithm = @()
     $Currency
+    $CoinName
+    $CoinSymbol
     $DeviceName
     $DeviceModel
     [Bool]$Enabled = $false
@@ -3707,6 +3709,9 @@ function Invoke-ReportMinerStatus {
                 Type           = @($_.DeviceModel)
                 Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()
                 Algorithm      = @($_.BaseAlgorithm)
+                Currency       = $_.Currency
+                CoinName       = @($_.CoinName | Select-Object)
+                CoinSymbol     = @($_.CoinSymbol | Select-Object)
                 Pool           = @($_.Pool)
                 CurrentSpeed   = @($_.Speed_Live)
                 EstimatedSpeed = @($_.Speed)
