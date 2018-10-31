@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerX22i\ccminer.exe"
-$Uri = "https://github.com/SUQAORG/ccminer-x22i/releases/download/v1.1.3/ccminer-x22i-bin-w64-v1.1.3.7z"
+$Uri = "https://github.com/SUQAORG/ccminer-x22i/releases/download/v1.2.0/ccminer-x22i-bin-w64-v1.2.0.7z"
 $Port = "124{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.0"
