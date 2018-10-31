@@ -116,11 +116,8 @@ param(
 }
 
 $Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
-if ($Rigs_Request) {
-    $RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Rigs_Request.id -join ';')/port" $API_Key $API_Secret
-}
 
-if (-not $Rigs_Request -or -not $RigInfo_Request) {
+if (-not $Rigs_Request) {
     Write-Log -Level Warn "Pool API ($Name) rig $Worker request has failed. "
     return
 }
@@ -134,7 +131,13 @@ if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Obje
     if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
         $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
-    }
+    }    
+}
+
+$RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret
+if (-not $RigInfo_Request) {
+    Write-Log -Level Warn "Pool API ($Name) rig $Worker info request has failed. "
+    return
 }
 
 $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
