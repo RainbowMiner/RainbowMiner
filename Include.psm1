@@ -1221,6 +1221,37 @@ function Start-SubProcessInConsole {
     }
 }
 
+function Stop-SubProcess {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$Job,
+        [Parameter(Mandatory = $false)]
+        [String]$Title = "Process",
+        [Parameter(Mandatory = $false)]
+        [String]$Name = ""
+    )
+    if ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
+        if ($Process = Get-Process -Id $Job.ProcessId -ErrorAction Ignore) {
+            $Process.CloseMainWindow() > $null
+            # Wait up to 10 seconds for the miner to close gracefully
+            if($Process.WaitForExit(10000)) { 
+                Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+            } else {
+                Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                if(-not $Process.HasExited) {
+                    Write-Log -Level Warn "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
+                    $Process.Kill()
+                }
+            }            
+        }
+        $Job.ProcessId = 0
+    }
+    if ($Job.Process | Get-Job -ErrorAction Ignore) {
+        $Job.Process | Remove-Job -Force
+    }
+}
+
 function Expand-WebRequest {
     [CmdletBinding()]
     param(
@@ -2163,24 +2194,7 @@ class Miner {
         $this.ClearHashRate()
 
         if ($this.Process) {
-            if ($this.HasOwnMinerWindow -and $this.ProcessId) {
-                if ($MiningProcess = Get-Process -Id $this.ProcessId -ErrorAction Ignore) {
-                    $MiningProcess.CloseMainWindow() > $null
-                    # Wait up to 10 seconds for the miner to close gracefully
-                    if($MiningProcess.WaitForExit(10000)) { 
-                        Write-Log "Miner $($this.Name) closed gracefully" 
-                    } else {
-                        Write-Log -Level Warn "Miner $($this.Name) failed to close within 10 seconds"
-                        if(-not $MiningProcess.HasExited) {
-                            Write-Log -Level Warn "Attempting to kill miner $($this.Name) PID $($this.Process.Id)"
-                            $MiningProcess.Kill()
-                        }
-                    }
-                }
-            }
-            if ($this.Process | Get-Job -ErrorAction Ignore) {
-                $this.Process | Remove-Job -Force
-            }
+            Stop-SubProcess -Job $this -Title "Miner $($this.Name)"
 
             if (-not ($this.Process | Get-Job -ErrorAction Ignore)) {
                 $this.Active = $this.GetActiveTime();
@@ -3922,6 +3936,7 @@ param(
                 if ($Job) {
                     $Job | Add-Member FilePath "$($Matches[1])" -Force
                     $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
+                    $Job | Add-Member HasOwnMinerWindow $true -Force
                     Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
                     $Script:AutoexecCommands.Add($Job) >$null
                 }
@@ -3932,25 +3947,7 @@ param(
 
 function Stop-Autoexec {
     $Script:AutoexecCommands | Where-Object Process | Foreach-Object {
-        $CompleteName = "$($_.FilePath) $($_.Arguments)"
-        if ($_.ProcessId) {
-            if ($Process = Get-Process -Id $_.ProcessId -ErrorAction Ignore) {
-                $Process.CloseMainWindow() > $null
-                # Wait up to 10 seconds for the miner to close gracefully
-                if($Process.WaitForExit(10000)) { 
-                    Write-Log "Autoexec command closed gracefully: $($CompleteName)" 
-                } else {
-                    Write-Log -Level Warn "Autoexec command failed to close within 10 seconds: $($CompleteName)"
-                    if(-not $Process.HasExited) {
-                        Write-Log -Level Warn "Attempting to kill autoexec command PID $($this.Process.Id): $($CompleteName)"
-                        $Process.Kill()
-                    }
-                }
-            }
-        }
-        if ($_.Process | Get-Job -ErrorAction Ignore) {
-            $_.Process | Remove-Job -Force
-        }
+        Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)"
     }
 }
 
