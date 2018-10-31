@@ -875,8 +875,8 @@ Tab "Actions":
 #### 1. Signup and create a rig for rent
 - signup at https://www.miningrigrentals.com
 - create API keys with permission "Manage Rigs" checked
-- create a rig for an algorithm that you want to rent to an interested renter at the "MyRigs" section of the website
-- add pools on the "Pool Configuration" tab of the rig
+- create a rig for at least one algorithm that you want to rent to an interested renter at the "MyRigs" section of the website
+- optional: add pools on the "Pool Configuration" tab of the rig
 - set your rig's rentable status to "available"
 - edit your rig's description and add your RainbowMiner workername, enclosed with square brackets, somewhere into the text, e.g. ``[rbm]``. This is important, otherwise Rainbowminer will not find your rig, later.
 
@@ -889,12 +889,13 @@ Tab "Actions":
     "API_Secret": "<put your MiningRigRentals API-secret key here>",
     "User": "<put your MiningRigRentals username here>",
     "Worker": "<put your RainbowMiner workername here or leave $WorkerName>",
-    "Algorithm": "<put a comma sep. list of all algorithm, you did setup a rig for>",
-  
-RainbowMiner will then read the actual average price being payed at MiningRigRentals for the setup algorithms. If this price triggers the profitability check, it will start to mine on the MiningRigRentals proxy, which will redirect to the pools, you have setup.
-If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on MiningRigRentals will be deactivated, for that time.
-  
+    "EnableMining": "0",
 
+All rigs will be automatically set to status "online", at MiningRigRentals and rest idle within RainbowMiner. If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on MiningRigRentals will be deactivated, for that time.
+
+If you want to include MiningRigRentals into RainbowMiner's profitability checks and switching operation, so that it behaves just like a normal pool, set "EnableMining" to "1". Only do this, if MiningRigRentals is your only pool, because the mining prices (these are the prices setup at MiningRigRentals), will not reflect the real market prices.
+
+  
 ## CREDITS
 
 The miner script has initially been forked from MultiPoolMiner, for my private use, only.
