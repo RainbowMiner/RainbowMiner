@@ -8,6 +8,7 @@ param(
     [String]$DataWindow = "average-2",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
+    [Bool]$EnableMining = $false,
     [String]$API_Key = "",
     [String]$API_Secret = "",
     [String]$User = ""
@@ -171,6 +172,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
                 Exclusive     = $_.status.status -eq "rented"
+                Idle          = if ($_.status.status -eq "rented") {$false} else {-not $EnableMining}
             }
         }
 

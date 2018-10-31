@@ -428,6 +428,7 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             $Session.Config.Pools.$p | Add-Member AllowZero (Get-Yes $Session.Config.Pools.$p.AllowZero) -Force
+            if ($Session.Config.Pools.$p.EnableMining -ne $null) {$Session.Config.Pools.$p | Add-Member EnableMining (Get-Yes $Session.Config.Pools.$p.EnableMining) -Force}
         }
     }
     
@@ -715,8 +716,9 @@ function Invoke-Core {
     #Give API access to the current running configuration
     $API.AllPools = $Session.AllPools | ConvertTo-Json -Depth 10
 
-    #Blend out pools, that do not pass minimum algorithm settings
+    #Blend out pools, that do not pass minimum algorithm settings or have idle set
     $Session.AllPools = $Session.AllPools | Where-Object {-not (
+                ($_.Idle) -or
                 ($_.Hashrate -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate -and $_.Hashrate -lt $Session.Config.Algorithms."$($_.Algorithm)".MinHashrate) -or
                 ($_.Workers -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers -and $_.Workers -lt $Session.Config.Algorithms."$($_.Algorithm)".MinWorkers) -or
                 ($_.BLK -ne $null -and $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Algorithms."$($_.Algorithm)".MaxTimeToFind))) -or

@@ -48,8 +48,8 @@
             Currencies=@()
         }
         "MiningRigRentals" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="";API_Key="";API_Secret=""}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningRigRentals username";API_Key="Enter your MiningRigRentals API key";API_Secret = "Enter your MiningPoolHub API secret key"}
+            Fields=[PSCustomObject]@{User="";API_Key="";API_Secret="";EnableMining="0"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningRigRentals username";API_Key="Enter your MiningRigRentals API key";API_Secret = "Enter your MiningRigRentals API secret key";EnableMining="Enable switching to MiningRigRentals, even it is not rentend (not recommended)"}
             Currencies=@()
         }
         "Nanopool" = [PSCustomObject]@{
