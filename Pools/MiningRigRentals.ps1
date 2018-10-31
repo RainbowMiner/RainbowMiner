@@ -61,6 +61,11 @@ $Pool_Request = $Pool_Request.data
     "ru"   = Get-Region "ru"
 }
 
+$Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.com","us-central01.miningrigrentals.com",
+                   "eu-01.miningrigrentals.com","eu-de01.miningrigrentals.com","eu-de02.miningrigrentals.com",
+                   "eu-ru01.miningrigrentals.com",
+                   "ap-01.miningrigrentals.com")
+
 function Invoke-MiningRigRentalRequest {
 [cmdletbinding()]   
 param(
@@ -162,6 +167,9 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
 
     if ($Pool_Rig) {
         if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online") {
+            $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
+            if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
+            
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
@@ -181,6 +189,15 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 PoolFee       = $Pool_Fee
                 Exclusive     = $_.status.status -eq "rented"
                 Idle          = if ($_.status.status -eq "rented") {$false} else {-not $EnableMining}
+                Failover      = @($Pool_Failover | Foreach-Object {
+                    [PSCustomObject]@{
+                        Protocol = "stratum+tcp"
+                        Host     = $_
+                        Port     = $Pool_Rig.port
+                        User     = "$($User).$($Pool_RigId)"
+                        Pass     = "x"
+                    }
+                })
             }
         }
 
