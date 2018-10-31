@@ -152,24 +152,26 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
 
     if ($Pool_Rig) {
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
-            CoinSymbol    = ""
-            Currency      = "BTC"
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = $Pool_Rig.server
-            Port          = $Pool_Rig.port
-            User          = "$($User).$($Pool_RigId)"
-            Pass          = "x"
-            Region        = $Pool_Regions."$($_.region)"
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_Fee
-            Exclusive     = $_.status.status -eq "rented"
+        if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online") {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
+                CoinSymbol    = ""
+                Currency      = "BTC"
+                Price         = $Stat.Minute_10 #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = $Pool_Rig.server
+                Port          = $Pool_Rig.port
+                User          = "$($User).$($Pool_RigId)"
+                Pass          = "x"
+                Region        = $Pool_Regions."$($_.region)"
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_Fee
+                Exclusive     = $_.status.status -eq "rented"
+            }
         }
 
         if ($_.status.status -ne "rented") {Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port}
