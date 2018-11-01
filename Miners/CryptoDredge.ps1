@@ -11,16 +11,16 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 
 $UriCuda = @(
-    #[PSCustomObject]@{
-    #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-cryptodredge/CryptoDredge_0.9.2_cuda_10.0_windows.zip"
-    #    Cuda = "10.0"
-    #},
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.4-cryptodredge/CryptoDredge_0.9.4_cuda_9.2_windows.zip"
-        Cuda = "9.2"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.5-cryptodredge/CryptoDredge_0.9.5_cuda_10.0_windows.zip"
+        Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.4-cryptodredge/CryptoDredge_0.9.4_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.5-cryptodredge/CryptoDredge_0.9.5_cuda_9.2_windows.zip"
+        Cuda = "9.2"
+    }
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.5-cryptodredge/CryptoDredge_0.9.5_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
@@ -31,6 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "allium";    MinMemGb = 1; Params = ""} #Allium
     [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
+    [PSCustomObject]@{MainAlgorithm = "bitcore";       MinMemGb = 1; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
     #[PSCustomObject]@{MainAlgorithm = "blake2s";   MinMemGb = 1; Params = ""} #Blake2s, ASIC domain. no longer profitable
     [PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast / Masari
@@ -52,6 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""} #X17
 )
 
 
