@@ -21,7 +21,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcash"; CoinSymbol = "BITC";  Params = ""} #Cuckoo/Bitcash
     [PSCustomObject]@{MainAlgorithm = "merit";   CoinSymbol = "MERIT"; Params = ""} #Cuckoo/Merit
-    [PSCustomObject]@{MainAlgorithm = "x22i";    CoinSymbol = "";      Params = ""} #X22i
+    #[PSCustomObject]@{MainAlgorithm = "x22i";    CoinSymbol = "";      Params = ""} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
