@@ -42,7 +42,7 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("hk","eu","us")
+$Pool_Regions = @("eu","us","hk")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
@@ -72,7 +72,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     foreach($Pool_Region in $Pool_Regions) {
         $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}else{$Pool_Region}).$Pool_Host"
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-            if (($Pool_Region -ne "asia" -or $Pool_CoinSymbol -eq "BCD") -and ($Pool_User -or $InfoOnly)) {
+            if ($Pool_User -or $InfoOnly) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
@@ -94,6 +94,15 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
+                    Failover      = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
+                        [PSCustomObject]@{
+                            Protocol      = "stratum+tcp"
+                            Host          = "$(if ($_ -eq "us"){"mine"}else{$_}).$Pool_Host"
+                            Port          = $Pool_Port
+                            User          = $Pool_User
+                            Pass          = "$Worker,c=$Pool_Currency{diff:,d=`$difficulty}"
+                        }
+                    })
                 }
             }
         }
