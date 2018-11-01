@@ -107,6 +107,15 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                Failover      = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
+                    [PSCustomObject]@{
+                        Protocol      = "stratum+tcp"
+                        Host          = "$($_).bsod.pw"
+                        Port          = $Pool_Port
+                        User          = "$($Pool_User).$($Worker)"
+                        Pass          = "c=$Pool_Currency{diff:,d=`$difficulty}"
+                    }
+                })
             }
         }
     }
