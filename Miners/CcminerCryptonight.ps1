@@ -6,10 +6,10 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CryptoNight\ccminer-cryptonight.exe"
-$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.05/ccminer-cryptonight-305-x64-cuda92.zip"
+$Uri = "https://github.com/KlausT/ccminer-cryptonight/releases/download/3.06/ccminer-cryptonight-306-x64-cuda10.zip"
 $Port = "105{0:d2}"
 $DevFee = 0.0
-$Cuda = "9.2"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -50,23 +50,21 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash") {
-                [PSCustomObject]@{
-                    Name = $Miner_Name
-                    DeviceName = $Miner_Device.Name
-                    DeviceModel = $Miner_Model
-                    Path = $Path
-                    Arguments = "-R 1 -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
-                    HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                    API = "Wrapper"
-                    Port = $Miner_Port
-                    Uri = $Uri
-					DevFee = $DevFee
-                    FaultTolerance = $_.FaultTolerance
-                    ExtendInterval = $_.ExtendInterval
-                    ManualUri = $ManualUri
-                }
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {            
+            [PSCustomObject]@{
+                Name = $Miner_Name
+                DeviceName = $Miner_Device.Name
+                DeviceModel = $Miner_Model
+                Path = $Path
+                Arguments = "-R 1 -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                API = "Wrapper"
+                Port = $Miner_Port
+                Uri = $Uri
+				DevFee = $DevFee
+                FaultTolerance = $_.FaultTolerance
+                ExtendInterval = $_.ExtendInterval
+                ManualUri = $ManualUri
             }
         }
     }
