@@ -3973,10 +3973,10 @@ param(
     [int]$Timeout = 3
 )
     try {
-        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout
+        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
         if ($User -ne "" -and $Result) {
             $Result = ConvertFrom-Json $Result -ErrorAction Stop
-            if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout > $null}
+            if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet > $null}
         }
         $true
     } catch {}

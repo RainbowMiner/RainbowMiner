@@ -189,7 +189,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 PoolFee       = $Pool_Fee
                 Exclusive     = $_.status.status -eq "rented"
                 Idle          = if ($_.status.status -eq "rented") {$false} else {-not $EnableMining}
-                Failover      = @($Pool_Failover | Foreach-Object {
+                Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
                     [PSCustomObject]@{
                         Protocol = "stratum+tcp"
                         Host     = $_
@@ -201,6 +201,10 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             }
         }
 
-        if ($_.status.status -ne "rented") {if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {$Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}}}
+        if ($_.status.status -ne "rented") {
+            if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {
+                $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}
+            }
+        }
     }
 }
