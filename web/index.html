@@ -22,6 +22,8 @@
         <tr>
             <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
             <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+            <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
+            <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
             <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
@@ -193,6 +195,8 @@
               item.tPrimaryHashRateLive = item.Speed_Live;
           }
           item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+
+          item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== ""? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== ""? item.CoinName : '-')
       });
       return data;
   }
