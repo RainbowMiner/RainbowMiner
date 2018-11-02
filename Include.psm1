@@ -3973,6 +3973,7 @@ param(
     [int]$Timeout = 3
 )
     try {
+        Write-Log -Level Verbose "Ping stratum $($Server):$($Port)"
         $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
         if ($User -ne "" -and $Result) {
             $Result = ConvertFrom-Json $Result -ErrorAction Stop
