@@ -201,6 +201,6 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             }
         }
 
-        if ($_.status.status -ne "rented") {if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {$Pool_Failover | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}}}
+        if ($_.status.status -ne "rented") {if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {$Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}}}
     }
 }

@@ -1347,7 +1347,7 @@ function Invoke-TcpRequest {
         [String]$Port, 
         [Parameter(Mandatory = $true)]
         [String]$Request, 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10, #seconds,
         [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline,
@@ -1390,7 +1390,7 @@ function Invoke-TcpRead {
         [String]$Server = "localhost", 
         [Parameter(Mandatory = $true)]
         [String]$Port, 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10 #seconds
     )
     $Response = $null
@@ -3973,8 +3973,11 @@ param(
     [int]$Timeout = 3
 )
     try {
-        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout | ConvertFrom-Json -ErrorAction Stop
-        if ($User -and $Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout > $null}
-        if ($Result.id -eq 1 -and -not $Result.error) {$True}
+        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout
+        if ($User -ne "" -and $Result) {
+            $Result = ConvertFrom-Json $Result -ErrorAction Stop
+            if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout > $null}
+        }
+        $true
     } catch {}
 }
