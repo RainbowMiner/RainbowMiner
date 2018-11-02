@@ -1350,7 +1350,9 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $true)]
         [Int]$Timeout = 10, #seconds,
         [Parameter(Mandatory = $false)]
-        [Switch]$DoNotSendNewline
+        [Switch]$DoNotSendNewline,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
@@ -1369,7 +1371,7 @@ function Invoke-TcpRequest {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Could not request from $($Server):$($Port)"
+        if (-not $Quiet) {Write-Log -Level Warn "Could not request from $($Server):$($Port)"}
     }
     finally {
         if ($Reader) {$Reader.Close();$Reader.Dispose()}
@@ -3966,10 +3968,13 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$User="",
     [Parameter(Mandatory = $False)]
-    [String]$Pass="x"
+    [String]$Pass="x",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 3
 )
     try {
-        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"RainbowMiner/$($Global:Session.Version)`"]}" -Timeout 10 | ConvertFrom-Json -ErrorAction Stop
-        if ($User -and $Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout 10 > $null}
+        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout | ConvertFrom-Json -ErrorAction Stop
+        if ($User -and $Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout > $null}
+        if ($Result.id -eq 1 -and -not $Result.error) {$True}
     } catch {}
 }
