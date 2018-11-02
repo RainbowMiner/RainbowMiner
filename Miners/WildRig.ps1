@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.6b-wildrig/wildrig-multi-0.12.6-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.7b-wildrig/wildrig-multi-0.12.7-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 20x128")} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = @("--opencl-threads 3 --opencl-launch 18x128","--opencl-threads 3 --opencl-launch 20x128")} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = @("--opencl-threads 3 --opencl-launch 20x0","--opencl-threads 3 --opencl-launch 20x0")} #X17
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = @("--opencl-threads 2 --opencl-launch 18x0","--opencl-threads 2 --opencl-launch 19x128")} #X22i
+    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = @("--opencl-threads 2 --opencl-launch 20x0","--opencl-threads 2 --opencl-launch 21x128")} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
