@@ -42,13 +42,13 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu","us","hk")
+$Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_CoinSymbol = $_
 
-    $Pool_Host = "icemining.ca"
+    $Pool_Host = "stratum.icemining.ca"
 
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
@@ -69,8 +69,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
-        $Pool_RegionHost = "$(if ($Pool_Region -eq "us"){"mine"}else{$Pool_Region}).$Pool_Host"
+    foreach($Pool_Region in $Pool_Regions) {        
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             if ($Pool_User -or $InfoOnly) {
                 [PSCustomObject]@{
@@ -82,7 +81,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = $Pool_RegionHost
+                    Host          = $Pool_Host
                     Port          = $Pool_Port
                     User          = $Pool_User
                     Pass          = "$Worker,c=$Pool_Currency{diff:,d=`$difficulty}"
@@ -94,15 +93,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
-                    Failover      = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
-                        [PSCustomObject]@{
-                            Protocol      = "stratum+tcp"
-                            Host          = "$(if ($_ -eq "us"){"mine"}else{$_}).$Pool_Host"
-                            Port          = $Pool_Port
-                            User          = $Pool_User
-                            Pass          = "$Worker,c=$Pool_Currency{diff:,d=`$difficulty}"
-                        }
-                    })
                 }
             }
         }
