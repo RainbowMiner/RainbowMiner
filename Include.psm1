@@ -2346,7 +2346,6 @@ class Miner {
             $this.Process | Receive-Job | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
-
                 if ($Line_Simple) {
                     $HashRates = @()
                     $Devices = @()
@@ -3973,7 +3972,6 @@ param(
     [int]$Timeout = 3
 )
     try {
-        Write-Log -Level Verbose "Ping stratum $($Server):$($Port)"
         $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
         if ($User -ne "" -and $Result) {
             $Result = ConvertFrom-Json $Result -ErrorAction Stop
@@ -3981,4 +3979,58 @@ param(
         }
         $true
     } catch {}
+}
+
+function Invoke-MiningRigRentalRequest {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$endpoint,
+    [Parameter(Mandatory = $True)]
+    [String]$key,
+    [Parameter(Mandatory = $True)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://www.miningrigrentals.com/api/v2"
+)
+    $nonce = (Get-UnixTimestamp)+5000
+    $str = "$key$nonce$endpoint"
+    $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
+    $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+    $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
+    $headers = [hashtable]@{
+	    'x-api-sign' = ($sign -replace '\-').ToLower()
+	    'x-api-key'  = $key
+	    'x-api-nonce'= $nonce
+        'Cache-Control' = 'no-cache'
+    }
+    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+    try {
+        $body = Switch($method) {
+            "PUT" {$params | ConvertTo-Json -Depth 10}
+            "GET" {if ($params.Count) {$params} else {$null}}
+        }
+        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
+    } catch {
+    }
+    if ($Request -and $Request.success) {$Request.data}
+}
+
+function Get-MiningRigRentalsDivisor {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$unit
+)
+    Switch (($unit -split "\*")[0]) {
+        "kh" {1e3}
+        "mh" {1e6}
+        "gh" {1e9}
+        "th" {1e12}
+        default {1}
+    }
 }

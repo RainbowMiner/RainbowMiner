@@ -66,61 +66,7 @@ $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.
                    "eu-ru01.miningrigrentals.com",
                    "ap-01.miningrigrentals.com")
 
-function Invoke-MiningRigRentalRequest {
-[cmdletbinding()]   
-param(
-    [Parameter(Mandatory = $True)]
-    [String]$base,
-    [Parameter(Mandatory = $True)]
-    [String]$endpoint,
-    [Parameter(Mandatory = $True)]
-    [String]$key,
-    [Parameter(Mandatory = $True)]
-    [String]$secret,
-    [Parameter(Mandatory = $False)]
-    $params = @{},
-    [Parameter(Mandatory = $False)]
-    [String]$method = "GET"
-)
-    $nonce = (Get-UnixTimestamp)+5000
-    $str = "$key$nonce$endpoint"
-    $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
-    $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-    $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
-    $headers = [hashtable]@{
-	    'x-api-sign' = ($sign -replace '\-').ToLower()
-	    'x-api-key'  = $key
-	    'x-api-nonce'= $nonce
-        'Cache-Control' = 'no-cache'
-    }
-    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-    try {
-        $body = Switch($method) {
-            "PUT" {$params | ConvertTo-Json -Depth 10}
-            "GET" {if ($params.Count) {$params} else {$null}}
-        }
-        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
-    } catch {
-    }
-    if ($Request -and $Request.success) {$Request.data}
-}
-
-function Get-MiningRigRentalsDivisor {
-[cmdletbinding()]   
-param(
-    [Parameter(Mandatory = $True)]
-    [String]$unit
-)
-    Switch (($unit -split "\*")[0]) {
-        "kh" {1e3}
-        "mh" {1e6}
-        "gh" {1e9}
-        "th" {1e12}
-        default {1}
-    }
-}
-
-$Rigs_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
+$Rigs_Request = Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
 
 if (-not $Rigs_Request) {
     Write-Log -Level Warn "Pool API ($Name) rig $Worker request has failed. "
@@ -129,17 +75,17 @@ if (-not $Rigs_Request) {
 
 if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
-        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
+        Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
         $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
     }
 } else {
     if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
-        Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
+        Invoke-MiningRigRentalRequest "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
         $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
     }    
 }
 
-$RigInfo_Request = Invoke-MiningRigRentalRequest $Pool_ApiBase "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret
+$RigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret
 if (-not $RigInfo_Request) {
     Write-Log -Level Warn "Pool API ($Name) rig $Worker info request has failed. "
     return
