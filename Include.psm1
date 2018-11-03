@@ -2123,6 +2123,7 @@ class Miner {
     $ExtendInterval = 0
     $Penalty = 0
     $MinSamples = 1
+    $ZeroRounds = 0
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2235,7 +2236,8 @@ class Miner {
     }
 
     EndOfRoundCleanup() {
-        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job >$null}        
+        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
+        if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
     }
 
     [DateTime]GetActiveStart() {
@@ -3995,29 +3997,38 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$method = "GET",
     [Parameter(Mandatory = $False)]
-    [String]$base = "https://www.miningrigrentals.com/api/v2"
+    [String]$base = "https://www.miningrigrentals.com/api/v2",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 10,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0
 )
-    $nonce = (Get-UnixTimestamp)+5000
-    $str = "$key$nonce$endpoint"
-    $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
-    $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-    $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
-    $headers = [hashtable]@{
-	    'x-api-sign' = ($sign -replace '\-').ToLower()
-	    'x-api-key'  = $key
-	    'x-api-nonce'= $nonce
-        'Cache-Control' = 'no-cache'
-    }
-    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-    try {
-        $body = Switch($method) {
-            "PUT" {$params | ConvertTo-Json -Depth 10}
-            "GET" {if ($params.Count) {$params} else {$null}}
+    $keystr = Get-MD5Hash "$($endoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
+    if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
+    if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].data -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+        $nonce = (Get-UnixTimestamp)+5000
+        $str = "$key$nonce$endpoint"
+        $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
+        $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+        $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
+        $headers = [hashtable]@{
+	        'x-api-sign' = ($sign -replace '\-').ToLower()
+	        'x-api-key'  = $key
+	        'x-api-nonce'= $nonce
+            'Cache-Control' = 'no-cache'
         }
-        $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Headers $headers -Method $method -Body $body
-    } catch {
+        $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+        try {
+            $body = Switch($method) {
+                "PUT" {$params | ConvertTo-Json -Depth 10}
+                "GET" {if ($params.Count) {$params} else {$null}}
+            }
+            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+        } catch {
+        }
+        $Global:MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
     }
-    if ($Request -and $Request.success) {$Request.data}
+    if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
 }
 
 function Get-MiningRigRentalsDivisor {

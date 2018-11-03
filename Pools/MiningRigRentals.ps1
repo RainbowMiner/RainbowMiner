@@ -85,7 +85,7 @@ if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Obje
     }    
 }
 
-$RigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret
+$RigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret -Timeout 20 -Cache 1440
 if (-not $RigInfo_Request) {
     Write-Log -Level Warn "Pool API ($Name) rig $Worker info request has failed. "
     return
@@ -133,8 +133,8 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Exclusive     = $_.status.status -eq "rented"
-                Idle          = if ($_.status.status -eq "rented") {$false} else {-not $EnableMining}
+                Exclusive     = $_.status.status -eq "rented" -and $_.poolstatus -eq "online"
+                Idle          = if ($_.status.status -eq "rented" -and $_.poolstatus -eq "online") {$false} else {-not $EnableMining}
                 Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
                     [PSCustomObject]@{
                         Protocol = "stratum+tcp"
@@ -147,7 +147,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             }
         }
 
-        if ($_.status.status -ne "rented") {
+        if ($_.status.status -ne "rented" -or ($_.status.status -eq "rented" -and $_.poolstatus -ne "online")) {
             if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {
                 $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}
             }
