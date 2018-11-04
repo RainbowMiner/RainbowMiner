@@ -1231,7 +1231,7 @@ function Invoke-Core {
     $Check_Profitability = $false
     if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
         #Remove no longer profitable miners
-        if ($Session.Config.CheckProfitability) {$BestMiners = $BestMiners | Where Profit -gt 0}
+        if ($Session.Config.CheckProfitability) {$BestMiners = $BestMiners | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner}}
         $Check_Profitability = $true
     }
 
@@ -1267,7 +1267,7 @@ function Invoke-Core {
         $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
         if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
             Write-Log -Level Warn "No more miners are profitable. $(if ($Session.Config.CheckProfitability) {" Waiting for profitability."})"
-            if ($Session.Config.CheckProfitability) {$Session.Profitable = $false}
+            if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object IsExclusiveMiner | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
         }
     }
 
