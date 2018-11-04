@@ -31,9 +31,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "allium";    MinMemGb = 1; Params = ""} #Allium
     [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
-    [PSCustomObject]@{MainAlgorithm = "bitcore";       MinMemGb = 1; Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "bitcore";   MinMemGb = 1; Params = ""} #BitCore
     #[PSCustomObject]@{MainAlgorithm = "blake2s";   MinMemGb = 1; Params = ""} #Blake2s, ASIC domain. no longer profitable
+    [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast / Masari
     [PSCustomObject]@{MainAlgorithm = "cnhaven";   MinMemGb = 4; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cnheavy";   MinMemGb = 4; Params = ""} #Cryptonightheavy
@@ -44,11 +44,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lbk3";      MinMemGb = 1; Params = ""} #LBK3
     [PSCustomObject]@{MainAlgorithm = "lyra2v2";   MinMemGb = 1; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
-    #[PSCustomObject]@{MainAlgorithm = "masari";    MinMemGb = 2; Params = ""} #Cryptonightfast / Masari
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
-    [PSCustomObject]@{MainAlgorithm = "polytimos";      MinMemGb = 1; Params = ""} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; MinMemGb = 1; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "skein";     MinMemGb = 1; Params = ""} #Skein
     [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
