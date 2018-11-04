@@ -55,6 +55,7 @@
             ".jpg" = "image/jpeg"
             ".gif" = "image/gif"
             ".ps1" = "text/html" # ps1 files get executed, assume their response is html
+            ".7z"  = "application/x-7z-compressed”
         }
 
         # Setup the listener
@@ -98,6 +99,7 @@
             $ContentType = "application/json"
             $StatusCode = 200
             $Data = ""
+            $ContentFileName = ""
             
             if($API.RemoteAPI -and (!$Request.IsAuthenticated)) {
                 $Data = "Unauthorized"
@@ -163,7 +165,40 @@
                     Break
                 }
                 "/debug" {
-                    $Data = @() | ConvertTo-Json
+                    #create 7z log and xxx out all purses
+                    $DebugDate = Get-Date -Format "yyyy-MM-dd"
+                    $DebugPath = ".\Logs\debug-$DebugDate"
+                    $PurgeStrings = @()
+                    @($API.Config,$API.UserConfig) | Select-Object | ConvertFrom-Json | Foreach-Object {
+                        $CurrentConfig = $_
+                        @("Wallet","UserName","API_ID","API_Key","MinerStatusKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                        $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
+                            $CurrentPool = $_
+                            $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
+                            @("Wallet","User","API_ID","API_Key","API_Secret") | Where-Object {$CurrentPool.$_} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                        }
+                    }
+                    $PurgeStrings = $PurgeStrings | Select-Object -Unique
+
+                    if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
+                    Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Foreach-Object {
+                        $NewFile = "$DebugPath\$($_.Name)"
+                        (Get-Content $_) | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
+                    }
+
+                    @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
+                        $NewFile = "$DebugPath\$($_).json"
+                        $API.$_ -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    }
+
+                    Start-Process "7z" "a `"$($DebugPath).7z`" `"$($DebugPath)\*`" -y -sdel" -Wait -WindowStyle Hidden
+                    Remove-Item $DebugPath -Recurse -Force
+
+                    $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).7z"))
+                    $ContentType = $MIMETypes[".7z"]
+                    $ContentFileName = "debug-$($DebugDate).7z"
+
+                    Remove-Item "$($DebugPath).7z" -Force -ErrorAction Ignore
                     Break
                 }
                 "/alldevices" {
@@ -308,21 +343,21 @@
 
                         If ($File.Extension -eq ".ps1") {
                             $Data = & $File.FullName -Parameters $Parameters
-                        } else {
+                        } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
                             $Data = Get-Content $Filename -Raw -ErrorAction Ignore
 
                             # Process server side includes for html files
                             # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
-                            if($File.Extension -eq ".html") {
-                                $IncludeRegex = [regex]'<!-- *#include *file="(.*)" *-->'
-                                $IncludeRegex.Matches($Data) | Foreach-Object {
-                                    $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
-                                    If (Test-Path $IncludeFile -PathType Leaf) {
-                                        $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
-                                        $Data = $Data -Replace $_.Value, $IncludeData
-                                    }
+                            $IncludeRegex = [regex]'<!-- *#include *file="(.*)" *-->'
+                            $IncludeRegex.Matches($Data) | Foreach-Object {
+                                $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
+                                If (Test-Path $IncludeFile -PathType Leaf) {
+                                    $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
+                                    $Data = $Data -Replace $_.Value, $IncludeData
                                 }
                             }
+                        } else {
+                            $Data = [System.IO.File]::ReadAllBytes($File.FullName)
                         }
 
                         # Set content type based on file extension
@@ -349,13 +384,17 @@
 
             # Send the response
             $Response.Headers.Add("Content-Type", $ContentType)
+            if ($ContentFileName -ne "") {$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")}
             $Response.StatusCode = $StatusCode
-            $ResponseBuffer = [System.Text.Encoding]::UTF8.GetBytes($Data)
+            $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
             $Response.ContentLength64 = $ResponseBuffer.Length
             $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
+            Remove-Variable "Data" -Force
+            Remove-Variable "ResponseBuffer" -Force
+            Remove-Variable "Response" -Force
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()
