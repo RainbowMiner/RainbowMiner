@@ -1398,6 +1398,7 @@ function Invoke-Core {
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
         $Miner_DeviceName = $_.DeviceName
         $Miner_DeviceModel = $_.DeviceModel
+        $Miner_ProfitMin = if ($Miner_DeviceModel -match "CPU") {1E-9} else {1E-7}
         $Miner_DeviceTitle = @($Session.Devices | Where-Object {$Miner_DeviceName -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Session.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
@@ -1418,7 +1419,7 @@ function Invoke-Core {
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
         )) > $null
 
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {($Session.Config.UIstyle -ne "full" -and $_.Speed -gt 0) -or $_.Profit -ge 1E-7 -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($IsExclusiveRun -or $Session.IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {($Session.Config.UIstyle -ne "full" -and $_.Speed -gt 0) -or $_.Profit -ge $Miner_ProfitMin -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {$_.Profit}}; Descending = $true}, @{Expression = {if ($IsExclusiveRun -or $Session.IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
     }
     Remove-Variable "Miner_Table"
 
