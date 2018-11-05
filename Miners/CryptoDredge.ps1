@@ -53,6 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""} #X17
+    [PSCustomObject]@{MainAlgorithm = "x22i";      MinMemGb = 1; Params = ""} #X22i
 )
 
 
