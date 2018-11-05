@@ -71,12 +71,17 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
     $Pool_Fee  = 0.0
 
     $Pool_Request = [PSCustomObject]@{}
+    $Pool_Ports   = [PSCustomObject]@{}
 
     $ok = $true
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/live_stats" -tag $Name
             $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(CPU|GPU)' | Select-Object -First 1 -ExpandProperty port
+            @("CPU","GPU","FARM") | Foreach-Object {
+                $PortType = $_
+                $Pool_Request.config.ports | Where-Object desc -match $PortType | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
+            }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -137,6 +142,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
             Protocol      = "stratum+tcp"
             Host          = $_.host
             Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
+            Ports         = $Pool_Ports
             User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
             Pass          = $Worker
             Region        = $Pool_Region
