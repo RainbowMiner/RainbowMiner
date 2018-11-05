@@ -1343,7 +1343,7 @@ function Invoke-Core {
         $_.SetStatus([MinerStatus]::Running)
 
         #Add watchdog timer
-        if ($Session.Config.Watchdog -and $_.Profit -ne $null -and -not $_.IsExclusiveMiner) {
+        if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
             $Miner_Name = $_.Name
             $Miner_DeviceModel = $_.DeviceModel
             $_.Algorithm | ForEach-Object {
@@ -1440,7 +1440,7 @@ function Invoke-Core {
         Write-Host " "
     } else {
         if ((-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Miners_Downloading -gt 0) {Write-Host " "}
-        #Display benchmarking progres
+        #Display benchmarking progress
         if (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) {
             Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
@@ -1587,7 +1587,7 @@ function Invoke-Core {
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Session.Config.EnableAutoUpdate) {
             if ($Session.AutoUpdate) {
-                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin $(if ($IsExclusiveRun) {$Session.AutoUpdate = $False;"as soon as exclusive mining ends"} else {"in some seconds"})" -ForegroundColor Yellow
             } else {
                 Write-Host "Automatic update failed! Please exit RainbowMiner and start Updater.bat manually to proceed" -ForegroundColor Yellow
             }
