@@ -6,7 +6,8 @@ class SrbMiner : Miner {
         $Parameters = $this.Arguments | ConvertFrom-Json
 
         #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
-        $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
+        $Threads = $Parameters.Config.gpu_conf.threads | Select-Object -Unique
+        $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel)$(if ($Threads -gt 1) {"-$($Threads)"}).txt"
         if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile")) {
             $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8
         }
