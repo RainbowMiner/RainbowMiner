@@ -3540,16 +3540,18 @@ Param(
     [Parameter(Mandatory = $False)]   
         [string]$url = "",
     [Parameter(Mandatory = $False)]   
-        [string]$method = "REST"
+        [string]$method = "REST",
+    [Parameter(Mandatory = $False)]
+        [int]$timeout = 10
 )
     $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
     if ($url -match "^https") {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12}
 
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
     } else {
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec 10 -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
     }
 }
 
@@ -3567,9 +3569,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$tag = "",
     [Parameter(Mandatory = $False)]
-        [int]$delay = 0
+        [int]$delay = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$timeout = 10
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout
 }
 
 function Invoke-WebRequestAsync {
@@ -3586,9 +3590,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$tag = "",
     [Parameter(Mandatory = $False)]
-        [int]$delay = 0
+        [int]$delay = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$timeout = 10
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout
 }
 
 function Invoke-GetUrlAsync {
@@ -3613,7 +3619,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$tag = "",
     [Parameter(Mandatory = $False)]
-        [int]$delay = 0
+        [int]$delay = 0,
+    [Parameter(Mandatory = $False)]
+        [int]$timeout = 10
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Sleep -Milliseconds $delay}
@@ -3630,7 +3638,7 @@ Param(
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             if ($delay) {Sleep -Milliseconds $delay}
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
@@ -3644,7 +3652,7 @@ Param(
         do {
             $Request = $RequestError = $null            
             try {
-                $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method
+                $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout
                 $AsyncLoader.Jobs.$Jobkey.Success++
                 $AsyncLoader.Jobs.$Jobkey.Prefail=0
             }
@@ -4003,9 +4011,9 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Cache = 0
 )
-    $keystr = Get-MD5Hash "$($endoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
-    if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
-    if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].data -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
+    if (-not (Test-Path Variable:Global:MRRCache)) {$Global:MRRCache = [hashtable]::Synchronized(@{})}
+    if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
         $nonce = (Get-UnixTimestamp)+5000
         $str = "$key$nonce$endpoint"
         $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
