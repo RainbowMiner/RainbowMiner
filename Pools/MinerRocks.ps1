@@ -55,9 +55,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             try {
                 $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name
                 $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(CPU|GPU)' | Select-Object -First 1 -ExpandProperty port
-                @("CPU","GPU","FARM") | Foreach-Object {
+                @("CPU","GPU","RIG") | Foreach-Object {
                     $PortType = $_
-                    $Pool_Request.config.ports | Where-Object desc -match $PortType | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
+                    $Pool_Request.config.ports | Where-Object desc -match $(if ($PortType -eq "RIG") {"farm"} else {$PortType}) | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
                 }
             }
             catch {

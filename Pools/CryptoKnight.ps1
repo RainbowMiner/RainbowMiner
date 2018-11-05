@@ -78,7 +78,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/live_stats" -tag $Name
             $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(CPU|GPU)' | Select-Object -First 1 -ExpandProperty port
-            @("CPU","GPU","FARM") | Foreach-Object {
+            @("CPU","GPU","RIG") | Foreach-Object {
                 $PortType = $_
                 $Pool_Request.config.ports | Where-Object desc -match $PortType | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
             }
