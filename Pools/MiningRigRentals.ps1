@@ -85,10 +85,16 @@ if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Obje
     }    
 }
 
-$RigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) -join ';')/port" $API_Key $API_Secret -Timeout 20 -Cache 1440
+$RigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) -join ';')/port" $API_Key $API_Secret -Timeout 20 -Cache 3600
 if (-not $RigInfo_Request) {
     Write-Log -Level Warn "Pool API ($Name) rig $Worker info request has failed. "
     return
+}
+
+$NewRigs = Compare-Object @($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id) @($RigInfo_Request | select-object -ExpandProperty rigid) | Where-Object {$_.SideIndicator -eq "<="} | Select-Object -ExpandProperty InputObject
+if ($NewRigs -and $NewRigs.Count) {
+    $NewRigInfo_Request = Invoke-MiningRigRentalRequest "/rig/$(($NewRigs | Sort-Object) -join ';')/port" $API_Key $API_Secret -Timeout 20
+    $NewRigInfo_Request | Foreach-Object {$RigInfo_Request += $_}
 }
 
 $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
