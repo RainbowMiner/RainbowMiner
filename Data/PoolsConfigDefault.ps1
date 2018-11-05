@@ -7,7 +7,7 @@
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
-            Currencies=@("RVN","PGN")            
+            Currencies=@("RVN")            
         }
         "Blockmasters" = [PSCustomObject]@{
             Currencies=@("BTC")
@@ -27,6 +27,9 @@
         }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
+        }
+        "GosCx" = [PSCustomObject]@{
+            Currencies=@("RVN")            
         }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
