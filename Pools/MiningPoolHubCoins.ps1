@@ -75,6 +75,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
         }
     }
     $Pool_Hashrate = [int64]$Pool_Hashrate
+    $Pool_TSL = [int64]$_.time_since_last_block
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_HashRate -FaultDetection $true -FaultTolerance 5 -Quiet
@@ -99,7 +100,9 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
+                    PoolFee       = $Pool_Fee
                     Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
@@ -118,8 +121,10 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         Pass          = "x{diff:,d=`$difficulty}"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
-                        Updated       = $Stat.Updated
+                        Updated       = $Stat.Updated                        
+                        PoolFee       = $Pool_Fee
                         Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_TSL
                     }
                 }
             }
