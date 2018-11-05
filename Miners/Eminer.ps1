@@ -66,12 +66,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
 				$DeviceIDsAll = ($Miner_Device | ForEach-Object {'{0:x}' -f ($_.Type_Mineable_Index)}) -join ','
 
+                $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
 					Name                 = $Miner_Name
 					DeviceName           = $Miner_Device.Name
 					DeviceModel          = $Miner_Model
 					Path                 = $Path
-					Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Session.Config.WorkerName) {" -N $($Session.Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
+					Arguments            = "-http :$Miner_Port -S $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -U $($Pools.$Algorithm_Norm.User) -P $($Pools.$Algorithm_Norm.Pass)$(if($Session.Config.WorkerName) {" -N $($Session.Config.WorkerName)"})$(if($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol)) {"$($DevfeeCoin.($Pools.$Algorithm_Norm.CoinSymbol))"})$($Commands.$_)$CommonCommands -M $($DeviceIDsAll)"
 					HashRates            = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
 					API                  = "Eminer"
 					Port                 = $Miner_Port

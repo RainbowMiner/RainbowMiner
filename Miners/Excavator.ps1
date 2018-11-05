@@ -100,6 +100,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb)})
 
         if ($Pools.$Main_Algorithm_Norm.Name -eq "Nicehash" -and $Miner_Device) {
+            $Pool_Port = if ($Pools.$Main_Algorithm_Norm.Ports -ne $null -and $Pools.$Main_Algorithm_Norm.Ports.GPU) {$Pools.$Main_Algorithm_Norm.Ports.GPU} else {$Pools.$Main_Algorithm_Norm.Port}
             if (-not $Secondary_Algorithm) {
                 #Single algo mining
                 $Miner_Name = (@($Name) + @($Threads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -110,7 +111,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     DeviceModel          = $Miner_Model
                     Path                 = $Path
                     Arguments            = @(`
-                        [PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$Main_Algorithm_Norm.Host):$($Pools.$Main_Algorithm_Norm.Port)"; "$($Pools.$Main_Algorithm_Norm.User)")},`
+                        [PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$Main_Algorithm_Norm.Host):$($Pool_Port)"; "$($Pools.$Main_Algorithm_Norm.User)")},`
                         [PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm")},`
                         [PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-$($Main_Algorithm)", "$_") + $Params} | Select-Object) * $Threads)}
                     )
@@ -130,13 +131,14 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 #Dual algo mining
                 if ($Pools.$Secondary_Algorithm_Norm.Host -and $Pools.$Secondary_Algorithm_Norm.Name -eq "Nicehash" ) {
                     $Miner_Name = (@($Name) + @($Threads) + @("$Secondary_Algorithm_Norm" -replace "-NHMP") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+
                     [PSCustomObject]@{
                         Name                 = $Miner_Name
                         DeviceName           = $Miner_Device.Name
                         DeviceModel          = $Miner_Model
                         Path                 = $Path
                         Arguments            = @(`
-                            [PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$Main_Algorithm_Norm.Host):$($Pools.$Main_Algorithm_Norm.Port)"; "$($Pools.$Main_Algorithm_Norm.User)")},`
+                            [PSCustomObject]@{id = 1; method = "subscribe"; params = @("$($Pools.$Main_Algorithm_Norm.Host):$($Pool_Port)"; "$($Pools.$Main_Algorithm_Norm.User)")},`
                             [PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm")};[PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Secondary_Algorithm")},`
                             [PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-$($Main_Algorithm)_$($Secondary_Algorithm)", "$_") + $Params} | Select-Object) * $Threads)}
                         )

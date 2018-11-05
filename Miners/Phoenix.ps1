@@ -67,12 +67,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					default {$Miner_Protocol_Params = "-proto 1"}
 				}
 
+                $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
 					Name = $Miner_Name
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -leaveoc -coin auto -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
+					Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -leaveoc -coin auto -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
 					API = "Claymore"
 					Port = $Miner_Port

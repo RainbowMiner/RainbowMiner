@@ -76,6 +76,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
             $Pool_Host = $null
             try {$Pool_Host = [Net.DNS]::Resolve($Pools.$Main_Algorithm_Norm.Host).AddressList.IPAddressToString | Select-Object -First 1} catch {}
             if ($Pool_Host) {
+                $Pool_Port = if ($Pools.$Main_Algorithm_Norm.Ports -ne $null -and $Pools.$Main_Algorithm_Norm.Ports.GPU) {$Pools.$Main_Algorithm_Norm.Ports.GPU} else {$Pools.$Main_Algorithm_Norm.Port}
                 if (-not $Secondary_Algorithm) {
                     #Single algo mining
                     $Miner_Name = (@($Name) + @($Threads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -85,7 +86,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                         DeviceName       = $Miner_Device.Name
                         DeviceModel      = $Miner_Model
                         Path             = $Path
-                        Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm", "$($Pool_Host):$($Pools.$Main_Algorithm_Norm.Port)", "$($Pools.$Main_Algorithm_Norm.User):$($Pools.$Main_Algorithm_Norm.Pass)")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
+                        Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm", "$($Pool_Host):$($Pool_Port)", "$($Pools.$Main_Algorithm_Norm.User):$($Pools.$Main_Algorithm_Norm.Pass)")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
                         HashRates        = [PSCustomObject]@{$Main_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Main_Algorithm_Norm)_HashRate".Week}
                         API              = "Excavator144"
                         Port             = $Miner_Port
@@ -100,13 +101,13 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     #Dual algo mining
                     if ($Pools.$Secondary_Algorithm_Norm.Host ) {
                         $Miner_Name = (@($Name) + @("$Secondary_Algorithm_Norm") + @($Threads) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-
+                        $SecondaryPool_Port = if ($Pools.$Secondary_Algorithm_Norm.Ports -ne $null -and $Pools.$Secondary_Algorithm_Norm.Ports.GPU) {$Pools.$Secondary_Algorithm_Norm.Ports.GPU} else {$Pools.$Secondary_Algorithm_Norm.Port}
                         [PSCustomObject]@{
                             Name             = $Miner_Name
                             DeviceName       = $Miner_Device.Name
                             DeviceModel      = $Miner_Model
                             Path             = $Path
-                            Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$($Main_Algorithm)_$($Secondary_Algorithm)", "$($Pool_Host):$($Pools.$Main_Algorithm_Norm.Port)", "$($Pools.$Main_Algorithm_Norm.User):$($Pools.$Main_Algorithm_Norm.Pass)", "$([Net.DNS]::Resolve($Pools.$Secondary_Algorithm_Norm.Host).AddressList.IPAddressToString | Select-Object -First 1):$($Pools.$Secondary_Algorithm_Norm.Port)", "$($Pools.$Secondary_Algorithm_Norm.User):$($Pools.$Secondary_Algorithm_Norm.Pass)")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
+                            Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$($Main_Algorithm)_$($Secondary_Algorithm)", "$($Pool_Host):$($Pool_Port)", "$($Pools.$Main_Algorithm_Norm.User):$($Pools.$Main_Algorithm_Norm.Pass)", "$([Net.DNS]::Resolve($Pools.$Secondary_Algorithm_Norm.Host).AddressList.IPAddressToString | Select-Object -First 1):$($SecondaryPool_Port)", "$($Pools.$Secondary_Algorithm_Norm.User):$($Pools.$Secondary_Algorithm_Norm.Pass)")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
                             HashRates        = [PSCustomObject]@{$Main_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Main_Algorithm_Norm)_HashRate".Week; $Secondary_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Secondary_Algorithm_Norm)_HashRate".Week}
                             API              = "Excavator144"
                             Port             = $Miner_Port

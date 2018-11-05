@@ -71,11 +71,12 @@ if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Sessio
                 $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
                 if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+                    $Pool_Port = if ($Miner_Model -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
                     $Arguments = [PSCustomObject]@{
                         Params = "-i $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
                         Config = [PSCustomObject]@{
                             pool_list       = @([PSCustomObject]@{
-                                    pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)"
+                                    pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
                                     wallet_address  = "$($Pools.$Algorithm_Norm.User)"
                                     pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
                                     use_nicehash    = $true
