@@ -98,6 +98,12 @@
   font-weight:bold;
 }
 
+.rainbow {
+    background: linear-gradient(to right, red, orange , yellow, green, cyan, blue, violet);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 #version {
   font-size: .6rem;
 }
