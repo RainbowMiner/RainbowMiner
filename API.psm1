@@ -144,6 +144,10 @@
                     $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
+                "/selectedpools" {
+                    $Data = ConvertTo-Json @(($API.SelectedPools | Select-Object | ConvertFrom-Json) | Select-Object)
+                    Break
+                }
                 "/algorithms" {
                     $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json).Algorithm | Sort-Object -Unique)
                     Break
@@ -342,7 +346,7 @@
                         $File = Get-ChildItem $Filename -ErrorAction Ignore
 
                         If ($File.Extension -eq ".ps1") {
-                            $Data = & $File.FullName -Parameters $Parameters
+                            $Data = (& $File.FullName -Parameters $Parameters) -join "`r`n"
                         } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
                             $Data = Get-Content $Filename -Raw -ErrorAction Ignore
 
