@@ -45,6 +45,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_Port = $_.port
     $Pool_Fee  = $_.fee
+    $Pool_Ports= [PSCustomObject]@{}
 
     if (-not $Pools_Requests.ContainsKey($Pool_RpcPath)) {
         $Pool_Request = [PSCustomObject]@{}
@@ -54,6 +55,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             try {
                 $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name
                 $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(CPU|GPU)' | Select-Object -First 1 -ExpandProperty port
+                @("CPU","GPU","FARM") | Foreach-Object {
+                    $PortType = $_
+                    $Pool_Request.config.ports | Where-Object desc -match $PortType | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
+                }
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -94,32 +99,35 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet}
             }
         }
-        $Pools_Requests[$Pool_RpcPath] = [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $_.coin
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = $Stat.Minute_10 #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = ""
-            Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
-            User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
-            Pass          = "w=$($Worker)"
-            Region        = ""
-            SSL           = $False
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_Fee
-            Workers       = $Pool_Request.pool.workers
-            Hashrate      = $Stat.HashRate_Live
-            TSL           = $Pool_TSL
-            BLK           = $Stat.BlockRate_Average
+        if (($ok -and $Pool_Port -and ($AllowZero -or $Pool_Request.pool.hashrate -gt 0)) -or $InfoOnly) {
+            $Pools_Requests[$Pool_RpcPath] = [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $_.coin
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = $Stat.Minute_10 #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = ""
+                Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
+                Ports         = $Pool_Ports
+                User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
+                Pass          = "w=$($Worker)"
+                Region        = ""
+                SSL           = $False
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_Fee
+                Workers       = $Pool_Request.pool.workers
+                Hashrate      = $Stat.HashRate_Live
+                TSL           = $Pool_TSL
+                BLK           = $Stat.BlockRate_Average
+            }
         }
     }
 
-    if (($ok -and $Pool_Port -and $Pools_Requests.ContainsKey($Pool_RpcPath) -and ($AllowZero -or $Pool_Request.pool.hashrate -gt 0)) -or $InfoOnly) {
-        $Pools_Requests[$Pool_RpcPath] | Add-Member -NotePropertyMembers @{Region=(Get-Region $_.region);Host=$_.host} -Force -PassThru
+    if ($Pools_Requests.ContainsKey($Pool_RpcPath)) {
+        $Pools_Requests[$Pool_RpcPath] | Add-Member -NotePropertyMembers @{Region=(Get-Region $_.region);Host=$_.host} -Force -PassThru | ConvertTo-Json | ConvertFrom-Json
     }
 }
 
