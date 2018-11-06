@@ -8,7 +8,7 @@ param(
 $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5e/sgminer-phi2-fancyIX-win64-beta5epp.7z"
 $Port = "409{0:d2}"
-$ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
+$ManualUri = "https://bitcointalk.org/index.php?topic=5028462.0"
 $DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
