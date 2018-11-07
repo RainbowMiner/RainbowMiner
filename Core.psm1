@@ -23,6 +23,7 @@
         Algorithms = @{Path='';LastWriteTime=0}
         Coins      = @{Path='';LastWriteTime=0}
     }
+    [hashtable]$Session.MinerInfo = @{}
 
     $Session.LastDonated = 0
     $Session.RoundCounter = 0
@@ -154,6 +155,9 @@
         #Remove stuck update
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force}
 
+        #Read miner info
+        if (Test-Path ".\Data\minerinfo.json") {try {(Get-Content ".\Data\minerinfo.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {}}
+
         #write version to data
         Set-ContentJson -PathToFile ".\Data\Version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
         $true
@@ -178,7 +182,7 @@ function Update-ActiveMiners {
         }        
     }
     if ($MinersFailed) {
-        $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
+        $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
     }
     [PSCustomObject]@{
         MinersUpdated = $MinersUpdated
@@ -292,7 +296,7 @@ function Invoke-Core {
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
-    $API.Version = $ConfirmedVersion | ConvertTo-Json
+    $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-Content ".\Logs\autoupdate.txt" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Last_Autoupdate = $null}}
@@ -313,7 +317,7 @@ function Invoke-Core {
     }
 
     #Give API access to all possible devices
-    if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices | ConvertTo-Json -Depth 10}
+    if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices}
 
     $MSIAenabled = -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
 
@@ -494,7 +498,8 @@ function Invoke-Core {
     }
 
     #Give API access to the current running configuration
-    $API.Config = $Session.Config | ConvertTo-Json -Depth 10
+    $API.Config = $Session.Config
+    $API.UserConfig = $Session.UserConfig
 
     #Clear pool cache if the pool configuration has changed
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
@@ -544,13 +549,13 @@ function Invoke-Core {
         }
 
         #Give API access to the device information
-        $API.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object | ConvertTo-Json -Depth 10
+        $API.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
 
         #Update device information for the first time
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
     }
     
-    $API.Devices = $Session.Devices | ConvertTo-Json -Depth 10
+    $API.Devices = $Session.Devices
 
     if (-not $Session.Devices) {
         Write-Log -Level Warn "No devices available. Please check your configuration. "
@@ -586,6 +591,18 @@ function Invoke-Core {
             }
         }
     }
+
+    $MinerInfoChanged = $false
+    Compare-Object @($Session.AvailMiners | Select-Object) @($Session.MinerInfo.Keys | Select-Object) | Foreach-Object {
+        $CcMinerName = $_.InputObject
+        Switch ($_.SideIndicator) {
+            "<=" {$Session.MinerInfo[$CcMinerName] = Get-MinersContent -MinerName $CcMinerName -InfoOnly $true}
+            "=>" {$Session.MinerInfo.Remove($CcMinerName)}
+        }
+        $MinerInfoChanged = $true
+    }
+    if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo > $null}
+    $API.MinerInfo = $Session.MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -653,11 +670,11 @@ function Invoke-Core {
         }
         $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
-        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
+        else {$API.Balances = $BalancesData.Balances}
     }
 
     #Give API access to the current rates
-    $API.Rates = $Session.Rates | ConvertTo-Json -Depth 10
+    $API.Rates = $Session.Rates
 
     #Load the stats
     Write-Log "Loading saved statistics. "
@@ -665,7 +682,7 @@ function Invoke-Core {
     [hashtable]$Session.Stats = Get-Stat -NoPools
 
     #Give API access to the current stats
-    $API.Stats = $Session.Stats | ConvertTo-Json -Depth 10
+    $API.Stats = $Session.Stats
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -689,7 +706,7 @@ function Invoke-Core {
     }
 
     #Give API access to the current running configuration
-    $API.NewPools = $NewPools | ConvertTo-Json -Depth 10
+    $API.NewPools = $NewPools | ConvertTo-Json -Depth 10 -Compress
 
     #This finds any pools that were already in $Session.AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
@@ -714,7 +731,7 @@ function Invoke-Core {
     Remove-Variable "NewPools" -Force
 
     #Give API access to the current running configuration
-    $API.AllPools = $Session.AllPools | ConvertTo-Json -Depth 10
+    $API.AllPools = $Session.AllPools
 
     #Blend out pools, that do not pass minimum algorithm settings or have idle set
     $Session.AllPools = $Session.AllPools | Where-Object {-not (
@@ -782,7 +799,7 @@ function Invoke-Core {
     }
     
     #Give API access to the pools information
-    $API.Pools = $Pools | ConvertTo-Json -Depth 10
+    $API.Pools = $Pools | ConvertTo-Json -Depth 10 -Compress
  
     #Load information about the miners
     Write-Log "Getting miner information. "
@@ -1084,13 +1101,13 @@ function Invoke-Core {
     }
 
     #Give API access to the miners information
-    $API.Miners = $Miners | ConvertTo-Json -Depth 10
+    $API.Miners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10
+    $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
     #Update the active miners
     if ($Miners.Count -eq 0) {
@@ -1367,7 +1384,7 @@ function Invoke-Core {
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
-    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10
+    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
 
     $IsExclusiveRun = ($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0
 
@@ -1378,14 +1395,14 @@ function Invoke-Core {
     }
 
     #Give API access to WatchdogTimers information
-    $API.WatchdogTimers = $Session.WatchdogTimers | ConvertTo-Json -Depth 10
+    $API.WatchdogTimers = $Session.WatchdogTimers
 
     #Update API miner information
     #$RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.ActiveMiners  = $Session.ActiveMiners | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-    $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-    $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}  | Foreach-Object {Get-FilteredMinerObject $_} | ConvertTo-Json -Depth 2
-    $API.Asyncloaderjobs = $Asyncloader.Jobs | ConvertTo-Json -Depth 10
+    $API.ActiveMiners  = $Session.ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
+    $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+    $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
+    $API.Asyncloaderjobs = $(if (Test-Path Variable:Global:AsyncLoader) {Get-AsyncLoaderJobs} else {@()}) | Select-Object | ConvertTo-Json -Depth 10 -Compress
 
     #
     #Start output to host

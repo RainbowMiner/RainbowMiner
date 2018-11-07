@@ -784,7 +784,9 @@ function Get-MinersContent {
         [Parameter(Mandatory = $false)]
         [PSCustomObject]$Pools = @{},
         [Parameter(Mandatory = $false)]
-        [Switch]$InfoOnly
+        [Switch]$InfoOnly,
+        [Parameter(Mandatory = $false)]
+        [String]$MinerName = "*"
     )
 
     [Hashtable]$Parameters = @{
@@ -792,17 +794,19 @@ function Get-MinersContent {
         InfoOnly = $InfoOnly
     }
 
-    foreach($Miner in @(Get-ChildItem "Miners\*.ps1" -File -ErrorAction Ignore)) {
+    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore)) {
         $Name = $Miner.BaseName
-        foreach($c in @(& $Miner.FullName @Parameters)) {
-            $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
-            $c | Add-Member -NotePropertyMembers @{
-                Name = if ($c.Name) {$c.Name} else {$Name}
-                BaseName = $Name
-                BaseAlgorithm = $p
-                DeviceModel = if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
-                PowerDraw = $Session.Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
-            } -Force -PassThru
+        if ($InfoOnly -or (Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name.Type | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {
+            foreach($c in @(& $Miner.FullName @Parameters)) {
+                $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
+                $c | Add-Member -NotePropertyMembers @{
+                    Name = if ($c.Name) {$c.Name} else {$Name}
+                    BaseName = $Name
+                    BaseAlgorithm = $p
+                    DeviceModel = if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
+                    PowerDraw = $Session.Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
+                } -Force -PassThru
+            }
         }
     }
 }
@@ -923,17 +927,6 @@ function Get-Combination {
             $x = $ripple -bor $ones
         }
     }
-}
-
-function Get-FilteredMinerObject {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
-        $Miner
-    )
-    $Out = [PSCustomObject]@{}
-    $Miner.PSObject.Properties.Name | Where-Object {$_ -ne 'Process'} | Foreach-Object {$Out | Add-Member $_ $Miner.$_ -Force}
-    $Out
 }
 
 function Start-SubProcess {

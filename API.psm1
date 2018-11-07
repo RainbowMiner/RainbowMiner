@@ -58,6 +58,17 @@
             ".7z"  = "application/x-7z-compressed”
         }
 
+        function Get-FilteredMinerObject {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+                $Miner
+            )
+            $Out = [PSCustomObject]@{}
+            $Miner.PSObject.Properties.Name | Where-Object {$_ -ne 'Process'} | Foreach-Object {$Out | Add-Member $_ $Miner.$_ -Force}
+            $Out
+        }
+
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
         if ($API.RemoteAPI) {
@@ -109,27 +120,31 @@
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
                 "/version" {
-                    $Data = $API.Version
+                    $Data = ConvertTo-Json $API.Version
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @(($API.ActiveMiners | Select-Object | ConvertFrom-Json) | Where {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object)
+                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @(($API.RunningMiners | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    Break
+                }
+                "/failedminers" {
+                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     Break
                 }
                 "/remoteminers" {
                     $Data = ConvertTo-Json @(($API.RemoteMiners | Select-Object | ConvertFrom-Json) | Select-Object) -Depth 10
                     Break
                 }
-                "/failedminers" {
-                    $Data = ConvertTo-Json @(($API.FailedMiners | Select-Object | ConvertFrom-Json) | Select-Object)
-                    Break
-                }
                 "/minersneedingbenchmark" {
                     $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | Select-Object | ConvertFrom-Json) | Select-Object)
+                    Break
+                }
+                "/minerinfo" {
+                    $Data = ConvertTo-Json @($API.MinerInfo | Select-Object)
                     Break
                 }
                 "/pools" {
@@ -137,11 +152,11 @@
                     Break
                 }
                 "/newpools" {
-                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object) | ConvertFrom-Json | Select-Object)
                     Break
                 }
                 "/allpools" {
-                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.AllPools | Select-Object)
                     Break
                 }
                 "/selectedpools" {
@@ -161,11 +176,11 @@
                     Break
                 }
                 "/config" {
-                    $Data = $API.Config
+                    $Data = ConvertTo-Json $API.Config
                     Break
                 }
                 "/userconfig" {
-                    $Data = $API.UserConfig
+                    $Data = ConvertTo-Json $API.UserConfig
                     Break
                 }
                 "/debug" {
@@ -173,7 +188,7 @@
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"
                     $DebugPath = ".\Logs\debug-$DebugDate"
                     $PurgeStrings = @()
-                    @($API.Config,$API.UserConfig) | Select-Object | ConvertFrom-Json | Foreach-Object {
+                    @($API.Config,$API.UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
                         @("Wallet","UserName","API_ID","API_Key","MinerStatusKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
@@ -192,7 +207,7 @@
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
                         $NewFile = "$DebugPath\$($_).json"
-                        $API.$_ -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                        ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
                     Start-Process "7z" "a `"$($DebugPath).7z`" `"$($DebugPath)\*`" -y -sdel" -Wait -WindowStyle Hidden
@@ -206,31 +221,31 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = ConvertTo-Json @(($API.AllDevices | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.AllDevices | Select-Object)
                     Break
                 }
                 "/devices" {
-                    $Data = ConvertTo-Json @(($API.Devices | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Devices | Select-Object)
                     Break
                 }
                 "/devicecombos" {
-                    $Data = ConvertTo-Json @(($API.DeviceCombos | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.DeviceCombos | Select-Object)
                     Break
                 }
                 "/stats" {
-                    $Data = ConvertTo-Json @(($API.Stats | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Stats | Select-Object)
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = ConvertTo-Json @(($API.WatchdogTimers | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.WatchdogTimers | Select-Object)
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Balances | Select-Object)
                     Break
                 }
                 "/rates" {
-                    $Data = ConvertTo-Json @(($API.Rates | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Rates | Select-Object)
                     Break
                 }
                 "/asyncloaderjobs" {
@@ -310,7 +325,7 @@
                     Break
                 }
                 "/currentprofit" {
-                    $Data = [PSCustomObject]@{ProfitBTC=$API.CurrentProfit;Rates=$API.Rates | Select-Object | ConvertFrom-Json} | ConvertTo-Json
+                    $Data = [PSCustomObject]@{ProfitBTC=$API.CurrentProfit;Rates=$API.Rates} | ConvertTo-Json
                     Break
                 }
                 "/stop" {
