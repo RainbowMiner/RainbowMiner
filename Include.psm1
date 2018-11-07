@@ -953,11 +953,14 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$ProcessName = "",
         [Parameter(Mandatory = $false)]
-        [Bool]$ShowMinerWindow = $false
+        [Bool]$ShowMinerWindow = $false,
+        [Parameter(Mandatory = $false)]
+        [Bool]$IsWrapper = $false
     )
 
-    if ( $ShowMinerWindow ) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName
+    if ($ShowMinerWindow) {        
+        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True}
+        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName}
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName
     }
@@ -978,19 +981,25 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = ""
+        [String]$ProcessName = "",
+        [Parameter(Mandatory = $false)]
+        [Bool]$ShowMinerWindow = $false
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
     if ($ProcessName -ne "" -and $ProcessName -ne $ExecName) {$ExecName = $ProcessName}
     $Running = @(Get-Process | Where-Object {$_.Name -eq $ExecName} | Select-Object -ExpandProperty Id)
 
-    $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
-    $ScriptBlock += "& '$FilePath'"
-    if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
-    $ScriptBlock += " *>&1"
-    $ScriptBlock += " | Write-Output"
-    if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
+    if ($ShowMinerWindow) {
+        $ScriptBlock = "Start-Process $(@{desktop = "powershell"; core = "pwsh"}.$Global:PSEdition) `"-command ```$Process = (Start-Process '$($FilePath)' '$($Argumentlist)' -WorkingDirectory '$($WorkingDirectory)' -WindowStyle Minimized -PassThru).Id; Wait-Process -Id `$PID; Stop-Process -Id ```$Process`" -WindowStyle Hidden -Wait"
+    } else {
+        $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
+        $ScriptBlock += "& '$FilePath'"
+        if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
+        $ScriptBlock += " *>&1"
+        $ScriptBlock += " | Write-Output"
+        if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
+    }
 
     $Job = Start-Job ([ScriptBlock]::Create($ScriptBlock))
 
@@ -1002,9 +1011,7 @@ function Start-SubProcessInBackground {
         }
     }
 
-    if ($ProcessId) {
-        (Get-Process -Id $ProcessId).PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-    }
+    if ($ProcessId) {(Get-Process -Id $ProcessId).PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]}
 
     [PSCustomObject]@{
         Process   = $Job
@@ -1352,7 +1359,9 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$DoNotSendNewline,
         [Parameter(Mandatory = $false)]
-        [Switch]$Quiet
+        [Switch]$Quiet,
+        [Parameter(Mandatory = $false)]
+        [Switch]$WriteOnly
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
@@ -1361,13 +1370,13 @@ function Invoke-TcpRequest {
         $Client = New-Object System.Net.Sockets.TcpClient $Server, $Port
         $Stream = $Client.GetStream()
         $Writer = New-Object System.IO.StreamWriter $Stream
-        $Reader = New-Object System.IO.StreamReader $Stream
+        if (-not $WriteOnly) {$Reader = New-Object System.IO.StreamReader $Stream}
         $client.SendTimeout = $Timeout * 1000
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
         if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}
-        $Response = $Reader.ReadLine()
+        if (-not $WriteOnly) {$Response = $Reader.ReadLine()}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -2182,7 +2191,7 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper")
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -3982,10 +3991,14 @@ param(
     [int]$Timeout = 3
 )
     try {
-        $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
-        if ($User -ne "" -and $Result) {
-            $Result = ConvertFrom-Json $Result -ErrorAction Stop
-            if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet > $null}
+        if ($User -ne "") {
+            $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
+            if ($User -ne "" -and $Result) {
+                $Result = ConvertFrom-Json $Result -ErrorAction Stop
+                if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet -WriteOnly > $null}
+            }
+        } else {
+            Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet -WriteOnly > $null
         }
         $true
     } catch {}
