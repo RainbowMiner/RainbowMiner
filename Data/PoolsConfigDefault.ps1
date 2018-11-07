@@ -22,7 +22,7 @@
             Fields=[PSCustomObject]@{AllowZero="1"}
             Currencies=@("RVN","SUQA")
         }
-        "CrypoKnight" = [PSCustomObject]@{
+        "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("WOW")
         }
         "Ethermine" = [PSCustomObject]@{

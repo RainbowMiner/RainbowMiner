@@ -73,9 +73,10 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
             "T" {$Pool_Hashrate *= 1e12}
             "P" {$Pool_Hashrate *= 1e15}
         }
-    }
+    } elseif ($Pool_Hashrate -notmatch "^[\d\.]+$") {$Pool_Hashrate = 0}
+
     $Pool_Hashrate = [int64]$Pool_Hashrate
-    $Pool_TSL = [int64]$_.time_since_last_block
+    $Pool_TSL = if ($_.time_since_last_block -eq "-") {$null} else {[int64]$_.time_since_last_block}
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_HashRate -FaultDetection $true -FaultTolerance 5 -Quiet
