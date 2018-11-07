@@ -80,3 +80,9 @@ Param(
     if (-not (Test-Path Variable:Global:Asyncloader)) {return}
     foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {if ($AsyncLoader.Jobs.$Jobkey.Tag -eq $tag) {$AsyncLoader.Jobs.$Jobkey.Paused=$true}}
 }
+
+function Get-AsyncLoaderJobs {
+    $AsyncLoader.Jobs.Values | Select-Object | Foreach-Object {
+        $Job = $_;$Out = [PSCustomObject]@{};$Job.PSObject.Properties.Name | Where-Object {$_ -ne "Request"} | Foreach-Object {$Out | Add-Member $_ $Job.$_ -Force};$Out
+    }
+}
