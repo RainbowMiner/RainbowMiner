@@ -11,12 +11,12 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 
 $UriCuda = @(
-    #[PSCustomObject]@{
-    #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.5-cryptodredge/CryptoDredge_0.9.5_cuda_10.0_windows.zip"
-    #    Cuda = "10.0"
-    #},
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.6-cryptodredge/CryptoDredge_0.9.6_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-cryptodredge/CryptoDredge_0.9.7_cuda_10.0_windows.zip"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-cryptodredge/CryptoDredge_0.9.7_cuda_9.2_windows.zip"
         Cuda = "9.2"
     }
     [PSCustomObject]@{
@@ -53,7 +53,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""} #X17
-    [PSCustomObject]@{MainAlgorithm = "x22i";      MinMemGb = 1; Params = ""} #X22i
+    [PSCustomObject]@{MainAlgorithm = "x22i";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
 )
 
 
