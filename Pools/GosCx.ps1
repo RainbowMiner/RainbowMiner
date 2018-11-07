@@ -81,7 +81,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = $Pool_Host
+                    Host          = "$($Pool_Region).$($Pool_Host)"
                     Port          = $Pool_Port
                     User          = $Pool_User
                     Pass          = "$Worker,c=$Pool_Currency{diff:,d=`$difficulty}"
