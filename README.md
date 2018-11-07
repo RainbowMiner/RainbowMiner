@@ -334,6 +334,10 @@ Config files are found in directory "Config\"
 - pools.config.txt = pool setup, set a different wallet, workername for each pool and coin
 - miners.config.txt = individually add arguments to miner (selected by name and device names and algorithm)
 - devices.config.txt = control algorithms and miners to be used by specific devices
+- algorithms.config.txt = globally adjust algorithms, like min. hashrate, timetofind etc.
+- coins.config.txt = globally adjust specific coins, like min. hashrate, timetofind etc.
+- ocprofiles.confit.txt = setup custom overclocking profiles
+- autoexec.config.txt = add executables/commands to be executed when RainbowMiner starts
 
 **Note: if you have not started the Start.bat yet, there will be no config files! Start it first!**
 **Config files are in JSON format. Look here for to get an idea, how they work: https://www.tutorialspoint.com/json/index.htm**
