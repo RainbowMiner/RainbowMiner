@@ -596,7 +596,7 @@ function Invoke-Core {
     Compare-Object @($Session.AvailMiners | Select-Object) @($Session.MinerInfo.Keys | Select-Object) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
-            "<=" {$Session.MinerInfo[$CcMinerName] = Get-MinersContent -MinerName $CcMinerName -InfoOnly $true}
+            "<=" {$Session.MinerInfo[$CcMinerName] = Get-MinersContent -MinerName $CcMinerName -InfoOnly}
             "=>" {$Session.MinerInfo.Remove($CcMinerName)}
         }
         $MinerInfoChanged = $true
