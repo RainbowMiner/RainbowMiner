@@ -186,10 +186,10 @@
             [PSCustomObject]@{MainAlgorithm = "timetravel10"; SecondaryAlgorithm = ""; Params = "--intensity 19"; OCprofile = ""; MSIAprofile = "4"}
         )
         "SgminerFancyIX" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "allium"; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "phi2";   Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
-            [PSCustomObject]@{MainAlgorithm = "x22i";   Params = "--gpu-threads 2 --worksize 256 -I 22"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "allium"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = "--gpu-threads 1 --worksize 256 -X 32"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "x22i"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 256 -I 22"; OCprofile = ""; MSIAprofile = ""}
         )
         "SgminerKl" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "aergo"; SecondaryAlgorithm = ""; Params = "-X 256 -g 2"; OCprofile = ""; MSIAprofile = ""}
