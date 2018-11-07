@@ -670,7 +670,7 @@ function Invoke-Core {
         }
         $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
-        else {$API.Balances = $BalancesData.Balances}
+        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
     }
 
     #Give API access to the current rates

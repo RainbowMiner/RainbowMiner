@@ -241,7 +241,7 @@
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @($API.Balances | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
                 "/rates" {
