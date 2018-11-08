@@ -4066,19 +4066,21 @@ function Set-MiningRigRentalStatus {
 [cmdletbinding()]   
 param(
     [Parameter(Mandatory = $True)]
-    [Int]$rigid,
+    [Int]$RigId,
     [Parameter(Mandatory = $False)]
-    [Switch]$Stop
+    [Switch]$Stop,
+    [Parameter(Mandatory = $False)]
+    [String]$Status = ""
 )
     if (-not (Test-Path Variable:Global:MRRStatus)) {$Global:MRRStatus = [hashtable]::Synchronized(@{})}
     $time = (Get-Date).ToUniversalTime()
-    if ($MRRStatus.ContainsKey($rigid)) {
-        if ($Stop) {$MRRStatus.Remove($rigid)}
-        else {
-            $MRRStatus[$rigid].last = $time
+    if ($MRRStatus.ContainsKey($RigId)) {
+        if ($Stop) {$MRRStatus.Remove($RigId)}
+        elseif ($Status -eq "online") {$MRRStatus[$RigId].next = $time;$MRRStatus[$RigId].wait = $false;$MRRStatus[$RigId].enable = $true}
+        elseif ($time -ge $MRRStatus[$RigId].next) {
+            if ($MRRStatus[$RigId].wait) {$MRRStatus[$RigId].next = $time.AddMinutes(15);$MRRStatus[$RigId].wait = $MRRStatus[$RigId].enable = $false}
+            else {$MRRStatus[$RigId].next = $time.AddMinutes(3);$MRRStatus[$RigId].wait = $MRRStatus[$RigId].enable = $true}
         }
-    } else {
-        $MRRStatus[$rigid] = [PSCustomObject]@{start = $time; last = $time}
-    }
-    if (-not $Stop) {$MRRStatus[$rigid]}
+    } else {$MRRStatus[$RigId] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
+    if (-not $Stop) {$MRRStatus[$RigId].enable}
 }
