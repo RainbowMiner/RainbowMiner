@@ -77,12 +77,14 @@ if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Obje
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest "/rig/$($Disable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="disabled"} -method "PUT" >$null
         $Rigs_Request | Where-Object {$Disable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="disabled"}
+        $Disable_Rigs | Foreach-Object {Set-MiningRigRentalStatus $_ -Stop}
     }
 } else {
     if ($Enable_Rigs = $Rigs_Request | Where-Object {$_.available_status -ne "available"} | Select-Object -ExpandProperty id) {
         Invoke-MiningRigRentalRequest "/rig/$($Enable_Rigs -join ';')" $API_Key $API_Secret -params @{"status"="available"} -method "PUT" >$null
         $Rigs_Request | Where-Object {$Enable_Rigs -contains $_.id} | Foreach-Object {$_.available_status="available"}
-    }    
+    }
+    $Rigs_Request | Foreach-Object {Set-MiningRigRentalStatus $_.id -Stop}
 }
 
 $RigInfo_Request = @(Invoke-MiningRigRentalRequest "/rig/$(($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) -join ';')/port" $API_Key $API_Secret -Timeout 20 -Cache 3600 | Select-Object)
@@ -119,6 +121,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
 
     if ($Pool_Rig) {
         if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online") {
+            $Pool_RigRentalSeconds = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId | Foreach-Object {($_.last - $_.start).TotalSeconds}} else {0}
             $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
             if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
             
@@ -139,8 +142,8 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Exclusive     = $_.status.status -eq "rented" -and $_.poolstatus -eq "online"
-                Idle          = if ($_.status.status -eq "rented" -and $_.poolstatus -eq "online") {$false} else {-not $EnableMining}
+                Exclusive     = $_.status.status -eq "rented" -and ($_.poolstatus -eq "online" -or $Pool_RigRentalSeconds -lt 300)
+                Idle          = if ($_.status.status -eq "rented" -and ($_.poolstatus -eq "online" -or $Pool_RigRentalSeconds -lt 300)) {$false} else {-not $EnableMining}
                 Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
                     [PSCustomObject]@{
                         Protocol = "stratum+tcp"

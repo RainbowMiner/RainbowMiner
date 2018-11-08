@@ -4061,3 +4061,24 @@ param(
         default {1}
     }
 }
+
+function Set-MiningRigRentalStatus {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [Int]$rigid,
+    [Parameter(Mandatory = $False)]
+    [Switch]$Stop
+)
+    if (-not (Test-Path Variable:Global:MRRStatus)) {$Global:MRRStatus = [hashtable]::Synchronized(@{})}
+    $time = (Get-Date).ToUniversalTime()
+    if ($MRRStatus.ContainsKey($rigid)) {
+        if ($Stop) {$MRRStatus.Remove($rigid)}
+        else {
+            $MRRStatus[$rigid].last = $time
+        }
+    } else {
+        $MRRStatus[$rigid] = [PSCustomObject]@{start = $time; last = $time}
+    }
+    if (-not $Stop) {$MRRStatus[$rigid]}
+}
