@@ -150,6 +150,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "3.8.11.3")) {
+        if (Test-Path ".\Data\minerinfo.json") {$ChangesTotal++; Remove-Item ".\Data\minerinfo.json" -Force}
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
