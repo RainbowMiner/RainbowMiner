@@ -64,7 +64,26 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
-    $Divisor = 1e9
+    if ($Pool_Request.$Pool_Algorithm.mbtc_mh_factor) {
+        $Pool_Factor = [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
+    } else {
+        $Pool_Factor = $(
+            Switch ($Pool_Algorithm_Norm) {
+                "Blake2s" {1000}
+                "Sha256"  {1000}
+                "Sha256t" {1000}
+                "Keccak"  {1000}
+                "KeccakC"  {1000}
+                default   {1}
+            })
+    }
+
+    if ($Pool_Factor -le 0) {
+        Write-Log -Level Info "Unable to determine divisor for $Pool_Coin using $Pool_Algorithm_Norm algorithm"
+        return
+    }
+
+    $Divisor = 1e9 * $Pool_Factor
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
