@@ -120,8 +120,8 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
 
     if ($Pool_Rig) {
+        $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
         if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online") {
-            $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
             $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
             if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
             
@@ -156,7 +156,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             }
         }
 
-        if ($_.status.status -ne "rented" -or -not $Pool_RigEnable) {
+        if (-not $Pool_RigEnable) {
             if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port)) {
                 $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port) {return}}
             }
