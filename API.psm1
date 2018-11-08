@@ -56,6 +56,7 @@
             ".gif" = "image/gif"
             ".ps1" = "text/html" # ps1 files get executed, assume their response is html
             ".7z"  = "application/x-7z-compressed”
+            ".zip" = "application/zip”
         }
 
         function Get-FilteredMinerObject {
@@ -210,14 +211,14 @@
                         ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
-                    Start-Process "7z" "a `"$($DebugPath).7z`" `"$($DebugPath)\*`" -y -sdel" -Wait -WindowStyle Hidden
+                    Start-Process "7z" "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip" -Wait -WindowStyle Hidden
                     Remove-Item $DebugPath -Recurse -Force
 
-                    $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).7z"))
-                    $ContentType = $MIMETypes[".7z"]
-                    $ContentFileName = "debug-$($DebugDate).7z"
+                    $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).zip"))
+                    $ContentType = $MIMETypes[".zip"]
+                    $ContentFileName = "debug-$($DebugDate).zip"
 
-                    Remove-Item "$($DebugPath).7z" -Force -ErrorAction Ignore
+                    Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
                     Break
                 }
                 "/alldevices" {
