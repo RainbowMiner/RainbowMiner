@@ -64,6 +64,9 @@
         "NLPool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "NLPoolCoins" = [PSCustomObject]@{
+            Currencies=@("BTC")
+        }
         "PhiPhiPool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
