@@ -624,8 +624,8 @@ function Invoke-Core {
 
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
 
-    $WatchdogInterval = ($WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
-    $WatchdogReset = ($WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
+    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
+    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
 
     #Update the exchange rates    
     try {
@@ -747,7 +747,7 @@ function Invoke-Core {
     #Apply watchdog to pools
     $Session.AllPools = $Session.AllPools | Where-Object {
         $Pool = $_
-        $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $WatchdogReset)
+        $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
         ($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2
     }
 
@@ -1096,7 +1096,7 @@ function Invoke-Core {
     #Apply watchdog to miners
     $Miners = $Miners | Where-Object {
         $Miner = $_
-        $Miner_WatchdogTimers = $Session.WatchdogTimers | Where-Object MinerName -EQ $Miner.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $WatchdogReset)
+        $Miner_WatchdogTimers = $Session.WatchdogTimers | Where-Object MinerName -EQ $Miner.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
         ($Miner_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>2 -and ($Miner_WatchdogTimers | Where-Object {$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>1
     }
 
@@ -1311,7 +1311,7 @@ function Invoke-Core {
             $Miner_Algorithm = $_
             $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
             if ($WatchdogTimer) {
-                if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $WatchdogInterval)) -and -not $Session.RestartMiners) {
+                if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
                     $Miner.SetStatus([MinerStatus]::Failed)
                 }
                 else {
@@ -1375,7 +1375,7 @@ function Invoke-Core {
                         Kicked    = $Session.Timer
                     }
                 }
-                elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $WatchdogReset))) {
+                elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset))) {
                     $WatchdogTimer.Kicked = $Session.Timer
                 }
             }
@@ -1484,14 +1484,14 @@ function Invoke-Core {
     }
 
     #Extend benchmarking interval to the maximum from running miners
-    $WatchdogResetOld = $WatchdogReset
+    $Session.WatchdogResetOld = $Session.WatchdogReset
     $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
     $CurrentInterval = $Session.Config.Interval
     if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
         $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval - $Session.Config.Interval)
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
-        $WatchdogInterval = ($WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
-        $WatchdogReset = ($WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
+        $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
+        $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
         if ($ExtendInterval -gt 1 ) {
             Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.BenchmarkInterval * $ExtendInterval) seconds). "
         }
@@ -1511,7 +1511,7 @@ function Invoke-Core {
 
     if ($Session.Config.UIstyle -eq "full" -or (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {
         #Display watchdog timers
-        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $WatchdogResetOld) | Format-Table -Wrap (
+        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogResetOld) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
@@ -1768,19 +1768,19 @@ function Invoke-Core {
         if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
             $Miner_PowerDraw = $Miner.GetPowerDraw($CurrentInterval * $ExtendInterval)
             $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_, $CurrentInterval * $ExtendInterval, $Miner.New)
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($_, ($CurrentInterval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Session.Strikes))}
+                $Miner_Algorithm = $_
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, $CurrentInterval * $ExtendInterval, $Miner.New)
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, ($CurrentInterval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Session.Strikes))}
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
                 $Stat = $null
                 if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
                 }
 
                 #Update watchdog timer
-                $Miner_Name = $Miner.Name
-                $Miner_Algorithm = $_
+                $Miner_Name = $Miner.Name                
                 $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if ($Stat -and $WatchdogTimer -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                     $WatchdogTimer.Kicked = $Stat.Updated
