@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-GetUrl "https://www.gos.cx/api/walletEx?address=$($_.Value)"
+        $Request = Invoke-GetUrl "https://www.gos.cx/api/wallet?address=$($_.Value)"
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
@@ -23,10 +23,10 @@ $Payout_Currencies | Foreach-Object {
                 Caption     = "$($Name) ($($Request.currency))"
                 Currency    = $Request.currency
                 Balance     = $Request.balance
-                Pending     = $Request.unsold
-                Total       = $Request.unpaid
-                Payed       = $Request.total - $Request.unpaid
-                Earned      = $Request.total
+                Pending     = $Request.pending
+                Total       = $Request.balance + $Request.pending
+                Payed       = $Request.earnedTotal - $Request.balance - $Request.pending
+                Earned      = $Request.earnedTotal
                 Payouts     = @($Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
