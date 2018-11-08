@@ -58,7 +58,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $UriCuda[0].Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
