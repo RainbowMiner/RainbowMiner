@@ -39,7 +39,7 @@
     $Session.IsInitialSetup = $false
     $Session.IsDonationRun = $false
     $Session.Stopp = $false
-    $Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")
+    try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
     [hashtable]$Session.Updatetracker = @{
         Balances = $Session.Timer
     }
