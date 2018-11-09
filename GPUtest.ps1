@@ -42,6 +42,17 @@ $Arguments = @(
 
 Invoke-Exe ".\Includes\nvidia-smi.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
+" " | Out-File $TestFileName -Append
+"5. OpenCL" | Out-File $TestFileName -Append
+"-"*80 | Out-File $TestFileName -Append
+" " | Out-File $TestFileName -Append
+
+[OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
+    $_ | Out-File $TestFileName -Encoding utf8 -Append
+    [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Out-File $TestFileName -Encoding utf8 -Append
+    "."*80 | Out-File $TestFileName -Append
+}
+
 Write-Host "Done! Now please drop the file"
 Write-Host " "
 Write-Host $(Resolve-Path $TestFileName | Select-Object -ExpandProperty Path) -ForegroundColor Yellow
