@@ -113,7 +113,8 @@
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Value in "));
-                        var balance    = properties.filter((properties) => properties.startsWith("Balance "));
+                        var balance = properties.filter((properties) => properties.startsWith("Balance "));
+                        var maincur = [];
 
                         if (boxes_ix[item.Name] === undefined) {
                             boxes_ix[item.Name] = boxes.length;
@@ -129,22 +130,24 @@
                             var csplit = item[currency].split(".");
                             var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
                             if (digits != -1) { item[currency] = parseFloat(item[currency]) }
-                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
+                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; maincur.push(name); }
                             else if (digits != -1) {
                                 if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
                                 boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
                             }
                         });
                         $.each(balance, function (cindex, currency) {
-                            var name = currency.replace("Balance (", "").replace(")","");
-                            item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
-                            var csplit = item[currency].split(".");
-                            var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
-                            if (digits != -1) { item[currency] = parseFloat(item[currency]) }
-                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
-                            else if (digits != -1) {
-                                if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
-                                boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                            var name = currency.replace("Balance (", "").replace(")", "");
+                            if ($.inArray(name,maincur)===-1) {
+                                item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                                var csplit = item[currency].split(".");
+                                var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+                                if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                                if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
+                                else if (digits != -1) {
+                                    if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
+                                    boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                                }
                             }
                         });
                     });
