@@ -17,7 +17,7 @@ $Payout_Currencies | Foreach-Object {
     try {
         $Request = Invoke-GetUrl "http://zpool.ca/api/walletEx?address=$($_.Value)"
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"

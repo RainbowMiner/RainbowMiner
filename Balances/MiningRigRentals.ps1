@@ -10,7 +10,7 @@ if (-not $Config.Pools.$Name.API_Key -or -not $Config.Pools.$Name.API_Secret) {r
 
 $Request = Invoke-MiningRigRentalRequest "/account/balance" $Config.Pools.$Name.API_Key $Config.Pools.$Name.API_Secret
 if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-    Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+    Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
 }
 
 $Request.PSObject.Properties.Name | Foreach-Object {

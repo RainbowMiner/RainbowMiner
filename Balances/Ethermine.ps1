@@ -23,7 +23,7 @@ $Payout_Currencies | Foreach-Object {
     try {
         $Request = Invoke-GetUrl "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard"
         if ($Request.status -ne "OK") {
-            Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
+            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"

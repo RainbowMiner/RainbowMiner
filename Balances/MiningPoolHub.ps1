@@ -23,7 +23,7 @@ catch {
 }
 
 if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-    Write-Log -Level Warn "Pool Balance API ($Name) returned nothing. "
+    Write-Log -Level Info "Pool Balance API ($Name) returned nothing. "
     return
 }
 

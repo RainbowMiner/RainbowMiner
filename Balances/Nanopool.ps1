@@ -17,7 +17,7 @@ $Payout_Currencies | Foreach-Object {
     try {
         $Request = Invoke-GetUrl "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)"
         if ($Request.status -ne "OK") {
-            Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
+            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
