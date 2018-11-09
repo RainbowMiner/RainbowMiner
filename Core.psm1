@@ -636,7 +636,7 @@ function Invoke-Core {
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         if (-not $NewRates.Count) {
             Write-Log -Level Warn "Coinbase is down, using fallback. "
-            Invoke-GetUrl "https://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
+            if (-not $Session.Rates.Count) {Invoke-GetUrl "https://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}}
         }
         if ($NewRates.Count) {
             $Session.Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
