@@ -185,7 +185,7 @@
                     Break
                 }
                 "/debug" {
-                    #create 7z log and xxx out all purses
+                    #create zip log and xxx out all purses
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"
                     $DebugPath = ".\Logs\debug-$DebugDate"
                     $PurgeStrings = @()
@@ -201,9 +201,9 @@
                     $PurgeStrings = $PurgeStrings | Select-Object -Unique
 
                     if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
-                    Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Foreach-Object {
+                    @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Foreach-Object {
                         $NewFile = "$DebugPath\$($_.Name)"
-                        (Get-Content $_) | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
+                        Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
                     }
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
