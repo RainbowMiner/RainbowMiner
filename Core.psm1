@@ -1308,24 +1308,28 @@ function Invoke-Core {
     #Stop or start miners in the active list depending on if they are the most profitable
     $Session.ActiveMiners | Where-Object {(($_.Best -EQ $false) -or $Session.RestartMiners) -and $_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
-        Write-Log "Stopping miner ($($Miner.Name)). "
+        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool). "
         $Miner.SetStatus([MinerStatus]::Idle)
+        $Miner.Stopped = $true
 
         #Remove watchdog timer
-        $Miner_Name = $Miner.Name
-        $Miner.Algorithm | ForEach-Object {
-            $Miner_Algorithm = $_
-            $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
-            if ($WatchdogTimer) {
-                if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
-                    $Miner.SetStatus([MinerStatus]::Failed)
-                }
-                else {
-                    $Session.WatchdogTimers = $Session.WatchdogTimers -notmatch $WatchdogTimer
+        if ($Session.Config.Watchdog -and $Session.WatchdogTimers) {
+            $Miner_Name = $Miner.Name
+            $Miner_Pool = $Miner.Pool
+            $Miner.Algorithm | ForEach-Object {
+                $Miner_Algorithm = $_
+                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
+                if ($WatchdogTimer) {
+                    if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
+                        $Miner.SetStatus([MinerStatus]::Failed)
+                        Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
+                    }
+                    else {
+                        $Session.WatchdogTimers = $Session.WatchdogTimers -ne $WatchdogTimer
+                    }
                 }
             }
         }
-        $Miner.Stopped = $true
     }
 
     if (($Session.ActiveMiners | ForEach-Object {$_.GetProcessNames()} | Measure-Object).Count -gt 0) {
@@ -1368,10 +1372,11 @@ function Invoke-Core {
         #Add watchdog timer
         if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
             $Miner_Name = $_.Name
+            $Miner_Pool = $_.Pool
             $Miner_DeviceModel = $_.DeviceModel
             $_.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
+                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
                 if (-not $WatchdogTimer) {
                     $Session.WatchdogTimers += [PSCustomObject]@{
                         MinerName = $Miner_Name
