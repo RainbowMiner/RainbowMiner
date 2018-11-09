@@ -4,7 +4,7 @@ class BMiner : Miner {
     [String[]]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
 
-        $Server = "127.0.0.1"
+        $Server = "localhost"
         $Timeout = 10 #seconds
 
         $Request = ""
@@ -13,8 +13,7 @@ class BMiner : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $ApiURI = if ($this.Name -like "Bminer7*") {"/api/status"}else{"/api/v1/status/solver"}
-            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)$($ApiURI)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -22,17 +21,20 @@ class BMiner : Miner {
             return @($Request, $Response)
         }
 
-        if ($this.Name -like "Bminer7*") {
-            # Legacy API for bminer upto version 7.0.0
-            $HashRate_Name = [String]$this.Algorithm[0]
-            $HashRate_Value = [Double]($Data.miners | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {$Data.miners.$_.solver.solution_rate} | Measure-Object -Sum).Sum
-            $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
-        } else {
-            # API for bminer starting version 8.0.0
-            $Data.devices.PSObject.Properties.Value.solvers | ForEach-Object {
-                $HashRate_Name = Get-Algorithm $_.algorithm
-                $HashRate_Value = if ($_.speed_info.solution_rate) {[Double]$_.speed_info.solution_rate} else {[Double]$_.speed_info.hash_rate}
-                if (Get-Member -inputobject $HashRate -name $HashRate_Name) {$HashRate.$HashRate_Name += [Int64]$HashRate_Value} else {$HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}}
+        $this.Algorithm | Select-Object -Unique | ForEach-Object {
+            $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_))
+            if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $_)*")} #temp fix
+
+            $HashRate_Value = 0
+
+            $Data.devices | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+                $Data.devices.$_.solvers | Where-Object {$HashRate_Name -like "$(Get-Algorithm $_.Algorithm)*"} | ForEach-Object {
+                    if ($_.speed_info.hash_rate) {$HashRate_Value += $_.speed_info.hash_rate}
+                    else {$HashRate_Value += $_.speed_info.solution_rate}
+                }
+            }
+            if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
             }
         }
 
