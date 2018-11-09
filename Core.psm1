@@ -39,6 +39,7 @@
     $Session.IsInitialSetup = $false
     $Session.IsDonationRun = $false
     $Session.Stopp = $false
+    $Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")
     [hashtable]$Session.Updatetracker = @{
         Balances = $Session.Timer
     }
@@ -1556,7 +1557,7 @@ function Invoke-Core {
 
     #Display pool balances, formatting it to show all the user specified currencies
     if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Balances.Count -gt 1) {
-        $ColumnMark = if ($PSVersionTable.PSVersion -ge (Get-Version "5.1")) {"$([char]27)[93m{value}$([char]27)[0m"} else {"{value}"}
+        $ColumnMark = if ($Session.EnableColors) {"$([char]27)[93m{value}$([char]27)[0m"} else {"{value}"}
         $NextBalances = 10-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
