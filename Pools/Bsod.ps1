@@ -32,7 +32,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -delay 1000 -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -delay 2000 -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
