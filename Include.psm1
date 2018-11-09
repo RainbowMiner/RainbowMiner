@@ -3577,9 +3577,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10
+        [int]$timeout = 10,
+    [Parameter(Mandatory = $False)]
+        [switch]$nocache
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache
 }
 
 function Invoke-WebRequestAsync {
@@ -3598,9 +3600,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10
+        [int]$timeout = 10,
+    [Parameter(Mandatory = $False)]
+        [switch]$nocache
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache
 }
 
 function Invoke-GetUrlAsync {
@@ -3627,7 +3631,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10
+        [int]$timeout = 10,
+    [Parameter(Mandatory = $False)]
+        [bool]$nocache = $false
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Sleep -Milliseconds $delay}
@@ -3641,6 +3647,8 @@ Param(
 
     if ($cycletime -le 0) {$cycletime = $AsyncLoader.Interval}
 
+    if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
+
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             if ($delay) {Sleep -Milliseconds $delay}
@@ -3652,8 +3660,6 @@ Param(
         }
 
         $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
-
-        $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
 
         do {
             $Request = $RequestError = $null            
@@ -3682,13 +3688,17 @@ Param(
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
         } else {
             $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10 | Get-Zip
+            if (-not $nocache) {$AsyncLoader.Jobs.$Jobkey.Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force}
         }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
         $Error.Clear()
     }
     if (-not $quiet) {
-        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {
+            if (-not $nocache -and -not $AsyncLoader.Jobs.$Jobkey.Request -and (Test-Path ".\Cache\$($Jobkey).asy")) {$AsyncLoader.Jobs.$Jobkey.Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw}
+            if ($AsyncLoader.Jobs.$Jobkey.Request) {Write-Log -Level Warn $AsyncLoader.Jobs.$Jobkey.Error} else {throw $AsyncLoader.Jobs.$Jobkey.Error}
+        }
         $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | Get-Unzip | ConvertFrom-Json
     }
 }

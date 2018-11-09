@@ -6,6 +6,8 @@ Param(
 )
     if ($Interval -lt 60) {return}
 
+    if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" > $null}
+
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 
     $AsyncLoader.Stop = $false
