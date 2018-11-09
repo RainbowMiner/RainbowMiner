@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\AMD-Zjazz\zjazz_amd.exe"
-$Uri = "https://github.com/zjazz/zjazz_amd_miner/releases/download/v1.2/zjazz_amd_win64_1.2.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-zjazz/zjazz_amd_win64_1.2.zip"
+$ManualUri = "https://github.com/zjazz/zjazz_amd_miner/releases"
 $Port = "408{0:d2}"
 $DevFee = 2.0
 

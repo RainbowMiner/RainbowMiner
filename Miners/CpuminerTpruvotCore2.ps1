@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\CPU-TPruvot\cpuminer-gw64-core2.exe"
-$Uri = "https://github.com/tpruvot/cpuminer-multi/releases/download/v1.3.1-multi/cpuminer-multi-rel1.3.1-x64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-cpuminermulti/cpuminer-multi-rel1.3.1-x64.zip"
+$ManualUri = "https://github.com/tpruvot/cpuminer-multi/releases"
 $Port = "511{0:d2}"
 $DevFee = 0.0
 

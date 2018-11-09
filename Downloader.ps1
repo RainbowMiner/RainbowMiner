@@ -4,10 +4,12 @@ $DownloadList = $args
 
 if ($Script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInvocation.MyCommand.Path)}
 
-$LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" | ConvertFrom-Json}).LocalAPIport
+$LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" -Raw | ConvertFrom-Json}).LocalAPIport
 if (-not $LocalAPIport) {$LocalAPIport = 4000}
 
-$ProtectedMinerFiles = if (Test-Path ".\Data\protectedminerfiles.json") {Get-Content ".\Data\protectedminerfiles.json" | ConvertFrom-Json}
+$ProtectedMinerFiles = if (Test-Path ".\Data\protectedminerfiles.json") {Get-Content ".\Data\protectedminerfiles.json" -Raw | ConvertFrom-Json}
+
+$Sha256 = if (Test-Path (".\Data\minersha256.json")) {Get-Content ".\Data\minersha256.json" -Raw | ConvertFrom-Json}
 
 [System.Collections.ArrayList]$RunningMiners_Paths = @()
 try {
@@ -51,7 +53,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
             }
             else {
-                Expand-WebRequest $URI (Split-Path $Path) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -ErrorAction Stop
+                Expand-WebRequest $URI (Split-Path $Path) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
             }
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }

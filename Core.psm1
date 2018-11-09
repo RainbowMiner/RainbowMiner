@@ -593,6 +593,7 @@ function Invoke-Core {
     }
 
     $MinerInfoChanged = $false
+    if (-not (Test-Path ".\Data\minerinfo.json")) {$Session.MinerInfo = @{}}
     Compare-Object @($Session.AvailMiners | Select-Object) @($Session.MinerInfo.Keys | Select-Object) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {

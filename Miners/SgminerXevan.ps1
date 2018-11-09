@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\Xevan-AMD\sgminer.exe"
-$Uri = "https://github.com/LIMXTEC/Xevan-GPU-Miner/releases/download/1/sgminer-xevan-5.5.0-nicehash-1-windows-amd64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.5.0-sgminerxevan/sgminer-xevan-5.5.0-nicehash-1-windows-amd64.zip"
+$ManualUri = "https://github.com/LIMXTEC/Xevan-GPU-Miner/releases"
 $Port = "405{0:d2}"
 $DevFee = 1.0
 

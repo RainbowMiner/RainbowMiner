@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Pigeoncoin\ccminer.exe"
-$Uri = "https://github.com/Pigeoncoin-Miner/Pigeoncoin/releases/download/v2.6-32bit/Pigeoncoin-Miner.32bit.2.6.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-pigeoncoin/Pigeoncoin-Miner.32bit.2.6.zip"
+$ManualUri = "https://github.com/Pigeoncoin-Miner/Pigeoncoin/releases"
 $Port = "101{0:d2}"
 $DevFee = 0.0
 $Cuda = "8.5"

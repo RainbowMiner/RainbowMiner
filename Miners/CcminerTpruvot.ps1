@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-TPruvot\ccminer.exe"
-$Uri = "https://github.com/tpruvot/ccminer/releases/download/2.2.5-tpruvot/ccminer-x86-2.2.5-cuda9.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-tpruvot/ccminer-x86-2.2.5-cuda9.7z"
+$ManualUri = "https://github.com/tpruvot/ccminer/releases"
 $Port = "114{0:d2}"
 $DevFee = 0.0
 $Cuda = "8.0"

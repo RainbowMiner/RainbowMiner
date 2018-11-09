@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\CPU-Yespower\cpuminer$($f = $Global:GlobalCPUInfo.Features; if ($f.avx2 -and $f.sha -and $f.aes) {'-avx2-sha'} elseif ($f.sse42 -and $f.sha -and $f.aes) {'-sse42-sha'} elseif ($f.avx2 -and $f.aes) {'-avx2'} elseif ($f.avx -and $f.aes) {'-avx'} elseif ($f.sse42) {'-sse42'} elseif ($f.sse2) {'-sse2'} else {''}).exe"
-$Uri = "https://github.com/bubasik/cpuminer-opt-yespower/releases/download/v3.8.8.3/cpuminer-opt-cryply-yespower-ver2.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.3-bubasik/cpuminer-opt-cryply-yespower-ver2.zip"
+$ManualUri = "https://github.com/bubasik/cpuminer-opt-yespower/releases"
 $Port = "530{0:d2}"
 $DevFee = 0.0
 

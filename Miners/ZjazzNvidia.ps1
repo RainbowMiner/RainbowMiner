@@ -6,12 +6,13 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Zjazz\zjazz_cuda.exe"
+$ManualUri = "https://github.com/zjazz/zjazz_cuda_miner/releases"
 $Port = "324{0:d2}"
 $DevFee = 2.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/zjazz/zjazz_cuda_miner/releases/download/1.2/zjazz_cuda_win64_1.2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2-zjazz/zjazz_cuda_win64_1.2.zip"
         Cuda = "9.1"
     }
 )

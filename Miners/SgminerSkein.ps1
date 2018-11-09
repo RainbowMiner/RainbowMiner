@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\Skein-AMD\sgminer.exe"
-$Uri = "https://github.com/miningpoolhub/sgminer/releases/download/5.3.1/Release.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.3.1-sgminerskein/Release.zip"
+$ManualUri = "https://github.com/miningpoolhub/sgminer/releases"
 $Port = "404{0:d2}"
 $DevFee = 1.0
 

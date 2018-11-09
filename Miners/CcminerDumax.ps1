@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-ccminerDumax\ccminer.exe"
-$Uri = "https://github.com/DumaxFr/ccminer/releases/download/dumax-0.9.4/ccminer-dumax-0.9.4-win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.4-dumax/ccminer-dumax-0.9.4-win64.zip"
+$ManualUri = "https://github.com/DumaxFr/ccminer/releases"
 $Port = "120{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.0"

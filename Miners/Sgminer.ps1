@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\AMD-NiceHash\sgminer.exe"
-$Uri = "https://github.com/nicehash/sgminer/releases/download/5.6.1/sgminer-5.6.1-nicehash-51-windows-amd64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1-sgminer/sgminer-5.6.1-nicehash-51-windows-amd64.zip"
+$ManualUri = "https://github.com/nicehash/sgminer/releases"
 $Port = "400{0:d2}"
 $DevFee = 1.0
 

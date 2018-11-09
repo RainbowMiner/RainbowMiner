@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Skunk\ccminer.exe"
-$URI = "https://github.com/scaras/ccminer-2.2-mod-r1/releases/download/2.2-r1/2.2-mod-r1.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2r1-ccminerskunk/2.2-mod-r1.zip"
+$ManualUri = "https://github.com/scaras/ccminer-2.2-mod-r1/releases"
 $Port = "109{0:d2}"
 $DevFee = 0.0
 $Cuda = "7.5"

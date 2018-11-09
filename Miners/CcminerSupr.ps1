@@ -6,7 +6,8 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerSupr\ccminer.exe"
-$Uri = "https://github.com/sp-hash/suprminer/releases/download/spmod-git11/spmodgit11.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/git11-spmod/spmodgit11.7z"
+$ManualUri = "https://github.com/sp-hash/suprminer/releases"
 $Port = "116{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"

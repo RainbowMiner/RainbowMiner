@@ -1260,7 +1260,9 @@ function Expand-WebRequest {
         [Parameter(Mandatory = $false)]
         [String]$Path = "",
         [Parameter(Mandatory = $false)]
-        [String[]]$ProtectedFiles = @()
+        [String[]]$ProtectedFiles = @(),
+        [Parameter(Mandatory = $false)]
+        [String]$Sha256 = ""
     )
 
     # Set current path used by .net methods to the same as the script's path
@@ -1273,6 +1275,8 @@ function Expand-WebRequest {
     if (Test-Path $FileName) {Remove-Item $FileName}
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
+
+    if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
 
     if (".msi", ".exe" -contains ([IO.FileInfo](Split-Path $Uri -Leaf)).Extension) {
         Start-Process $FileName "-qb" -Wait

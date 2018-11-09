@@ -6,16 +6,17 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
+$ManualUri = "https://github.com/KlausT/ccminer/releases"
 $Port = "106{0:d2}"
 $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/KlausT/ccminer/releases/download/8.23/ccminer-823-cuda10-x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.23-klaust/ccminer-823-cuda10-x64.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/KlausT/ccminer/releases/download/8.23/ccminer-823-cuda92-x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.23-klaust/ccminer-823-cuda92-x64.zip"
         Cuda = "9.2"
     }        
 )

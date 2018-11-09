@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Eminer\eminer.exe"
-$Uri = "https://github.com/ethash/eminer-release/releases/download/v0.6.1-rc2/eminer.v0.6.1-rc2.win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1rc2-eminer/eminer.v0.6.1-rc2.win64.zip"
 $ManualUri = "https://github.com/ethash/eminer-release"
 $Port = "318{0:d2}"
 $DevFee = 0.0
