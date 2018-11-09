@@ -90,7 +90,7 @@
 
             if (-not $psISE) {
                 $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
-                $BackupDateDelete = (Get-Date).AddDays(-7).ToString("yyyyMMddHHmmss")
+                $BackupDateDelete = (Get-Date).AddMonths(-1).ToString("yyyyMMddHHmmss")
                 Get-ChildItem "$($ConfigFile_Path)\Backup\*.*" | Where-Object {$_.BaseName.SubString(0,14) -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
                 if (Test-Path $ConfigFile) {Copy-Item $ConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["Pools"].Path) {Copy-Item $Session.ConfigFiles["Pools"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_pools.$($ConfigFile_Name)"}
