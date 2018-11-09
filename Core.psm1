@@ -1784,7 +1784,7 @@ function Invoke-Core {
                 }
 
                 #Update watchdog timer
-                $Miner_Name = $Miner.Name                
+                $Miner_Name = $Miner.Name
                 $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if ($Stat -and $WatchdogTimer -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                     $WatchdogTimer.Kicked = $Stat.Updated
