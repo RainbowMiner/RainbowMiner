@@ -598,12 +598,12 @@ function Invoke-Core {
     Compare-Object @($Session.AvailMiners | Select-Object) @($Session.MinerInfo.Keys | Select-Object) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
-            "<=" {$Session.MinerInfo[$CcMinerName] = Get-MinersContent -MinerName $CcMinerName -InfoOnly}
+            "<=" {$Session.MinerInfo[$CcMinerName] = @(Get-MinersContent -MinerName $CcMinerName -InfoOnly | Select-Object -ExpandProperty Type)}
             "=>" {$Session.MinerInfo.Remove($CcMinerName)}
         }
         $MinerInfoChanged = $true
     }
-    if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo > $null}
+    if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo -Compress > $null}
     $API.MinerInfo = $Session.MinerInfo
 
     #Check for GPU failure and reboot, if needed

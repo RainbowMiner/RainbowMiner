@@ -796,7 +796,7 @@ function Get-MinersContent {
 
     foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore)) {
         $Name = $Miner.BaseName
-        if ($InfoOnly -or (Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name.Type | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {
+        if ($InfoOnly -or (Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
                 $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
                 $c | Add-Member -NotePropertyMembers @{
@@ -2945,7 +2945,9 @@ function Set-ContentJson {
         [Parameter(Mandatory = $True)]
         $Data,
         [Parameter(Mandatory = $False)]
-        $MD5hash = ''
+        $MD5hash = '',
+        [Parameter(Mandatory = $False)]
+        [Switch]$Compress
     )
     $retry = 3
     do {
@@ -2956,7 +2958,8 @@ function Set-ContentJson {
                     $FileStream.Dispose()
             }
             if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                $Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8
+                if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8}
+                else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8}
             } else {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
                 Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
