@@ -44,7 +44,7 @@ Param(
                 if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
                     try {
                         Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$AsyncLoader.Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
                     }
                     catch {
                         $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
