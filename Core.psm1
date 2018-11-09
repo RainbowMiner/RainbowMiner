@@ -634,6 +634,10 @@ function Invoke-Core {
         Write-Log "Updating exchange rates from Coinbase. "
         [hashtable]$NewRates = @{}
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
+        if (-not $NewRates.Count) {
+            Write-Log -Level Warn "Coinbase is down, using fallback. "
+            Invoke-GetUrl "https://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
+        }
         if ($NewRates.Count) {
             $Session.Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
             $MissingCurrencies = @($Session.Config.Currency | Where-Object {-not $NewRates.ContainsKey($_)})
@@ -643,8 +647,6 @@ function Invoke-Core {
                     $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))));$Session.Rates[$_] = [Double]$NewRates.$_}                
                 }
             }
-        } else {
-            Write-Log -Level Warn "Coinbase is down. "
         }
     }
     catch {
@@ -1430,7 +1432,7 @@ function Invoke-Core {
             @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
-            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit) {ConvertTo-LocalCurrency `$(`$_.Profit) $($Session.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
+            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Session.Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Session.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
         }                        
         $Miner_Table.AddRange(@(
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
@@ -1592,7 +1594,7 @@ function Invoke-Core {
                 }
                 $CurrentProfit_Offset = 6
             }
-            $StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null
+            if ($Session.Rates.$Miner_Currency) {$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null}
     }
     if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
 
