@@ -1411,7 +1411,7 @@ function Start-Setup {
 
             $CoinSetupDone = $false
             do {
-                try {        
+                try {
                     $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet=""}
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
