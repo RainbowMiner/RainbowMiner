@@ -175,6 +175,10 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "3.8.12.0")) {       
+        if (Test-Path "RainbowMinerV3.8.12.0.zip") {$ChangesTotal++; Remove-Item "RainbowMinerV3.8.12.0.zip" -Force -ErrorAction Ignore}
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
