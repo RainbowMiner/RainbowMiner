@@ -127,7 +127,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
             
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = if ($_.status.status -eq "rented") {"$($_.status.hours)h"} else {""}
+                CoinName      = if ($_.status.status -eq "rented") {try {[timespan]::fromhours($_.status.hours).ToString("hh\hmm\mss\s")}catch{"$($_.status.hours)h"}} else {""}
                 CoinSymbol    = ""
                 Currency      = "BTC"
                 Price         = $Stat.Minute_10 #instead of .Live
