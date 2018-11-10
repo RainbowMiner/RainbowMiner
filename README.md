@@ -476,7 +476,7 @@ The comparison prices of the pools will be scaled with the following formula:
 
 Each pool has it's own section, in the pools.config.txt
 
-#### Change payout currency of a pool (e.g. Ravenminer uses RVN)
+#### Change payout currency of a pool / add more wallets (e.g. Ravenminer uses RVN)
 
 The default pool config look like this:
 
@@ -486,7 +486,7 @@ The default pool config look like this:
         "Penalty": 0
     }
 
-The line "BTC": "$Wallet" defines the payout wallet address. $Wallet uses the value in your config.txt
+The line "BTC": "$Wallet" defines the payout wallet address. $Wallet uses the value in your config.txt, $<CURRENCY> uses the value, defined for the corresponding currency in coins.config.txt
 If you want to change it to LTC, for example, you have to change this line like this:
 
     "Zpool": {
@@ -494,6 +494,24 @@ If you want to change it to LTC, for example, you have to change this line like 
         "Worker": "$WorkerName",
         "Penalty": 0
     }
+
+Or like this, if you setup a global wallet address in coins.config.txt
+
+    "Zpool": {
+        "LTC": "$LTC",
+        "Worker": "$WorkerName",
+        "Penalty": 0
+    }
+
+For non-autoexchange pools, you may define multiple wallets. The wallets define, which coins may be mined at a pool. In the following example, Rainbowminer will mine RVN and SUQA on Icemining, hereby using the default RVN wallet in the coins.config.txt.
+
+    "Icemining": {
+        "RVN": "$RVN",
+        "SUQA": "<YOUR_SUQA_ADDRESS>"
+        "Worker": "$WorkerName",
+        "Penalty": 0
+    }
+
 
 #### Change a pool's penalty
     
@@ -571,7 +589,7 @@ Example:
 
     "Ethermine": {
         "ETH": "0x012031012301230123012301230",
-        "ZEC": "t012301230123012301230",
+        "ZEC": "$ZEC",
         "User": "$UserName",
         "Worker": "$WorkerName",
         "API_ID": "$API_ID",
@@ -759,7 +777,8 @@ Example:
           "Penalty": "10",
           "MinHashrate": "50GH",
           "MinWorkers": "300",
-          "MaxTimeToFind": "1.5h"
+          "MaxTimeToFind": "1.5h",
+          "Wallet": "<YOUR_RAVENCOIN_ADDRESS>"
         }
     }
 
@@ -768,6 +787,7 @@ This configuration would:
 - set a minimum RVN pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
 - set the mimimum pool workers mining RVN to 300 for a pool to be selected
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
+- define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
 
 
 ### Config\ocprofiles.config.txt
