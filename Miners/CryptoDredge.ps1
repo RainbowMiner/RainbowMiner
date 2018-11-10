@@ -12,16 +12,12 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-cryptodredge/CryptoDredge_0.9.7_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.0-cryptodredge/CryptoDredge_0.10.0_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.7-cryptodredge/CryptoDredge_0.9.7_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.10.0-cryptodredge/CryptoDredge_0.10.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
-    }
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.6-cryptodredge/CryptoDredge_0.9.6_cuda_9.1_windows.zip"
-        Cuda = "9.1"
     }
 )
 
@@ -41,6 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
     [PSCustomObject]@{MainAlgorithm = "exosis";    MinMemGb = 1; Params = ""} #Exosis
+    [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lbk3";      MinMemGb = 1; Params = ""} #LBK3
     [PSCustomObject]@{MainAlgorithm = "lyra2v2";   MinMemGb = 1; Params = ""} #Lyra2Re2
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
