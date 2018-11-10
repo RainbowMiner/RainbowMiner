@@ -169,6 +169,10 @@ try {
             }
         }
         $StatTouch | Foreach-Object {Get-ChildItem "Stats\Miners\*-$($_)-*_HashRate.txt" | Foreach-Object {$_.LastWriteTime = Get-Date}}
+
+        Get-ChildItem "MinersOldVersions" -Filter "*.ps1" | Foreach-Object {
+            if (Test-Path "Miners\$($_.Name)") {Copy-Item "MinersOldVersions\$($_.Name)" "Miners" -Force -ErrorAction Ignore;$ChangesTotal++}
+        }
     }
 
     if ($MinersConfigCleanup) {
