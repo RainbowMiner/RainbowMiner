@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-sse2.exe"
-$Uri = "https://github.com/JayDDee/cpuminer-opt/files/1996977/cpuminer-opt-3.8.8.1-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1-jayddee/cpuminer-opt-3.8.8.1-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
