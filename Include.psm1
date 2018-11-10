@@ -91,7 +91,7 @@ function Confirm-Cuda {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet") -and @("API_Key","API_ID","API_Secret","AECurrency","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 10 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and @("API_Key","API_ID","API_Secret","AECurrency","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero") -inotcontains $_.Name} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -3131,7 +3131,7 @@ function Set-CoinsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $SetupNames = @("Penalty","MinHashrate","MinWorkers","MaxTimeToFind")
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet=""}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
@@ -3139,10 +3139,10 @@ function Set-CoinsConfigDefault {
                     if ($Setup.$Coin) {
                         $Preset | Add-Member $Coin $Setup.$Coin
                     } else {
-                        $Preset | Add-Member $Coin ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0"})
+                        $Preset | Add-Member $Coin $Default
                     }
                 }
-                foreach($SetupName in $SetupNames) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName "0" -Force}}
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName $Default.$SetupName -Force}}
             }
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }

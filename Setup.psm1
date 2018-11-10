@@ -62,7 +62,7 @@ function Start-Setup {
             Write-Host "- Pools: finetune pools, add different coin wallets, penalty values and more" -ForegroundColor Yellow
             Write-Host "- Devices: finetune devices, select algorithms, coins and more" -ForegroundColor Yellow
             Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
-            Write-Host "- Coins: finetune global settings for dedicated coins, penalty, minimum hasrate and more" -ForegroundColor Yellow
+            Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             Write-Host " "
             if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
@@ -922,6 +922,7 @@ function Start-Setup {
             do {
                 try {
                     $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+                    $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                     $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
                     $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     if ($Pool_Name -eq '') {throw}
@@ -1053,6 +1054,7 @@ function Start-Setup {
                                                 foreach ($p in $Pool_Actual_Currency) {
                                                     $v = $PoolConfig.$p
                                                     if ($v -eq "`$Wallet") {$v = "default (wallet $($Config.Wallet) from your config.txt)"}
+                                                    elseif ($v -eq "`$$p") {$v = "default (wallet $($CoinsActual.$p.Wallet) from your coins.config.txt)"}
                                                     Write-Host "$p = $v" -ForegroundColor Cyan
                                                 }
                                             } else {
@@ -1063,14 +1065,15 @@ function Start-Setup {
                                             $PoolEditCurrency = $PoolEditCurrency.Trim()
                                             if ($PoolEditCurrency -ne "") {
                                                 $v = $PoolConfig.$PoolEditCurrency
-                                                if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC")) {$v = "default"}
-                                                $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC") -or $v -eq "`$$PoolEditCurrency") {$v = "default"}
+                                                elseif ($v -eq "`$$PoolEditCurrency") {$v = "default";$t = "coins.config.txt"}
+                                                $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                                 $v = $v.Trim()
                                                 if (@("back","<") -inotcontains $v) {
                                                     if (@("del","delete","remove","clear","rem") -icontains $v) {
                                                         if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)} 
                                                     } else {
-                                                        if (@("def","default","wallet","standard") -icontains $v) {$v = "`$Wallet"}
+                                                        if (@("def","default","wallet","standard") -icontains $v) {$v = "`$$(if ($PoolEditCurrency -eq "BTC") {"Wallet"} else {$PoolEditCurrency})"}
                                                         $PoolConfig | Add-Member $PoolEditCurrency $v -Force
                                                     }
                                                 }
@@ -1408,8 +1411,8 @@ function Start-Setup {
 
             $CoinSetupDone = $false
             do {
-                try {
-        
+                try {        
+                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet=""}
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                         Write-Host " "
@@ -1422,15 +1425,18 @@ function Start-Setup {
                             @{Label="MinHashrate"; Expression={"$($_.Value.MinHashrate)"}; Align="center"}
                             @{Label="MinWorkers"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
                             @{Label="MaxTimeToFind"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
+                            @{Label="Wallet"; Expression={"$($_.Value.Wallet)"}}
                         )
                         [console]::ForegroundColor = $p
 
                         $Coin_Symbol = Read-HostString -Prompt "Which coinsymbol do you want to edit/create/delete? (leave empty to end coin config)" -Characters "`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         if ($Coin_Symbol -eq '') {throw}
 
+                        $Coin_Symbol = $Coin_Symbol.ToUpper()
+
                         if (-not $CoinsActual.$Coin_Symbol) {
                             if (Read-HostBool "Do you want to add a new coin `"$($Coin_Symbol)`"?" -Default $true) {
-                                $CoinsActual | Add-Member $Coin_Symbol ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0"}) -Force
+                                $CoinsActual | Add-Member $Coin_Symbol $CoinsDefault -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActual > $null
                             } else {
                                 $Coin_Symbol = ''
@@ -1457,8 +1463,9 @@ function Start-Setup {
                         [System.Collections.ArrayList]$CoinSetupStepBack = @()
 
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
+                        $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$CoinsDefault -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","wallet")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do { 
@@ -1478,6 +1485,10 @@ function Start-Setup {
                                     "maxtimetofind" {
                                         $CoinConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $CoinConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $CoinConfig.MaxTimeToFind = $CoinConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "wallet" {
+                                        $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.Wallet = $CoinConfig.Wallet -replace "\s+"
                                     }
                                     "save" {
                                         Write-Host " "

@@ -354,6 +354,7 @@ function Invoke-Core {
                 $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
                 $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
                 $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
+                $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
             }
         }
     }
@@ -398,13 +399,15 @@ function Invoke-Core {
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters @{
+            $PoolParams = @{
                 Wallet              = $Session.Config.Wallet
                 UserName            = $Session.Config.UserName
                 WorkerName          = $Session.Config.WorkerName
                 API_ID              = $Session.Config.API_ID
                 API_Key             = $Session.Config.API_Key
-            } | Select-Object -ExpandProperty Content) -Force
+            }
+            $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.Wallet -and -not $PoolParams.ContainsKey($_.Name)} | Foreach-Object {$PoolParams[$_.Name] = $_.Value.Wallet}
+            $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters $PoolParams | Select-Object -ExpandProperty Content) -Force
             $CheckPools = $true
         }
     }    
