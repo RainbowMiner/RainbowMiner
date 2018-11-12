@@ -355,6 +355,7 @@ function Invoke-Core {
                 $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
                 $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
                 $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
+                $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
             }
         }
     }
@@ -395,7 +396,7 @@ function Invoke-Core {
 
     #Check for pool config
     $CheckPools = $false
-    Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
+    Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path -force
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
@@ -408,9 +409,15 @@ function Invoke-Core {
             }
             $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.Wallet -and -not $PoolParams.ContainsKey($_.Name)} | Foreach-Object {$PoolParams[$_.Name] = $_.Value.Wallet}
             $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters $PoolParams | Select-Object -ExpandProperty Content) -Force
+            $Session.Config.Pools.PSObject.Properties | Where-Object {$_.Value.EnableAutoCoin} | Foreach-Object {
+                $PoolName = $_.Name
+                $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.EnableAutoPool -and $_.Value.Wallet} | Sort-Object Name | Foreach-Object {
+                    if (-not $Session.Config.Pools.$PoolName."$($_.Name)") {$Session.Config.Pools.$PoolName | Add-Member $_.Name $_.Value.Wallet -Force}
+                }
+            }
             $CheckPools = $true
         }
-    }    
+    }
 
     $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_} | ForEach-Object {
         $Session.Config.Pools | Add-Member $_ (

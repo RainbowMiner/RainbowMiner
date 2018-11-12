@@ -3131,7 +3131,7 @@ function Set-CoinsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0"}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
@@ -3142,8 +3142,11 @@ function Set-CoinsConfigDefault {
                         $Preset | Add-Member $Coin $Default
                     }
                 }
+            }
+            foreach ($Coin in @($Preset.PSObject.Properties.Name | Select-Object)) {
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName $Default.$SetupName -Force}}
             }
+
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
         }
         catch{
@@ -3209,6 +3212,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0"}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             if ($Pools.Count -gt 0) {
@@ -3224,16 +3228,7 @@ function Set-PoolsConfigDefault {
                         }
                         $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
                     }
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Worker") {$Setup_Content | Add-Member Worker "`$WorkerName" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Penalty") {$Setup_Content | Add-Member Penalty 0 -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "Algorithm") {$Setup_Content | Add-Member Algorithm "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$Setup_Content | Add-Member ExcludeAlgorithm "" -Force}            
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "CoinName") {$Setup_Content | Add-Member CoinName "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$Setup_Content | Add-Member ExcludeCoin "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "CoinSymbol") {$Setup_Content | Add-Member CoinSymbol "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$Setup_Content | Add-Member ExcludeCoinSymbol "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "FocusWallet") {$Setup_Content | Add-Member FocusWallet "" -Force}
-                    if ($Setup_Content.PSObject.Properties.Name -inotcontains "AllowZero") {$Setup_Content | Add-Member AllowZero "0" -Force}
+                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
                     $Done | Add-Member $_ $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null

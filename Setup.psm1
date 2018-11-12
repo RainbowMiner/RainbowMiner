@@ -918,6 +918,8 @@ function Start-Setup {
 
             Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
 
+            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0"}
+
             $PoolSetupDone = $false
             do {
                 try {
@@ -958,7 +960,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
                         if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -966,16 +968,8 @@ function Start-Setup {
                         $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
                             if ($PoolConfig.PSObject.Properties.Name -inotcontains $_) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
                         }
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Worker") {$PoolConfig | Add-Member Worker "`$WorkerName" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Penalty") {$PoolConfig | Add-Member Penalty 0 -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "Algorithm") {$PoolConfig | Add-Member Algorithm "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeAlgorithm") {$PoolConfig | Add-Member ExcludeAlgorithm "" -Force}            
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinName") {$PoolConfig | Add-Member CoinName "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoin") {$PoolConfig | Add-Member ExcludeCoin "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "CoinSymbol") {$PoolConfig | Add-Member CoinSymbol "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "ExcludeCoinSymbol") {$PoolConfig | Add-Member ExcludeCoinSymbol "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "FocusWallet") {$PoolConfig | Add-Member FocusWallet "" -Force}
-                        if ($PoolConfig.PSObject.Properties.Name -inotcontains "AllowZero") {$PoolConfig | Add-Member AllowZero "0" -Force}
+                        foreach($SetupName in $PoolDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolDefault.$SetupName -Force}}
+
                         if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
                                         
                         do { 
@@ -1035,6 +1029,9 @@ function Start-Setup {
                                     }
                                     "excludecoinsymbol" {
                                         $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "enableautocoin" {
+                                        $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "penalty" {                                                    
                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1114,6 +1111,7 @@ function Start-Setup {
                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
                                         $PoolConfig | Add-Member CoinSymbol $($PoolConfig.CoinSymbol -join ",") -Force
                                         $PoolConfig | Add-Member ExcludeCoinSymbol $($PoolConfig.ExcludeCoinSymbol -join ",") -Force
+                                        $PoolConfig | Add-Member EnableAutoCoin $(if (Get-Yes $PoolConfig.EnableAutoCoin){"1"}else{"0"}) -Force
                                         $PoolConfig | Add-Member FocusWallet $($PoolConfig.FocusWallet -join ",") -Force
                                         $PoolConfig | Add-Member AllowZero $(if (Get-Yes $PoolConfig.AllowZero){"1"}else{"0"}) -Force
                                         if ($PoolConfig.EnableMining -ne $null) {$PoolConfig.EnableMining = $(if (Get-Yes $PoolConfig.AllowZero){"1"}else{"0"})}
@@ -1412,7 +1410,7 @@ function Start-Setup {
             $CoinSetupDone = $false
             do {
                 try {
-                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet=""}
+                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0"}
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                         Write-Host " "
@@ -1425,6 +1423,7 @@ function Start-Setup {
                             @{Label="MinHashrate"; Expression={"$($_.Value.MinHashrate)"}; Align="center"}
                             @{Label="MinWorkers"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
                             @{Label="MaxTimeToFind"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
+                            @{Label="EAP"; Expression={"$(if (Get-Yes $_.Value.EnableAutoPool) {"Y"} else {"N"})"}; Align="center"}
                             @{Label="Wallet"; Expression={"$($_.Value.Wallet)"}}
                         )
                         [console]::ForegroundColor = $p
@@ -1463,9 +1462,9 @@ function Start-Setup {
                         [System.Collections.ArrayList]$CoinSetupStepBack = @()
 
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
-                        $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$CoinsDefault -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
+                        $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","wallet")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","wallet","enableautopool")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do { 
@@ -1490,10 +1489,15 @@ function Start-Setup {
                                         $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $CoinConfig.Wallet = $CoinConfig.Wallet -replace "\s+"
                                     }
+                                    "enableautopool" {
+                                        $CoinConfig.EnableAutoPool = Read-HostBool -Prompt "Automatically enable `"$Coin_Symbol`" for pools activated in pools.config.txt with EnableAutoCoin=`"1`"" -Default $CoinConfig.EnableAutoPool | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_})) {throw "cancel"}
-                                                        
+
+                                        $CoinConfig | Add-Member EnableAutoPool $(if (Get-Yes $CoinConfig.EnableAutoPool){"1"}else{"0"}) -Force
+
                                         $CoinsActual | Add-Member $Coin_Symbol $CoinConfig -Force
                                         $CoinsActualSave = [PSCustomObject]@{}
                                         $CoinsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$CoinsActualSave | Add-Member $_ ($CoinsActual.$_) -Force}

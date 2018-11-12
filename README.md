@@ -511,6 +511,15 @@ For non-autoexchange pools, you may define multiple wallets. The wallets define,
         "Worker": "$WorkerName",
         "Penalty": 0
     }
+    
+Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set paremeter "EnableAutoCoin" to "1".
+Example:
+
+    "Icemining": {
+        "Worker": "$WorkerName",
+        "Penalty": 0,
+        "EnableAutoCoin": "1"
+    }
 
 
 #### Change a pool's penalty
@@ -778,7 +787,8 @@ Example:
           "MinHashrate": "50GH",
           "MinWorkers": "300",
           "MaxTimeToFind": "1.5h",
-          "Wallet": "<YOUR_RAVENCOIN_ADDRESS>"
+          "Wallet": "<YOUR_RAVENCOIN_ADDRESS>",
+          "EnableAutoPool": "1"
         }
     }
 
@@ -788,6 +798,7 @@ This configuration would:
 - set the mimimum pool workers mining RVN to 300 for a pool to be selected
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
+- each pool, that has it's parameter "EnableAutoCoin" set to "1" will use this RVN wallet
 
 
 ### Config\ocprofiles.config.txt
