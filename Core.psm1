@@ -409,12 +409,6 @@ function Invoke-Core {
             }
             $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.Wallet -and -not $PoolParams.ContainsKey($_.Name)} | Foreach-Object {$PoolParams[$_.Name] = $_.Value.Wallet}
             $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters $PoolParams | Select-Object -ExpandProperty Content) -Force
-            $Session.Config.Pools.PSObject.Properties | Where-Object {$_.Value.EnableAutoCoin} | Foreach-Object {
-                $PoolName = $_.Name
-                $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.EnableAutoPool -and $_.Value.Wallet} | Sort-Object Name | Foreach-Object {
-                    if (-not $Session.Config.Pools.$PoolName."$($_.Name)") {$Session.Config.Pools.$PoolName | Add-Member $_.Name $_.Value.Wallet -Force}
-                }
-            }
             $CheckPools = $true
         }
     }
@@ -440,6 +434,13 @@ function Invoke-Core {
                     $Session.Config.Pools.$p.$q = @(Compare-Object $Session.Config.Pools.$p.$q $Session.Config.Pools.$p.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject -Unique)
                 }
                 $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
+            }
+
+            $Session.Config.Pools.$p | Add-Member EnableAutoCoin (Get-Yes $Session.Config.Pools.$p.EnableAutoCoin) -Force
+            if ($Session.Config.Pools.$p.EnableAutoCoin) {
+                $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.EnableAutoPool -and $_.Value.Wallet} | Sort-Object Name | Foreach-Object {
+                    if (-not $Session.Config.Pools.$p."$($_.Name)") {$Session.Config.Pools.$p | Add-Member $_.Name $_.Value.Wallet -Force}
+                }
             }
             $Session.Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
