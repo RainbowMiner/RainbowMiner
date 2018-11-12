@@ -14,7 +14,7 @@ $Request = [PSCustomObject]@{}
 
 # Get user balances
 try {
-    $Request = Invoke-GetUrl "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)"
+    $Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

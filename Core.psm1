@@ -678,7 +678,7 @@ function Invoke-Core {
 
     #Update the pool balances every 10 Minutes
     if ($Session.Config.ShowPoolBalances) {
-        $RefreshBalances = (-not $Session.Updatetracker.Balances -or $Session.Updatetracker.Balances -lt $Session.Timer.AddMinutes(-10))
+        $RefreshBalances = (-not $Session.Updatetracker.Balances -or $Session.Updatetracker.Balances -lt $Session.Timer.AddMinutes(-$Session.Config.BalanceUpdateMinutes))
         if ($RefreshBalances) {
             Write-Log "Getting pool balances. "
             $Session.Updatetracker.Balances = $Session.Timer

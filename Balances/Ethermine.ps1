@@ -19,9 +19,11 @@ $API_Hosts = @{
     "ZEC" = "https://api-zcash.flypool.org"
 }
 
+$Count = 0
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-GetUrl "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard"
+        $Request = Invoke-RestMethodAsync "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Count++
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {

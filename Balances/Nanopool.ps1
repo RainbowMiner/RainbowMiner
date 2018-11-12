@@ -13,9 +13,11 @@ if (-not $Payout_Currencies) {
     return
 }
 
+$Count = 0
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-GetUrl "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)"
+        $Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($_.Name.ToLower())/user/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Count++
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {

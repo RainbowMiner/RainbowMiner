@@ -13,11 +13,14 @@ if (-not $Payout_Currencies) {
     return
 }
 
+$Count = 0
 $Payout_Currencies | Foreach-Object {
+    $Currency = $_.Name
     try {
-        $Request = Invoke-GetUrl "http://blockmasters.co/api/walletEx?address=$($_.Value)"
+        $Request = Invoke-RestMethodAsync "http://blockmasters.co/api/walletEx?address=$($_.Value)" -delay $(if ($Count){2000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
+            Write-Log -Level Info "Pool Balance API ($Name) for $Currency returned nothing. "
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
@@ -34,6 +37,6 @@ $Payout_Currencies | Foreach-Object {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Verbose "Pool Balance API ($Name) for $($_.Name) has failed. "
+        Write-Log -Level Verbose "Pool Balance API ($Name) for $($Currency) has failed. "
     }
 }

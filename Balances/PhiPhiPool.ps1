@@ -12,7 +12,7 @@ if (!$PoolConfig.BTC) {
 $Request = [PSCustomObject]@{}
 
 try {
-    $Request = Invoke-GetUrl "http://www.phi-phi-pool.com/api/walletEx?address=$($PoolConfig.BTC)"
+    $Request = Invoke-RestMethodAsync "http://www.phi-phi-pool.com/api/walletEx?address=$($PoolConfig.BTC)" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

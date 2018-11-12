@@ -13,9 +13,11 @@ if (-not $Payout_Currencies) {
     return
 }
 
+$Count = 0
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-GetUrl "http://nlpool.nl/api/walletEx?address=$($_.Value)"
+        $Request = Invoke-RestMethodAsync "http://nlpool.nl/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
