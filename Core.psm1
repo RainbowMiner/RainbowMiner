@@ -1667,7 +1667,7 @@ function Invoke-Core {
         Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
 
         $AllMinersFailed = $false
-        if ($WaitRound % $(if (($Session.ActiveMiners | Where-Object Best | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running -and $_.Speed -contains $null} | Measure-Object).Count) {3} else {5}) -eq 0) {
+        if ($WaitRound % 3 -eq 0) {
             $MinersUpdateStatus = Update-ActiveMiners
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
                 $AllMinersFailed = $true
