@@ -1514,7 +1514,7 @@ function Invoke-Core {
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
         $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
         $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
-        if ($ExtendInterval -gt 1 ) {
+        if ($ExtendInterval -gt 1) {
             Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.BenchmarkInterval * $ExtendInterval) seconds). "
         }
         $CurrentInterval = $Session.BenchmarkInterval
