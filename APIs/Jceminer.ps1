@@ -8,13 +8,20 @@ class Jceminer : Miner {
         $Params = ""
         if ($Parameters.Config -ne $null) {
             #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
-            $ConfigFile = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
-            $ConfigFileExample = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).example.txt"
-            if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile")) {
+
+            if ($this.DeviceModel -match "CPU") {
+                $ConfigFile = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
+                $ConfigFileExample = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).example.txt"
+            } else {
+                $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
+                $ConfigFileExample = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).example.txt"                
+            }
+
+            if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile") -and $this.DeviceModel -match "CPU") {
                 ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{\s*" -replace "\s*}$" | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8
             }
             ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{\s*" -replace "\s*}$" | Set-Content "$(Split-Path $this.Path)\$ConfigFileExample" -ErrorAction Ignore -Encoding UTF8 -Force
-            $Params = "-c $ConfigFile"
+            $Params = if (Test-Path "$(Split-Path $this.Path)\$ConfigFile") {"-c $ConfigFile"} else {"--auto"}
         }
 
         return "$Params $($Parameters.Params)".Trim()

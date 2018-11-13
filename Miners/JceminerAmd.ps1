@@ -62,6 +62,25 @@ if ($InfoOnly) {
     return
 }
 
+$Model_Defaults = @(
+    [PSCustomObject]@{model = "HD7950"; algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 464   ; minmemgb = 3},
+    [PSCustomObject]@{model = "HD7990"; algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = @(208,224)  ; minmemgb = 1},
+    [PSCustomObject]@{model = "HD7850"; algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 464   ; minmemgb = 2},
+    [PSCustomObject]@{model = "HD7870"; algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 464   ; minmemgb = 2},
+    [PSCustomObject]@{model = "RX550";  algogb = 2; worksize = 16; alpha = 64;  beta = 8;  multi_hash = 432   ; minmemgb = 2},
+    [PSCustomObject]@{model = "RX560";  algogb = 2; worksize = 8;  alpha = 128; beta = 8;  multi_hash = 464   ; minmemgb = 2},
+    [PSCustomObject]@{model = "RX570";  algogb = 2; worksize = 8;  alpha = 128; beta = 8;  multi_hash = 1008  ; minmemgb = 8},
+    [PSCustomObject]@{model = "RX580";  algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 944   ; minmemgb = 4},
+    [PSCustomObject]@{model = "GTX1070";  algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 944   ; minmemgb = 4},
+    [PSCustomObject]@{model = "RX580";  algogb = 2; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 1696  ; minmemgb = 8},
+    [PSCustomObject]@{model = "RX580";  algogb = 4; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 832   ; minmemgb = 8},
+    [PSCustomObject]@{model = "VEGA56"; algogb = 4; worksize = 8;  alpha = 64;  beta = 16; multi_hash = 896   ; minmemgb = 8},
+    [PSCustomObject]@{model = "VEGA64"; algogb = 2; worksize = 8;  alpha = 64;  beta = 16; multi_hash = 1920  ; minmemgb = 8},
+    [PSCustomObject]@{model = "other";  algogb = 1; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = @(208,224)   ; minmemgb = 1}
+    [PSCustomObject]@{model = "other";  algogb = 1; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 464   ; minmemgb = 2}
+    [PSCustomObject]@{model = "other";  algogb = 1; worksize = 8;  alpha = 64;  beta = 8;  multi_hash = 944   ; minmemgb = 4}
+)
+
 $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
@@ -71,22 +90,36 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Commands | ForEach-Object {        
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)})
-        $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
             $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
             $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
             $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
             $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+
+            $Model_Configs = @()
+            $Miner_Device | Foreach-Object {
+                $Model_Default = $Model_Defaults | Where-Object {$_.name -eq $Miner_Model -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1
+                if (-not $Model_Default) {$Model_Default = $Model_Defaults | Where-Object {$_.name -eq "other" -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1}
+                if (-not $Model_Default) {$Model_Default = $Model_Defaults | Select-Object -First 1}
+                $Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[0]} else {$Model_Default.multi_hash}}
+                $Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[1]} else {$Model_Default.multi_hash}}
+            }
+
+            $Arguments = [PSCustomObject]@{
+                Config = [PSCustomObject]@{gpu_threads_conf = $Model_Configs}
+                Params = "-g $($DeviceIDsAll) --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"
+            }
 
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "-g $($DeviceIDsAll) --auto --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"
+                Arguments = $Arguments
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                API       = "XMRig"
+                API       = "Jceminer"
                 Port      = $Miner_Port
                 Uri       = $Uri
                 DevFee    = $DevFee
