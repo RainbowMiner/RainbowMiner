@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.8b-wildrig/wildrig-multi-0.12.8-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.8.1b-wildrig/wildrig-multi-0.12.8.1-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
