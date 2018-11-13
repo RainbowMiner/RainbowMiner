@@ -2,7 +2,9 @@
 [cmdletbinding()]
 Param(
     [Parameter(Mandatory = $False)]
-    [int]$Interval = 60
+    [int]$Interval = 60,
+    [Parameter(Mandatory = $False)]
+    [bool]$Quickstart = $false
 )
     if ($Interval -lt 60) {return}
 
@@ -12,8 +14,9 @@ Param(
 
     $AsyncLoader.Stop = $false
     [hashtable]$AsyncLoader.Jobs = @{}
-    $AsyncLoader.CycleTime = 10
-    $AsyncLoader.Interval  = $Interval
+    $AsyncLoader.CycleTime  = 10
+    $AsyncLoader.Interval   = $Interval
+    $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
 
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()

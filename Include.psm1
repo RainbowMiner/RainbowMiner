@@ -3648,9 +3648,15 @@ Param(
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
+        $Quickstart = $false
         if (-not $AsyncLoader.Jobs.$Jobkey) {
-            if ($delay) {Sleep -Milliseconds $delay}
+            $Quickstart = -not $nocache -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
+            if (-not $Quickstart -and $delay) {Sleep -Milliseconds $delay}
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+            if ($Quickstart) {
+                $AsyncLoader.Quickstart += $delay
+                if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
+            }
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
@@ -3662,7 +3668,8 @@ Param(
         do {
             $Request = $RequestError = $null            
             try {
-                $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout
+                if ($Quickstart) {$Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw}
+                else {$Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout}
                 $AsyncLoader.Jobs.$Jobkey.Success++
                 $AsyncLoader.Jobs.$Jobkey.Prefail=0
             }
@@ -3672,7 +3679,7 @@ Param(
             finally {
                 $Error.Clear()
             }
-            $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
+            if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
 
             $retry--
             if ($retry) {
@@ -3684,7 +3691,9 @@ Param(
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
-        } else {
+        } elseif ($Quickstart) {
+            $AsyncLoader.Jobs.$Jobkey.Request = $Request
+        } else {            
             $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10 | Get-Zip
             if (-not $nocache) {$AsyncLoader.Jobs.$Jobkey.Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force}
         }
