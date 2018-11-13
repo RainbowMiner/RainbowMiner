@@ -106,6 +106,7 @@
 
 #version {
   font-size: .6rem;
+  -webkit-text-fill-color: #fff;
 }
 
 .navbar .form-control {
