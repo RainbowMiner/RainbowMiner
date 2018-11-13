@@ -5,11 +5,6 @@
         [String]$ConfigFile = ".\Config\config.txt"
     )
 
-    $Session.Timer = (Get-Date).ToUniversalTime()
-    $Session.NextReport = $Session.Timer
-    $Session.StatEnd = $Session.Timer
-    $Session.DecayStart = $Session.Timer
-
     $Session.ActiveMiners = @()
     $Session.AllPools = $null
     $Session.WatchdogTimers = @()
@@ -40,9 +35,6 @@
     $Session.IsDonationRun = $false
     $Session.Stopp = $false
     try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
-    [hashtable]$Session.Updatetracker = @{
-        Balances = $Session.Timer
-    }
 
     if (Confirm-IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
 
@@ -169,7 +161,14 @@
         Write-Log -Level Error "$($_) Cannot run RainbowMiner. "
         $false
     }
-    #[console]::TreatControlCAsInput = $true
+
+    $Session.Timer = (Get-Date).ToUniversalTime()
+    $Session.NextReport = $Session.Timer
+    $Session.StatEnd = $Session.Timer
+    $Session.DecayStart = $Session.Timer
+    [hashtable]$Session.Updatetracker = @{
+        Balances = $Session.Timer
+    }
 }
 
 function Update-ActiveMiners {
@@ -277,12 +276,13 @@ function Invoke-Core {
 
         #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
+        if (-not $Session.CurrentInterval) {$Session.CurrentInterval = $Session.Config.Inteval}
     }
 
     #Start/stop services
     if ($Session.RoundCounter -eq 0) {Start-Autoexec -Priority $Session.Config.AutoexecPriority}
     if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
-    if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval}
+    if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart}
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
     if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.LocalAPIport -ne $ConfigBackup.LocalAPIport) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {
@@ -634,7 +634,7 @@ function Invoke-Core {
     $Session.Timer = (Get-Date).ToUniversalTime()
 
     $StatStart = $Session.StatEnd
-    $Session.StatEnd = $Session.Timer.AddSeconds($Session.Config.Interval)
+    $Session.StatEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)
     $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
 
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
@@ -1505,21 +1505,6 @@ function Invoke-Core {
         }
     }
 
-    #Extend benchmarking interval to the maximum from running miners
-    $Session.WatchdogResetOld = $Session.WatchdogReset
-    $ExtendInterval = if ($Session.Config.DisableExtendInterval) {1} else {(@(1) + [int[]]@($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval) | Measure-Object -Maximum).Maximum}
-    $CurrentInterval = $Session.Config.Interval
-    if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {
-        $Session.StatEnd = $Session.StatEnd.AddSeconds($Session.BenchmarkInterval * $ExtendInterval - $Session.Config.Interval)
-        $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
-        $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
-        $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
-        if ($ExtendInterval -gt 1) {
-            Write-Log -Level Warn "Benchmarking watchdog sensitive algorithm or miner. Increasing interval time temporarily to $($ExtendInterval)x interval ($($Session.BenchmarkInterval * $ExtendInterval) seconds). "
-        }
-        $CurrentInterval = $Session.BenchmarkInterval
-    }
-
     #Display active miners list
     $Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Session.Config.UIstyle -eq "full" -or (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $_.GetStatus() -eq [MinerStatus]::Running) -and (-not $_.Donator -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
@@ -1533,7 +1518,7 @@ function Invoke-Core {
 
     if ($Session.Config.UIstyle -eq "full" -or (-not $IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0)) {
         #Display watchdog timers
-        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogResetOld) | Format-Table -Wrap (
+        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogReset) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
@@ -1642,12 +1627,28 @@ function Invoke-Core {
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
-         
+
+    $Session.Timer = (Get-Date).ToUniversalTime()         
+
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
-    $Session.Timer = (Get-Date).ToUniversalTime()
-    if ($Session.StatEnd.AddSeconds(-10) -le $Session.Timer) {$Session.StatEnd = $Session.Timer.AddSeconds(10)}
+    #Extend benchmarking interval to the maximum from running miners
+    $ExtendInterval  = [Math]::Max(1,($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval | Measure-Object -Maximum).Maximum * (-not $Session.Config.DisableExtendInterval))
+    $CurrentInterval = $Session.Config.Interval
+    if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$CurrentInterval = $Session.BenchmarkInterval * $ExtendInterval}
+
+    #Dynamically adapt current interval
+    if ($Session.StatEnd.AddSeconds(-10) -le $Session.Timer) {$CurrentInterval += [Math]::Round(($Session.Timer - $Session.StatEnd.AddSeconds(-10)).TotalSeconds/30+0.5)*30}
+
+    #Apply current interval if changed
+    if ($CurrentInterval -ne $Session.CurrentInterval) {
+        Write-Log -Level Info "Runtime interval changed from $($Session.CurrentInterval) to $CurrentInterval seconds. "
+        $Session.StatEnd = $Session.StatEnd.AddSeconds($CurrentInterval-$Session.CurrentInterval)
+        $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
+        $Session.CurrentInterval = $CurrentInterval
+    }
+
     $WaitSeconds = [int]($Session.StatEnd - $Session.Timer).TotalSeconds
 
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
@@ -1750,7 +1751,7 @@ function Invoke-Core {
                 "Y" {
                     Stop-AsyncLoader
                     Sleep 2
-                    Start-Asyncloader
+                    Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
                     Write-Host -NoNewline "[Y] pressed - Asyncloader yanked."
                     Write-Log "Asyncloader yanked."
                 }
@@ -1788,11 +1789,11 @@ function Invoke-Core {
         if ($Miner.New) {$Miner.Benchmarked++}
 
         if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
-            $Miner_PowerDraw = $Miner.GetPowerDraw($CurrentInterval * $ExtendInterval)
+            $Miner_PowerDraw = $Miner.GetPowerDraw($Session.CurrentInterval)
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, $CurrentInterval * $ExtendInterval, $Miner.New)
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, ($CurrentInterval * $Miner.Benchmarked * $ExtendInterval), ($Miner.Benchmarked -lt $Session.Strikes))}
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, $Session.CurrentInterval, $Miner.New)
+                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, ($Session.CurrentInterval * $Miner.Benchmarked), ($Miner.Benchmarked -lt $Session.Strikes))}
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
@@ -1829,6 +1830,7 @@ function Invoke-Core {
                 $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
                 if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
                 else {$StartCommand = $StartCommand -replace "-command","-windowstyle $($StartWindowState) -command"}
+                if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
                 Write-Log "Restarting $($StartWindowState) $($StartCommand)"
                 $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                 if ($NewKid -and $NewKid.ReturnValue -eq 0) {
