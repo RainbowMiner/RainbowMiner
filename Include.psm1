@@ -3952,6 +3952,16 @@ param(
     } catch {$s}
 }
 
+function Get-UrlEncode {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [string]$Uri = ""
+)
+    if ($Uri -match "^(.*?)({[^}]+})(.*?)$") {"$([System.Web.HttpUtility]::UrlEncode($Matches[1]))$($Matches[2])$([System.Web.HttpUtility]::UrlEncode($Matches[3]))"}
+    else {[System.Web.HttpUtility]::UrlEncode($Uri)}
+}
+
 function Get-LastDrun {
     if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-Content ".\Data\lastdrun.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {}}
 }
