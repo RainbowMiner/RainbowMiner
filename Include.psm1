@@ -4008,10 +4008,12 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Pass="x",
     [Parameter(Mandatory = $False)]
-    [int]$Timeout = 3
+    [int]$Timeout = 3,
+    [Parameter(Mandatory = $False)]
+    [bool]$WaitForResponse = $False
 )
     try {
-        if ($User -ne "") {
+        if ($User -ne "" -or $WaitForResponse) {
             $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
             if ($User -ne "" -and $Result) {
                 $Result = ConvertFrom-Json $Result -ErrorAction Stop
