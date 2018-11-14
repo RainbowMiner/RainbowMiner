@@ -41,7 +41,7 @@ function Confirm-Version {
             if ($Force) {
                 $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             } else {
-                $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600
+                $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600 -noquickstart
             }
             $RemoteVersion = ($Request.tag_name -replace '^v')
             if ($RemoteVersion) {
@@ -3577,9 +3577,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 10,
     [Parameter(Mandatory = $False)]
-        [switch]$nocache
+        [switch]$nocache,
+    [Parameter(Mandatory = $False)]
+        [switch]$noquickstart
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart
 }
 
 function Invoke-WebRequestAsync {
@@ -3600,9 +3602,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 10,
     [Parameter(Mandatory = $False)]
-        [switch]$nocache
+        [switch]$nocache,
+    [Parameter(Mandatory = $False)]
+        [switch]$noquickstart
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart
 }
 
 function Invoke-GetUrlAsync {
@@ -3631,7 +3635,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 10,
     [Parameter(Mandatory = $False)]
-        [bool]$nocache = $false
+        [bool]$nocache = $false,
+    [Parameter(Mandatory = $False)]
+        [bool]$noquickstart = $false
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Sleep -Milliseconds $delay}
@@ -3650,7 +3656,7 @@ Param(
     if ($force -or -not $AsyncLoader.Jobs.$Jobkey -or $AsyncLoader.Jobs.$Jobkey.Paused) {
         $Quickstart = $false
         if (-not $AsyncLoader.Jobs.$Jobkey) {
-            $Quickstart = -not $nocache -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
+            $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
             if (-not $Quickstart -and $delay) {Sleep -Milliseconds $delay}
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
             if ($Quickstart) {
