@@ -20,7 +20,6 @@
     }
     [hashtable]$Session.MinerInfo = @{}
 
-    $Session.LastDonated = 0
     $Session.RoundCounter = 0
 
     $Session.SkipSwitchingPrevention = $false
@@ -1413,7 +1412,7 @@ function Invoke-Core {
     #Move donation run into the future, if benchmarks are ongoing
     if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $IsExclusiveRun) {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
-        if ($Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
 
     #Give API access to WatchdogTimers information
