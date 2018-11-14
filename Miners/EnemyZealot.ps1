@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-enemyzealot/z-enemy.1-23-cuda10.0_x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v2-enemyzealot/z-enemy.1-24-cuda10.0_ver2.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-enemyzealot/z-enemy.1-23-cuda9.2_x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v2-enemyzealot/z-enemy.1-24-cuda9.2_ver2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-enemyzealot/z-enemy.1-23-cuda9.1_x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v2-enemyzealot/z-enemy.1-24-cuda9.1_ver2.zip"
         Cuda = "9.1"
     }
 )
@@ -38,13 +38,13 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "-N 1"} #Renesis
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12 (testing)
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus, new in 1.10
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S (T-Rex faster)
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 (T-Rex has better numbers at the pool)
+    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 (T-Rex has better numbers at the pool)
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-N 1"} #Xevan, new in 1.09a
 )
 
