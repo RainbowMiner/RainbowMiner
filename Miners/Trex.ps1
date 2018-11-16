@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.4-trex/t-rex-0.7.4-win-cuda10.0.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.5test-trex/t-rex-0.7.5-win-cuda10.0.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.4-trex/t-rex-0.7.4-win-cuda9.2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.5test-trex/t-rex-0.7.5-win-cuda9.2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.4-trex/t-rex-0.7.4-win-cuda9.1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.5test-trex/t-rex-0.7.5-win-cuda9.1.zip"
         Cuda = "9.1"
     }
 )
@@ -32,6 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bcd"; Params = ""} #Bcd
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
