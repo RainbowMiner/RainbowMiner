@@ -3317,7 +3317,9 @@ function Get-YiiMPDataWindow {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
-        [String]$DataWindow = ''
+        [String]$DataWindow = '',
+        [Parameter(Mandatory = $False)]
+        [String]$Default = $Session.Config.PoolDataWindow
     )
     Switch ($DataWindow -replace "[^A-Za-z0-9]+") {
         {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current"}
@@ -3335,7 +3337,7 @@ function Get-YiiMPDataWindow {
         {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h"}
         {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h"}
         {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h"}
-        default {"estimate_current"}
+        default {if ($Default) {$Default} else {"average-2h"}}
     }
 }
 
@@ -3807,27 +3809,6 @@ function Invoke-ReportMinerStatus {
     catch {
         Write-Log -Level Warn "Miner Status $($ReportUrl) has failed. "
     }
-}
-
-function Write-HostSetupHints {
-[cmdletbinding()]   
-Param(   
-    [Parameter(Mandatory = $False)]   
-    [string]$Color = "Yellow"
-)
-
-    Write-Host " "
-    Write-Host "Hints:" -ForegroundColor $Color
-    Write-Host "- press Return to accept the defaults" -ForegroundColor $Color
-    Write-Host "- fields marked with * are mandatory" -ForegroundColor $Color
-    Write-Host "- use comma `",`" to separate list entries" -ForegroundColor $Color
-    Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor $Color
-    Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor $Color
-    Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor $Color
-    Write-Host "- enter `"back`" or `"<`" to repeat the last input" -ForegroundColor $Color
-    Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor $Color
-    Write-Host "- enter `"exit`" or `"cancel`" to abort without any changes to the configuration" -ForegroundColor $Color
-    Write-Host " "
 }
 
 function Confirm-IsAdmin {

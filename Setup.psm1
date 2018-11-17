@@ -1,4 +1,51 @@
 ﻿
+function Write-HostSetupHints {
+[cmdletbinding()]   
+Param(   
+    [Parameter(Mandatory = $False)]   
+    [string]$Color = "Yellow"
+)
+
+    Write-Host " "
+    Write-Host "Hints:" -ForegroundColor $Color
+    Write-Host "- press Return to accept the defaults" -ForegroundColor $Color
+    Write-Host "- fields marked with * are mandatory" -ForegroundColor $Color
+    Write-Host "- use comma `",`" to separate list entries" -ForegroundColor $Color
+    Write-Host "- add new entries to a list, by adding a `"+`" in front of your input" -ForegroundColor $Color
+    Write-Host "- remove entries from a list, by adding a `"-`" in front of your input" -ForegroundColor $Color
+    Write-Host "- enter `"list`" or `"help`" to show a list of all valid entries" -ForegroundColor $Color
+    Write-Host "- enter `"back`" or `"<`" to repeat the last input" -ForegroundColor $Color
+    Write-Host "- enter `"delete`" to clear a non-mandatory entry" -ForegroundColor $Color
+    Write-Host "- enter `"exit`" or `"cancel`" to abort without any changes to the configuration" -ForegroundColor $Color
+    Write-Host " "
+}
+
+function Write-HostSetupDataWindowHints {
+[cmdletbinding()]   
+Param(   
+    [Parameter(Mandatory = $False)]   
+    [string]$Color = "Cyan"
+)
+
+    Write-Host " "
+    Write-Host "- estimate_current: the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor $Color
+    Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor $Color
+    Write-Host "- actual_last24h: the actual profitability over the past 24 hours (less switching)" -ForegroundColor $Color
+    Write-Host "- mininum (or minimum-2): the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- maximum (or maximum-2): the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- average (or average-2): the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- mininume (or minimum-2e): the minimum value of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
+    Write-Host "- maximume (or maximum-2e): the maximum value of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
+    Write-Host "- averagee (or average-2e): the calculated average of estimate_current and estimate_last24h will be used" -ForegroundColor $Color
+    Write-Host "- mininumh (or minimum-2h): the minimum value of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- maximumh (or maximum-2h): the maximum value of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- averageh (or average-2h): the calculated average of estimate_last24h and actual_last24h will be used" -ForegroundColor $Color
+    Write-Host "- mininumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor $Color
+    Write-Host "- maximumall (or maximum-3): the maximum value of the above three values will be used" -ForegroundColor $Color
+    Write-Host "- averageall (or average-3): the calculated average of the above three values will be used" -ForegroundColor $Color
+    Write-Host " "
+}
+
 function Start-Setup {
     [CmdletBinding()]
     param(
@@ -87,10 +134,10 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -466,6 +513,14 @@ function Start-Setup {
                             $GlobalSetupStepStore = $false
                             if ($IsInitialSetup) {throw "Goto save"}
                         }
+                        "pooldatawindow" {
+                            Write-Host " "
+                            Write-Host "Choose the default pool datawindow" -ForegroundColor Green
+
+                            Write-HostSetupDataWindowHints
+
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                            
+                        }
                         "hashrateweight" {
                             Write-Host " "
                             Write-Host "Adjust hashrate weight"
@@ -687,6 +742,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member DisableAsyncLoader $(if (Get-Yes $Config.DisableAsyncLoader){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
                             $ConfigActual | Add-Member CPUMiningAffinity $Config.CPUMiningAffinity -Force
+                            $ConfigActual | Add-Member PoolDataWindow $Config.PoolDataWindow -Force
                             $ConfigActual | Add-Member HashrateWeight $Config.HashrateWeight -Force
                             $ConfigActual | Add-Member HashrateWeightStrength $Config.HashrateWeightStrength -Force
                             $ConfigActual | Add-Member PoolAccuracyWeight $Config.PoolAccuracyWeight -Force
@@ -974,7 +1030,7 @@ function Start-Setup {
                         }
                         foreach($SetupName in $PoolDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolDefault.$SetupName -Force}}
 
-                        if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "estimate_current" -Force}  
+                        if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "" -Force}  
                                         
                         do { 
                             try {
@@ -1087,19 +1143,9 @@ function Start-Setup {
                                     "datawindow" {
                                         Write-Host " "
                                         Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
-                                        Write-Host " "
-                                        Write-Host "- estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor Cyan
-                                        Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor Cyan
-                                        Write-Host "- actual_last24h: the actual profitability over the past 24 hours (less switching)" -ForegroundColor Cyan
-                                        Write-Host "- mininum (or minimum-2): the minimum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                        Write-Host "- maximum (or maximum-2): the maximum value of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                        Write-Host "- average (or average-2): the calculated average of estimate_current and actual_last24h will be used" -ForegroundColor Cyan
-                                        Write-Host "- mininumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor Cyan
-                                        Write-Host "- maximumall (or maximum-3): the maximum value of the above three values will be used" -ForegroundColor Cyan
-                                        Write-Host "- averageall (or average-3): the calculated average of the above three values will be used" -ForegroundColor Cyan
-                                        Write-Host " "
-                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool" -Default (Get-YiiMPDataWindow $PoolConfig.DataWindow) | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
-                                        $PoolConfig.DataWindow = Get-YiiMPDataWindow $PoolConfig.DataWindow
+
+                                        Write-HostSetupDataWindowHints
+                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool (leave empty for default)" -Default $PoolConfig.DataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
                                     }
                                     "focuswallet" {
                                         $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
