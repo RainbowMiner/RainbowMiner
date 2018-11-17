@@ -4020,14 +4020,19 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Timeout = 3,
     [Parameter(Mandatory = $False)]
-    [bool]$WaitForResponse = $False
+    [bool]$WaitForResponse = $False,
+    [Parameter(Mandatory = $False)]
+    [switch]$SubscribeExtraNonce
 )
     try {
         if ($User -ne "" -or $WaitForResponse) {
             $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
             if ($User -ne "" -and $Result) {
                 $Result = ConvertFrom-Json $Result -ErrorAction Stop
-                if ($Result.id -eq 1 -and -not $Result.error) {Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet -WriteOnly > $null}
+                if ($Result.id -eq 1 -and -not $Result.error) {
+                    $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet
+                    if ($SubscribeExtraNonce -and $Result.id -eq 2 -and -not $Result.error) {$Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`":3,`"method`":`"mining.extranonce.subscribe`",`"params`":[]}" -Timeout $Timeout -Quiet}
+                }
             }
         } else {
             Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet -WriteOnly > $null
