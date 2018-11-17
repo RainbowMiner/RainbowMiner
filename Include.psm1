@@ -177,7 +177,7 @@ function Get-Balance {
         }
     }
 
-    $Balances = @($Balances | Select-Object) + $Totals
+    $Balances = @($Balances | Where-Object {$_.Total} | Select-Object) + $Totals
 
     $Balances | Foreach-Object {
         $Balance = $_
