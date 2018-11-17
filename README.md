@@ -5,6 +5,8 @@
 
 ###### **Central monitoring for all of your rigs: [https://rbminer.net](https://rbminer.net)**
 
+###### **Discord: [https://discord.gg/ZBNVWYY](https://discord.gg/ZBNVWYY)**
+
 
 ## INTRODUCTION
 
@@ -112,7 +114,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
   - **ResetProfit.bat**: reset RainbowMiner's profit calculation
   - **Stopp.bat**: halt RainbowMiner at once
   - **Updater.bat**: update to newest release of RainbowMiner manually. Make sure, you stop RainbowMiner before running this helper
-	
+  	
 
 ## WEB-INTERFACE
 
