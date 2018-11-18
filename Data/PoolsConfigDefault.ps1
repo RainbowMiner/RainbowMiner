@@ -59,6 +59,8 @@
             Currencies=@("ETH")
         }
         "NiceHash" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{API_ID="";API_Key=""}
+            SetupFields=[PSCustomObject]@{API_ID="Enter your Nicehash API ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash Readonly API key  (pulls and adds NH balance)"}
             Currencies=@("BTC")
             Defaults=[PSCustomObject]@{StatAverage="Minute_5"}
         }
