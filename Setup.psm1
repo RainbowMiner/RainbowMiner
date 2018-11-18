@@ -534,7 +534,7 @@ function Start-Setup {
 
                             Write-HostSetupDataWindowHints
 
-                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                         }
                         "poolstataverage" {
                             Write-Host " "
@@ -1169,7 +1169,7 @@ function Start-Setup {
                                         Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
 
                                         Write-HostSetupDataWindowHints
-                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool (leave empty for default)" -Default $PoolConfig.DataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
+                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool (leave empty for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
                                     }
                                     "stataverage" {
                                         Write-Host " "
