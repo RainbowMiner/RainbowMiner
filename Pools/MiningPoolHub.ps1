@@ -7,7 +7,8 @@ param(
     [alias("WorkerName")]
     [String]$Worker,
     [TimeSpan]$StatSpan,
-    [Bool]$AllowZero = $false
+    [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_10"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -71,7 +72,7 @@ $Pool_Request.return | ForEach-Object {
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = ""
-                    Price         = $Stat.Minute_10 #instead of .Live
+                    Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
@@ -91,7 +92,7 @@ $Pool_Request.return | ForEach-Object {
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
                         Currency      = ""
-                        Price         = $Stat.Minute_10 #instead of .Live
+                        Price         = $Stat.$StatAverage #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+ssl"

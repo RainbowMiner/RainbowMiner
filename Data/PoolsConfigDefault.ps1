@@ -60,6 +60,7 @@
         }
         "NiceHash" = [PSCustomObject]@{
             Currencies=@("BTC")
+            Defaults=[PSCustomObject]@{StatAverage="Minute_5"}
         }
         "NLPool" = [PSCustomObject]@{
             Currencies=@("BTC")

@@ -3206,24 +3206,25 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";DataWindow=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";DataWindow="";StatAverage=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             if ($Pools.Count -gt 0) {
-                $Pools | Foreach-Object {        
-                    if ($Preset -and $Preset.PSObject.Properties.Name -icontains $_) {
-                        $Setup_Content = $Preset.$_
+                $Pools | Foreach-Object {
+                    $Pool_Name = $_
+                    if ($Preset -and $Preset.PSObject.Properties.Name -icontains $Pool_Name) {
+                        $Setup_Content = $Preset.$Pool_Name
                     } else {
                         $Setup_Content = [PSCustomObject]@{}
                         $Setup_Currencies = @("BTC")
-                        if ($Setup.$_) {
-                            if ($Setup.$_.Fields) {$Setup_Content = $Setup.$_.Fields}
-                            $Setup_Currencies = @($Setup.$_.Currencies)            
+                        if ($Setup.$Pool_Name) {
+                            if ($Setup.$Pool_Name.Fields) {$Setup_Content = $Setup.$Pool_Name.Fields}
+                            $Setup_Currencies = @($Setup.$Pool_Name.Currencies)            
                         }
                         $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
                     }
-                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
-                    $Done | Add-Member $_ $Setup_Content
+                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $(if ($Setup.$Pool_Name.Defaults.$SetupName -ne $null) {$Setup.$Pool_Name.Defaults.$SetupName} else {$Default.$SetupName}) -Force}}
+                    $Done | Add-Member $Pool_Name $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null
             } else {
@@ -3304,6 +3305,23 @@ function Get-CPUAffinity {
             $a = $r = 0; $b = [Math]::max(1,[int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores));
             for($i=0;$i -lt [Math]::min($Threads,$Global:GlobalCPUInfo.Threads);$i++) {$a;$c=($a+$b)%$Global:GlobalCPUInfo.Threads;if ($c -lt $a) {$r++;$a=$c+$r}else{$a=$c}}
         } else {$Global:GlobalCPUInfo.RealCores}) | Sort-Object
+    }
+}
+
+function Get-StatAverage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [String]$Average = '',
+        [Parameter(Mandatory = $False)]
+        [String]$Default = ''
+    )
+    Switch ($Average -replace "[^A-Za-z0-9_]+") {
+        {"Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week" -icontains $_} {$_}
+        {"Minute5","Min5","Min_5","5Minute","5_Minute","5" -icontains $_} {"Minute_5"}
+        {"Minute10","Min10","Min_10","10Minute","10_Minute","10" -icontains $_} {"Minute_10"}
+        {"3Day","3_Day","Three_Day" -icontains $_} {"ThreeDay"}
+        default {if ($Default) {$Default} else {"Minute_10"}}
     }
 }
 

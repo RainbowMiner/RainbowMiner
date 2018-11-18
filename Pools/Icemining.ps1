@@ -7,7 +7,8 @@ param(
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
-    [Bool]$AllowZero = $false
+    [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_10"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -78,7 +79,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_CoinSymbol
                     Currency      = $Pool_Currency
-                    Price         = $Stat.Minute_10 #instead of .Live
+                    Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"

@@ -7,7 +7,8 @@ param(
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
-    [Bool]$AllowZero = $false
+    [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_10"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -103,7 +104,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 CoinName      = $_.coin
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
-                Price         = $Stat.Minute_10 #instead of .Live
+                Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"

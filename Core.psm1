@@ -270,6 +270,7 @@ function Invoke-Core {
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ( $Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite" ) {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
+        $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if (-not $Session.Config.LocalAPIport) {$Session.Config | Add-Member LocalAPIport 4000 -Force}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.LocalAPIport} > $null
 
@@ -446,6 +447,7 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             $Session.Config.Pools.$p | Add-Member AllowZero (Get-Yes $Session.Config.Pools.$p.AllowZero) -Force
             if ($Session.Config.Pools.$p.EnableMining -ne $null) {$Session.Config.Pools.$p | Add-Member EnableMining (Get-Yes $Session.Config.Pools.$p.EnableMining) -Force}
+            $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
     }
     

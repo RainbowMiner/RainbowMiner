@@ -6,7 +6,8 @@ param(
     [String]$Worker, 
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
-    [Bool]$AllowZero = $false
+    [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_5"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -69,8 +70,8 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     CoinName      = $Pool_Coin
                     CoinSymbol    = ""
                     Currency      = "BTC"
-                    Price         = $Stat.Minute_5
-                    StablePrice   = $Stat.Day #instead of .Week
+                    Price         = $Stat.$StatAverage
+                    StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
                     Host          = $This_Host

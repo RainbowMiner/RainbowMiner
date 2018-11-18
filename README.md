@@ -422,6 +422,8 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **ShowPoolBalances** = set to 1 to let RainbowMiner show your current pool balances [default=1]
 - **ShowPoolBalancesDetails** = set to 0 if coin balances at a pool should be added up to BTC [default=1]
 - **ShowPoolBalancesExcludedPools** = set to 1 to let RainbowMiner try to fetch balances from not used pools in addition to the currently activated pools [default=0]
+- **PoolDataWindow** = set global default for all pool data windows [default=estimate_current]
+- **PoolStatAverage** = set global default for all pool moving average price trend
 
 #### Select mining mode ####
 
@@ -536,6 +538,7 @@ If you feel like a pool tends to exagerate it's results, you can set a penalty i
 
 This would reduce the hashrate-results from the pool Ravenminer by 5%
 
+
 #### Change a pool's time frame (data window)
 
 To override the default data window "average2e" of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashrefinery,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
@@ -555,7 +558,7 @@ Possible values are:
 - mininum3: the minimum value of the above three values will be used
 - maximum3: the maximum value of the above three values will be used
 - average3: the calculated average of the above three values will be used
-
+    
 Example:
 
     "Zpool": {
@@ -563,6 +566,30 @@ Example:
         "Worker": "$WorkerName",
         "Penalty": 0,
         "DataWindow": "minimum3"
+    }
+
+
+#### Change a pool's moving average (stat average)
+
+The price pulled from the pool's API is being averaged down with a defined moving average trend line. The averaging time can be defined, using the parameter "StatAverage". It overrides the global default set by the config.txt parameter "PoolStatAverage".
+
+Possible values are:
+- Live: the live price
+- Minute_5: five minutes moving average
+- Minute_10: ten minutes moving average
+- Hour: one hour moving average
+- Day: one day moving average
+- ThreeDay: three day moving average
+- Week: one week moving average
+
+Example:
+
+    "Zpool": {
+        "LTC": "<YOUR_LITECOIN_ADDRESS>",
+        "Worker": "$WorkerName",
+        "Penalty": 0,
+        "DataWindow": "minimum3",
+        "StatAverage": "Hour"
     }
 
 

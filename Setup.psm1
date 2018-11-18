@@ -1,11 +1,10 @@
 ﻿
 function Write-HostSetupHints {
-[cmdletbinding()]   
-Param(   
-    [Parameter(Mandatory = $False)]   
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
     [string]$Color = "Yellow"
 )
-
     Write-Host " "
     Write-Host "Hints:" -ForegroundColor $Color
     Write-Host "- press Return to accept the defaults" -ForegroundColor $Color
@@ -21,12 +20,11 @@ Param(
 }
 
 function Write-HostSetupDataWindowHints {
-[cmdletbinding()]   
-Param(   
-    [Parameter(Mandatory = $False)]   
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
     [string]$Color = "Cyan"
 )
-
     Write-Host " "
     Write-Host "- estimate_current: the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)" -ForegroundColor $Color
     Write-Host "- estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)" -ForegroundColor $Color
@@ -43,6 +41,23 @@ Param(
     Write-Host "- mininumall (or minimum-3): the minimum value of the above three values will be used" -ForegroundColor $Color
     Write-Host "- maximumall (or maximum-3): the maximum value of the above three values will be used" -ForegroundColor $Color
     Write-Host "- averageall (or average-3): the calculated average of the above three values will be used" -ForegroundColor $Color
+    Write-Host " "
+}
+
+function Write-HostSetupStatAverageHints {
+[cmdletbinding()]
+Param(
+    [Parameter(Mandatory = $False)]
+    [string]$Color = "Cyan"
+)
+    Write-Host " "
+    Write-Host "- Live: live pool price" -ForegroundColor $Color
+    Write-Host "- Minute_5: five minutes moving average" -ForegroundColor $Color
+    Write-Host "- Minute_10: ten minutes moving average" -ForegroundColor $Color
+    Write-Host "- Hour: one hour moving average" -ForegroundColor $Color
+    Write-Host "- Day: one day moving average" -ForegroundColor $Color
+    Write-Host "- ThreeDay: three day moving average" -ForegroundColor $Color
+    Write-Host "- Week: one week moving average" -ForegroundColor $Color
     Write-Host " "
 }
 
@@ -134,10 +149,10 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -519,7 +534,15 @@ function Start-Setup {
 
                             Write-HostSetupDataWindowHints
 
-                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                            
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                        }
+                        "poolstataverage" {
+                            Write-Host " "
+                            Write-Host "Choose the default pool moving average price trendline" -ForegroundColor Green
+
+                            Write-HostSetupStatAverageHints
+
+                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used (or leave empty for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                         }
                         "hashrateweight" {
                             Write-Host " "
@@ -743,6 +766,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member CPUMiningThreads $Config.CPUMiningThreads -Force
                             $ConfigActual | Add-Member CPUMiningAffinity $Config.CPUMiningAffinity -Force
                             $ConfigActual | Add-Member PoolDataWindow $Config.PoolDataWindow -Force
+                            $ConfigActual | Add-Member PoolStatAverage $Config.PoolStatAverage -Force
                             $ConfigActual | Add-Member HashrateWeight $Config.HashrateWeight -Force
                             $ConfigActual | Add-Member HashrateWeightStrength $Config.HashrateWeightStrength -Force
                             $ConfigActual | Add-Member PoolAccuracyWeight $Config.PoolAccuracyWeight -Force
@@ -978,7 +1002,7 @@ function Start-Setup {
 
             Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
 
-            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0"}
+            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";"StatAverage" = "";"DataWindow" = ""}
 
             $PoolSetupDone = $false
             do {
@@ -1020,7 +1044,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin","stataverage")) > $null
                         if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -1146,6 +1170,13 @@ function Start-Setup {
 
                                         Write-HostSetupDataWindowHints
                                         $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool (leave empty for default)" -Default $PoolConfig.DataWindow | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
+                                    }
+                                    "stataverage" {
+                                        Write-Host " "
+                                        Write-Host "*** Define the pool's moving average price trendline" -ForegroundColor Green
+
+                                        Write-HostSetupStatAverageHints
+                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used (or leave empty for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                     }
                                     "focuswallet" {
                                         $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)

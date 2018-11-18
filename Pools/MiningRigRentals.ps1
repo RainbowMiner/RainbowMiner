@@ -8,6 +8,7 @@ param(
     [String]$DataWindow = "average-2",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
+    [String]$StatAverage = "Minute_10",
     [Bool]$EnableMining = $false,
     [String]$API_Key = "",
     [String]$API_Secret = "",
@@ -130,7 +131,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 CoinName      = if ($_.status.status -eq "rented") {try {[timespan]::fromhours($_.status.hours).ToString("hh\hmm\mss\s")}catch{"$($_.status.hours)h"}} else {""}
                 CoinSymbol    = ""
                 Currency      = "BTC"
-                Price         = $Stat.Minute_10 #instead of .Live
+                Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
