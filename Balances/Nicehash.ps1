@@ -25,6 +25,17 @@ catch {
     return
 }
 
+if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
+    try {
+        $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($API_ID)&key=$($API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
+        @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$Sum += $PaidRequest.result.$_}
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool paid Balance API ($Name) has failed. "
+    }
+}
+
 [PSCustomObject]@{
     Caption     = "$($Name) (BTC)"
     Currency    = "BTC"
