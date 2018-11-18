@@ -19,6 +19,7 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "https://icemining.ca/api/currencies" -tag $Name
+    if ($PoolCoins_Request -is [string]) {$PoolCoins_Request = ($PoolCoins_Request -replace '<script.+?/script>' -replace '<.+?>').Trim() | ConvertFrom-Json -ErrorAction Stop}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
