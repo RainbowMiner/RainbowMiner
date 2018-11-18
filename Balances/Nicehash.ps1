@@ -28,7 +28,7 @@ catch {
 $SumPaid = 0
 if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
     try {
-        $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($API_ID)&key=$($API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
+        $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($PoolConfig.API_ID)&key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
         @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$SumPaid += $PaidRequest.result.$_}
     }
     catch {
