@@ -25,10 +25,11 @@ catch {
     return
 }
 
+$SumPaid = 0
 if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
     try {
         $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($API_ID)&key=$($API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
-        @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$Sum += $PaidRequest.result.$_}
+        @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$SumPaid += $PaidRequest.result.$_}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -45,4 +46,15 @@ if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
     Payouts     = @($UnpaidRequest.result.payments | Select-Object)
     LastUpdated = (Get-Date).ToUniversalTime()
 }
+[PSCustomObject]@{
+    Caption     = "$($Name)Paid (BTC)"
+    Info        = "Paid"
+    Currency    = "BTC"
+    Balance     = $SumPaid
+    Pending     = 0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
+    Total       = $SumPaid
+    Payouts     = @()
+    LastUpdated = (Get-Date).ToUniversalTime()
+}
+
 

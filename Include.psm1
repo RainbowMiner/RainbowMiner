@@ -821,7 +821,7 @@ function Get-BalancesContent {
         $Name = $Balance.BaseName 
         foreach($c in @(& $Balance.FullName @Parameters)) {
             $c | Add-Member -NotePropertyMembers @{
-                Name = if ($c.Name) {$c.Name} else {$Name}
+                Name = "$(if ($c.Name) {$c.Name} else {$Name})$(if ($c.Info) {$c.Info})"
                 BaseName = $Name
             } -Force -PassThru
         }
