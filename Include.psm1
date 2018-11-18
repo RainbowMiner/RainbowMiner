@@ -365,6 +365,8 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Int64]$BlockRate = 0,
         [Parameter(Mandatory = $false)]
+        [Double]$ErrorRatio = 0,
+        [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -397,33 +399,19 @@ function Set-Stat {
 
         $AddStat = Switch($Mode) {
             "Miners" {
-                if (-not $Stat.PowerDraw_Average) {
-                    @{
-                        PowerDraw_Live = $PowerDraw
-                        PowerDraw_Average = $PowerDraw
-                    }
-                } else {
-                    @{
-                        PowerDraw_Live = [Double]$Stat.PowerDraw_Live
-                        PowerDraw_Average = [Double]$Stat.PowerDraw_Average
-                    }
+                @{
+                    PowerDraw_Live = [Double]$Stat.PowerDraw_Live
+                    PowerDraw_Average = [Double]$Stat.PowerDraw_Average
                 }
             }
             "Pools" {
-                if (-not $Stat.HashRate_Average) {
-                    @{
-                        HashRate_Live = $HashRate
-                        HashRate_Average = [Double]$HashRate
-                        BlockRate_Live = $BlockRate
-                        BlockRate_Average = [Double]$BlockRate
-                    }
-                } else {
-                    @{
-                        HashRate_Live = [Int64]$Stat.HashRate_Live
-                        HashRate_Average = [Double]$Stat.HashRate_Average
-                        BlockRate_Live = [Int64]$Stat.BlockRate_Live
-                        BlockRate_Average = [Double]$Stat.BlockRate_Average
-                    }
+                @{
+                    HashRate_Live = [Int64]$Stat.HashRate_Live
+                    HashRate_Average = [Double]$Stat.HashRate_Average
+                    BlockRate_Live = [Int64]$Stat.BlockRate_Live
+                    BlockRate_Average = [Double]$Stat.BlockRate_Average
+                    ErrorRatio = if ($Stat.ErrorRatio -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio}
+                    ErrorRatio_Average = if ($Stat.ErrorRatio_Average -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio_Average}
                 }
             }
         }
@@ -494,6 +482,8 @@ function Set-Stat {
                         HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
                         BlockRate_Live = $BlockRate
                         BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
+                        ErrorRatio_Live = $ErrorRatio
+                        ErrorRatio_Average = ((1 - $Span_ThreeDay) * $Stat.ErrorRatio_Average) + ($Span_ThreeDay * [Double]$ErrorRatio)
                     }
                 }
             }
@@ -564,6 +554,8 @@ function Set-Stat {
                     HashRate_Average = $HashRate
                     BlockRate_Live = $BlockRate
                     BlockRate_Average = $BlockRate
+                    ErrorRatio = $ErrorRatio
+                    ErrorRatio_Average = $ErrorRatio
                 }
             }
         }
@@ -606,6 +598,8 @@ function Set-Stat {
                     HashRate_Average = [Decimal]$Stat.HashRate_Average
                     BlockRate_Live = [Int64]$Stat.BlockRate_Live
                     BlockRate_Average = [Decimal]$Stat.BlockRate_Average
+                    ErrorRatio_Live = [Decimal]$Stat.ErrorRatio_Live
+                    ErrorRatio_Average = [Decimal]$Stat.ErrorRatio_Average
                 }
             }
         }
@@ -3337,7 +3331,7 @@ function Get-YiiMPDataWindow {
         {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h"}
         {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h"}
         {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h"}
-        default {if ($Default) {$Default} else {"average-2h"}}
+        default {if ($Default) {$Default} else {"estimate_current"}}
     }
 }
 
@@ -3351,7 +3345,9 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $False)]
         [String]$DataWindow = '',
         [Parameter(Mandatory = $False)]
-        [Switch]$CheckDataWindow = $false
+        [Switch]$CheckDataWindow = $false,
+        [Parameter(Mandatory = $False)]
+        [Switch]$IncludeErrorRatio = $false
     )    
     [Double]$Value = 0
     [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
@@ -3408,7 +3404,14 @@ function Get-YiiMPValue {
         if (-not $DataWindow -or -not $values.ContainsKey($DataWindow)) {foreach ($field in $allfields) {if ($values.ContainsKey($field)) {$DataWindow = $field;break}}}
         if ($DataWindow -and $values.ContainsKey($DataWindow)) {$Value = $values[$DataWindow]}
     }
-    if ($hasdetails){$Value}else{$Value*1e-6/$Factor}
+    if (-not $hasdetails){$Value*=1e-6/$Factor}
+    if ($IncludeErrorRatio) {
+        $Base = if ($Values["actual_last24h"]) {$Values["actual_last24h"]} else {$Values["estimate_last24h"]}
+        [PSCustomObject]@{
+            Price = $Value
+            ErrorRatio = if ($Base -and $Values["estimate_current"]) {$Values["estimate_current"]/$Base - 1} else {0}
+        }
+    } else {$Value}
 }
 
 function Get-DeviceSubsets($Device) {

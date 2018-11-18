@@ -89,10 +89,12 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Factor = 1
 
     $Pool_TSL = if ($PoolCoins_Request) {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast}else{$null}
+    $Pool_BLK = $PoolCoins_Request.$Pool_Currency."24h_blocks"
 
     if (-not $InfoOnly) {
-        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow "estimate_last24h" -Factor $Pool_Factor) -Duration (New-TimeSpan -Days 1) -HashRate $Pool_Request.$_.hashrate -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet}
-        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value (Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.$_.hashrate -BlockRate $PoolCoins_Request.$Pool_Currency."24h_blocks" -Quiet}
+        $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true; $DataWindow = "estimate_last24h"}
+        $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor -IncludeErrorRatio
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price.Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -ErrorRatio $Pool_Price.ErrorRatio -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
     }
 
     if ($Pool_User -or $InfoOnly) {
@@ -118,6 +120,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            ErrorRatio    = $Stat.ErrorRatio_Average
         }
     }
 }
