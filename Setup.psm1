@@ -542,7 +542,7 @@ function Start-Setup {
 
                             Write-HostSetupStatAverageHints
 
-                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used (or leave empty for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used (or leave empty for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                         }
                         "hashrateweight" {
                             Write-Host " "
@@ -1176,7 +1176,7 @@ function Start-Setup {
                                         Write-Host "*** Define the pool's moving average price trendline" -ForegroundColor Green
 
                                         Write-HostSetupStatAverageHints
-                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used (or leave empty for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used (or leave empty for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                     }
                                     "focuswallet" {
                                         $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
