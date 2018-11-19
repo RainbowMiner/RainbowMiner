@@ -3223,7 +3223,10 @@ function Set-PoolsConfigDefault {
                         }
                         $Setup_Currencies | Foreach-Object {$Setup_Content | Add-Member $_ "$(if ($_ -eq "BTC"){"`$Wallet"})" -Force}
                     }
-                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $(if ($Setup.$Pool_Name.Fields -and $Setup.$Pool_Name.Fields.$SetupName -ne $null) {$Setup.$Pool_Name.Fields.$SetupName} else {$Default.$SetupName}) -Force}}
+                    if ($Setup.$Pool_Name.Fields -ne $null) {
+                        foreach($SetupName in $Setup.$Pool_Name.Fields.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Setup.$Pool_Name.Fields.$SetupName -Force}}
+                    }
+                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Setup_Content.$SetupName -eq $null){$Setup_Content | Add-Member $SetupName $Default.$SetupName -Force}}
                     $Done | Add-Member $Pool_Name $Setup_Content
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Done -MD5hash $ChangeTag > $null
