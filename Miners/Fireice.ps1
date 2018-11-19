@@ -8,7 +8,7 @@ param(
 $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.0-fireice/xmr-stak-win64-2.6.0-nodevfee.7z"
 $Port = "309{0:d2}"
-$ManualUri = "https://github.com/RainbowMiner/xmr-stak/releases"
+$ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $DevFee = 0.0
 $Cuda = "10.0"
 
