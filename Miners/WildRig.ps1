@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.9b-wildrig/wildrig-multi-0.12.9-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.0b-wildrig/wildrig-multi-0.13.0-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -19,16 +19,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11";        Params = @("--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 19x128")} #C11
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = @("--opencl-threads 2 --opencl-launch 18x128", "--opencl-threads 2 --opencl-launch 20x128", "--opencl-threads 2 --opencl-launch 20x128")} #Geek
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = @("--opencl-threads 3 --opencl-launch 20x0",   "--opencl-threads 3 --opencl-launch 22x0",   "--opencl-threads 3 --opencl-launch 22x0")} #Hex
-    [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = @("--opencl-threads 3 --opencl-launch 18x128", "--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 19x128")} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = @("--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 21x128", "--opencl-threads 2 --opencl-launch 21x128")} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = @("--opencl-threads 3 --opencl-launch 18x0",   "--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 19x0")} #PHI
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = @("--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 20x0",   "--opencl-threads 3 --opencl-launch 20x0")} #Renesis
     [PSCustomObject]@{MainAlgorithm = "skunkhash";  Params = @("--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = @("--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 19x128")} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = @("--opencl-threads 3 --opencl-launch 16x128", "--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 19x128")} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";     Params = @("--opencl-threads 3 --opencl-launch 20x0",   "--opencl-threads 3 --opencl-launch 20x128", "--opencl-threads 3 --opencl-launch 20x128")} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "x16r";       Params = @("--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 18x128", "--opencl-threads 3 --opencl-launch 18x128")} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16s";       Params = @("--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 18x128", "--opencl-threads 3 --opencl-launch 18x128")} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17";        Params = @("--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 19x128", "--opencl-threads 3 --opencl-launch 20x128")} #X17
+    [PSCustomObject]@{MainAlgorithm = "x16r";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16s";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17";        Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X17
+    [PSCustomObject]@{MainAlgorithm = "x18";        Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 19x0",   "--opencl-threads 2 --opencl-launch 19x0")} #X18
     [PSCustomObject]@{MainAlgorithm = "x22i";       Params = @("--opencl-threads 2 --opencl-launch 19x0",   "--opencl-threads 2 --opencl-launch 19x0",   "--opencl-threads 2 --opencl-launch 576x0")} #X22i
 )
 
