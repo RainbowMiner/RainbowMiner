@@ -6,7 +6,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object Name,Value -Unique | Sort-Object Name,Value)
+$Payout_Currencies = @(@($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object) | Select-Object Name,Value -Unique | Sort-Object Name,Value)
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
