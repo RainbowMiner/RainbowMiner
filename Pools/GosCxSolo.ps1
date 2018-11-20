@@ -46,7 +46,7 @@ catch {
 $Pool_Regions = @("ru","eu","us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate_solo -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_CoinSymbol = $_
 
     $Pool_Host = "gos.cx"
@@ -56,7 +56,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
-    $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm.fees -ne $null) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
+    $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fee_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.fee_solo} else {$Pool_Fee}
     $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
     $Pool_User = $Wallets.$Pool_Currency
 
@@ -64,10 +64,16 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9
 
-    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
+    $Pool_Price = [Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate
+    if ($Pool_Price -eq 0 -and [Int64]$PoolCoins_Request.$Pool_CoinSymbol.block_reward -gt 0 -and [Int64]$PoolCoins_Request.$Pool_CoinSymbol.difficulty -gt 0 -and [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -gt 0) {
+        $Pool_Price = 20116.56761169 / [Int64]$PoolCoins_Request.$Pool_CoinSymbol.difficulty * [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_btc" / [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks";
+        if (@("sha256","sha256t","blake","blakecoin","blake2s","decred","keccak","keccakc","lbry","vanilla") -icontains $Pool_Algorithm) {$Pool_Price /= 1000}
+    }
+
+    $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ($Pool_Price / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_solo -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_solo" -Quiet
     }
 
     foreach($Pool_Region in $Pool_Regions) {
