@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-SgminerKl\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.7-sgminerkl/sgminer-kl-1.0.7-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.9-sgminerkl/sgminer-kl-1.0.9-windows.zip"
 $ManualUri = "https://github.com/KL0nLutiy/sgminer-kl/releases"
 $Port = "402{0:d2}"
 $DevFee = 1.0
@@ -18,7 +18,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-X 256 -g 2"} #C11
     [PSCustomObject]@{MainAlgorithm = "geek"; Params = "-X 256 -g 2"} #Geek
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-X 256 -g 2 -w 256"} # Phi
-    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-X 256 -g 2"} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "polytimos"; Params = "-X 256 -g 2 -w 256"} #Polytimos
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-X 256 -g 2 -w 256"} # Skunk
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-X 256 -g 2"} #Tribus
     [PSCustomObject]@{MainAlgorithm = "xevan"; Params = "-X 256 -g 2"} #Xevan
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-X 256 -g 2"} #X16S Pigeoncoin
