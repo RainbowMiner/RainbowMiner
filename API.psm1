@@ -246,10 +246,10 @@
                     Break
                 }
                 "/payouts" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Where-Object Payouts | Select-Object BaseName,Currency,Payouts | Group-Object BaseName,Currency | Foreach-Object {
-                        $Balance_BaseName = $_.Group.BaseName
-                        $Balance_Currency = $_.Group.Currency
-                        $_.Group.Payouts | Foreach-Object {
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Where-Object Payouts | Select-Object BaseName,Currency,Payouts | Foreach-Object {
+                        $Balance_BaseName = $_.BaseName
+                        $Balance_Currency = $_.Currency
+                        $_.Payouts | Foreach-Object {
                             [PSCustomObject]@{
                                 Name     = $Balance_BaseName
                                 Currency = $Balance_Currency
