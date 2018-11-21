@@ -37,12 +37,9 @@
 
     if (Confirm-IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
 
-    #Cleanup the log
-    if (Test-Path ".\Logs"){
-        Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore
-    } else {
-        New-Item ".\Logs" -ItemType "directory" -Force > $null
-    }
+    #Cleanup the log and cache
+    if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
+    if (Test-Path ".\Cache"){Get-ChildItem -Path ".\Cache" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-14)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Cache" -ItemType "directory" -Force > $null}
 
     Write-Host "Detecting devices .."
 
