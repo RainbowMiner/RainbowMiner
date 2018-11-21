@@ -16,7 +16,7 @@ if (-not $Payout_Currencies) {
 $Count = 0
 $Payout_Currencies | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "http://zpool.ca/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://zpool.ca/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
