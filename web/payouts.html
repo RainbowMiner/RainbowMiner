@@ -1,0 +1,45 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navpayouts" class="h2">Pool Payouts</h1>
+</div>
+<p>Lists all pool payouts, reported by the pool-APIs (if supported)</p>
+<table id="pools" class="table"
+  data-toggle="table"
+  data-url="/payouts"
+  data-filter-control="true"
+  data-filter-show-clear="true"
+  data-sort-order="desc"
+  data-sort-name="Date"
+  data-cache="false"
+  data-show-columns="true"
+  data-show-toggle="true"
+  data-show-refresh="true"
+  data-icons-prefix="fa"
+  data-icons="icons"
+  data-detail-view="true"
+  data-detail-formatter="detailFormatter"
+>
+  <thead>
+      <tr>
+          <th data-field="Date" data-sortable="true" data-filter-control="input">Date</th>
+          <th data-field="Amount" data-align="right" data-sortable="true" data-formatter="formatPrices">Amount</th>
+          <th data-field="Currency" data-sortable="true" data-filter-control="select">Currency</th>
+          <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="Txid" data-sortable="true">Txid</th>
+      </tr>
+  </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+
+    function formatPrices(data) {
+        return data.toFixed(10);
+    }
+  
+    function formatDate(data) {
+        return timeSince(new Date(data));
+        return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
+    }
+</script>
+<!--#include file="/parts/foot.html" -->

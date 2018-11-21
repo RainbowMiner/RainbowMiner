@@ -245,6 +245,22 @@
                     $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break
                 }
+                "/payouts" {
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Where-Object Payouts | Select-Object BaseName,Currency,Payouts | Group-Object BaseName,Currency | Foreach-Object {
+                        $Balance_BaseName = $_.Group.BaseName
+                        $Balance_Currency = $_.Group.Currency
+                        $_.Group.Payouts | Foreach-Object {
+                            [PSCustomObject]@{
+                                Name     = $Balance_BaseName
+                                Currency = $Balance_Currency
+                                Date     = $(if ($_.time -match "^\d+$") {Get-UnixToUTC $_.time} else {(Get-Date $_.time).ToUniversalTime()}).ToString("yyyy-MM-dd HH:mm:ss")
+                                Amount   = [Double]$_.amount
+                                Txid     = $_.txid
+                            }                            
+                        }    
+                    } | Sort-Object Date,Name,Currency | Select-Object)
+                    Break
+                }
                 "/rates" {
                     $Data = ConvertTo-Json @($API.Rates | Select-Object)
                     Break

@@ -3922,6 +3922,15 @@ function Get-UnixTimestamp {
     [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)
 }
 
+function Get-UnixToUTC {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
+    [Int64]$UnixTimestamp = 0
+)
+    [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + ([TimeSpan]::FromSeconds($UnixTimestamp))
+}
+
 function Get-Zip {
 [cmdletbinding()]
 param(
