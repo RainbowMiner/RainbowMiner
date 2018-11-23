@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.0-srbminer/SRBMiner-CN-V1-7-0.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.1-srbminer/SRBMiner-CN-V1-7-1.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -22,6 +22,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
     [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 1 thread
     [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Festival 1 thread
+    [PSCustomObject]@{MainAlgorithm = "freehaven" ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-FreeHaven 1 thread
     [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Lite 1 thread
     [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Haven 1 thread
@@ -39,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
     [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads
     [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Festival 2 thread
+    [PSCustomObject]@{MainAlgorithm = "freehaven" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-FreeHaven 2 thread
     [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Lite 2 threads
     [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Haven 2 threads
@@ -66,6 +68,7 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight Red [mox]
 #- Cryptonight Dark [CryoNote]
 #- Cryptonight Fest [Festival coin]
+#- Cryptonight FreeHaven [FreeHaven]
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
