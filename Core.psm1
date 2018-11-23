@@ -1636,7 +1636,7 @@ function Invoke-Core {
     $Interval = if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$Interval = $Session.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
 
     #Dynamically adapt current interval
-    $NextInterval = [Math]::Min($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
+    $NextInterval = [Math]::Max($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
