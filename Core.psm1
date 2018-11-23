@@ -273,7 +273,7 @@ function Invoke-Core {
 
         #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
-        if (-not $Session.CurrentInterval) {$Session.CurrentInterval = $Session.Config.Inteval}
+        if (-not $Session.CurrentInterval) {$Session.CurrentInterval = $Session.Config.Interval}
     }
 
     #Start/stop services
@@ -1633,18 +1633,17 @@ function Invoke-Core {
 
     #Extend benchmarking interval to the maximum from running miners
     $ExtendInterval  = [Math]::Max(1,($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval | Measure-Object -Maximum).Maximum * (-not $Session.Config.DisableExtendInterval))
-    $CurrentInterval = $Session.Config.Interval
-    if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$CurrentInterval = $Session.BenchmarkInterval * $ExtendInterval}
+    $Interval = if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$Interval = $Session.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
 
     #Dynamically adapt current interval
-    if ($Session.StatEnd.AddSeconds(-10) -le $Session.Timer) {$CurrentInterval += [Math]::Round(($Session.Timer - $Session.StatEnd.AddSeconds(-10)).TotalSeconds/30+0.5)*30}
+    $NextInterval = [Math]::Min($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
 
     #Apply current interval if changed
-    if ($CurrentInterval -ne $Session.CurrentInterval) {
-        Write-Log -Level Info "Runtime interval changed from $($Session.CurrentInterval) to $CurrentInterval seconds. "
-        $Session.StatEnd = $Session.StatEnd.AddSeconds($CurrentInterval-$Session.CurrentInterval)
+    if ($NextInterval -ne $Session.CurrentInterval) {
+        Write-Log -Level Info "Runtime interval changed from $($Session.CurrentInterval) to $NextInterval seconds. "
+        $Session.StatEnd = $Session.StatEnd.AddSeconds($NextInterval-$Session.CurrentInterval)
         $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
-        $Session.CurrentInterval = $CurrentInterval
+        $Session.CurrentInterval = $NextInterval
     }
 
     $WaitSeconds = [int]($Session.StatEnd - $Session.Timer).TotalSeconds
