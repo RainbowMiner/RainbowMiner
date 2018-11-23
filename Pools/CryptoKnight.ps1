@@ -41,7 +41,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Caliber"; symbol = "CAL"; algo = "CnV8"; port = 14101; fee = 0.0; walletSymbol = "caliber"; host = "caliber.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "CitiCash"; symbol = "CCH"; algo = "CnHeavy"; port = 4461; fee = 0.0; walletSymbol = "citi"; host = "citi.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Elya"; symbol = "ELYA"; algo = "CnV7"; port = 50201; fee = 0.0; walletSymbol = "elya"; host = "elya.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "FreeHaven"; symbol = "XFH"; algo = "CnFreeHaven"; port = 7731; fee = 0.0; walletSymbol = "faven"; host = "213.133.103.136"}
+    [PSCustomObject]@{coin = "FreeHaven"; symbol = "XFH"; algo = "CnFreeHaven"; port = 7731; fee = 0.0; walletSymbol = "xaven"; host = "213.133.103.136"}
     [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 9111; fee = 0.0; walletSymbol = "graft"; host = "graft.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5531; fee = 0.0; walletSymbol = "haven"; host = "haven.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "IntenseCoin"; symbol = "ITNS"; algo = "CnV7"; port = 8881; fee = 0.0; walletSymbol = "itns"; host = "intense.ingest.cryptoknight.cc"}
