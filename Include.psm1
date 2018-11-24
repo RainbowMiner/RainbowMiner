@@ -65,7 +65,7 @@ function Confirm-Version {
 
     if (-not $Silent) {
         if ($Script:GlobalVersion.RemoteVersion -gt $Script:GlobalVersion.Version) {
-            Write-Log -Level Warn "$Name is out of date: lastest release version v$Version is available."
+            Write-Log -Level Warn "$Name is out of date: lastest release version v$($Script:GlobalVersion.RemoteVersion) is available."
         } elseif ($Script:GlobalVersion.RemoteVersion -lt $Script:GlobalVersion.Version) {
             Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
         }
