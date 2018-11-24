@@ -2,6 +2,8 @@
 
 param(
     [PSCustomObject]$Wallets,
+    [alias("WorkerName")]
+    [String]$Worker,
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
@@ -89,7 +91,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Host          = "$($Pool_Region).$($Pool_Host)"
                     Port          = $Pool_Port
                     User          = $Pool_User
-                    Pass          = "{workername},c=$Pool_Currency,m=solo{diff:,d=`$difficulty}"
+                    Pass          = "{workername:$Worker},c=$Pool_Currency,m=solo{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
