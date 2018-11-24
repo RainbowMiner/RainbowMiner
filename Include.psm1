@@ -3723,11 +3723,12 @@ Param(
 
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
-            if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
+            if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
         } elseif (-not $Quickstart) {
             $Request | ConvertTo-Json -Compress -Depth 10 | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
             Remove-Variable "Request"
         }
+        if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null}
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
         $Error.Clear()
