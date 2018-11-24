@@ -393,7 +393,7 @@ function Invoke-Core {
 
     #Check for pool config
     $CheckPools = $false
-    Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path -force
+    Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
