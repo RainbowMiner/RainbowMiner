@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "polytimos"; MinMemGb = 1; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "skein";     MinMemGb = 1; Params = ""} #Skein
     [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
