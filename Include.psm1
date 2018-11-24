@@ -3684,7 +3684,7 @@ Param(
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
             if (-not $Quickstart -and $delay) {Sleep -Milliseconds $delay}
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Request='';Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
             if ($Quickstart) {
                 $AsyncLoader.Quickstart += $delay
                 if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
@@ -3700,10 +3700,17 @@ Param(
         do {
             $Request = $RequestError = $null            
             try {
-                if ($Quickstart) {$Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw}
-                else {$Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout}
+                if ($Quickstart) {
+                    if (-not ($Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore)) {
+                        Remove-Item ".\Cache\$($Jobkey).asy" -Force
+                        $Quickstart = $false                        
+                        if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Sleep -Milliseconds $delay}
+                    }
+                }
+                if (-not $Quickstart) {$Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout}
+                if (-not $Request) {throw "Empty request"}
                 $AsyncLoader.Jobs.$Jobkey.Success++
-                $AsyncLoader.Jobs.$Jobkey.Prefail=0
+                $AsyncLoader.Jobs.$Jobkey.Prefail=0                
             }
             catch {
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
@@ -3723,11 +3730,8 @@ Param(
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}
-        } elseif ($Quickstart) {
-            $AsyncLoader.Jobs.$Jobkey.Request = $Request
-        } else {            
-            $AsyncLoader.Jobs.$Jobkey.Request = $Request | ConvertTo-Json -Compress -Depth 10 | Get-Zip
-            if (-not $nocache) {$AsyncLoader.Jobs.$Jobkey.Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force}
+        } elseif (-not $Quickstart) {
+            $Request | ConvertTo-Json -Compress -Depth 10 | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
         }
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
@@ -3735,10 +3739,12 @@ Param(
     }
     if (-not $quiet) {
         if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {
-            if (-not $nocache -and -not $AsyncLoader.Jobs.$Jobkey.Request -and (Test-Path ".\Cache\$($Jobkey).asy")) {$AsyncLoader.Jobs.$Jobkey.Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw}
-            if ($AsyncLoader.Jobs.$Jobkey.Request) {Write-Log -Level Warn $AsyncLoader.Jobs.$Jobkey.Error} else {throw $AsyncLoader.Jobs.$Jobkey.Error}
+            if (Test-Path ".\Cache\$($Jobkey).asy") {Write-Log -Level Warn $AsyncLoader.Jobs.$Jobkey.Error} else {throw $AsyncLoader.Jobs.$Jobkey.Error}
         }
-        $AsyncLoader.Jobs.$Jobkey.Request | Select-Object | Get-Unzip | ConvertFrom-Json
+        if (Test-Path ".\Cache\$($Jobkey).asy") {
+            try {Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}
+            catch {throw "Job $Jobkey contains clutter.";Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore}
+        }
     }
 }
 
