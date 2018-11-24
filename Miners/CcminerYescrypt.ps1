@@ -6,10 +6,11 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
+#$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v7-ccmineryescrypt/ccminerKlausTyescrypt.7z"
 $Port = "106{0:d2}"
 $DevFee = 0.0
-$Cuda = "9.2"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -35,11 +36,11 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
     #[PSCustomObject]@{MainAlgorithm = "X17"; Params = ""} #X17 Verge
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"}, #YesctyptR8
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
-    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-N 1 -i 12.25"} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #yescrypt
+    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""}, #YesctyptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""} #YescryptR16 #Yenten
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""} #PPN
+    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = ""} #YescryptR32
  
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
@@ -97,8 +98,8 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($MinerParams)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
+                Arguments = "-N 1 -R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($MinerParams)"
+                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Day}
                 API = "Ccminer"
                 Port = $Miner_Port
                 URI = $Uri
