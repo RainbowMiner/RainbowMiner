@@ -36,6 +36,10 @@ if ($InfoOnly) {
 
 if (-not $API_Key -or -not $API_Secret) {return}
 
+$Rigs_Request = Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
+
+if (-not $Rigs_Request) {return}
+
 $Pool_Request = [PSCustomObject]@{}
 
 $Pool_ApiBase = "https://www.miningrigrentals.com/api/v2"
@@ -66,13 +70,6 @@ $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.
                    "eu-01.miningrigrentals.com","eu-de01.miningrigrentals.com","eu-de02.miningrigrentals.com",
                    "eu-ru01.miningrigrentals.com",
                    "ap-01.miningrigrentals.com")
-
-$Rigs_Request = Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[$($Worker)\]"
-
-if (-not $Rigs_Request) {
-    Write-Log -Level Warn "Pool API ($Name) rig $Worker request has failed. "
-    return
-}
 
 if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Object).Count) {
     if ($Disable_Rigs = $Rigs_Request | Where-Object {$_.status.status -ne "rented" -and $_.available_status -eq "available"} | Select-Object -ExpandProperty id) {
