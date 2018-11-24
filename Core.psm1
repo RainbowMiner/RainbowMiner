@@ -1061,7 +1061,7 @@ function Invoke-Core {
             $Miner.Arguments = $Miner.Arguments | ConvertTo-Json -Depth 10 -Compress
         }
         try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {$Miner_Difficulty=0.0}
-        if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}",$(if ($Miner.DeviceModel -match '\-' -or -not $Session.Config.Devices."$($Miner.DeviceModel)".Worker) {$Session.Config.WorkerName} else {$Session.Config.Devices."$($Miner.DeviceModel)".Worker})}
+        if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_')}
                 
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 1 -Force}
