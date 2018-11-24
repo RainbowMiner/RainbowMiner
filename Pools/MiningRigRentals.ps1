@@ -122,7 +122,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
 
     if ($Pool_Rig) {
         $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
-        if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online") {
+        if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online" -or $EnableMining) {
             $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
             if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
             
