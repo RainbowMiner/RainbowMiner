@@ -2,8 +2,6 @@
 
 param(
     [PSCustomObject]$Wallets,
-    [alias("WorkerName")]
-    [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "average-2",
     [Bool]$InfoOnly = $false,
@@ -99,7 +97,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Protocol      = "stratum+tcp"
                 Host          = "$($Pool_Region).bsod.pw"
                 Port          = $Pool_Port
-                User          = "$($Pool_User).$($Worker)"
+                User          = "$($Pool_User).{workername}"
                 Pass          = "c=$Pool_Currency{diff:,d=`$difficulty}"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
@@ -116,7 +114,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         Protocol      = "stratum+tcp"
                         Host          = "$($_).bsod.pw"
                         Port          = $Pool_Port
-                        User          = "$($Pool_User).$($Worker)"
+                        User          = "$($Pool_User).{workername}"
                         Pass          = "c=$Pool_Currency{diff:,d=`$difficulty}"
                     }
                 })

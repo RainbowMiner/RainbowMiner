@@ -2,8 +2,6 @@
 
 param(
     [PSCustomObject]$Wallets,
-    [alias("WorkerName")]
-    [String]$Worker, 
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
@@ -147,7 +145,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
             Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
             Ports         = $Pool_Ports
             User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
-            Pass          = $Worker
+            Pass          = "{workername}"
             Region        = $Pool_Region
             SSL           = $False
             Updated       = $Stat.Updated

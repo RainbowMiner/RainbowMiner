@@ -4,8 +4,6 @@ param(
     [PSCustomObject]$Wallets,
     [alias("UserName")]
     [String]$User, 
-    [alias("WorkerName")]
-    [String]$Worker,
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10"
@@ -78,7 +76,7 @@ $Pool_Request.return | ForEach-Object {
                     Protocol      = "stratum+tcp"
                     Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
                     Port          = $Pool_Port
-                    User          = "$User.$Worker"
+                    User          = "$User.{workername}"
                     Pass          = "x{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
@@ -98,7 +96,7 @@ $Pool_Request.return | ForEach-Object {
                         Protocol      = "stratum+ssl"
                         Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
                         Port          = $Pool_Port
-                        User          = "$User.$Worker"
+                        User          = "$User.{workername}"
                         Pass          = "x{diff:,d=`$difficulty}"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true

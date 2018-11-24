@@ -2,8 +2,6 @@
 
 param(
     [PSCustomObject]$Wallets,
-    [alias("WorkerName")]
-    [String]$Worker, 
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
@@ -76,7 +74,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     Protocol      = "stratum+tcp"
                     Host          = $This_Host
                     Port          = $This_Port
-                    User          = "$($Wallets.BTC).$Worker"
+                    User          = "$($Wallets.BTC).{workername}"
                     Pass          = "x"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
@@ -97,7 +95,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         Protocol      = "stratum+ssl"
                         Host          = $This_Host
                         Port          = $This_Port + 30000
-                        User          = "$($Wallets.BTC).$Worker"
+                        User          = "$($Wallets.BTC).{workername}"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $true
