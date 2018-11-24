@@ -1633,7 +1633,7 @@ function Invoke-Core {
 
     #Extend benchmarking interval to the maximum from running miners
     $ExtendInterval  = [Math]::Max(1,($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval | Measure-Object -Maximum).Maximum * (-not $Session.Config.DisableExtendInterval))
-    $Interval = if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$Interval = $Session.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
+    $Interval = if (-not $IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$Session.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
 
     #Dynamically adapt current interval
     $NextInterval = [Math]::Max($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
