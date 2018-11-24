@@ -7,6 +7,7 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 $SavedFiles = @("Start.bat")
 
 $MinersConfigCleanup = $true
+$CacheCleanup = $false
 $ChangesTotal = 0
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
@@ -179,6 +180,10 @@ try {
         if (Test-Path "RainbowMinerV3.8.12.0.zip") {$ChangesTotal++; Remove-Item "RainbowMinerV3.8.12.0.zip" -Force -ErrorAction Ignore}
     }
 
+    if ($Version -le (Get-Version "3.8.13.4")) {
+        $CacheCleanup = $true
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -198,6 +203,8 @@ try {
         Set-ContentJson -PathToFile $MinersConfigFile -Data $MinersActualSave > $null
         $ChangesTotal++
     }
+
+    if ($CacheCleanup) {if (Test-Path "Cache") {Get-ChildItem "Cache" -Filter "*.asy" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}}
 
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
 
