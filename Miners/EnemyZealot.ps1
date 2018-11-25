@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v3-enemyzealot/z-enemy.1-24-cuda10.0_ver3.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda10.0_ver1.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v3-enemyzealot/z-enemy.1-24-cuda9.2_ver3.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda_9.2_ver1.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24v3-enemyzealot/z-enemy.1-24-cuda9.1_ver3.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda_9.1_ver1.zip"
         Cuda = "9.1"
     }
 )
