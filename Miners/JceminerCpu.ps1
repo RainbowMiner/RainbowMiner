@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Jceminer\jce_cn_cpu_miner$($f = $Global:GlobalCPUInfo.Features; if($f.'64bit'){'64'}else{'32'}).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33f-jceminer/jce_cn_cpu_miner.windows.033f.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33g-jceminer/jce_cn_cpu_miner.windows.033g.zip"
 $Port = "320{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 1.5
@@ -16,6 +16,7 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No NVIDIA p
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Params = "--variation 3"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Params = "--variation 15"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; MinMemGb = 2; Params = "--variation 18"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; MinMemGb = 2; Params = "--variation 9"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/msr";        Threads = 1; MinMemGb = 2; Params = "--variation 11"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; MinMemGb = 2; Params = "--variation 10"}
@@ -48,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
 #N=15 Cryptonight V8 fork of Oct-2018
 #N=16 Pool-managed Autoswitch
 #N=17 Cryptolight-Dark
+#N=18 Cryptonight-FreeHaven
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
