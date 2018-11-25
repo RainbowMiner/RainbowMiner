@@ -1552,7 +1552,7 @@ function Get-Device {
             $Global:GlobalCPUInfo | Add-Member L3CacheSize $Script:GlobalGetDeviceCacheCIM[0].L3CacheSize
             $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $Script:GlobalGetDeviceCacheCIM[0].MaxClockSpeed
             $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
-            if ($Global:GlobalCPUInfo.Vendor -eq "INTEL" -and $Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+            if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
         }        
     }
     catch {
