@@ -4034,24 +4034,26 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Pass="x",
     [Parameter(Mandatory = $False)]
+    [String]$Worker=$Session.Config.WorkerName,
+    [Parameter(Mandatory = $False)]
     [int]$Timeout = 3,
     [Parameter(Mandatory = $False)]
     [bool]$WaitForResponse = $False,
     [Parameter(Mandatory = $False)]
-    [switch]$SubscribeExtraNonce
-)
+    [ValidateSet("Stratum","EthProxy")]
+    [string]$Method = "Stratum"
+)    
+    $Request = if ($Method -eq "EthProxy") {"{`"id`": 1, `"method`": `"login`", `"params`": {`"login`": `"$($User)`", `"pass`": `"$($Pass)`", `"rigid`": `"$($Worker)`", `"agent`": `"RainbowMiner/$($Session.Version)`"}}"} else {"{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": [`"RainbowMiner/$($Session.Version)`"]}"}
     try {
-        if ($User -ne "" -or $WaitForResponse) {
-            $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet
-            if ($User -ne "" -and $Result) {
+        if ($WaitForResponse) {
+            $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet
+            if ($Result) {
                 $Result = ConvertFrom-Json $Result -ErrorAction Stop
-                if ($Result.id -eq 1 -and -not $Result.error) {
-                    $Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"params`": [`"$($User)`", `"$($Pass)`"], `"id`": 2, `"method`": `"mining.authorize`"}" -Timeout $Timeout -Quiet
-                    if ($SubscribeExtraNonce -and $Result.id -eq 2 -and -not $Result.error) {$Result = Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`":3,`"method`":`"mining.extranonce.subscribe`",`"params`":[]}" -Timeout $Timeout -Quiet}
-                }
+                if ($Result.id -eq 1 -and -not $Result.error) {$true}
             }
         } else {
-            Invoke-TcpRequest -Server $Server -Port $Port -Request "{`"id`": 1, `"method`": `"mining.subscribe`", `"params`": []}" -Timeout $Timeout -Quiet -WriteOnly > $null
+            Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly > $null
+            $true
         }
         $true
     } catch {}
