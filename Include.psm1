@@ -4055,7 +4055,6 @@ param(
             Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly > $null
             $true
         }
-        $true
     } catch {}
 }
 
