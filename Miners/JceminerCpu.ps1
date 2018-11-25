@@ -14,22 +14,22 @@ $DevFee = 1.5
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Params = "--variation 3"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Params = "--variation 15"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; MinMemGb = 2; Params = "--variation 18"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; MinMemGb = 2; Params = "--variation 9"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr";        Threads = 1; MinMemGb = 2; Params = "--variation 11"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; MinMemGb = 2; Params = "--variation 10"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Threads = 1; MinMemGb = 2; Params = "--variation 8"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 2; Params = "--variation 7"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; MinMemGb = 1; Params = "--variation 2"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; MinMemGb = 1; Params = "--variation 4"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; MinMemGb = 1; Params = "--variation 6"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/red";   Threads = 1; MinMemGb = 1; Params = "--variation 14"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/dark";  Threads = 1; MinMemGb = 1; Params = "--variation 17"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; MinMemGb = 4; Params = "--variation 5"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; MinMemGb = 4; Params = "--variation 13"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; MinMemGb = 4; Params = "--variation 12"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; ScratchPadMb = 2; Params = "--variation 3"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; ScratchPadMb = 2; Params = "--variation 15"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; ScratchPadMb = 2; Params = "--variation 18"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; ScratchPadMb = 2; Params = "--variation 9"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr";        Threads = 1; ScratchPadMb = 2; Params = "--variation 11"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; ScratchPadMb = 2; Params = "--variation 10"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Threads = 1; ScratchPadMb = 2; Params = "--variation 8"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; ScratchPadMb = 2; Params = "--variation 7"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; ScratchPadMb = 1; Params = "--variation 2"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; ScratchPadMb = 1; Params = "--variation 4"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; ScratchPadMb = 1; Params = "--variation 6"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/red";   Threads = 1; ScratchPadMb = 1; Params = "--variation 14"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/dark";  Threads = 1; ScratchPadMb = 1; Params = "--variation 17"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Threads = 1; ScratchPadMb = 4; Params = "--variation 5"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Threads = 1; ScratchPadMb = 4; Params = "--variation 13"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Threads = 1; ScratchPadMb = 4; Params = "--variation 12"}
 )
 
 #N=1 Original Cryptonight
