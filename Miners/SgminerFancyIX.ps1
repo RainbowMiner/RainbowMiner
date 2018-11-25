@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5fpp/sgminer-phi2-fancyIX-win64-beta5fpp.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5fp4/sgminer-phi2-fancyIX-win64-beta5fp4.zip"
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5028462.0"
 $DevFee = 0.0
