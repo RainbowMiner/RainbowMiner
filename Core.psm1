@@ -855,7 +855,7 @@ function Invoke-Core {
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
-                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
+                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -ne $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Foreach-Object {
                         $Name = $_.Name
                         $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
