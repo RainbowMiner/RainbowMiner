@@ -198,6 +198,7 @@ try {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $ConfigActual.MinerName = $ConfigActual.MinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
         $ConfigActual.ExcludeMinerName = $ConfigActual.ExcludeMinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
+        $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
         $ChangesTotal++
 
         $MinersSave = [PSCustomObject]@{}
