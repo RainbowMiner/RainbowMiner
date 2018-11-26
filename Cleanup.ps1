@@ -184,6 +184,47 @@ try {
         $CacheCleanup = $true
     }
 
+    if ($Version -le (Get-Version "3.8.13.6")) {
+        #CcminerAlexis78x64 -> CcminerAlexis78
+        #CcminerTpruvotx64 -> CcminerTpruvot
+        
+        if (Test-Path "Stats\Miners") {
+            Get-ChildItem "Stats\Miners" -Filter "NVIDIA-CcminerAlexis78-*txt" | Foreach-Object {$ChangesTotal++; Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            Get-ChildItem "Stats\Miners" -Filter "NVIDIA-CcminerAlexis78x64-*txt" | Foreach-Object {$ChangesTotal++; Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($_.Name -replace "78x64","78")" -Force}
+            Get-ChildItem "Stats\Miners" -Filter "NVIDIA-CcminerTpruvot-*txt" | Foreach-Object {$ChangesTotal++; Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            Get-ChildItem "Stats\Miners" -Filter "NVIDIA-CcminerTpruvotx64-*txt" | Foreach-Object {$ChangesTotal++; Move-Item $_.FullName -Destination "$($_.DirectoryName)\$($_.Name -replace "otx64","ot")" -Force}
+        }
+
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $ConfigActual.MinerName = $ConfigActual.MinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
+        $ConfigActual.ExcludeMinerName = $ConfigActual.ExcludeMinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
+        $ChangesTotal++
+
+        $MinersSave = [PSCustomObject]@{}
+        $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $MinersActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
+            if (($_.Name -match "CcminerAlexis78x64" -or $_.Name -match "CcminerTpruvotx64") -or ($_.Name -notmatch "CcminerAlexis78" -and $_.Name -notmatch "CcminerTpruvot")) {                
+                $MinersSave | Add-Member $(if ($_.Name -match "CcminerAlexis78x64") {$_.Name -replace "78x64","78"} elseif ($_.Name -match "CcminerTpruvotx64") {$_.Name -replace "otx64","ot"} else {$_.Name}) $_.Value -ErrorAction Ignore -Force
+            }
+        }        
+        $MinersActualSave = [PSCustomObject]@{}
+        $MinersSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MinersActualSave | Add-Member $_ @($MinersSave.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}
+        $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
+        $ChangesTotal++
+
+        $DevicesSave = [PSCustomObject]@{}
+        $DevicesActual = Get-Content "$DevicesConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $DevicesActual.PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {
+            $_.Value.MinerName = $_.Value.MinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
+            $_.Value.ExcludeMinerName = $_.Value.ExcludeMinerName -replace "(CcminerAlexis78|CcminerTpruvot)\s*(,\s*|$)" -replace "[,\s]+$" -replace "(CcminerAlexis78|CcminerTpruvot)x64","`$1"
+            $DevicesSave | Add-Member $_.Name $_.Value -ErrorAction Ignore
+        }
+        $DevicesActualSave = [PSCustomObject]@{}
+        $DevicesSave.PSObject.Properties.Name | Sort-Object | Foreach-Object {$DevicesActualSave | Add-Member $_ $DevicesSave.$_}
+        $DevicesActualSave | ConvertTo-Json | Set-Content $DevicesConfigFile -Encoding Utf8
+        $ChangesTotal++
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
