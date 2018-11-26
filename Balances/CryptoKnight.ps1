@@ -47,19 +47,21 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "WowNero"; symbol = "WOW"; algo = "CnV8"; port = 50901; fee = 0.0; walletSymbol = "wownero"; host = "wownero.ingest.cryptoknight.cc"}
 )
 
-$Divisor = 1e12
-
 $Count = 0
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath = $_.walletSymbol.ToLower()
 
     $Pool_Request = [PSCustomObject]@{}
+    $Request = [PSCustomObject]@{}
 
     try {
+        $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats" -tag $Name
+        $Divisor = $Pool_Request.config.coinUnits
+
         $Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay $(if ($Count){100} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
-        if (-not $Request.stats) {
+        if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
             $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
