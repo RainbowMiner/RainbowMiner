@@ -864,7 +864,7 @@ function Invoke-Core {
             }
 
             #Gather mining statistics for fresh combos
-            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -match '-'} | Foreach-Object {
+            $AllMiners | Where-Object {($_.HashRates.PSObject.Properties.Value -eq $null -or $_.HashRates.PSObject.Properties.Value -contains 0) -and $_.DeviceModel -match '-'} | Foreach-Object {
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
