@@ -850,7 +850,17 @@ function Invoke-Core {
 
     if ($Session.Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
-            #Benchmarking is still ongoing - remove device combos from miners
+            #Benchmarking is still ongoing - remove device combos from miners and make sure no combo stat is left over
+            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Foreach-Object {
+                $Miner = $_
+                $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
+                $AllMiners | 
+                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
+                    Foreach-Object {
+                        $Name = $_.Name
+                        $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
+                    }
+            }
             $AllMiners = $AllMiners | Where-Object {$_.DeviceModel -notmatch '-'}
         } else {
             #Remove device combos, where the parameter-preset is different and there does not exist an own definition
@@ -864,7 +874,7 @@ function Invoke-Core {
             }
 
             #Gather mining statistics for fresh combos
-            $AllMiners | Where-Object {($_.HashRates.PSObject.Properties.Value -eq $null -or $_.HashRates.PSObject.Properties.Value -contains 0) -and $_.DeviceModel -match '-'} | Foreach-Object {
+            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -match '-'} | Foreach-Object {
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
@@ -877,7 +887,7 @@ function Invoke-Core {
                 $Miner.PowerDraw = ($AllMiners | 
                     Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Select-Object -ExpandProperty PowerDraw |
-                    Measure-Object -Sum).Sum 
+                    Measure-Object -Sum).Sum
             }
         }
     }
