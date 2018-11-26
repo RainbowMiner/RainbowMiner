@@ -26,13 +26,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "c11/flax"; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
+    #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
     #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
+    [PSCustomObject]@{MainAlgorithm = "exosis"; Params = ""} #Exosis
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
-    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
+    #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"; FaultTolerance = 0.5} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
@@ -46,14 +47,14 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi1612"; Params = " -N 3"} #PHI spmod is faster
+    [PSCustomObject]@{MainAlgorithm = "phi"; Params = " -N 1"} #PHI
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scrypt-jane"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #SonoA
     [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
