@@ -6,47 +6,59 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-TPruvot\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-tpruvot/ccminer-x86-2.2.5-cuda9.7z"
 $ManualUri = "https://github.com/tpruvot/ccminer/releases"
 $Port = "114{0:d2}"
 $DevFee = 0.0
-$Cuda = "8.0"
+
+$UriCuda = @(
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-tpruvot/ccminertpruvotx64.7z"
+        Cuda = "10.0"
+    }
+)
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
+    [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
+    [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
+    #[PSCustomObject]@{MainAlgorithm = "c11/flax"; Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
     #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
+    [PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    #[PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"} #HMQ1725
-    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JackPot
-    [PSCustomObject]@{MainAlgorithm = "jha"; Params = " -N 1"} #JHA
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""} #keccakc
+    [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"; FaultTolerance = 0.5} #HMQ1725
+    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
+    [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #keccakc
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin
+    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin        
+    #[PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"} #PHI spmod is faster
+    #[PSCustomObject]@{MainAlgorithm = "phi1612"; Params = " -N 3"} #PHI spmod is faster
+    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
-    #[PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
+    #[PSCustomObject]@{MainAlgorithm = "scrypt-jane"; Params = ""} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
     #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #SonoA
+    [PSCustomObject]@{MainAlgorithm = "stellite"; Params = ""} # CryptoNightV3
     #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
-    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
-    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = "-N 1"} #Tribus (enemyz 1.10 is faster)
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel
+    [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
     #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
@@ -88,7 +100,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
@@ -96,7 +108,14 @@ if ($InfoOnly) {
     return
 }
 
-if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+$Uri = ""
+for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        $Uri = $UriCuda[$i].Uri
+        $Cuda= $UriCuda[$i].Cuda
+    }
+}
+if (-not $Uri) {return}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Miner_Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
@@ -112,21 +131,23 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
-                API = "Ccminer"
-                Port = $Miner_Port
-                Uri = $Uri
-				DevFee = $DevFee
-                FaultTolerance = $_.FaultTolerance
-                ExtendInterval = $_.ExtendInterval
-                ManualUri = $ManualUri
+            if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash" -or @("graft","monero") -inotcontains $_.MainAlgorithm) {
+                $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+                [PSCustomObject]@{
+                    Name = $Miner_Name
+                    DeviceName = $Miner_Device.Name
+                    DeviceModel = $Miner_Model
+                    Path = $Path
+                    Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass) $($_.Params)"
+                    HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+                    API = "Ccminer"
+                    Port = $Miner_Port
+                    Uri = $Uri
+					DevFee = $DevFee
+                    FaultTolerance = $_.FaultTolerance
+                    ExtendInterval = $_.ExtendInterval
+                    ManualUri = $ManualUri
+                }
             }
         }
     }
