@@ -226,6 +226,20 @@ try {
         $ChangesTotal++
     }
 
+    if ($Version -le (Get-Version "3.8.13.9")) {
+        #remove combos from stats
+        $AllDevices | Where-Object {$_.Model -ne "CPU" -and ($_.Vendor -eq "NVIDIA" -or $_.Vendor -eq "AMD")} | Select-Object -ExpandProperty Model -Unique | Foreach-Object {
+            $Model = $_
+            $ModelName = ($AllDevices | Where-Object Model -eq $Model | Select-Object -ExpandProperty Name | Sort-Object) -join '-'
+            Get-ChildItem "Stats\Miners\*$($ModelName -replace '-','*')*_*_HashRate.txt" | Foreach-Object {
+                if ($_.BaseName -match "^.+?(GPU.+?)_" -and $Matches[1] -ne $ModelName) {
+                    Remove-Item $_.FullName -Force -ErrorAction Ignore
+                    $ChangesTotal++
+                }
+            }
+        }        
+    }
+
     if ($MinersConfigCleanup) {
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
