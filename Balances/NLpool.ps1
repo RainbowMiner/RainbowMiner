@@ -6,18 +6,24 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = @()
-if ((-not $Config.PoolName.Count -or $Config.PoolName -icontains $Name) -and (-not $Config.ExcludePoolName.Count -or $Config.ExcludePoolName -inotcontains $Name)) {$Payout_Currencies += @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object)}
-if ((-not $Config.PoolName.Count -or $Config.PoolName -icontains "$($Name)Coins") -and (-not $Config.ExcludePoolName.Count -or $Config.ExcludePoolName -inotcontains "$($Name)Coins")) {$Payout_Currencies += @($Config.Pools."$($Name)Coins".Wallets.PSObject.Properties | Select-Object)}
-$Payout_Currencies = $Payout_Currencies | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Coins".Wallets.PSObject.Properties | Select-Object) | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
     return
 }
 
+$PoolCoins_Request = [PSCustomObject]@{}
+try {
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/currencies" -tag $Name
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
+}
+
 $Count = 0
-$Payout_Currencies | Foreach-Object {
+$Payout_Currencies | Where-Object {@("BTC","LTC")+@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
     try {
         $Request = Invoke-RestMethodAsync "https://nlpool.nl/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++

@@ -1,15 +1,8 @@
 ﻿param(
     $Config
 )
-return
+
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
-
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object Name,Value -Unique | Sort-Object Name,Value)
-
-if (-not $Payout_Currencies) {
-    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
-    return
-}
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR"; algo = "wildkeccak"; port = 5555; fee = 0.9; walletSymbol = "boolberry"; host = "boolberry.miner.rocks"; region = "eu"}
@@ -28,9 +21,6 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "masari.miner.rocks"; region = "eu"}
 )
 
-$Divisor = 1e12
-
-$Count = 0
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath = $_.walletSymbol.ToLower()
@@ -42,8 +32,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name
         $Divisor = $Pool_Request.config.coinUnits
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay $(if ($Count){100} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
-        $Count++
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {

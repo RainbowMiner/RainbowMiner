@@ -38,8 +38,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync $("https://api.nanopool.org/v1/" + $Pool_Currency.ToLower() + "/approximated_earnings/1000") -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name
-            if ($Pool_Request.status -ne "OK") {throw}
+            $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/approximated_earnings/1000" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name -retry 5 -retrywait 200
+            if (-not $Pool_Request.status) {throw}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -48,7 +48,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
 
         if ($ok) {
-            $Pool_ExpectedEarning = [double]($Pool_Request | Select-Object -ExpandProperty data | Select-Object -ExpandProperty day | Select-Object -ExpandProperty bitcoins) / $_.divisor / 1000    
+            $Pool_ExpectedEarning = [double]$Pool_Request.data.day.bitcoins / $_.divisor / 1000    
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -ChangeDetection $true -Quiet
         }
     }

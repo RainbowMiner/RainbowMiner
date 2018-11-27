@@ -6,18 +6,25 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = @()
-if ((-not $Config.PoolName.Count -or $Config.PoolName -icontains $Name) -and (-not $Config.ExcludePoolName.Count -or $Config.ExcludePoolName -inotcontains $Name)) {$Payout_Currencies += @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object)}
-if ((-not $Config.PoolName.Count -or $Config.PoolName -icontains "$($Name)Solo") -and (-not $Config.ExcludePoolName.Count -or $Config.ExcludePoolName -inotcontains "$($Name)Solo")) {$Payout_Currencies += @($Config.Pools."$($Name)Solo".Wallets.PSObject.Properties | Select-Object)}
-$Payout_Currencies = $Payout_Currencies | Select-Object Name,Value -Unique | Sort-Object Name,Value
+$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object) + @($Config.Pools."$($Name)Coins".Wallets.PSObject.Properties | Select-Object) | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
     Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
     return
 }
 
+$PoolCoins_Request = [PSCustomObject]@{}
+try {
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -tag $Name
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    return
+}
+
 $Count = 0
-$Payout_Currencies | Foreach-Object {
+$Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
     try {
         $Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++

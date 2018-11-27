@@ -6,23 +6,16 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Request = [PSCustomObject]@{}
 
-$Payout_Currencies = @($Config.Pools.$Name.Wallets.PSObject.Properties | Select-Object Name,Value -Unique | Sort-Object Name,Value)
-
-if (-not $Payout_Currencies) {
-    Write-Log -Level Verbose "Cannot get balance on pool ($Name) - no wallet address specified. "
-    return
-}
-
-$API_Hosts = @{
+$API_Hosts = [PSCustomObject]@{
     "ETH" = "https://api.ethermine.org"
     "ETC" = "https://api-etc.ethermine.org"
     "ZEC" = "https://api-zcash.flypool.org"
 }
 
 $Count = 0
-$Payout_Currencies | Foreach-Object {
+$API_Hosts.PSObject.Properties | Where-Object {$Config.Pools.$Name.Wallets."$($_.Name)"} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "$($API_Hosts."$($_.Name)")/miner/$($_.Value)/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "$($_.Value)/miner/$($Config.Pools.$Name.Wallets."$($_.Name)")/dashboard" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
