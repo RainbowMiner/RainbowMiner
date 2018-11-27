@@ -52,11 +52,12 @@
 319	Funakoshi
 320	JceminerCpu
 321	JceminerAmd
-322	Ethminer15
+322	Ethminer16
 323	Phoenix30
 324	ZjazzNvidia
 325	FireIce247
 326	T-Rex070
+327	Ethminer17
 
 400	Sgminer
 401	SgminerBitcore

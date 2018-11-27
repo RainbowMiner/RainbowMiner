@@ -675,20 +675,6 @@ function Invoke-Core {
         }
     }
 
-    #Update the pool balances every 10 Minutes
-    if ($Session.Config.ShowPoolBalances) {
-        $RefreshBalances = (-not $Session.Updatetracker.Balances -or $Session.Updatetracker.Balances -lt $Session.Timer.AddMinutes(-$Session.Config.BalanceUpdateMinutes))
-        if ($RefreshBalances) {
-            Write-Log "Getting pool balances. "
-            $Session.Updatetracker.Balances = $Session.Timer
-        } else {
-            Write-Log "Updating pool balances. "
-        }
-        $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
-        if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
-        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
-    }
-
     #Give API access to the current rates
     $API.Rates = $Session.Rates
 
@@ -710,6 +696,20 @@ function Invoke-Core {
             $SelectedPoolNames += $_
             Get-PoolsContent "Pools\$($_).ps1" -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
         }
+    }
+
+    #Update the pool balances every "BalanceUpdateMinutes" minutes
+    if ($Session.Config.ShowPoolBalances) {
+        $RefreshBalances = (-not $Session.Updatetracker.Balances -or $Session.Updatetracker.Balances -lt $Session.Timer.AddMinutes(-$Session.Config.BalanceUpdateMinutes))
+        if ($RefreshBalances) {
+            Write-Log "Getting pool balances. "
+            $Session.Updatetracker.Balances = $Session.Timer
+        } else {
+            Write-Log "Updating pool balances. "
+        }
+        $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
+        if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
+        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
