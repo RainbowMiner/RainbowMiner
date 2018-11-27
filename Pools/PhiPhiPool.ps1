@@ -40,7 +40,7 @@ catch {
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
+$Pool_Regions = @("asia","eu")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC") + @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if ($PoolCoins_Request) {
@@ -48,7 +48,7 @@ if ($PoolCoins_Request) {
     if ($PoolCoins_Algorithms.Count) {foreach($p in $PoolCoins_Request.PSObject.Properties.Name) {if ($PoolCoins_Algorithms -contains $PoolCoins_Request.$p.algo) {$Pool_Coins[$PoolCoins_Request.$p.algo] = [hashtable]@{Name = $PoolCoins_Request.$p.name; Symbol = $p -replace '-.+$'}}}}
 }
 
-$Pool_Host = "pool1.phi-phi-pool.com"
+$Pool_Host = "phi-phi-pool.com"
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Port = $Pool_Request.$_.port
@@ -89,7 +89,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = "$Pool_Host"
+                    Host          = "$Pool_Region.$Pool_Host"
                     Port          = $Pool_Port
                     User          = $Wallets.$Pool_Currency
                     Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}"
