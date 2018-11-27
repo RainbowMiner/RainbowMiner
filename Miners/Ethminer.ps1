@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-alpha.1-ethminer/ethminer-0.17.0-alpha.1-cuda10.0-windows-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.0-ethminer/ethminer-0.17.0-rc.0-cuda10.0-windows-amd64.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
@@ -70,7 +70,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.User)):$([System.Web.HttpUtility]::UrlEncode($Pools.$Algorithm_Norm.Pass))@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
+					Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User):$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
 					API = "Claymore"
 					Port = $Miner_Port
