@@ -1417,6 +1417,7 @@ function Invoke-Core {
     $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
 
+    $IsExclusiveRun = $Session.IsExclusiveRun
     $Session.IsExclusiveRun = ($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0
 
     #Move donation run into the future, if benchmarks are ongoing
@@ -1620,9 +1621,11 @@ function Invoke-Core {
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Session.Config.EnableAutoUpdate) {
             if ($Session.AutoUpdate) {
-                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin in some seconds" -ForegroundColor Yellow
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts in some seconds" -ForegroundColor Yellow
             } elseif ($Session.IsExclusiveRun) {
-                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) will begin as soon as exclusive mining ends" -ForegroundColor Yellow
+                Write-Host "Automatic update to v$($ConfirmedVersion.RemoteVersion) starts as soon as exclusive mining ends" -ForegroundColor Yellow
+            } elseif ($IsExclusiveRun) {
+                Write-Host "Exclusive run finished. Automatic update to v$($ConfirmedVersion.RemoteVersion) starts after the next round" -ForegroundColor Yellow
             } else {
                 Write-Host "Automatic update failed! Please exit RainbowMiner and start Updater.bat manually to proceed" -ForegroundColor Yellow
             }
