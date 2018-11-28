@@ -12,11 +12,11 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.0-cryptodredge/CryptoDredge_0.11.0_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.0-cryptodredge/CryptoDredge_0.11.0_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
     }
 )
@@ -36,6 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnsaber";   MinMemGb = 4; Params = ""} #Cryptonightheavytube
     [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
+    [PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";    MinMemGb = 1; Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lbk3";      MinMemGb = 1; Params = ""} #LBK3
@@ -44,6 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "pipe";      MinMemGb = 1; Params = ""} #Pipe
     [PSCustomObject]@{MainAlgorithm = "polytimos"; MinMemGb = 1; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "skein";     MinMemGb = 1; Params = ""} #Skein
     [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
