@@ -3789,6 +3789,7 @@ function Invoke-ReportMinerStatus {
                 'BTC/day'      = $_.Profit
                 Profit         = $_.Profit
                 Donator        = $_.Donator
+                Benchmarking   = $_.Speed -contains $null
             }
         }
     )
