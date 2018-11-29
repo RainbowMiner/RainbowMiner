@@ -297,7 +297,7 @@ function Invoke-Core {
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
-    $API.Version = $ConfirmedVersion
+    $API.Version = $ConfirmedVersion | ConvertTo-Json -Compress
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-Content ".\Logs\autoupdate.txt" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Last_Autoupdate = $null}}
@@ -1641,6 +1641,10 @@ function Invoke-Core {
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force
+
+    [System.GC]::Collect()
+    [System.GC]::WaitForPendingFinalizers()
+    [System.GC]::Collect()
 
     $Session.Timer = (Get-Date).ToUniversalTime()         
 

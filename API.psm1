@@ -121,7 +121,7 @@
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
                 "/version" {
-                    $Data = ConvertTo-Json $API.Version
+                    $Data = $API.Version
                     break
                 }
                 "/activeminers" {
