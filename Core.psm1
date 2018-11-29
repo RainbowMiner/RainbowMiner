@@ -1645,6 +1645,7 @@ function Invoke-Core {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
     [System.GC]::Collect()
+    Get-MemoryUsage -ForceFullCollection >$null
 
     $Session.Timer = (Get-Date).ToUniversalTime()         
 
