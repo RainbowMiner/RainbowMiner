@@ -118,6 +118,15 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     $Pool_Rig = $RigInfo_Request | Where-Object rigid -eq $Pool_RigId
 
     if ($Pool_Rig) {
+        $Pool_Price = $Stat.$StatAverage
+        if ($_.status.status -eq "rented") {
+            try {
+                if ($Rig_RentalId = (Invoke-MiningRigRentalRequest "/account/transactions" $API_Key $API_Secret -params (@{rig=$Pool_RigId;type="credit";limit=1;algo=$Pool_Algorithm}) -Cache $([double]$_.status.hours*3600)).transactions.rental) {
+                    if ($Rig_RentalPrice = [Double](Invoke-MiningRigRentalRequest "/rental/$($Rig_RentalId)" $API_Key $API_Secret -Cache $([double]$_.status.hours*3600)).price.advertised / $Divisor) {$Pool_Price = $Rig_RentalPrice}
+                }
+            } catch {}
+        }
+
         $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
         if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online" -or $EnableMining) {
             $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
@@ -128,7 +137,7 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
                 CoinName      = if ($_.status.status -eq "rented") {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
                 CoinSymbol    = ""
                 Currency      = "BTC"
-                Price         = $Stat.$StatAverage #instead of .Live
+                Price         = $Pool_Price
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
