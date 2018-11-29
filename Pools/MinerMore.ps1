@@ -65,6 +65,10 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Divisor = 1e9
 
     $Pool_Price = [Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate
+    if ($Pool_Price -eq 0 -and [Int64]$PoolCoins_Request.$Pool_CoinSymbol.block_reward -gt 0 -and [Int64]$PoolCoins_Request.$Pool_CoinSymbol.difficulty -gt 0 -and [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -gt 0) {
+        $Pool_Price = 20116.56761169 / [Int64]$PoolCoins_Request.$Pool_CoinSymbol.difficulty * [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_btc" / [Double]$PoolCoins_Request.$Pool_CoinSymbol."24h_blocks";
+        if (@("sha256","sha256t","blake","blakecoin","blake2s","decred","keccak","keccakc","lbry","vanilla") -icontains $Pool_Algorithm) {$Pool_Price /= 1000}
+    }
 
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
