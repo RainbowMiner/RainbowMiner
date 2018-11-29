@@ -113,8 +113,12 @@
             [PSCustomObject]@{MainAlgorithm = "skein"; SecondaryAlgorithm = ""; Params = "-i auto"; OCprofile = ""; MSIAprofile = ""}
         )
         "CcminerYescrypt" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "-i 17.6"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "yescrypt"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "yescryptR8"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "yescryptR16"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "yescryptR24"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "yescryptR32"; SecondaryAlgorithm = ""; Params = "-i 12.5"; OCprofile = ""; MSIAprofile = ""}
         )
         "ClaymoreEthash" = [PSCustomObject[]]@(

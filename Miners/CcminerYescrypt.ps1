@@ -7,7 +7,7 @@ param(
 
 $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
 #$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21k-ccminerklaust/ccminerklaust_v8.21k.7z"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v9-ccmineryescrypt/ccminerKlausTyescryptv9.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerKlausTyescryptv10.7z"
 $Port = "106{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.0"
@@ -40,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""}, #YesctyptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""} #YescryptR16 #Yenten
     [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""} #PPN
+    [PSCustomObject]@{MainAlgorithm = "yescryptR24"; Params = ""} #YescryptR24
     [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = ""; ExtendInterval = 2} #YescryptR32
  
     # ASIC - never profitable 20/04/2018
