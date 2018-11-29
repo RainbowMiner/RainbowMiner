@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-trex/t-rex-0.8.2-win-cuda10.0.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-trex/t-rex-0.8.3-win-cuda10.0.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-trex/t-rex-0.8.2-win-cuda9.2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-trex/t-rex-0.8.3-win-cuda9.2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.2-trex/t-rex-0.8.2-win-cuda9.1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-trex/t-rex-0.8.3-win-cuda9.1.zip"
         Cuda = "9.1"
     }
 )
@@ -49,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r (fastest)
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
+    [PSCustomObject]@{MainAlgorithm = "x21i"; Params = ""} #X21i
     [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #X22i
 )
 
