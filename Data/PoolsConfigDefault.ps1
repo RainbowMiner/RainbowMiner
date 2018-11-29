@@ -37,6 +37,9 @@
         "Icemining" = [PSCustomObject]@{
             Currencies=@("BCD","RVN","SUQA")
         }
+        "MinerMore" = [PSCustomObject]@{
+            Currencies=@("RVN","SUQA")
+        }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
         }
