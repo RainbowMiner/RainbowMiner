@@ -2417,7 +2417,7 @@ class Miner {
     }
 
     AddMinerData($data) {
-        $this.Data = @($this.Data) + $data
+        $this.Data += $data
         if ($this.Data.Count -gt $this.MinSamples) {
             $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*(2+$this.Benchmarked*($this.Speed -contains $null)))
             $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
