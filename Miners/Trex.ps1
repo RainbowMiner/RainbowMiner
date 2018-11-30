@@ -49,7 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r (fastest)
     [PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; FaultTolerance = 0.5} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17
-    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #X21s
+    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #X22i
 )
 
