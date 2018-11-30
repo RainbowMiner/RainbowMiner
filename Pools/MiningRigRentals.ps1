@@ -120,7 +120,13 @@ $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Obj
     if ($Pool_Rig) {
         $Pool_Price = $Stat.$StatAverage
         if ($_.status.status -eq "rented") {
-            try {if ($Rig_RentalPrice = [Double](Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)).rentals.price.advertised / $Divisor) {$Pool_Price = $Rig_RentalPrice}} catch {}
+            try {
+                $Pool_RigRental = Invoke-MiningRigRentalRequest "/rental" $API_Key $API_Secret -params (@{type="owner";"rig"=$Pool_RigId;history=$false;limit=1}) -Cache $([double]$_.status.hours*3600)
+                if ($Rig_RentalPrice = [Double]$Pool_RigRental.rentals.price.advertised / $Divisor) {
+                    $Pool_Price = $Rig_RentalPrice
+                    if ($Pool_RigRental.rentals.price.currency -ne "BTC") {$Pool_Price *= $_.price.BTC.price/$_.price.LTC.price}
+                }
+            } catch {}
         }
 
         $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
