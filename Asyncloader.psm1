@@ -13,7 +13,7 @@ Param(
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 
     $AsyncLoader.Stop = $false
-    [hashtable]$AsyncLoader.Jobs = @{}
+    $AsyncLoader.Jobs = [hashtable]::Synchronized(@{})
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
