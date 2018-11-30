@@ -775,7 +775,7 @@ function Invoke-Core {
         do {
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
             else {Write-Host "." -NoNewline;Start-Sleep 2;$i+=2}
-            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+            if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
         } until ($keyPressedValue -or ($i -gt $Session.Config.Interval))
 
         Write-Host " "
@@ -813,7 +813,8 @@ function Invoke-Core {
         $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00) * (-not $Pools.$_.PPS))) -Force
         $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
     }
-    
+    Remove-Variable "Pools_Hashrates"
+
     #Give API access to the pools information
     $API.Pools = $Pools | ConvertTo-Json -Depth 10 -Compress
  
@@ -1091,10 +1092,10 @@ function Invoke-Core {
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $_.VersionCheck}
     if (($AllMiners.Count -ne $Miners.Count) -or $Session.StartDownloader) {
         $Miners_DownloadList = @($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Where-Object {$_.VersionCheck -ne $true} | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "Searchable"; expression = {$true}}, @{name = "IsMiner"; expression = {$true}})        
-        if ($Miners_DownloadList.Count -gt 0 -and $Downloader.State -ne "Running") {
+        if ($Miners_DownloadList.Count -gt 0 -and $Session.Downloader.State -ne "Running") {
             Clear-Host
             Write-Log "Starting download of $($Miners_DownloadList.Count) files."
-            $Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
+            $Session.Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
         }
         $Session.StartDownloader = $false
     }
@@ -1148,7 +1149,7 @@ function Invoke-Core {
         do {
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
             else {Write-Host "." -NoNewline;Start-Sleep 2;$i+=2}
-            if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+            if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
         } until ($keyPressedValue -or ($i -gt $Session.Config.Interval))
 
         Write-Host " "
@@ -1356,7 +1357,7 @@ function Invoke-Core {
         $Running = @($Session.ActiveMiners | Where-Object Best -EQ $true | Foreach-Object {if ($_.GetStatus() -eq [MinerStatus]::Running -and $_.GetProcessId() -gt 0) {$_.GetProcessId()}})
         Get-Process | Where-Object {@($Session.ActiveMiners | Foreach-Object {$_.GetExecNames()}) -contains $_.ProcessName} | Select-Object -ExpandProperty ProcessName | Compare-Object @($Session.ActiveMiners | Where-Object Best -EQ $true | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {$_.GetExecNames()}) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | Select-Object -Unique | ForEach-Object {Get-Process -Name $_ -ErrorAction Ignore | Where-Object {$Running -notcontains $_.Id} | ForEach-Object {Write-Warning "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
-    if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+    if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
 
     $Session.ActiveMiners | Where-Object {$_.Best -EQ $true -and $_.GetStatus() -ne [MinerStatus]::Running} | ForEach-Object {
@@ -1540,7 +1541,7 @@ function Invoke-Core {
     if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0) {Write-Host "* net power consumption. A base power offset of $("{0:d}" -f [int]$Session.Config.PowerOffset)W is being added to calculate the final profit."; Write-Host " "}
 
     #Display profit comparison    
-    if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Downloader.State -ne "Running") {
+    if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Session.Downloader.State -ne "Running") {
         $MinerComparisons = 
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
         [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -replace '\-.*$')-$($_.Algorithm -join '/')"}}
@@ -1786,7 +1787,7 @@ function Invoke-Core {
         }
     }
 
-    if ($Downloader.HasMoreData) {$Downloader | Receive-Job}
+    if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
 
     if (-not $keyPressed) {
         $host.UI.RawUI.CursorPosition = $CursorPosition
