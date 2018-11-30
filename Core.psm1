@@ -1435,7 +1435,7 @@ function Invoke-Core {
     $API.ActiveMiners  = $Session.ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
     $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
     $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
-    $API.Asyncloaderjobs = $(if (Test-Path Variable:Global:AsyncLoader) {Get-AsyncLoaderJobs} else {@()}) | Select-Object | ConvertTo-Json -Depth 10 -Compress
+    $API.Asyncloaderjobs = $Asyncloader.Jobs
 
     #
     #Start output to host

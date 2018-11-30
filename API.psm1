@@ -266,7 +266,7 @@
                     Break
                 }
                 "/asyncloaderjobs" {
-                    $Data = ConvertTo-Json @(($API.Asyncloaderjobs | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Asyncloaderjobs | Select-Object)
                     Break
                 }
                 "/decsep" {
