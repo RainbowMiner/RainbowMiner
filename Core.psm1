@@ -694,7 +694,7 @@ function Invoke-Core {
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | WHere-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
-            Get-PoolsContent "Pools\$($_).ps1" -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
+            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
         }
     }
 

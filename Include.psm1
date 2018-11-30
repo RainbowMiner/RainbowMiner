@@ -738,7 +738,7 @@ function Get-PoolsContent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [String]$Path, 
+        [String]$PoolName, 
         [Parameter(Mandatory = $true)]
         [PSCustomObject]$Config,        
         [Parameter(Mandatory = $true)]
@@ -751,7 +751,7 @@ function Get-PoolsContent {
         [Bool]$IgnoreFees = $false
     )
         
-    Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
+    Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
 
         [Hashtable]$Parameters = @{

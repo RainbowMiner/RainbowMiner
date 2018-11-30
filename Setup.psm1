@@ -1026,7 +1026,7 @@ function Start-Setup {
                         Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActual > $null
                     }
 
-                    $Pool = Get-PoolsContent "Pools\$($Pool_Name).ps1" -Config @{DataWindow="estimate_current"} -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true
+                    $Pool = Get-PoolsContent $Pool_Name -Config @{DataWindow="estimate_current"} -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true
 
                     if ($Pool) {
                         $PoolSetupStepsDone = $false
