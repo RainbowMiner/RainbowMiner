@@ -11,12 +11,12 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 
 $UriCuda = @(
+    #[PSCustomObject]@{
+    #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_10.0_windows.zip"
+    #    Cuda = "10.0"
+    #},
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_10.0_windows.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.0-cryptodredge/CryptoDredge_0.13.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
     }
 )
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lbk3";      MinMemGb = 1; Params = ""} #LBK3
     [PSCustomObject]@{MainAlgorithm = "lyra2v2";   MinMemGb = 1; Params = ""} #Lyra2Re2
+    [PSCustomObject]@{MainAlgorithm = "Lyra2vc0banHash";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
@@ -54,6 +55,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
+    [PSCustomObject]@{MainAlgorithm = "x21s";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
 )
 
