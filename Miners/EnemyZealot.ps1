@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bcd"; Params = "-N 1"} #Bcd, new in 1.20
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = "-N 1"} #Bitcore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} # New in 1.11
-    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; FaultTolerance = 0.5} #HEX/XDNA, new in 1.15a
+    [PSCustomObject]@{MainAlgorithm = "hex"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.5; HashrateDuration = "Day"} #HEX/XDNA, new in 1.15a
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
