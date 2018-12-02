@@ -1270,7 +1270,10 @@ function Expand-WebRequest {
 
     if (Test-Path $FileName) {Remove-Item $FileName}
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $oldProgressPreference = $Global:ProgressPreference
+    $Global:ProgressPreference = "SilentlyContinue"
     Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
+    $Global:ProgressPreference = $oldProgressPreference
 
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
 
@@ -3577,7 +3580,10 @@ Param(
     if ($method -eq "REST") {
         Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
     } else {
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
+        $Global:ProgressPreference = $oldProgressPreference
     }
 }
 
@@ -3611,7 +3617,7 @@ function Invoke-WebRequestAsync {
 Param(   
     [Parameter(Mandatory = $True)]
         [string]$url,
-    [Parameter(Mandatory = $False)]   
+    [Parameter(Mandatory = $False)]
         [int]$cycletime = 0,
     [Parameter(Mandatory = $False)]
         [int]$retry = 0,
