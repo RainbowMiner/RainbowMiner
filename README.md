@@ -374,6 +374,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **LocalAPIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
+- **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
 - **EnableMinerStatus** = set to 1 to enable central monitoring
 - **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]
 - **MinerStatusKey** = your unique miner status key (get one at https://rbminer.net, you can reuse MPM keys)
@@ -965,6 +966,20 @@ Tab "Actions":
 All rigs will be automatically set to status "online", at MiningRigRentals and rest idle within RainbowMiner. If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on MiningRigRentals will be deactivated, for that time.
 
 If you want to include MiningRigRentals into RainbowMiner's profitability checks and switching operation, so that it behaves just like a normal pool, set "EnableMining" to "1". Only do this, if MiningRigRentals is your only pool, because the mining prices (these are the prices setup at MiningRigRentals), will not reflect the real market prices.
+
+
+### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
+
+- RainbowMiner has a build-in list of protected files, that will be kept during updates: 
+
+    config.txt
+    nvidia.txt
+    amd.txt
+    config_*.txt
+
+- If you want to add your own userdefined files, that should be kept from update to update, edit the file `Config\minerconfigfiles.txt` and add your files (wildcards are allowed), one at each row.
+
+- if the automatic fails: when updating, RainbowMiner creates a backup folder that contains the full contents of the original. It is named like the original miner's folder, but date/time added with a dot (e.g. CryptoNight-SrbMiner.20181202_174533). A maximum of three backups is kept.
 
   
 ## CREDITS
