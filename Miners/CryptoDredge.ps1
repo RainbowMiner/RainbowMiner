@@ -11,13 +11,17 @@ $Port = "313{0:d2}"
 $DevFee = 1.0
 
 $UriCuda = @(
-    #[PSCustomObject]@{
-    #    Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-cryptodredge/CryptoDredge_0.12.0_cuda_10.0_windows.zip"
-    #    Cuda = "10.0"
-    #},
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.0-cryptodredge/CryptoDredge_0.13.0_cuda_10.0_windows.zip"
+        Cuda = "10.0"
+    },
     [PSCustomObject]@{
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.0-cryptodredge/CryptoDredge_0.13.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.0-cryptodredge/CryptoDredge_0.13.0_cuda_9.1_windows.zip"
+        Cuda = "9.1"
     }
 )
 
