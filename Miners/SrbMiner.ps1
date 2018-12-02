@@ -15,24 +15,24 @@ if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD pres
 
 $Commands = [PSCustomObject[]]@(
     # Note: For fine tuning directly edit Config_[MinerName]-[Algorithm]-[Port].txt in the miner binary directory
-    [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 1 thread
-    [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 1 thread
-    [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-B2N 1 thread
-    [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 1 thread
-    [PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
-    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 1 thread
-    [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Festival 1 thread
-    [PSCustomObject]@{MainAlgorithm = "freehaven" ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-FreeHaven 1 thread
-    [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Lite 1 thread
-    [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
-    [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Haven 1 thread
-    [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 1 thread
-    [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Italo 1 thread
-    [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
-    [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 1 thread
-    [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV7 1 thread
-    [PSCustomObject]@{MainAlgorithm = "normalv8"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV8 1 thread
-    [PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-B2N 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
+    #[PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Festival 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "freehaven" ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-FreeHaven 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-Lite 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 1; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
+    #[PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Haven 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 1; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Italo 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV7 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "normalv8"  ; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNightV8 1 thread
+    #[PSCustomObject]@{MainAlgorithm = "stellitev4"; Threads = 1; MinMemGb = 2; Params = ""} # CryptoNight-Stellite 1 thread
     [PSCustomObject]@{MainAlgorithm = "alloy"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Alloy 2 threads
     [PSCustomObject]@{MainAlgorithm = "artocash"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ArtoCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-B2N 2 threads
