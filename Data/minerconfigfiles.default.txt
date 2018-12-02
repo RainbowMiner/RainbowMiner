@@ -1,0 +1,13 @@
+;
+; RainbowMiner minerconfigfiles
+; =============================
+; 
+; add the names of protected miner configuration files in the miner's Bin folders
+; - wildcards are allowed
+; - paths are disallowed
+; - .exe/.dll/.bin are disallowed
+; - semicolon ";" marks the beginning of a remark (everything, including the ";", will be ignored)
+;
+
+;test.bat
+;testconfig_*.txt

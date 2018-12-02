@@ -8,6 +8,7 @@ $LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data
 if (-not $LocalAPIport) {$LocalAPIport = 4000}
 
 $ProtectedMinerFiles = if (Test-Path ".\Data\protectedminerfiles.json") {Get-Content ".\Data\protectedminerfiles.json" -Raw | ConvertFrom-Json}
+if (Test-Path ".\Config\minerconfigfiles.txt") {Get-Content ".\Config\minerconfigfiles.txt" | Where-Object {$_ -match "^([^;]+)"} | Foreach-Object {if ($File = $Matches[1].Trim()) {$ProtectedMinerFiles += $File}}}
 
 $Sha256 = if (Test-Path (".\Data\minersha256.json")) {Get-Content ".\Data\minersha256.json" -Raw | ConvertFrom-Json}
 

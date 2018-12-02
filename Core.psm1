@@ -117,6 +117,9 @@
             $_ | Resolve-Path -Relative
         }
 
+        #create special config files
+        if (-not (Test-Path ".\Config\minerconfigfiles.txt") -and (Test-Path ".\Data\minerconfigfiles.default.txt")) {Copy-Item ".\Data\minerconfigfiles.default.txt" ".\Config\minerconfigfiles.txt" -Force -ErrorAction Ignore}
+
         #cleanup legacy data
         if (Test-Path ".\Cleanup.ps1") {
             if ($RunCleanup) {

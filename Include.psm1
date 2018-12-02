@@ -1283,13 +1283,13 @@ function Expand-WebRequest {
     else {
         $Path_Old = (Join-Path (Split-Path $Path) ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName)
         $Path_New = (Join-Path (Split-Path $Path) (Split-Path $Path -Leaf))
-        $Path_Bak = (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).bak")
+        $Path_Bak = (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).$(Get-Date -Format "yyyyMMdd_HHmmss")")
 
         if (Test-Path $Path_Old) {Remove-Item $Path_Old -Recurse -Force}
         Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath($Path_Old))`" -y -spe" -Wait -WindowStyle Hidden
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
-        if (Test-Path $Path_New) {Move-Item $Path_New $Path_Bak}
+        if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
         if (Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $false) {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
@@ -1298,8 +1298,8 @@ function Expand-WebRequest {
             Remove-Item $Path_Old -Recurse -Force
         }
         if (Test-Path $Path_Bak) {
-            $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore | Where-Object PSIsContainer -EQ $false | Foreach-Object {Move-Item $_ $Path_New -Force}}
-            Remove-Item $Path_Bak -Recurse -Force
+            $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {Copy-Item $_ $Path_New -Force}}
+            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") | Where-Object PSIsContainer -EQ $true | Sort-Object Name -Descending | Select-Object -Skip 3 | Foreach-Object {Remove-Item $_ -Recurse -Force}
         }
     }
 }
