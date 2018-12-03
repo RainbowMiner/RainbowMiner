@@ -16,9 +16,9 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight";            Threads = 1; MinMemGb = 2; Params = ""} #CryptoNight
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2";    Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightBittube2
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_haven";       Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightHaven
-    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy";       Threads = 1; MinMemGb = 4; Params = ""} #CryptoNightHeavy
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_bittube2";    Threads = 1; MinMemGb = 4; Params = ""; ExtendInterval = 2} #CryptoNightBittube2
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_haven";       Threads = 1; MinMemGb = 4; Params = ""; ExtendInterval = 2} #CryptoNightHaven
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_heavy";       Threads = 1; MinMemGb = 4; Params = ""; ExtendInterval = 2} #CryptoNightHeavy
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite";        Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLite
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7";     Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7_xor"; Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7Xor
