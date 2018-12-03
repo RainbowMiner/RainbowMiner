@@ -130,16 +130,15 @@
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "pascal"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
         )
         "CryptoDredge" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "dedal"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "1"}
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
-        )
-        "CryptoDredgeBeta" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
-            [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "1"}
-            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x21s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
         "CuBalloon" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
@@ -217,6 +216,7 @@
         )        
         "Trex" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "balloon"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "dedal"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2v2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}

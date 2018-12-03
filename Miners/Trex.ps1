@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bcd"; Params = ""} #Bcd
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""} #Dedal
+    [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal
     [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
