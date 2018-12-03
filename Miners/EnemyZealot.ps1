@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda10.0_ver1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.26v1-enemyzealot/z-enemy.1-26-cuda10.0.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda_9.2_ver1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.26v1-enemyzealot/z-enemy.1-26-cuda9.2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.25v1-enemyzealot/z-enemy.1-25-cuda_9.1_ver1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.26v1-enemyzealot/z-enemy.1-26-cuda9.1.zip"
         Cuda = "9.1"
     }
 )
@@ -37,7 +37,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = "-N 1"; ExtendInterval = 2} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = "-N 1"} #PHI2, new in 1.12
     [PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
-    [PSCustomObject]@{MainAlgorithm = "renesis"; Params = "-N 1"} #Renesis
     [PSCustomObject]@{MainAlgorithm = "skunk"; Params = "-N 1"} #Skunk, new in 1.11
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = "-N 1"} #Sonoa, new in 1.12 (testing)
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = "-N 1"} #Timetravel8
