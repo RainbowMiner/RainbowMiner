@@ -12,6 +12,8 @@ class Eminer : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/stats" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
@@ -20,6 +22,7 @@ class Eminer : Miner {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
+        $Global:ProgressPreference = $oldProgressPreference
         
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.total_hashrate_mean | Measure-Object -Sum).Sum

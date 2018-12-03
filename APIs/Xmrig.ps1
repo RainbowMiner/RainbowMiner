@@ -12,6 +12,8 @@ class Xmrig : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api.json" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
@@ -20,6 +22,7 @@ class Xmrig : Miner {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix

@@ -12,6 +12,8 @@ class BMiner : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/api/v1/status/solver" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
@@ -20,6 +22,7 @@ class BMiner : Miner {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
         $this.Algorithm | Select-Object -Unique | ForEach-Object {
             $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_))
