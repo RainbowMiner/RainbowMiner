@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6.0-fireice/xmr-stak-win64-2.6.0-nodevfee.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.7.0-fireice/xmr-stak-win64-2.7.0.7z"
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $DevFee = 0.0
@@ -23,6 +23,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7";     Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7
     [PSCustomObject]@{MainAlgorithm = "cryptonight_lite_v7_xor"; Threads = 1; MinMemGb = 1; Params = ""} #CryptoNightLiteV7Xor
     [PSCustomObject]@{MainAlgorithm = "cryptonight_masari";      Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightMasari
+    [PSCustomObject]@{MainAlgorithm = "cryptonight_superfast";   Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightSuperfast
     [PSCustomObject]@{MainAlgorithm = "cryptonight_v7";          Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "cryptonight_v7_stellite"; Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV7Stellite
     [PSCustomObject]@{MainAlgorithm = "cryptonight_v8";          Threads = 1; MinMemGb = 2; Params = ""} #CryptoNightV8
