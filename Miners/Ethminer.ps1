@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.0-ethminer/ethminer-0.17.0-rc.0-cuda10.0-windows-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-alpha.1-ethminer/ethminer-0.17.0-alpha.1-cuda10.0-windows-amd64.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
@@ -61,8 +61,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 				$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
 				$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
-				$Miner_Protocol = $Pools.$Algorithm_Norm.Protocol
-				if ($Pools.$Algorithm_Norm.Name -eq 'NiceHash') {$Miner_Protocol = $Miner_Protocol -replace "stratum","stratum2"}
+                $Miner_Protocol = "stratum"
 
                 $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}        
 				[PSCustomObject]@{
