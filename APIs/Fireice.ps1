@@ -6,8 +6,8 @@ class Fireice : Miner {
         $Miner_Path = Split-Path $this.Path
         $Parameters = $this.Arguments | ConvertFrom-Json
         $Miner_Vendor = $Parameters.Vendor
-        $ConfigFile = "Common_$($this.Pool -join'-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
-        $HwConfigFile = "Config_$($Miner_Vendor.ToLower())-$(($Global:Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $this.DeviceModel | Select-Object -ExpandProperty Name | Sort-Object) -join '-').txt"
+        $ConfigFile = "common_$($this.Pool -join'-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
+        $HwConfigFile = "config_$($Miner_Vendor.ToLower())-$(($Global:Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $this.DeviceModel | Select-Object -ExpandProperty Name | Sort-Object) -join '-').txt"
         $DeviceConfigFile = "$($Miner_Vendor.ToLower())_$($this.BaseAlgorithm -join '-')-$($this.DeviceName -join '-').txt"
 
         ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$" | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8 -Force
@@ -36,7 +36,7 @@ class Fireice : Miner {
                 } else {
                     $DeviceConfig = @("{$(((Get-Content "$Miner_Path\$HwConfigFile") -replace '^\s*//.*' | Out-String) -replace '\/\*.*' -replace '\*\/' -replace '\*.+' -replace '\s' -replace ',\},]','}]' -replace ',\},\{','},{' -replace ',$','')}" | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty gpu_threads_conf | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object)
                     $DeviceConfig | Where-Object bfactor -eq 6 | Foreach-Object {$_.bfactor = 8}
-                    if ($DeviceConfig) {"`"gpu_threads_conf`": $($DeviceConfig | ConvertTo-Json -Depth 10)," | Set-Content "$Miner_Path\$DeviceConfigFile" -Force}
+                    if ($DeviceConfig) {"`"gpu_threads_conf`": $(ConvertTo-Json $DeviceConfig -Depth 10)," | Set-Content "$Miner_Path\$DeviceConfigFile" -Force}
                 }
             }
             catch {
