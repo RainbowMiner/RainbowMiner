@@ -3,23 +3,48 @@
 class Fireice : Miner {
 
     [String]GetArguments() {
-        $Parameters = $this.Arguments | ConvertFrom-Json        
-        $ConfigFile = "config_$($this.Name)-$($this.BaseAlgorithm -join '-')$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
+        $Miner_Path = Split-Path $this.Path
+        $Parameters = $this.Arguments | ConvertFrom-Json
+        $Miner_Vendor = $Parameters.Vendor
+        $ConfigFile = "Common_$($this.Pool -join'-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.Config.pool_list[0].use_tls){"-ssl"}).txt"
+        $HwConfigFile = "Config_$($Miner_Vendor.ToLower())-$(($Global:Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $this.DeviceModel | Select-Object -ExpandProperty Name | Sort-Object) -join '-').txt"
+        $DeviceConfigFile = "$($Miner_Vendor.ToLower())_$($this.BaseAlgorithm -join '-')-$($this.DeviceName -join '-').txt"
+
         ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$" | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8 -Force
 
-        if ($this.DeviceModel -ne "CPU") {
-            $Vendor = Get-Device $this.DeviceName[0] | Select-Object -ExpandProperty Vendor
-            $DCFile = "$($Vendor.ToLower())-$($this.BaseAlgorithm -join '-').txt"
-            $DCPath = Join-Path $(Split-Path $this.Path) $DCFile
-            $DCFile0= "$($Vendor.ToLower()).txt"
-            $DCPath0= Join-Path $(Split-Path $this.Path) $DCFile0
-            if (-not (Test-Path $DCPath) -and (Test-Path $DCPath0)) {Copy-Item $DCPath0 $DCPath -Force} #legacy
-            $DCFile = "--$($Vendor.ToLower()) $DCFile "
-        } else {
-            $DCFile = ""
+        if (-not (Test-Path "$Miner_Path\$DeviceConfigFile")) {
+            try {
+                if (-not (Test-Path "$Miner_Path\$HwConfigFile")) {
+                    Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
+                    $ArgumentList = "-C $ConfigFile --$($Miner_Vendor.ToLower()) $HwConfigFile $($Parameters.Params)".Trim()
+                    $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper")
+                    if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
+                        $wait = 0
+                        $Job | Add-Member HasOwnMinerWindow $true -Force
+                        While (-not (Test-Path "$Miner_Path\$HwConfigFile") -and $wait -lt 60) {
+                            Start-Sleep -Milliseconds 500
+                            $wait++
+                        }
+                    }
+                    Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
+                    Remove-Variable "Job"
+                }
+                $LegacyDeviceConfigFile = if ($Miner_Vendor -eq "CPU") {"cpu.txt"} else {"$($Miner_Vendor.ToLower())-$($this.BaseAlgorithm -join '-').txt"}
+                if (Test-Path "$Miner_Path\$LegacyDeviceConfigFile") {$HwConfigFile = $LegacyDeviceConfigFile}
+                if ($Miner_Vendor -eq "CPU") {
+                    Copy-File "$Miner_Path\$HwConfigFile" "$Miner_Path\$DeviceConfigFile" -Force
+                } else {
+                    $DeviceConfig = "{$(((Get-Content "$Miner_Path\$HwConfigFile") -replace '^\s*//.*' | Out-String) -replace '\/\*.*' -replace '\*\/' -replace '\*.+' -replace '\s' -replace ',\},]','}]' -replace ',\},\{','},{' -replace ',$','')}" | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty gpu_threads_conf | Where-Object {$Parameters.Devices -contains $_.index}
+                    $DeviceConfig | Where-Object bfactor -eq 6 | Foreach-Object {$_.bfactor = 8}
+                    if ($DeviceConfig) {"`"gpu_threads_conf`": $($DeviceConfig | ConvertTo-Json -Depth 10)," | Set-Content "$Miner_Path\$DeviceConfigFile" -Force}
+                }
+            }
+            catch {
+                Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($Error[0])']."
+            }
         }
 
-        return "-C $ConfigFile $DCFile$($Parameters.Params)".Trim()
+        return "-C $ConfigFile --$($Miner_Vendor.ToLower()) $DeviceConfigFile $($Parameters.Params)".Trim()
     }
 
     [String[]]UpdateMinerData () {

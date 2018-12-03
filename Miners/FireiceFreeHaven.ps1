@@ -46,9 +46,8 @@ if ($InfoOnly) {
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | Where-Object {$_ -ne "NVIDIA" -or $Cuda} | Foreach-Object {
-    $Miner_Vendor = $_  
-    @($Session.DevicesByTypes.$Miner_Vendor) | Where-Object {$_.Model -eq $Session.DevicesByTypes.FullComboModels.$Miner_Vendor} | Select-Object Vendor, Model -Unique | ForEach-Object {
+foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
+	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
             
@@ -104,7 +103,11 @@ if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Sessio
                             http_pass       = ""
                             prefer_ipv4     = $true
                         }
+                        Devices = @($Miner_Device.Type_Vendor_Index)
+                        Vendor = $Miner_Vendor
                     }
+
+                    if ($Miner_Device.PlatformId) {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
 
                     [PSCustomObject]@{
                         Name      = $Miner_Name
