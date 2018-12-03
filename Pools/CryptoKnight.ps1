@@ -34,7 +34,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 5541; fee = 0.0; walletSymbol = "aeon"; host = "aeon.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Alloy"; symbol = "XAO"; algo = "CnAlloy"; port = 5661; fee = 0.0; walletSymbol = "alloy"; host = "alloy.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Arqma"; symbol = "ARQ"; algo = "CnLiteV7"; port = 3731; fee = 0.0; walletSymbol = "arq"; host = "arq.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "Arto"; symbol = "ARTO"; algo = "CnArto"; port = 51201; fee = 0.0; walletSymbol = "arto"; host = "arto.ingest.cryptoknight.cc"}
+    [PSCustomObject]@{coin = "Arto"; symbol = "RTO"; algo = "CnArto"; port = 51201; fee = 0.0; walletSymbol = "arto"; host = "arto.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BBS"; symbol = "BBS"; algo = "CnLiteV7"; port = 19931; fee = 0.0; walletSymbol = "bbs"; host = "bbs.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BitcoinNote"; symbol = "BTCN"; algo = "CnLiteV7"; port = 4461; fee = 0.0; walletSymbol = "btcn"; host = "btcn.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 4461; fee = 0.0; walletSymbol = "ipbc"; host = "tube.ingest.cryptoknight.cc"}
