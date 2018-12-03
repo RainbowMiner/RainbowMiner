@@ -34,7 +34,7 @@ class Fireice : Miner {
                 if ($Miner_Vendor -eq "CPU") {
                     Copy-File "$Miner_Path\$HwConfigFile" "$Miner_Path\$DeviceConfigFile" -Force
                 } else {
-                    $DeviceConfig = "{$(((Get-Content "$Miner_Path\$HwConfigFile") -replace '^\s*//.*' | Out-String) -replace '\/\*.*' -replace '\*\/' -replace '\*.+' -replace '\s' -replace ',\},]','}]' -replace ',\},\{','},{' -replace ',$','')}" | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty gpu_threads_conf | Where-Object {$Parameters.Devices -contains $_.index}
+                    $DeviceConfig = @("{$(((Get-Content "$Miner_Path\$HwConfigFile") -replace '^\s*//.*' | Out-String) -replace '\/\*.*' -replace '\*\/' -replace '\*.+' -replace '\s' -replace ',\},]','}]' -replace ',\},\{','},{' -replace ',$','')}" | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty gpu_threads_conf | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object)
                     $DeviceConfig | Where-Object bfactor -eq 6 | Foreach-Object {$_.bfactor = 8}
                     if ($DeviceConfig) {"`"gpu_threads_conf`": $($DeviceConfig | ConvertTo-Json -Depth 10)," | Set-Content "$Miner_Path\$DeviceConfigFile" -Force}
                 }
