@@ -5,10 +5,10 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0b-phoenix/PhoenixMiner_4.0b_Windows.zip"
+$Path = ".\Bin\Ethash-Phoenix35\PhoenixMiner.exe"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5d-phoenixminer/PhoenixMiner_3.5d_Windows.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
-$Port = "308{0:d2}"
+$Port = "328{0:d2}"
 $DevFee = 0.65
 $Cuda = "6.5"
 
@@ -73,7 +73,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -allpools 0 -leaveoc -coin $(if ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"} else {"auto"}) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
+					Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -leaveoc -coin auto -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -wal $($Pools.$Algorithm_Norm.User) -pass $($Pools.$Algorithm_Norm.Pass) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
 					API = "Claymore"
 					Port = $Miner_Port
