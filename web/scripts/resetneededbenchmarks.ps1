@@ -21,7 +21,7 @@ $count = 0
     $Miners_Key  = "$($_.Name)-$($Algo)"
     if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
         $Miners_List[$Miners_Key] = $true                            
-        $Miners_Path = Get-ChildItem ".\Stats\Miners\*$($_.Name)_$($Algo)_HashRate.txt"
+        $Miners_Path = Get-ChildItem ".\Stats\Miners\*$($_.Name)_$($Algo)_HashRate.txt" | Where-Object -FilterScript {$_.Name -match "^(AMD|CPU|NVIDIA)-$($Miner.Name)_$($Miner_Algo)_HashRate.txt$"}
 
         if ($Miners_Path -and $Miners_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]) {
             Get-ChildItem ".\Stats\Miners\*$($_.Name -replace '-','*')*_$($Algo)_HashRate.txt" | Remove-Item -ErrorAction Ignore

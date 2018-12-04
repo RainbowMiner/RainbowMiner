@@ -850,7 +850,6 @@ function Invoke-Core {
                 $MinerOk
             }
     }
-    $Session.Stats = $null
 
     if ($Session.Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
@@ -899,6 +898,7 @@ function Invoke-Core {
     Write-Log "Calculating profit for each miner. "
 
     [hashtable]$AllMiners_VersionCheck = @{}
+    [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.ArrayList]$Miner_Arguments_List = @()
     $AllMiners | ForEach-Object {
         $Miner = $_
@@ -1067,9 +1067,15 @@ function Invoke-Core {
             $Miner_Uri = ""
             if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI}
             $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI
+            $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()
         }
         $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
-  
+
+        if ($Session.Config.EnableAutoBenchmark -and $Miner.DeviceModel -notmatch '-' -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Session.Stats.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate") -and $Session.Stats["$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {            
+            Get-ChildItem ".\Stats\Miners\*$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
+            if ($Miner.BaseAlgorithm[1]) {Get-ChildItem ".\Stats\Miners\*$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore}
+        }
+
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
         else {
             if ($Miners.Arguments.Params -is [string]) {$Miners.Arguments.Params = ($Miner.Arguments.Params -replace "\s+"," ").trim()}
@@ -1104,7 +1110,9 @@ function Invoke-Core {
     }
     $Miners_Downloading = $Miners_DownloadList.Count
     Remove-Variable "AllMiners_VersionCheck" -Force
+    Remove-Variable "AllMiners_VersionDate" -Force
     Remove-Variable "Miners_DownloadList" -Force
+    $Session.Stats = $null
 
     #Open firewall ports for all miners
     if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
