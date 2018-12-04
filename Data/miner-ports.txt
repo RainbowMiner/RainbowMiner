@@ -58,6 +58,7 @@
 325	FireIce247
 326	T-Rex070
 327	Ethminer17
+328	Phoenix35
 
 400	Sgminer
 401	SgminerBitcore
