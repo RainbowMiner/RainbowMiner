@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-CcminerX21s\ccminer.exe"
+$Path = ".\Bin\NVIDIA-CcminerX21s\ccminer-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-ccminerx21s/ccminer-x21s-2.3-cuda9.7z"
 $ManualUri = "https://github.com/SUQAORG/ccminer-x22i/releases"
 $Port = "125{0:d2}"
