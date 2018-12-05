@@ -1065,9 +1065,8 @@ function Invoke-Core {
         if (-not $AllMiners_VersionCheck.ContainsKey($Miner.BaseName)) {
             $Miner_UriJson = (Split-Path $Miner.Path) + "\_uri.json"
             $Miner_Uri = ""
-            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI}
-            $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI
-            $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()
+            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()}
+            $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI            
         }
         $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
 
