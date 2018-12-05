@@ -5,15 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-TPruvot\ccminer.exe"
+$Path = ".\Bin\NVIDIA-TPruvot\ccminer-x64.exe"
 $ManualUri = "https://github.com/tpruvot/ccminer/releases"
 $Port = "114{0:d2}"
 $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-tpruvot/ccminertpruvotx64.7z"
-        Cuda = "10.0"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-tpruvot/ccminer-2.3-cuda9.7z"
+        Cuda = "9.0"
     }
 )
 
@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
     #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
-    [PSCustomObject]@{MainAlgorithm = "exosis"; Params = ""} #Exosis
+    #[PSCustomObject]@{MainAlgorithm = "exosis"; Params = ""} #Exosis
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
     #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
