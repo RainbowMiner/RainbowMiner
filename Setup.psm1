@@ -650,6 +650,13 @@ function Start-Setup {
                         "enableautobenchmark" {
                             $Config.EnableAutoBenchmark = Read-HostBool -Prompt "Automatically start benchmarks of updated miners" -Default $Config.EnableAutoBenchmark | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
+                        "enableresetvega" {
+                            if ($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Model -match "Vega"}) {
+                                $Config.EnableResetVega = Read-HostBool -Prompt "Reset VEGA devices before miner (re-)start (needs admin privileges)" -Default $Config.EnableResetVega | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
                         "proxy" {
                             $Config.Proxy = Read-HostString -Prompt "Enter proxy address, if used" -Default $Config.Proxy -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
@@ -765,6 +772,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableAutoupdate $(if (Get-Yes $Config.EnableAutoupdate){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableAutoAlgorithmAdd $(if (Get-Yes $Config.EnableAutoAlgorithmAdd){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableAutoBenchmark $(if (Get-Yes $Config.EnableAutoBenchmark){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member EnableResetVega $(if (Get-Yes $Config.EnableResetVega){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member Delay $Config.Delay -Force
                             $ConfigActual | Add-Member LocalAPIport $Config.LocalAPIport -Force
                             $ConfigActual | Add-Member EnableAutoMinerPorts $(if (Get-Yes $Config.EnableAutoMinerPorts){"1"}else{"0"}) -Force

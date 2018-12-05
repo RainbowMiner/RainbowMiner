@@ -1477,13 +1477,14 @@ function Get-Device {
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
+                $Instance_Id  = ''
 
                 if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
-                    if ($Device_Name_Tmp = $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Select-Object -ExpandProperty DeviceName) {$Device_Name = $Device_Name_Tmp}
+                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $Instance_Id = $_.InstanceId}
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
                 }
@@ -1503,6 +1504,7 @@ function Get-Device {
                     OpenCL = $Device_OpenCL
                     Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
                     Model_Name = [String]$Device_Name
+                    Instance_Id = [String]$Instance_Id
                 }
 
                 if ($Device.Type -ne "Cpu" -and ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_}))) {
@@ -1733,6 +1735,7 @@ function Get-DeviceName {
                 [PSCustomObject]@{
                     Index = $DeviceId
                     DeviceName = $DeviceName
+                    InstanceId = $_.GpuId
                     SubId = $SubId
                 }
                 $DeviceId++
@@ -1751,6 +1754,7 @@ function Get-DeviceName {
                         [PSCustomObject]@{
                             Index = $DeviceId
                             DeviceName = $DeviceName
+                            InstanceId = $AdlResultSplit[9]
                             SubId = $SubId
                         }
                         $DeviceId++
@@ -4153,4 +4157,19 @@ param(
         }
     } else {$MRRStatus[$RigId] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
     if (-not $Stop) {$MRRStatus[$RigId].enable}
+}
+
+function Reset-Vega {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String[]]$DeviceName
+)
+	foreach ($Device in ($Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega" -and $_.Instance_Id})) {
+		Disable-PnpDevice -DeviceId $Device.Instance_Id -ErrorAction Ignore -Confirm:$false > $null
+		Start-Sleep 3
+		Enable-PnpDevice -DeviceId $Device.Instance_Id -ErrorAction Ignore -Confirm:$false > $null
+		Start-Sleep 3
+        Write-Log -Level Info "Disabled/Enabled device $($_.Model) $($_.Name)"
+	}
 }

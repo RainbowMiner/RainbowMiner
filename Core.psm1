@@ -1373,6 +1373,8 @@ function Invoke-Core {
 
     $Session.ActiveMiners | Where-Object {$_.Best -EQ $true -and $_.GetStatus() -ne [MinerStatus]::Running} | ForEach-Object {
 
+        if ($Session.Config.EnableResetVega) {Reset-Vega $_.DeviceName}
+
         #Set MSI Afterburner profile
         if ($MSIAenabled) {
             $MSIAplannedprofile = $Session.ActiveMiners | Where-Object {$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0} | Select-Object -ExpandProperty MSIAprofile -Unique
