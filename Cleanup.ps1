@@ -245,6 +245,10 @@ try {
         $AddAlgorithm += @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s")
     }
 
+    if ($Version -le (Get-Version "3.9.0.1")) {
+        $AddAlgorithm += @("x20r")
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
