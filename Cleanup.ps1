@@ -246,7 +246,26 @@ try {
     }
 
     if ($Version -le (Get-Version "3.9.0.1")) {
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $Algorithms = $ConfigActual.Algorithm
+        if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
+        if ($Algorithms -and $Algorithms.Count -le 7 -and (-not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s")) -or -not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s","x20r")))) {
+            $ConfigActual.Algorithm = ""
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal++
+        }
         $AddAlgorithm += @("x20r")
+    }
+
+    if ($Version -le (Get-Version "3.9.0.2")) {
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $Algorithms = $ConfigActual.Algorithm
+        if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
+        if ($Algorithms -and $Algorithms.Count -le 7 -and (-not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s")) -or -not (Compare-Object $Algorithms @("cnfreehaven","dedal","exosis","lyra2vc0banhash","pipe","x21s","x20r")))) {
+            $ConfigActual.Algorithm = ""
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal++
+        }
     }
 
     if ($AddAlgorithm.Count -gt 0) {
