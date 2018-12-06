@@ -247,17 +247,19 @@ try {
 
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        if (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd) {
+        if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
             $Algorithms = $ConfigActual.Algorithm
             $Algorithms_Hash = [hashtable]@{}
             if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
             $Algorithms | Foreach-Object {$Algorithms_Hash[$(Get-Algorithm $_)] = $true}
             $Changes = 0
-            $AddAlgorithm | Where-Object {-not $Algorithms_Hash.ContainsKey($(Get-Algorithm $_))} | Foreach-Object {$Algorithms += $_;$Algorithms_Hash[$(Get-Algorithm $_)] = $true;$Changes++}
-            if ($Changes -gt 0) {
-                $ConfigActual.Algorithm = ($Algorithms | Sort-Object) -join ","
-                $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
-                $ChangesTotal+=$Changes
+            if ($Algorithms -and $Algorithms.Count -gt 0) {
+                $AddAlgorithm | Where-Object {-not $Algorithms_Hash.ContainsKey($(Get-Algorithm $_))} | Foreach-Object {$Algorithms += $_;$Algorithms_Hash[$(Get-Algorithm $_)] = $true;$Changes++}
+                if ($Changes -gt 0) {
+                    $ConfigActual.Algorithm = ($Algorithms | Sort-Object) -join ","
+                    $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+                    $ChangesTotal+=$Changes
+                }
             }
         }
     }
