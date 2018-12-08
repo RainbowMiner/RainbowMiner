@@ -44,7 +44,6 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "FreeHaven"; symbol = "XFH"; algo = "CnFreeHaven"; port = 7731; fee = 0.0; walletSymbol = "xaven"; host = "213.133.103.136"}
     [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 9111; fee = 0.0; walletSymbol = "graft"; host = "graft.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5531; fee = 0.0; walletSymbol = "haven"; host = "haven.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "IntenseCoin"; symbol = "ITNS"; algo = "CnV7"; port = 8881; fee = 0.0; walletSymbol = "itns"; host = "intense.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "IPBC"; symbol = "IPBC"; algo = "CnSaber"; port = 4461; fee = 0.0; walletSymbol = "ipbc"; host = "ipbcrocks.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Iridium"; symbol = "IRD"; algo = "CnLiteV7"; port = 50501; fee = 0.0; walletSymbol = "iridium"; host = "iridium.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Italo"; symbol = "ITA"; algo = "CnHaven"; port = 50701; fee = 0.0; walletSymbol = "italo"; host = "italo.ingest.cryptoknight.cc"}
