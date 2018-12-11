@@ -269,7 +269,7 @@ try {
     }
 
     if ($Version -le (Get-Version "3.9.0.3")) {
-        $AddAlgorithm += @("lyra2v3")
+        $AddAlgorithm += @("lyra2v3","gltastralhash","gltjeonghash","gltpadihash","gltpawelhash")
     }
 
     if ($AddAlgorithm.Count -gt 0) {
