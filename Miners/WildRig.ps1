@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.13.4b-wildrig/wildrig-multi-0.13.4-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.0b-wildrig/wildrig-multi-0.14.0-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -20,10 +20,16 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "c11";        Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 19x0",   "--opencl-threads 2 --opencl-launch 19x0")} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal";      Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #Dedal
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = @("--opencl-threads 2 --opencl-launch 18x128", "--opencl-threads 2 --opencl-launch 20x128", "--opencl-threads 2 --opencl-launch 20x128")} #Geek
+    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0")} #GLT-AstralHash
+    [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0")} #GLT-JeongHash
+    [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0")} #GLT-PadiHash
+    [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 17x0")} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = @("--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 22x0",   "--opencl-threads 2 --opencl-launch 23x0")} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = @("--opencl-threads 2 --opencl-launch 20x128", "--opencl-threads 2 --opencl-launch 20x128", "--opencl-threads 2 --opencl-launch 20x128")} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = @("--opencl-threads 1 --opencl-launch 21x0",   "--opencl-threads 1 --opencl-launch 23x0",   "--opencl-threads 1 --opencl-launch 23x0")} #Lyra2RE3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = @("--opencl-threads 1 --opencl-launch 21x0",   "--opencl-threads 1 --opencl-launch 23x0",   "--opencl-threads 1 --opencl-launch 23x0")} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = @("--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 19x0")} #PHI
-    [PSCustomObject]@{MainAlgorithm = "renesis";    Params = @("--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 18x128")} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "renesis";    Params = @("--opencl-threads 3 --opencl-launch 17x0",   "--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 18x128")} #Renesis
     [PSCustomObject]@{MainAlgorithm = "skunkhash";  Params = @("--opencl-threads 3 --opencl-launch 17x0",   "--opencl-threads 3 --opencl-launch 18x0",   "--opencl-threads 3 --opencl-launch 18x0")} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 18x0")} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = @("--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128")} #Timetravel
