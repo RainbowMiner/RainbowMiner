@@ -38,6 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";        Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X17
     [PSCustomObject]@{MainAlgorithm = "x18";        Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X18
+    [PSCustomObject]@{MainAlgorithm = "x20r";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";       Params = @("--opencl-threads 2 --opencl-launch 19x0",   "--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 18x0")} #X22i
 )
