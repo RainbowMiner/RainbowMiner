@@ -136,11 +136,11 @@ function Get-Balance {
         Name    = "*Total*"
         Caption = "*Total*"
     }
+
+    if (Test-Path ".\Data\worldcurrencies.json") {$WorldCurrencies = Get-Content ".\Data\worldcurrencies.json" | ConvertFrom-Json} else {$WorldCurrencies = @("USD","EUR","GBP")}
+
     [hashtable]$Digits = @{}
-    @($CurrenciesWithBalances)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {
-        if (-not $NewRates.ContainsKey($_) -and $RatesAPI.$_.BTC) {$v = 1/$RatesAPI.$_.BTC;$NewRates[$_] = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))))}
-        $Digits[$_] = if ($NewRates.ContainsKey($_)) {($($NewRates.$_).ToString().Split(".")[1]).length} else {8}
-    }
+    @($CurrenciesWithBalances)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | Sort-Object | ForEach-Object {
         $Currency = $_.ToUpper()
@@ -181,7 +181,7 @@ function Get-Balance {
 
     $Balances | Foreach-Object {
         $Balance = $_
-        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($Digits[$Matches[2]])}" -f $Balance.$_}
+        $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
     }
     
     [PSCustomObject]@{
