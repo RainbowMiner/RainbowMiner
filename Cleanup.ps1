@@ -272,6 +272,18 @@ try {
         $AddAlgorithm += @("lyra2v3","gltastralhash","gltjeonghash","gltpadihash","gltpawelhash")
     }
 
+    if ($Version -le (Get-Version "3.9.0.6")) {
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $Algorithms = $ConfigActual.Algorithm
+        if ($Algorithms -is [string]) {$Algorithms = $Algorithms.Trim(); $Algorithms = @(if ($Algorithms -ne ''){@([regex]::split($Algorithms.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
+        if ($Algorithms | Where-Object {$_ -eq "System.Object[]"}) {
+            $Algorithms = $Algorithms | Where-Object {$_ -ne "System.Object[]"}
+            $ConfigActual.Algorithm = $Algorithms -join ','
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal++
+        }
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
