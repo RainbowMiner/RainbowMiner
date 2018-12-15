@@ -16,7 +16,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region = "us"
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Swap"; symbol = "XFH"; algo = "CnSwap"; port = 33022; fee = 0.5; livestats = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "CnSwap"; port = 33022; fee = 0.5; livestats = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
