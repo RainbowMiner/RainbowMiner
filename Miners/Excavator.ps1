@@ -12,12 +12,8 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.13a/excavator_v1.5.13a_Win64_CUDA_10.zip"
+        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.14a/excavator_v1.5.14a_Win64.zip"
         Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.13a/excavator_v1.5.13a_Win64.zip"
-        Cuda = "9.1"
     }
 )
 
