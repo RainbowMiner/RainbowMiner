@@ -42,9 +42,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ## REQUIRED PRE-REQUESITES
 
-1. Install PowerShell 6: [Download Installer for version 6.1.0](https://github.com/PowerShell/PowerShell/releases/download/v6.1.0/PowerShell-6.1.0-win-x64.msi)
+1. Install PowerShell 6: [Download Installer for version 6.1.1](https://github.com/PowerShell/PowerShell/releases/download/v6.1.1/PowerShell-6.1.1-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
-3. Update GPU drivers: [Nvidia 416.94](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenaline 18.9.3](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+3. Update GPU drivers: [Nvidia 417.35](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 18.12.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
@@ -434,6 +434,7 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
   - "legacy": one miner will handle all devices of one vendor together. Only NVIDIA, AMD, CPU are possible to select.
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
   - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
+- **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
 
 #### Set electricity cost handling ####
 
@@ -471,6 +472,9 @@ ClaymoreCPU, FireIce and JceminerCpu are not affected by these settings. They ca
 - **DisableAPI** = set to 1, if no localhost API is needed
 - **DisableAsyncLoader** = set to 1, if all net access should happen synchronous (used for debugging)
 - **DisableMSIAmonitor** = set to 1, to fully disable MSI Afterburner monitoring (if more than six AMD GPU are used for mining)
+- **Quickstart** = set to 1 to read all pool data from cache during startup (speeds up first start, but balance data may be out of date)
+- **StartPaused** = set to 1 to start RainbowMiner in pause mode (no mining, you will have to press "P" to enable mining)
+
 
 **Notes for HashrateWeight**
 
