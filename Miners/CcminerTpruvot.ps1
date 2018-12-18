@@ -34,7 +34,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
     #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
-    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = "-N 1"; FaultTolerance = 0.5} #HMQ1725
     #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = "-N 1"} #JHA
