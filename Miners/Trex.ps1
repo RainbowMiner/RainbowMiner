@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.8-trex/t-rex-0.8.8-win-cuda10.0.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.9-trex/t-rex-0.8.9-win-cuda10.0.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.8-trex/t-rex-0.8.8-win-cuda9.2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.9-trex/t-rex-0.8.9-win-cuda9.2.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.8-trex/t-rex-0.8.8-win-cuda9.1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.9-trex/t-rex-0.8.9-win-cuda9.1.zip"
         Cuda = "9.1"
     }
 )
@@ -102,7 +102,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-N 10 -r 5 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User) -p $($_.Pass)"})$(if (-not $Session.Config.ShowMinerWindow){" --no-color"}) --quiet --api-bind-http 0 $($_.Params)"
+                Arguments = "-N 10 -r 5 -b 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User) -p $($Pools.$Algorithm_Norm.Pass)$($Pools.$Algorithm_Norm.Failover | Select-Object | Foreach-Object {" -o $($_.Protocol)://$($_.Host):$($_.Port) -u $($_.User) -p $($_.Pass)"})$(if (-not $Session.Config.ShowMinerWindow){" --no-color"}) --no-nvml --quiet --api-bind-http 0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
                 API = "Ccminer"
                 Port = $Miner_Port
