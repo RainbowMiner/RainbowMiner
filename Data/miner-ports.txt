@@ -81,5 +81,6 @@
 520	ClaymoreCpu
 521	XmrigCpu
 530	CpuminerYespower
+531	CpuminerBinarium
 
 4068    CcminerSpModTribus
