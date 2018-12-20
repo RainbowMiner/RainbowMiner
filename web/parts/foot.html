@@ -35,7 +35,7 @@
       (function p() {
           $.ajax({
               url: '/currentprofit', success: function (result) {
-                  $("#profit").html("<h6>Current profit: " + formatBTC(result.ProfitBTC) + " BTC/Day</h6>");
+                  $("#profit").html("<h6>Current profit: " + formatBTC(result.AllProfitBTC) + " BTC/Day</h6>");
                   var xchange = new Array();
                   xchange.push("1 BTC");
                   $.each(result.Rates, function (key, itm) {

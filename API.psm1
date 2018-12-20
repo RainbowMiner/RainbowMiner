@@ -341,7 +341,9 @@
                     Break
                 }
                 "/currentprofit" {
-                    $Data = [PSCustomObject]@{ProfitBTC=$API.CurrentProfit;Rates=$API.Rates} | ConvertTo-Json
+                    $Profit = $API.CurrentProfit
+                    $API.RemoteMiners | Select-Object | ConvertFrom-Json | Where-Object {(Get-UnixTimestamp)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
+                    $Data = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$API.Rates} | ConvertTo-Json
                     Break
                 }
                 "/stop" {
