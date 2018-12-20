@@ -48,9 +48,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique | Where-Object {$Wallets.$_}
 $Pool_PoolFee = 0.5
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$PoolCoins_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
-    $Pool_CoinSymbol = $_
-
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
     $Pool_Host = "blockmasters.co"
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
@@ -58,8 +56,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
-    $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
-    $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
@@ -92,7 +88,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             if ($Pool_User -or $InfoOnly) {
-                #Option 2
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
@@ -105,7 +100,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                     Port          = $Pool_Port
                     User          = $Pool_User
-                    Pass          = "{workername:$Worker},c=$Pool_Currency,mc=$Pool_Currency{diff:,d=`$difficulty}"
+                    Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $false
                     Updated       = $Stat.Updated
@@ -114,33 +109,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
-                }
-            }
-            if (-not $Pool_User -or $InfoOnly) {
-                foreach($Pool_ExCurrency in $Pool_Currencies) {
-                    #Option 3
-                    [PSCustomObject]@{
-                        Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin
-                        CoinSymbol    = $Pool_CoinSymbol
-                        Currency      = $Pool_ExCurrency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.Week
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+tcp"
-                        Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
-                        Port          = $Pool_Port
-                        User          = $Wallets.$Pool_ExCurrency
-                        Pass          = "{workername:$Worker},c=$Pool_ExCurrency,mc=$Pool_Currency{diff:,d=`$difficulty}"
-                        Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $false
-                        Updated       = $Stat.Updated
-                        PoolFee       = $Pool_PoolFee
-                        Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                        Hashrate      = $Stat.HashRate_Live
-                        BLK           = $Stat.BlockRate_Average
-                        TSL           = $Pool_TSL
-                    }
                 }
             }
         }
