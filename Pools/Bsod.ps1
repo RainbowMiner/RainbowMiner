@@ -46,8 +46,7 @@ catch {
 $Pool_Regions = @("eu","us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {(($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $PoolCoins_Request.$_.symbol -and $Wallets."$($PoolCoins_Request.$_.symbol)") -or $InfoOnly} | ForEach-Object {
-    $Pool_CoinSymbol = $_
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate_shared -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
 
     $Pool_Host = "bsod.pw"
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
@@ -58,8 +57,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Key = "$($Pool_Algorithm)_$($Pool_CoinSymbol)".ToLower()
     $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fees -ne $null) {$Pool_Request.$Pool_CoinSymbol.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
-    $Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol}
-    $Pool_User = $Wallets.$Pool_Currency
 
     if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
