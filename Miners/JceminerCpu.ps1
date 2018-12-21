@@ -50,7 +50,7 @@ $Commands = [PSCustomObject[]]@(
 #N=15 Cryptonight V8 fork of Oct-2018
 #N=16 Pool-managed Autoswitch
 #N=17 Cryptolight-Dark
-#N=18 Cryptonight-FreeHaven
+#N=18 Cryptonight-Swap
 #N=19 Cryptolight-Uplexa
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
