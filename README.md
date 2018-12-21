@@ -21,9 +21,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, GosCx, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Sgminer, T-Rex and many more)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Build-in automatic update**
 - **Mining devices freely selectable**
