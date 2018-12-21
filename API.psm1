@@ -342,7 +342,7 @@
                 }
                 "/currentprofit" {
                     $Profit = $API.CurrentProfit
-                    $API.RemoteMiners | Select-Object | ConvertFrom-Json | Where-Object {(Get-UnixTimestamp)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
+                    $API.RemoteMiners | Select-Object | ConvertFrom-Json | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
                     $Data = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$API.Rates} | ConvertTo-Json
                     Break
                 }
