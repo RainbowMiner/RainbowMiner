@@ -18,6 +18,7 @@
     EnableMinerStatus = $true
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex
+    GPUMiningAffinity = ""
     Delay = 1
     EthPillEnable = "disable"
 }
