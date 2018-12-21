@@ -363,7 +363,7 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Int64]$HashRate = 0,
         [Parameter(Mandatory = $false)]
-        [Int64]$BlockRate = 0,
+        [Double]$BlockRate = 0,
         [Parameter(Mandatory = $false)]
         [Double]$ErrorRatio = 0,
         [Parameter(Mandatory = $false)]
@@ -408,7 +408,7 @@ function Set-Stat {
                 @{
                     HashRate_Live = [Int64]$Stat.HashRate_Live
                     HashRate_Average = [Double]$Stat.HashRate_Average
-                    BlockRate_Live = [Int64]$Stat.BlockRate_Live
+                    BlockRate_Live = [Double]$Stat.BlockRate_Live
                     BlockRate_Average = [Double]$Stat.BlockRate_Average
                     ErrorRatio = if ($Stat.ErrorRatio -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio}
                     ErrorRatio_Average = if ($Stat.ErrorRatio_Average -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio_Average}
@@ -598,7 +598,7 @@ function Set-Stat {
                 $OutStat | Add-Member -NotePropertyMembers @{
                     HashRate_Live = [Int64]$Stat.HashRate_Live
                     HashRate_Average = [Decimal]$Stat.HashRate_Average
-                    BlockRate_Live = [Int64]$Stat.BlockRate_Live
+                    BlockRate_Live = [Decimal]$Stat.BlockRate_Live
                     BlockRate_Average = [Decimal]$Stat.BlockRate_Average
                     ErrorRatio_Live = [Decimal]$Stat.ErrorRatio_Live
                     ErrorRatio_Average = [Decimal]$Stat.ErrorRatio_Average
