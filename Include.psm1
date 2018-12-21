@@ -944,14 +944,16 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Bool]$ShowMinerWindow = $false,
         [Parameter(Mandatory = $false)]
-        [Bool]$IsWrapper = $false
+        [Bool]$IsWrapper = $false,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0
     )
 
     if ($ShowMinerWindow) {        
-        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True}
-        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName}
+        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True -CPUAffinity $CPUAffinity}
+        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity}
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity
     }
 }
 
@@ -972,7 +974,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [String]$ProcessName = "",
         [Parameter(Mandatory = $false)]
-        [Bool]$ShowMinerWindow = $false
+        [Bool]$ShowMinerWindow = $false,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
@@ -1000,7 +1004,16 @@ function Start-SubProcessInBackground {
         }
     }
 
-    if ($ProcessId) {(Get-Process -Id $ProcessId).PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]}
+    if ($ProcessId) {
+        try {
+            $Process = Get-Process -Id $ProcessId
+            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
+        } catch {
+            Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
 
     [PSCustomObject]@{
         Process   = $Job
@@ -1023,7 +1036,9 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = ""
+        [String]$ProcessName = "",
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
@@ -1204,11 +1219,17 @@ function Start-SubProcessInConsole {
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
 
-    $Process = Get-Process | Where-Object Id -EQ $JobOutput.ProcessId
-    if ($Process) {
-        $Process.Handle | Out-Null
-        $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        $ProcessId = $JobOutput.ProcessId
+    try {
+        $Process = Get-Process | Where-Object Id -EQ $JobOutput.ProcessId
+        if ($Process) {
+            $Process.Handle | Out-Null
+            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
+            $ProcessId = $JobOutput.ProcessId
+        }
+    } catch {
+        Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+        if ($Error.Count){$Error.RemoveAt(0)}
     }
     
     [PSCustomObject]@{
@@ -2136,7 +2157,7 @@ class Miner {
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
-    [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1}
+    [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
@@ -2191,7 +2212,7 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper")
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper")
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -2314,11 +2335,12 @@ class Miner {
         return $this.ProcessId
     }
 
-    SetPriorities([int]$cpu=-2,[int]$gpu=-1) {
+    SetPriorities([int]$cpu=-2,[int]$gpu=-1,[string]$affinity="") {
         if ($cpu -lt -2) {$cpu=-2} elseif ($cpu -gt 3) {$cpu=3}
         if ($gpu -lt -2) {$gpu=-2} elseif ($gpu -gt 3) {$gpu=3}
         $this.Priorities.CPU = $cpu
         $this.Priorities.GPU = $gpu
+        $this.Priorities.CPUAffinity = if ($this.DeviceName -notlike "CPU*") {ConvertFrom-CPUAffinity $affinity -ToInt} else {0}
     }
 
     SetStatusRaw([MinerStatus]$Status) {

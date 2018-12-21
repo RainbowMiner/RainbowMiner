@@ -1400,7 +1400,7 @@ function Invoke-Core {
         }            
         $Session.DecayStart = $Session.Timer
 
-        $_.SetPriorities($Session.Config.MiningPriorityCPU,$Session.Config.MiningPriorityGPU)
+        $_.SetPriorities($Session.Config.MiningPriorityCPU,$Session.Config.MiningPriorityGPU,$Session.Config.GPUMiningAffinity)
 
         $_.SetStatus([MinerStatus]::Running)
 
