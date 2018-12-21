@@ -23,10 +23,13 @@
             Currencies=@("RVN","SUQA")
         }
         "CryptoKnight" = [PSCustomObject]@{
-            Currencies=@("WOW")
+            Currencies=@("XWP")
         }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
+        }
+        "FairPool" = [PSCustomObject]@{
+            Currencies=@("XWP")
         }
         "GosCx" = [PSCustomObject]@{
             Currencies=@("RVN")            
