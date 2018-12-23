@@ -4007,10 +4007,12 @@ function Get-UrlEncode {
 [cmdletbinding()]
 param(
     [Parameter(Mandatory = $False,ValueFromPipeline = $True)]
-    [string]$Uri = ""
+    [string]$Uri = "",
+    [Parameter(Mandatory = $false)]
+    [switch]$ConvertDot = $false
 )
-    if ($Uri -match "^(.*?)({[^}]+})(.*?)$") {"$([System.Web.HttpUtility]::UrlEncode($Matches[1]))$($Matches[2])$([System.Web.HttpUtility]::UrlEncode($Matches[3]))"}
-    else {[System.Web.HttpUtility]::UrlEncode($Uri)}
+    $Uri = if ($Uri -match "^(.*?)({[^}]+})(.*?)$") {"$([System.Web.HttpUtility]::UrlEncode($Matches[1]))$($Matches[2])$([System.Web.HttpUtility]::UrlEncode($Matches[3]))"} else {[System.Web.HttpUtility]::UrlEncode($Uri)}
+    if ($ConvertDot) {$Uri -replace "\.","%2e"} else {$Uri}
 }
 
 function Get-LastDrun {

@@ -6,11 +6,20 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Ethminer\ethminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.2-ethminer/ethminer-0.17.0-rc.2-cuda10.0-windows-amd64.zip"
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
-$Cuda = "10.0"
+
+$UriCuda = @(
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.2-ethminer/ethminer-0.17.0-rc.2-cuda10.0-windows-amd64.zip"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.2-ethminer/ethminer-0.17.0-rc.2-cuda9.0-windows-amd64.zip"
+        Cuda = "9.0"
+    }
+)
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -21,6 +30,7 @@ $Commands = [PSCustomObject[]]@(
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+$Uri = $UriCuda[0].Uri
 
 if ($InfoOnly) {
     [PSCustomObject]@{
@@ -36,7 +46,15 @@ if ($InfoOnly) {
     return
 }
 
-if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Session.DevicesByTypes.NVIDIA) {
+    $Cuda = 0
+    for($i=0;$i -le $UriCuda.Count -and -not $Cuda;$i++) {
+        if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+            $Uri = $UriCuda[$i].Uri
+            $Cuda= $UriCuda[$i].Cuda
+        }
+    }
+}
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
@@ -69,7 +87,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User):$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
+					Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot):$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
 					API = "Claymore"
 					Port = $Miner_Port
