@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Jceminer\jce_cn_cpu_miner$($f = $Global:GlobalCPUInfo.Features; if($f.'64bit'){'64'}else{'32'}).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33j-jceminer/jce_cn_cpu_miner.windows.033j.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33k-jceminer/jce_cn_cpu_miner.windows.033k.zip"
 $Port = "320{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 1.5
