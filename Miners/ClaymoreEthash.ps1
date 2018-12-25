@@ -6,13 +6,13 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.9-claymoredual/claymoredual_v11.9.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0.7z"
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "203{0:d2}"
 $Cuda = "6.5"
 
 $DevFee = 1.0
-$DevFeeDual = 1.5
+$DevFeeDual = 1.0
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -105,7 +105,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		$Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
 		$Miner_Model = $_.Model
 		$Fee = 0
-		if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 2.1gb}) {$Fee=$DevFee}
+		if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 4gb}) {$Fee=$DevFee}
 
 		switch($_.Vendor) {
 			"NVIDIA" {$Arguments_Platform = "-platform 2"}
