@@ -1222,10 +1222,10 @@ function Start-SubProcessInConsole {
     try {
         $Process = Get-Process | Where-Object Id -EQ $JobOutput.ProcessId
         if ($Process) {
+            $ProcessId = $JobOutput.ProcessId
             $Process.Handle | Out-Null
             $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
             if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
-            $ProcessId = $JobOutput.ProcessId
         }
     } catch {
         Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
