@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10.7.0-bminer/bminer-lite-v10.7.0-31ee7bc-CUDA-9.2-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.0.0-bminer/bminer-lite-v11.0.0-097b627-CUDA-9.2-amd64.zip"
 $ManualURI = "https://bminer.me"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -22,6 +22,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "zhash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0} #" -nofee" #Zhash
     #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; DevFee = 1.3} #Ethash + Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; DevFee = 1.3} #Ethash + Decred
+    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "tensority"; Params = "-dual-intensity 2"; DevFee = 1.3} #Ethash + BTM
 )
 
 $Coins = [PSCustomObject]@{
