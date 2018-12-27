@@ -289,7 +289,7 @@ try {
     }
 
     if ($Version -le (Get-Version "3.9.1.3")) {
-        $AddAlgorithm += @("mtp")
+        $AddAlgorithm += @("mtp","cnturtle","cnwebchain")
     }
 
     if ($AddAlgorithm.Count -gt 0) {
