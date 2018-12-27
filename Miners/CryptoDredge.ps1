@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.0-cryptodredge/CryptoDredge_0.14.0_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.0-cryptodredge/CryptoDredge_0.15.0_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.0-cryptodredge/CryptoDredge_0.14.0_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.0-cryptodredge/CryptoDredge_0.15.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.0-cryptodredge/CryptoDredge_0.14.0_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.0-cryptodredge/CryptoDredge_0.15.0_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "Lyra2vc0banHash";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 4; Params = ""} #MTP
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
