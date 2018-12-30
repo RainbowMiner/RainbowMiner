@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\Equihash-MiniZ\miner.exe"
+$Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
