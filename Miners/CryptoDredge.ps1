@@ -48,7 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "Lyra2vc0banHash";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 5; Params = ""; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
@@ -122,7 +122,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Uri = $Uri
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
-                DevFee = $DevFee
+                DevFee = if ($_.DevFee -ne $null) {$_.DevFee} else {$DevFee}
                 ManualUri = $ManualUri
             }
         }
