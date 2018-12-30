@@ -2063,6 +2063,18 @@ function Get-Algorithm {
     }
 }
 
+function Get-EquihashCoinPers {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Coin = "",
+        [Parameter(Mandatory = $false)]
+        [String]$Default = "auto"
+    )
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}        
+    if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
+}
+
 function Get-Region {
     [CmdletBinding()]
     param(
@@ -2091,6 +2103,19 @@ function Get-Algorithms {
         if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
         else {$Global:GlobalAlgorithms.Keys | Sort-Object}
     }
+}
+
+function Get-EquihashCoins {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
+        [hashtable]$Global:GlobalEquihashCoins = @{}
+        (Get-Content "Data\equihashcoins.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+    }
+    if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
 
 function Get-Regions {
