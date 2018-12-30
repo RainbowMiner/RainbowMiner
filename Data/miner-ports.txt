@@ -24,6 +24,7 @@
 123	CcminerAlexis78x64
 124	CcminerX22i
 125	CcminerX21s
+126	CcminerMtp
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -60,6 +61,8 @@
 326	T-Rex085
 327	Ethminer17
 328	Phoenix35
+329	Gminer
+330	MiniZ
 
 400	Sgminer
 401	SgminerBitcore
