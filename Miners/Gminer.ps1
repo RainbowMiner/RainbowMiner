@@ -37,19 +37,6 @@ if ($InfoOnly) {
     return
 }
 
-$Coins = [PSCustomObject]@{
-    default     = "--pers auto"
-    AION        = "--pers AION0PoW"
-    ANON        = "--pers AnonyPoW"
-    BTG         = "--pers BgoldPoW"
-    BTCZ        = "--pers BitcoinZ"
-    GENX        = "--pers GENX_PoW"
-    SAFE        = "--pers Safecoin"
-    XSG         = "--pers sngemPoW"
-    ZEL         = "--pers ZelProof"
-    ZER         = "--pers ZERO_PoW"
-}
-
 if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
@@ -58,11 +45,6 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
-
-        $MinerCoin_Params = ""
-        if ($Pools.$Algorithm_Norm.CoinSymbol) {$MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinSymbol)"}
-        elseif ($Pools.$Algorithm_Norm.CoinName) {$MinerCoin_Params = $Coins."$($Pools.$Algorithm_Norm.CoinName)"}
-        else {$MinerCoin_Params = $Coins.default}
 
         $MinMemGB = $_.MinMemGB        
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
@@ -79,7 +61,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "--api $($Miner_Port) --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) $($MinerCoin_Params) --watchdog 0 $($_.Params)"
+                Arguments = "--api $($Miner_Port) --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User) --pass $($Pools.$Algorithm_Norm.Pass) --pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto") --watchdog 0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API = "Gminer"
                 Port = $Miner_Port
