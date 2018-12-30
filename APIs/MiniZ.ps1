@@ -7,26 +7,23 @@ class MiniZ : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = ""
+        $Request = '{"id":"1", "method":"getstat"}'
         $Response = ""
 
         $HashRate = [PSCustomObject]@{}
 
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = (Invoke-WebRequest "http://$($Server):$($this.Port)" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop).Content
-            $HashRate_Value = if (($Response -split 'Total')[1] -match "Sol/s[^\d\.]+([\d\.]+)") {[Double]$Matches[1]}
-            if ($HashRate_Value -eq $null) {Throw "Invalid response"}
+            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
-        $Global:ProgressPreference = $oldProgressPreference
 
         $HashRate_Name = [String]$this.Algorithm[0]
-        
+        $HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
+
         $HashRate_Value = [Int64]$HashRate_Value
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
