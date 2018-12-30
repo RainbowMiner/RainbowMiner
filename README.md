@@ -44,7 +44,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 1. Install PowerShell 6: [Download Installer for version 6.1.1](https://github.com/PowerShell/PowerShell/releases/download/v6.1.1/PowerShell-6.1.1-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
-3. Update GPU drivers: [Nvidia 417.35](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 18.12.2](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+3. Update GPU drivers: [Nvidia 417.35](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 18.12.3](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
@@ -818,7 +818,9 @@ Example:
           "Penalty": "10",
           "MinHashrate": "50GH",
           "MinWorkers": "300",
-          "MaxTimeToFind": "1.5h"
+          "MaxTimeToFind": "1.5h",
+          "MSIAprofile": 4,
+          "OCprofile": "Profile4"
         }
     }
 
@@ -827,6 +829,10 @@ This configuration would:
 - set a minimum X17 pool hashrate of 50 GH/s for a pool to be selected (units allowed: k=kilo, M=Mega, G=Giga, T=Tera, P=Peta)
 - set the mimimum pool workers mining X17 to 300 for a pool to be selected
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
+- set the MSI Afterburner overclocking profile to 4 (if MSIA is used)
+- set the overclocking profile to "Profile4" (if the RainbowMiner oc is used)
+- the overclocking profiles define the default for a specific algorithm
+- the OCprofile hierarchy: miners.config.txt over algorithms.config.txt over devices.config.txt
 
 
 ### Config\coins.config.txt
