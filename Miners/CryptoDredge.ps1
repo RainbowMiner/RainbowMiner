@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.1-cryptodredge/CryptoDredge_0.15.1_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.1-cryptodredge/CryptoDredge_0.15.1_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_9.2_windows.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.1-cryptodredge/CryptoDredge_0.15.1_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
