@@ -946,14 +946,16 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Bool]$IsWrapper = $false,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @()
     )
 
     if ($ShowMinerWindow) {        
-        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True -CPUAffinity $CPUAffinity}
-        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity}
+        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True -CPUAffinity $CPUAffinity -EnvVars $EnvVars}
+        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars}
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars
     }
 }
 
@@ -976,7 +978,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Bool]$ShowMinerWindow = $false,
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @()
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
@@ -994,7 +998,7 @@ function Start-SubProcessInBackground {
         if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
     }
 
-    $Job = Start-Job ([ScriptBlock]::Create($ScriptBlock))
+    $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
 
     $ProcessId = 0
     if ($Job) {
@@ -1038,14 +1042,18 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [String]$ProcessName = "",
         [Parameter(Mandatory = $false)]
-        [Int]$CPUAffinity = 0
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @()
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
     if ( $ProcessName -eq $ExecName ) { $ProcessName = "" }
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName {
-        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName)
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName, $EnvVars {
+        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName, $EnvVars)
+
+        $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
         $CurrentPwd = $pwd
 
@@ -2182,6 +2190,7 @@ class Miner {
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
+    [String[]]$EnvVars = @()
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
     [Bool]$Stopped = $false
     [Bool]$Donator = $false
@@ -2237,7 +2246,7 @@ class Miner {
             }
 
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper")
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper") -EnvVars $this.EnvVars
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
