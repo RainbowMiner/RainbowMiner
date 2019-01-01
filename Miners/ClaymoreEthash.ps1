@@ -164,6 +164,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						Uri         = $Uri
 						DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
 						ManualUri   = $ManualUri
+                        EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 					}
 				}
 			}

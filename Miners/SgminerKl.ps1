@@ -70,7 +70,8 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 Port       = $Miner_Port
                 URI        = $Uri
                 DevFee     = $DevFee
-                ManualUri = $ManualUri
+                ManualUri  = $ManualUri
+                EnvVars    = @("GPU_FORCE_64BIT_PTR=0")
             }
         }
     }

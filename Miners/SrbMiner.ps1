@@ -154,6 +154,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 Uri         = $Uri
                 DevFee      = $DevFee
                 ManualUri   = $ManualUri
+                EnvVars     = @("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")
             }
         }
     }
