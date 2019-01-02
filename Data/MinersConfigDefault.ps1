@@ -79,12 +79,19 @@
             [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
+        "CcminerSupr2" = [PSCustomObject[]]@(       
+            [PSCustomObject]@{MainAlgorithm = "groestl"; SecondaryAlgorithm = ""; Params = "-i 21"; OCprofile = ""; MSIAprofile = "4"} 
+            [PSCustomObject]@{MainAlgorithm = "x16r"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16rt"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+            [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
+        )
         "CcminerTpruvot" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "lyra2z"; SecondaryAlgorithm = ""; Params = "-i 21"; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x13"; SecondaryAlgorithm = ""; Params = "-i 20"; OCprofile = ""; MSIAprofile = ""}
         )
         "CcminerTpruvotx64" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "allium"; SecondaryAlgorithm = ""; Params = "-i 22.125"; OCprofile = ""; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "groestl"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "hmq1725"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
             [PSCustomObject]@{MainAlgorithm = "keccak"; SecondaryAlgorithm = ""; Params = "-i 29"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "keccakc"; SecondaryAlgorithm = ""; Params = "-i 29"; OCprofile = ""; MSIAprofile = ""}
