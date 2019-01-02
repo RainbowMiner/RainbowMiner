@@ -2187,6 +2187,7 @@ class Miner {
     $Penalty = 0
     $MinSamples = 1
     $ZeroRounds = 0
+    $Rounds = 0
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2196,6 +2197,7 @@ class Miner {
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
     [Bool]$IsExclusiveMiner = $false
+    [Bool]$IsRunningFirstRounds = $false
     hidden [System.Management.Automation.Job]$Process = $null
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
@@ -2229,6 +2231,7 @@ class Miner {
 
         $this.New = $true
         $this.Activated++
+        $this.Rounds = 0
 
         if (-not $this.Process) {
             if ($this.BaseAlgorithm -icontains "Ethash" -and $this.EthPillEnable -ne "disable") {
@@ -2302,6 +2305,7 @@ class Miner {
     EndOfRoundCleanup() {
         if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
+        $this.Rounds++
     }
 
     [DateTime]GetActiveStart() {
