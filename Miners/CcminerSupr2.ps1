@@ -5,20 +5,23 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-CcminerSupr\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/git11-spmod/spmodgit11.7z"
-$ManualUri = "https://github.com/sp-hash/suprminer/releases"
-$Port = "116{0:d2}"
+$Path = ".\Bin\NVIDIA-CcminerSupr2\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0-ccminersupr/suprminer-2.0.7z"
+$ManualUri = "https://github.com/ocminer/suprminer/releases"
+$Port = "127{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 1; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
-    [PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S PigeonCoin
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"; ExtendInterval = 2} #x17 (new in git11)
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
+    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = "-N 1"} #Groestl
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 2; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
+    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = "-N 10"; ExtendInterval = 2; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16RT Veil
+    #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S PigeonCoin    
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #x17
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
