@@ -5,10 +5,10 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-CcminerSupr2\ccminer.exe"
+$Path = ".\Bin\NVIDIA-CcminerX16r\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0-ccminersupr/suprminer-2.0.7z"
 $ManualUri = "https://github.com/ocminer/suprminer/releases"
-$Port = "127{0:d2}"
+$Port = "116{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.2"
 
@@ -16,7 +16,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
-    [PSCustomObject]@{MainAlgorithm = "groestl"; Params = "-N 1"} #Groestl
+    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = "-N 1"} #Groestl
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 2; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
     [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = "-N 10"; ExtendInterval = 2; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16RT Veil
