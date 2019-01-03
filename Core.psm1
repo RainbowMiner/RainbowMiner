@@ -1096,6 +1096,7 @@ function Invoke-Core {
         if (-not $Miner.MinSamples) {$Miner | Add-Member MinSamples 3 -Force} #min. 10 seconds, 3 samples needed
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
+        if ($Miner.EnvVars -eq $null) {$Miner | Add-Member EnvVars @() -Force}
 
         $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
         $Miner | Add-Member IsExclusiveMiner   (($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive | Measure-Object).Count -gt 0) -Force
