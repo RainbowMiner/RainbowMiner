@@ -26,6 +26,7 @@ class Excavator : Miner {
 
         $this.New = $true
         $this.Activated++
+        $this.Rounds = 0
 
         if ($this.Status -ne [MinerStatus]::Idle) {
             return
@@ -485,6 +486,7 @@ class Excavator : Miner {
 
     EndOfRoundCleanup() {
         if ([Excavator]::Service.HasMoreData) {[Excavator]::Service | Receive-Job > $null}
+        $this.Rounds++
     }
 
     [DateTime]GetActiveLast() {
