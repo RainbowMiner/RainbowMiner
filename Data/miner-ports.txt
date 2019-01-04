@@ -74,10 +74,11 @@
 407	WildRig
 408	ZjazzAmd
 
-500	CpuminerJayddeeSse2
+500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
 502	CpuminerJayddeeAvx2
 503	CpuminerJayddeeAvx2sha
+504	CpuminerOptBF
 510	CpuminerTpruvotAvx2
 511	CpuminerTpruvotCore2
 512	CpuminerTpruvotCorei7
