@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.0b-wildrig/wildrig-multi-0.14.0-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.0.12-wildrig/wildrig-multi-windows-0.15.0.12-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -35,6 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = @("--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128")} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";     Params = @("--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 21x0",   "--opencl-threads 2 --opencl-launch 21x0")} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x16r";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";        Params = @("--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X17
     [PSCustomObject]@{MainAlgorithm = "x18";        Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 20x0",   "--opencl-threads 2 --opencl-launch 20x0")} #X18
