@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-cryptodredge/CryptoDredge_0.16.0_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-cryptodredge/CryptoDredge_0.16.0_cuda_9.2_windows.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2-cryptodredge/CryptoDredge_0.15.2_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-cryptodredge/CryptoDredge_0.16.0_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
@@ -48,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "Lyra2vc0banHash";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";   MinMemGb = 1; Params = ""} #Lyra2zz
     [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
     [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
@@ -59,6 +60,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
     [PSCustomObject]@{MainAlgorithm = "x21s";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
