@@ -297,7 +297,7 @@ try {
     }
 
     if ($Version -le (Get-Version "3.9.1.8")) {
-        $AddAlgorithm += @("beam")
+        $AddAlgorithm += @("beam","lyra2zz")
     }
 
     if ($AddAlgorithm.Count -gt 0) {
