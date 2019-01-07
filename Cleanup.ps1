@@ -304,6 +304,19 @@ try {
         $AddAlgorithm += @("sha256q")
     }
 
+    if ($Version -le (Get-Version "3.9.2.0")) {
+        if (Test-Path "Bin\Cryptonight-Fireice250") {
+            Get-ChildItem "Bin\Cryptonight-Fireice250\*.txt" | Foreach-Object {
+                if ($_.BaseName -match "^(amd|nvidia)_.+?(-GPU.+)$") {                    
+                    if ((Get-Content $_) -match "platform_index") {
+                        Remove-Item $_.FullName -Force -ErrorAction Ignore
+                        $ChangesTotal++
+                    }
+                }
+            }
+        }
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
