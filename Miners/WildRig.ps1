@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.0.12-wildrig/wildrig-multi-windows-0.15.0.12-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.1-wildrig/wildrig-multi-windows-0.15.1-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -30,6 +30,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = @("--opencl-threads 1 --opencl-launch 21x0",   "--opencl-threads 1 --opencl-launch 23x0",   "--opencl-threads 1 --opencl-launch 23x0")} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = @("--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 19x0",   "--opencl-threads 3 --opencl-launch 19x0")} #PHI
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = @("--opencl-threads 3 --opencl-launch 17x0",   "--opencl-threads 3 --opencl-launch 17x128", "--opencl-threads 3 --opencl-launch 18x128")} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = @("--opencl-threads 1 --opencl-launch 29x0",   "--opencl-threads 1 --opencl-launch 29x0",   "--opencl-threads 1 --opencl-launch 29x0")} #SHA256q
+    [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = @("--opencl-threads 1 --opencl-launch 29x0",   "--opencl-threads 1 --opencl-launch 29x0",   "--opencl-threads 1 --opencl-launch 29x0")} #SHA256t
     [PSCustomObject]@{MainAlgorithm = "skunkhash";  Params = @("--opencl-threads 3 --opencl-launch 17x0",   "--opencl-threads 3 --opencl-launch 18x0",   "--opencl-threads 3 --opencl-launch 18x0")} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = @("--opencl-threads 2 --opencl-launch 17x0",   "--opencl-threads 2 --opencl-launch 18x0",   "--opencl-threads 2 --opencl-launch 18x0")} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = @("--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128", "--opencl-threads 2 --opencl-launch 17x128")} #Timetravel
