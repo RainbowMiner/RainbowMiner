@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Haven 2 threads
     [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 2 threads
     [PSCustomObject]@{MainAlgorithm = "hycon"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Hycon 2 thread
-    [PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
+    #[PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "mox"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
