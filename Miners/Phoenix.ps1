@@ -12,7 +12,7 @@ $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "6.5"
 
-if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Devices -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @()} #Ethash2GB
