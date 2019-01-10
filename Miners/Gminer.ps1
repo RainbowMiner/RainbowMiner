@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.17-gminer/gminer_1_17_minimal_windows64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.18-gminer/gminer_1_18_minimal_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
