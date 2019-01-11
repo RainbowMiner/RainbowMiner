@@ -12,11 +12,11 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.2-ethminer/ethminer-0.17.0-rc.2-cuda10.0-windows-amd64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-ethminer/ethminer-0.17.0-cuda10.0-windows-amd64.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-rc.2-ethminer/ethminer-0.17.0-rc.2-cuda9.0-windows-amd64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-ethminer/ethminer-0.17.0-cuda9.0-windows-amd64.zip"
         Cuda = "9.0"
     }
 )
@@ -38,7 +38,7 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
