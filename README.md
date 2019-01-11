@@ -209,15 +209,16 @@ The different Equihash algorithms are distinguished using the following Paramete
 The n and k values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
 
 RainbowMiner uses the following nameing convention:
-- Equihash16x5 = Equihash (96, 5)	
+- Equihash16x5 = Equihash (96, 5)
 - Equihash20x9 = Equihash (200, 9)
-- Equihash21x9 = Equihash (210, 9)	
-- Equihash24x5 = Equihash (144,5)	
-- Equihash24x7 = Equihash (192,7)
+- Equihash21x9 = Equihash (210, 9)
+- Equihash24x5 = Equihash (144,5), e.g. BTG
+- Equihash25x5 = Equihash (150,5), e.g. BEAM
+- Equihash24x7 = Equihash (192,7), e.g. ZEROcoin
 
 The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
 
-RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5
+RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. beam will be represented by Equihash25x5
 
 
 ## OVERCLOCKING OVERVIEW
