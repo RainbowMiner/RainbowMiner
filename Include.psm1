@@ -3160,16 +3160,12 @@ function Set-AlgorithmsConfigDefault {
             $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
-                if (-not $Preset.$Algorithm) {
-                    if ($Setup.$Algorithm) {
-                        $Preset | Add-Member $Algorithm $Setup.$Algorithm
-                    } else {
-                        $Preset | Add-Member $Algorithm ([PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile=0;OCprofile=""})
-                    }
-                }
+                if (-not $Preset.$Algorithm) {$Preset | Add-Member $Algorithm $(if ($Setup.$Algorithm) {$Setup.$Algorithm} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Algorithm.$SetupName -eq $null){$Preset.$Algorithm | Add-Member $SetupName $Default.$SetupName -Force}}
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -3198,19 +3194,12 @@ function Set-CoinsConfigDefault {
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
-                if (-not $Preset.$Coin) {
-                    if ($Setup.$Coin) {
-                        $Preset | Add-Member $Coin $Setup.$Coin
-                    } else {
-                        $Preset | Add-Member $Coin $Default
-                    }
-                }
-            }
-            foreach ($Coin in @($Preset.PSObject.Properties.Name | Select-Object)) {
+                if (-not $Preset.$Coin) {$Preset | Add-Member $Coin $(if ($Setup.$Coin) {$Setup.$Coin} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName $Default.$SetupName -Force}}
             }
-
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -3243,7 +3232,9 @@ function Set-DevicesConfigDefault {
                 if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceModel) {$Setup.$DeviceModel} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName $Default.$SetupName -Force}}
             }
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -3323,7 +3314,9 @@ function Set-OCProfilesConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
