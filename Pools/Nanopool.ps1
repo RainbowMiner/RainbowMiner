@@ -27,6 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC"; port = 6666;  fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
     [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightV7"; symbol = "XMR"; port = 14444; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
     [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN"; port = 13333; fee = 2; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN"; port = 12222; fee = 1; divisor = 1;       ssl = $false; protocol = "stratum+tcp"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
