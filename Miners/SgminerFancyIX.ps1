@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5gp2-fancyIX/sgminer-phi2-fancyIX-win64-beta5gp2.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5gp3-fancyIX/sgminer-phi2-fancyIX-win64-beta5gp3.zip"
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5028462.0"
 $DevFee = 0.0
@@ -17,6 +17,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
     [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "--gpu-threads 1 --worksize 256 -I 24"}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";  Params = "--gpu-threads 1 --worksize 256 -I 22"}
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz"; Params = "--gpu-threads 1 --worksize 256 -I 22"}
     [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"}
     [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2}
 )
