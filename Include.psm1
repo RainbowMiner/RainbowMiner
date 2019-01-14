@@ -82,7 +82,7 @@ function Confirm-Cuda {
     $max = [Math]::min($ver1.Count,$ver2.Count)
 
     for($i=0;$i -lt $max;$i++) {
-        if ([int]$ver1[$i] -lt [int]$ver2[$i]) {if ($Warning -ne "") {Write-Log -Level Warn "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
+        if ([int]$ver1[$i] -lt [int]$ver2[$i]) {if ($Warning -ne "") {Write-Log -Level Info "$($Warning) requires CUDA version $($RequiredVersion) or above (installed version is $($ActualVersion)). Please update your Nvidia drivers."};return $false}
         if ([int]$ver1[$i] -gt [int]$ver2[$i]) {return $true}
     }
     $true
