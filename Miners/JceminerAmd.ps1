@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Jceminer\jce_cn_gpu_miner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33b15-jceminer/jce_cn_gpu_miner.033b15.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33b16-jceminer/jce_cn_gpu_miner.033b16.zip"
 $Port = "321{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 0.9
@@ -22,6 +22,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; MinMemGb = 2; Params = "--variation 10"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Threads = 1; MinMemGb = 2; Params = "--variation 8"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 2; Params = "--variation 7"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtlv8";      Threads = 1; MinMemGb = 2; Params = "--variation 21"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; MinMemGb = 1; Params = "--variation 2"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; MinMemGb = 1; Params = "--variation 4"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; MinMemGb = 1; Params = "--variation 6"}
@@ -54,6 +55,7 @@ $Commands = [PSCustomObject[]]@(
 #N=18 Cryptonight-Swap
 #N=19 Cryptolight-Uplexa
 #N=20 Cryptolight-Turtle v2
+#N=21 Cryptonight-Stellite v8
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
