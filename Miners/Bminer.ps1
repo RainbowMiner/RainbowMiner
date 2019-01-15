@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v11.4.1-bminer/bminer-lite-v11.4.1-c19297e-CUDA-9.2-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0.1-bminer/bminer-lite-v12.0.1-eab048c-CUDA-9.2-amd64.zip"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -17,6 +17,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeternity"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Aeternity
     [PSCustomObject]@{MainAlgorithm = "beam"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
     [PSCustomObject]@{MainAlgorithm = "equihash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
     [PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
