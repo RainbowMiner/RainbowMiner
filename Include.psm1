@@ -1507,14 +1507,15 @@ function Get-Device {
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
                 $InstanceId  = ''
+                $SubId = ''
 
                 if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
-                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId}
-                    if ($DeviceName -eq "Radeon RX Vega" -or $DeviceName -eq "gfx900") {
+                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId}
+                    if ($SubId -eq "687F" -or $DeviceName -eq "Radeon RX Vega" -or $DeviceName -eq "gfx900") {
                         if ($Device_OpenCL.MaxComputeUnits -eq 56) {$DeviceName = "Radeon Vega 56"}
                         elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$DeviceName = "Radeon Vega 64"}
                     }
