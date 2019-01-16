@@ -38,7 +38,6 @@ catch {
     Write-Log -Level Warn "Pool currencies API ($Name) has failed. "
 }
 
-
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
