@@ -64,6 +64,7 @@
 328	Phoenix35
 329	Gminer
 330	MiniZ
+331	ProgPOWNvidia
 
 400	Sgminer
 401	SgminerBitcore
@@ -74,6 +75,7 @@
 406	Nsgminer
 407	WildRig
 408	ZjazzAmd
+409	ProgPOWAmd
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
