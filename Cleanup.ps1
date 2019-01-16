@@ -321,6 +321,10 @@ try {
         $AddAlgorithm += @("cuckaroo29")
     }
 
+    if ($Version -le (Get-Version "3.9.2.7")) {
+        $AddAlgorithm += @("progpow")
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
