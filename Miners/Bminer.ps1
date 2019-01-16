@@ -15,17 +15,17 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "aeternity"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Aeternity
-    [PSCustomObject]@{MainAlgorithm = "beam"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
-    [PSCustomObject]@{MainAlgorithm = "equihash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
-    [PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
-    [PSCustomObject]@{MainAlgorithm = "tensority"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Bytom
-    #[PSCustomObject]@{MainAlgorithm = "zhash"; SecondaryAlgorithm = ""; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + Decred
-    [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "tensority"; Params = "-dual-intensity 2"; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + BTM
+    [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Aeternity
+    [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
+    [PSCustomObject]@{MainAlgorithm = "equihash";     SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
+    [PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = ""; MinMemGb = 4; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
+    [PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Bytom
+    #[PSCustomObject]@{MainAlgorithm = "zhash";        SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake2s";  MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake14r"; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + Decred
+    [PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; MinMemGb = 4; Params = "-dual-intensity 2"; DevFee = 1.3; Vendor = @("NVIDIA")} #Ethash + BTM
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -48,20 +48,24 @@ if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Sessio
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Miner_Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
-        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-        $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+        $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
 
-        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+            $MinMemGb = $_.MinMemGb
+
+            $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)})
+
             $MainAlgorithm = $_.MainAlgorithm
             $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
 
             if ($Miner_Vendor -eq "AMD") {$DeviceIDsAll = "amd:$($DeviceIDsAll -replace ',',',amd:')"}
 
             if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device) {
+                $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+
+                $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
                 $SecondAlgorithm = $_.SecondaryAlgorithm
                 if ($SecondAlgorithm -ne '') {
