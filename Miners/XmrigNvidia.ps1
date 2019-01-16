@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.4-xmrignvidia/xmrig-nvidia-2.8.4-cuda-9_2-win64-rbm.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.1-xmrignvidia/xmrig-nvidia-2.9.1-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"
 $DevFee = 0.0
@@ -17,6 +17,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2"; Params = "--bfactor=12"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/half"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
