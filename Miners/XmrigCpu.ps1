@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.2-xmrigcpu/xmrig-2.9.2-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.3-xmrig/xmrig-2.9.3-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
 $DevFee = 0.0
