@@ -29,6 +29,7 @@
           <th data-field="tPrimarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
           <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select">2nd Algo</th>
           <th data-field="tSecondarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
+          <th data-field="tDevFee" data-align="right" data-sortable="true">Fee</th>
       </tr>
   </thead>
 </table>
@@ -55,8 +56,10 @@
             if (Array.isArray(item.Speed)) {
                 item.tPrimarySpeed = item.Speed[0];
                 item.tSecondarySpeed = item.Speed[1];
+                item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-') + '/' + (parseFloat(item.DevFee[item.Algorithm[1]]) ? parseFloat(item.DevFee[item.Algorithm[1]]) + ' %' : '-');
             } else {
                 item.tPrimarySpeed = item.Speed;
+                item.tDevFee = parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-';
             }
 
             // Format the device(s)
