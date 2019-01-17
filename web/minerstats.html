@@ -62,6 +62,7 @@
                   <tr>
                       <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                       <th data-field="Algorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
+                      <th data-field="tSpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
                       <th data-field="DeviceModel" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                       <th data-field="tButton" data-align="center">Bench</th>
@@ -128,7 +129,8 @@
             item.tStatus = 'Ok';
             if (item.Benchmarking) item.tStatus = 'Benchmarking';
             else if (item.NeedsBenchmark) item.tStatus = 'Needs Benchmark'
-            else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'            
+            else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
+            item.tSpeed = item.Speed[0];
         });
         return data;
     }
