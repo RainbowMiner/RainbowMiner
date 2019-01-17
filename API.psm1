@@ -284,8 +284,10 @@
                         }
                         [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
                         [String]$SecondAlgo = ''
+                        $Speed = @($_.HashRates.$Algo)
                         if (($_.HashRates.PSObject.Properties.Name | Measure-Object).Count -gt 1) {
                             $SecondAlgo = $_.HashRates.PSObject.Properties.Name | Select -Index 1
+                            $Speed += $_.HashRates.$SecondAlgo
                         }
                         
                         $Miners_Key = "$($_.Name)_$($Algo -replace '\-.*$')"
@@ -299,7 +301,8 @@
                                     BaseName = $_.BaseName
                                     Name = $_.Name
                                     Algorithm = $Algo
-                                    SecondaryAlgorithm = $SecondAlgo                                
+                                    SecondaryAlgorithm = $SecondAlgo
+                                    Speed = $Speed                                    
                                     DeviceModel = $_.DeviceModel
                                     Benchmarking = -not $Miner_Path
                                     NeedsBenchmark = $Miner_NeedsBenchmark
