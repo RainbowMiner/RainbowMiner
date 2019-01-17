@@ -1515,9 +1515,9 @@ function Get-Device {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
                     $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId}
-                    if ($SubId -eq "687F" -or $DeviceName -eq "Radeon RX Vega" -or $DeviceName -eq "gfx900") {
-                        if ($Device_OpenCL.MaxComputeUnits -eq 56) {$DeviceName = "Radeon Vega 56"}
-                        elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$DeviceName = "Radeon Vega 64"}
+                    if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
+                        if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
+                        elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
                     }
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
