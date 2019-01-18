@@ -26,6 +26,7 @@
 125	CcminerX21s
 126	CcminerMtp
 127	CcminerThe1
+128	CcminerDyn
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -76,6 +77,7 @@
 407	WildRig
 408	ZjazzAmd
 409	ProgPOWAmd
+410	SgminerDyn
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
