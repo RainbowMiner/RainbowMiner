@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-Dyn\ccminer.exe"
+$Path = ".\Bin\NVIDIA-CcminerDyn\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ccminerdyn/ccminer-dyn-1.0.0.7z"
 $ManualUri = "https://github.com/duality-solutions/Dynamic-GPU-Miner-Nvidia/releases"
 $Port = "128{0:d2}"
