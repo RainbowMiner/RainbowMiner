@@ -5,7 +5,7 @@ param(
     [alias("WorkerName")]
     [String]$Worker,
     [alias("UserName")]
-    [String]$User, 
+    [String]$User,
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_10"

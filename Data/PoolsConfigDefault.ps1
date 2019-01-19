@@ -32,7 +32,12 @@
             Currencies=@("XWP")
         }
         "GosCx" = [PSCustomObject]@{
-            Currencies=@("RVN")            
+            Currencies=@("RVN")
+        }
+        "Grinmint" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Password="x"}
+            SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
+            Currencies=@("GRIN")
         }
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
