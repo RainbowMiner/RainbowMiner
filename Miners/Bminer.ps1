@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Aeternity
     [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; MinMemGb = 8; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2} #" -nofee" #Beam
-    [PSCustomObject]@{MainAlgorithm = "equihash";     SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
+    #[PSCustomObject]@{MainAlgorithm = "equihash";     SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
     [PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = ""; MinMemGb = 4; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
     [PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Bytom
