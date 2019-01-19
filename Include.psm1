@@ -110,22 +110,40 @@ function Get-Balance {
 
     if (-not $Balances) {return}
 
-    #Get exchgange rates for all payout currencies
-    $CurrenciesWithBalances = @(@($Balances.currency) | Select-Object -Unique | Sort-Object)
-    $CurrenciesToExchange = @(@("BTC") + @($Config.Currency) | Select-Object -Unique | Sort-Object)
-    try {
-        $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($CurrenciesWithBalances -join ",")&tsyms=$($CurrenciesToExchange -join ",")&extraParams=https://github.com/rainbowminer/RainbowMiner"
+    #Get exchange rates for all payout currencies
+    $CurrenciesWithBalances = @()
+    $CurrenciesToExchange   = @("BTC")
+
+    $RatesAPI = [PSCustomObject]@{}
+    
+    $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesWithBalances += $_}
+    $Config.Currency | Where-Object {$_ -ne "BTC"} | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange += $_}
+
+    $CurrenciesWithBalances | Foreach-Object {
+        $Currency = $_
+        if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
+            $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
+            $CurrenciesToExchange | Foreach-Object {
+                $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
+            }
+        }
     }
-    catch {
-        Write-Log -Level Warn "Cryptocompare API for $($CurrenciesWithBalances -join ",") to $($CurrenciesToExchange -join ",") has failed. "
-        if ($Error.Count){$Error.RemoveAt(0)}
-        $RatesAPI = [PSCustomObject]@{}
-        $CurrenciesWithBalances | Foreach-Object {
-            $Currency = $_
-            if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
-                $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-                $CurrenciesToExchange | Foreach-Object {
-                    $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
+
+    if ($false) {
+        try {
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($CurrenciesWithBalances -join ",")&tsyms=$($CurrenciesToExchange -join ",")&extraParams=https://github.com/rainbowminer/RainbowMiner"
+        }
+        catch {
+            Write-Log -Level Warn "Cryptocompare API for $($CurrenciesWithBalances -join ",") to $($CurrenciesToExchange -join ",") has failed. "
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $RatesAPI = [PSCustomObject]@{}
+            $CurrenciesWithBalances | Foreach-Object {
+                $Currency = $_
+                if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
+                    $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
+                    $CurrenciesToExchange | Foreach-Object {
+                        $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
+                    }
                 }
             }
         }
@@ -140,9 +158,9 @@ function Get-Balance {
     if (Test-Path ".\Data\worldcurrencies.json") {$WorldCurrencies = Get-Content ".\Data\worldcurrencies.json" | ConvertFrom-Json} else {$WorldCurrencies = @("USD","EUR","GBP")}
 
     [hashtable]$Digits = @{}
-    @($CurrenciesWithBalances)+@($Config.Currency) | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
+    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
 
-    $CurrenciesWithBalances | Sort-Object | ForEach-Object {
+    $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
         $Balances | Where-Object Currency -eq $Currency | Foreach-Object {$_ | Add-Member "Balance ($Currency)" $_.Total -Force}
         if (($Balances."Balance ($Currency)" | Measure-Object -Sum).sum) {$Totals | Add-Member "Balance ($Currency)" ($Balances."Balance ($Currency)" | Measure-Object -Sum).sum -Force}
@@ -215,7 +233,14 @@ function Get-CoinSymbol {
 
 function Get-Ticker {
     [CmdletBinding()]
-    param($Symbol, $Convert)
+    param(
+        [Parameter(Mandatory = $true)]
+        $Symbol,
+        [Parameter(Mandatory = $false)]
+        $Convert = "BTC",
+        [Parameter(Mandatory = $false)]
+        $Jobkey = $null
+    )
 
     if (-not $Convert) {$Convert="BTC"}
     $Convert = $Convert.ToUpper()
@@ -225,14 +250,14 @@ function Get-Ticker {
     try {
         $Symbol = ($Symbol -join ',').ToUpper()
         if ($Symbol -match ',') {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner"
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Warn "Symbols $($Symbol) not found on Cryptocompare"
             } else {
                 $RatesAPI
             }
         } else {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner"
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Warn "Symbol $($Symbol) not found on Cryptocompare"
             } else {
@@ -3669,9 +3694,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
-        [switch]$noquickstart
+        [switch]$noquickstart,
+    [Parameter(Mandatory = $False)]
+        [string]$Jobkey = $null
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey
 }
 
 function Invoke-WebRequestAsync {
@@ -3686,6 +3713,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$retrywait = 250,
     [Parameter(Mandatory = $False)]
+        [string]$Jobkey = $null,
+    [Parameter(Mandatory = $False)]
         [string]$tag = "",
     [Parameter(Mandatory = $False)]
         [int]$delay = 0,
@@ -3696,7 +3725,7 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey
 }
 
 function Invoke-GetUrlAsync {
@@ -3738,6 +3767,7 @@ Param(
     if (-not $url -and -not $Jobkey) {return}
     
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
+    elseif ($url -and $AsyncLoader.Jobs.$Jobkey -and $AsyncLoader.Jobs.$Jobkey.Url -ne $url) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url}
 
     if ($cycletime -le 0) {$cycletime = $AsyncLoader.Interval}
 
@@ -3771,13 +3801,17 @@ Param(
                         if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Sleep -Milliseconds $delay}
                     }
                 }
-                if (-not $Quickstart) {$Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout}
+                if (-not $Quickstart) {
+                    #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
+                    $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout                    
+                }
                 if (-not $Request) {throw "Empty request"}
                 $AsyncLoader.Jobs.$Jobkey.Success++
                 $AsyncLoader.Jobs.$Jobkey.Prefail=0                
             }
             catch {
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
+                #Write-Log -Level Info "GetUrl Failed $RequestError"
             }
             finally {
                 $Error.Clear()

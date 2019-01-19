@@ -651,19 +651,18 @@ function Invoke-Core {
     try {
         Write-Log "Updating exchange rates from Coinbase. "
         [hashtable]$NewRates = @{}
-        Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
+        Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         if (-not $NewRates.Count) {
             Write-Log -Level Warn "Coinbase is down, using fallback. "
             if (-not $Session.Rates.Count) {Invoke-GetUrl "https://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}}
         }
-        if ($NewRates.Count) {
-            $Session.Config.Currency | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
-            $MissingCurrencies = @($Session.Config.Currency | Where-Object {-not $NewRates.ContainsKey($_)})
-            if ($MissingCurrencies.Count -gt 0) {
-                if ($MissingCurrenciesTicker = Get-Ticker -Symbol $MissingCurrencies) {
-                    Write-Log "Updating missing currencies ($($MissingCurrencies -join ",")) "
-                    $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(8-[math]::log($v,10))));$Session.Rates[$_] = [Double]$NewRates.$_}                
-                }
+        $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
+        $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
+        $MissingCurrencies = @($AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)})
+        if ($MissingCurrencies.Count -gt 0) {
+            if ($MissingCurrenciesTicker = Get-Ticker $MissingCurrencies -Jobkey "globalticker") {
+                Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
+                $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = [Double]$NewRates.$_}
             }
         }
     }
@@ -1660,7 +1659,7 @@ function Invoke-Core {
     }
 
     #Reduce Memory
-    @("BalancesData","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
+    @("BalancesData","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
