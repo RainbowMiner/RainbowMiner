@@ -1,6 +1,7 @@
 ﻿
 [PSCustomObject]@{
         "Bminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; OCprofile = ""; MSIAprofile = "5"}
