@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0b-phoenix/PhoenixMiner_4.0b_Windows.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.1c-phoenix/PhoenixMiner_4.1c_Windows.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
