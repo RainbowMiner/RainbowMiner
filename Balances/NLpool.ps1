@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $PoolCoins_Request = [PSCustomObject]@{}
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/currencies" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/currencies" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
