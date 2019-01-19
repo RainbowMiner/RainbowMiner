@@ -658,12 +658,10 @@ function Invoke-Core {
         }
         $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
         $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
-        $MissingCurrencies = @($AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)})
-        if ($MissingCurrencies.Count -gt 0) {
-            if ($MissingCurrenciesTicker = Get-Ticker $MissingCurrencies -Jobkey "globalticker") {
-                Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
-                $MissingCurrenciesTicker.PSObject.Properties.Name | Foreach-Object {$v = $MissingCurrenciesTicker.$_.BTC;if ($v){$v=1/[double]$v}else{$v=0};$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = [Double]$NewRates.$_}
-            }
+        $MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}
+        if ($MissingCurrenciesTicker = Get-TickerGlobal $MissingCurrencies) {
+            Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
+            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_)} | Foreach-Object {$v = [double]$MissingCurrenciesTicker.$_;$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
         }
     }
     catch {
@@ -712,9 +710,9 @@ function Invoke-Core {
         } else {
             Write-Log "Updating pool balances. "
         }
-        $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -NewRates $NewRates -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
+        $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
-        else {$API.Balances = $BalancesData.Balances | ConvertTo-Json -Depth 10}
+        else {$API.Balances = $BalancesData | ConvertTo-Json -Depth 10}
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
@@ -1594,20 +1592,20 @@ function Invoke-Core {
     }
 
     #Display pool balances, formatting it to show all the user specified currencies
-    if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Balances.Count -gt 1) {
+    if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Count -gt 1) {
         $ColumnMark = if ($Session.EnableColors) {"$([char]27)[93m{value}$([char]27)[0m"} else {"{value}"}
         $NextBalances = $Session.Config.BalanceUpdateMinutes-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
         $Columns = @()
         $ColumnFormat = [Array]@{Name = "Name"; Expression = "Name"}
-        if (($BalancesData.Balances.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
+        if (($BalancesData.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
             $ColumnFormat += @{Name = "Sym"; Expression = {if ($_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}
             $ColumnFormat += @{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}            
         }
-        $Columns += $BalancesData.Balances | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
+        $Columns += $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
         $ColumnFormat += $Columns | Foreach-Object {@{Name = "$($_ -replace "Value in\s+")"; Expression = "$_"; Align = "right"}}
-        $BalancesData.Balances | Format-Table -Wrap -Property $ColumnFormat
+        $BalancesData | Format-Table -Wrap -Property $ColumnFormat
         Remove-Variable "Columns" -Force
         Remove-Variable "ColumnFormat" -Force
         Remove-Variable "BalancesData" -Force

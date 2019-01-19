@@ -112,19 +112,27 @@ function Get-Balance {
 
     #Get exchange rates for all payout currencies
     $CurrenciesWithBalances = @()
-    $CurrenciesToExchange   = @("BTC")
+    $CurrenciesToExchange   = @()
+    $CurrenciesMissing = @()
 
     $RatesAPI = [PSCustomObject]@{}
     
     $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesWithBalances += $_}
-    $Config.Currency | Where-Object {$_ -ne "BTC"} | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange += $_}
+    @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange += $_}
+    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Session.Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing += $_}
+
+    if ($CurrenciesMissing.Count) {
+        if ($MissingCurrenciesTicker = Get-TickerGlobal $CurrenciesMissing) {
+            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {$CurrenciesMissing -icontains $_} | Foreach-Object {$Session.Rates[$_]=[double]$MissingCurrenciesTicker.$_}
+        }
+    }
 
     $CurrenciesWithBalances | Foreach-Object {
         $Currency = $_
-        if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
+        if ($Session.Rates.ContainsKey($Currency) -and $Session.Rates[$Currency]) {
             $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-            $CurrenciesToExchange | Foreach-Object {
-                $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
+            $CurrenciesToExchange | Where-Object {$Session.Rates.ContainsKey($_)} | Foreach-Object {
+                $RatesAPI.$Currency | Add-Member $_ ($Session.Rates.$_/$Session.Rates.$Currency)
             }
         }
     }
@@ -202,10 +210,7 @@ function Get-Balance {
         $Balance.PSObject.Properties.Name | Where-Object {$_ -match "^(Value in |Balance \()(\w+)"} | Foreach-Object {if ($Balance.$_ -eq "" -or $Balance.$_ -eq $null) {$Balance.$_=0};$Balance.$_ = "{0:N$($n = if ($Balance.$_ -ge 10 -and $Digits[$Matches[2]] -eq 8) {[Math]::Min([Math]::Ceiling([Math]::Log10($Balance.$_)),8)} else {1};$Digits[$Matches[2]]-$n+1)}" -f $Balance.$_}
     }
     
-    [PSCustomObject]@{
-        Balances = $Balances
-        Rates    = $RatesAPI
-    }
+    $Balances
 }
 
 function Get-CoinSymbol {
@@ -231,6 +236,32 @@ function Get-CoinSymbol {
     if (-not $Silent) {$Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
 }
 
+function Get-TickerGlobal {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $Symbols
+    )
+
+    if (-not (Test-Path Variable:Global:GlobalGetTicker)) {$Global:GlobalGetTicker = @()}
+    $Symbols | Where-Object {$_ -and $Global:GlobalGetTicker -inotcontains $_} | Foreach-Object {$Global:GlobalGetTicker += $_.ToUpper()}
+    if ($Global:GlobalGetTicker.Count -gt 0) {
+        try {
+            $SymbolStr = (@($Global:GlobalGetTicker | Sort-Object) -join ',').ToUpper()
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=$($SymbolStr)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker"
+            if ($RatesAPI.Response -eq "Error") {
+                Write-Log -Level Warn "Symbols $($SymbolStr) not found on Cryptocompare"
+            } else {
+                $RatesAPI.BTC
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Cryptocompare API for $($SymbolStr) to BTC has failed. "
+        }
+    }
+}
+
 function Get-Ticker {
     [CmdletBinding()]
     param(
@@ -248,26 +279,26 @@ function Get-Ticker {
     #eventually consult crex24: https://api.crex24.com/CryptoExchangeService/BotPublic/ReturnTicker
 
     try {
-        $Symbol = ($Symbol -join ',').ToUpper()
-        if ($Symbol -match ',') {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
+        $SymbolStr = (@($Symbol | Sort-Object) -join ',').ToUpper()
+        if ($SymbolStr -match ',') {
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Symbols $($Symbol) not found on Cryptocompare"
+                Write-Log -Level Warn "Symbols $($SymbolStr) not found on Cryptocompare"
             } else {
                 $RatesAPI
             }
         } else {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($Symbol)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Symbol $($Symbol) not found on Cryptocompare"
+                Write-Log -Level Warn "Symbol $($SymbolStr) not found on Cryptocompare"
             } else {
-                [PSCustomObject]@{$Symbol = $RatesAPI}
+                [PSCustomObject]@{$SymbolStr = $RatesAPI}
             }
         }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Cryptocompare API for $($Symbol) to $($Convert) has failed. "
+        Write-Log -Level Warn "Cryptocompare API for $($SymbolStr) to $($Convert) has failed. "
     }
 }
 
@@ -3868,7 +3899,8 @@ function Invoke-ReportMinerStatus {
     $Profit = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object Profit -Sum).Sum, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object PowerDraw -Sum).Sum, 2) | ConvertTo-Json
     $Status = if ($Session.Paused) {"Paused"} else {"Running"}
-    $Rates  = $Session.Rates | ConvertTo-Json
+    $Rates = [PSCustomObject]@{}
+    $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
 
     Write-Log "Pinging monitoring server. "
 
@@ -3908,7 +3940,7 @@ function Invoke-ReportMinerStatus {
         $ReportDone = $false
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = $Rates; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status

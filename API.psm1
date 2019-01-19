@@ -262,7 +262,10 @@
                     Break
                 }
                 "/rates" {
-                    $Data = ConvertTo-Json @($API.Rates | Select-Object)
+                    $Rates = [PSCustomObject]@{}
+                    $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
+                    $Data = ConvertTo-Json @($Rates | Select-Object)
+                    Remove-Variable "Rates"
                     Break
                 }
                 "/asyncloaderjobs" {
