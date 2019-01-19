@@ -262,10 +262,7 @@
                     Break
                 }
                 "/rates" {
-                    $Rates = [PSCustomObject]@{}
-                    $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
-                    $Data = ConvertTo-Json @($Rates | Select-Object)
-                    Remove-Variable "Rates"
+                    $Data = ConvertTo-Json @($API.Rates | Select-Object)
                     Break
                 }
                 "/asyncloaderjobs" {
@@ -349,7 +346,9 @@
                 "/currentprofit" {
                     $Profit = $API.CurrentProfit
                     $API.RemoteMiners | Select-Object | ConvertFrom-Json | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
-                    $Data = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$API.Rates} | ConvertTo-Json
+                    $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
+                    $Data = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$Rates} | ConvertTo-Json
+                    Remove-Variable "Rates"
                     Break
                 }
                 "/stop" {
