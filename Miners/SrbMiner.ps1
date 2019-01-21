@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.6-srbminer/SRBMiner-CN-V1-7-6.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.7-srbminer/SRBMiner-CN-V1-7-7.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -38,12 +38,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-B2N 2 threads
     [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 2 thread
     [PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
-    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads
-    [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Festival 2 thread    
+    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads (upto #359.999)
+    [PSCustomObject]@{MainAlgorithm = "fast2"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast2 (Masari) 2 threads (at #360.000)
+    [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Festival 2 thread
     [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Lite 2 threads
     [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Haven 2 threads
     [PSCustomObject]@{MainAlgorithm = "heavy"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Heavy 2 threads
+    [PSCustomObject]@{MainAlgorithm = "hospital"  ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Hospital 2 thread
     [PSCustomObject]@{MainAlgorithm = "hycon"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Hycon 2 thread
     #[PSCustomObject]@{MainAlgorithm = "italo"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
     [PSCustomObject]@{MainAlgorithm = "marketcash"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
@@ -57,27 +59,33 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "upx"       ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa 2 threads
     [PSCustomObject]@{MainAlgorithm = "webchain"  ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Webchain 2 threads
 )
-#- Cryptonight Lite [lite]
-#- Cryptonight V7 [normalv7]
-#- Cryptonight Lite V7 [litev7]
-#- Cryptonight Heavy [heavy]
-#- Cryptonight Haven [haven]
-#- Cryptonight Fast [fast]
-#- Cryptonight BitTubeV2 [bittubev2]
-#- Cryptonight StelliteV4 [stellitev4]
-#- Cryptonight ArtoCash [artocash]
-#- Cryptonight Alloy [alloy]
-#- Cryptonight B2N [b2n]
-#- Cryptonight MarketCash [marketcash]
-#- Cryptonight Italo [italo]
-#- Cryptonight Red [mox]
-#- Cryptonight Dark [CryoNote]
-#- Cryptonight Fest [Festival coin]
-#- Cryptonight Swap [swap]
-#- Cryptonight Upx [upx]
-#- Cryptonight Hycon [hycon]
-#- Cryptonight Webchain [webchain]
-#- Cryptonight Turtle [turtle]
+
+#- Cryptonight Alloy 			[alloy]
+#- Cryptonight ArtoCash 		[artocash]
+#- Cryptonight B2N 				[b2n]
+#- Cryptonight BitTubeV2 		[bittubev2]
+#- Cryptonight Dark 			[dark]
+#- Cryptonight Fast 			[fast]
+#- Cryptonight Fast2 			[fast2]
+#- Cryptonight Fest 			[festival]
+#- Cryptonight Haven 			[haven]
+#- Cryptonight Heavy			[heavy]
+#- Cryptonight Hospital 		[hospital]
+#- Cryptonight Hycon 			[hycon]
+#- Cryptonight Italo 			[italo]
+#- Cryptonight Lite 			[lite]
+#- Cryptonight Lite V7 			[litev7]
+#- Cryptonight MarketCash 		[marketcash]
+#- Cryptonight Red 				[mox]
+#- Cryptonight 					[normal]
+#- Cryptonight V7 				[normalv7]
+#- Cryptonight V8 				[normalv8]
+#- Cryptonight StelliteV4 		[stellitev4]
+#- Cryptonight StelliteV5-V8-V9 [stellitev8]
+#- Cryptonight Swap				[swap]
+#- Cryptonight Turtle 			[turtle]
+#- Cryptonight Upx 				[upx]
+#- Cryptonight Webchain 		[webchain]
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
