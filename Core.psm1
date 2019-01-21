@@ -334,7 +334,7 @@ function Invoke-Core {
             $Session.ConfigFiles["Algorithms"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime()
             $AllAlgorithms = (Get-ChildItemContent $Session.ConfigFiles["Algorithms"].Path -Quick).Content
             $Session.Config | Add-Member Algorithms ([PSCustomObject]@{})  -Force
-            $Session.Config.Algorithm | Where-Object {$AllAlgorithms.$_ -ne $null} | Foreach-Object {
+            $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
                 $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
                 $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
                 $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
