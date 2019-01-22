@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.2.0-bminer/bminer-lite-v12.2.0-937f19b-amd64.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v13.0.0-bminer/bminer-lite-v13.0.0-6d94ac7-amd64.zip"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
