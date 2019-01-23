@@ -1956,13 +1956,13 @@ function Update-DeviceInformation {
                         $AdlResult | ForEach-Object {
                             [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
                             $i=0
-                            foreach($v in @($_ -split ',')) {
+                            foreach($v in @($x -split ',')) {
                                 if ($i -ge $AdlResultSplit.Count) {break}
                                 if ($i -eq 0) {
                                     $AdlResultSplit[0] = $v
                                 } elseif ($i -lt 8) {
-                                    $v = $v -replace "[^\d\.]"
-                                    if ($v -match "^(\d+|\.\d+|\d+\.\d+)$") {
+                                    $v = $v -replace "[^\-\d\.]"
+                                    if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
                                         $ibak = $AdlResultSplit[$i]
                                         try {
                                             if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
