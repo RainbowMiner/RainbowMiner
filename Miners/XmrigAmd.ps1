@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.4-xmrig/xmrig-amd-2.9.4-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.0-xmrig/xmrig-amd-2.10.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"
 $Port = "304{0:d2}"
 $DevFee = 0.0
@@ -27,6 +27,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle"; Params = ""}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
