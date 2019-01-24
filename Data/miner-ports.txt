@@ -67,6 +67,7 @@
 330	MiniZ
 331	ProgPOWNvidia
 332	Bminer1220
+333	TTminer
 
 400	Sgminer
 401	SgminerBitcore
