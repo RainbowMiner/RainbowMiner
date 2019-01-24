@@ -10,7 +10,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.10
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
-$Cuda = "9.0"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
