@@ -21,7 +21,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP and Zpool)**
+- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, GrinMint, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -79,8 +79,8 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, fairpool, goscx, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
-<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more</details>
+<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, fairpool, goscx, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
+<details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more</details>
 
 
 ## HOTKEYS
@@ -145,6 +145,7 @@ https://www.blockmasters.co/ auto-exchange and payout in BTC
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
