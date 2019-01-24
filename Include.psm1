@@ -3117,16 +3117,18 @@ function Set-MinersConfigDefault {
                 $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
                 #cleanup duplicates in algorithm lists
                 $Preset = [PSCustomObject]@{}
-                foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
-                    if (Get-Member -inputobject $Preset -name $Name -Membertype Properties) {continue}
-                    $Preset | Add-Member $Name @(
-                        [System.Collections.ArrayList]$MinerCheck = @()
-                        foreach($cmd in $PresetTmp.$Name) {
-                            $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
-                            $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
-                            $k = "$m-$s"
-                            if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
-                        }) -Force
+                if ($PresetTmp.PSObject.Properties.Name.Count -gt 0 ) {
+                    foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
+                        if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
+                        $Preset | Add-Member $Name @(
+                            [System.Collections.ArrayList]$MinerCheck = @()
+                            foreach($cmd in $PresetTmp.$Name) {
+                                $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
+                                $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
+                                $k = "$m-$s"
+                                if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
+                            }) -Force
+                    }
                 }
             }
             catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
@@ -3155,7 +3157,7 @@ function Set-MinersConfigDefault {
                                 $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
                                 $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
                                 $k = "$m-$s"                                
-                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty=""};$MinerCheck.Add($k)>$null}
+                                if (-not $MinerCheck.Contains($k)) {[PSCustomObject]@{MainAlgorithm=$m;SecondaryAlgorithm=$s;Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"};$MinerCheck.Add($k)>$null}
                             }
                         )
                     }
@@ -3190,8 +3192,17 @@ function Set-MinersConfigDefault {
                 }
             }
 
+            $Default = [PSCustomObject]@{Params = "";MSIAprofile = "";OCprofile = "";Difficulty="";Penalty="";Disable="0"}
             $DoneSave = [PSCustomObject]@{}
-            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {if ($Done.$_.Count) {$DoneSave | Add-Member $_ @($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)}}
+            $Done.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+                if ($Done.$_.Count) {
+                    $Done.$_ | Foreach-Object {
+                        $Done1 = $_
+                        $Default.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $Default.$_ -Force}
+                    }
+                    $DoneSave | Add-Member $_ @($Done.$_ | Sort-Object MainAlgorithm,SecondaryAlgorithm)
+                }
+            }
             Set-ContentJson -PathToFile $PathToFile -Data $DoneSave -MD5hash $ChangeTag > $null
         }
         catch{
