@@ -56,7 +56,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $MainAlgorithm = $_.MainAlgorithm
             $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
 
-            $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)} | where-Object {@("RTX2060","RTX2070","RTX2080","RTX2080Ti") -icontains $_.Model})
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)} | where-Object {@("RTX2060","RTX2070","RTX2080","RTX2080Ti") -icontains $_.Model}
 
             if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device) {
                 $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
