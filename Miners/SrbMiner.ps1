@@ -142,7 +142,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                         pools = @([PSCustomObject]@{
                             pool = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
                             wallet = $($Pools.$Algorithm_Norm.User)
-                            password = $($Pools.$Algorithm_Norm.Pass)
+                            password = "$($Pools.$Algorithm_Norm.Pass)"
                             pool_use_tls = $($Pools.$Algorithm_Norm.SSL)
                             nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
                         })

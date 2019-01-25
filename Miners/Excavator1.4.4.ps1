@@ -86,7 +86,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                         DeviceName       = $Miner_Device.Name
                         DeviceModel      = $Miner_Model
                         Path             = $Path
-                        Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm", "$($Pool_Host):$($Pool_Port)", "$($Pools.$Main_Algorithm_Norm.User):$($Pools.$Main_Algorithm_Norm.Pass)")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
+                        Arguments        = @([PSCustomObject]@{id = 1; method = "algorithm.add"; params = @("$Main_Algorithm", "$($Pool_Host):$($Pool_Port)", "$($Pools.$Main_Algorithm_Norm.User)$(if ($Pools.$Main_Algorithm_Norm.Pass) {":$($Pools.$Main_Algorithm_Norm.Pass)"})")}) + @([PSCustomObject]@{id = 1; method = "workers.add"; params = @(@($Miner_Device.Type_Vendor_Index | ForEach-Object {@("alg-0", "$_")} | Select-Object) * $Threads) + $Params})
                         HashRates        = [PSCustomObject]@{$Main_Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Main_Algorithm_Norm)_HashRate".Week}
                         API              = "Excavator144"
                         Port             = $Miner_Port

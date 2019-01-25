@@ -15,7 +15,7 @@ if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD pres
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptolite"; Params = " -lite 1 0"} #Cryptolite
-    [PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " -pow7 0"} #CryptoNight
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = " -pow7 0"} #CryptoNight
     [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = " -pow7 1"} #CryptoNightV7
 )
 
@@ -55,7 +55,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path = $Path
-                Arguments = "-r -1 -mport -$($Miner_Port) -xpool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) -xwal $($Pools.$Algorithm_Norm.User) -xpsw $($Pools.$Algorithm_Norm.Pass) -di $($DeviceIDsAll) -logfile $($Miner_Port)_log.txt $($_.Params)"
+                Arguments = "-r -1 -mport -$($Miner_Port) -xpool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) -xwal $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -xpsw $($Pools.$Algorithm_Norm.Pass)"}) -di $($DeviceIDsAll) -logfile $($Miner_Port)_log.txt $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week }
                 API = "Claymore"
                 Port = $Miner_Port
