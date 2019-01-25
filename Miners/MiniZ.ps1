@@ -12,11 +12,11 @@ $DevFee = 2.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0i-miniz/miniZ_v1.0i_win-x64.zip"
-        Cuda = "9.2"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0j-miniz/miniZ_v1.0j_cuda10_win-x64.zip"
+        Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0i-miniz/miniZ_v1.0i_cuda8_win-x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0j-miniz/miniZ_v1.0j_win-x64.zip"
         Cuda = "8.0"
     }
 )
