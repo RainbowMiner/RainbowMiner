@@ -12,7 +12,7 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.14a/excavator_v1.5.14a_Win64.zip"
+        Uri = "https://github.com/nicehash/excavator/releases/download/v1.5.15a/excavator_v1.5.15a_Win64.zip"
         Cuda = "10.0"
     }
 )
@@ -28,9 +28,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Threads = 1; MinMemGB = 2; ExtendInterval = 3; FaultTolerance = 0.5; Params = @()} #X16R
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "decred"; Threads = 1; MinMemGB = 4; ExtendInterval = 2; Params = @()} #Dual mining
-    #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "pascal"; Threads = 1; MinMemGB = 4; ExtendInterval = 2; Params = @()} #Dual mining
 
     #2 Threads
     #[PSCustomObject]@{MainAlgorithm = "cryptonightV7"; Threads = 2; MinMemGB = 2*6; ExtendInterval = 1; Params = @()} #CryptonightV7
@@ -40,15 +40,14 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 2; MinMemGB = 2*1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Threads = 2; MinMemGB = 2*1; ExtendInterval = 1; Params = @()} #Lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 2; MinMemGB = 2*2; ExtendInterval = 1; Params = @()} #NeoScrypt 2 threads crashes
+    #[PSCustomObject]@{MainAlgorithm = "skunk"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Threads = 2; MinMemGB = 2*6; ExtendInterval = 3; FaultTolerance = 0.5; Params = @()} #X16R 2 threads out-of memory
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "decred"; Threads = 2; MinMemGB = 2*4; ExtendInterval = 2; Params = @()} #Dual mining
-    #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "pascal"; Threads = 2; MinMemGB = 2*4; ExtendInterval = 2; Params = @()} #Dual mining
 
     #ASIC mining only 2018/06/11
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Blake2s
     #[PSCustomObject]@{MainAlgorithm = "decred"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Pascal
     #[PSCustomObject]@{MainAlgorithm = "keccak"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Pascal
-    #[PSCustomObject]@{MainAlgorithm = "pascal"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Pascal
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
