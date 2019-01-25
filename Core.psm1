@@ -597,13 +597,15 @@ function Invoke-Core {
                 for($i=1;($i -lt $CcMinerName_Array.Count) -and $CcMinerOk;$i++) {if ($Session.Config.DeviceModel -inotcontains $CcMinerName_Array[$i]) {$CcMinerOk=$false}}
                 if ($CcMinerOk) {
                     foreach($p in @($CcMiner.Value)) {
-                        if ($(foreach($q in $p.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) {$true;break}})) {
+                        $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
+                        if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
                             $CcMinerNameToAdd = $CcMinerName
                             if ($p.MainAlgorithm -ne '*') {
                                 $CcMinerNameToAdd += "-$(Get-Algorithm $p.MainAlgorithm)"
                                 if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
                             }
                             $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
+                            $Session.Config.Miners.$CcMinerNameToAdd.Disable = Get-Yes $Session.Config.Miners.$CcMinerNameToAdd.Disable
                         }
                     }
                 }
@@ -834,10 +836,12 @@ function Invoke-Core {
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
             Where-Object {$Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} |
+            Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm -join '-')".Disable}
             Where-Object {
                 $MinerOk = $true
                 foreach ($p in @($_.DeviceModel -split '-')) {
-                    if ($Session.Config.Devices.$p -and
+                    if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm -join '-')".Disable -or 
+                        $Session.Config.Devices.$p -and
                         (
                             ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
                             ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
