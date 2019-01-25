@@ -907,7 +907,7 @@ function Start-Setup {
                 [System.Collections.ArrayList]$MinerSetupSteps = @()
                 [System.Collections.ArrayList]$MinerSetupStepBack = @()
                                                                     
-                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty")) > $null                                    
+                $MinerSetupSteps.AddRange(@("minername","devices","algorithm","secondaryalgorithm","configure","params","ocprofile","msiaprofile","difficulty","extendinterval","faulttolerance","penalty","disable")) > $null                                    
                 $MinerSetupSteps.Add("save") > $null                         
 
                 do { 
@@ -959,6 +959,7 @@ function Start-Setup {
                                     FaultTolerance = ""
                                     Penalty = ""
                                     Difficulty = ""
+                                    Disable = "0"
                                 }
                         
                                 if (Get-Member -InputObject $MinersActual -Name $EditMinerName -Membertype Properties) {$MinersActual.$EditMinerName | Where-Object {$_.MainAlgorithm -eq $EditAlgorithm -and $_.SecondaryAlgorithm -eq $EditSecondaryAlgorithm} | Foreach-Object {foreach ($p in @($_.PSObject.Properties.Name)) {$EditMinerConfig | Add-Member $p $_.$p -Force}}}
@@ -995,6 +996,14 @@ function Start-Setup {
                             "penalty" {
                                 $EditMinerConfig.Penalty = Read-HostDouble -Prompt "Use a penalty in % (enter -1 to not change penalty)" -Default $(if ($EditMinerConfig.Penalty -eq ''){-1}else{$EditMinerConfig.Penalty}) -Min -1 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 if ($EditMinerConfig.Penalty -lt 0) {$EditMinerConfig.Penalty=""}
+                            }
+                            "disable" {
+                                $MinerSetupStepStore = $false
+                                if ($EditAlgorithm -ne '*') {
+                                    $EditMinerConfig.Disable = Read-HostBool -Prompt "Disable $EditAlgorithm$(if ($EditSecondaryAlgorithm) {"-$EditSecondaryAlgorithm"}) on $EditMinerName" -Default $EditMinerConfig.Disable | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    $MinerSetupStepStore = $true
+                                }
+                                $EditMinerConfig.Disable = if (Get-Yes $EditMinerConfig.Disable) {"1"} else {"0"}
                             }
                             "save" {
                                 Write-Host " "
