@@ -1956,7 +1956,7 @@ function Update-DeviceInformation {
                         $AdlResult | ForEach-Object {
                             [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
                             $i=0
-                            foreach($v in @($x -split ',')) {
+                            foreach($v in @($_ -split ',')) {
                                 if ($i -ge $AdlResultSplit.Count) {break}
                                 if ($i -eq 0) {
                                     $AdlResultSplit[0] = $v
