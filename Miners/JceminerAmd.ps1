@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Params = "--variation 15"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; MinMemGb = 2; Params = "--variation 18"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; MinMemGb = 2; Params = "--variation 9"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr";        Threads = 1; MinMemGb = 2; Params = "--variation 11"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 2; Params = "--variation 11"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; MinMemGb = 2; Params = "--variation 10"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Threads = 1; MinMemGb = 2; Params = "--variation 8"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 2; Params = "--variation 7"}

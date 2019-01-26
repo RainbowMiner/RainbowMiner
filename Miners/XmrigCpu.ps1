@@ -14,20 +14,20 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/half"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -60,12 +60,13 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+            $xmrig_algo = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             [PSCustomObject]@{
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path      = $Path
-                Arguments = "-R 1 --api-port $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
+                Arguments = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API       = "XMRig"
                 Port      = $Miner_Port

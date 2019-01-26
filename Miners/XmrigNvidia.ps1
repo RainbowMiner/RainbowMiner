@@ -15,20 +15,20 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2"; Params = "--bfactor=12"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/half"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/msr"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = "--bfactor=12"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -63,7 +63,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            $xmrig_algo = if ($_.MainAlgorithm -eq "cryptonightv7") {"cryptonight"} else {$_.MainAlgorithm}
+            $xmrig_algo = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
             $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
             [PSCustomObject]@{
                 Name = $Miner_Name
