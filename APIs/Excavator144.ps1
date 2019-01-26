@@ -614,7 +614,7 @@ class Excavator144 : Miner {
                 if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -match "$(Get-Algorithm $Algorithm)*")} #temp fix
                 $HashRate_Value = [Double](($Workers | Where-Object {$this.Workers -like $_.worker_id}).speed | Select-Object -Index @($Workers.worker_id | ForEach-Object {$_ * 2 + $Algorithms.IndexOf($Algorithm)}) | Measure-Object -Sum).Sum
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                    $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                 }
             }
         }

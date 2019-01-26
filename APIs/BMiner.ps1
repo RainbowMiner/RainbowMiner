@@ -28,16 +28,16 @@ class BMiner : Miner {
             $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_))
             if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $_)*")} #temp fix
 
-            $HashRate_Value = 0
+            $HashRate_Value = 0.0
 
             $Data.devices | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
                 $Data.devices.$_.solvers | Where-Object {$HashRate_Name -like "$(Get-Algorithm $_.Algorithm)*"} | ForEach-Object {
-                    if ($_.speed_info.hash_rate) {$HashRate_Value += $_.speed_info.hash_rate}
-                    else {$HashRate_Value += $_.speed_info.solution_rate}
+                    if ($_.speed_info.hash_rate) {$HashRate_Value += [Double]$_.speed_info.hash_rate}
+                    else {$HashRate_Value += [Double]$_.speed_info.solution_rate}
                 }
             }
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+                $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             }
         }
 

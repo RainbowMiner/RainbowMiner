@@ -47,7 +47,7 @@ class SrbMiner : Miner {
         if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.HashRate_total_now}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
         }
 
         $this.AddMinerData([PSCustomObject]@{

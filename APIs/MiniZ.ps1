@@ -24,7 +24,6 @@ class MiniZ : Miner {
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum
 
-        $HashRate_Value = [Int64]$HashRate_Value
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             $this.AddMinerData([PSCustomObject]@{

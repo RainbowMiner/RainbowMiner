@@ -652,7 +652,7 @@ class Excavator : Miner {
             if (-not $HashRate_Name) {$HashRate_Name = [String](($this.Algorithm -replace "-NHMP") -match "$(Get-Algorithm $Algorithm)*")} #temp fix
             $HashRate_Value = [Double](($Workers.algorithms | Where-Object {$_.name -eq $Algorithm}).speed | Measure-Object -Sum).Sum
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                $HashRate | Add-Member @{"$($HashRate_Name)-NHMP" = [Int64]$HashRate_Value}
+                $HashRate | Add-Member @{"$($HashRate_Name)-NHMP" = $HashRate_Value}
             }
         }
 

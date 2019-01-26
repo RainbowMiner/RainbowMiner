@@ -417,7 +417,7 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$PowerDraw = 0,
         [Parameter(Mandatory = $false)]
-        [Int64]$HashRate = 0,
+        [Double]$HashRate = 0,
         [Parameter(Mandatory = $false)]
         [Double]$BlockRate = 0,
         [Parameter(Mandatory = $false)]
@@ -462,7 +462,7 @@ function Set-Stat {
             }
             "Pools" {
                 @{
-                    HashRate_Live = [Int64]$Stat.HashRate_Live
+                    HashRate_Live = [Double]$Stat.HashRate_Live
                     HashRate_Average = [Double]$Stat.HashRate_Average
                     BlockRate_Live = [Double]$Stat.BlockRate_Live
                     BlockRate_Average = [Double]$Stat.BlockRate_Average
@@ -652,7 +652,7 @@ function Set-Stat {
             }
             "Pools" {
                 $OutStat | Add-Member -NotePropertyMembers @{
-                    HashRate_Live = [Int64]$Stat.HashRate_Live
+                    HashRate_Live = [Decimal]$Stat.HashRate_Live
                     HashRate_Average = [Decimal]$Stat.HashRate_Average
                     BlockRate_Live = [Decimal]$Stat.BlockRate_Live
                     BlockRate_Average = [Decimal]$Stat.BlockRate_Average
@@ -2563,7 +2563,7 @@ class Miner {
         $this.Data = @()
     }
 
-    [Int64]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {
+    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {
         $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
 

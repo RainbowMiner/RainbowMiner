@@ -28,7 +28,6 @@ class Lol : Miner {
             $HashRate_Value = [double]$Data.'TotalSpeed(5s)'
         }
         
-        $HashRate_Value = [Int64]$HashRate_Value
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             $this.AddMinerData([PSCustomObject]@{

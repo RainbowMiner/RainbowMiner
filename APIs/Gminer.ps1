@@ -27,9 +27,9 @@ class Gminer : Miner {
 
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm($Data.algorithm -replace '".+' -replace ',')))
         if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]}
-        $HashRate_Value = ($Data.devices.speed | Measure-Object -Sum).Sum
+        $HashRate_Value = [Double]($Data.devices.speed | Measure-Object -Sum).Sum
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

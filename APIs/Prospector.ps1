@@ -29,7 +29,7 @@ class Prospector : Miner {
             if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $_)*")} #temp fix
             $HashRate_Value = [Double](($Data | Where-Object coin -EQ $_).rate | Measure-Object -Sum).Sum
 
-            $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+            $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
         }
 
         $this.AddMinerData([PSCustomObject]@{
