@@ -6,6 +6,7 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 $SavedFiles = @("Start.bat")
 
+$DownloadsCleanup = $true
 $MinersConfigCleanup = $true
 $CacheCleanup = $false
 $ChangesTotal = 0
@@ -371,6 +372,16 @@ try {
     if ($CacheCleanup) {if (Test-Path "Cache") {Get-ChildItem "Cache" -Filter "*.asy" | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}}
 
     $SavedFiles | Where-Object {Test-Path "$($_).saved"} | Foreach-Object {Move-Item "$($_).saved" $_ -Force -ErrorAction Ignore;$ChangesTotal++}
+
+    if ($DownloadsCleanup) {
+        if (Test-Path "Downloads"){
+            $AllMinersArchives = Get-MinersContent -InfoOnly | Where-Object {$_.Uri} | Foreach-Object {Split-Path $_.Uri -Leaf} | Sort-Object
+            Get-ChildItem -Path "Downloads" -Filter "*" | Where-Object {@(".7z",".rar",".zip") -icontains $_.Extension -and $_.LastWriteTime -lt (Get-Date).AddDays(-5) -and $AllMinersArchives -notcontains $_.Name} | Foreach-Object {
+                Remove-Item $_.FullName -Force -ErrorAction Ignore
+                $ChangesTotal++
+            }
+        }
+    }
 
     "Cleaned $ChangesTotal elements"
 }
