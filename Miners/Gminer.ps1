@@ -15,7 +15,7 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 6; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckaroo29/GRIN
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2; Params = "--algo 96_5"} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3.9; Params = "--algo 150_5"} #Equihash 150,5

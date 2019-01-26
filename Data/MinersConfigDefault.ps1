@@ -177,6 +177,9 @@
         "Excavator1.4.4" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
         )
+        "Gminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "cuckatoo29"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "3"}
+        )
         "lolMiner" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "equihash16x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "5"}
