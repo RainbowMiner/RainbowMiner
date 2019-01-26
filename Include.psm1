@@ -4126,12 +4126,13 @@ param(
 )
     $Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
-        if ($Matches[1].Length) {$s = [System.Web.HttpUtility]::UrlEncode($Matches[1]); $Uri2+=if ($ConvertDot) {$s -replace "\.","%2e"} else {$s}}
+        if ($Matches[1].Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Matches[1])}
         $Uri2+=$Matches[2]
         $Uri=$Matches[3]
     }
-    if ($Uri.Length) {$Uri = [System.Web.HttpUtility]::UrlEncode($Uri); $Uri2+=if ($ConvertDot) {$Uri -replace "\.","%2e"} else {$Uri}}
-    $Uri2 -join ''    
+    if ($Uri.Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Uri)}
+    $Uri = $Uri2 -join ''
+    if ($ConvertDot) {$Uri -replace "\.","%2e"} else {$Uri}
 }
 
 function Get-LastDrun {
