@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.22-gminer/gminer_1_22_minimal_windows64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-gminer/gminer_1_23_minimal_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
@@ -15,7 +15,7 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; Penalty = 15} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 6; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckaroo29/GRIN
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2; Params = "--algo 96_5"} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3.9; Params = "--algo 150_5"} #Equihash 150,5
@@ -69,7 +69,8 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Port = $Miner_Port
                 DevFee = $DevFee
                 Uri = $Uri
-                ExtendInterval = 2
+                FaultTolerance = $_.FaultTolerance
+                ExtendInterval = $_.ExtendInterval
                 ManualUri = $ManualUri
             }
         }
