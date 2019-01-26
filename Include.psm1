@@ -4127,8 +4127,10 @@ param(
     $Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
         if ($Matches[1].Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Matches[1])}
-        $Uri2+=$Matches[2]
+        $Tmp=$Matches[2]
         $Uri=$Matches[3]
+        if ($Tmp -match "^{(\w+):(.*?)}$") {$Tmp = "{$($Matches[1]):$([System.Web.HttpUtility]::UrlEncode($Matches[2]))}"}
+        $Uri2+=$Tmp
     }
     if ($Uri.Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Uri)}
     $Uri = $Uri2 -join ''
