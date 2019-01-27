@@ -88,6 +88,16 @@ function Confirm-Cuda {
     $true
 }
 
+function Get-NvidiaArchitecture {
+    [CmdLetBinding()]
+    param($Model)
+    Switch ($Model) {
+        {$_ -match "^RTX20\d{2}"} {"Turing"}
+        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"} {"Pascal"}
+        default {"Other"}
+    }
+}
+
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
