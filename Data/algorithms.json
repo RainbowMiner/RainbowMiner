@@ -177,6 +177,8 @@
     "cryptonightv7stellitev4": "CryptoNightXtl",
     "cryptonightv7stellitev8": "CryptoNightXtlV8",
     "cryptonightv8": "CryptoNightV8",
+    "cryptonightv8fast": "CryptoNightXtlV8",
+    "cryptonightv8stellite": "CryptoNightXtlV8",
     "cryptonightwebchain": "CryptoNightWebchain",
     "cryptonightwownero": "CryptoNightV8",
     "cryptonightxao": "CryptoNightXao",
