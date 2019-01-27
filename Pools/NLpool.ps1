@@ -52,7 +52,7 @@ if ($PoolCoins_Request) {
 
 $Pool_Host = "mine.nlpool.nl"
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $AllowZero -or $InfoOnly} |ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $AllowZero -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $Pool_Request.$_.port
     $Pool_Algorithm = $Pool_Request.$_.name
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -69,6 +69,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         Write-Log -Level Info "$($Name): Unable to determine divisor for algorithm $Pool_Algorithm. "
         return
     }
+
+    if ($Pool_Coin -match 'testnet') {return}
     
     $Pool_TSL = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object timesincelast -Minimum).Minimum
     $Pool_BLK = ($PoolCoins_Request.PSObject.Properties.Value | Where-Object algo -eq $Pool_Algorithm | Measure-Object "24h_blocks" -Maximum).Maximum
