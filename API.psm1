@@ -345,10 +345,12 @@
                 }
                 "/currentprofit" {
                     $Profit = $API.CurrentProfit
-                    $API.RemoteMiners | Select-Object | ConvertFrom-Json | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
+                    $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json
+                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
                     $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
-                    $Data = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$Rates} | ConvertTo-Json
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$Rates} | ConvertTo-Json
                     Remove-Variable "Rates"
+                    Remove-Variable "RemoteMiners"
                     Break
                 }
                 "/stop" {
