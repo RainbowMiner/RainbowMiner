@@ -956,7 +956,7 @@ function Invoke-Core {
 
             #overclocking is different
             foreach($p in @($Miner.DeviceModel -split '-')) {
-                if ($Miner_OCprofiles.$p -ne '') {continue}
+                if ($Miner_OCprofile.$p -ne '') {continue}
                 $Miner_CommonCommands_array[1] = $p
                 for($i=$Miner_CommonCommands_array.Count;$i -gt 1; $i--) {
                     $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
