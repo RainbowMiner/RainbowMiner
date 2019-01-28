@@ -316,6 +316,7 @@
     "neoscrypt": "NeoScrypt",
     "ninja": "Polytimos",
     "nist5": "Nist5",
+    "nrghash": "NrgHash",
     "padihash": "GLTPadiHash",
     "pascal": "Pascal",
     "pawelhash": "GLTPawelHash",
