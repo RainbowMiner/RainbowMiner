@@ -1017,9 +1017,8 @@ function Start-SubProcess {
         [String[]]$EnvVars = @()
     )
 
-    if ($ShowMinerWindow) {        
-        if ($IsWrapper) {Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -ShowMinerWindow $True -CPUAffinity $CPUAffinity -EnvVars $EnvVars}
-        else {Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars}
+    if ($ShowMinerWindow -and -not $IsWrapper) {
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars
     }
@@ -1040,9 +1039,7 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = "",
-        [Parameter(Mandatory = $false)]
-        [Bool]$ShowMinerWindow = $false,
+        [String]$ProcessName = "",        
         [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
@@ -1053,16 +1050,12 @@ function Start-SubProcessInBackground {
     if ($ProcessName -ne "" -and $ProcessName -ne $ExecName) {$ExecName = $ProcessName}
     $Running = @(Get-Process | Where-Object {$_.Name -eq $ExecName} | Select-Object -ExpandProperty Id)
 
-    if ($ShowMinerWindow) {
-        $ScriptBlock = "Start-Process $(@{desktop = "powershell"; core = "pwsh"}.$Global:PSEdition) `"-command ```$Process = (Start-Process '$($FilePath)' '$($Argumentlist)' -WorkingDirectory '$($WorkingDirectory)' -WindowStyle Minimized -PassThru).Id; Wait-Process -Id `$PID; Stop-Process -Id ```$Process`" -WindowStyle Hidden -Wait"
-    } else {
-        $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
-        $ScriptBlock += "& '$FilePath'"
-        if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
-        $ScriptBlock += " *>&1"
-        $ScriptBlock += " | Write-Output"
-        if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
-    }
+    $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
+    $ScriptBlock += "& '$FilePath'"
+    if ($ArgumentList) {$ScriptBlock += " $ArgumentList"}
+    $ScriptBlock += " *>&1"
+    $ScriptBlock += " | Write-Output"
+    if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
 
     $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
 
@@ -2480,7 +2473,6 @@ class Miner {
     }
 
     [String[]]UpdateMinerData () {
-        $Lines = @()
 
         if ($this.Process.HasMoreData) {
             $Date = (Get-Date).ToUniversalTime()
@@ -2493,16 +2485,17 @@ class Miner {
                     $Devices = @()
 
                     if ($Line_Simple -match "/s") {
-                        $Words = $Line_Simple -split " "
+                        $Words = $Line_Simple -split "\s+"
 
                         $Words -match "/s$" | ForEach-Object {
-                            if (($Words | Select-Object -Index $Words.IndexOf($_)) -match "^((?:\d*\.)?\d+)(.*)$") {
-                                $HashRate = ($matches | Select-Object -Index 1) -as [Decimal]
-                                $HashRate_Unit = ($matches | Select-Object -Index 2)
+                            $Index = $Words.IndexOf($_)
+                            if (($Words | Select-Object -Index $Index) -match "^((?:\d*[\.,])?\d+)(.*)$") {
+                                $HashRate = ($Matches | Select-Object -Index 1) -replace ',','.' -as [Decimal]
+                                $HashRate_Unit = ($Matches | Select-Object -Index 2)
                             }
                             else {
-                                $HashRate = ($Words | Select-Object -Index ($Words.IndexOf($_) - 1)) -as [Decimal]
-                                $HashRate_Unit = ($Words | Select-Object -Index $Words.IndexOf($_))
+                                $HashRate = ($Words | Select-Object -Index ($Index - 1)) -replace ',','.' -as [Decimal]
+                                $HashRate_Unit = ($Words | Select-Object -Index $Index)
                             }
 
                             switch -wildcard ($HashRate_Unit) {
@@ -2519,19 +2512,21 @@ class Miner {
 
                     if (($HashRates | Measure-Object -Sum).Sum -gt 0) {
                         if ($Line_Simple -match "\b(gpu|cpu|device)([^s]|\b)") {
-                            $Words = $Line_Simple -replace "#", "" -replace ":", "" -split " "
+                            $Words = $Line_Simple -replace "[#:]" -split "[\s/]+"
 
-                            $Words -match "^(gpu|cpu|device)([^s]|$)" | ForEach-Object {
-                                if (($Words | Select-Object -Index $Words.IndexOf($_)) -match "^(.*)((?:\d*\.)?\d+)$") {
-                                    $Device = ($matches | Select-Object -Index 2) -as [Int]
-                                    $Device_Type = ($matches | Select-Object -Index 1)
-                                }
-                                else {
-                                    $Device = ($Words | Select-Object -Index ($Words.IndexOf($_) + 1)) -as [Int]
-                                    $Device_Type = ($Words | Select-Object -Index $Words.IndexOf($_))
-                                }
+                            for($i=0;$i -lt $Words.Count;$i++) {
+                                if ($Words[$i] -match "^(gpu|cpu|device)([^s]|$)") {                                   
+                                    if (($Words | Select-Object -Index $i) -match "^(.*)((?:\d*[\.,])?\d+)$") {
+                                        $Device = ($Matches | Select-Object -Index 2) -as [Int]
+                                        $Device_Type = ($Matches | Select-Object -Index 1)
+                                    }
+                                    else {
+                                        $Device = ($Words | Select-Object -Index ($i + 1)) -as [Int]
+                                        $Device_Type = ($Words | Select-Object -Index $i)
+                                    }
 
-                                $Devices += "{0}#{1:d2}" -f $Device_Type, $Device
+                                    $Devices += "{0}#{1:d2}" -f $Device_Type, $Device
+                                }
                             }
                         }
 
@@ -2543,15 +2538,13 @@ class Miner {
                             Device = $Devices
                         })
                     }
-
-                    $Lines += $Line
                 }
             }
 
             $this.CleanupMinerData()
         }
 
-        return $Lines
+        return @()
     }
 
     AddMinerData($data) {
