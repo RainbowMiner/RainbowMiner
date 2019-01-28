@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.23-gminer/gminer_1_23_minimal_windows64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.24-gminer/gminer_1_24_minimal_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
@@ -15,10 +15,11 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGB = 8; Params = "--algo aeternity"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0} #Equihash Cuckaroo29/GRIN    
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2; Params = "--algo 96_5"} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3.9; Params = "--algo 150_5"} #Equihash 150,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3.9; Params = "--algo 150_5"} #Equihash 150,5 problem on nicehash!
     [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 3.0; Params = "--algo 192_7"} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9"} #Equihash 210,9
 )
@@ -56,7 +57,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Equihash25x5" -or $Pools.$Algorithm_Norm.Name -notmatch "nicehash")) {
             $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
             [PSCustomObject]@{
                 Name = $Miner_Name
