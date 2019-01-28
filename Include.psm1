@@ -2665,10 +2665,9 @@ class Miner {
             Intel  = "*Intel*"
         }
 
-        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
-            if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {
-                $DeviceIds = @($Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)
-                $Profile = $Config.OCprofiles."$($this.OCprofile.$DeviceModel)"
+        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {            
+            if ($Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"}) {
+                $DeviceIds = @($Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)                
                 $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
                 $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
                 $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
