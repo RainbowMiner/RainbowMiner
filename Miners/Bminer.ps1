@@ -69,7 +69,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if ($SecondAlgorithm -ne '') {
                     $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
                 }
-                $Stratum = "$(if ($MainAlgorithm -eq "equihash") {"stratum"} else {$MainAlgorithm})$(if ($Pools.$MainAlgorithm_Norm.SSL) {"+ssl"})"
+                $Stratum = "$(if ($MainAlgorithm -eq "equihash") {"stratum"} else {$MainAlgorithm})$(if ($Pools.$MainAlgorithm_Norm.SSL -or $_.MainAlgorithm -eq "beam") {"+ssl"})"
 
                 if ($SecondAlgorithm -eq '') {
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
