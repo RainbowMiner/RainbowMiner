@@ -866,7 +866,7 @@ This configuration would:
 
 ### Config\ocprofiles.config.txt
 
-This file contains all custom overclocking profiles. These profiles can be assigned by name to miners in file Config\miners.config.txt, field "OCprofile".
+This file contains all custom overclocking profiles. These profiles can be assigned by name to miners in file Config\miners.config.txt or to algorithms in file Config\algorithms.config.txt, field "OCprofile".
 
 Example (this is the setup for one of my GTX1070 rigs, basicly substituting the MSI Afterburner profiles I recommended above)
 
@@ -927,6 +927,29 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 - MemoryClockBoost: in MHz, set to "*", if you do not want this to be changed
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
+
+To make it easy to handle names, profiles may be assigned to a devices. Just add the device model (see file Config\devices.config.txt for all model names) with "-" to the profile name. With this feature, it is very easy to use different overclocking rules for each device under one name.
+
+Example for a rig, using GTX1070Ti and GTX1060 side by side:
+
+{
+  "MinMemOC-GTX1060": {
+    "PowerLimit": 75,
+    "ThermalLimit": 70,
+    "MemoryClockBoost": "-500",
+    "CoreClockBoost": "150",
+    "LockVoltagePoint": "*"
+  },
+  "MinMemOC-GTX1070Ti": {
+    "PowerLimit": 82,
+    "ThermalLimit": 80,
+    "MemoryClockBoost": "-500",
+    "CoreClockBoost": "50",
+    "LockVoltagePoint": "*"
+  }
+}
+
+The name of this exemplary profile is "MinMemOC" - if this name would be put into algorithms.config.txt, for example for algo "X16R", different overclocking settings would be used for the different devices when mining X16R.
 
 
 ### Config\autoexec.config.txt
