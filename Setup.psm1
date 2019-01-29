@@ -1712,7 +1712,8 @@ function Start-Setup {
                         [console]::ForegroundColor = "Cyan"
                         Write-Host "Current profiles:"
                         $OCProfilesActual.PSObject.Properties | Format-Table @(
-                            @{Label="Name"; Expression={"$($_.Name)"}}
+                            @{Label="Name"; Expression={"$($_.Name -replace '-.+$')"}}
+                            @{Label="Device"; Expression={"$($_.Name -replace '^.+-')"}}
                             @{Label="Power Limit"; Expression={"$(if ($_.Value.PowerLimit -eq '0'){'*'}else{"$($_.Value.PowerLimit) %"})"}; Align="center"}
                             @{Label="Thermal Limit"; Expression={"$(if ($_.Value.ThermalLimit -eq '0'){'*'}else{"$($_.Value.ThermalLimit) °C"})"}; Align="center"}
                             @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
@@ -1720,8 +1721,16 @@ function Start-Setup {
                         )
                         [console]::ForegroundColor = $p
 
-                        $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create/delete? (leave empty to end profile config)" -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                        if ($OCProfile_Name -eq '') {throw}
+                        $OCProfile_Name = $OCProfile_Device = ""
+                        do {
+                            $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create/delete? (leave empty to end profile config)" -Characters "A-Z0-9" -Default $OCProfile_Name | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            if ($OCProfile_Name -eq '') {throw}
+                            if (($SetupDevices | Where-Object Type -eq "gpu" | Measure-Object).Count) {
+                                $OCProfile_Device = Read-HostString -Prompt "Assign this profile to a device? (leave empty for none)" -Characters "A-Z0-9" -Valid @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -Unique -ExpandProperty Model | Sort-Object)| Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                            }
+                        } until (@("back","<") -inotcontains $OCProfile_Device)
+
+                        if ($OCProfile_Device) {$OCProfile_Name += "-$OCProfile_Device"}
 
                         if (-not $OCProfilesActual.$OCProfile_Name) {
                             if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
