@@ -433,6 +433,8 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$ErrorRatio = 0,
         [Parameter(Mandatory = $false)]
+        [Double]$UplimProtection = 0,
+        [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -461,7 +463,7 @@ function Set-Stat {
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
-        if ($Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 1.0) {throw "Fluctuation out of range"}
+        if ($Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
         $AddStat = Switch($Mode) {
             "Miners" {
@@ -518,6 +520,8 @@ function Set-Stat {
                 $ToleranceMin = $Stat.Hour / $FaultTolerance
                 $ToleranceMax = $Stat.Hour * $FaultTolerance
             }
+        } elseif ($Stat.Hour -gt 0 -and $UplimProtection -gt 1.0) {            
+            $ToleranceMax = $Stat.Hour * $UplimProtection
         }
 
         if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live) {$Updated = $Stat.updated}
