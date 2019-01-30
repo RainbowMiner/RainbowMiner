@@ -54,7 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    #[PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
     [PSCustomObject]@{MainAlgorithm = "x21s";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
