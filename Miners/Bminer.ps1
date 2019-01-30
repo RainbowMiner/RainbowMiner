@@ -58,7 +58,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
-            if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device -and ($MainAlgorithm_Norm -ne "Equihash25x5" -or $Pools.$MainAlgorithm_Norm.Name -notmatch "nicehash")) {
+            if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device) {
                 $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                 $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
