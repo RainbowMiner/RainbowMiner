@@ -12,6 +12,10 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.7z"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-tpruvot/ccminer-2.3-cuda9.7z"
         Cuda = "9.0"
     }
@@ -24,13 +28,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
+    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""} #Blake2b
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "c11/flax"; Params = ""} #C11
     #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
     #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
     #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Params = ""} #Equihash
-    #[PSCustomObject]@{MainAlgorithm = "exosis"; Params = ""} #Exosis
+    [PSCustomObject]@{MainAlgorithm = "exosis"; Params = "-N 1"} #Exosis
     #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
     #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
     #[PSCustomObject]@{MainAlgorithm = "graft"; Params = ""} #CryptoNightV7
@@ -43,6 +48,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #lyra2re
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "-N 1"} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z, ZCoin        
     #[PSCustomObject]@{MainAlgorithm = "monero"; Params = "-N 1"} #CryptoNightV8
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
@@ -51,6 +57,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = " -N 3"}
     #[PSCustomObject]@{MainAlgorithm = "polytimos"; Params = ""} #Polytimos
     #[PSCustomObject]@{MainAlgorithm = "scrypt-jane"; Params = ""} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = "-N 1"} #sha256q
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = "-N 1"} #sha256t
     #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
