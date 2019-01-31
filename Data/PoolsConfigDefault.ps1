@@ -1,15 +1,17 @@
 ﻿[PSCustomObject]@{
         "AHashPool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=15}
             Currencies=@("BTC")
         }
         "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak"}
+            Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=15}
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
             Currencies=@("RVN")            
         }
         "Blockmasters" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=15}
             Currencies=@("BTC")
         }
         "BlockmastersCoins" = [PSCustomObject]@{
@@ -52,7 +54,7 @@
             Currencies=@("XMR")
         }
         "MiningPoolHub" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key";AECurrency="BTC"}
+            Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key";AECurrency="BTC";Penalty=12}
             SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
         }
@@ -75,6 +77,7 @@
             Currencies=@("BTC")
         }
         "NLPool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=12}
             Currencies=@("BTC")
         }
         "NLPoolCoins" = [PSCustomObject]@{
@@ -95,7 +98,15 @@
         "YiiMP" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
         }
+        "ZergPool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=12}
+            Currencies=@("BTC")
+        }
+        "ZergPoolCoins" = [PSCustomObject]@{
+            Currencies=@("XZC")
+        }
         "Zpool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Penalty=12}
             Currencies=@("BTC")
         }
 }

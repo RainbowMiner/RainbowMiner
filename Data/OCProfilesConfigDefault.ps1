@@ -34,32 +34,4 @@
         CoreClockBoost = "*"
         LockVoltagePoint = "*"
     }
-    'Profile6' = [PSCustomObject]@{
-        PowerLimit = 0
-        ThermalLimit = 0
-        MemoryClockBoost = "*"
-        CoreClockBoost = "*"
-        LockVoltagePoint = "*"
-    }
-    'Profile7' = [PSCustomObject]@{
-        PowerLimit = 0
-        ThermalLimit = 0
-        MemoryClockBoost = "*"
-        CoreClockBoost = "*"
-        LockVoltagePoint = "*"
-    }
-    'Profile8' = [PSCustomObject]@{
-        PowerLimit = 0
-        ThermalLimit = 0
-        MemoryClockBoost = "*"
-        CoreClockBoost = "*"
-        LockVoltagePoint = "*"
-    }
-    'Profile9' = [PSCustomObject]@{
-        PowerLimit = 0
-        ThermalLimit = 0
-        MemoryClockBoost = "*"
-        CoreClockBoost = "*"
-        LockVoltagePoint = "*"
-    }
 }

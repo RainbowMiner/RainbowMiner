@@ -1,6 +1,8 @@
 ﻿[PSCustomObject]@{
-    PoolName = @("Nicehash","Blazepool","MiningPoolHub","NLpool","ZergPool","Zpool")
-    Algorithm = @("aergo","allium","bcd","bitcore","blake2s","c11","cryptonightswap","cryptonightheavy","cryptonightv8","dedal","equihash","equihash144","equihash150","equihash192","ethash","hex","hmq1725","keccak","keccakc","lyra2z","m7m","pascal","phi","phi2","poly","renesis","skein","skunk","sonoa","timetravel","tribus","x16r","x16s","x17","x21s","x22i","xevan","yescrypt","yescryptr16","yescryptr32","yespower")
+    PoolName = @("Nicehash","MiningPoolHub","NLpool","ZergPool","Zpool")
+    Algorithm = @("AeriumX","Allium","Argon2dDYN","Bcd","Bitcore","Blake2s","C11","CryptoNightHeavy","CryptoNightSuperFast","CryptoNightV8","Cuckaroo29","Cuckoo","Equihash","Equihash16x5","Equihash24x5",
+"Equihash24x7","Equihash25x5","Ethash","GLTPawelHash","Hex","HMQ1725","Keccak","KeccakC","Lyra2RE3","Lyra2z","Lyra2zz","m7m","MTP","NrgHash","Pascal","PHI","PHI2","Polytimos","Skein","
+Skunk","SonoA","Tribus","X16r","X16rt","X16s","X17","X21s","X22i","Xevan","Yescrypt","YescryptR16","YescryptR32","YescryptR8","Yespower")
     ExcludeMinerName = @("ClaymoreEquihashAmd")
     MinerStatusURL = "https://rbminer.net"
     FastestMinerOnly = $true
@@ -14,7 +16,9 @@
     DisableMSIAmonitor = $false
     EnableOCProfiles = $false
     EnableOCVoltage = $false
-    EnableAutoUpdate = $false
+    EnableAutoUpdate = $true
+    EnableAutoAlgorithmAdd = $true
+    EnableAutoBenchmark = $true
     EnableMinerStatus = $true
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex
