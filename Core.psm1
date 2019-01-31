@@ -1232,6 +1232,8 @@ function Invoke-Core {
             $ActiveMiner.CoinName   = $Miner.Pools.PSObject.Properties.Value.CoinName
             $ActiveMiner.CoinSymbol = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
             $ActiveMiner.EnvVars = $Miner.EnvVars
+            $ActiveMiner.StartCommand = $Miner.StartCommand
+            $ActiveMiner.StopCommand = $Miner.StopCommand
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1258,6 +1260,8 @@ function Invoke-Core {
                 PowerDraw            = $Miner.PowerDraw
                 Speed                = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
                 Speed_Live           = 0
+                StartCommand         = $Miner.StartCommand
+                StopCommand          = $Miner.StopCommand
                 Best                 = $false
                 Best_Comparison      = $false
                 New                  = $false

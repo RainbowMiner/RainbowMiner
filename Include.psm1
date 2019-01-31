@@ -2238,6 +2238,8 @@ class Miner {
     $PowerDraw
     $Speed
     $Speed_Live
+    $StartCommand
+    $StopCommand
     $Best
     $Best_Comparison
     $New
@@ -2302,6 +2304,7 @@ class Miner {
         $this.Rounds = 0
 
         if (-not $this.Process) {
+            if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
             if ($this.BaseAlgorithm -icontains "Ethash" -and $this.EthPillEnable -ne "disable") {
                 $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
                 $Prescription = ""
@@ -2315,7 +2318,6 @@ class Miner {
                     Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
-
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
             $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper") -EnvVars $this.EnvVars
             $this.Process   = $Job.Process
@@ -2351,6 +2353,7 @@ class Miner {
                 }
             }
         }
+        if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
         $this.ProcessId = 0
     }
 
