@@ -85,7 +85,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     PPS           = $true
                 }
 
-                if ($Pool_Algorithm_Norm -eq "CryptonightV7" -or $Pool_Algorithm_Norm -eq "Equihash") {
+                if (@("CryptonightV7","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
