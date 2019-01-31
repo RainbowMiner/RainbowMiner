@@ -1377,7 +1377,7 @@ function Invoke-Core {
         }
     }
 
-    Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Where-Object {$Session.ActiveMiners.ProcessId -notcontains $_.ProcessId} | Select-Object ProcessId,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
+    Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Where-Object {$Session.ActiveMiners.ProcessId -notcontains $_.ProcessId -and @($Session.ActiveMiners | Select-Object -ExpandProperty Path | Split-Path -Leaf | Select-Object -unique) -icontains $_.ProcessName} | Select-Object ProcessId,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
 
     if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
@@ -1791,6 +1791,12 @@ function Invoke-Core {
                     $Session.Restart = $true
                     Write-Log "User requests to restart RainbowMiner."
                     Write-Host -NoNewline "[R] pressed - restarting RainbowMiner."
+                    $keyPressed = $true
+                }
+                "W" {
+                    Write-Host -NoNewline "[W] pressed - resetting WatchDog."
+                    #$Session.WatchdogTimers = $Session.WatchdogTimers | Where-Object {$Session.ActiveMiners | Where-Object$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
+                    Write-Log "Watchdog reset."
                     $keyPressed = $true
                 }
                 "Y" {
