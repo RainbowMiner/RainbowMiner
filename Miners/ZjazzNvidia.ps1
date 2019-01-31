@@ -20,8 +20,8 @@ $UriCuda = @(
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "bitcash"; CoinSymbol = "BITC";  Params = ""} #Cuckoo/Bitcash
-    [PSCustomObject]@{MainAlgorithm = "merit";   CoinSymbol = "MERIT"; Params = ""} #Cuckoo/Merit
+    [PSCustomObject]@{MainAlgorithm = "bitcash"; CoinSymbol = "BITC";  Params = ""; ExtendInterval = 2; FaultTolerance = 0.5} #Cuckoo/Bitcash
+    [PSCustomObject]@{MainAlgorithm = "merit";   CoinSymbol = "MERIT"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.5} #Cuckoo/Merit
     #[PSCustomObject]@{MainAlgorithm = "x22i";    CoinSymbol = "";      Params = ""} #X22i
 )
 

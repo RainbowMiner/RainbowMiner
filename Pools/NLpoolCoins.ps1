@@ -83,8 +83,13 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9 * $Pool_Factor
 
+    $Pool_Divisor = Switch($Pool_Algorithm_Norm) {
+        "cuckoo" {1e9}
+        default {1}
+    }
+
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor * $Pool_Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate ($PoolCoins_Request.$Pool_CoinSymbol.hashrate/$Pool_Divisor) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
     }
 
     foreach($Pool_Region in $Pool_Regions) {
