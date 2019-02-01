@@ -152,7 +152,7 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -323,7 +323,24 @@ function Start-Setup {
                         "currency" {
                             $Config.Currency = Read-HostArray -Prompt "Enter all currencies to be displayed (e.g. EUR,USD,BTC)" -Default $Config.Currency -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
-
+                        "benchmarkintervalsetup" {
+                            if ($IsInitialSetup) {
+                                Write-Host " "
+                                Write-Host "RainbowMiner includes a lot of different miner programs. Before the regular profit switching operation may start," -ForegroundColor Cyan
+                                Write-Host "all programs need to be benchmarked on your system, once. The benchmarks will already mine into your wallet," -ForegroundColor Cyan
+                                Write-Host "but it may take a long time to finish. Please be patient. It is a one time thing." -ForegroundColor Cyan
+                                Write-Host " "
+                                Write-Host "Please select the benchmark-accuracy. This value will determine the runtime interval used for benchmarks" -ForegroundColor Cyan
+                                Write-Host "(this value can be set to individual values by directly changing BenchmarkInterval in config.txt)." -ForegroundColor Cyan
+                                Write-Host "- Quick   = 60 seconds (should be enough, for most cases)" -ForegroundColor Cyan
+                                Write-Host "- Normal  = 90 seconds" -ForegroundColor Cyan
+                                Write-Host "- Precise = 180 seconds" -ForegroundColor Cyan                                
+                                $BenchmarkAccuracy = Read-HostString -Prompt "Please select the benchmark accuracy (enter quick,normal or precise)" -Default $(if ($Config.BenchmarkInterval -le 60){"quick"} elseif ($Config.BenchmarkInterval -le 90) {"normal"} else {"precise"}) -Valid @("quick","normal","precise") -Mandatory -Characters "A-Z" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.BenchmarkInterval = Switch($BenchmarkAccuracy) {"quick" {60};"normal" {90};"precise" {180}}
+                            } else {
+                                $GlobalSetupStepStore = $false 
+                            }
+                        }
                         "poolname" {
                             if ($SetupType -eq "A") {
                                 Write-Host ' '
