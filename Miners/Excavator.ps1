@@ -25,9 +25,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonightV8"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #CryptonightV8
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; Threads = 1; MinMemGB = 4; ExtendInterval = 1; Params = @()} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "equihash"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Equihash
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
+    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Threads = 1; MinMemGB = 1; ExtendInterval = 1; Params = @()} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt
+    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #NeoScrypt
     [PSCustomObject]@{MainAlgorithm = "skunk"; Threads = 1; MinMemGB = 2; ExtendInterval = 1; Params = @()} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Threads = 1; MinMemGB = 2; ExtendInterval = 3; FaultTolerance = 0.5; Params = @()} #X16R
     #[PSCustomObject]@{MainAlgorithm = "daggerhashimoto"; SecondaryAlgorithm = "decred"; Threads = 1; MinMemGB = 4; ExtendInterval = 2; Params = @()} #Dual mining
