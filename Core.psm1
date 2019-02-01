@@ -272,8 +272,10 @@ function Invoke-Core {
         $Session.Config.UIstyle = if ( $Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite" ) {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
+        if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.LocalAPIport) {$Session.Config | Add-Member LocalAPIport 4000 -Force}
         Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.LocalAPIport} > $null
+
 
         #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
@@ -578,7 +580,7 @@ function Invoke-Core {
 
     if (-not $Session.Devices) {
         Write-Log -Level Warn "No devices available. Please check your configuration. "
-        Start-Sleep $Session.BenchmarkInterval
+        Start-Sleep 60
         continue
     }
 
@@ -1685,7 +1687,7 @@ function Invoke-Core {
 
     #Extend benchmarking interval to the maximum from running miners
     $ExtendInterval  = [Math]::Max(1,($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval | Measure-Object -Maximum).Maximum * (-not $Session.Config.DisableExtendInterval))
-    $Interval = if (-not $Session.IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.BenchmarkInterval -ne $Session.Config.Interval)) {$Session.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
+    $Interval = if (-not $Session.IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.Config.BenchmarkInterval -ne $Session.Config.Interval)) {$Session.Config.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
 
     #Dynamically adapt current interval
     $NextInterval = [Math]::Max($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)

@@ -464,6 +464,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 
 #### Technical/Other ####
 - **Interval** = timing interval in seconds of RainbowMiner [default=60]
+- **BenchmarkInterval** = timing interval in seconds, used for benchmarks [default=60]
 - **MinimumMiningIntervals** = minimum number of intervals a miner will run, before switching will be allowed [default=1]
 - **SSL** = set to 1, if only ssl connections wanted
 - **Proxy** = set your proxy address here, if you are using one
