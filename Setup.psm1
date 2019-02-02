@@ -1755,7 +1755,7 @@ function Start-Setup {
 
                         if (-not $OCProfilesActual.$OCProfile_Name) {
                             if (Read-HostBool "Do you want to create new profile `"$($OCProfile_Name)`"?" -Default $true) {
-                                $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*"}) -Force                                                
+                                $OCProfilesActual | Add-Member $OCProfile_Name ([PSCustomObject]@{}) -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["OCProfiles"].Path -Data $OCProfilesActual > $null
                             } else {
                                 $OCProfile_Name = ''
@@ -1780,6 +1780,15 @@ function Start-Setup {
                         $OCProfileSetupStep = 0
                         [System.Collections.ArrayList]$OCProfileSetupSteps = @()
                         [System.Collections.ArrayList]$OCProfileSetupStepBack = @()
+
+                        $OCProfileDefault = [PSCustomObject]@{
+                            PowerLimit = 0
+                            ThermalLimit = 0
+                            MemoryClockBoost = "*"
+                            CoreClockBoost = "*"
+                            LockVoltagePoint = "*"
+                        }
+                        foreach($SetupName in $OCProfileDefault.PSObject.Properties.Name) {if ($OCProfilesActual.$OCProfile_Name.$SetupName -eq $null){$OCProfilesActual.$OCProfile_Name | Add-Member $SetupName $OCProfileDefault.$SetupName -Force}}
 
                         $OCProfileConfig = $OCProfilesActual.$OCProfile_Name.PSObject.Copy()
 

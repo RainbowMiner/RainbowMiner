@@ -3393,8 +3393,22 @@ function Set-OCProfilesConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
+            if (-not $Preset.PSObject.Properties.Name) {
+                $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
+            } else {
+                $Default = [PSCustomObject]@{
+                    PowerLimit = 0
+                    ThermalLimit = 0
+                    MemoryClockBoost = "*"
+                    CoreClockBoost = "*"
+                    LockVoltagePoint = "*"
+                }
+                $Preset.PSObject.Properties.Name | Foreach-Object {
+                    $PresetName = $_
+                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$PresetName.$SetupName -eq $null){$Preset.$PresetName | Add-Member $SetupName $Default.$SetupName -Force}}
+                }
+            }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
