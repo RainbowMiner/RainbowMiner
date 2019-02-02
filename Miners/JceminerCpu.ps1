@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Jceminer\jce_cn_cpu_miner$($f = $Global:GlobalCPUInfo.Features; if($f.'64bit'){'64'}else{'32'}).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33p-jceminer/jce_cn_cpu_miner.windows.033p.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33q-jceminer/jce_cn_cpu_miner.windows.033q.zip"
 $Port = "320{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 1.5
@@ -21,8 +21,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; ScratchPadMb = 2; Params = "--variation 11"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast2";      Threads = 1; ScratchPadMb = 2; Params = "--variation 21"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Threads = 1; ScratchPadMb = 2; Params = "--variation 10"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/waltz";      Threads = 1; ScratchPadMb = 2; Params = "--variation 22"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Threads = 1; ScratchPadMb = 2; Params = "--variation 8"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; ScratchPadMb = 2; Params = "--variation 7"}    
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; ScratchPadMb = 2; Params = "--variation 7"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; ScratchPadMb = 1; Params = "--variation 2"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Threads = 1; ScratchPadMb = 1; Params = "--variation 4"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Threads = 1; ScratchPadMb = 1; Params = "--variation 6"}
@@ -56,6 +57,7 @@ $Commands = [PSCustomObject[]]@(
 #N=19 Cryptolight-Uplexa
 #N=20 Cryptolight-Turtle v2
 #N=21 Cryptonight-Stellite v8
+#N=22 Cryptonight-Waltz/Graft
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
