@@ -12,15 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-cryptodredge/CryptoDredge_0.16.1_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.2-cryptodredge/CryptoDredge_0.16.2_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-cryptodredge/CryptoDredge_0.16.1_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.2-cryptodredge/CryptoDredge_0.16.2_cuda_9.2_windows.zip"
         Cuda = "9.2"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.1-cryptodredge/CryptoDredge_0.16.1_cuda_9.1_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.2-cryptodredge/CryptoDredge_0.16.2_cuda_9.1_windows.zip"
         Cuda = "9.1"
     }
 )
@@ -33,10 +33,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";   MinMemGb = 1; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast / Masari
+    [PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast
+    [PSCustomObject]@{MainAlgorithm = "cnfast2";   MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
     [PSCustomObject]@{MainAlgorithm = "cnhaven";   MinMemGb = 4; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cnheavy";   MinMemGb = 4; Params = ""} #Cryptonightheavy
     [PSCustomObject]@{MainAlgorithm = "cnsaber";   MinMemGb = 4; Params = ""} #Cryptonightheavytube
+    [PSCustomObject]@{MainAlgorithm = "cnsuperfast"; MinMemGb = 2; Params = ""} #CryptonightSuperFast / Swap
     [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
     [PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal
@@ -54,7 +56,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
-    #[PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
     [PSCustomObject]@{MainAlgorithm = "x21s";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
