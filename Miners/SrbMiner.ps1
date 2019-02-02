@@ -38,7 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "b2n"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-B2N 2 threads
     [PSCustomObject]@{MainAlgorithm = "bittubev2" ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-BittypeV2 2 thread
     [PSCustomObject]@{MainAlgorithm = "dark"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Dark (Cryo) thread
-    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast (Masari) 2 threads (upto #359.999)
+    [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast 2 threads (upto #359.999)
     [PSCustomObject]@{MainAlgorithm = "fast2"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast2 (Masari) 2 threads (at #360.000)
     [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Festival 2 thread
     [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Lite 2 threads
