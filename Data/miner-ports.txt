@@ -70,6 +70,7 @@
 333	TTminer
 334	Energiminer
 335	GrinProMiner
+336	LolMiner07
 
 400	Sgminer
 401	SgminerBitcore
