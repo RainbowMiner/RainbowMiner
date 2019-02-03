@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.9-teamred/teamredminer-v0.3.9-win.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.10-teamred/teamredminer-v0.3.10-win.zip"
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
