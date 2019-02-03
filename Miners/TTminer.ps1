@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
+$Path = ".\Bin\NVIDIA-TTminer\TradeTec-MinerCmd.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.8-ttminer/TradeTec-Miner-2.1.8.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
