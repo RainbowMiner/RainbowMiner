@@ -5,8 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\NVIDIA-TTminer\TradeTec-MinerCmd.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.8-ttminer/TradeTec-Miner-2.1.8.zip"
+$Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.8-ttminer/TT-Miner-2.1.8.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"  ; MinMemGB = 2; Params = ""} #Ethash2GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
-    #[PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP 
+    [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""} #ProgPoW2gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""} #ProgPoW3gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""} #ProgPoW 
@@ -69,7 +69,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Path           = $Path
                 Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -RH $($_.Params)"
                 HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API            = "Wrapper"
+                API            = "Claymore"
                 Port           = $Miner_Port
                 DevFee         = $DevFee
                 Uri            = $Uri
