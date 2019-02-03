@@ -96,7 +96,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Commands | ForEach-Object {
         $MinMemGb = $_.MinMemGb
         
-        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)})
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
