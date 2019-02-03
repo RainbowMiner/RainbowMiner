@@ -15,22 +15,22 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     #GPU - profitable 20/04/2018
-    [PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
+    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = "-N 1"} #c11
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = "-N 1"} #HSR
-    [PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
-    [PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
+    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = "-N 1"} #Keccak
+    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = "-N 1"} #Keccakc
     #[PSCustomObject]@{MainAlgorithm = "lyra2"; Params = ""} #Lyra2
-    [PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
+    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = "-N 1"} #lyra2v2
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = ""} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "poly"; Params = "-N 1"} #Polytimos
-    [PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
+    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = "-N 1"} #Skein
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = "-N 1"} #skein2
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = "-N 1"} #Veltor
     #[PSCustomObject]@{MainAlgorithm = "whirlcoin"; Params = ""} #WhirlCoin
     #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
-    [PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
+    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
     [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 v1.2 faster
 
     # ASIC - never profitable 20/04/2018
