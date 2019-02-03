@@ -15,7 +15,7 @@ if (-not $Payout_Currencies) {
 
 $PoolCoins_Request = [PSCustomObject]@{}
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

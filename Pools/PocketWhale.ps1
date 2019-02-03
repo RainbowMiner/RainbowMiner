@@ -34,7 +34,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath)/stats" -tag $Name -timeout 15
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath)/stats" -tag $Name -timeout 15 -cycletime 120
             $Pool_Port = $Pool_Request.config.ports | Where-Object desc -match '(Mid|High)' | Select-Object -First 1 -ExpandProperty port
             @("CPU","GPU","RIG") | Foreach-Object {
                 $PortType = $_

@@ -17,7 +17,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/status" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/status" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -26,7 +26,7 @@ catch {
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/currencies" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.ahashpool.com/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

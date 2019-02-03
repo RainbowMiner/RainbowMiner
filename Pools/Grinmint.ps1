@@ -24,9 +24,9 @@ $Pool_Request = [PSCustomObject]@{}
 $Pool_NetworkRequest = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.grinmint.com/v1/poolStats" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name -retry 3 -retrywait 1000
+    $Pool_Request = Invoke-RestMethodAsync "https://api.grinmint.com/v1/poolStats" -tag $Name -retry 3 -retrywait 1000 -cycletime 120
     if (-not $Pool_Request.status) {throw}
-    #$Pool_NetworkRequest = Invoke-RestMethodAsync "https://api.grinmint.com/v1/networkStats" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name -retry 3 -retrywait 1000 -delay 500
+    #$Pool_NetworkRequest = Invoke-RestMethodAsync "https://api.grinmint.com/v1/networkStats" -tag $Name -retry 3 -retrywait 1000 -delay 500 -cycletime 120
     #if (-not $Pool_NetworkRequest.status) {throw}
 }
 catch {

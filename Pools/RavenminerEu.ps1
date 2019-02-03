@@ -17,7 +17,7 @@ $Pool_Request = [PSCustomObject]@{}
 
 $Success = $true
 try {
-    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name)){throw}
+    if (-not ($Pool_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/status" -tag $Name -cycletime 120)){throw}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -51,7 +51,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    if (-not ($PoolCoins_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/currencies" -tag $Name)){throw}
+    if (-not ($PoolCoins_Request = Invoke-RestMethodAsync "https://eu.ravenminer.com/api/currencies" -tag $Name -cycletime 120)){throw}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

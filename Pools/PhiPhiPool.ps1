@@ -17,7 +17,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://phi-phi-pool.com/api/status" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "https://phi-phi-pool.com/api/status" -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
@@ -30,7 +30,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://phi-phi-pool.com/api/currencies" -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://phi-phi-pool.com/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     Write-Log -Level Warn "Pool currencies API ($Name) has failed. "

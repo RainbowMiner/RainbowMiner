@@ -45,7 +45,7 @@ $Pool_Request = [PSCustomObject]@{}
 $Pool_ApiBase = "https://www.miningrigrentals.com/api/v2"
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "$Pool_ApiBase/info/algos" -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "$Pool_ApiBase/info/algos" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

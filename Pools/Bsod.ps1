@@ -19,7 +19,7 @@ $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -tag $Name -cycletime ([Math]::Max(120,$Session.Config.Interval))
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -33,7 +33,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -delay 2000 -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "http://api.bsod.pw/api/status" -delay 2000 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

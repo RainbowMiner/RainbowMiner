@@ -18,7 +18,7 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/currencies" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,7 +32,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 }
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/status" -cycletime ([Math]::Max(120,$Session.Config.Interval)) -tag $Name
+    $Pool_Request = Invoke-RestMethodAsync "https://www.nlpool.nl/api/status" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
