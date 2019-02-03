@@ -31,7 +31,7 @@ if (($Pool_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
+$Pool_Regions = @("eu", "usa", "hk") #, "jp", "in", "br")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
@@ -65,45 +65,47 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     $This_Port = $Pool_Port
                     $This_Host = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                 }
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $Pool_Coin
-                    CoinSymbol    = ""
-                    Currency      = "BTC"
-                    Price         = $Stat.$StatAverage
-                    StablePrice   = $Stat.Week
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+tcp"
-                    Host          = $This_Host
-                    Port          = $This_Port
-                    User          = "$($Wallets.BTC).{workername:$Worker}"
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $false
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_PoolFee
-                    PPS           = $true
-                }
-
-                if (@("CryptonightV7","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {
+                if ($Pool_Algorithm_Norm -ne "Equihash25x5" -or $Pool_Region -ne "eu") {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = ""
                         Currency      = "BTC"
-                        Price         = $Stat.Minute_5
-                        StablePrice   = $Stat.Day #instead of .Week
+                        Price         = $Stat.$StatAverage
+                        StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+ssl"
+                        Protocol      = "stratum+tcp"
                         Host          = $This_Host
-                        Port          = $This_Port + 30000
+                        Port          = $This_Port
                         User          = "$($Wallets.BTC).{workername:$Worker}"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $true
+                        SSL           = $false
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
                         PPS           = $true
+                    }
+
+                    if (@("CryptonightV7","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {
+                        [PSCustomObject]@{
+                            Algorithm     = $Pool_Algorithm_Norm
+                            CoinName      = $Pool_Coin
+                            CoinSymbol    = ""
+                            Currency      = "BTC"
+                            Price         = $Stat.Minute_5
+                            StablePrice   = $Stat.Day #instead of .Week
+                            MarginOfError = $Stat.Week_Fluctuation
+                            Protocol      = "stratum+ssl"
+                            Host          = $This_Host
+                            Port          = $This_Port + 30000
+                            User          = "$($Wallets.BTC).{workername:$Worker}"
+                            Pass          = "x"
+                            Region        = $Pool_RegionsTable.$Pool_Region
+                            SSL           = $true
+                            Updated       = $Stat.Updated
+                            PoolFee       = $Pool_PoolFee
+                            PPS           = $true
+                        }
                     }
                 }
             }
