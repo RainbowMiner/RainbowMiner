@@ -62,7 +62,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $MinMemGb = $_.MinMemGb
             $Params = $_.Params
         
-            $Miner_Device = @($Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)})
+            $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
             if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            

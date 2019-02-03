@@ -115,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		[hashtable]$Miner_Device_hash = @{}
 		$Commands.MinMemGB | Select-Object -Unique | Foreach-Object {
 			$MinMemGB = $_
-			$Miner_Device_hash[$MinMemGB] = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb})
+			$Miner_Device_hash[$MinMemGB] = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1gb}
 		}
  
 		$Commands | ForEach-Object {
