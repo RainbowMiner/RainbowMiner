@@ -49,8 +49,8 @@
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = "-i 19"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
         )
-        "CcminerKlausT" = [PSCustomObject[]]@(
-            [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "-i 17.6"; OCprofile = ""; MSIAprofile = "3"}
+        "CcminerKlausT" = [PSCustomObject[]]@(            
+            [PSCustomObject]@{MainAlgorithm = "lyra2v3"; SecondaryAlgorithm = ""; Params = "-i 24"; OCprofile = ""; MSIAprofile = "4"}
         )
         "CcminerPigeoncoin" = [PSCustomObject[]]@(        
             [PSCustomObject]@{MainAlgorithm = "x16s"; SecondaryAlgorithm = ""; Params = ""; OCprofile = ""; MSIAprofile = "4"}
