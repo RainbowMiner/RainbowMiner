@@ -65,47 +65,64 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     $This_Port = $Pool_Port
                     $This_Host = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
                 }
-                if ($Pool_Algorithm_Norm -ne "Equihash25x5" -or $Pool_Region -ne "eu") {
+                $Pool_Failover = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_.$Pool_Host"}})
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin
+                    CoinSymbol    = ""
+                    Currency      = "BTC"
+                    Price         = $Stat.$StatAverage
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+tcp"
+                    Host          = $This_Host
+                    Port          = $This_Port
+                    User          = "$($Wallets.BTC).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $false
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_PoolFee
+                    PPS           = $true
+                    Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
+                        [PSCustomObject]@{
+                            Protocol = "stratum+tcp"
+                            Host     = $_
+                            Port     = $This_Port
+                            User     = "$($Wallets.BTC).{workername:$Worker}"
+                            Pass     = "x"
+                        }
+                    })
+                }
+
+                if ($Pool_Algorithm_Norm -match "^(equihash|cryptonight)") {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = ""
                         Currency      = "BTC"
-                        Price         = $Stat.$StatAverage
-                        StablePrice   = $Stat.Week
+                        Price         = $Stat.Minute_5
+                        StablePrice   = $Stat.Day #instead of .Week
                         MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+tcp"
+                        Protocol      = "stratum+ssl"
                         Host          = $This_Host
-                        Port          = $This_Port
+                        Port          = $This_Port + 30000
                         User          = "$($Wallets.BTC).{workername:$Worker}"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $false
+                        SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_PoolFee
                         PPS           = $true
-                    }
-
-                    if (@("CryptonightV7","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {
-                        [PSCustomObject]@{
-                            Algorithm     = $Pool_Algorithm_Norm
-                            CoinName      = $Pool_Coin
-                            CoinSymbol    = ""
-                            Currency      = "BTC"
-                            Price         = $Stat.Minute_5
-                            StablePrice   = $Stat.Day #instead of .Week
-                            MarginOfError = $Stat.Week_Fluctuation
-                            Protocol      = "stratum+ssl"
-                            Host          = $This_Host
-                            Port          = $This_Port + 30000
-                            User          = "$($Wallets.BTC).{workername:$Worker}"
-                            Pass          = "x"
-                            Region        = $Pool_RegionsTable.$Pool_Region
-                            SSL           = $true
-                            Updated       = $Stat.Updated
-                            PoolFee       = $Pool_PoolFee
-                            PPS           = $true
-                        }
+                        Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
+                            [PSCustomObject]@{
+                                Protocol = "stratum+tcp"
+                                Host     = $_
+                                Port     = $This_Port
+                                User     = "$($Wallets.BTC).{workername:$Worker}"
+                                Pass     = "x"
+                            }
+                        })
                     }
                 }
             }
