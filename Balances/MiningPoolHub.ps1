@@ -14,7 +14,7 @@ $Request = [PSCustomObject]@{}
 
 # Get user balances
 try {
-    $Request = Invoke-RestMethodAsync "http://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Request = Invoke-RestMethodAsync "https://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -32,10 +32,15 @@ $Request.getuserallbalances.data | Foreach-Object {
     #Define currency
     $Currency = $_.coin
     try {
-        $Currency = Invoke-GetUrl "http://$($_.coin).miningpoolhub.com/index.php?page=api&action=getpoolinfo&api_key=$($PoolConfig.API_Key)" | Select-Object -ExpandProperty getpoolinfo | Select-Object -ExpandProperty data | Select-Object -ExpandProperty currency 
+        $Currency = Invoke-GetUrl "https://$($_.coin).miningpoolhub.com/index.php?page=api&action=getpoolinfo&api_key=$($PoolConfig.API_Key)" | Select-Object -ExpandProperty getpoolinfo | Select-Object -ExpandProperty data | Select-Object -ExpandProperty currency
     }
     catch {
-        Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
+        $Currency = Get-CoinSymbol $_.coin
+        if (-not $Currency -and $_.coin -match '-') {$Currency = Get-CoinSymbol ($_.coin -replace '\-.*$')}
+        if (-not $Currency) {
+            $Currency = $_.coin
+            Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
+        }
     }
 
     [PSCustomObject]@{
