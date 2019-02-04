@@ -9,7 +9,7 @@ $Path = ".\Bin\Equihash-lolMiner07\lolMiner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7alpha4-lolminer/lolMiner_v07_alpha4_Win64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "336{0:d2}"
-$Cuda = 10.0
+$Cuda = "10.0"
 $DevFee = 2.0
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
