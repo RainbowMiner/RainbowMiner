@@ -20,7 +20,6 @@ try {
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
 }
 
 $Count = 0
