@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
-$ManualUri = "https://github.com/KlausT/ccminer/releases"
+$ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "106{0:d2}"
 $DevFee = 0.0
 
