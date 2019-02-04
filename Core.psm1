@@ -1300,7 +1300,6 @@ function Invoke-Core {
         $_.Profit_Bias = $_.Profit_Unbias
         if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -or ($_.GetStatus() -eq [MinerStatus]::Running)) {
             if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals) {$_.IsRunningFirstRounds=$true}
-            if ($_.ExtendInterval -and $_.ExtendInterval -gt 1 -and $_.Rounds -gt 0 -and ($_ | Where-Object Profit -EQ $null | Measure-Object).Count) {$_.ExtendInterval = 1}
         }
     }
 
