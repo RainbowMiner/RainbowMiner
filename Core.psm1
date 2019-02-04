@@ -1299,6 +1299,7 @@ function Invoke-Core {
     $Session.ActiveMiners | Where-Object {$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.GetStatus() -eq [MinerStatus]::Running)} | Foreach-Object {
         $_.Profit_Bias = $_.Profit_Unbias
         if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals -and (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -or ($_.GetStatus() -eq [MinerStatus]::Running))) {$_.IsRunningFirstRounds=$true}
+        if ($_.ExtendInterval -and $_.ExtendInterval -gt 1 -and $_.Rounds -gt 0 -and ($_ | Where-Object Profit -EQ $null | Measure-Object).Count) {$_.ExtendInterval = 1}
     }
 
     #Get most profitable miner combination
