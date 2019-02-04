@@ -2268,6 +2268,7 @@ class Miner {
     [Bool]$IsFocusWalletMiner = $false
     [Bool]$IsExclusiveMiner = $false
     [Bool]$IsRunningFirstRounds = $false
+    [Bool]$NoCPUMining = $false
     hidden [System.Management.Automation.Job]$Process = $null
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero

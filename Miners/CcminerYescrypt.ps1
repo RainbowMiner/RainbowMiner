@@ -25,7 +25,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""} #YescryptR16 #Yenten
     [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""} #PPN
     [PSCustomObject]@{MainAlgorithm = "yescryptR24"; Params = ""} #YescryptR24
-    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = ""; ExtendInterval = 2; Penalty = 1} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-i 12.5"; ExtendInterval = 2; Penalty = 1} #YescryptR32
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

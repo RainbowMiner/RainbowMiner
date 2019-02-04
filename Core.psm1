@@ -1100,6 +1100,7 @@ function Invoke-Core {
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
         if ($Miner.EnvVars -eq $null) {$Miner | Add-Member EnvVars @() -Force}
+        if ($Miner.NoCPUMining -eq $null) {$Miner | Add-Member NoCPUMining $false -Force}
 
         $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
         $Miner | Add-Member IsExclusiveMiner   (($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive | Measure-Object).Count -gt 0) -Force
@@ -1236,6 +1237,7 @@ function Invoke-Core {
             $ActiveMiner.EnvVars = $Miner.EnvVars
             $ActiveMiner.StartCommand = $Miner.StartCommand
             $ActiveMiner.StopCommand = $Miner.StopCommand
+            $ActiveMiner.NoCPUMining = $Miner.NoCPUMining
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1286,6 +1288,7 @@ function Invoke-Core {
                 IsExclusiveMiner     = $Miner.IsExclusiveMiner
                 MinSamples           = $Miner.MinSamples
                 EnvVars              = $Miner.EnvVars
+                NoCPUMining          = $Miner.NoCPUMining
             }
         }
     }
