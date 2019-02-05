@@ -1,4 +1,5 @@
 ﻿[PSCustomObject]@{
+    "Allium" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile=""}
     "Balloon" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile=""}
     "Dedal" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile=""}
     "GLTAstralHash" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile=""}
