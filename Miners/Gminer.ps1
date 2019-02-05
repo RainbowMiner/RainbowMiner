@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.29-gminer/gminer_1_29_minimal_windows64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-gminer/gminer_1_31_minimal_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
@@ -16,7 +16,8 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGB = 8; Params = "--algo aeternity"; ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN    
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8; Params = "--algo grin29"; ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 9; Params = "--algo grin31"; ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2; Params = "--algo 96_5"} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--algo 144_5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3; Params = "--algo 150_5"} #Equihash 150,5/BEAM
