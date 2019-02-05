@@ -258,9 +258,9 @@ function Get-TickerGlobal {
     if ($Global:GlobalGetTicker.Count -gt 0) {
         try {
             $SymbolStr = (@($Global:GlobalGetTicker | Sort-Object) -join ',').ToUpper()
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=$($SymbolStr)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker"
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=$($SymbolStr)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker" -cycletime 1800
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Symbols $($SymbolStr) not found on Cryptocompare"
+                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
             } else {
                 $RatesAPI.BTC
             }
@@ -291,16 +291,16 @@ function Get-Ticker {
     try {
         $SymbolStr = (@($Symbol | Sort-Object) -join ',').ToUpper()
         if ($SymbolStr -match ',') {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey -cycletime 1800
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Symbols $($SymbolStr) not found on Cryptocompare"
+                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
             } else {
                 $RatesAPI
             }
         } else {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey -cycletime 1800
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Symbol $($SymbolStr) not found on Cryptocompare"
+                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
             } else {
                 [PSCustomObject]@{$SymbolStr = $RatesAPI}
             }
