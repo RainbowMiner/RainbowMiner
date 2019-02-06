@@ -195,15 +195,16 @@
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                             $CurrentPool = $_
                             $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
-                            @("Wallet","User","API_ID","API_Key","API_Secret") | Where-Object {$CurrentPool.$_} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                            @("Wallet","User","API_ID","API_Key","API_Secret","Password") | Where-Object {$CurrentPool.$_} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
                         }
                     }
-                    $PurgeStrings = $PurgeStrings | Select-Object -Unique
+                    $PurgeStrings = $PurgeStrings | Select-Object -Unique | Foreach-Object {[regex]::Escape($_)}
 
                     if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
-                    @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Foreach-Object {
+                    @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
                         $NewFile = "$DebugPath\$($_.Name)"
                         Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
+                        (Get-Item $NewFile).LastWriteTime = $_.LastWriteTime
                     }
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
