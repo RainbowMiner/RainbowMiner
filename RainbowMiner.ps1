@@ -177,7 +177,7 @@ $EnableMinerStatus = $true
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version = "3.9.5.0"
+$Session.Version = "3.9.5.1"
 
 $Session.Strikes           = 3
 $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
@@ -215,6 +215,8 @@ if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
 Import-Module .\Core.psm1
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 if ($UseTimeSync) {Test-TimeSync}
 
