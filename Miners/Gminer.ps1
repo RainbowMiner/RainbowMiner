@@ -5,7 +5,7 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\Equihash-Gminer\miner.exe"
+$Path = ".\Bin\NVIDIA-Gminer\miner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.31-gminer/gminer_1_31_minimal_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
