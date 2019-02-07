@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\Equihash-lolMiner07\lolMiner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7alpha4-lolminer/lolMiner_v07_alpha4_Win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7alpha5-lolminer/lolMiner_v07_alpha5_Win64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "336{0:d2}"
 $Cuda = "10.0"
@@ -68,7 +68,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     DeviceName  = $Miner_Device.Name
                     DeviceModel = $Miner_Model
                     Path        = $Path
-                    Arguments   = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $($_.Params)"
+                    Arguments   = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --tls $(if ($Pools.$Algorithm_Norm.SSL) {1} else {0}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $($_.Params)"
                     HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                     API         = "Lol"
                     Port        = $Miner_Port
