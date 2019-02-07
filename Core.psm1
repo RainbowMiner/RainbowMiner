@@ -171,28 +171,6 @@
     }
 }
 
-function Update-ActiveMiners {
-    Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
-    $MinersUpdated = 0
-    $MinersFailed  = 0
-    $ExclusiveMinersFailed = 0
-    $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
-        $Miner = $_
-        Switch ($Miner.GetStatus()) {
-            "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
-            "RunningFailed" {$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
-        }        
-    }
-    if ($MinersFailed) {
-        $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
-    }
-    [PSCustomObject]@{
-        MinersUpdated = $MinersUpdated
-        MinersFailed  = $MinersFailed
-        ExclusiveMinersFailed = $ExclusiveMinersFailed
-    }
-}
-
 function Invoke-Core {
 
     #Load the config    
@@ -299,6 +277,7 @@ function Invoke-Core {
         $API.RemoteAPI = $Session.Config.RemoteAPI
         $API.LocalAPIport = $Session.Config.LocalAPIport
     }
+    if (-not (Test-Path Variable:Global:AsyncMiner)) {Start-AsyncMiner}
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
@@ -1715,24 +1694,22 @@ function Invoke-Core {
     $cursorPosition = $host.UI.RawUI.CursorPosition
     Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
 
-    $SamplesPicked = 0
     $WaitRound = 0
+    $WaitRoundStart = $Session.Timer
     do {
         $WaitRound++
 
         $Session.TimerBackup = $Session.Timer
 
-        Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
+        Start-Sleep 1
 
         $AllMinersFailed = $false
-        if ($WaitRound % 3 -eq 0) {
-            $MinersUpdateStatus = Update-ActiveMiners
-            if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
+        if ($AsyncMiner.LastUpdate -gt $WaitRoundStart) {
+            if ((-not $AsyncMiner.MinersUpdated -and $AsyncMiner.MinersFailed) -or $AsyncMiner.ExclusiveMinersFailed) {
                 $AllMinersFailed = $true
                 $host.UI.RawUI.CursorPosition = $CursorPosition
-                Write-Log -Level Warn "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
+                Write-Log -Level Warn "$(if (-not $AsyncMiner.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             }
-            $SamplesPicked++
         }
 
         $Session.Timer = (Get-Date).ToUniversalTime()
@@ -1821,8 +1798,6 @@ function Invoke-Core {
             }
         }
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
-
-    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
 
     if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
@@ -1926,6 +1901,7 @@ function Stop-Core {
     #Stop services
     if (-not $Session.Config.DisableAPI)         {Stop-APIServer}
     if (-not $Session.Config.DisableAsyncLoader) {Stop-AsyncLoader}
+    Stop-AsyncMiner
 
     Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
     Write-Log "Gracefully halting RainbowMiner"

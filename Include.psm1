@@ -2424,6 +2424,22 @@ class Miner {
         }
     }
 
+    [TimeSpan]GetCurrentActiveTime() {
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        
+        if ($Begin -and $End) {
+            return ($End - $Begin)
+        }
+        elseif ($Begin) {
+            return ((Get-Date) - $Begin)
+        }
+        else {
+            return 0
+        }
+    }
+
     [Int]GetActivateCount() {
         return $this.Activated
     }
@@ -3714,6 +3730,15 @@ Param(
     $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
     $utf8 = new-object -TypeName System.Text.UTF8Encoding
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
+}
+
+function Get-Sigma {
+    [CmdletBinding()]
+    param($data)
+
+    $mean  = ($data | measure-object -Average).Average
+    $bias  = $data.Count-1.5+1/(8*($data.Count-1))
+    [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
 }
 
 function Invoke-GetUrl {
