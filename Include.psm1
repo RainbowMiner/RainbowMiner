@@ -229,7 +229,7 @@ function Get-CoinSymbol {
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-RestMethod "https://rbminer.net/api/coins.php" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Request = Invoke-RestMethod "http://rbminer.net/api/coins.php" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -2424,22 +2424,6 @@ class Miner {
         }
     }
 
-    [TimeSpan]GetCurrentActiveTime() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
-        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
-        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
-        
-        if ($Begin -and $End) {
-            return ($End - $Begin)
-        }
-        elseif ($Begin) {
-            return ((Get-Date) - $Begin)
-        }
-        else {
-            return 0
-        }
-    }
-
     [Int]GetActivateCount() {
         return $this.Activated
     }
@@ -3732,15 +3716,6 @@ Param(
     [System.BitConverter]::ToString($md5.ComputeHash($utf8.GetBytes($value))).ToUpper() -replace '-'
 }
 
-function Get-Sigma {
-    [CmdletBinding()]
-    param($data)
-
-    $mean  = ($data | measure-object -Average).Average
-    $bias  = $data.Count-1.5+1/(8*($data.Count-1))
-    [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
-}
-
 function Invoke-GetUrl {
 [cmdletbinding()]
 Param(   
@@ -3942,7 +3917,7 @@ Param(
 function Get-MinerStatusKey {    
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     try {
-        $Response = Invoke-RestMethod -Uri "https://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Response = Invoke-RestMethod -Uri "http://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
         if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1}
         Write-Log "Miner Status key created: $Response"
         $Response
@@ -3991,7 +3966,7 @@ function Invoke-ReportMinerStatus {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
-    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
+    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "http://rbminer.net/api/report.php"})}
 
     # Send the request
     try {

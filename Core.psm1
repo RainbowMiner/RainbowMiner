@@ -171,6 +171,28 @@
     }
 }
 
+function Update-ActiveMiners {
+    Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
+    $MinersUpdated = 0
+    $MinersFailed  = 0
+    $ExclusiveMinersFailed = 0
+    $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
+        $Miner = $_
+        Switch ($Miner.GetStatus()) {
+            "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
+            "RunningFailed" {$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
+        }        
+    }
+    if ($MinersFailed) {
+        $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+    }
+    [PSCustomObject]@{
+        MinersUpdated = $MinersUpdated
+        MinersFailed  = $MinersFailed
+        ExclusiveMinersFailed = $ExclusiveMinersFailed
+    }
+}
+
 function Invoke-Core {
 
     #Load the config    
@@ -277,7 +299,6 @@ function Invoke-Core {
         $API.RemoteAPI = $Session.Config.RemoteAPI
         $API.LocalAPIport = $Session.Config.LocalAPIport
     }
-    if (-not (Test-Path Variable:Global:AsyncMiner)) {Start-AsyncMiner}
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
@@ -458,7 +479,7 @@ function Invoke-Core {
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
-            try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php"} catch {Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
+            try {$DonationData = Invoke-GetUrl "http://rbminer.net/api/dconf.php"} catch {Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = '{"Wallets":{"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ethermine":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Nanopool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"NiceHash":{"BTC":"3HFhYADZvybBstETYNEVMqVWMU9EJRfs4f","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"RavenminerEu":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"average-2e","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl","groestl","neoscrypt"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"average-2e","Penalty":0,"Algorithm":["lyra2z","skein","myriadgroestl"]},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"average-2e","Penalty":0}},"Pools":["AHashPool","Nicehash","BlazePool","Ravenminer","NLpool","Zpool"],"Algorithm":["bitcore","c11","dedal","ethash","equihash24x5","hmq1725","lyra2z","sonoa","tribus","x16r","x16s","x17","x21s","x22i"]}' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
@@ -637,7 +658,7 @@ function Invoke-Core {
         Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
         if (-not $NewRates.Count) {
             Write-Log -Level Warn "Coinbase is down, using fallback. "
-            if (-not $Session.Rates.Count) {Invoke-GetUrl "https://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}}
+            if (-not $Session.Rates.Count) {Invoke-GetUrl "http://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}}
         }
         $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
         $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
@@ -1694,22 +1715,24 @@ function Invoke-Core {
     $cursorPosition = $host.UI.RawUI.CursorPosition
     Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
 
+    $SamplesPicked = 0
     $WaitRound = 0
-    $WaitRoundStart = $Session.Timer
     do {
         $WaitRound++
 
         $Session.TimerBackup = $Session.Timer
 
-        Start-Sleep 1
+        Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
 
         $AllMinersFailed = $false
-        if ($AsyncMiner.LastUpdate -gt $WaitRoundStart) {
-            if ((-not $AsyncMiner.MinersUpdated -and $AsyncMiner.MinersFailed) -or $AsyncMiner.ExclusiveMinersFailed) {
+        if ($WaitRound % 3 -eq 0) {
+            $MinersUpdateStatus = Update-ActiveMiners
+            if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
                 $AllMinersFailed = $true
                 $host.UI.RawUI.CursorPosition = $CursorPosition
-                Write-Log -Level Warn "$(if (-not $AsyncMiner.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
+                Write-Log -Level Warn "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             }
+            $SamplesPicked++
         }
 
         $Session.Timer = (Get-Date).ToUniversalTime()
@@ -1798,6 +1821,8 @@ function Invoke-Core {
             }
         }
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
+
+    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
 
     if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
         if ($Session.Timer -gt $Session.NextReport) {
@@ -1901,7 +1926,6 @@ function Stop-Core {
     #Stop services
     if (-not $Session.Config.DisableAPI)         {Stop-APIServer}
     if (-not $Session.Config.DisableAsyncLoader) {Stop-AsyncLoader}
-    Stop-AsyncMiner
 
     Remove-Item ".\stopp.txt" -Force -ErrorAction Ignore
     Write-Log "Gracefully halting RainbowMiner"
