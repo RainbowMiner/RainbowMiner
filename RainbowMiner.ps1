@@ -214,7 +214,6 @@ if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
 }
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
-Import-Module .\Asyncminer.psm1
 Import-Module .\Core.psm1
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
