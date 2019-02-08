@@ -2238,6 +2238,7 @@ class Miner {
     $PowerDraw
     $Speed
     $Speed_Live
+    $Variance
     $StartCommand
     $StopCommand
     $Best
@@ -2258,6 +2259,7 @@ class Miner {
     $MinSamples = 1
     $ZeroRounds = 0
     $Rounds = 0
+    $MaxBenchmarkRounds = 3
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2368,6 +2370,8 @@ class Miner {
         Sleep -Milliseconds 500
         $this.ResetOCprofile() #reset all overclocking
         Sleep -Milliseconds 500
+        $this.Benchmarked = 0
+        $this.New = $false
     }
 
     StopMiningPostCleanup() {
@@ -2558,7 +2562,7 @@ class Miner {
     AddMinerData($data) {
         $this.Data += $data
         if ($this.Data.Count -gt $this.MinSamples) {
-            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*(2+$this.Benchmarked*($this.Speed -contains $null)))
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
             $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
         }
     }
@@ -2574,7 +2578,7 @@ class Miner {
         $this.Data = @()
     }
 
-    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm, [Int]$Seconds = 60, [Boolean]$Safe = $this.New) {
+    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm) {
         $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
 
@@ -2582,7 +2586,9 @@ class Miner {
         $HashRates_Averages = @{}
         $HashRates_Variances = @{}
 
-        $this.Data | Where-Object HashRate | Where-Object Date -GE (Get-Date).ToUniversalTime().AddSeconds( - $Seconds) | ForEach-Object {
+        $Seconds = $this.DataInterval * [Math]::Max($this.ExtendInterval,1)
+
+        $this.Data | Where-Object {$_.HashRate} | Where-Object {$_.Date -ge (Get-Date).ToUniversalTime().AddSeconds( - $Seconds)} | ForEach-Object {
             $Data_Devices = $_.Device
             if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
 
@@ -2591,27 +2597,30 @@ class Miner {
 
             $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
             $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @(($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum) / $Data_Devices.Count)}
-            $HashRates_Variances."$($Data_Devices | ConvertTo-Json)" += @($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum)
+            $HashRates_Variances."$($Data_Devices -join '-')" += @($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum)
         }
 
         $HashRates_Count = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
         $HashRates_Average = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
-        $HashRates_Variance = $HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {$HashRates_Variances.$_ | Measure-Object -Average -Minimum -Maximum} | ForEach-Object {if ($_.Average) {($_.Maximum - $_.Minimum) / $_.Average}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+        $HashRates_Variance = if ($HashRates_Average) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
 
-        if ($Safe) {
-            if ($HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt 0.05) {
-                return 0
-            }
-            else {
-                return $HashRates_Average * (1 + ($HashRates_Variance / 2))
-            }
+        $this.Variance = $HashRates_Variance
+        $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
+
+        if ($this.IsBenchmarking() -and ($this.Benchmarked -lt [Math]::Max($this.ExtendInterval,1) -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
+            return 0
         }
         else {
             return $HashRates_Average
         }
     }
 
-    [Int64]GetPowerDraw([Int]$Seconds = 60) {
+    [Bool]IsBenchmarking() {
+        return $this.New -and $this.Benchmarked -lt ($this.MaxBenchmarkRounds + [Math]::Max($this.ExtendInterval,1) - 1)
+    }
+
+    [Int64]GetPowerDraw() {
+        $Seconds = $this.DataInterval * [Math]::Max($this.ExtendInterval,1)
         return ($this.Data | Where-Object PowerDraw | Where-Object Date -GE (Get-Date).ToUniversalTime().AddSeconds( - $Seconds) | Select-Object -ExpandProperty PowerDraw | Measure-Object -Average).Average
     }
 
@@ -2709,6 +2718,15 @@ class Miner {
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
         }
     }
+}
+
+function Get-Sigma {
+    [CmdletBinding()]
+    param($data)
+
+    $mean  = ($data | measure-object -Average).Average
+    $bias  = $data.Count-1.5+1/(8*($data.Count-1))
+    [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
 }
 
 function Get-GPUVendorList {

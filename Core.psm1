@@ -172,6 +172,9 @@
 }
 
 function Update-ActiveMiners {
+    [CmdletBinding()]
+    param([Bool]$FirstRound = $false, [Switch]$Silent = $false)
+
     Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
     $MinersUpdated = 0
     $MinersFailed  = 0
@@ -179,17 +182,19 @@ function Update-ActiveMiners {
     $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
         $Miner = $_
         Switch ($Miner.GetStatus()) {
-            "Running" {$Miner.UpdateMinerData() > $null;$MinersUpdated++}
+            "Running" {if (-not $FirstRound -or $Miner.Rounds) {$Miner.UpdateMinerData() > $null};$MinersUpdated++}
             "RunningFailed" {$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }        
     }
     if ($MinersFailed) {
         $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
     }
-    [PSCustomObject]@{
-        MinersUpdated = $MinersUpdated
-        MinersFailed  = $MinersFailed
-        ExclusiveMinersFailed = $ExclusiveMinersFailed
+    if (-not $Silent) {
+        [PSCustomObject]@{
+            MinersUpdated = $MinersUpdated
+            MinersFailed  = $MinersFailed
+            ExclusiveMinersFailed = $ExclusiveMinersFailed
+        }
     }
 }
 
@@ -900,7 +905,7 @@ function Invoke-Core {
             }
         }
     }
-    
+
     Write-Log "Calculating profit for each miner. "
 
     [hashtable]$AllMiners_VersionCheck = @{}
@@ -1210,34 +1215,35 @@ function Invoke-Core {
         }
 
         if ($ActiveMiner) {
-            $ActiveMiner.Profit = $Miner.Profit
-            $ActiveMiner.Profit_Comparison = $Miner.Profit_Comparison
+            $ActiveMiner.Profit             = $Miner.Profit
+            $ActiveMiner.Profit_Comparison  = $Miner.Profit_Comparison
             $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
-            $ActiveMiner.Profit_Bias = $Miner.Profit_Bias
-            $ActiveMiner.Profit_Unbias = $Miner.Profit_Unbias
-            $ActiveMiner.Profit_Cost = $Miner.Profit_Cost
-            $ActiveMiner.PowerDraw = $Miner.PowerDraw
-            $ActiveMiner.Speed = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
-            $ActiveMiner.DeviceName = $Miner.DeviceName
-            $ActiveMiner.DeviceModel = $Miner.DeviceModel
-            $ActiveMiner.ShowMinerWindow = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow)
-            $ActiveMiner.DevFee = $Miner.DevFee
-            $ActiveMiner.MSIAprofile = $Miner.MSIAprofile
-            $ActiveMiner.OCprofile = $Miner.OCprofile
-            $ActiveMiner.FaultTolerance = $Miner.FaultTolerance
-            $ActiveMiner.Penalty = $Miner.Penalty
-            $ActiveMiner.ManualUri = $Miner.ManualUri
-            $ActiveMiner.EthPillEnable = $Session.Config.EthPillEnable
-            $ActiveMiner.Enabled = $true
+            $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
+            $ActiveMiner.Profit_Unbias      = $Miner.Profit_Unbias
+            $ActiveMiner.Profit_Cost        = $Miner.Profit_Cost
+            $ActiveMiner.PowerDraw          = $Miner.PowerDraw
+            $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
+            $ActiveMiner.DeviceName         = $Miner.DeviceName
+            $ActiveMiner.DeviceModel        = $Miner.DeviceModel
+            $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow)
+            $ActiveMiner.DevFee             = $Miner.DevFee
+            $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
+            $ActiveMiner.OCprofile          = $Miner.OCprofile
+            $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
+            $ActiveMiner.Penalty            = $Miner.Penalty
+            $ActiveMiner.ManualUri          = $Miner.ManualUri
+            $ActiveMiner.EthPillEnable      = $Session.Config.EthPillEnable
+            $ActiveMiner.DataInterval       = $Session.Config.BenchmarkInterval
+            $ActiveMiner.Enabled            = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
-            $ActiveMiner.IsExclusiveMiner = $Miner.IsExclusiveMiner
-            $ActiveMiner.MinSamples = $Miner.MinSamples
-            $ActiveMiner.CoinName   = $Miner.Pools.PSObject.Properties.Value.CoinName
-            $ActiveMiner.CoinSymbol = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-            $ActiveMiner.EnvVars = $Miner.EnvVars
-            $ActiveMiner.StartCommand = $Miner.StartCommand
-            $ActiveMiner.StopCommand = $Miner.StopCommand
-            $ActiveMiner.NoCPUMining = $Miner.NoCPUMining
+            $ActiveMiner.IsExclusiveMiner   = $Miner.IsExclusiveMiner
+            $ActiveMiner.MinSamples         = $Miner.MinSamples
+            $ActiveMiner.CoinName           = $Miner.Pools.PSObject.Properties.Value.CoinName
+            $ActiveMiner.CoinSymbol         = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
+            $ActiveMiner.EnvVars            = $Miner.EnvVars
+            $ActiveMiner.StartCommand       = $Miner.StartCommand
+            $ActiveMiner.StopCommand        = $Miner.StopCommand
+            $ActiveMiner.NoCPUMining        = $Miner.NoCPUMining
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1281,8 +1287,9 @@ function Invoke-Core {
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Session.Config.EthPillEnable
-                DataInterval         = $Session.Config.Interval
+                DataInterval         = $Session.Config.BenchmarkInterval
                 Donator              = $Session.IsDonationRun
+                MaxBenchmarkRounds   = $Session.Strikes
                 Enabled              = $true
                 IsFocusWalletMiner   = $Miner.IsFocusWalletMiner
                 IsExclusiveMiner     = $Miner.IsExclusiveMiner
@@ -1304,8 +1311,8 @@ function Invoke-Core {
     }
 
     #Get most profitable miner combination
-    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.Benchmarked}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.Benchmarked}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
     $Check_Profitability = $false
     if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
@@ -1691,12 +1698,8 @@ function Invoke-Core {
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
-    #Extend benchmarking interval to the maximum from running miners
-    $ExtendInterval  = [Math]::Max(1,($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Where-Object {$_.Speed -contains $null} | Select-Object -ExpandProperty ExtendInterval | Measure-Object -Maximum).Maximum * (-not $Session.Config.DisableExtendInterval))
-    $Interval = if (-not $Session.IsExclusiveRun -and $MinersNeedingBenchmark.Count -gt 0 -and ($ExtendInterval -gt 1 -or $Session.Config.BenchmarkInterval -ne $Session.Config.Interval)) {$Session.Config.BenchmarkInterval * $ExtendInterval} else {$Session.Config.Interval}
-
     #Dynamically adapt current interval
-    $NextInterval = [Math]::Max($Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
+    $NextInterval = [Math]::Max($Session.Config.Interval,$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
@@ -1717,16 +1720,12 @@ function Invoke-Core {
 
     $SamplesPicked = 0
     $WaitRound = 0
-    do {
-        $WaitRound++
-
-        $Session.TimerBackup = $Session.Timer
-
-        Start-Sleep $(if ($WaitRound -gt 1) {1} else {2})
+    do {        
+        $Session.TimerBackup = $Session.Timer                
 
         $AllMinersFailed = $false
         if ($WaitRound % 3 -eq 0) {
-            $MinersUpdateStatus = Update-ActiveMiners
+            $MinersUpdateStatus = Update-ActiveMiners -FirstRound (-not $WaitRound)
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
                 $AllMinersFailed = $true
                 $host.UI.RawUI.CursorPosition = $CursorPosition
@@ -1734,6 +1733,8 @@ function Invoke-Core {
             }
             $SamplesPicked++
         }
+
+        Sleep 1
 
         $Session.Timer = (Get-Date).ToUniversalTime()
         if ($UseTimeSync -and $Session.Timer -le $Session.TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
@@ -1820,6 +1821,7 @@ function Invoke-Core {
                 }
             }
         }
+        $WaitRound++
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
@@ -1844,35 +1846,46 @@ function Invoke-Core {
     #Save current hash rates
     Write-Log "Saving hash rates. "
     $Session.ActiveMiners | Foreach-Object {
-        $Miner = $_
-        $Miner.Speed_Live = [Double[]]@()
+        $Miner = $_        
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})}
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
         if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
-            $Miner_PowerDraw = $Miner.GetPowerDraw($Session.CurrentInterval)
+            $Miner.Speed_Live = [Double[]]@()
+
+            Write-Log "$($Miner.BaseName) $(if ($Miner.IsBenchmarking()) {"benchmarking"} else {"mining"}) $($Miner.BaseAlgorithm -join '-') on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner.IsBenchmarking()) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance*100))%"} else {$Miner.Rounds})"
+
+            $Miner_PowerDraw = $Miner.GetPowerDraw()
+
+            $Statset = 0
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, $Session.CurrentInterval, $Miner.New)
-                if ($Miner.New -and (-not $Miner_Speed)) {$Miner_Speed = $Miner.GetHashRate($Miner_Algorithm, ($Session.CurrentInterval * $Miner.Benchmarked), ($Miner.Benchmarked -lt $Session.Strikes))}
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm)                
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
                 $Stat = $null
-                if ((-not $Miner.New) -or $Miner_Speed -or $Miner.Benchmarked -ge ($Session.Strikes * $Session.Strikes) -or $Miner.GetActivateCount() -ge $Session.Strikes) {
+                if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
+                    $Statset++
                 }
 
                 #Update watchdog timer
                 $Miner_Name = $Miner.Name
-                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
-                if ($Stat -and $WatchdogTimer -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
-                    $WatchdogTimer.Kicked = $Stat.Updated
+                if ($WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}) {                
+                    if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
+                        $WatchdogTimer.Kicked = $Stat.Updated
+                    } elseif ($Miner.IsBenchmarking()) {
+                        $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
+                    }
                 }
                 $Miner_PowerDraw = 0
             }
+
+            if ($Statset -eq $Miner.Algorithm.Count) {$Miner.Benchmarked = 0}
+
             $Miner.EndOfRoundCleanup()
             Write-ActivityLog $Miner
         }
