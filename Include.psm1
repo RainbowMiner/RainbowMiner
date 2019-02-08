@@ -1520,7 +1520,9 @@ function Get-Device {
         [Parameter(Mandatory = $false)]
         [String[]]$Name = @(),
         [Parameter(Mandatory = $false)]
-        [Switch]$Refresh = $false
+        [Switch]$Refresh = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$IgnoreOpenCL = $false
     )
 
     if ($Name) {
@@ -1629,7 +1631,7 @@ function Get-Device {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "OpenCL device detection has failed: $($_.Exception.Message)"
+        Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
     }
 
     #CPU detection
@@ -3165,7 +3167,7 @@ function Set-MinersConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content}
-            $AllDevices = Get-Device "cpu","gpu"
+            $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -InfoOnly)}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
                 if ($a -eq "CPU") {[System.Collections.ArrayList]$SetupDevices = @("CPU")}
@@ -3327,7 +3329,7 @@ function Set-DevicesConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $AllDevices = Get-Device "cpu","nvidia","amd" | Select-Object -ExpandProperty Model -Unique
+            $AllDevices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Model -Unique
             foreach ($DeviceModel in $AllDevices) {
                 if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceModel) {$Setup.$DeviceModel} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName $Default.$SetupName -Force}}

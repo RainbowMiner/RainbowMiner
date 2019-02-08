@@ -45,7 +45,7 @@
 
     Write-Host "Detecting devices .."
 
-    $Session.AllDevices = Get-Device "cpu","gpu"
+    $Session.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
 
     Write-Host "Initialize configuration .."
     try {

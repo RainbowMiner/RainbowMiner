@@ -82,7 +82,7 @@ function Start-Setup {
         $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
         $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
         $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
-        $SetupDevices = Get-Device "nvidia","amd","cpu"
+        $SetupDevices = Get-Device "nvidia","amd","cpu" -IgnoreOpenCL
 
         Clear-Host
               
