@@ -11,6 +11,8 @@ class Lol : Miner {
 
         $HashRate = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
             $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
             if ($Response.StatusCode -ne 200) {throw}
@@ -20,8 +22,9 @@ class Lol : Miner {
             Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
             return @("", $Response)
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
-        $HashRate_Name = Get-Algorithm($Data.Mining.Algorithm -replace "/")
+        $HashRate_Name = Get-Algorithm($Data.Mining.Algorithm -replace "/" -replace "\s+-\s+.+$")
         $HashRate_Value = [Double]$data.Session.Performance_Summary
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
