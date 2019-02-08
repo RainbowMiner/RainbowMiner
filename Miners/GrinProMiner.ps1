@@ -15,7 +15,7 @@ $Cuda = "10.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; Params = ""; DevFee = 2.0; ExtendInterval = 2; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
     #[PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; Params = ""; DevFee = 2.0; ExtendInterval = 2; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
 )
 

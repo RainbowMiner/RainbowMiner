@@ -19,9 +19,9 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
     [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""} #ProgPoW3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""} #ProgPoW 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW 
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"    ; MinMemGB = 2; Params = ""} #Ubqhash 
 )
 

@@ -40,14 +40,6 @@ if ($InfoOnly) {
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-$UserConfig = [hashtable]@{
-    DEFAULTS = [hashtable]@{
-        DIGITS = 2
-        CONNECTION_ATTEMPTS = 4
-        RECONNECTION_TIMER = 5
-    }
-}
-
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
     $Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
