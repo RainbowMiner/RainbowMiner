@@ -1740,6 +1740,13 @@ function Invoke-Core {
 
         $Session.Timer = (Get-Date).ToUniversalTime()
         if ($UseTimeSync -and $Session.Timer -le $Session.TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
+
+        if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
+            if ($Session.Timer -gt $Session.NextReport) {
+                Invoke-ReportMinerStatus
+                $Session.NextReport = $Session.Timer.AddSeconds(60)
+            }
+        }
  
         $keyPressedValue = $false
 
@@ -1827,13 +1834,6 @@ function Invoke-Core {
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
-
-    if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
-        if ($Session.Timer -gt $Session.NextReport) {
-            Invoke-ReportMinerStatus
-            $Session.NextReport = $Session.Timer.AddSeconds($Session.Config.Interval)
-        }
-    }
 
     if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
 
