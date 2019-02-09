@@ -29,18 +29,11 @@ if (($Request.getuserallbalances.data | Get-Member -MemberType NoteProperty -Err
 
 $Request.getuserallbalances.data | Foreach-Object {
 
-    #Define currency
-    $Currency = $_.coin
-    try {
-        $Currency = Invoke-GetUrl "https://$($_.coin).miningpoolhub.com/index.php?page=api&action=getpoolinfo&api_key=$($PoolConfig.API_Key)" | Select-Object -ExpandProperty getpoolinfo | Select-Object -ExpandProperty data | Select-Object -ExpandProperty currency
-    }
-    catch {
-        $Currency = Get-CoinSymbol $_.coin
-        if (-not $Currency -and $_.coin -match '-') {$Currency = Get-CoinSymbol ($_.coin -replace '\-.*$')}
-        if (-not $Currency) {
-            $Currency = $_.coin
-            Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
-        }
+    $Currency = Get-CoinSymbol $_.coin
+    if (-not $Currency -and $_.coin -match '-') {$Currency = Get-CoinSymbol ($_.coin -replace '\-.*$')}
+    if (-not $Currency) {
+        $Currency = $_.coin
+        Write-Log -Level Warn "Cannot determine currency for coin ($($_.coin)) - cannot convert some balances to BTC or other currencies. "
     }
 
     [PSCustomObject]@{
