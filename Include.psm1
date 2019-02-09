@@ -2580,7 +2580,7 @@ class Miner {
         $this.Data = @()
     }
 
-    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm) {
+    [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
         $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
 
@@ -2609,7 +2609,7 @@ class Miner {
         $this.Variance = $HashRates_Variance
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
 
-        if ($this.IsBenchmarking() -and ($this.Benchmarked -lt [Math]::Max($this.ExtendInterval,1) -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
+        if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt [Math]::Max($this.ExtendInterval,1) -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
             return 0
         }
         else {
@@ -3951,37 +3951,52 @@ function Invoke-ReportMinerStatus {
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Profit = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object Profit -Sum).Sum, 8) | ConvertTo-Json
-    $PowerDraw = [Math]::Round(($Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object PowerDraw -Sum).Sum, 2) | ConvertTo-Json
     $Status = if ($Session.Paused) {"Paused"} else {"Running"}
     $Rates = [PSCustomObject]@{}
     $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
 
     Write-Log "Pinging monitoring server. "
 
+    $Profit = 0.0
+    $PowerDraw = 0.0
+
     $minerreport = ConvertTo-Json @(
         $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
+            $Miner = $_
+            $Miner.Speed_Live = [Double[]]@()           
+            $Miner.Algorithm | ForEach-Object {
+                $Miner_Speed = $Miner.GetHashRate($_,$false)
+                $Miner.Speed_Live += [Double]$Miner_Speed
+            }
+            $Miner_PowerDraw = $Miner.GetPowerDraw()
+
+            $Profit += [Double]$Miner.Profit
+            $PowerDraw += [Double]$Miner_PowerDraw
+
             # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
             [PSCustomObject]@{
-                Name           = $_.BaseName
-                Path           = Resolve-Path -Relative $_.Path
-                Type           = @($_.DeviceModel)
-                Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $_.GetActiveTime()
-                Algorithm      = @($_.BaseAlgorithm)
-                Currency       = $_.Currency
-                CoinName       = @($_.CoinName | Where-Object {$_})
-                CoinSymbol     = @($_.CoinSymbol | Where-Object {$_})
-                Pool           = @($_.Pool)
-                CurrentSpeed   = @($_.Speed_Live)
-                EstimatedSpeed = @($_.Speed)
-                PowerDraw      = $_.PowerDraw
-                'BTC/day'      = $_.Profit
-                Profit         = $_.Profit
-                Donator        = $_.Donator
-                Benchmarking   = $_.Speed -contains $null
+                Name           = $Miner.BaseName
+                Path           = Resolve-Path -Relative $Miner.Path
+                Type           = @($Miner.DeviceModel)
+                Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Currency       = $Miner.Currency
+                CoinName       = @($Miner.CoinName | Where-Object {$Miner})
+                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner})
+                Pool           = @($Miner.Pool)
+                CurrentSpeed   = @($Miner.Speed_Live)
+                EstimatedSpeed = @($Miner.Speed)
+                PowerDraw      = $Miner_PowerDraw
+                'BTC/day'      = $Miner.Profit
+                Profit         = $Miner.Profit
+                Donator        = $Miner.Donator
+                Benchmarking   = $Miner.Speed -contains $null
             }
         }
     )
+    
+    $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
+    $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
      
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
