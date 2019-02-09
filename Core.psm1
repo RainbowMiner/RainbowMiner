@@ -671,7 +671,7 @@ function Invoke-Core {
         $MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}
         if ($MissingCurrenciesTicker = Get-TickerGlobal $MissingCurrencies) {
             Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
-            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_)} | Foreach-Object {$v = [double]$MissingCurrenciesTicker.$_;$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
+            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_) -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$v = [double](1/$MissingCurrenciesTicker.$_.BTC);$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
         }
     }
     catch {

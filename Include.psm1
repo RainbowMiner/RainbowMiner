@@ -133,7 +133,7 @@ function Get-Balance {
 
     if ($CurrenciesMissing.Count) {
         if ($MissingCurrenciesTicker = Get-TickerGlobal $CurrenciesMissing) {
-            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {$CurrenciesMissing -icontains $_} | Foreach-Object {$Session.Rates[$_]=[double]$MissingCurrenciesTicker.$_}
+            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {$CurrenciesMissing -icontains $_ -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$Session.Rates[$_]=[double](1/$MissingCurrenciesTicker.$_.BTC)}
         }
     }
 
@@ -258,11 +258,11 @@ function Get-TickerGlobal {
     if ($Global:GlobalGetTicker.Count -gt 0) {
         try {
             $SymbolStr = (@($Global:GlobalGetTicker | Sort-Object) -join ',').ToUpper()
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=$($SymbolStr)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker" -cycletime 1800
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker" -cycletime 1800
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
             } else {
-                $RatesAPI.BTC
+                $RatesAPI
             }
         }
         catch {
