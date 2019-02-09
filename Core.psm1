@@ -1885,6 +1885,7 @@ function Invoke-Core {
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
                     $Statset++
+                    if ($Miner.New) {$Miner.Benchmarked = 0}
                 }
 
                 #Update watchdog timer

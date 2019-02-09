@@ -2371,8 +2371,7 @@ class Miner {
     hidden StopMiningPostProcess() {
         Sleep -Milliseconds 500
         $this.ResetOCprofile() #reset all overclocking
-        Sleep -Milliseconds 500
-        $this.Benchmarked = 0
+        Sleep -Milliseconds 500        
         $this.New = $false
     }
 
