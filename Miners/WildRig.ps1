@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.2.2-wildrig/wildrig-multi-windows-0.15.2.2-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.3.7b-wildrig/wildrig-multi-windows-0.15.3.7-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -17,6 +17,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo";      Params = ""} #Aergo
     [PSCustomObject]@{MainAlgorithm = "bcd";        Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";    Params = ""} #BitCore
+    [PSCustomObject]@{MainAlgorithm = "bmw512";     Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";        Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal";      Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = ""} #Geek
