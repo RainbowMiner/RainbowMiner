@@ -1728,11 +1728,21 @@ function Invoke-Core {
         $AllMinersFailed = $false
         if ($WaitRound % 3 -eq 0) {
             $MinersUpdateStatus = Update-ActiveMiners -FirstRound (-not $WaitRound)
+
+            $LoopWarn = ""
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
-                $AllMinersFailed = $true
-                $host.UI.RawUI.CursorPosition = $CursorPosition
-                Write-Log -Level Warn "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
+                $Session.StatEnd = $Session.Timer.AddSeconds(0)
+                $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
+            } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed) {
+                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.BenchmarkInterval - [int]($Session.Timer-$StatStart).TotalSeconds))
+                if ($NextStatEnd -lt $Session.StatEnd) {$Session.StatEnd = $NextStatEnd}
+                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. "
             }
+            if ($LoopWarn -ne "") {
+                $host.UI.RawUI.CursorPosition = $CursorPosition
+                Write-Log -Level Warn $LoopWarn                
+            }
+
             $SamplesPicked++
         }
 
@@ -1831,9 +1841,9 @@ function Invoke-Core {
             }
         }
         $WaitRound++
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd) -or $AllMinersFailed)
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd))
 
-    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$SamplesPicked++}
+    if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
 
     if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
 
@@ -1847,6 +1857,9 @@ function Invoke-Core {
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
+
+    $StatSpan = New-TimeSpan $StatStart $Session.Timer
+
     $Session.ActiveMiners | Foreach-Object {
         $Miner = $_        
 
@@ -1864,7 +1877,7 @@ function Invoke-Core {
             $Statset = 0
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm)                
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)                
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
