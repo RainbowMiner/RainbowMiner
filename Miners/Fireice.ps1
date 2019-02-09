@@ -109,7 +109,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Vendor = $Miner_Vendor
                     }
 
-                    if ($Miner_Device.PlatformId) {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
+                    if ($Miner_Vendor -ne "CPU") {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
 
                     [PSCustomObject]@{
                         Name      = $Miner_Name
