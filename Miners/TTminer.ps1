@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.8-ttminer/TT-Miner-2.1.8.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.9-ttminer/TT-Miner-2.1.9.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
@@ -18,7 +18,9 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"  ; MinMemGB = 2; Params = ""} #Ethash2GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP 
+    #[PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 4; Params = ""} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP
+    [PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""} #MYRGR    
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW 
