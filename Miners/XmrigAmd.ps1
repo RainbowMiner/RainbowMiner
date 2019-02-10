@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.0-xmrig/xmrig-amd-2.10.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.11.0-xmrig/xmrig-amd-2.11.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"
 $Port = "304{0:d2}"
 $DevFee = 0.0
@@ -16,6 +16,7 @@ if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD pres
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
