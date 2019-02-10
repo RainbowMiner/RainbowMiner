@@ -36,6 +36,10 @@
         "GosCx" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
+        "GosCxSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1"}
+            Currencies=@("RVN")
+        }
         "Grinmint" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
             SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
@@ -103,7 +107,11 @@
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{
-            Currencies=@("XZC")
+            Currencies=@("BTC")
+        }
+        "ZergPoolSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1"}
+            Currencies=@("BTC")
         }
         "Zpool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=12}
