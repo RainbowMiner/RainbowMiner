@@ -17,6 +17,7 @@
         Pools      = @{Path='';LastWriteTime=0}
         Algorithms = @{Path='';LastWriteTime=0}
         Coins      = @{Path='';LastWriteTime=0}
+        GpuGroups  = @{Path='';LastWriteTime=0}
     }
     [hashtable]$Session.MinerInfo = @{}
 
@@ -77,6 +78,7 @@
             $Session.ConfigFiles["OCProfiles"].Path = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["Algorithms"].Path = @($ConfigFile_Path,"\algorithms.",$ConfigFile_Name) -join ''
             $Session.ConfigFiles["Coins"].Path = @($ConfigFile_Path,"\coins.",$ConfigFile_Name) -join ''
+            $Session.ConfigFiles["GpuGroups"].Path = @($ConfigFile_Path,"\gpugroups.",$ConfigFile_Name) -join ''
 
             if (-not $psISE) {
                 $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
@@ -89,7 +91,12 @@
                 if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {Copy-Item $Session.ConfigFiles["OCProfiles"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {Copy-Item $Session.ConfigFiles["Algorithms"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_algorithms.$($ConfigFile_Name)"}
                 if (Test-Path $Session.ConfigFiles["Coins"].Path) {Copy-Item $Session.ConfigFiles["Coins"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_coins.$($ConfigFile_Name)"}
+                if (Test-Path $Session.ConfigFiles["GpuGroups"].Path) {Copy-Item $Session.ConfigFiles["GpuGroups"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_gpugroups.$($ConfigFile_Name)"}
             }
+
+            # Create and apply gpugroups.config.txt if it is missing
+            Set-GpuGroupsConfigDefault -PathToFile $Session.ConfigFiles["GpuGroups"].Path -Force
+            $Session.ConfigFiles["GpuGroups"].Path = $Session.ConfigFiles["GpuGroups"].Path | Resolve-Path -Relative
         
             # Create pools.config.txt if it is missing
             Set-PoolsConfigDefault -PathToFile $Session.ConfigFiles["Pools"].Path -Force

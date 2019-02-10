@@ -3311,6 +3311,37 @@ function Set-CoinsConfigDefault {
     }
 }
 
+function Set-GpuGroupsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$PathToFile,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+        }
+        try {            
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
+            foreach ($GpuName in $GpuNames) {
+                if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
+                elseif ($Preset.$GpuName -ne "") {$Script:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper()}}
+            }
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+}
 
 function Set-DevicesConfigDefault {
     [CmdletBinding()]
