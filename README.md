@@ -454,6 +454,15 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
   - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
 - **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
 
+#### Setup network operations
+
+- **RunMode** = possible values are "standalone", "server", "client"
+  - "standalone": this mining rig will handle everything on it's own
+  - "server": this mining rig will act as server in a multiple rig setup
+  - "client": this mining rig will not create network traffic but pull the data from the server rig
+- **ServerName** = if RunMode is set to "client", enter the server's name
+- **ServerPort** = if setup as server, this will be the listening port, if in client mode, enter the server's port.
+
 #### Set electricity cost handling ####
 
 - **PowerPrice** = price of 1kW/h (kilowatt per hour) that your electricity supplier charges [default=0]
@@ -810,6 +819,29 @@ This configuration would:
 - for custom overclocking Profile1 is used as default for this GPU type
 - set a power adjust factor of 87.5% to the Radeon R290X (if RainbowMiner reported 250W with factor 100%, it will now show 250W x 87.5 / 100 = 175W)
 - the pool worker name for the GTX1050Ti will be set to "my1050". If used in combos, the individual worker names will be combined with _ (underscore)
+
+
+### Config\gpugroups.config.txt
+
+Under some circumstances you might want to divide GPUs with unique model name into multiple groups (e.g. mining on different pools). For this case, all GPUs may be grouped, using group names, to be setup in gpugroups.config.txt.
+To find out the GPU numbers in your system, start ListDevices.bat
+
+Example:
+Assumed four GTX1070 GPUs running in this rig.
+
+    {
+      "GPU#00": "A",
+      "GPU#01": "A",
+      "GPU#02": "Zerg",
+      "GPU#03": ""
+    }
+
+Using this setup, RainbowMiner will use the following model names:
+- GPU#00 and GPU#01 will get name "GTX1070A"
+- GPU#02 will get name "GTX1070ZERG"
+- GPU#03 will keep name "GTX1070"
+
+This will result in three separate GPU groups. Be aware, that for each device group a new entry in devices.config.txt will be created. Also, all different device group combinations will be added to miners.config.txt.
 
 
 ### Config\algorithms.config.txt
