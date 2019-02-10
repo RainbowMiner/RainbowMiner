@@ -59,7 +59,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
-            if (($Pools.$MainAlgorithm_Norm.Host -or $MainAlgorithm -eq "equihash1445") -and $Miner_Device -and $Pools.$MainAlgorithm_Norm.Name -ne "Nicehash") {
+            if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and $Pools.$MainAlgorithm_Norm.Name -ne "Nicehash") {
                 $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                 $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
@@ -70,7 +70,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                 if ($SecondAlgorithm -ne '') {
                     $SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
                 }
-                $Stratum = "$(if ($MainAlgorithm -eq "equihash") {"stratum"} else {$MainAlgorithm})$(if ($Pools.$MainAlgorithm_Norm.SSL -or $_.MainAlgorithm -eq "beam") {"+ssl"})"
+                $Stratum = "$(if ($MainAlgorithm -eq "equihash") {"stratum"} else {$MainAlgorithm})$(if ($Pools.$MainAlgorithm_Norm.SSL) {"+ssl"})"
 
                 if ($SecondAlgorithm -eq '') {
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
