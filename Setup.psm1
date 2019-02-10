@@ -126,6 +126,7 @@ function Start-Setup {
             Write-Host "- Algorithms: finetune global settings for algorithms, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
+            Write-Host "- Network: client/server setup for multiple rigs within one network" -ForegroundColor Yellow
             Write-Host " "
             if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
                 Write-Host " WARNING: without the following data, RainbowMiner is not able to start mining. " -BackgroundColor Yellow -ForegroundColor Black
@@ -134,13 +135,13 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDLIOX"
+            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, [N]etwork, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDLIONX"
         }
 
         if ($SetupType -eq "X") {
             $RunSetup = $false
         }
-        elseif (@("W","C","E","S","A") -contains $SetupType) {
+        elseif (@("W","C","E","S","A","N") -contains $SetupType) {
                             
             $GlobalSetupDone = $false
             $GlobalSetupStep = 0
@@ -152,7 +153,8 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","servername","serverport")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","localapiport","runmode","servername","serverport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -312,6 +314,45 @@ function Start-Setup {
                                 Write-Host " "
                             }
                             $Config.LocalAPIport = Read-HostInt -Prompt "Choose the web interface localhost port" -Default $Config.LocalAPIPort -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+                        "runmode" {
+                            Write-Host " "
+                            Write-Host "WARNING: the client/server feature is not yet implemented. Rigs will always work in standalone mode." -ForegroundColor Yellow
+                            Write-Host " "
+                            if ($IsInitialSetup) {
+                                Write-Host " "
+                                Write-Host "In a large mining array, one of the rigs may be assigned as server, all the others become clients." -ForegroundColor Cyan
+                                Write-Host "Only the server will contact the pool APIs and others. All clients will get their information from the server." -ForegroundColor Cyan
+                                Write-Host "Be aware, if the mode is set to client, RainbowMiner will wait for the server at startup." -ForegroundColor Cyan
+                                Write-Host "If it doesn't find a server, it will wait for ever, so make sure that a server is running." -ForegroundColor Cyan
+                                Write-Host " "
+                            }
+                            $Config.RunMode = Read-HostString -Prompt "Select the operation mode of this rig (standalone,server,client)" -Default $Config.RunMode -Valid @("standalone","server","client") | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            if ($Config.RunMode -eq "") {$Config.RunMode = "standalone"}
+                            if ($Config.RunMode -eq "server") {
+                                Write-Host " "
+                                Write-Host "Write down the servername: $($env:COMPUTERNAME)" -ForegroundColor Yellow
+                                Write-Host " "
+                                $Config.ServerName = $env:COMPUTERNAME
+                            }
+                        }
+                        "servername" {
+                            if ($Config.RunMode -eq "client") {
+                                $Config.ServerName = Read-HostString -Prompt "Enter the server name (or leave empty for standalone operation)" -Default $Config.ServerName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "serverport" {
+                            $ServerPortPrompt = Switch($Config.RunMode) {
+                                "client" {"Enter the server port"}
+                                "server" {"Enter the port to listen for clients"}
+                            }
+                            if ($ServerPortPrompt) {
+                                $Config.ServerPort = Read-HostInt -Prompt "$($ServerPortPrompt) (or leave empty for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
                         }
                         "enableautominerports" {
                             if (-not $IsInitialSetup) {
@@ -849,6 +890,9 @@ function Start-Setup {
                             $ConfigActual | Add-Member NVSMIpath $Config.NVSMIpath -Force
                             $ConfigActual | Add-Member Quickstart $(if (Get-Yes $Config.Quickstart){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member StartPaused $(if (Get-Yes $Config.StartPaused){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member RunMode $Config.RunMode -Force
+                            $ConfigActual | Add-Member ServerName $Config.ServerName -Force
+                            $COnfigActual | Add-Member ServerPort $Config.ServerPort -Force
 
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
