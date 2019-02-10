@@ -2603,7 +2603,7 @@ class Miner {
 
         $HashRates_Count = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
         $HashRates_Average = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
-        $HashRates_Variance = if ($HashRates_Average) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+        $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
 
         $this.Variance = $HashRates_Variance
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
@@ -2725,9 +2725,11 @@ function Get-Sigma {
     [CmdletBinding()]
     param($data)
 
-    $mean  = ($data | measure-object -Average).Average
-    $bias  = $data.Count-1.5+1/(8*($data.Count-1))
-    [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
+    if ($data -and $data.count -gt 1) {
+        $mean  = ($data | measure-object -Average).Average
+        $bias  = $data.Count-1.5+1/(8*($data.Count-1))
+        [Math]::Sqrt(($data | Foreach-Object {[Math]::Pow(($_ - $mean),2)} | Measure-Object -Sum).Sum/$bias)
+    } else {0}
 }
 
 function Get-GPUVendorList {
