@@ -16,7 +16,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
-    [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $true; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
+    [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; NH = $false; MinMemGb = 8; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; NH = $false; MinMemGb = 10; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
     #[PSCustomObject]@{MainAlgorithm = "equihash";     SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
