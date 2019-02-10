@@ -1170,6 +1170,11 @@ function Invoke-Core {
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
+    #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
+    $MinersNeedingBenchmark = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null}
+    $MinersNeedingBenchmarkCount = ($MinersNeedingBenchmark | Measure-Object).Count
+    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
+
     #Update the active miners
     if ($Miners.Count -eq 0) {
         Write-Log -Level Warn "No miners available. Press [X] to exit."
@@ -1319,8 +1324,8 @@ function Invoke-Core {
     }
 
     #Get most profitable miner combination
-    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.Benchmarked}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.Benchmarked}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $MinersNeedingBenchmarkCount}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+    $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $MinersNeedingBenchmarkCount}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
     $Check_Profitability = $false
     if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
@@ -1464,15 +1469,11 @@ function Invoke-Core {
         }
     }
 
-    #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
-    $MinersNeedingBenchmark = @($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null})
-    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
-
     $IsExclusiveRun = $Session.IsExclusiveRun
     $Session.IsExclusiveRun = ($Session.ActiveMiners | Where-Object {$_.IsExclusiveMiner -and $_.GetStatus() -eq [MinerStatus]::Running} | Measure-Object).Count -gt 0
 
     #Move donation run into the future, if benchmarks are ongoing
-    if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0) -or $Session.IsExclusiveRun) {
+    if ((-not $Session.IsDonationRun -and $MinersNeedingBenchmarkCount -gt 0) -or $Session.IsExclusiveRun) {
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
@@ -1492,7 +1493,7 @@ function Invoke-Core {
     #
     Clear-Host
 
-    $Session.Benchmarking = -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmark.Count -gt 0
+    $Session.Benchmarking = -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmarkCount -gt 0
     $LimitMiners = if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {100} else {3}
 
     #Display mining information
@@ -1520,7 +1521,7 @@ function Invoke-Core {
             @{Label = "PoolFee"; Expression = {$_.Pools.PSObject.Properties.Value | ForEach-Object {if ($_.PoolFee) {'{0:p2}' -f ($_.PoolFee/100) -replace ",*0+\s%"," %"}else {"-"}}}; Align = 'right'}
         )) > $null
 
-        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {($Session.Config.UIstyle -ne "full" -and $_.Speed -gt 0) -or ($_.Profit+$(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})) -ge $Miner_ProfitMin -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($Session.Benchmarking) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.Benchmarking) {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.IsExclusiveRun -or $Session.IsDonationRun -or $MinersNeedingBenchmark.Count -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
+        $Miners | Where-Object {$_.DeviceModel -eq $Miner_DeviceModel} | Where-Object {($Session.Config.UIstyle -ne "full" -and $_.Speed -gt 0) -or ($_.Profit+$(if ($Session.Config.UsePowerPrice -and $_.Profit_Cost -ne $null -and $_.Profit_Cost -gt 0) {$_.Profit_Cost})) -ge $Miner_ProfitMin -or $_.Profit -eq $null} | Sort-Object DeviceModel, @{Expression = {if ($Session.Benchmarking) {$_.HashRates.PSObject.Properties.Name}}}, @{Expression = {if ($Session.Benchmarking) {$_.Profit}}; Descending = $true}, @{Expression = {if ($Session.IsExclusiveRun -or $Session.IsDonationRun -or $MinersNeedingBenchmarkCount -lt 1) {[double]$_.Profit_Bias}}; Descending = $true} | Select-Object -First $($LimitMiners) | Format-Table $Miner_Table | Out-Host        
     }
     Remove-Variable "Miner_Table"
 
@@ -1543,7 +1544,7 @@ function Invoke-Core {
         if ($Session.Benchmarking -or $Miners_Downloading -gt 0) {Write-Host " "}
         #Display benchmarking progress
         if ($Session.Benchmarking) {
-            Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmark.Count) miner$(if ($MinersNeedingBenchmark.Count -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
+            Write-Log -Level Warn "Benchmarking in progress: $($MinersNeedingBenchmarkCount) miner$(if ($MinersNeedingBenchmarkCount -gt 1){'s'}) left, interval is set to $($Session.Config.BenchmarkInterval) seconds."
             $MinersNeedingBenchmarkWithEI = ($MinersNeedingBenchmark | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Measure-Object).Count
             if (-not $Session.Config.DisableExtendInterval -and $MinersNeedingBenchmarkWithEI -gt 0) {
                 $BenchmarkMinutes = [Math]::Ceiling($Session.Config.BenchmarkInterval/60)
@@ -1573,7 +1574,7 @@ function Invoke-Core {
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd}d/{0:hh}h/{0:mm}m" -f $_.GetActiveTime()}}, 
         @{Label = "Started"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
-        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner -or $_.IsExclusiveMiner) {"(!)"} elseif ($Session.Config.MinimumMiningIntervals -gt 1 -and $MinersNeedingBenchmark.Count -eq 0 -and ($_.IsRunningFirstRounds -or ($_.Rounds -eq 0 -and $_.GetStatus() -eq [MinerStatus]::Running))) {"($($_.Rounds+1)/$($Session.Config.MinimumMiningIntervals))"})"}},
+        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner -or $_.IsExclusiveMiner) {"(!)"} elseif ($Session.Config.MinimumMiningIntervals -gt 1 -and $MinersNeedingBenchmarkCount -eq 0 -and ($_.IsRunningFirstRounds -or ($_.Rounds -eq 0 -and $_.GetStatus() -eq [MinerStatus]::Running))) {"($($_.Rounds+1)/$($Session.Config.MinimumMiningIntervals))"})"}},
         @{Label = "Algorithm"; Expression = {$_.BaseAlgorithm}},
         @{Label = "Coin"; Expression = {$_.CoinName}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}},
