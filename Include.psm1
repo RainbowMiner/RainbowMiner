@@ -2341,7 +2341,7 @@ class Miner {
     hidden StopMining() {
         $this.Status = [MinerStatus]::Failed
 
-        $this.ClearHashRate()
+        $this.ResetMinerData()
 
         if ($this.Process) {
             Stop-SubProcess -Job $this -Title "Miner $($this.Name)"
@@ -2578,7 +2578,7 @@ class Miner {
     CleanupMinerData() {
     }
 
-    ClearHashRate() {
+    ResetMinerData() {
         $this.Data = @()
     }
 

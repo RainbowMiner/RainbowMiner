@@ -191,7 +191,7 @@ function Update-ActiveMiners {
         $Miner = $_
         Switch ($Miner.GetStatus()) {
             "Running" {if (-not $FirstRound -or $Miner.Rounds) {$Miner.UpdateMinerData() > $null};$MinersUpdated++}
-            "RunningFailed" {$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
+            "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }        
     }
     if ($MinersFailed) {
