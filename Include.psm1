@@ -2273,7 +2273,7 @@ class Miner {
     [Bool]$IsExclusiveMiner = $false
     [Bool]$IsRunningFirstRounds = $false
     [Bool]$NoCPUMining = $false
-    [Int]$NeedsBenchmark = 0
+    [Bool]$NeedsBenchmark = $false
     hidden [System.Management.Automation.Job]$Process = $null
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
