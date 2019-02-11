@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.7-srbminer/SRBMiner-CN-V1-7-7.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.8-srbminer/SRBMiner-CN-V1-7-8.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -41,6 +41,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "fast"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast 2 threads (upto #359.999)
     [PSCustomObject]@{MainAlgorithm = "fast2"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Fast2 (Masari) 2 threads (at #360.000)
     [PSCustomObject]@{MainAlgorithm = "fest"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Festival 2 thread
+    [PSCustomObject]@{MainAlgorithm = "gpu"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-GPU (Ryo)
     [PSCustomObject]@{MainAlgorithm = "lite"      ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Lite 2 threads
     [PSCustomObject]@{MainAlgorithm = "litev7"    ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-LiteV7 2 threads
     [PSCustomObject]@{MainAlgorithm = "haven"     ; Threads = 2; MinMemGb = 4; Params = ""} # CryptoNight-Haven 2 threads
@@ -68,6 +69,7 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight Fast 			[fast]
 #- Cryptonight Fast2 			[fast2]
 #- Cryptonight Fest 			[festival]
+#- Cryptonight GPU 				[gpu]
 #- Cryptonight Haven 			[haven]
 #- Cryptonight Heavy			[heavy]
 #- Cryptonight Hospital 		[hospital]
