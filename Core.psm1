@@ -1729,7 +1729,7 @@ function Invoke-Core {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[W]atchdog reset, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
 
     $SamplesPicked = 0
     $WaitRound = 0
@@ -1838,7 +1838,7 @@ function Invoke-Core {
                 }
                 "W" {
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    #$Session.WatchdogTimers = $Session.WatchdogTimers | Where-Object {$Session.ActiveMiners | Where-Object$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
+                    $Session.WatchdogTimers = @()
                     Write-Log "Watchdog reset."
                     $keyPressed = $true
                 }
@@ -1864,7 +1864,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 100)
+    Write-Host (" " * 120)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
