@@ -35,8 +35,8 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 5555; fee = 0.9; walletSymbol = "bittube"; host = "sg.bittube.miner.rocks"; region = "asia"}
     [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 5555; fee = 0.9; walletSymbol = "aeon"; host = "aeon.miner.rocks"; region = "eu"}
     [PSCustomObject]@{coin = "Turtlecoin"; symbol = "TRTL"; algo = "CnLiteV7"; port = 5555; fee = 0.9; walletSymbol = "turtle"; host = "turtle.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "masari.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "sg.masari.miner.rocks"; region = "asia"}
+    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast2"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "masari.miner.rocks"; region = "eu"}
+    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast2"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "sg.masari.miner.rocks"; region = "asia"}
 )
 
 $Pools_Requests = [hashtable]@{}
