@@ -1488,7 +1488,9 @@ function Invoke-TcpRead {
         [Parameter(Mandatory = $true)]
         [String]$Port, 
         [Parameter(Mandatory = $false)]
-        [Int]$Timeout = 10 #seconds
+        [Int]$Timeout = 10, #seconds
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
@@ -1503,7 +1505,7 @@ function Invoke-TcpRead {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Could not read from $($Server):$($Port)"
+        if (-not $Quiet) {Write-Log -Level Warn "Could not read from $($Server):$($Port)"}
     }
     finally {
         if ($Reader) {$Reader.Close();$Reader.Dispose()}
