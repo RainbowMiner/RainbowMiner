@@ -50,7 +50,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Lethean"; symbol = "LTHN"; algo = "CnV8"; port = 8881; fee = 0.0; walletSymbol = "lethean"; host = "lethean.ingest.cryptoknight.cc"}
     #[PSCustomObject]@{coin = "Lines"; symbol = "LNS"; algo = "CnV7"; port = 50401; fee = 0.0; walletSymbol = "lines"; host = "lines.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 7731; fee = 0.0; walletSymbol = "loki"; host = "loki.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast"; port = 3333; fee = 0.0; walletSymbol = "msr"; host = "masari.ingest.cryptoknight.cc"}
+    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast2"; port = 3333; fee = 0.0; walletSymbol = "msr"; host = "masari.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Monero"; symbol = "XMR"; algo = "CnV8"; port = 4441; fee = 0.0; walletSymbol = "monero"; host = "monero.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "MoneroV"; symbol = "XMV"; algo = "CnV7"; port = 9221; fee = 0.0; walletSymbol = "monerov"; host = "monerov.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Niobio"; symbol = "NBR"; algo = "CnHeavy"; port = 50101; fee = 0.0; walletSymbol = "niobio"; host = "niobio.ingest.cryptoknight.cc"}
