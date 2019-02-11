@@ -2240,7 +2240,7 @@ class Miner {
     $PowerDraw
     $Speed
     $Speed_Live
-    $Variance
+    [double[]]$Variance = @()
     $StartCommand
     $StopCommand
     $Best
@@ -2273,6 +2273,7 @@ class Miner {
     [Bool]$IsExclusiveMiner = $false
     [Bool]$IsRunningFirstRounds = $false
     [Bool]$NoCPUMining = $false
+    [Int]$NeedsBenchmark = 0
     hidden [System.Management.Automation.Job]$Process = $null
     [Int]$ProcessId = 0
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
@@ -2605,7 +2606,8 @@ class Miner {
         $HashRates_Average = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
         $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
 
-        $this.Variance = $HashRates_Variance
+        $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
+
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
 
         if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt [Math]::Max($this.ExtendInterval,1) -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
