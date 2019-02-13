@@ -871,13 +871,13 @@ function Invoke-Core {
     }
 
     if ($Session.Config.MiningMode -eq "combo") {
-        if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 1) {
+        if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 0) {
             #Benchmarking is still ongoing - remove device combos from miners and make sure no combo stat is left over
-            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -notmatch '-'} | Foreach-Object {
+            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'} | Foreach-Object {
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
-                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -ne $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
+                    Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Foreach-Object {
                         $Name = $_.Name
                         $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
@@ -896,7 +896,7 @@ function Invoke-Core {
             }
 
             #Gather mining statistics for fresh combos
-            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -eq $null -and $_.DeviceModel -match '-'} | Foreach-Object {
+            $AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -match '-'} | Foreach-Object {
                 $Miner = $_
                 $ComboAlgos = $Miner.HashRates.PSObject.Properties.Name
                 $AllMiners | 
@@ -1165,12 +1165,12 @@ function Invoke-Core {
     $API.Miners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
-    if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -eq $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
+    if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
-    #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used    
+    #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null}
     $MinersNeedingBenchmarkCount = ($MinersNeedingBenchmark | Measure-Object).Count
     $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
@@ -1729,7 +1729,7 @@ function Invoke-Core {
     $Host.UI.RawUI.FlushInputBuffer()
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[W]atchdog reset, [V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
+    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
 
     $SamplesPicked = 0
     $WaitRound = 0
@@ -1838,7 +1838,7 @@ function Invoke-Core {
                 }
                 "W" {
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    $Session.WatchdogTimers = @()
+                    #$Session.WatchdogTimers = $Session.WatchdogTimers | Where-Object {$Session.ActiveMiners | Where-Object$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
                     Write-Log "Watchdog reset."
                     $keyPressed = $true
                 }
@@ -1864,7 +1864,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 120)
+    Write-Host (" " * 100)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
