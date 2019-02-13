@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.0.7-sgminer/sgminer-v0.0.7.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.0-sgminermtp/sgminermtp-0.1.0.zip"
 $ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
 $Port = "411{0:d2}"
 $DevFee = 0.0
@@ -14,7 +14,7 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--worksize 64 -I 20"}
+    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_nvidia4 --worksize 64 -I 22"}    
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -54,7 +54,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName  = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path        = $Path
-                Arguments   = "--kernel $($_.MainAlgorithm)$(if ($Miner_Model -match "(gfx900|vega)") {"_nvidia"}) --device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --text-only --gpu-platform $($Miner_PlatformId) $($_.Params)"
+                Arguments   = "$($_."Params$(if ($Miner_Model -match "(gfx900|vega)") {"Vega"})") --device $($DeviceIDsAll) --api-port $($Miner_Port) --api-listen -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --gpu-platform $($Miner_PlatformId)"
                 HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API         = "Xgminer"
                 Port        = $Miner_Port
