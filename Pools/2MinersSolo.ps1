@@ -76,7 +76,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_Request = [PSCustomObject]@{}
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_Host)/api/stats" -tag $Name -retry 5 -retrywait 200 -cycletime 120 -delay 200
-            if ($Pool_Request.code -ne $null) {throw}
+            if ($Pool_Request.code -ne $null -or $Pool_Request.nodes -eq $null -or -not $Pool_Request.nodes) {throw}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -111,7 +111,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
             $Divisor = 1e8
             
-            $blocks = $Pool_Blocks.candidates.timestamp + $Pool_Blocks.immature.timestamp + $Pool_Blocks.matured.timestamp
+            $blocks = @()
+            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates.timestamp}
+            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature.timestamp}
+            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured.timestamp}
             $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
             $Pool_BLK = [int]$(if ($blocks_measure.Maximum - $blocks_measure.Minimum) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)*$blocks_measure.Count})
             $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
