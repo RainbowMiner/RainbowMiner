@@ -6,7 +6,38 @@ class Excavator : Miner {
     hidden [DateTime]$BeginTime = 0
     hidden [DateTime]$EndTime = 0
     hidden [Array]$Workers = @()
+    hidden [Array]$Algorithm_IDs = @()
     hidden [Int32]$Service_Id = 1
+
+    static [PSCustomObject]InvokeRequest($Miner, $Request) {
+        $Server = "localhost"
+        $Timeout = 10 #seconds
+
+        try {
+            $Response = Invoke-TcpRequest $Server $Miner.Port ($Request | ConvertTo-Json -Compress) $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+
+            if ($Data.id -ne 1) {
+                Write-Log -Level Error  "Invalid response returned by miner ($($Miner.Name)). "
+                $Miner.SetStatus("Failed")
+            }
+
+            if ($Data.error) {
+                Write-Log -Level Error  "Error returned by miner ($($Miner.Name)): $($Data.error)"
+                $Miner.SetStatus("Failed")
+            }
+        }
+        catch {
+            Write-Log -Level Error  "Failed to connect to miner ($($Miner.Name)). "
+            $Miner.SetStatus("Failed")
+            return $null
+        }
+        return $Data
+    }
+
+    static WriteMessage($Miner, $Message) {
+        $Data = [Excavator]::InvokeRequest($Miner, @{id = 1; method = "message"; params = @($Message)})
+    }
 
     [String[]]GetProcessNames() {
         return @()
@@ -36,216 +67,55 @@ class Excavator : Miner {
 
         $this.BeginTime = Get-Date
 
+        [Excavator]::WriteMessage($this, "Starting worker for miner $($this.Name) ")
+
         if ($this.Workers) {
             if ([Excavator]::Service.Id -eq $this.Service_Id) {
-                # Free all workers for this device
-                $Request = @{id = 1; method = "workers.free"; params = $this.Workers} | ConvertTo-Json -Compress
-                try {
-                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                    if ($Data.id -ne 1) {
-                        Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-
-                    if ($Data.error) {
-                        Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                       $this.SetStatus([MinerStatus]::Failed)
-                    }
-                }
-                catch {
-                    Write-Log -Level Warn  "Failed to connect to miner ($($this.Name)). "
-                    $this.SetStatus([MinerStatus]::Failed)
-                    return
-                }
+                #Free all workers for this device
+                $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "workers.free"; params = @($this.Workers)})
             }
         }
 
-        # Subscribe to Nicehash        
-        $Request = ($this.Arguments | ConvertFrom-Json) | Where-Object Method -Like "subscribe" | Select-Object -Index 0 | ConvertTo-Json -Depth 10 -Compress
-        try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
+        #Subscribe to Nicehash        
+        $Request = ($this.Arguments | ConvertFrom-Json) | Where-Object Method -Like "subscribe" | Select-Object -Index 0
+        $Data = [Excavator]::InvokeRequest($this, $Request)
 
-            if ($Data.id -ne 1) {
-                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-
-            if ($Data.error) {
-                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-        }
-        catch {
-            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-            $this.SetStatus([MinerStatus]::Failed)
-            return
-        }
-
-        # Build list of all algorithms
-        $Request = @{id = 1; method = "algorithm.list"; params = @()} | ConvertTo-Json -Compress
-        try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-            if ($Data.id -ne 1) {
-                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-
-            if ($Data.error) {
-                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-        }
-        catch {
-            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-            $this.SetStatus([MinerStatus]::Failed)
-            return
-        }
-        $Algorithms = @($Data.algorithms.Name)
+        #Build list of all algorithms
+        $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "algorithm.list"; params = @()})
+        $Algorithms = @($Data.algorithms.name)
 
         ($this.Arguments | ConvertFrom-Json) | Where-Object Method -Like "*.add" | ForEach-Object {
-            $Argument = $_
+            $Argument = @($_)
 
             switch ($Argument.method) {
                 #Add algorithms so it will receive new jobs
                 "algorithm.add" {
                     if ($Algorithms -notcontains $Argument.params) {
-                        $Request = $Argument | ConvertTo-Json -Compress
-
-                        try {
-                            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                            if ($Data.id -ne 1) {
-                                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                                $this.SetStatus([MinerStatus]::Failed)
-                            }
-
-                            if ($Data.error) {
-                                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                                $this.SetStatus([MinerStatus]::Failed)
-                            }
-                        }
-                        catch {
-                            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                            return
-                        }
-
-                    }
-                }
-
-                "worker.add" {
-                    # Add worker for device
-                    $Request = $Argument | ConvertTo-Json -Compress
-
-                    try {
-                        $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                        $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                        if ($Data.id -ne 1) {
-                            Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-
-                        if ($Data.error) {
-                            Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-                    }
-                    catch {
-                        Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                        return
-                    }
-
-                    if ("$($Data.worker_id)") {
-                        $this.Workers += "$($Data.worker_id)"
+                        $Data = [Excavator]::InvokeRequest($this, $Argument)
                     }
                 }
 
                 #Add workers for device
                 "workers.add" {
-                    $Request = $Argument | ConvertTo-Json -Compress
-
-                    try {
-                        $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                        $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                        if ($Data.id -ne 1) {
-                            Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-
-                        $Data.Status | ForEach-Object {
-                            if ($_.error) {
-                                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($_.error)"
-                                $this.SetStatus([MinerStatus]::Failed)
-                            }
-                        }
-                    }
-                    catch {
-                        if ($this.GetActiveTime().TotalSeconds -gt 60) {
-                            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-                        return
-                    }
-
+                    $Data = [Excavator]::InvokeRequest($this, $Argument)
                     $Data.Status | Where-Object {"$($_.worker_id)"} | ForEach-Object {
                         $this.Workers += "$($_.worker_id)"
                     }
                 }
+
                 Default {
-                    $Request = $Argument | ConvertTo-Json -Compress
-
-                    try {
-                        $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                        $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                        if ($Data.id -ne 1) {
-                            Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-
-                        if ($Data.error) {
-                            Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-                    }
-                    catch {
-                        Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                        return
-                    }
+                    $Data = [Excavator]::InvokeRequest($this, $Argument)
                 }
             }
         }
 
-        # Worker started message
-        $Request = @{id = 1; method = "message"; params = @("Worker [$($this.Workers -join "&")] for miner $($this.Name) started. ")} | ConvertTo-Json -Compress
-        try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-            if ($Data.id -ne 1) {
-                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-
-            if ($Data.error) {
-                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-        }
-        catch {
-            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-            $this.SetStatus([MinerStatus]::Failed)
-            return
+        #Get Algorithm ID list for current miner
+        $WorkerList = [Excavator]::InvokeRequest($this, @{id = 1; method = "worker.list"; params = @()})
+        $this.Algorithm_IDs = @(($WorkerList.workers | Where-Object {$this.Workers -contains $_.worker_id}).algorithms.id) | Select-Object -Unique
+        
+        #Worker started message
+        if ($this.Algorithm_IDs) {
+            [Excavator]::WriteMessage($this, "Worker [$($this.Workers -join " ")] for miner $($this.Name) started. ")
         }
     }
 
@@ -265,157 +135,38 @@ class Excavator : Miner {
             if ([Excavator]::Service.Id -eq $this.Service_Id) {
                 
                 #Get algorithm list
-                $Request = @{id = 1; method = "algorithm.list"; params = @()} | ConvertTo-Json -Compress
-                try {
-                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                    if ($Data.id -ne 1) {
-                        Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-
-                    if ($Data.error) {
-                        Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-                }
-                catch {
-                    Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                    $this.SetStatus([MinerStatus]::Failed)
-                    return
-                }
+                $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "algorithm.list"; params = @()})
                 $Algorithms = @($Data.algorithms.Name)
 
-                # Free workers for this device
-                $Request = @{id = 1; method = "workers.free"; params = $this.Workers} | ConvertTo-Json -Compress
-                $Response = ""
-                $HashRate = [PSCustomObject]@{}
+                #Free workers for this device
+                $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "workers.free"; params = @($this.Workers)})
 
-                try {
-                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                    if ($Data.id -ne 1) {
-                        Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-
-                    if ($Data.error) {
-                        Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-                }
-                catch {
-                    Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                    $this.SetStatus([MinerStatus]::Failed)
-                    return
-                }
+                #Worker stopped message
+                [Excavator]::WriteMessage($this, "Worker [$($this.Workers -join " ")] for miner $($this.Name) stopped. ")
 
                 #Get worker list
-                $Request = @{id = 1; method = "worker.list"; params = @()} | ConvertTo-Json -Compress
-
-                try {
-                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                    if ($Data.id -ne 1) {
-                        Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-
-                    if ($Data.error) {
-                        Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-                }
-                catch {
-                    Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                    $this.SetStatus([MinerStatus]::Failed)
-                    return
-                }
+                $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "worker.list"; params = @()})
                 $Active_Algorithms = $Algorithms | Select-Object -Unique |  Where-Object {$Data.workers.algorithms.name -icontains $_}
                 $Unused_Algorithms = $Algorithms | Select-Object -Unique |  Where-Object {$Data.workers.algorithms.name -inotcontains $_}
 
-                if ($Unused_Algorithms) {
-                    #Remove unused algorithms
-                    $Request = @{id = 1; method = "algorithm.remove"; params = @($Unused_Algorithms)} | ConvertTo-Json -Compress
+                $Unused_Algorithms | ForEach-Object {
+                    #Remove unused algorithm
+                    $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "algorithm.remove"; params = @($_)})
 
-                    try {
-                        $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                        $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                        if ($Data.id -ne 1) {
-                            Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-
-                        if ($Data.error) {
-                            Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-                    }
-                    catch {
-                        Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                        return
-                    }
-                }
-
-                # Worker stopped message
-                $Request = @{id = 1; method = "message"; params = @("Worker [$($this.Workers -join "&")] for miner $($this.Name) stopped. ")} | ConvertTo-Json -Compress
-                try {
-                    $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                    $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                    if ($Data.id -ne 1) {
-                        Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-
-                    if ($Data.error) {
-                        Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                        $this.SetStatus([MinerStatus]::Failed)
-                    }
-                }
-                catch {
-                    Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                    $this.SetStatus([MinerStatus]::Failed)
-                    return
+                    #Algorithm cleared message
+                    [Excavator]::WriteMessage($this, "Unused algorithm [$_] cleared. ")
                 }
 
                 if (-not $Active_Algorithms) {
                     if ($true) {
                         #Stop miner, this will also unsubscribe
-                        $Request = @{id = 1; method = "miner.stop"; params = @()} | ConvertTo-Json -Compress
+                        $Request = @{id = 1; method = "miner.stop"; params = @()}
                     }
                     else{
                         #Quit miner
-                        $Request = @{id = 1; method = "quit"; params = @()} | ConvertTo-Json -Compress
+                        $Request = @{id = 1; method = "quit"; params = @()}
                     }
-                    $Response = ""
-
-                    $HashRate = [PSCustomObject]@{}
-
-                    try {
-                        $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-                        $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-                        if ($Data.id -ne 1) {
-                            Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-
-                        if ($Data.error) {
-                            Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                            $this.SetStatus([MinerStatus]::Failed)
-                        }
-                    }
-                    catch {
-                        Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                        $this.SetStatus([MinerStatus]::Failed)
-                        return
-                    }
+                    $Data = [Excavator]::InvokeRequest($this, $Request)
                 }
             }
         }
@@ -617,65 +368,48 @@ class Excavator : Miner {
 
         $Server = "localhost"
         $Timeout = 10 #seconds
-        $HashRate = [PSCustomObject]@{}
 
-        #Get list of all active workers
-        $Request = @{id = 1; method = "worker.list"; params = @()} | ConvertTo-Json -Compress
+        #Get list of all active algorithms
+        $Request = @{id = 1; method = "algorithm.list"; params = @()} | ConvertTo-Json -Compress
         $Response = ""
-
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
 
             if ($Data.id -ne 1) {
-                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
+                Write-Log -Level Error  "Invalid response returned by miner ($($this.Name)). "
             }
 
             if ($Data.error) {
-                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
+                Write-Log -Level Error  "Error returned by miner ($($this.Name)): $($Data.error)"
             }
         }
         catch {
-            if ($this.GetActiveTime().TotalSeconds -gt 60) {
-                Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-                $this.SetStatus([MinerStatus]::Failed)
-            }
             return @($Request, $Response)
         }
 
         #Get hash rates per algorithm
-        $Data.workers.algorithms.name | Select-Object -Unique | ForEach-Object {
-            $Workers = $Data.workers | Where-Object {$this.workers -match $_.Worker_id}
-            $Algorithm = $_
+        $Algorithms = $Data.algorithms | Where-Object {$this.Algorithm_IDs -contains $_.Algorithm_id}
 
-            $HashRate_Name = [String](($this.Algorithm -replace "-NHMP") -match (Get-Algorithm $Algorithm))
-            if (-not $HashRate_Name) {$HashRate_Name = [String](($this.Algorithm -replace "-NHMP") -match "$(Get-Algorithm $Algorithm)*")} #temp fix
-            $HashRate_Value = [Double](($Workers.algorithms | Where-Object {$_.name -eq $Algorithm}).speed | Measure-Object -Sum).Sum
-            if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                $HashRate | Add-Member @{"$($HashRate_Name)-NHMP" = $HashRate_Value}
+        $HashRate = [PSCustomObject]@{}
+        $HashRate_Name = ""
+        $HashRate_Value = [Int64]0
+
+        $Algorithms | ForEach-Object {
+            $HashRate_Name = [String](Get-Algorithm $_.name)
+
+            $Accepted_Shares = [Int64]$_.accepted_shares
+            $Rejected_Shares = [Int64]$_.rejected_shares
+            $HashRate_Value  = [Int64]$_.Speed
+
+            if ($HashRate_Name -and $HashRate_Value -GT 0) {
+                $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
             }
         }
 
         #Print algorithm speeds
-        $Request = @{id = 1; method = "algorithm.print.speeds"; params = @()} | ConvertTo-Json -Compress
-        try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop
-            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
-
-            if ($Data.id -ne 1) {
-                Write-Log -Level Warn  "Invalid response returned by miner ($($this.Name)). "
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-
-            if ($Data.error) {
-                Write-Log -Level Warn  "Error returned by miner ($($this.Name)): $($Data.error)"
-                $this.SetStatus([MinerStatus]::Failed)
-            }
-        }
-        catch {
-            Write-Log -Level Warn "Failed to connect to miner ($($this.Name)). "
-            $this.SetStatus([MinerStatus]::Failed)
-        }
+        $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "algorithm.print.speeds"; params = @()})
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
