@@ -1888,7 +1888,7 @@ function Invoke-Core {
             $Statset = 0
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)                
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
