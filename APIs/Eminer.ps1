@@ -23,20 +23,25 @@ class Eminer : Miner {
             return @($Request, $Response)
         }
         $Global:ProgressPreference = $oldProgressPreference
+
+        $Accepted_Shares = [Double]$Data.found_solutions
+        $Rejected_Shares = [Double]($Data.invalid_solutions + $Data.rejected_solutions)
         
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.total_hashrate_mean | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $this.AddMinerData([PSCustomObject]@{
-                Date     = (Get-Date).ToUniversalTime()
-                Raw      = $Response
-                HashRate = $HashRate
-                PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
-                Device   = @()
-            })
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
         }
+
+        $this.AddMinerData([PSCustomObject]@{
+            Date     = (Get-Date).ToUniversalTime()
+            Raw      = $Response
+            HashRate = $HashRate
+            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
+            Device   = @()
+        })
 
         $this.CleanupMinerData()
 

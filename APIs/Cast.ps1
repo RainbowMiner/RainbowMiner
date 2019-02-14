@@ -27,7 +27,13 @@ class Cast : Miner {
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.hash_rate | Measure-Object -Sum).Sum / 1000
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        $Accepted_Shares = [Int64]$Data.shares.num_accepted
+        $Rejected_Shares = [Int64]($Data.shares.num_rejected + $Data.shares.num_rejected + $Data.shares.num_network_fail + $Data.shares.num_outdated)
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

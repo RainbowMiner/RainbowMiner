@@ -66,10 +66,16 @@ class GrinPro : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Accepted_Shares = [Int64]$Data.shares.accepted
+        $Rejected_Shares = [Int64]($Data.shares.submitted - $Data.shares.accepted)
+
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.workers | Where-Object status -eq "ONLINE" | Select-Object -ExpandProperty graphsPerSecond | Measure-Object -Sum).Sum
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

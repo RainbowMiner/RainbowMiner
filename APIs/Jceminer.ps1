@@ -50,6 +50,9 @@ class Jceminer : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Accepted_Shares = [Double]$Data.results.shares_good
+        $Rejected_Shares = [Double]($Data.results.shares_total - $Data.results.shares_good)
+
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
         if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]} #fireice fix
@@ -57,7 +60,10 @@ class Jceminer : Miner {
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[2]} #fix
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

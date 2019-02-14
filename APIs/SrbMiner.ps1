@@ -42,12 +42,16 @@ class SrbMiner : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Accepted_Shares = [Int64]$Data.shares.accepted
+        $Rejected_Shares = [Int64]$Data.shares.rejected
+
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [double]$Data.HashRate_total_5min
         if (-not $HashRate_Value) {$HashRate_Value = [double]$Data.HashRate_total_now}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
         }
 
         $this.AddMinerData([PSCustomObject]@{

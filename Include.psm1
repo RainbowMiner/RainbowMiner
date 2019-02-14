@@ -2240,6 +2240,7 @@ class Miner {
     $Profit_Unbias
     $Profit_Cost
     $PowerDraw
+    $Shares
     $Speed
     $Speed_Live
     [double[]]$Variance = @()
@@ -2264,6 +2265,7 @@ class Miner {
     $ZeroRounds = 0
     $Rounds = 0
     $MaxBenchmarkRounds = 3
+    $MaxRejectionRatio = 0.3
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2488,6 +2490,21 @@ class Miner {
         }
     }
 
+    UpdateShares([String]$Algorithm,[Double]$Accepted,[Double]$Rejected) {
+        if ($this.Shares -eq $null) {$this.Shares = [PSCustomObject]@{}}
+        if ($this.Shares.$Algorithm -eq $null) {$this.Shares | Add-Member $Algorithm ([PSCustomObject]@{Accepted=0.0;Rejected=0.0}) -Force}
+        $this.Shares.$Algorithm.Accepted = $Accepted
+        $this.Shares.$Algorithm.Rejected = $Rejected
+    }
+
+    GetShareCount([String]$Algorithm) {
+        if ($this.Shares -ne $null -and $this.Shares.$Algorithm -ne $null) {$this.Shares.$Algorithm.Accepted + $this.Shares.$Algorithm.Rejected}
+    }
+
+    GetRejectedShareRatio([String]$Algorithm) {
+        if ($this.GetShareCount($Algorithm) -ge 3) {$this.Shares.$Algorithm.Rejected / $this.GetShareCount($Algorithm)}
+    }
+
     [String[]]UpdateMinerData () {
 
         if ($this.Process.HasMoreData) {
@@ -2593,15 +2610,16 @@ class Miner {
         $Seconds = $this.DataInterval * [Math]::Max($this.ExtendInterval,1)
 
         $this.Data | Where-Object {$_.HashRate} | Where-Object {$_.Date -ge (Get-Date).ToUniversalTime().AddSeconds( - $Seconds)} | ForEach-Object {
-            $Data_Devices = $_.Device
-            if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
-
             $Data_HashRates = $_.HashRate.$Algorithm
             if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
 
-            $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
-            $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @(($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum) / $Data_Devices.Count)}
-            $HashRates_Variances."$($Data_Devices -join '-')" += @($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum)
+            if ($Data_HashRates) {
+                $Data_Devices = $_.Device
+                if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
+                $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
+                $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @(($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum) / $Data_Devices.Count)}
+                $HashRates_Variances."$($Data_Devices -join '-')" += @($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum)
+            }
         }
 
         $HashRates_Count = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum

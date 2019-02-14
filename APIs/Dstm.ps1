@@ -21,20 +21,25 @@ class Dstm : Miner {
             return @($Request, $Response)
         }
 
+        $Accepted_Shares = [Double]($Data.result.accepted_shares | Measure-Object -Sum).Sum
+        $Rejected_Shares = [Double]($Data.result.rejected_shares | Measure-Object -Sum).Sum
+
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.result.sol_ps | Measure-Object -Sum).Sum
         if (-not $HashRate_Value) {$HashRate_Value = [Double]($Data.result.speed_sps | Measure-Object -Sum).Sum} #ewbf fix
         
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $this.AddMinerData([PSCustomObject]@{
-                Date     = (Get-Date).ToUniversalTime()
-                Raw      = $Response
-                HashRate = $HashRate
-                PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
-                Device   = @()
-            })
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
         }
+
+        $this.AddMinerData([PSCustomObject]@{
+            Date     = (Get-Date).ToUniversalTime()
+            Raw      = $Response
+            HashRate = $HashRate
+            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
+            Device   = @()
+        })
 
         $this.CleanupMinerData()
 

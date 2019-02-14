@@ -21,6 +21,9 @@ class Claymore : Miner {
             return @($Request, $Response)
         }
 
+        $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
+        $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
+
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm ($Data.result[0] -split " - ")[1]))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm ($Data.result[0] -split " - ")[1])*")} #temp fix
         if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]}
@@ -29,7 +32,15 @@ class Claymore : Miner {
         if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
         if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = [Int64]$HashRate_Value}
+        $HashRate_Value = [Int64]$HashRate_Value
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
+
+        $Accepted_Shares = [Int64]($Data.result[4] -split ";")[1]
+        $Rejected_Shares = [Int64]($Data.result[4] -split ";")[2]
 
         $HashRate_Name = if ($HashRate_Name) {[String]($this.Algorithm -notlike $HashRate_Name)}
         $HashRate_Value = [Double]($Data.result[4] -split ";")[0]
@@ -37,7 +48,10 @@ class Claymore : Miner {
         if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
         if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()
@@ -46,6 +60,8 @@ class Claymore : Miner {
             PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
         })
+
+        $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
 
         $this.CleanupMinerData()
 

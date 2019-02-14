@@ -21,6 +21,9 @@ class Xgminer : Miner {
             return @($Request, $Response)
         }
 
+        $Accepted_Shares = [Int64]$Data.SUMMARY.accepted
+        $Rejected_Shares = [Int64]$Data.SUMMARY.rejected
+
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = if ($Data.SUMMARY.HS_5s) {[Double]$Data.SUMMARY.HS_5s * [Math]::Pow(1000, 0)}
         elseif ($Data.SUMMARY.KHS_5s) {[Double]$Data.SUMMARY.KHS_5s * [Math]::Pow(1000, 1)}
@@ -35,7 +38,10 @@ class Xgminer : Miner {
         elseif ($Data.SUMMARY.THS_av) {[Double]$Data.SUMMARY.THS_av * [Math]::Pow(1000, 4)}
         elseif ($Data.SUMMARY.PHS_av) {[Double]$Data.SUMMARY.PHS_av * [Math]::Pow(1000, 5)}
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

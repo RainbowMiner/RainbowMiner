@@ -24,11 +24,15 @@ class Lol : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Accepted_Shares = [Int64]$Data.Session.Accepted
+        $Rejected_Shares = [Int64]($Data.Session.Submitted - $Data.Session.Accepted)
+
         $HashRate_Name = Get-Algorithm($Data.Mining.Algorithm -replace "/" -replace "\s+-\s+.+$")
         $HashRate_Value = [Double]$data.Session.Performance_Summary
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
         }
 
         $this.AddMinerData([PSCustomObject]@{
