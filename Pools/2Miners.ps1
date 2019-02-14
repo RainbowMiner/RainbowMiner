@@ -58,10 +58,6 @@ $Pools_Data = @(
     [PSCustomObject]@{id = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1}
 )
 
-$Pool_Currencies = @($Pools_Data | Select-Object -ExpandProperty symbol | Where-Object {$Wallets."$($_)"} | Select-Object -Unique)
-
-if (($Pool_Currencies | Measure-Object).Count) {$Pool_Ticker = Get-TickerGlobal $Pool_Currencies}
-
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.algo
@@ -106,7 +102,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $coinUnits    = 1e10
             $amountLive   = $profitLive / $coinUnits
 
-            $lastSatPrice = [Double]$Pool_Ticker.$Pool_Currency.BTC
+            $lastSatPrice = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
             $satRewardLive = $amountLive * $lastSatPrice
 
             $Divisor = 1e8
