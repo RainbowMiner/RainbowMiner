@@ -1394,9 +1394,10 @@ function Invoke-Core {
         #Remove watchdog timer
         if ($Session.Config.Watchdog -and $Session.WatchdogTimers) {
             $Miner_Name = $Miner.Name
-            $Miner_Pool = $Miner.Pool
+            $Miner_Index = 0
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
+                $Miner_Pool = $Miner.Pool[$Miner_Index]
                 $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
                 if ($WatchdogTimer) {
                     if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
@@ -1407,6 +1408,7 @@ function Invoke-Core {
                         $Session.WatchdogTimers = $Session.WatchdogTimers -ne $WatchdogTimer
                     }
                 }
+                $Miner_Index++
             }
         }
     }
@@ -1451,11 +1453,10 @@ function Invoke-Core {
         #Add watchdog timer
         if ($Session.Config.Watchdog -and $_.Profit -ne $null) {
             $Miner_Name = $_.Name
-            $Miner_Pool = $_.Pool
             $Miner_DeviceModel = $_.DeviceModel
             $_.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
-                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
+                $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if (-not $WatchdogTimer) {
                     $Session.WatchdogTimers += [PSCustomObject]@{
                         MinerName = $Miner_Name
@@ -1713,6 +1714,7 @@ function Invoke-Core {
 
     #Dynamically adapt current interval
     $NextInterval = [Math]::Max($Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval",$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
+    if ($Session.IsDonationRun -and $NextInterval -gt $DonateMinutes*60) {$NextInterval = $DonateMinutes*60}
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
