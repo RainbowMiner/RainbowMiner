@@ -14,7 +14,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $Pool_Currency = "GRIN"
-$Pool_Fee = 0.0
+$Pool_Fee = 2.5
 
 if (-not $Wallets.$Pool_Currency -and -not $InfoOnly) {return}
 
