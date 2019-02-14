@@ -35,7 +35,7 @@ class Claymore : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
         if ($this.Algorithm[1]) {
@@ -52,7 +52,7 @@ class Claymore : Miner {
 
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-                $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+                $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
             }
         }
 
@@ -64,7 +64,7 @@ class Claymore : Miner {
             Device   = @()
         })
 
-        $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+        $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
         $this.CleanupMinerData()
 

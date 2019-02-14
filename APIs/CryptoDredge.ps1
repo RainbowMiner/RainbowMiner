@@ -25,7 +25,13 @@ class CryptoDredge : Miner {
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
         $HashRate_Value = [Double]$Data.KHS * 1000
 
-        $HashRate | Where-Object {$HashRate_Name} | Add-Member @{$HashRate_Name = $HashRate_Value}
+        $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
+        $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
+
+        if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+        }
 
         $this.AddMinerData([PSCustomObject]@{
             Date     = (Get-Date).ToUniversalTime()

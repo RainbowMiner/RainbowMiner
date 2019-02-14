@@ -2367,7 +2367,10 @@ class Miner {
         $this.ProcessId = 0
     }
 
-    hidden StartMiningPreProcess() { }
+    hidden StartMiningPreProcess() {
+        $this.Shares = @()
+        $this.Algorithm | Foreach-Object {$this.Shares += [PSCustomObject]@{Accepted=0;Rejected=0}}
+    }
 
     hidden StartMiningPostProcess() { }
 
@@ -2490,19 +2493,22 @@ class Miner {
         }
     }
 
-    UpdateShares([String]$Algorithm,[Double]$Accepted,[Double]$Rejected) {
-        if ($this.Shares -eq $null) {$this.Shares = [PSCustomObject]@{}}
-        if ($this.Shares.$Algorithm -eq $null) {$this.Shares | Add-Member $Algorithm ([PSCustomObject]@{Accepted=0.0;Rejected=0.0}) -Force}
-        $this.Shares.$Algorithm.Accepted = $Accepted
-        $this.Shares.$Algorithm.Rejected = $Rejected
+    UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
+        $this.Shares[$Index].Accepted = $Accepted
+        $this.Shares[$Index].Rejected = $Rejected
     }
 
-    GetShareCount([String]$Algorithm) {
-        if ($this.Shares -ne $null -and $this.Shares.$Algorithm -ne $null) {$this.Shares.$Algorithm.Accepted + $this.Shares.$Algorithm.Rejected}
+    [Int64]GetShareCount([Int]$Index) {
+        return [Int64]($this.Shares[$Index].Accepted + $this.Shares[$Index].Rejected)
     }
 
-    GetRejectedShareRatio([String]$Algorithm) {
-        if ($this.GetShareCount($Algorithm) -ge 3) {$this.Shares.$Algorithm.Rejected / $this.GetShareCount($Algorithm)}
+    [Double]GetRejectedShareRatio([Int]$Index) {
+        return [Double]$(if ($this.GetShareCount($Index) -ge 3) {$this.Shares[$Index].Rejected / $this.GetShareCount($Index)})
+    }
+
+    [Double]GetMaxRejectedShareRatio() {
+        $Index = 0
+        return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index);$Index++} | Measure-Object -Maximum).Maximum
     }
 
     [String[]]UpdateMinerData () {

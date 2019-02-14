@@ -30,6 +30,7 @@ class BMiner : Miner {
         catch {}
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Index = 0
         $this.Algorithm | Select-Object -Unique | ForEach-Object {
             $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $_))
             if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $_)*")} #temp fix
@@ -47,8 +48,9 @@ class BMiner : Miner {
             }
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-                $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+                $this.UpdateShares($Index,$Accepted_Shares,$Rejected_Shares)
             }
+            $Index++
         }
 
         $this.AddMinerData([PSCustomObject]@{

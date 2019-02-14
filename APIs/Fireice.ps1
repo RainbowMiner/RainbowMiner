@@ -82,7 +82,7 @@ class Fireice : Miner {
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-            $this.UpdateShares($HashRate_Name,$Accepted_Shares,$Rejected_Shares)
+            $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
         $this.AddMinerData([PSCustomObject]@{

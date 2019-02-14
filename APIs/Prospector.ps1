@@ -31,7 +31,7 @@ class Prospector : Miner {
 
             if ($HashRate_Name -and $HashRate_Value -gt 0) {
                 $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
-                $this.UpdateShares($HashRate_Name,0,0)
+                $this.UpdateShares(0,0,0)
             }
         }
 
