@@ -1396,7 +1396,7 @@ function Invoke-Core {
     #Stop or start miners in the active list depending on if they are the most profitable
     $Session.ActiveMiners | Where-Object {(($_.Best -EQ $false) -or $Session.RestartMiners) -and $_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
-        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool). "
+        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
         $Miner.SetStatus([MinerStatus]::Idle)
         $Miner.Stopped = $true
 

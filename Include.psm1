@@ -2233,6 +2233,7 @@ class Miner {
     $DeviceName
     $DeviceModel
     [Bool]$Enabled = $false
+    [string[]]$Pool = @()
     $Profit
     $Profit_Comparison
     $Profit_MarginOfError
@@ -2250,8 +2251,7 @@ class Miner {
     $Best_Comparison
     $New
     $Benchmarked
-    $LogFile
-    $Pool
+    $LogFile    
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
     $OCprofile
