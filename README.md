@@ -21,9 +21,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, GrinMint, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP and Zpool)**
+- **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, GrinMint, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, StarPool, YiiMP, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **Build-in automatic update**
 - **Mining devices freely selectable**
@@ -80,7 +80,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, fairpool, goscx, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, fairpool, goscx, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zergpool, zergpoolcoins, zergpoolsolo, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more</details>
 
 
@@ -132,30 +132,30 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 
 ## POOLS
 
+<details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>AHashPool / AHashPoolCoins</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
 <details><summary>BlazePool</summary> https://www.blazepool.com/ auto-exchange and payout in BTC</details>
-<details><summary>BlockCruncher</summary>https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
-<details><summary>BlockMasters / BlockMastersCoins</summary>
-
-https://www.blockmasters.co/ auto-exchange and payout in BTC
-  - 'blockmasters' mine most profitable algorithm. Pool chooses coin or merged mining benefits
-  - 'blockmasterscoins' mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
+<details><summary>BlockCruncher</summary> https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
+<details><summary>BlockMasters</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable algorithm. Pool chooses coin or merged mining benefits
+</details>
+<details><summary>BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>MiningPoolHub / MiningPooHubCoins</summary>
-
-https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
-  - 'miningpoolhub' parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
-  - 'miningpoolhubcoins' allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
+<details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
+</details>
+<details><summary>MiningPooHubCoins</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
 <details><summary>MiningRigRentals</summary> https://www.miningrigrentals.com/ rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
 <details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC), you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Ethermine</details>
@@ -167,6 +167,10 @@ https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required
 <details><summary>RavenminerEu</summary> https://eu.ravenminer.com/ ravencoin-pool for eu region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>StarPool</summary> https://www.starpool.biz/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>ZergPool</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
+<details><summary>ZergPoolCoins</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any other coin. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin.
+</details>
+<details><summary>ZergPoolSolo</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. You decide which coins to mine solo in pools.config.txt</details>
 <details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC</details>
 <br />	
   
