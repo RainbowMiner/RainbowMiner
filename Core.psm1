@@ -189,8 +189,17 @@ function Update-ActiveMiners {
     $ExclusiveMinersFailed = 0
     $Session.ActiveMiners | Where-Object Best |  Foreach-Object {
         $Miner = $_
+        if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
+            if (-not $FirstRound -or $Miner.Rounds) {
+                $Miner.UpdateMinerData() > $null
+                if (-not $Miner.CheckShareRatio() -and -not ($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})) {
+                    $Miner.SetStatusRaw([MinerStatus]::RunningFailed)
+                }
+            }
+        }
+
         Switch ($Miner.GetStatus()) {
-            "Running" {if (-not $FirstRound -or $Miner.Rounds) {$Miner.UpdateMinerData() > $null};$MinersUpdated++}
+            "Running"       {$MinersUpdated++}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }        
     }

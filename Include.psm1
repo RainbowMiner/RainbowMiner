@@ -2265,7 +2265,7 @@ class Miner {
     $ZeroRounds = 0
     $Rounds = 0
     $MaxBenchmarkRounds = 3
-    $MaxRejectionRatio = 0.3
+    $MaxRejectedShareRatio = 0.3
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval
@@ -2443,7 +2443,8 @@ class Miner {
 
     [MinerStatus]GetStatus() {
         $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object HasExited}
-        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited) ) {
+        
+        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited)) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
@@ -2509,6 +2510,10 @@ class Miner {
     [Double]GetMaxRejectedShareRatio() {
         $Index = 0
         return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index);$Index++} | Measure-Object -Maximum).Maximum
+    }
+
+    [Bool]CheckShareRatio() {
+        return $this.GetMaxRejectedShareRatio() -le $this.MaxRejectedShareRatio
     }
 
     [String[]]UpdateMinerData () {
