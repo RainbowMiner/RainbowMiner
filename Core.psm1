@@ -1339,38 +1339,34 @@ function Invoke-Core {
     $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
     $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
+    $NoCPUMining = ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
+    if ($NoCPUMining -and $MinersNeedingBenchmarkCount -eq 0) {$BestMiners2 = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
+
     $Check_Profitability = $false
-    if ($Session.Config.UsePowerPrice -and ($Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null} | Measure-Object).Count -eq 0) {
+    if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
         #Remove no longer profitable miners
-        if ($Session.Config.CheckProfitability) {$BestMiners = $BestMiners | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner}}
+        if ($Session.Config.CheckProfitability) {
+            $BestMiners = $BestMiners | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner}
+            if ($BestMiners2) {$BestMiners2 = $BestMiners2 | Where {$_.Profit -gt 0 -or $_.IsExclusiveMiner}}
+        }
         $Check_Profitability = $true
     }
 
-    $BestMiners_DeviceNames = @($BestMiners | Select-Object -ExpandProperty DeviceName -Unique | Sort-Object)
-
-    $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames | Measure-Object).Count -eq 0})
-    $BestMiners_Combos = $Miners_Device_Combos | ForEach-Object {
-        $Miner_Device_Combo = $_.Combination
-        [PSCustomObject]@{
-            Combination = $Miner_Device_Combo | ForEach-Object {
-                $Miner_Device_Count = $_.DeviceName.Count
-                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
-                $BestMiners | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
+    if ($NoCPUMining) {        
+        $BestMiners_Message = "CPU"
+        $BestMiners_Combo  = Get-BestMinerDeviceCombos @($BestMiners | Where-Object DeviceModel -ne "CPU") -SortBy "Profit_Bias"
+        if ($MinersNeedingBenchmarkCount -eq 0) {
+            $BestMiners_Combo2 = Get-BestMinerDeviceCombos $BestMiners2 -SortBy "Profit_Bias"
+            if (($BestMiners_Combo.Profit | Measure-Object -Sum).Sum -lt ($BestMiners_Combo2.Profit | Measure-Object -Sum).Sum) {
+                $BestMiners_Message = "GPU-only"
+                $BestMiners_Combo = $BestMiners_Combo2
             }
         }
+        $BestMiners_Message = "GPU/CPU mining conflict: $($BestMiners_Message) will not be started for best profit"
+    } else {
+        $BestMiners_Combo = Get-BestMinerDeviceCombos $BestMiners -SortBy "Profit_Bias"        
     }
-    $BestMiners_Combos_Comparison = $Miners_Device_Combos | ForEach-Object {
-        $Miner_Device_Combo = $_.Combination
-        [PSCustomObject]@{
-            Combination = $Miner_Device_Combo | ForEach-Object {
-                $Miner_Device_Count = $_.DeviceName.Count
-                [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
-                $BestMiners_Comparison | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
-            }
-        }
-    }
-    $BestMiners_Combo = $BestMiners_Combos | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Bias -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
-    $BestMiners_Combo_Comparison = $BestMiners_Combos_Comparison | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object Profit_Comparison -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
+    $BestMiners_Combo_Comparison = Get-BestMinerDeviceCombos $BestMiners_Comparison -SortBy "Profit_Comparison"
 
     $Session.Profitable = $true
     $PowerOffset_Cost = [Double]0
@@ -1389,14 +1385,14 @@ function Invoke-Core {
 
     #Stop failed miners
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | Foreach-Object {
-        Write-Log -Level Warn "Stopping crashed miner ($($_.Name)) "
+        Write-Log -Level Info "Stopping crashed miner ($($_.Name)) "
         $_.SetStatus([MinerStatus]::Idle)
     }
 
     #Stop or start miners in the active list depending on if they are the most profitable
     $Session.ActiveMiners | Where-Object {(($_.Best -EQ $false) -or $Session.RestartMiners) -and $_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | ForEach-Object {
         $Miner = $_
-        Write-Log "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
+        Write-Log -Level Info "Stopping miner $($Miner.Name) on pool $($Miner.Pool -join '/'). "
         $Miner.SetStatus([MinerStatus]::Idle)
         $Miner.Stopped = $true
 
@@ -1580,6 +1576,9 @@ function Invoke-Core {
         if ($Miners_Downloading -gt 0) {
             Write-Log -Level Warn "Download in progress: $($Miners_Downloading) miner$(if($Miners_Downloading -gt 1){"s"}) left. Command windows will popup during extraction."
         }
+        if ($NoCPUMining) {
+            Write-Log -Level Warn $BestMiners_Message
+        }
     }
 
     #Display active miners list
@@ -1705,7 +1704,7 @@ function Invoke-Core {
     }
 
     #Reduce Memory
-    @("BalancesData","BestMiners_Combo","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
+    @("BalancesData","BestMiners_Combo","BestMiners_Combo2","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
