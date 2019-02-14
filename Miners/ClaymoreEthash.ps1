@@ -128,7 +128,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 				$DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
-				if ($Pools.$MainAlgorithm_Norm.Name -eq 'NiceHash') {$EthereumStratumMode = "3"} else {$EthereumStratumMode = "2"} #Optimize stratum compatibility
+                #Optimize stratum compatibility
+                $EthereumStratumMode = Switch($Pools.$MainAlgorithm_Norm.Name) {
+                    "NiceHash"    {3}
+                    "2Miners"     {0}
+                    "2MinersSolo" {0}
+                    default       {2}
+                }				
 
 				if ($Arguments_Platform) {                
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
