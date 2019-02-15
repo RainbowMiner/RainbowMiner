@@ -1763,10 +1763,13 @@ function Invoke-Core {
             $LoopWarn = ""
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
                 $Session.StatEnd = $Session.Timer.AddSeconds(0)
+                $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed) {
-                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.BenchmarkInterval - [int]($Session.Timer-$StatStart).TotalSeconds))
-                if ($NextStatEnd -lt $Session.StatEnd) {$Session.StatEnd = $NextStatEnd}
+                if ($Session.BenchmarkInterval -lt ($Session.StatEnd - $Session.Timer).TotalSeconds) {
+                    $Session.StatEnd = $Session.Timer.AddSeconds($Session.BenchmarkInterval)
+                    $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
+                }
                 $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. "
             }
             if ($LoopWarn -ne "") {
