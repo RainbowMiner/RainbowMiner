@@ -2527,7 +2527,7 @@ class Miner {
     }
 
     [Double]GetRejectedShareRatio([Int]$Index) {
-        return [Double]$(if ($this.GetShareCount($Index) -ge 3) {$this.Shares[$Index].Rejected / $this.GetShareCount($Index)})
+        return [Double]$(if ($this.GetShareCount($Index) -ge 10) {$this.Shares[$Index].Rejected / $this.GetShareCount($Index)})
     }
 
     [Double]GetMaxRejectedShareRatio() {
