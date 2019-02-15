@@ -286,12 +286,13 @@ function Invoke-Core {
             if ($var -is [array] -and $Session.Config.$name -is [string]) {$Session.Config.$name = $Session.Config.$name.Trim(); $Session.Config.$name = @(if ($Session.Config.$name -ne ''){@([regex]::split($Session.Config.$name.Trim(),"\s*[,;:]+\s*") | Where-Object {$_})})}
             elseif (($var -is [bool] -or $var -is [switch]) -and $Session.Config.$name -isnot [bool]) {$Session.Config.$name = Get-Yes $Session.Config.$name}
             elseif ($var -is [int] -and $Session.Config.$name -isnot [int]) {$Session.Config.$name = [int]$Session.Config.$name}
+            elseif ($var -is [double] -and $Session.Config.$name -isnot [double]) {$Session.Config.$name = [double]$session.Config.$name}
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.Region = $Session.Config.Region | ForEach-Object {Get-Region $_}
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
-        $Session.Config.UIstyle = if ( $Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite" ) {"full"} else {$Session.Config.UIstyle}
+        $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
@@ -302,6 +303,9 @@ function Invoke-Core {
         #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
         if (-not $Session.CurrentInterval) {$Session.CurrentInterval = $Session.Config.Interval}
+        if ($Session.Config.MaxRejectedShareRatio -eq $null) {$Session.Config | Add-Member MaxRejectedShareRatio $Session.DefaultValues["MaxRejectedShareRatio"] -Force}
+        elseif ($Session.Config.MaxRejectedShareRatio -lt 0) {$Session.Config.MaxRejectedShareRatio = 0}
+        elseif ($Session.Config.MaxRejectedShareRatio -gt 1) {$Session.Config.MaxRejectedShareRatio = 1}
     }
 
     #Start/stop services
@@ -1123,6 +1127,10 @@ function Invoke-Core {
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
         if ($Miner.EnvVars -eq $null) {$Miner | Add-Member EnvVars @() -Force}
         if ($Miner.NoCPUMining -eq $null) {$Miner | Add-Member NoCPUMining $false -Force}
+        if ($Miner.MaxRejectedShareRatio -eq $null) {$Miner | Add-Member MaxRejectedShareRatio $Session.Config.MaxRejectedShareRatio}
+        $Miner.MaxRejectedShareRatio = [Double]$Miner.MaxRejectedShareRatio
+        if ($Miner.MaxRejectedShareRatio -lt 0) {$Miner.MaxRejectedShareRatio = 0}
+        elseif ($Miner.MaxRejectedShareRatio -gt 1) {$Miner.MaxRejectedShareRatio = 1}
 
         $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
         $Miner | Add-Member IsExclusiveMiner   (($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive | Measure-Object).Count -gt 0) -Force
@@ -1267,6 +1275,7 @@ function Invoke-Core {
             $ActiveMiner.StopCommand        = $Miner.StopCommand
             $ActiveMiner.NoCPUMining        = $Miner.NoCPUMining
             $ActiveMiner.NeedsBenchmark     = $Miner.HashRates.PSObject.Properties.Value -contains $null
+            $ActiveMiner.MaxRejectedShareRatio = $Miner.MaxRejectedShareRatio
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1321,6 +1330,7 @@ function Invoke-Core {
                 EnvVars              = $Miner.EnvVars
                 NoCPUMining          = $Miner.NoCPUMining
                 NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
+                MaxRejectedShareRatio= $Miner.MaxRejectedShareRatio
             }
         }
     }

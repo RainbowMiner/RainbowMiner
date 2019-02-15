@@ -2536,7 +2536,7 @@ class Miner {
     }
 
     [Bool]CheckShareRatio() {
-        return $this.GetMaxRejectedShareRatio() -le $this.MaxRejectedShareRatio
+        return $this.MaxRejectedShareRatio -le 0 -or $this.GetMaxRejectedShareRatio() -le $this.MaxRejectedShareRatio
     }
 
     [String[]]UpdateMinerData () {
