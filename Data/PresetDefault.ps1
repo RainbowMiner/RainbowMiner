@@ -1,3 +1,3 @@
 ﻿[PSCustomObject]@{
-    EnableCheckMiningConflict = $Global:GlobalCPUInfo.Cores -le 4
+    EnableCheckMiningConflict = $Global:GlobalCPUInfo.Cores -le 2
 }
