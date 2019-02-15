@@ -72,9 +72,10 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -RH $($_.Params)"
                 HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API            = "Claymore"
-                Port           = $Miner_Port
-                DevFee         = $DevFee
+                Port           = $Miner_Port                
                 Uri            = $Uri
+                DevFee         = $DevFee
+                FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
                 ManualUri      = $ManualUri
             }
