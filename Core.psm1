@@ -594,7 +594,12 @@ function Invoke-Core {
             }
         } elseif ($Session.Config.MiningMode -eq "combo") {
             #add combos to DevicesbyTypes
-            @("NVIDIA","AMD","CPU") | Foreach-Object {$Session.DevicesByTypes.$_ += $Session.DevicesByTypes.Combos.$_}     
+            @("NVIDIA","AMD","CPU") | Foreach-Object {$Session.DevicesByTypes.$_ += $Session.DevicesByTypes.Combos.$_}
+        }
+
+        [hashtable]$Session.DeviceNames = @{}
+        @("NVIDIA","AMD","CPU") | Foreach-Object {
+            $Session.DevicesByTypes.$_ | Group-Object Model | Foreach-Object {$Session.DeviceNames[$_.Name] = @($_.Group | Select-Object -ExpandProperty Name | Sort-Object)}
         }
 
         #Give API access to the device information
@@ -860,7 +865,7 @@ function Invoke-Core {
     if ($Session.Config.EnableAutoMinerPorts) {Set-ActiveMinerPorts @($Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object);Set-ActiveTcpPorts} else {Set-ActiveTcpPorts -Disable}
     $AllMiners = if (Test-Path "Miners") {
         Get-MinersContent -Pools $Pools | 
-            Where-Object {$_.DeviceName} | #filter miners for non-present hardware
+            Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Session.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Session.Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
