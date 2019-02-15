@@ -50,6 +50,7 @@
 
     Write-Host "Initialize configuration .."
     try {
+        Set-PresetDefault
         $RunCleanup = $true
         $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
         if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
@@ -1774,7 +1775,7 @@ function Invoke-Core {
                     $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 }
                 $SomeMinersFailed = $true
-                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" "*40)"
+                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" "*66)"
             }
             if ($LoopWarn -ne "") {
                 $host.UI.RawUI.CursorPosition = $CursorPosition
