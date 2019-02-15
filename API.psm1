@@ -124,6 +124,10 @@
                     $Data = $API.Version
                     break
                 }
+                "/info" {
+                    $Data = ConvertTo-Json $API.Info
+                    break
+                }
                 "/activeminers" {
                     $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     break
@@ -458,4 +462,16 @@ Function Stop-APIServer {
     $Global:API.Server = $null
     $Global:API.Handle = $null
     Remove-Variable "API" -Scope Global -Force    
+}
+
+function Set-APIInfo {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Name,
+        [Parameter(Mandatory = $true)]
+        $Value
+    )
+    if (-not $API.Info) {$API.Info = [hashtable]@{}}
+    $API.Info[$Name] = $Value
 }
