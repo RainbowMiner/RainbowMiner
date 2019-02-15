@@ -3333,6 +3333,15 @@ function Set-AlgorithmsConfigDefault {
     }
 }
 
+function Set-PresetDefault {
+    if (Test-Path ".\Data\PresetDefault.ps1") {
+        $Setup = Get-ChildItemContent ".\Data\PresetDefault.ps1" | Select-Object -ExpandProperty Content
+        $Setup.PSObject.Properties.Name | Foreach-Object {
+            $Session.DefaultValues[$_] = $Setup.$_
+        }
+    }
+}
+
 function Set-CoinsConfigDefault {
     [CmdletBinding()]
     param(
