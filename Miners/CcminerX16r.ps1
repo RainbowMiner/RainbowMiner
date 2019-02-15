@@ -19,7 +19,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = "-N 1"} #Groestl
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "x16r"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
-    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16RT Veil
+    #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = "-N 10"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16RT Veil
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = "-N 1"; FaultTolerance = 0.5} #X16S PigeonCoin    
     #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #x17
 )
