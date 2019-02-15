@@ -194,6 +194,7 @@ function Update-ActiveMiners {
                 $Miner.UpdateMinerData() > $null
                 if (-not $Miner.CheckShareRatio() -and -not ($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})) {
                     $Miner.SetStatusRaw([MinerStatus]::RunningFailed)
+                    Write-Log "Too many rejected shares for miner $($Miner.Name)"
                 }
             }
         }
@@ -1767,13 +1768,13 @@ function Invoke-Core {
                 $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
-                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.BenchmarkInterval - [int]($Session.Timer-$StatStart).TotalSeconds))
+                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - ($Session.Timer-$StatStart).TotalSeconds))
                 if ($NextStatEnd -lt $Session.StatEnd) {
                     $Session.StatEnd = $NextStatEnd
                     $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 }
                 $SomeMinersFailed = $true
-                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. "
+                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" "*40)"
             }
             if ($LoopWarn -ne "") {
                 $host.UI.RawUI.CursorPosition = $CursorPosition
