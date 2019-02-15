@@ -1951,7 +1951,7 @@ function Invoke-Core {
                 $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
                 $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
                 if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
-                else {$StartCommand = $StartCommand -replace "-command","-windowstyle $($StartWindowState) -command"}
+                else {$StartCommand = $StartCommand -replace "-command ","-windowstyle $($StartWindowState) -command "}
                 if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
                 Write-Log "Restarting $($StartWindowState) $($StartCommand)"
                 $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
