@@ -1753,6 +1753,7 @@ function Invoke-Core {
 
     $SamplesPicked = 0
     $WaitRound = 0
+    $SomeMinersFailed = $false
     do {        
         $Session.TimerBackup = $Session.Timer                
 
@@ -1765,11 +1766,13 @@ function Invoke-Core {
                 $Session.StatEnd = $Session.Timer.AddSeconds(0)
                 $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
-            } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed) {
-                if ($Session.BenchmarkInterval -lt ($Session.StatEnd - $Session.Timer).TotalSeconds) {
-                    $Session.StatEnd = $Session.Timer.AddSeconds($Session.BenchmarkInterval)
+            } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
+                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.BenchmarkInterval - [int]($Session.Timer-$StatStart).TotalSeconds))
+                if ($NextStatEnd -lt $Session.StatEnd) {
+                    $Session.StatEnd = $NextStatEnd
                     $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
                 }
+                $SomeMinersFailed = $true
                 $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. "
             }
             if ($LoopWarn -ne "") {
