@@ -173,7 +173,7 @@
 
     $Session.Timer = (Get-Date).ToUniversalTime()
     $Session.NextReport = $Session.Timer
-    $Session.StatEnd = $Session.Timer
+    $Session.RoundStart = $Session.Timer
     $Session.DecayStart = $Session.Timer
     [hashtable]$Session.Updatetracker = @{
         Balances = $Session.Timer
@@ -327,6 +327,8 @@ function Invoke-Core {
         $API.RemoteAPI = $Session.Config.RemoteAPI
         $API.LocalAPIport = $Session.Config.LocalAPIport
     }
+
+    if ($CheckConfig) {Set-Watchdog -Reset}
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
@@ -675,14 +677,11 @@ function Invoke-Core {
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
 
-    $StatStart = $Session.StatEnd
-    $Session.StatEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)
-    $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
+    $RoundSpan = New-TimeSpan $Session.RoundStart $Session.Timer
+    $Session.RoundStart = $Session.Timer
+    $RoundEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)    
 
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
-
-    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1)) + $StatSpan.TotalSeconds
-    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1)) + $StatSpan.TotalSeconds
 
     #Update the exchange rates    
     try {
@@ -695,8 +694,8 @@ function Invoke-Core {
         }
         $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
         $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
-        $MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}
-        if ($MissingCurrenciesTicker = Get-TickerGlobal $MissingCurrencies) {
+        if ($MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}) {
+            $MissingCurrenciesTicker = Get-TickerGlobal $MissingCurrencies
             Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
             $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_) -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$v = [double](1/$MissingCurrenciesTicker.$_.BTC);$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
         }
@@ -734,7 +733,7 @@ function Invoke-Core {
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | WHere-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
-            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $StatSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
+            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
         }
     }
 
@@ -1127,7 +1126,7 @@ function Invoke-Core {
                 
         if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 1 -Force}
-        if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance 0.1 -Force}
+        if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance $(if ($Miner.DeviceName -match "^CPU") {0.25} else {0.1}) -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
         if (-not $Miner.MinSamples) {$Miner | Add-Member MinSamples 3 -Force} #min. 10 seconds, 3 samples needed
         if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
@@ -1630,7 +1629,7 @@ function Invoke-Core {
         [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
         [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -replace '\-.*$')-$($_.Algorithm -join '/')"}}
 
-        $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $StatSpan
+        $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $RoundSpan
 
         $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
         $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
@@ -1721,7 +1720,7 @@ function Invoke-Core {
     }
 
     #Reduce Memory
-    @("BalancesData","BestMiners_Combo","BestMiners_Combo2","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
+    @("BalancesData","BestMiners_Combo","BestMiners_Combo2","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pools","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
@@ -1738,18 +1737,19 @@ function Invoke-Core {
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
     #Dynamically adapt current interval
-    $NextInterval = [Math]::Max($Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval",$Session.CurrentInterval + [int]($Session.Timer - $Session.StatEnd.AddSeconds(-15)).TotalSeconds)
+    $NextInterval = [Math]::Max($Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval",$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
     if ($Session.IsDonationRun -and $NextInterval -gt $DonateMinutes*60) {$NextInterval = $DonateMinutes*60}
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
         Write-Log -Level Info "Runtime interval changed from $($Session.CurrentInterval) to $NextInterval seconds. "
-        $Session.StatEnd = $Session.StatEnd.AddSeconds($NextInterval-$Session.CurrentInterval)
-        $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
+        $RoundEnd = $RoundEnd.AddSeconds($NextInterval-$Session.CurrentInterval)
         $Session.CurrentInterval = $NextInterval
     }
 
-    $WaitSeconds = [int]($Session.StatEnd - $Session.Timer).TotalSeconds
+    Set-Watchdog
+
+    $WaitSeconds = [int]($RoundEnd - $Session.Timer).TotalSeconds
 
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
@@ -1757,12 +1757,13 @@ function Invoke-Core {
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
     Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
-
+        
     $SamplesPicked = 0
     $WaitRound = 0
     $SomeMinersFailed = $false
+    $MinerStart = $Session.Timer
     do {        
-        $Session.TimerBackup = $Session.Timer                
+        $TimerBackup = $Session.Timer
 
         $AllMinersFailed = $false
         if ($WaitRound % 3 -eq 0) {
@@ -1770,15 +1771,11 @@ function Invoke-Core {
 
             $LoopWarn = ""
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
-                $Session.StatEnd = $Session.Timer.AddSeconds(0)
-                $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
+                $RoundEnd = $Session.Timer.AddSeconds(0)
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
-                $NextStatEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$StatStart).TotalSeconds))
-                if ($NextStatEnd -lt $Session.StatEnd) {
-                    $Session.StatEnd = $NextStatEnd
-                    $StatSpan = New-TimeSpan $StatStart $Session.StatEnd
-                }
+                $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
+                if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
                 $SomeMinersFailed = $true
                 $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" "*66)"
             }
@@ -1790,10 +1787,11 @@ function Invoke-Core {
             $SamplesPicked++
         }
 
-        Sleep 1
-
-        $Session.Timer = (Get-Date).ToUniversalTime()
-        if ($UseTimeSync -and $Session.Timer -le $Session.TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
+        if (-not $MinersNeedingBenchmarkCount -and ($Session.Timer - $MinerStart).TotalSeconds -ge $Session.Config.BenchmarkInterval) {
+            Write-Log "Saving hash rates. "
+            if (-not (Set-MinerStats ($Session.Timer-$MinerStart) -Watchdog)) {$RoundEnd = $Session.Timer.AddSeconds(0)}            
+            $MinerStart = $Session.Timer
+        }
 
         if ($Session.Config.EnableMinerStatus -and $Session.Config.MinerStatusURL -and $Session.Config.MinerStatusKey) {
             if ($Session.Timer -gt $Session.NextReport) {
@@ -1885,7 +1883,15 @@ function Invoke-Core {
             }
         }
         $WaitRound++
-    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $Session.StatEnd))
+
+        $Session.Timer = (Get-Date).ToUniversalTime()
+        if ($UseTimeSync -and $Session.Timer -le $TimerBackup) {Test-TimeSync;$Session.Timer = (Get-Date).ToUniversalTime()}
+
+        if (-not $keyPressed) {
+            $Waitms = 1000 - ($Session.Timer - $TimerBackup).TotalMilliseconds
+            if ($Waitms -gt 0) {Sleep -Milliseconds $Waitms}
+        }
+    } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $RoundEnd))
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
 
@@ -1901,56 +1907,7 @@ function Invoke-Core {
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
-
-    $StatSpan = New-TimeSpan $StatStart $Session.Timer
-
-    $Session.ActiveMiners | Foreach-Object {
-        $Miner = $_        
-
-        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})}
-
-        if ($Miner.New) {$Miner.Benchmarked++}
-
-        if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
-            $Miner.Speed_Live = [Double[]]@()            
-
-            $Miner_PowerDraw = $Miner.GetPowerDraw()
-
-            $Statset = 0
-            $Miner.Algorithm | ForEach-Object {
-                $Miner_Algorithm = $_
-                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
-
-                $Miner.Speed_Live += [Double]$Miner_Speed
-
-                Write-Log "$($Miner.BaseName) $(if ($Miner.IsBenchmarking()) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner.IsBenchmarking()) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
-
-                $Stat = $null
-                if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
-                    $Statset++                    
-                }
-
-                #Update watchdog timer
-                $Miner_Name = $Miner.Name
-                if ($WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}) {                
-                    if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
-                        $WatchdogTimer.Kicked = $Stat.Updated
-                    } elseif ($Miner.IsBenchmarking()) {
-                        $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
-                    }
-                }
-                $Miner_PowerDraw = 0
-            }
-
-            if ($Statset -eq $Miner.Algorithm.Count) {$Miner.Benchmarked = 0}
-
-            $Miner.EndOfRoundCleanup()
-            Write-ActivityLog $Miner
-        }
-    }
-
-    Remove-Variable "Pools" -Force
+    Set-MinerStats ($Session.Timer - $MinerStart)
 
     #Cleanup stopped miners    
     $Session.ActiveMiners | Where-Object {$_.Stopped} | Foreach-Object {$_.StopMiningPostCleanup()}

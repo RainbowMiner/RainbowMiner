@@ -312,6 +312,86 @@ function Get-Ticker {
     }
 }
 
+function Set-Watchdog {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Reset = $false
+    )
+    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Session.Config.BenchmarkInterval
+    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Session.Config.BenchmarkInterval
+}
+
+function Set-MinerStats {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [TimeSpan]$StatSpan,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Watchdog = $false
+    )
+
+    $Miner_Failed_Total = 0
+    $Session.ActiveMiners | Foreach-Object {
+        $Miner = $_        
+
+        if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})}
+
+        if ($Miner.New) {$Miner.Benchmarked++}
+
+        if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
+            $Miner.Speed_Live = [Double[]]@()            
+
+            $Miner_PowerDraw = $Miner.GetPowerDraw()
+
+            $Statset = 0
+            $Miner_Index = 0
+            $Miner_Failed= $false
+            $Miner.Algorithm | ForEach-Object {
+                $Miner_Algorithm = $_
+                $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
+
+                $Miner.Speed_Live += [Double]$Miner_Speed
+
+                Write-Log "$($Miner.BaseName) $(if ($Miner.IsBenchmarking()) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner.IsBenchmarking()) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
+
+                $Stat = $null
+                if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
+                    $Statset++                    
+                }
+
+                #Update watchdog timer
+                if ($WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
+                    if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
+                        $WatchdogTimer.Kicked = $Stat.Updated
+                    } elseif ($Miner.IsBenchmarking()) {
+                        $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
+                    } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) {
+                        $Miner_Failed = $true
+                    }
+                }
+                $Miner_PowerDraw = 0
+                $Miner_Index++
+            }
+
+            if ($Statset -eq $Miner.Algorithm.Count) {$Miner.Benchmarked = 0}
+
+            $Miner.EndOfRoundCleanup()            
+
+            if ($Miner_Failed) {
+                $Miner.SetStatus([MinerStatus]::Failed)
+                $Miner.Stopped = $true
+                Write-Log -Level Warn "Miner $($Miner.Name) mining $($Miner.Algorithm -join '/') on pool $($Miner.Pool -join '/') temporarily disabled. "
+                $Miner_Failed_Total++
+            } else {
+                Write-ActivityLog $Miner
+            }            
+        }
+    }
+    if ($Watchdog) {-not $Miner_Failed_Total}
+}
+
 Function Write-Log {
     [CmdletBinding()]
     Param(
@@ -2834,7 +2914,7 @@ function Get-DeviceModelName {
         [Parameter(Mandatory = $False)]
         [Switch]$Short
     )
-    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Foreach-Object {if ($Short){($_ -replace "geforce|radeon|intel|\(r\)","").Trim()}else {$_}}
+    $Device | Where-Object {$Name.Count -eq 0 -or $Name -icontains $_.Name} | Foreach-Object {if ($_.Type -eq "Cpu") {"CPU"} else {$_.Model_Name}} | Select-Object -Unique | Foreach-Object {if ($Short){($_ -replace "geforce|radeon|intel|\(r\)","").Trim()}else {$_}}
 }
 
 function Get-GPUIDs {
@@ -4134,7 +4214,6 @@ function Invoke-ReportMinerStatus {
             $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1} 
         }
-        Write-Log "Miner Status $($ReportUrl): $($ReportStatus)"
     }
     catch {
         Write-Log -Level Warn "Miner Status $($ReportUrl) has failed. "
