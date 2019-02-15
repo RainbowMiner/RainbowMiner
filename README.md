@@ -485,6 +485,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
+- **MaxRejectedShareRatio** = set max. allowed ratio "bad shares/found shares" until a miner gets disabled [default=0.3]
 - **EnableFastSwitching** = set to 1 to remove switching prevention completly. Expect a lot of switching [default=0]
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
 - **HashrateWeightStrength** = adjust the strength of the weight (integer, 0=no weight, 100=linear, 200=square) [default=50]
