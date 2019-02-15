@@ -1964,6 +1964,7 @@ function Invoke-Core {
             }
         }
         catch {
+            Write-Log "Autoupdate failed: $($_.Exception.Message) on item $($_.Exception.ItemName)"
         }
         if (-not $Session.Stopp) { #fallback to old updater
             if ($Session.AutoUpdate) {
