@@ -99,27 +99,21 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
             $timestamp    = Get-UnixTimestamp
             $timestamp24h = $timestamp - 24*3600
-            
-            $diffLive     = [Double]$Pool_Request.nodes[0].difficulty
-            $reward       = [Double]$Pool_Blocks."$(if ($Pool_Blocks.candidatesTotal) {"candidates"} elseif ($Pool_Blocks.immatureTotal) {"immature"} else {"matured"})"[0].reward
-            $profitLive   = 86400/$diffLive*$reward
-            $coinUnits    = 1e10
-            $amountLive   = $profitLive / $coinUnits
 
-            $lastSatPrice = [Double]$Pool_Ticker.$Pool_Currency.BTC
-            $satRewardLive = $amountLive * $lastSatPrice
-
-            $Divisor = 1e8
-            
             $blocks = @()
-            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates.timestamp}
-            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature.timestamp}
-            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured.timestamp}
-            $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
-            $Pool_BLK = [int]$(if ($blocks_measure.Maximum - $blocks_measure.Minimum) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)*$blocks_measure.Count})
-            $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
-
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($satRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
+            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates | Select-Object timestamp,reward}
+            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature   | Select-Object timestamp,reward}
+            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured    | Select-Object timestamp,reward}
+            
+            $blocks_measure = $blocks | Where-Object {$_.timestamp -gt $timestamp24h} | Measure-Object timestamp -Minimum -Maximum
+            $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
+            $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
+            $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound            
+            $reward         = $(if ($blocks) {$blocks | Select-Object -Last 1 -ExpandProperty reward} else {0})/1e8
+            $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+            $btcRewardLive  = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
+            $Divisor        = 1
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
 
         }
     }
