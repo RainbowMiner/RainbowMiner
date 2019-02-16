@@ -3506,9 +3506,11 @@ function Set-DevicesConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
             $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-            $AllDevices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Model -Unique
-            foreach ($DeviceModel in $AllDevices) {
-                if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceModel) {$Setup.$DeviceModel} else {[PSCustomObject]@{}}) -Force}
+            $Devices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL
+            $Devices | Select-Object -Unique Type,Model | Foreach-Object {
+                $DeviceModel = $_.Model
+                $DeviceType  = $_.Type
+                if (-not $Preset.$DeviceModel) {$Preset | Add-Member $DeviceModel $(if ($Setup.$DeviceType) {$Setup.$DeviceType} else {[PSCustomObject]@{}}) -Force}
                 foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$DeviceModel.$SetupName -eq $null){$Preset.$DeviceModel | Add-Member $SetupName $Default.$SetupName -Force}}
             }
             $Sorted = [PSCustomObject]@{}
@@ -3591,21 +3593,27 @@ function Set-OCProfilesConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{
+                PowerLimit = 0
+                ThermalLimit = 0
+                MemoryClockBoost = "*"
+                CoreClockBoost = "*"
+                LockVoltagePoint = "*"
+            }
             if (-not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
-                $Setup.PSObject.Properties.Name | Where-Object {-not $Preset.$_} | Foreach-Object {$Preset | Add-Member $_ $Setup.$_}
-            } else {
-                $Default = [PSCustomObject]@{
-                    PowerLimit = 0
-                    ThermalLimit = 0
-                    MemoryClockBoost = "*"
-                    CoreClockBoost = "*"
-                    LockVoltagePoint = "*"
+                $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
+                $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
+                    $Model = $_
+                    For($i=1;$i -le 5;$i++) {
+                        $Profile = "Profile$($i)-$($Model)"
+                        if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
+                    }
                 }
-                $Preset.PSObject.Properties.Name | Foreach-Object {
-                    $PresetName = $_
-                    foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$PresetName.$SetupName -eq $null){$Preset.$PresetName | Add-Member $SetupName $Default.$SetupName -Force}}
-                }
+            }
+            $Preset.PSObject.Properties.Name | Foreach-Object {
+                $PresetName = $_
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$PresetName.$SetupName -eq $null){$Preset.$PresetName | Add-Member $SetupName $Default.$SetupName -Force}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
