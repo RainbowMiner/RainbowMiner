@@ -34,28 +34,28 @@ catch {
 #}
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "eth"; coin = "Ethereum"; algo = "Ethash"; symbol = "ETH"; port = 2020; fee = 1}
-    [PSCustomObject]@{id = "etc"; coin = "Ethereum Classic"; algo = "Ethash"; symbol = "ETC"; port = 1010; fee = 1}
-    [PSCustomObject]@{id = "clo"; coin = "Callisto"; algo = "Ethash"; symbol = "CLO"; port = 3030; fee = 1}
-    [PSCustomObject]@{id = "moac"; coin = "MOAC"; algo = "Ethash"; symbol = "MOAC"; port = 5050; fee = 1}
-    [PSCustomObject]@{id = "exp"; coin = "Expanse"; algo = "Ethash"; symbol = "EXP"; port = 3030; fee = 1}
-    [PSCustomObject]@{id = "music"; coin = "Musicoin"; algo = "Ethash"; symbol = "MUSIC"; port = 4040; fee = 1}
-    [PSCustomObject]@{id = "pirl"; coin = "Pirl"; algo = "Ethash"; symbol = "PIRL"; port = 6060; fee = 1}
-    [PSCustomObject]@{id = "etp"; coin = "Metaverse ETP"; algo = "Ethash"; symbol = "ETP"; port = 9292; fee = 1}
-    [PSCustomObject]@{id = "ella"; coin = "Ellaism"; algo = "Ethash"; symbol = "ELLA"; port = 3030; fee = 1}
-    [PSCustomObject]@{id = "yoc"; coin = "Yocoin"; algo = "Ethash"; symbol = "YOC"; port = 4040; fee = 1}
-    [PSCustomObject]@{id = "aka"; coin = "Akroma"; algo = "Ethash"; symbol = "AKA"; port = 5050; fee = 1}
-    [PSCustomObject]@{id = "zec"; coin = "Zcash"; algo = "Equihash"; symbol = "ZEC"; port = 1010; fee = 1}
-    [PSCustomObject]@{id = "zcl"; coin = "Zclassic"; algo = "Equihash"; symbol = "ZCL"; port = 2020; fee = 1}
-    [PSCustomObject]@{id = "zen"; coin = "Zencash"; algo = "Equihash"; symbol = "ZEN"; port = 3030; fee = 1}
-    [PSCustomObject]@{id = "hush"; coin = "Hush"; algo = "Equihash"; symbol = "HUSH"; port = 7070; fee = 1}
-    [PSCustomObject]@{id = "btcp"; coin = "Bitcoin Private"; algo = "Equihash"; symbol = "BTCP"; port = 1010; fee = 1}
-    [PSCustomObject]@{id = "btg"; coin = "Bitcoin GOLD"; algo = "Equihash24x5"; symbol = "BTG"; port = 4040; fee = 1}
-    [PSCustomObject]@{id = "btcz"; coin = "BitcoinZ"; algo = "Equihash24x5"; symbol = "BTCZ"; port = 2020; fee = 1}
-    [PSCustomObject]@{id = "zel"; coin = "ZelCash"; algo = "Equihash24x5"; symbol = "ZEL"; port = 9090; fee = 1}
-    [PSCustomObject]@{id = "xmr"; coin = "Monero"; algo = "Monero"; symbol = "XMR"; port = 2222; fee = 1}
-    [PSCustomObject]@{id = "xzc"; coin = "Zсoin"; algo = "MTP"; symbol = "XZC"; port = 8080; fee = 1}
-    [PSCustomObject]@{id = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1}
+    [PSCustomObject]@{id = "eth"; coin = "Ethereum"; algo = "Ethash"; symbol = "ETH"; port = 2020; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "etc"; coin = "Ethereum Classic"; algo = "Ethash"; symbol = "ETC"; port = 1010; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "clo"; coin = "Callisto"; algo = "Ethash"; symbol = "CLO"; port = 3030; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "moac"; coin = "MOAC"; algo = "Ethash"; symbol = "MOAC"; port = 5050; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "exp"; coin = "Expanse"; algo = "Ethash"; symbol = "EXP"; port = 3030; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "music"; coin = "Musicoin"; algo = "Ethash"; symbol = "MUSIC"; port = 4040; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "pirl"; coin = "Pirl"; algo = "Ethash"; symbol = "PIRL"; port = 6060; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "etp"; coin = "Metaverse ETP"; algo = "Ethash"; symbol = "ETP"; port = 9292; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "ella"; coin = "Ellaism"; algo = "Ethash"; symbol = "ELLA"; port = 3030; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "yoc"; coin = "Yocoin"; algo = "Ethash"; symbol = "YOC"; port = 4040; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "aka"; coin = "Akroma"; algo = "Ethash"; symbol = "AKA"; port = 5050; fee = 1; divisor = 1e18}
+    [PSCustomObject]@{id = "zec"; coin = "Zcash"; algo = "Equihash"; symbol = "ZEC"; port = 1010; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "zcl"; coin = "Zclassic"; algo = "Equihash"; symbol = "ZCL"; port = 2020; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "zen"; coin = "Zencash"; algo = "Equihash"; symbol = "ZEN"; port = 3030; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "hush"; coin = "Hush"; algo = "Equihash"; symbol = "HUSH"; port = 7070; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "btcp"; coin = "Bitcoin Private"; algo = "Equihash"; symbol = "BTCP"; port = 1010; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "btg"; coin = "Bitcoin GOLD"; algo = "Equihash24x5"; symbol = "BTG"; port = 4040; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "btcz"; coin = "BitcoinZ"; algo = "Equihash24x5"; symbol = "BTCZ"; port = 2020; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "zel"; coin = "ZelCash"; algo = "Equihash24x5"; symbol = "ZEL"; port = 9090; fee = 1; divisor = 1e8}
+    [PSCustomObject]@{id = "xmr"; coin = "Monero"; algo = "Monero"; symbol = "XMR"; port = 2222; fee = 1; divisor = 1e12}
+    [PSCustomObject]@{id = "xzc"; coin = "Zсoin"; algo = "MTP"; symbol = "XZC"; port = 8080; fee = 1; divisor = 1e8}
+    #[PSCustomObject]@{id = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1; divisor = 1e18}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -66,6 +66,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Coin = $_.coin
     $Pool_Host = "$($_.id).2miners.com"
     $Pool_Fee = $_.fee
+    $Pool_Divisor = $_.divisor
 
     $ok = ($Pool_HostStatus | Where-Object {$_.host -notmatch 'solo-' -and $_.host -match "$($Pool_Host)"} | Measure-Object).Count -gt 0
     if ($ok -and -not $InfoOnly) {
@@ -84,7 +85,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Blocks = [PSCustomObject]@{}
 
             try {
-                $Pool_Blocks = Invoke-RestMethodAsync "https://$($Pool_Host)/api/blocks" -tag $Name -retry 5 -retrywait 200 -cycletime 120 -delay 200
+                $Pool_Blocks = Invoke-RestMethodAsync "https://$($Pool_Host)/api/blocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
                 if ($Pool_Blocks.code -ne $null) {throw}
             }
             catch {
@@ -97,15 +98,15 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $timestamp24h = $timestamp - 24*3600
             
             $blocks = @()
-            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates | Select-Object timestamp,reward}
-            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature   | Select-Object timestamp,reward}
-            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured    | Select-Object timestamp,reward}
+            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates | Select-Object timestamp,reward,difficulty}
+            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature   | Select-Object timestamp,reward,difficulty}
+            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured    | Select-Object timestamp,reward,difficulty}
 
             $blocks_measure = $blocks | Where-Object {$_.timestamp -gt $timestamp24h} | Measure-Object timestamp -Minimum -Maximum
             $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
             $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
-            $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound            
-            $reward         = $(if ($blocks) {$blocks | Sort-Object timestamp | Select-Object -Last 1 -ExpandProperty reward} else {0})/1e8
+            $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
+            $reward         = $(if ($blocks) {$blocks | Sort-Object timestamp | Select-Object -Last 1 -ExpandProperty reward} else {0})/$Pool_Divisor
             $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
             $btcRewardLive  = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
             $Divisor        = 1
