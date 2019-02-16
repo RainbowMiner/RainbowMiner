@@ -42,24 +42,16 @@ $Pools_Data = @(
     [PSCustomObject]@{port = 4416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $true}
 )
 
-#$diffLive     = $Pool_NetworkRequest.total_difficulty
-$reward       = 60
-#$profitLive   = 86400/$diffLive*$reward
-#$coinUnits    = 1
-#$amountLive   = $profitLive / $coinUnits
-$btcPrice     = if ($Session.Rates.GRIN) {1/[double]$Session.Rates.GRIN} else {0}
-#$btcRewardLive= $amountLive*$btcPrice
-
-$btcRewardLive = $btcPrice * $reward * $Pool_Request.pool_stats.blocks_found_last_24_hours / ($Pool_Request.pool_stats.primary_hashrate + $Pool_Request.pool_stats.secondary_hashrate)
-
-$Divisor      = 1
-
-$lastBlock = $Pool_Request.mined_blocks | select-object -first 1
-$Pool_BLK = $Pool_Request.pool_stats.blocks_found_last_24_hours
-$Pool_TSL = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $lastBlock.time).ToUniversalTime()).TotalSeconds}
+$lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
+$Pool_BLK      = $Pool_Request.pool_stats.blocks_found_last_24_hours
+$Pool_TSL      = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $lastBlock.time).ToUniversalTime()).TotalSeconds}
+$reward        = 60
+$btcPrice      = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+$btcRewardLive = if ($Pool_Request.pool_stats.secondary_hashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $Pool_Request.pool_stats.secondary_hashrate} else {0}
+$Divisor       = 1
     
 if (-not $InfoOnly) {
-    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.primary_hashrate -BlockRate $Pool_BLK
+    $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
 }
 
 $Pools_Data | ForEach-Object {
@@ -74,7 +66,7 @@ $Pools_Data | ForEach-Object {
         Protocol      = "stratum+tcp"
         Host          = $_.host
         Port          = $_.port
-        User          = "$($Wallets.GRIN)/{workername:$Worker}"
+        User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"
         Pass          = $Password
         Region        = $_.region
         SSL           = $_.ssl
