@@ -312,14 +312,16 @@ function Get-Ticker {
     }
 }
 
-function Set-Watchdog {
+function Update-WatchdogLevels {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [Switch]$Reset = $false
     )
-    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Session.Config.BenchmarkInterval
-    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Session.Config.BenchmarkInterval
+    $Interval = $Session.Config.BenchmarkInterval
+    if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
+    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
 }
 
 function Set-MinerStats {

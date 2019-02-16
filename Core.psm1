@@ -173,7 +173,6 @@
 
     $Session.Timer = (Get-Date).ToUniversalTime()
     $Session.NextReport = $Session.Timer
-    $Session.RoundStart = $Session.Timer
     $Session.DecayStart = $Session.Timer
     [hashtable]$Session.Updatetracker = @{
         Balances = $Session.Timer
@@ -258,6 +257,7 @@ function Invoke-Core {
                     $Session.RestartMiners = $true
                     $ReReadConfig = $true
                     $Session.RunSetup = $false
+                    $Session.RoundStart = $null
                 }
             } until (-not $ReReadConfig)
         } else {
@@ -328,7 +328,7 @@ function Invoke-Core {
         $API.LocalAPIport = $Session.Config.LocalAPIport
     }
 
-    if ($CheckConfig) {Set-Watchdog -Reset}
+    if ($CheckConfig) {Update-WatchdogLevels -Reset}
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
@@ -677,9 +677,9 @@ function Invoke-Core {
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
 
-    $RoundSpan = New-TimeSpan $Session.RoundStart $Session.Timer
+    $RoundSpan = if ($Session.RoundStart) {New-TimeSpan $Session.RoundStart $Session.Timer} else {New-TimeSpan -Seconds $Session.Config.BenchmarkInterval}
     $Session.RoundStart = $Session.Timer
-    $RoundEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)    
+    $RoundEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)
 
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
 
@@ -1747,7 +1747,7 @@ function Invoke-Core {
         $Session.CurrentInterval = $NextInterval
     }
 
-    Set-Watchdog
+    Update-WatchdogLevels
 
     $WaitSeconds = [int]($RoundEnd - $Session.Timer).TotalSeconds
 
