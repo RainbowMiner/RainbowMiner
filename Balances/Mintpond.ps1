@@ -19,10 +19,10 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         $Request = Invoke-RestMethodAsync "$($Pool_Url)/miner/balances/$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (-not $Request.miner.balances) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
+            Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "            
         } else {
             [PSCustomObject]@{
-                Caption     = "$($Name) ($($_.Name))"
+                Caption     = "$($Name) ($($Pool_Currency))"
                 Currency    = $Pool_Currency
                 Balance     = [double]$Request.miner.balances.confirmed
                 Pending     = [double]$Request.miner.balances.unconfirmed
@@ -36,6 +36,6 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Balance API ($Name) for $($_.Name) has failed. "
+        Write-Log -Level Warn "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
     }
 }
