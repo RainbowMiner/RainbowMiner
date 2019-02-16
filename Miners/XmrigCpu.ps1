@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.11.0-xmrig/xmrig-2.11.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.12.0-xmrig/xmrig-2.12.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
 $DevFee = 0.0
@@ -19,6 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Params = ""; Algorithm = "cryptonight/wow"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""}
