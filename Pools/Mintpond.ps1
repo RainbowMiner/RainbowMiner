@@ -26,13 +26,12 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Currency = $_.symbol
     $Pool_Url = "https://api.mintpond.com/v1/$($_.url)"
 
-
     $Pool_Request = [PSCustomObject]@{}
     $Pool_RequestBlockstats = [PSCustomObject]@{}
     $Pool_RequestBlocks = [PSCustomObject]@{}
 
     $Pool_TSL  = $timestamp = Get-UnixTimestamp
-    $timestamp24h = $timestamp - 24*3600
+    $timestamp24h = $timestamp - 86400
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -79,7 +78,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($_.url)-$($Pool_Region).mintpond.com"
                 Port          = $_.port
-                User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
+                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
                 Region        = Get-Region $Pool_Region
                 SSL           = $_.ssl
