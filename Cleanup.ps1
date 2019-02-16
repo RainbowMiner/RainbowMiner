@@ -359,7 +359,7 @@ try {
     }
 
     if ($Version -le (Get-Version "3.9.6.9")) {
-        $AddAlgorithm += @("CryptonightConceal")
+        $AddAlgorithm += @("CryptonightConceal","CryptonightR")
     }
 
     if ($AddAlgorithm.Count -gt 0) {
