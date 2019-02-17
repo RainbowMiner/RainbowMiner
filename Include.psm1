@@ -3245,15 +3245,17 @@ function Set-ContentJson {
     $retry = 3
     do {
         try {
+            $Exists = $false
             if ([System.IO.File]::Exists($PathToFile)) {
                     $FileStream = [System.IO.File]::Open($PathToFile,'Open','Write')
                     $FileStream.Close()
                     $FileStream.Dispose()
+                    $Exists = $true
             }
             if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
                 if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8}
                 else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8}
-            } else {
+            } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
                 Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
             }
