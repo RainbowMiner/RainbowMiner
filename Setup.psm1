@@ -99,6 +99,16 @@ function Start-Setup {
         Write-Host "*** RainbowMiner Configuration ***" -BackgroundColor Green -ForegroundColor Black
         Write-Host " "
 
+        try {
+            $TotalMem = (($Session.Devices | Where-Object Type -eq "Gpu").OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
+            $TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB
+            if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
+                Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
+                Write-Host " "
+            }
+        } catch {}
+
+
         if ($IsInitialSetup) {
             $SetupType = "A" 
             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
