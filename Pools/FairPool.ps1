@@ -21,11 +21,13 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5566; fee = 1.0; walletSymbol = "xhv"; host = "mine.xhv.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Lethean"; symbol = "LTHN"; algo = "CnV8"; port = 6070; fee = 1.0; walletSymbol = "lethean"; host = "mine.lethean.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 5577; fee = 1.0; walletSymbol = "loki"; host = "mine.loki.fairpool.xyz"; user="%wallet%+%worker%"}
+    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnHalf"; port = 6060; fee = 1.0; walletSymbol = "msr"; host = "mine.msr.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "PrivatePay"; symbol = "XPP"; algo = "CnFast"; port = 6050; fee = 1.0; walletSymbol = "xpp"; host = "mine.xpp.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "QuantumResistantLedger"; symbol = "QRL"; algo = "CnV7"; port = 7000; fee = 1.0; walletSymbol = "qrl"; host = "mine.qrl.fairpool.xyz"; user="%wallet%+%worker%"}
-    [PSCustomObject]@{coin = "Ryo"; symbol = "RYO"; algo = "CnHeavy"; port = 5555; fee = 1.0; walletSymbol = "ryo"; host = "mine.ryo.fairpool.xyz"; user="%wallet%+%worker%"}
+    [PSCustomObject]@{coin = "Ryo"; symbol = "RYO"; algo = "CnGpu"; port = 5555; fee = 1.0; walletSymbol = "ryo"; host = "mine.ryo.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHaven"; port = 5599; fee = 1.0; walletSymbol = "xrn"; host = "mine.xrn.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Solace"; symbol = "XPP"; algo = "CnHeavy"; port = 5588; fee = 1.0; walletSymbol = "solace"; host = "mine.solace.fairpool.xyz"; user="%wallet%+%worker%"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "CnSwap"; port = 5588; fee = 1.0; walletSymbol = "xfh"; host = "mine.xfh.fairpool.xyz"; user="%wallet%+%worker%"}
 
     [PSCustomObject]@{coin = "Akroma"; symbol = "AKA"; algo = "Ethash"; port = 2222; fee = 1.0; walletSymbol = "aka"; host = "mine.aka.fairpool.xyz"; user="%wallet%.%worker%"}
     [PSCustomObject]@{coin = "DogEthereum"; symbol = "DOGX"; algo = "Ethash"; port = 7788; fee = 1.0; walletSymbol = "dogx"; host = "mine.dogx.fairpool.xyz"; user="%wallet%.%worker%"}
