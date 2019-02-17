@@ -4565,3 +4565,7 @@ param(
         }
 	}
 }
+
+function Test-Internet {
+    (Get-NetConnectionProfile -IPv4Connectivity Internet | Measure-Object).Count
+}
