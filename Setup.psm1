@@ -100,7 +100,7 @@ function Start-Setup {
         Write-Host " "
 
         try {
-            $TotalMem = (($Session.Devices | Where-Object Type -eq "Gpu").OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
+            $TotalMem = (($Session.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
             $TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB
             if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
                 Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
