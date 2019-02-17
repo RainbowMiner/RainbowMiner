@@ -59,7 +59,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_BLK       = $Pool_RequestBlockstats.pool.blockStats.valid24h
             $reward         = if ($lastBlock.reward) {$lastBlock.reward} else {14}
             $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}            
-            $btcRewardLive  = if ($Pool_Request.pool.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.pool.hashrate} else {0}
+            $btcRewardLive  = if ($Pool_Request.pool.hashrate -gt 0) {$btcPrice * $reward * 86400 / $Pool_Request.pool.estTime / $Pool_Request.pool.hashrate} else {0}
             $Divisor        = 1
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet
         }
