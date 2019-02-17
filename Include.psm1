@@ -971,7 +971,7 @@ function Get-BalancesContent {
     }
 
     $UsePools = Get-ChildItem "Pools" -File -ErrorAction Ignore | Select-Object -ExpandProperty BaseName | Where-Object {($Config.PoolName.Count -eq 0 -or $Config.PoolName -icontains $_) -and ($Config.ExcludePoolName -eq 0 -or $Config.ExcludePoolName -inotcontains $_)}
-    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {$UsePools -match "^$($_.BaseName)`(Coins|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools})) {
+    foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {$UsePools -match "^$($_.BaseName)`(Coins|Party|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools})) {
         $Name = $Balance.BaseName 
         foreach($c in @(& $Balance.FullName @Parameters)) {
             $c | Add-Member -NotePropertyMembers @{

@@ -199,7 +199,7 @@
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                             $CurrentPool = $_
                             $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
-                            @("Wallet","User","API_ID","API_Key","API_Secret","Password") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 2} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                            @("Wallet","User","API_ID","API_Key","API_Secret","Password","PartyPassword") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 2} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
                         }
                     }
                     $PurgeStrings = $PurgeStrings | Select-Object -Unique | Foreach-Object {[regex]::Escape($_)}

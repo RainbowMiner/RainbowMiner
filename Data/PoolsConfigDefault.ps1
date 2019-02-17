@@ -26,6 +26,11 @@
         "Bsod" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
         }
+        "BsodParty" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
+            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
+            Currencies=@("RVN","SUQA")
+        }
         "BsodSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1"}
             Currencies=@("RVN","SUQA")
@@ -40,11 +45,16 @@
             Currencies=@("XWP")
         }
         "GosCx" = [PSCustomObject]@{
-            Currencies=@("RVN")
+            Currencies=@("GIN")
+        }
+        "GosCxParty" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
+            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
+            Currencies=@("GIN")
         }
         "GosCxSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1"}
-            Currencies=@("RVN")
+            Currencies=@("GIN")
         }
         "Grinmint" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Password="x"}
@@ -116,6 +126,11 @@
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{
+            Currencies=@("BTC")
+        }
+        "ZergPoolParty" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
+            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
         }
         "ZergPoolSolo" = [PSCustomObject]@{
