@@ -27,9 +27,7 @@ class Xmrig : Miner {
         $Accepted_Shares = [Double]$Data.results.shares_good
         $Rejected_Shares = [Double]($Data.results.shares_total - $Data.results.shares_good)
         
-        $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
-        if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
-        if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]} #fireice fix
+        $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = [Double]$Data.hashrate.total[0]
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[1]} #fix
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[2]} #fix

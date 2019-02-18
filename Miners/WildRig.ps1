@@ -37,6 +37,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";     Params = ""} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "veil";       Params = ""; Algorithm = "x16rt"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "x16r";       Params = ""} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = ""} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
@@ -75,6 +76,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
 
     $Commands | ForEach-Object {
+        $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
         if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -84,7 +86,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                 DeviceName  = $Miner_Device.Name
                 DeviceModel = $Miner_Model
                 Path        = $Path
-                Arguments   = "--api-port $($Miner_Port) --algo $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($Params)"
+                Arguments   = "--api-port $($Miner_Port) --algo $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($Params)"
                 HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API         = "XMRig"
                 Port        = $Miner_Port
