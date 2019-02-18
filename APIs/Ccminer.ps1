@@ -21,8 +21,7 @@ class Ccminer : Miner {
             return @($Request, $Response)
         }
 
-        $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
-        if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
+        $HashRate_Name = $this.Algorithm[0]
         $HashRate_Value = if ($Data.NAME -match "zjazz" -and ($Data.ALGO -eq "bitcash" -or $Data.ALGO -eq "merit")) {[Double]$Data.HS} else {[Double]$Data.KHS * 1000}
 
         $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
