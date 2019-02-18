@@ -1212,7 +1212,7 @@ function Invoke-Core {
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
             else {Write-Host "." -NoNewline;Start-Sleep 2;$i+=2}
             if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
-        } until ($keyPressedValue -or ($i -gt $Session.Config.Interval))
+        } until ($keyPressedValue -or ($i -gt [Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)))
 
         Write-Host " "
         if ($keyPressedValue -eq "X") {
