@@ -80,7 +80,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, cryptoknight, ethermine, fairpool, goscx, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zergpool, zergpoolcoins, zergpoolsolo, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethermine, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, starpool, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more</details>
 
 
@@ -142,11 +142,13 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>GosCxParty</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
@@ -171,6 +173,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>ZergPool</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
 <details><summary>ZergPoolCoins</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any other coin. Mine most profitable coin, either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching. Switching will be by coin.
 </details>
+<details><summary>ZergPoolParty</summary> https://www.zergpool.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>ZergPoolSolo</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. You decide which coins to mine solo in pools.config.txt</details>
 <details><summary>Zpool</summary> https://www.zpool.ca/ auto-exchange and payout in BTC</details>
 <br />	
