@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.0-sgminermtp/sgminermtp-0.1.0.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-sgminermtp/sgminermtp-0.1.1.zip"
 $ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
 $Port = "411{0:d2}"
 $DevFee = 0.0
@@ -14,7 +14,7 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_nvidia4 --worksize 64 -I 22"}    
+    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_vega --worksize 64 -I 20"}    
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
