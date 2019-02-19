@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-sgminermtp/sgminermtp-0.1.1.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.1-sgminermtp/sgminermtp-0.1.1.zip"
 $ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
 $Port = "411{0:d2}"
 $DevFee = 0.0
