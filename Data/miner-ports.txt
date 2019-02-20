@@ -71,6 +71,7 @@
 334	Energiminer
 335	GrinProMiner
 336	LolMiner07
+337	SwapMiner
 
 400	Sgminer
 401	SgminerBitcore
