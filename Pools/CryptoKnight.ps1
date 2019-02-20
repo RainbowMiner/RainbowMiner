@@ -61,7 +61,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHeavy"; port = 5531; fee = 0.0; walletSymbol = "saronite"; host = "saronite.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Solace"; symbol = "SOL"; algo = "CnHeavy"; port = 5001; fee = 0.0; walletSymbol = "solace"; host = "solace.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Stellite"; symbol = "XTL"; algo = "CnHalf"; port = 16221; fee = 0.0; walletSymbol = "stellite"; host = "stellite.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "CnSwap"; port = 7731; fee = 0.0; walletSymbol = "swap"; host = "swap.ingest.cryptoknight.cc"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 7731; fee = 0.0; walletSymbol = "swap"; host = "swap.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Triton"; symbol = "TRIT"; algo = "CnLiteV7"; port = 6631; fee = 0.0; walletSymbol = "triton"; host = "triton.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "WowNero"; symbol = "WOW"; algo = "CnWow"; port = 50901; fee = 0.0; walletSymbol = "wownero"; host = "wownero.ingest.cryptoknight.cc"}
 )
