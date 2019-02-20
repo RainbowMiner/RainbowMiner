@@ -611,7 +611,7 @@ function Set-Stat {
         if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-            if (-not $Quiet) {Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Int64]$ToleranceMin) to $([Int64]$ToleranceMax)). "}
+            if (-not $Quiet) {Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Math]::Round($ToleranceMin,2)) to $([Math]::Round($ToleranceMax,2)). "}
         }
         else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
