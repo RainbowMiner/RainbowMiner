@@ -64,8 +64,14 @@
         "Hashrefinery" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "HeroMiners" = [PSCustomObject]@{
+            Currencies=@("XWP")
+        }
         "Icemining" = [PSCustomObject]@{
             Currencies=@("BCD","RVN","SUQA")
+        }
+        "LuckyPool" = [PSCustomObject]@{
+            Currencies=@("XWP")
         }
         "MinerMore" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
@@ -109,14 +115,14 @@
         "PhiPhiPool" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "PocketWhale" = [PSCustomObject]@{
+            Currencies=@("XWP")
+        }
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
         "RavenminerEu" = [PSCustomObject]@{
             Currencies=@("RVN")
-        }
-        "StarPool" = [PSCustomObject]@{
-            Currencies=@("BTC")
         }
         "YiiMP" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
