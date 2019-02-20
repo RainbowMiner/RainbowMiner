@@ -362,6 +362,10 @@ try {
         $AddAlgorithm += @("CryptonightConceal","CryptonightR")
     }
 
+    if ($Version -le (Get-Version "3.9.7.1")) {
+        $AddAlgorithm += @("Cuckaroo29s")
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
