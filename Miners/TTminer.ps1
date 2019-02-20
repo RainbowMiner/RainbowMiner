@@ -62,7 +62,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+        if ($Pools.$Algorithm_Norm.Host -and $Pools.$Algorithm_Norm.Name -ne "NiceHash" -and $Miner_Device) {
             $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
             [PSCustomObject]@{
                 Name           = $Miner_Name
