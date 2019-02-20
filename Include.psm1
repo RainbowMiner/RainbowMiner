@@ -2434,7 +2434,7 @@ class Miner {
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper") -EnvVars $this.EnvVars
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper" -or $this.API -eq "SwapMiner") -EnvVars $this.EnvVars
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -2493,7 +2493,7 @@ class Miner {
     }
 
     EndOfRoundCleanup() {
-        if ($this.API -ne "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
+        if ($this.API -ne "Wrapper" -and $this.API -ne "SwapMiner" -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
     }
