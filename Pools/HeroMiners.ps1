@@ -13,7 +13,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "us"
+$Pool_Region = "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 10410; fee = 0.9; walletSymbol = "aeon"; host = "aeon.herominers.com"}

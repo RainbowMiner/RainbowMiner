@@ -13,7 +13,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "us"
+$Pool_Region = "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 6040; fee = 1.0; walletSymbol = "tube"; host = "mine.tube.fairpool.xyz"; user="%wallet%+%worker%"}
