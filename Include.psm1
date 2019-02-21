@@ -4501,6 +4501,10 @@ param(
             $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
         } catch {
         }
+        if ($Request.success -ne $null -and -not $Request.success) {
+            Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
+        }
+
         if (-not $Global:MRRCache[$keystr] -or ($Request -and $Request.success)) {
             $Global:MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
