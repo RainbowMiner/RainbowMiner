@@ -21,7 +21,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU)**
 - **Profit auto-switch between mining programs and algorithm for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, GrinMint, HashRefinery, Icemining, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, YiiMP, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, FairPool, GosCx, GrinMint, HashRefinery, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, YiiMP, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -80,7 +80,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 
 Done!
 
-<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethermine, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, icemining, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethermine, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, herominers, icemining, luckypool, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more</details>
 
 
@@ -144,7 +144,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
-<details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
@@ -152,7 +152,9 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
+<details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>PocketWhale</summary> https://swap2.luckypool.io/ SWAP-pool for us region, pays in XWP, set your XWP-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
 <details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
 <details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
@@ -165,7 +167,7 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
 <details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com auto-exchangeand payout in BTC or any coin, that is listed at the pool</details>
-<details><summary>PocketWhale</summary> https://freehaven.pocketwhale.info/ cryptonight freehaven XFH-pool for us region, pays in XFH, set your XFH-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
+<details><summary>PocketWhale</summary> https://swap.pocketwhale.info/ SWAP-pool for us region, pays in XWP, set your XWP-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>RavenminerEu</summary> https://eu.ravenminer.com/ ravencoin-pool for eu region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
