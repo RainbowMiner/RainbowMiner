@@ -16,7 +16,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; Params = ""; DevFee = 2.0; ExtendInterval = 2; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 8; Params = ""; DevFee = 2.0; ExtendInterval = 2; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -50,6 +50,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
             if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and $Pools.$MainAlgorithm_Norm.Name -notmatch "nicehash") {
+                $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
                 $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                 $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
                 
@@ -57,7 +58,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     Params = "api-port=$($Miner_Port) $($_.Params)".Trim()
                     Config = [PSCustomObject]@{
                         Host = $Pools.$MainAlgorithm_Norm.Host
-                        Port = $Pools.$MainAlgorithm_Norm.Port
+                        Port = $Pool_Port
                         SSL  = $Pools.$MainAlgorithm_Norm.SSL
                         User = $Pools.$MainAlgorithm_Norm.User
                         Pass = $Pools.$MainAlgorithm_Norm.Pass
