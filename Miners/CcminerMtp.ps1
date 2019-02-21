@@ -57,7 +57,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
-                Path = "$($Path)$(if ($Pools.$Algorithm_Norm.Name -ne "Nicehash") {"-nh"})"
+                Path = "$(if ($Pools.$Algorithm_Norm.Name -eq "Nicehash") {$Path -replace "ccminer","ccminer-nh"} else {$Path})"
                 Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
