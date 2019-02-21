@@ -83,6 +83,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     ManualUri = $ManualUri
                     StopCommand = "Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"
                     NoCPUMining = $_.NoCPUMining
+                    DotNetSdk = "2.0"
                 }
             }
         }
