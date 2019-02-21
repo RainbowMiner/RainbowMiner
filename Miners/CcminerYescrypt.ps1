@@ -20,12 +20,12 @@ $UriCuda = @(
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""; ExtendInterval = 2}, #YesctyptR8
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""; ExtendInterval = 2} #YescryptR16 #Yenten
-    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""; ExtendInterval = 2} #PPN
-    [PSCustomObject]@{MainAlgorithm = "yescryptR24"; Params = ""; ExtendInterval = 2} #YescryptR24
-    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-i 12.5"; ExtendInterval = 2} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #yescrypt
+    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3}, #YesctyptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR16 #Yenten
+    [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #PPN
+    [PSCustomObject]@{MainAlgorithm = "yescryptR24"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR24
+    [PSCustomObject]@{MainAlgorithm = "yescryptR32"; Params = "-i 12.5"; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR32
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
