@@ -46,7 +46,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 418.81](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 18.12.3](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
-5. If you plan on using [GrinProMiner](https://grinpro.io) or [SwapMiner](https://github.com/swap-dev/SwapReferenceMiner/releases): Install Microsoft [.NET Core 2.2](https://dotnet.microsoft.com/download) - download and install "Build Apps .NET Core Sdk", click the button "** Download .NET Core Sdk **"
+5. If you plan on using [GrinProMiner](https://grinpro.io) or [SwapMiner](https://github.com/swap-dev/SwapReferenceMiner/releases): Install Microsoft [.NET Core 2.2 Runtime](https://dotnet.microsoft.com/download) - download and install "Run Apps .NET Core Runtime", click the button "** Download .NET Core Runtime **"
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
