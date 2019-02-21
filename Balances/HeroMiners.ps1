@@ -1,0 +1,64 @@
+﻿param(
+    $Config
+)
+
+$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
+
+$Pools_Data = @(
+    [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 10410; fee = 0.9; walletSymbol = "aeon"; host = "aeon.herominers.com"}
+    [PSCustomObject]@{coin = "Arqma"; symbol = "ARQ"; algo = "CnLiteV7"; port = 10320; fee = 0.9; walletSymbol = "arqma"; host = "arqma.herominers.com"}
+    [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 10280; fee = 0.9; walletSymbol = "tube"; host = "tube.herominers.com"}
+    [PSCustomObject]@{coin = "Block"; symbol = "BLOC"; algo = "CnHaven"; port = 10240; fee = 0.9; walletSymbol = "bloc"; host = "bloc.herominers.com"}
+    [PSCustomObject]@{coin = "Citadel"; symbol = "CTL"; algo = "CnV7"; port = 10420; fee = 0.9; walletSymbol = "citadel"; host = "citadel.herominers.com"}
+    [PSCustomObject]@{coin = "Conceal"; symbol = "CCX"; algo = "CnFast"; port = 10360; fee = 0.9; walletSymbol = "conceal"; host = "conceal.herominers.com"}
+    [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 10100; fee = 0.9; walletSymbol = "graft"; host = "graft.herominers.com"}
+    [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 10140; fee = 0.9; walletSymbol = "haven"; host = "haven.herominers.com"}
+    [PSCustomObject]@{coin = "Lethean"; symbol = "LTHN"; algo = "CnV8"; port = 10180; fee = 0.9; walletSymbol = "lethean"; host = "lethean.herominers.com"}
+    [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 10110; fee = 0.9; walletSymbol = "loki"; host = "loki.herominers.com"}
+    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnHalf"; port = 10150; fee = 0.9; walletSymbol = "masari"; host = "masari.herominers.com"}
+    [PSCustomObject]@{coin = "Monero"; symbol = "XMR"; algo = "CnV8"; port = 10190; fee = 0.9; walletSymbol = "monero"; host = "monero.herominers.com"}
+    [PSCustomObject]@{coin = "MoneroV"; symbol = "XMV"; algo = "CnV7"; port = 10200; fee = 0.9; walletSymbol = "monerov"; host = "monerov.herominers.com"}
+    [PSCustomObject]@{coin = "Qrl"; symbol = "QRL"; algo = "CnV7"; port = 10370; fee = 0.9; walletSymbol = "qrl"; host = "qrl.herominers.com"}
+    [PSCustomObject]@{coin = "Ryo"; symbol = "RYO"; algo = "CnGpu"; port = 10270; fee = 0.9; walletSymbol = "ryo"; host = "ryo.herominers.com"}
+    [PSCustomObject]@{coin = "SafeX"; symbol = "SAFE"; algo = "CnV7"; port = 10430; fee = 0.9; walletSymbol = "safex"; host = "safex.herominers.com"}
+    [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHeavy"; port = 10230; fee = 0.9; walletSymbol = "saronite"; host = "saronite.herominers.com"}
+    [PSCustomObject]@{coin = "Stellite"; symbol = "XTL"; algo = "CnHalf"; port = 10130; fee = 0.9; walletSymbol = "stellite"; host = "stellite.herominers.com"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 10441; fee = 0.9; walletSymbol = "swap"; host = "swap.herominers.com"}
+    [PSCustomObject]@{coin = "Turtle"; symbol = "TRTL"; algo = "CnTurtle"; port = 10380; fee = 0.9; walletSymbol = "turtlecoin"; host = "turtlecoin.herominers.com"}
+    [PSCustomObject]@{coin = "uPlexa"; symbol = "UPX"; algo = "CnUpx"; port = 10470; fee = 0.9; walletSymbol = "uplexa"; host = "uplexa.herominers.com"}
+    [PSCustomObject]@{coin = "Xcash"; symbol = "XCASH"; algo = "CnHalf"; port = 10440; fee = 0.9; walletSymbol = "xcash"; host = "xcash.herominers.com"}
+)
+
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+    $Pool_Currency = $_.symbol
+    $Pool_RpcPath = $_.walletSymbol.ToLower()
+
+    $Pool_Request = [PSCustomObject]@{}
+    $Request = [PSCustomObject]@{}
+
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
+        $Divisor = $Pool_Request.config.coinUnits
+
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        if (-not $Request.stats -or -not $Divisor) {
+            Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
+        } else {
+            $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
+            [PSCustomObject]@{
+                Caption     = "$($Name) ($Pool_Currency)"
+                Currency    = $Pool_Currency
+                Balance     = $Request.stats.balance / $Divisor
+                Pending     = $Pending
+                Total       = $Request.stats.balance / $Divisor + $Pending
+                Payed       = $Request.stats.paid / $Divisor
+                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                LastUpdated = (Get-Date).ToUniversalTime()
+            }
+        }
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+    }
+}
