@@ -891,10 +891,12 @@ function Invoke-Core {
             }
     }
 
+    #Check if .NET Core Sdk is installed
     $MinersNeedSdk = $AllMiners | Where-Object {$_.DotNetSdk -and (Compare-Version $_.DotNetSdk $Session.Config.DotNETSdkVersion) -gt 0}
     if ($MinersNeedSdk) {
-        $MinersNeedSdk | Foreach-Object {Write-Log -Level Warn "$($_.BaseName) requires .NET Core Sdk (min. version $DotNetSdk) to be installed! Find the x64 installer here: https://dotnet.microsoft.com/download"}
+        $MinersNeedSdk | Foreach-Object {Write-Log -Level Warn "$($_.BaseName) requires .NET Core Sdk (min. version $($_.DotNetSdk)) to be installed! Find the x64 installer here: https://dotnet.microsoft.com/download"}
         $AllMiners = $AllMiners | Where-Object {@($MinersNeedSdk) -notcontains $_}
+        Sleep 2
     }
 
     if ($Session.Config.MiningMode -eq "combo") {
