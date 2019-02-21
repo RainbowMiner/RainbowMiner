@@ -188,6 +188,10 @@
                     $Data = ConvertTo-Json $API.UserConfig
                     Break
                 }
+                "/downloadlist" {
+                    $Data = ConvertTo-Json @(($API.DownloadList | Select-Object | ConvertFrom-Json) | Select-Object)
+                    Break
+                }
                 "/debug" {
                     #create zip log and xxx out all purses
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"

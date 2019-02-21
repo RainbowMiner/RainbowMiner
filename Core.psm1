@@ -1164,6 +1164,7 @@ function Invoke-Core {
         }
         $Session.StartDownloader = $false
     }
+    $API.DownloadList = $Miners_DownloadList | ConvertTo-Json -Depth 10 -Compress
     $Miners_Downloading = $Miners_DownloadList.Count
     Remove-Variable "AllMiners_VersionCheck" -Force
     Remove-Variable "AllMiners_VersionDate" -Force
