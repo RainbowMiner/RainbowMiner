@@ -12,7 +12,7 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18-ccminerklaust/ccminer-8.21-r18.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18v3-ccminerklaust/ccminerKlausT-8.21-r18v3.7z"
         Cuda = "10.0"
     }        
 )
