@@ -194,7 +194,7 @@ function Update-ActiveMiners {
                 $Miner.UpdateMinerData() > $null
                 if (-not $Miner.CheckShareRatio() -and -not ($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})) {
                     Write-Log "Too many rejected shares for miner $($Miner.Name)"
-                    Stop-SubProcess -Job $Miner -Title "Miner $($this.Name)"
+                    $Miner.ResetMinerData()
                 }
             }
         }
