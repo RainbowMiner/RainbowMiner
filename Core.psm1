@@ -572,7 +572,7 @@ function Invoke-Core {
 
         $Session.Config | Add-Member DeviceModel @($Session.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
         $Session.Config | Add-Member CUDAVersion $(if (($Session.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
-        $Session.Config | Add-Member DotNETSdkVersion $(try {[String]((dir (Get-Command dotnet).Path.Replace('dotnet.exe', 'sdk')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1)} catch {}) -Force
+        $Session.Config | Add-Member DotNETSdkVersion $(try {[String]((dir (Get-Command dotnet -ErrorAction Stop).Path.Replace('dotnet.exe', 'sdk')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1)} catch {}) -Force
 
         #Create combos
         @($Session.DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
