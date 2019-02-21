@@ -25,6 +25,7 @@ class Claymore : Miner {
 
         $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
         $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
+        $Accepted_Shares -= $Rejected_Shares
         
         $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
         if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
