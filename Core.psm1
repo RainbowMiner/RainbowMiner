@@ -863,6 +863,7 @@ function Invoke-Core {
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName    
     if ($Session.Config.EnableAutoMinerPorts) {Set-ActiveMinerPorts @($Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object);Set-ActiveTcpPorts} else {Set-ActiveTcpPorts -Disable}
+    $AllMiner_Warnings = @()
     $AllMiners = if (Test-Path "Miners") {
         Get-MinersContent -Pools $Pools | 
             Where-Object {$_.DeviceName -and ($_.DeviceModel -notmatch '-' -or -not (Compare-Object $_.DeviceName $Session.DeviceNames."$($_.DeviceModel)"))} | #filter miners for non-present hardware
@@ -886,14 +887,14 @@ function Invoke-Core {
                         )
                     ) {$MinerOk=$false;break}
                 }
-                if ($_.DotNetSdk) {
-                    if ((Compare-Version $_.DotNetSdk $Session.Config.DotNETSdkVersion) -gt 0) {
-                        Write-Log -Level Warn "$($_.BaseName) requires .NET Core Sdk (min. version $DotNetSdk) to be installed! Find the x64 installer here: https://dotnet.microsoft.com/download"
-                        $MinerOk = $false
-                    }
-                }
                 $MinerOk
             }
+    }
+
+    $MinersNeedSdk = $AllMiners | Where-Object {$_.DotNetSdk -and (Compare-Version $_.DotNetSdk $Session.Config.DotNETSdkVersion) -gt 0}
+    if ($MinersNeedSdk) {
+        $MinersNeedSdk | Foreach-Object {Write-Log -Level Warn "$($_.BaseName) requires .NET Core Sdk (min. version $DotNetSdk) to be installed! Find the x64 installer here: https://dotnet.microsoft.com/download"}
+        $AllMiners = $AllMiners | Where-Object {@($MinersNeedSdk) -notcontains $_}
     }
 
     if ($Session.Config.MiningMode -eq "combo") {
