@@ -2722,34 +2722,43 @@ class Miner {
         $HashRates_Devices = @($this.Data | Where-Object Device | Select-Object -ExpandProperty Device -Unique)
         if (-not $HashRates_Devices) {$HashRates_Devices = @("Device")}
 
-        $HashRates_Counts = @{}
-        $HashRates_Averages = @{}
-        $HashRates_Variances = @{}
+        $Intervals = [Math]::Max($this.ExtendInterval,1)
+        $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
+        $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or $_.HashRate."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe}
 
-        $Seconds = $this.DataInterval * [Math]::Max($this.ExtendInterval,1)
+        $HashRates_Count = $HashRates_Average = $HashRates_Variance = 0
 
-        $this.Data | Where-Object {$_.HashRate} | Where-Object {$_.Date -ge (Get-Date).ToUniversalTime().AddSeconds( - $Seconds)} | ForEach-Object {
-            $Data_HashRates = $_.HashRate.$Algorithm
-            if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
+        $Steps = if ($this.Rounds -ge $Intervals) {1} else {2}
+        for ($Step = 0; $HashData -and ($Step -lt $Steps); $Step++) {
+            $HashRates_Counts = @{}
+            $HashRates_Averages = @{}
+            $HashRates_Variances = @{}
 
-            if ($Data_HashRates) {
+            $HashData | ForEach-Object {
+                $Data_HashRates = $_.HashRate.$Algorithm
+                if (-not $Data_HashRates -and $Algorithm -match "-") {$Data_HashRates = $_.HashRate."$($Algorithm -replace '\-.*$')"}
+
                 $Data_Devices = $_.Device
                 if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
-                $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
-                $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @(($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum) / $Data_Devices.Count)}
-                $HashRates_Variances."$($Data_Devices -join '-')" += @($Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum)
-            }
-        }
 
-        $HashRates_Count = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
-        $HashRates_Average = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
-        $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+                $HashRate = $Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+                if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * 0.5)) {
+                    $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
+                    $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @($HashRate / $Data_Devices.Count)}
+                    $HashRates_Variances."$($Data_Devices -join '-')" += @($HashRate)
+                }
+            }
+
+            $HashRates_Count    = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
+            $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
+            $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+        }
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
 
         $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
 
-        if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt [Math]::Max($this.ExtendInterval,1) -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
+        if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt $Intervals -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
             return 0
         }
         else {
