@@ -4322,7 +4322,12 @@ param(
 }
 
 function Get-UnixTimestamp {
-    [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False)]
+    [Switch]$Milliseconds = $false
+)
+    [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})")
 }
 
 function Get-UnixToUTC {
@@ -4493,7 +4498,7 @@ param(
     $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
     if (-not (Test-Path Variable:Global:MRRCache)) {$Global:MRRCache = [hashtable]::Synchronized(@{})}
     if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
-        $nonce = (Get-UnixTimestamp)+5000
+        $nonce = Get-UnixTimestamp -Milliseconds
         $str = "$key$nonce$endpoint"
         $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
         $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
