@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.13-ccminermtp/ccminermtp-1.1.13p.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.15-ccminermtp/ccminermtp-v1.1.15.7z"
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
@@ -57,7 +57,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 Name = $Miner_Name
                 DeviceName = $Miner_Device.Name
                 DeviceModel = $Miner_Model
-                Path = "$(if ($Pools.$Algorithm_Norm.Name -eq "Nicehash") {$Path -replace "ccminer.exe","ccminer-nh.exe"} else {$Path})"
+                Path = $Path
                 Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
                 HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
                 API = "Ccminer"
