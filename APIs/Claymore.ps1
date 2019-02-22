@@ -58,10 +58,8 @@ class Claymore : Miner {
         }
 
         $this.AddMinerData([PSCustomObject]@{
-            Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
-            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
         })
 

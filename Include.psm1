@@ -2697,6 +2697,9 @@ class Miner {
     }
 
     AddMinerData($data) {
+        $data | Add-Member Date (Get-Date).ToUniversalTime() -Force
+        $data | Add-Member PowerDraw $(Get-DevicePowerDraw -DeviceName $this.DeviceName) -Force
+        $data | Add-Member Round $this.Rounds -Force
         $this.Data += $data
         if ($this.Data.Count -gt $this.MinSamples) {
             $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)

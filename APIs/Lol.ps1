@@ -36,10 +36,8 @@ class Lol : Miner {
         }
 
         $this.AddMinerData([PSCustomObject]@{
-            Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response.Content
             HashRate = $HashRate
-            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
         })
 

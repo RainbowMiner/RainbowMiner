@@ -44,8 +44,6 @@ class SwapMiner : Miner {
 
     [String[]]UpdateMinerData () {
         if ($this.Process.HasMoreData) {
-            $Date = (Get-Date).ToUniversalTime()
-
             $HashRate_Name = $this.Algorithm[0]
 
             $this.Process | Receive-Job | ForEach-Object {
@@ -67,10 +65,8 @@ class SwapMiner : Miner {
                         }
 
                         $this.AddMinerData([PSCustomObject]@{
-                            Date = $Date
                             Raw = $Line_Simple
-                            HashRate = $HashRate
-                            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName                           
+                            HashRate = $HashRate                          
                             Device = @()
                         })
                     }

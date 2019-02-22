@@ -412,10 +412,8 @@ class Excavator : Miner {
         $Data = [Excavator]::InvokeRequest($this, @{id = 1; method = "algorithm.print.speeds"; params = @()})
 
         $this.AddMinerData([PSCustomObject]@{
-            Date     = (Get-Date).ToUniversalTime()
             Raw      = $Response
             HashRate = $HashRate
-            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName
             Device   = @()
         })
 
