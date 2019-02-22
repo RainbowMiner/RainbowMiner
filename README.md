@@ -1041,7 +1041,7 @@ Tab "Actions":
 
 #### 1. Signup and create a rig for rent
 - signup at https://www.miningrigrentals.com
-- create API keys with permission "Manage Rigs" checked
+- create API keys with permission "Balance/Withdraw" = "Read-Only" and "Manage Rigs" = "Yes" (Hint: if you have multiple RainbowMiner rigs, create new keys for each of it!)
 - create a rig for at least one algorithm that you want to rent to an interested renter at the "MyRigs" section of the website
 - optional: add pools on the "Pool Configuration" tab of the rig
 - set your rig's rentable status to "available"
