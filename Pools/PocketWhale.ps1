@@ -16,7 +16,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region = "us"
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 33022; fee = 0.5; livestats = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 33022; fee = 0.5; livestats = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"; divisor = 32}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -24,6 +24,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath = $_.livestats
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
 
     $Pool_Port = 0
     $Pool_Fee  = $_.fee
@@ -62,7 +63,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $diffLive     = $Pool_Request.network.difficulty
         $reward       = $Pool_Request.network.reward
-        $profitLive   = 86400/$diffLive*$reward
+        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
         $coinUnits    = $Pool_Request.config.coinUnits
         $amountLive   = $profitLive / $coinUnits
 
@@ -78,7 +79,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         if ($averageDifficulties) {
             $averagePrices = ($Pool_Request.charts.price | Select-Object | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average
             if ($averagePrices) {
-                $profitDay = 86400/$averageDifficulties * $reward
+                $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
                 $amountDay = $profitDay/$coinUnits
                 $satRewardDay = $amountDay * $averagePrices
             }

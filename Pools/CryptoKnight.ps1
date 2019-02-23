@@ -61,7 +61,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHeavy"; port = 5531; fee = 0.0; walletSymbol = "saronite"; host = "saronite.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Solace"; symbol = "SOL"; algo = "CnHeavy"; port = 5001; fee = 0.0; walletSymbol = "solace"; host = "solace.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "Stellite"; symbol = "XTL"; algo = "CnHalf"; port = 16221; fee = 0.0; walletSymbol = "stellite"; host = "stellite.ingest.cryptoknight.cc"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 7731; fee = 0.0; walletSymbol = "swap"; host = "swap.ingest.cryptoknight.cc"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 7731; fee = 0.0; walletSymbol = "swap"; host = "swap.ingest.cryptoknight.cc"; divisor = 32}
     [PSCustomObject]@{coin = "Triton"; symbol = "TRIT"; algo = "CnLiteV7"; port = 6631; fee = 0.0; walletSymbol = "triton"; host = "triton.ingest.cryptoknight.cc"}
     [PSCustomObject]@{coin = "WowNero"; symbol = "WOW"; algo = "CnWow"; port = 50901; fee = 0.0; walletSymbol = "wownero"; host = "wownero.ingest.cryptoknight.cc"}
 )
@@ -71,6 +71,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
     $Pool_RpcPath = $_.walletSymbol.ToLower()
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
 
     $Pool_Port = 0
     $Pool_Fee  = 0.0
@@ -103,7 +104,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
 
         $diffLive     = $Pool_Request.network.difficulty
         $reward       = $Pool_Request.network.reward
-        $profitLive   = 86400/$diffLive*$reward
+        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
         $coinUnits    = $Pool_Request.config.coinUnits
         $amountLive   = $profitLive / $coinUnits
 
@@ -119,7 +120,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.walletSymbol} | Where
         if ($averageDifficulties) {
             $averagePrices = if ($Pool_Request.charts.price) {($Pool_Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
             if ($averagePrices) {
-                $profitDay = 86400/$averageDifficulties * $reward
+                $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
                 $amountDay = $profitDay/$coinUnits
                 $satRewardDay = $amountDay * $averagePrices
             }

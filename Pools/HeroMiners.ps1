@@ -34,7 +34,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "SafeX"; symbol = "SAFE"; algo = "CnV7"; port = 10430; fee = 0.9; walletSymbol = "safex"; host = "safex.herominers.com"}
     [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHeavy"; port = 10230; fee = 0.9; walletSymbol = "saronite"; host = "saronite.herominers.com"}
     [PSCustomObject]@{coin = "Stellite"; symbol = "XTL"; algo = "CnHalf"; port = 10130; fee = 0.9; walletSymbol = "stellite"; host = "stellite.herominers.com"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 10441; fee = 0.9; walletSymbol = "swap"; host = "swap.herominers.com"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 10441; fee = 0.9; walletSymbol = "swap"; host = "swap.herominers.com"; divisor = 32}
     [PSCustomObject]@{coin = "Turtle"; symbol = "TRTL"; algo = "CnTurtle"; port = 10380; fee = 0.9; walletSymbol = "turtlecoin"; host = "turtlecoin.herominers.com"}
     [PSCustomObject]@{coin = "uPlexa"; symbol = "UPX"; algo = "CnUpx"; port = 10470; fee = 0.9; walletSymbol = "uplexa"; host = "uplexa.herominers.com"}
     [PSCustomObject]@{coin = "Xcash"; symbol = "XCASH"; algo = "CnHalf"; port = 10440; fee = 0.9; walletSymbol = "xcash"; host = "xcash.herominers.com"}
@@ -45,6 +45,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_RpcPath = $_.walletSymbol.ToLower()
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
 
     $Pool_Fee  = 0.9
 
@@ -88,7 +89,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $diffLive     = $Pool_Request.network.difficulty
         $reward       = $Pool_Request.lastblock.reward
-        $profitLive   = 86400/$diffLive*$reward
+        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
         $coinUnits    = $Pool_Request.config.coinUnits
         $amountLive   = $profitLive / $coinUnits
 
@@ -111,7 +112,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         if ($averageDifficulties) {
             $averagePrices = if ($Pool_Request.charts.price) {($Pool_Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
             if ($averagePrices) {
-                $profitDay = 86400/$averageDifficulties * $reward
+                $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
                 $amountDay = $profitDay/$coinUnits
                 $satRewardDay = $amountDay * $averagePrices
                 if ($Pool_Request.config.priceCurrency -ne "BTC") {

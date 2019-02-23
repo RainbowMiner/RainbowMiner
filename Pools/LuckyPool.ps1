@@ -22,7 +22,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 7788; fee = 0.9; walletSymbol = "haven"; host = "haven.luckypool.io"}
     #[PSCustomObject]@{coin = "JyoCoin"; symbol = "JYO"; algo = "CnV8"; port = 5008; fee = 0.9; walletSymbol = "jyo"; host = "jyo.luckypool.io"}
     #[PSCustomObject]@{coin = "SafexCash"; symbol = "SFX"; algo = "CnV8"; port = 3388; fee = 0.9; walletSymbol = "sfx"; host = "safex.luckypool.io"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; walletSymbol = "swap2"; host = "swap2.luckypool.io"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; walletSymbol = "swap2"; host = "swap2.luckypool.io"; divisor = 32}
     #[PSCustomObject]@{coin = "WowNero"; symbol = "WOW"; algo = "CnWow"; port = 4488; fee = 0.9; walletSymbol = "wownero"; host = "wownero.luckypool.io"}
     #[PSCustomObject]@{coin = "Xcash"; symbol = "XCASH"; algo = "CnHeavyX"; port = 4488; fee = 0.9; walletSymbol = "xcash"; host = "xcash.luckypool.io"}
 )
@@ -33,6 +33,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Host = $_.host
+    $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
 
     $Pool_Fee  = 0.9
 
@@ -76,7 +77,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
         $diffLive     = $Pool_Request.network.difficulty
         $reward       = $Pool_Request.network.reward
-        $profitLive   = 86400/$diffLive*$reward
+        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
         $coinUnits    = $Pool_Request.config.coinUnits
         $amountLive   = $profitLive / $coinUnits
 
@@ -97,7 +98,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         if ($averageDifficulties) {
             $averagePrices = if ($Pool_Request.charts.price) {($Pool_Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
             if ($averagePrices) {
-                $profitDay = 86400/$averageDifficulties * $reward
+                $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
                 $amountDay = $profitDay/$coinUnits
                 $satRewardDay = $amountDay * $averagePrices
                 if ($Pool_Request.config.priceCurrency -ne "BTC") {
