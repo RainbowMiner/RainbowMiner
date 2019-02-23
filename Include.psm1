@@ -2725,10 +2725,12 @@ class Miner {
         $Intervals = [Math]::Max($this.ExtendInterval,1)
         $Timeframe = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
         $HashData  = $this.Data | Where-Object {$_.HashRate -and ($_.HashRate.$Algorithm -or $_.HashRate."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe}
+        $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
+        $MinHashRate = 1-[Math]::Min($MaxVariance/2,0.1)
 
         $HashRates_Count = $HashRates_Average = $HashRates_Variance = 0
 
-        $Steps = if ($this.Rounds -ge $Intervals) {1} else {2}
+        $Steps = if ($this.Rounds -ge 2*$Intervals) {1} else {2}
         for ($Step = 0; $HashData -and ($Step -lt $Steps); $Step++) {
             $HashRates_Counts = @{}
             $HashRates_Averages = @{}
@@ -2742,7 +2744,7 @@ class Miner {
                 if (-not $Data_Devices) {$Data_Devices = $HashRates_Devices}
 
                 $HashRate = $Data_HashRates | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-                if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * 0.5)) {
+                if ($HashRates_Variances."$($Data_Devices -join '-')" -or ($HashRate -gt $HashRates_Average * $MinHashRate)) {
                     $Data_Devices | ForEach-Object {$HashRates_Counts.$_++}
                     $Data_Devices | ForEach-Object {$HashRates_Averages.$_ += @($HashRate / $Data_Devices.Count)}
                     $HashRates_Variances."$($Data_Devices -join '-')" += @($HashRate)
@@ -2752,12 +2754,11 @@ class Miner {
             $HashRates_Count    = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
             $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
             $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
+            Write-Log "GetHashrate#$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance
-
-        $MaxVariance = if ($this.FaultTolerance) {$this.FaultTolerance} else {0.05}
-
+        
         if ($Safe -and $this.IsBenchmarking() -and ($this.Benchmarked -lt $Intervals -or $HashRates_Count -lt $this.MinSamples -or $HashRates_Variance -gt $MaxVariance)) {
             return 0
         }
