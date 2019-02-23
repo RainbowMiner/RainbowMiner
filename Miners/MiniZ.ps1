@@ -12,11 +12,11 @@ $DevFee = 2.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0j-miniz/miniZ_v1.0j_cuda10_win-x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1k-miniz/miniZ_v1.1k_cuda10_win-x64.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0j-miniz/miniZ_v1.0j_win-x64.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1k-miniz/miniZ_v1.1k_win-x64.zip"
         Cuda = "8.0"
     }
 )
@@ -24,7 +24,8 @@ $UriCuda = @(
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2; Params = "--par=144,5"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--par=96,5"}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--par=144,5"} #Equihash 144,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
