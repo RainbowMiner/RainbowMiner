@@ -2371,6 +2371,8 @@ class Miner {
     $Rounds = 0
     $MaxBenchmarkRounds = 3
     $MaxRejectedShareRatio = 0.3
+    $MiningPriority
+    $MiningAffinity
     $ManualUri
     [String]$EthPillEnable = "disable"
     $DataInterval

@@ -891,7 +891,7 @@ function Invoke-Core {
             }
     }
 
-    #Check if .NET Core Sdk is installed
+    #Check if .NET Core Runtime is installed
     $MinersNeedSdk = $AllMiners | Where-Object {$_.DotNetRuntime -and (Compare-Version $_.DotNetRuntime $Session.Config.DotNETRuntimeVersion) -gt 0}
     if ($MinersNeedSdk) {
         $MinersNeedSdk | Foreach-Object {Write-Log -Level Warn "$($_.BaseName) requires .NET Core Runtime (min. version $($_.DotNetRuntime)) to be installed! Find the installer here: https://dotnet.microsoft.com/download"}
@@ -1293,6 +1293,8 @@ function Invoke-Core {
             $ActiveMiner.NoCPUMining        = $Miner.NoCPUMining
             $ActiveMiner.NeedsBenchmark     = $Miner.HashRates.PSObject.Properties.Value -contains $null
             $ActiveMiner.MaxRejectedShareRatio = $Miner.MaxRejectedShareRatio
+            $ActiveMiner.MiningPriority     = $Miner.MiningPriority
+            $ActiveMiner.MiningAffinity     = $Miner.MiningAffinity
         }
         else {
             Write-Log "New miner object for $($Miner.BaseName)"
@@ -1348,6 +1350,8 @@ function Invoke-Core {
                 NoCPUMining          = $Miner.NoCPUMining
                 NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
                 MaxRejectedShareRatio= $Miner.MaxRejectedShareRatio
+                MiningPriority       = $Miner.MiningPriority
+                MiningAffinity       = $Miner.MiningAffinity
             }
         }
     }
@@ -1478,7 +1482,11 @@ function Invoke-Core {
         }            
         $Session.DecayStart = $Session.Timer
 
-        $_.SetPriorities($Session.Config.MiningPriorityCPU,$Session.Config.MiningPriorityGPU,$Session.Config.GPUMiningAffinity)
+        $_.SetPriorities(
+            $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityCPU}),
+            $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityGPU}),
+            $(if ($_.MiningAffinity -ne $null) {$_.MiningAffinity} else {$Session.Config.GPUMiningAffinity})
+        )
 
         $_.SetStatus([MinerStatus]::Running)
 
