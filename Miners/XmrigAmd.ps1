@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.12.0-xmrig/xmrig-amd-2.12.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.13.0-xmrig/xmrig-amd-2.13.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"
 $Port = "304{0:d2}"
 $DevFee = 0.0
@@ -19,9 +19,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        MinMemGb = 4; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       MinMemGb = 2; Params = ""; Algorithm = "cryptonight/msr"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          MinMemGb = 2; Params = ""; Algorithm = "cryptonight/wow"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        MinMemGb = 2; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     MinMemGb = 1; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     MinMemGb = 1; Params = ""}
