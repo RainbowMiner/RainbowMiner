@@ -80,7 +80,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 FaultTolerance = $_.FaultTolerance
                 ExtendInterval = $_.ExtendInterval
                 ManualUri      = $ManualUri
-                MiningPriority = 4
+                MiningPriority = 2
             }
         }
     }
