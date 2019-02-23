@@ -365,6 +365,10 @@ try {
         $AddAlgorithm += @("Cuckaroo29s")
     }
 
+    if ($Version -le (Get-Version "3.9.7.8")) {
+        Get-ChildItem "Stats\Pools\CryptoKnight_XWP_Profit.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
