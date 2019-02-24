@@ -367,6 +367,7 @@ try {
 
     if ($Version -le (Get-Version "3.9.7.8")) {
         Get-ChildItem "Stats\Pools\CryptoKnight_XWP_Profit.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        $AddAlgorithm += @("CryptonightHeavyX","CryptonightZelerius")
     }
 
     if ($AddAlgorithm.Count -gt 0) {
