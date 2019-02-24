@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.11b-ttminer/TT-Miner-2.1.11-beta8.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.11-ttminer/TT-Miner-2.1.11.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
@@ -20,7 +20,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
     #[PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 4; Params = ""} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP
-    [PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""} #MYRGR    
+    #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""} #MYRGR    
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW 
@@ -69,7 +69,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName     = $Miner_Device.Name
                 DeviceModel    = $Miner_Model
                 Path           = $Path
-                Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -RH $($_.Params)"
+                Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port)$(if ($Pools.$Algorithm_Norm.Name -ne "NiceHash") {" -RH"}) $($_.Params)"
                 HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
                 API            = "Claymore"
                 Port           = $Miner_Port                
