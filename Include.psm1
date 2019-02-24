@@ -4179,8 +4179,8 @@ function Invoke-ReportMinerStatus {
                 Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
                 Algorithm      = @($Miner.BaseAlgorithm)
                 Currency       = $Miner.Currency
-                CoinName       = @($Miner.CoinName | Where-Object {$Miner})
-                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner})
+                CoinName       = @($Miner.CoinName | Where-Object {$Miner} | Select-Object)
+                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner} | Select-Object)
                 Pool           = @($Miner.Pool)
                 CurrentSpeed   = @($Miner.Speed_Live)
                 EstimatedSpeed = @($Miner.Speed)
