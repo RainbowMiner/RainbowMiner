@@ -2,6 +2,7 @@
 
 param(
     [PSCustomObject]$Wallets,
+    [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
     [TimeSpan]$StatSpan,

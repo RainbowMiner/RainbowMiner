@@ -571,6 +571,20 @@ Example:
         "EnableAutoCoin": "1"
     }
 
+#### Add additional password parameters for YiiMP based pools
+
+Many our pools are based on the open-source YiiMP pool (e.g. AHashpool,BlazePool,Blockmaster,ZergPool,ZPool etc.). Some of these pools accept additional parameters. A prominent example is the setting of a custom payout limit at ZergPool (pl=x.xx). To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
+
+Example:
+
+"ZergPool": {
+    "LTC": "<YOUR_LTC_ADDRESS>",
+    "LTC-Params": "pl=1.5",
+    "Worker": "$WorkerName",
+    "Penalty": 0
+}
+
+In this example, if mining Zergpool, it will autoexchange everything into LTC. The parameter string "pl=1.5" will be added to the password, that is passed to the pool. In the case of ZergPool it will define a payout limit of 1.5 LTC. Of course any parameters can be added here, depending on the pool's options.
 
 #### Change a pool's penalty
     

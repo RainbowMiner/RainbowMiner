@@ -1147,7 +1147,7 @@ function Start-Setup {
 
             Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
 
-            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";"StatAverage" = "";"DataWindow" = ""}
+            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";StatAverage = "";DataWindow = ""}
 
             $PoolSetupDone = $false
             do {
@@ -1271,7 +1271,7 @@ function Start-Setup {
                                     "currency" {
                                         $PoolEditCurrencyDone = $false
                                         Write-Host " "
-                                        Write-Host "*** Define your wallets for this pool ***" -ForegroundColor Green
+                                        Write-Host "*** Define your wallets and password params for this pool ***" -ForegroundColor Green
                                         do {
                                             $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
                                             Write-Host " "
@@ -1290,19 +1290,30 @@ function Start-Setup {
                                             $PoolEditCurrency = Read-HostString -Prompt "Enter the currency you want to edit, add or remove (leave empty to end wallet configuration)" -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                             $PoolEditCurrency = $PoolEditCurrency.Trim()
                                             if ($PoolEditCurrency -ne "") {
-                                                $v = $PoolConfig.$PoolEditCurrency
-                                                if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC") -or $v -eq "`$$PoolEditCurrency") {$v = "default"}
-                                                elseif ($v -eq "`$$PoolEditCurrency") {$v = "default";$t = "coins.config.txt"}
-                                                $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
-                                                $v = $v.Trim()
-                                                if (@("back","<") -inotcontains $v) {
-                                                    if (@("del","delete","remove","clear","rem") -icontains $v) {
-                                                        if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)} 
-                                                    } else {
-                                                        if (@("def","default","wallet","standard") -icontains $v) {$v = "`$$(if ($PoolEditCurrency -eq "BTC") {"Wallet"} else {$PoolEditCurrency})"}
-                                                        $PoolConfig | Add-Member $PoolEditCurrency $v -Force
+                                                do {
+                                                    $CurrencyEntryDone = $true
+                                                    $v = $PoolConfig.$PoolEditCurrency
+                                                    $params = $PoolConfig."$($PoolEditCurrency)-Params"
+                                                    if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC") -or $v -eq "`$$PoolEditCurrency") {$v = "default"}
+                                                    elseif ($v -eq "`$$PoolEditCurrency") {$v = "default";$t = "coins.config.txt"}
+                                                    $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                    $v = $v.Trim()
+                                                    if (@("back","<") -inotcontains $v) {
+                                                        if (@("del","delete","remove","clear","rem") -icontains $v) {
+                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains $PoolEditCurrency) {$PoolConfig.PSObject.Properties.Remove($PoolEditCurrency)}
+                                                            if (@($PoolConfig.PSObject.Properties.Name) -icontains "$($PoolEditCurrency)-Params") {$PoolConfig.PSObject.Properties.Remove("$($PoolEditCurrency)-Params")}
+                                                        } else {
+                                                            if (@("def","default","wallet","standard") -icontains $v) {$v = "`$$(if ($PoolEditCurrency -eq "BTC") {"Wallet"} else {$PoolEditCurrency})"}
+                                                            $PoolConfig | Add-Member $PoolEditCurrency $v -Force
+                                                            $params = Read-HostString -Prompt "Enter additional password parameters for $PoolEditCurrency" -Default $params -Characters $false | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                            if (@("back","<") -inotcontains $params) {
+                                                                $PoolConfig | Add-Member "$($PoolEditCurrency)-Params" "$($params)" -Force
+                                                            } else {
+                                                                $CurrencyEntryDone = $false
+                                                            }
+                                                        }
                                                     }
-                                                }
+                                                } until ($CurrencyEntryDone)
                                             } else {
                                                 $PoolEditCurrencyDone = $true
                                             }

@@ -478,7 +478,11 @@ function Invoke-Core {
                     if (-not $Session.Config.Pools.$p."$($_.Name)") {$Session.Config.Pools.$p | Add-Member $_.Name $_.Value.Wallet -Force}
                 }
             }
-            $Session.Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
+            $c = Get-PoolPayoutCurrencies $Session.Config.Pools.$p
+            $cparams = [PSCustomObject]@{}
+            $c.PSObject.Properties.Name | Where-Object {$Session.Config.Pools.$p."$($_)-Params"} | Foreach-Object {$cparams | Add-Member $_ $Session.Config.Pools.$p."$($_)-Params" -Force}
+            $Session.Config.Pools.$p | Add-Member Wallets $c -Force
+            $Session.Config.Pools.$p | Add-Member Params $cparams -Force
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             $Session.Config.Pools.$p | Add-Member AllowZero (Get-Yes $Session.Config.Pools.$p.AllowZero) -Force
@@ -536,7 +540,11 @@ function Invoke-Core {
                     if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @(($Session.Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
                     $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                 }
-                $Session.Config.Pools.$p | Add-Member Wallets (Get-PoolPayoutCurrencies $Session.Config.Pools.$p) -Force
+                $c = Get-PoolPayoutCurrencies $Session.Config.Pools.$p
+                $cparams = [PSCustomObject]@{}
+                $c.PSObject.Properties.Name | Where-Object {$Session.Config.Pools.$p."$($_)-Params"} | Foreach-Object {$cparams | Add-Member $_ $Session.Config.Pools.$p."$($_)-Params" -Force}
+                $Session.Config.Pools.$p | Add-Member Wallets $c -Force
+                $Session.Config.Pools.$p | Add-Member Params $cparams -Force
                 $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
                 $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
 

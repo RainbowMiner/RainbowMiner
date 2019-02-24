@@ -2,6 +2,7 @@
 
 param(
     [PSCustomObject]$Wallets,
+    [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
     [TimeSpan]$StatSpan,
@@ -84,6 +85,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
     }
 
+    $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
+
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
@@ -98,7 +101,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = if ($Pool_Region -eq "us") {$Pool_Host} else {"$Pool_Region.$Pool_Host"}
                 Port          = $Pool_Port
                 User          = $Pool_User
-                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}"
+                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated

@@ -2,6 +2,7 @@
 
 param(
     [PSCustomObject]$Wallets,
+    [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
     [TimeSpan]$StatSpan,
@@ -86,6 +87,8 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         }
     }
 
+    $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
+
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
@@ -100,7 +103,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = "$($Pool_Region).bsod.pw"
                 Port          = $Pool_Port
                 User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "m=party.$PartyPassword,c=$Pool_Currency{diff:,d=`$difficulty}"
+                Pass          = "m=party.$PartyPassword,c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated

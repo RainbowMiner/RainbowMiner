@@ -2,6 +2,7 @@
 
 param(
     [PSCustomObject]$Wallets,
+    [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
     [TimeSpan]$StatSpan,
@@ -98,6 +99,8 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -ErrorRatio 0.000 -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
     }
 
+    $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
+
     if ($Pool_User -or $InfoOnly) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
@@ -111,7 +114,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
             Host          = $Pool_Host
             Port          = $Pool_Port
             User          = $Pool_User
-            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}"
+            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
             Region        = $Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
