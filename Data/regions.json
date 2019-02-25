@@ -1,6 +1,7 @@
 {
     "asia":  "Asia",
     "br":  "Asia",
+    "ca":  "US",
     "eu":  "Europe",
     "europe":  "Europe",
     "hk":  "Asia",
@@ -10,5 +11,6 @@
     "us":  "US",
     "usa":  "US",
     "ru":  "Russia",
-    "sea":  "Asia"
+    "sea":  "Asia",
+    "sg":  "Asia"
 }
