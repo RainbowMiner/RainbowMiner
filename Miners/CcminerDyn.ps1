@@ -15,7 +15,7 @@ $Cuda = "10.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = "-a argon2d"} #Argon2d-dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = "-a argon2d"; ExtendInterval = 2} #Argon2d-dyn
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
