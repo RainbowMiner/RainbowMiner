@@ -103,40 +103,42 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-            $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+				$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+				$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
-            $Model_Configs = @()
-            $Miner_Device | Foreach-Object {
-                $Model_Default = $Model_Defaults | Where-Object {$_.name -eq $Miner_Model -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1
-                if (-not $Model_Default) {$Model_Default = $Model_Defaults | Where-Object {$_.name -eq "other" -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1}
-                if (-not $Model_Default) {$Model_Default = $Model_Defaults | Select-Object -First 1}
-                $Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[0]} else {$Model_Default.multi_hash}}
-                $Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[1]} else {$Model_Default.multi_hash}}
-            }
+				$Model_Configs = @()
+				$Miner_Device | Foreach-Object {
+					$Model_Default = $Model_Defaults | Where-Object {$_.name -eq $Miner_Model -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1
+					if (-not $Model_Default) {$Model_Default = $Model_Defaults | Where-Object {$_.name -eq "other" -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1}
+					if (-not $Model_Default) {$Model_Default = $Model_Defaults | Select-Object -First 1}
+					$Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[0]} else {$Model_Default.multi_hash}}
+					$Model_Configs += [PSCustomObject]@{mode="GPU";worksize=$Model_Default.worksize;alpha=$Model_Default.alpha;beta=$Model_Default.beta;index=$_.Type_Vendor_Index;multi_hash=if ($Model_Default.multi_hash -is [array]) {$Model_Default.multi_hash[1]} else {$Model_Default.multi_hash}}
+				}
 
-            $Arguments = [PSCustomObject]@{
-                Config = [PSCustomObject]@{gpu_threads_conf = $Model_Configs}
-                Params = "-g $($DeviceIDsAll) --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"
-            }
+				$Arguments = [PSCustomObject]@{
+					Config = [PSCustomObject]@{gpu_threads_conf = $Model_Configs}
+					Params = "-g $($DeviceIDsAll) --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"
+				}
 
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path      = $Path
-                Arguments = $Arguments
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                API       = "Jceminer"
-                Port      = $Miner_Port
-                Uri       = $Uri
-                DevFee    = $DevFee
-                ManualUri = $ManualUri
-            }
-        }
+				[PSCustomObject]@{
+					Name = $Miner_Name
+					DeviceName = $Miner_Device.Name
+					DeviceModel = $Miner_Model
+					Path      = $Path
+					Arguments = $Arguments
+					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API       = "Jceminer"
+					Port      = $Miner_Port
+					Uri       = $Uri
+					DevFee    = $DevFee
+					ManualUri = $ManualUri
+				}
+			}
+		}
     }
 }

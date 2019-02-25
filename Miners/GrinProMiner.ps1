@@ -44,49 +44,51 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $MinMemGb = $_.MinMemGb
-            $MainAlgorithm = $_.MainAlgorithm
-            $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
+            $Algorithm = $_.MainAlgorithm
+            $Algorithm_Norm = Get-Algorithm $Algorithm
 
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
-            if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and $Pools.$MainAlgorithm_Norm.Name -notmatch "nicehash") {
-                $Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-                $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-                $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {
+					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
                 
-                $Arguments = [PSCustomObject]@{
-                    Params = "api-port=$($Miner_Port) $($_.Params)".Trim()
-                    Config = [PSCustomObject]@{
-                        Host = $Pools.$MainAlgorithm_Norm.Host
-                        Port = $Pool_Port
-                        SSL  = $Pools.$MainAlgorithm_Norm.SSL
-                        User = $Pools.$MainAlgorithm_Norm.User
-                        Pass = $Pools.$MainAlgorithm_Norm.Pass
-                    }
-                    Device = @($Miner_Device | Foreach-Object {[PSCustomObject]@{Name=$_.Model_Name;Vendor=$_.Vendor;Index=$_.Type_Vendor_Index;PlatformId=$_.PlatformId}})
-                }
+					$Arguments = [PSCustomObject]@{
+						Params = "api-port=$($Miner_Port) $($_.Params)".Trim()
+						Config = [PSCustomObject]@{
+							Host = $Pools.$Algorithm_Norm.Host
+							Port = $Pool_Port
+							SSL  = $Pools.$Algorithm_Norm.SSL
+							User = $Pools.$Algorithm_Norm.User
+							Pass = $Pools.$Algorithm_Norm.Pass
+						}
+						Device = @($Miner_Device | Foreach-Object {[PSCustomObject]@{Name=$_.Model_Name;Vendor=$_.Vendor;Index=$_.Type_Vendor_Index;PlatformId=$_.PlatformId}})
+					}
 
-                $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-                [PSCustomObject]@{
-                    Name = $Miner_Name
-                    DeviceName = $Miner_Device.Name
-                    DeviceModel = $Miner_Model
-                    Path = $Path
-                    #Arguments = "ignore-config=true $($DeviceIDsAll) api-port=$($Miner_Port) stratum-address=$($Pools.$MainAlgorithm_Norm.Host) stratum-port=$($Pools.$MainAlgorithm_Norm.Port) stratum-login=$($Pools.$MainAlgorithm_Norm.User) $(if ($Pools.$MainAlgorithm_Norm.Pass) {"stratum-password=$($Pools.$MainAlgorithm_Norm.Pass)"}) $($_.Params)"
-                    Arguments = $Arguments
-                    HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
-                    API = "GrinPro"
-                    Port = $Miner_Port
-                    Uri = $Uri
-                    DevFee = $_.DevFee
-                    FaultTolerance = $_.FaultTolerance
-                    ExtendInterval = $_.ExtendInterval
-                    ManualUri = $ManualUri
-                    StopCommand = "Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"
-                    NoCPUMining = $_.NoCPUMining
-                    DotNetRuntime = "2.0"
-                }
-            }
+					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+					[PSCustomObject]@{
+						Name = $Miner_Name
+						DeviceName = $Miner_Device.Name
+						DeviceModel = $Miner_Model
+						Path = $Path
+						#Arguments = "ignore-config=true $($DeviceIDsAll) api-port=$($Miner_Port) stratum-address=$($Pools.$Algorithm_Norm.Host) stratum-port=$($Pools.$Algorithm_Norm.Port) stratum-login=$($Pools.$Algorithm_Norm.User) $(if ($Pools.$Algorithm_Norm.Pass) {"stratum-password=$($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+						Arguments = $Arguments
+						HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
+						API = "GrinPro"
+						Port = $Miner_Port
+						Uri = $Uri
+						DevFee = $_.DevFee
+						FaultTolerance = $_.FaultTolerance
+						ExtendInterval = $_.ExtendInterval
+						ManualUri = $ManualUri
+						StopCommand = "Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"
+						NoCPUMining = $_.NoCPUMining
+						DotNetRuntime = "2.0"
+					}
+				}
+			}
         }
     }
 }

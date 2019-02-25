@@ -7,13 +7,13 @@ class SrbMiner : Miner {
 
         #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
         $Threads = $Parameters.Config.gpu_conf.threads | Select-Object -Unique
-        $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel)$(if ($Threads -gt 1) {"-$($Threads)"}).txt"
+        $ConfigFile = "config_$($this.Name)-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Threads -gt 1) {"-$($Threads)"}).txt"
         if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile")) {
             $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$ConfigFile" -ErrorAction Ignore -Encoding UTF8
         }
 
         #Write pool file. Keep separate files
-        $PoolFile = "pools_$($this.Pool)-$($this.Algorithm -join '-').txt"
+        $PoolFile = "pools_$($this.Pool)-$($this.BaseAlgorithm -join '-').txt"
         $Parameters.Pools | ConvertTo-Json -Depth 10 | Set-Content "$(Split-Path $this.Path)\$PoolFile" -Force -ErrorAction Ignore -Encoding UTF8
 
         return "--config $ConfigFile --pools $PoolFile $($Parameters.Params)".Trim()

@@ -62,23 +62,25 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
         
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-            [PSCustomObject]@{
-                Name           = $Miner_Name
-                DeviceName     = $Miner_Device.Name
-                DeviceModel    = $Miner_Model
-                Path           = $Path
-                Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) $($_.Params)"
-                HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API            = "Claymore"
-                Port           = $Miner_Port                
-                Uri            = $Uri
-                DevFee         = $DevFee
-                FaultTolerance = $_.FaultTolerance
-                ExtendInterval = $_.ExtendInterval
-                ManualUri      = $ManualUri
-            }
-        }
+		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+				[PSCustomObject]@{
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "--api-bind 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -A $($_.MainAlgorithm -replace "\d{1}gb$")-$AlgorithmCuda -P $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$($Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+					API            = "Claymore"
+					Port           = $Miner_Port                
+					Uri            = $Uri
+					DevFee         = $DevFee
+					FaultTolerance = $_.FaultTolerance
+					ExtendInterval = $_.ExtendInterval
+					ManualUri      = $ManualUri
+				}
+			}
+		}
     }
 }

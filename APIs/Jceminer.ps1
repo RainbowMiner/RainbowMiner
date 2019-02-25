@@ -10,11 +10,11 @@ class Jceminer : Miner {
             #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
 
             if ($this.DeviceModel -match "CPU") {
-                $ConfigFile = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
-                $ConfigFileExample = "config_$($this.Algorithm -join '-')-$($this.DeviceModel).example.txt"
+                $ConfigFile = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel).txt"
+                $ConfigFileExample = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel).example.txt"
             } else {
-                $ConfigFile = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).txt"
-                $ConfigFileExample = "config_$($this.Name)-$($this.Algorithm -join '-')-$($this.DeviceModel).example.txt"                
+                $ConfigFile = "config_$($this.Name)-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel).txt"
+                $ConfigFileExample = "config_$($this.Name)-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel).example.txt"                
             }
 
             if (-not (Test-Path "$(Split-Path $this.Path)\$ConfigFile") -and $this.DeviceModel -match "CPU") {

@@ -47,20 +47,22 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-            [PSCustomObject]@{
-                Name = $Miner_Name
-                DeviceName = $Miner_Device.Name
-                DeviceModel = $Miner_Model
-                Path = $Path
-                Arguments = "-r -1 -mport -$($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"            
-                HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week)}
-                API = "Claymore"
-                Port = $Miner_Port
-                Uri = $Uri
-				DevFee = $DevFee
-                ManualUri = $ManualUri
-            }
-        }
+		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+				[PSCustomObject]@{
+					Name = $Miner_Name
+					DeviceName = $Miner_Device.Name
+					DeviceModel = $Miner_Model
+					Path = $Path
+					Arguments = "-r -1 -mport -$($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"            
+					HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+					API = "Claymore"
+					Port = $Miner_Port
+					Uri = $Uri
+					DevFee = $DevFee
+					ManualUri = $ManualUri
+				}
+			}
+		}
     }
 }

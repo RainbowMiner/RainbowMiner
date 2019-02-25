@@ -73,28 +73,30 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			$Miner_ExtendInterval = $_.ExtendInterval
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb}
 
-			if ($Miner_Device) {
-				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-				$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
-				$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+					$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"
+					$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
-                $Miner_Protocol = "stratum"
+					$Miner_Protocol = "stratum"
 
-                $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}        
-				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path = $Path
-					Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot)$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)"})@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-					API = "Claymore"
-					Port = $Miner_Port
-					Uri = $Uri
-					ManualUri = $ManualUri
-					ExtendInterval = $Miner_ExtendInterval
+					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}        
+					[PSCustomObject]@{
+						Name = $Miner_Name
+						DeviceName = $Miner_Device.Name
+						DeviceModel = $Miner_Model
+						Path = $Path
+						Arguments = "--api-port $($Miner_Port) $($Miner_Deviceparams) $($DeviceIDsAll) -P $($Miner_Protocol)://$(Get-UrlEncode $Pools.$Algorithm_Norm.User -ConvertDot)$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass -ConvertDot)"})@$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $($_.Params)"
+						HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+						API = "Claymore"
+						Port = $Miner_Port
+						Uri = $Uri
+						ManualUri = $ManualUri
+						ExtendInterval = $Miner_ExtendInterval
+					}
 				}
 			}
 		}

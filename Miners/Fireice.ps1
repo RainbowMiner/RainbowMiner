@@ -67,66 +67,66 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         
             $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb)}
 
-            if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-                $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-                $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-                $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
-                if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-                    $Pool_Port = if ($Miner_Model -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-                    $Arguments = [PSCustomObject]@{
-                        Params = "-i $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
-                        Config = [PSCustomObject]@{
-                            pool_list       = @([PSCustomObject]@{
-                                    pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
-                                    wallet_address  = "$($Pools.$Algorithm_Norm.User)"
-                                    pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
-                                    use_nicehash    = $($Pools.$Algorithm_Norm.Name -eq "Nicehash")
-                                    use_tls         = $Pools.$Algorithm_Norm.SSL
-                                    tls_fingerprint = ""
-                                    pool_weight     = 1
-                                    rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
-                                }
-                            )
-                            currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$_.Algorithm}
-                            call_timeout    = 10
-                            retry_time      = 10
-                            giveup_limit    = 0
-                            verbose_level   = 3
-                            print_motd      = $true
-                            h_print_time    = 60
-                            aes_override    = $null
-                            use_slow_memory = "warn"
-                            tls_secure_algo = $true
-                            daemon_mode     = $false
-                            flush_stdout    = $false
-                            output_file     = ""
-                            httpd_port      = $Miner_Port
-                            http_login      = ""
-                            http_pass       = ""
-                            prefer_ipv4     = $true
-                        }
-                        Devices = @($Miner_Device.Type_Vendor_Index)
-                        Vendor = $Miner_Vendor
-                    }
+					$Pool_Port = if ($Miner_Model -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+					$Arguments = [PSCustomObject]@{
+						Params = "-i $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
+						Config = [PSCustomObject]@{
+							pool_list       = @([PSCustomObject]@{
+									pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
+									wallet_address  = "$($Pools.$Algorithm_Norm.User)"
+									pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
+									use_nicehash    = $($Pools.$Algorithm_Norm.Name -eq "Nicehash")
+									use_tls         = $Pools.$Algorithm_Norm.SSL
+									tls_fingerprint = ""
+									pool_weight     = 1
+									rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
+								}
+							)
+							currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$_.Algorithm}
+							call_timeout    = 10
+							retry_time      = 10
+							giveup_limit    = 0
+							verbose_level   = 3
+							print_motd      = $true
+							h_print_time    = 60
+							aes_override    = $null
+							use_slow_memory = "warn"
+							tls_secure_algo = $true
+							daemon_mode     = $false
+							flush_stdout    = $false
+							output_file     = ""
+							httpd_port      = $Miner_Port
+							http_login      = ""
+							http_pass       = ""
+							prefer_ipv4     = $true
+						}
+						Devices = @($Miner_Device.Type_Vendor_Index)
+						Vendor = $Miner_Vendor
+					}
 
-                    if ($Miner_Vendor -ne "CPU") {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
+					if ($Miner_Vendor -ne "CPU") {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
 
-                    [PSCustomObject]@{
-                        Name      = $Miner_Name
-                        DeviceName= $Miner_Device.Name
-                        DeviceModel=$Miner_Model
-                        Path      = $Path
-                        Arguments = $Arguments
-                        HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Week}
-                        API       = "Fireice"
-                        Port      = $Miner_Port
-                        Uri       = $Uri
-                        DevFee    = $DevFee
-                        ManualUri = $ManualUri
-                    }
-                }
-            }
+					[PSCustomObject]@{
+						Name      = $Miner_Name
+						DeviceName= $Miner_Device.Name
+						DeviceModel=$Miner_Model
+						Path      = $Path
+						Arguments = $Arguments
+						HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+						API       = "Fireice"
+						Port      = $Miner_Port
+						Uri       = $Uri
+						DevFee    = $DevFee
+						ManualUri = $ManualUri
+					}
+				}
+			}
         }
     }
 }
