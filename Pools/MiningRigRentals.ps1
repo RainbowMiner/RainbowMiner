@@ -67,6 +67,11 @@ $Pool_Request = $Pool_Request.data
     "ru"   = Get-Region "ru"
 }
 
+[hashtable]$Pool_AlgoXlat = @{
+    "x16rt"    = "Veil"
+    "x16rtgin" = "X16rt"
+}
+
 $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.com","us-central01.miningrigrentals.com",
                    "eu-01.miningrigrentals.com","eu-de01.miningrigrentals.com","eu-de02.miningrigrentals.com",
                    "eu-ru01.miningrigrentals.com",
@@ -81,7 +86,7 @@ if (($Rigs_Request | Where-Object {$_.status.status -eq "rented"} | Measure-Obje
 } else {
     $Valid_Rigs = @()
     $Rigs_Request | Select-Object id,type | Foreach-Object {
-        $Pool_Algorithm_Norm = Get-Algorithm $_.type
+        $Pool_Algorithm_Norm = Get-Algorithm $(if ($Pool_AlgoXlat.ContainsKey($_.type)) {$Pool_AlgoXlat[$_.type]} else {$_.type})
         if (-not (
             ($Session.Config.Algorithm.Count -and $Session.Config.Algorithm -inotcontains $Pool_Algorithm_Norm) -or
             ($Session.Config.ExcludeAlgorithm.Count -and $Session.Config.ExcludeAlgorithm -icontains $Pool_Algorithm_Norm) -or
@@ -119,7 +124,7 @@ if ($NewRigs -and $NewRigs.Count) {
 $Rigs_Request | Where-Object {$_.available_status -eq "available"} | ForEach-Object {
     $Pool_RigId = $_.id
     $Pool_Algorithm = $_.type
-    $Pool_Algorithm_Norm = Get-Algorithm $_.type
+    $Pool_Algorithm_Norm = Get-Algorithm $(if ($Pool_AlgoXlat.ContainsKey($_.type)) {$Pool_AlgoXlat[$_.type]} else {$_.type})
 
     if ($false) {
         $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
