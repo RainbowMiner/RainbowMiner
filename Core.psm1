@@ -160,7 +160,7 @@
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force}
 
         #Read miner info
-        if (Test-Path ".\Data\minerinfo.json") {try {(Get-Content ".\Data\minerinfo.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {}}
+        if (Test-Path ".\Data\minerinfo.json") {try {(Get-Content ".\Data\minerinfo.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\Version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
@@ -580,7 +580,7 @@ function Invoke-Core {
 
         $Session.Config | Add-Member DeviceModel @($Session.Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object) -Force
         $Session.Config | Add-Member CUDAVersion $(if (($Session.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.Platform.Version -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
-        $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]((dir (Get-Command dotnet -ErrorAction Stop).Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1)} catch {}) -Force
+        $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]((dir (Get-Command dotnet -ErrorAction Stop).Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1)} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
 
         #Create combos
         @($Session.DevicesByTypes.PSObject.Properties.Name) | Where {@("Combos","FullComboModels") -inotcontains $_} | Foreach-Object {
@@ -712,7 +712,7 @@ function Invoke-Core {
             Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
             $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_) -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$v = [double](1/$MissingCurrenciesTicker.$_.BTC);$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
         }
-    } catch {}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
