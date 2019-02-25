@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\SWAP-Reference\SwapReferenceMinerCLI.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-swap/SwapReferenceMinerCLI-v1.0.2-rbm.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-swap/SwapMiner-v1.2.0-rbm.7z"
 $ManualURI = "https://github.com/swap-dev/SwapReferenceMiner/releases"
 $Port = "337{0:d2}"
 $DevFee = 0.0
