@@ -692,15 +692,19 @@ function Invoke-Core {
 
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
 
-    #Update the exchange rates    
+    #Update the exchange rates
+    [hashtable]$NewRates = @{}
+    Write-Log "Updating exchange rates from Coinbase. "
+    try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {$NewRates.Clear()}
+
+    if ($NewRates.Count) {
+        Write-Log -Level Info "Coinbase is down, using fallback. "
+        try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {Write-Log -Level Warn "Coinbase down. "}
+    }
+
+    $NewRates["BTC"] = "1.0"
+
     try {
-        Write-Log "Updating exchange rates from Coinbase. "
-        [hashtable]$NewRates = @{}
-        Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}
-        if (-not $NewRates.Count) {
-            Write-Log -Level Warn "Coinbase is down, using fallback. "
-            if (-not $Session.Rates.Count) {Invoke-GetUrl "http://rbminer.net/api/coinbase.php" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}}
-        }
         $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
         $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
         if ($MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}) {
@@ -708,10 +712,7 @@ function Invoke-Core {
             Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
             $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_) -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$v = [double](1/$MissingCurrenciesTicker.$_.BTC);$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
         }
-    }
-    catch {
-        Write-Log -Level Warn "Coinbase is down. "
-    }
+    } catch {}
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
