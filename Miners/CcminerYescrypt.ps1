@@ -12,7 +12,7 @@ $DevFee = 0.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18v3-ccminerklaust/ccminerKlausT-8.21-r18v3.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v10-ccmineryescrypt/ccminerKlausTyescryptv10.7z"
         Cuda = "10.0"
     }        
 )
@@ -72,7 +72,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 DeviceName     = $Miner_Device.Name
                 DeviceModel    = $Miner_Model
                 Path           = $Path
-                Arguments      = "-N 1 -R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+                Arguments      = "--no-cpu-verify -N 1 -R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
                 HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm)_HashRate".Day * $(if ($_.Penalty -ne $null) {$_.Penalty} else {1})}
                 API            = "Ccminer"
                 Port           = $Miner_Port
@@ -81,6 +81,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                 ExtendInterval = $_.ExtendInterval
                 ManualUri      = $ManualUri
                 MiningPriority = 2
+                MaxRejectedShareRatio = 0.5
             }
         }
     }
