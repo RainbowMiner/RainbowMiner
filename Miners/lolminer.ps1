@@ -15,11 +15,11 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--coin MNX";       Fee=1} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; Params = "--coin AION";      Fee=1} #Equihash 210,9
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--coin AUTO144_5"; Fee=1} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; Params = "--coin AUTO192_7"; Fee=1} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 4; Params = "--coin BEAM";      Fee=1} #Equihash 150,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--coin MNX";       Fee=1; ExtendInterval = 2} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; Params = "--coin AION";      Fee=1; ExtendInterval = 2} #Equihash 210,9
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 4; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2} #Equihash 150,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
