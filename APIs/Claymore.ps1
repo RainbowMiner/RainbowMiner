@@ -23,11 +23,11 @@ class Claymore : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
+        $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
         $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
         $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
         $Accepted_Shares -= $Rejected_Shares
-        
-        $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
+
         if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
         if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
         if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
@@ -42,11 +42,11 @@ class Claymore : Miner {
         if ($this.Algorithm[1]) {
             $HashRate_Name = [String]$this.Algorithm[1]
 
+            $HashRate_Value = [Double]($Data.result[4] -split ";")[0]
             $Accepted_Shares = [Int64]($Data.result[4] -split ";")[1]
             $Rejected_Shares = [Int64]($Data.result[4] -split ";")[2]
+            $Accepted_Shares -= $Rejected_Shares
 
-            $HashRate_Name = if ($HashRate_Name) {[String]($this.Algorithm -notlike $HashRate_Name)}
-            $HashRate_Value = [Double]($Data.result[4] -split ";")[0]
             if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
             if ($this.Algorithm -like "progpow*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}
             if ($this.Algorithm -eq "neoscrypt") {$HashRate_Value *= 1000}
