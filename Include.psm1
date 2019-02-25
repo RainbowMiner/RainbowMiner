@@ -4582,12 +4582,13 @@ param(
 )
 	foreach ($Device in ($Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega" -and $_.InstanceId})) {
         try {
-            $InstanceId = Get-PnpDevice -Class "Display" | Where InstanceId -like $($Device.InstanceId -replace '_','?') | Select-Object -ExpandProperty InstanceId
-		    Disable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
-		    Start-Sleep 3
-		    Enable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
-		    Start-Sleep 3
-            Write-Log -Level Info "Disabled/Enabled device $($Device.Model) $($Device.Name)"
+            if ($InstanceId = Get-PnpDevice -Class "Display" | Where InstanceId -like $($Device.InstanceId -replace '_','?') | Select-Object -ExpandProperty InstanceId) {
+		        Disable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
+		        Start-Sleep 3
+		        Enable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
+		        Start-Sleep 3
+                Write-Log -Level Info "Disabled/Enabled device $($Device.Model) $($Device.Name)"
+            }
         } catch {
             Write-Log -Level Info "Failed to disable/enable device $($Device.Model) $($Device.Name): $($_.Exception.Message)"
         }
