@@ -85,6 +85,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $amountLive   = $profitLive / $coinUnits
 
         $btcPrice     = $Pool_Request.coinPrice."coin-btc"
+        if (-not $btcPrice -and $Session.Rates.$Pool_Currency) {$btcPrice = 1/$Session.Rates.$Pool_Currency}
         $btcRewardDay = $amountDay*$btcPrice
         $btcRewardLive= $amountLive*$btcPrice
 
