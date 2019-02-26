@@ -697,7 +697,7 @@ function Invoke-Core {
     Write-Log "Updating exchange rates from Coinbase. "
     try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {$NewRates.Clear()}
 
-    if ($NewRates.Count) {
+    if (-not $NewRates.Count) {
         Write-Log -Level Info "Coinbase is down, using fallback. "
         try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {Write-Log -Level Warn "Coinbase down. "}
     }
