@@ -126,6 +126,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
 
         $lastSatPrice = if ($Pool_Request.charts.price) {[Double]($Pool_Request.charts.price | Select-Object -Last 1)[1]} else {0}
         if (-not $lastSatPrice -and $Session.Rates.$Pool_Currency) {$lastSatPrice = 1/$Session.Rates.$Pool_Currency*1e8}
+        elseif ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Pool_Currency) {$Session.Rates.$Pool_Currency = 1/$lastSatPrice*1e8}
         $satRewardLive = $amountLive * $lastSatPrice
 
         $amountDay = 0.0
