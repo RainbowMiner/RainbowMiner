@@ -4598,9 +4598,15 @@ param(
 }
 
 function Test-Internet {
-    $NetConn = if (Get-Command "Test-NetConnection" -ErrorAction Ignore) {$true}
-    $oldProgressPreference = $Global:ProgressPreference
-    $Global:ProgressPreference = "SilentlyContinue"
-    Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if ($NetConn -and (Test-NetConnection $url -ErrorAction Ignore -InformationLevel Quiet) -or (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore)) {$true;break}}
-    $Global:ProgressPreference = $oldProgressPreference
+    if (Get-Command "Test-Connection" -ErrorAction Ignore) {
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
+        Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
+        $Global:ProgressPreference = $oldProgressPreference
+    } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
+        (Get-NetConnectionProfile -IPv4Connectivity Internet | Measure-Object).Count -gt 0
+    } else {
+        $true
+    }
 }
+
