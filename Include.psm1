@@ -361,7 +361,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet $Quiet
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$Quiet
                     $Statset++                    
                 }
 
@@ -521,7 +521,7 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
-        [Bool]$Quiet = $false
+        [Switch]$Quiet = $false
     )
 
     $Updated = $Updated.ToUniversalTime()
