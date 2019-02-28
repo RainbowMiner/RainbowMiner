@@ -330,7 +330,9 @@ function Set-MinerStats {
         [Parameter(Mandatory = $true)]
         [TimeSpan]$StatSpan,
         [Parameter(Mandatory = $false)]
-        [Switch]$Watchdog = $false
+        [Switch]$Watchdog = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     $Miner_Failed_Total = 0
@@ -359,7 +361,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel]
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet $Quiet
                     $Statset++                    
                 }
 
@@ -519,7 +521,7 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$Quiet = $false
+        [Bool]$Quiet = $false
     )
 
     $Updated = $Updated.ToUniversalTime()
@@ -611,7 +613,7 @@ function Set-Stat {
         if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-            if (-not $Quiet) {Write-Log -Level Warn "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Math]::Round($ToleranceMin,2)) to $([Math]::Round($ToleranceMax,2))). "}
+            Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Stat file ($Name) was not updated because the value ($([Decimal]$Value)) is outside fault tolerance ($([Math]::Round($ToleranceMin,2)) to $([Math]::Round($ToleranceMax,2))). "
         }
         else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)

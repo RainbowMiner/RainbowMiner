@@ -1817,7 +1817,7 @@ function Invoke-Core {
 
         if (-not $MinersNeedingBenchmarkCount -and ($Session.Timer - $MinerStart).TotalSeconds -ge $Session.Config.BenchmarkInterval) {
             Write-Log "Saving hash rates. "
-            if (-not (Set-MinerStats ($Session.Timer-$MinerStart) -Watchdog)) {$RoundEnd = $Session.Timer.AddSeconds(0)}            
+            if (-not (Set-MinerStats ($Session.Timer-$MinerStart) -Watchdog -Quiet)) {$RoundEnd = $Session.Timer.AddSeconds(0)}            
             $MinerStart = $Session.Timer
         }
 
@@ -1897,7 +1897,8 @@ function Invoke-Core {
                 }
                 "W" {
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    #$Session.WatchdogTimers = $Session.WatchdogTimers | Where-Object {$Session.ActiveMiners | Where-Object$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
+                    $Session.WatchdogTimers = @()
+                    Update-WatchdogLevels -Reset
                     Write-Log "Watchdog reset."
                     $keyPressed = $true
                 }
