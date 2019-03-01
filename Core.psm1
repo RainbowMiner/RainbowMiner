@@ -1763,7 +1763,7 @@ function Invoke-Core {
     #Dynamically adapt current interval
     $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
     if ($Session.IsDonationRun -and $NextIntervalPreset -gt $DonateMinutes*60) {$NextIntervalPreset = $DonateMinutes*60}
-    $NextInterval = [Math]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
+    $NextInterval = [Math]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-20)).TotalSeconds)
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
