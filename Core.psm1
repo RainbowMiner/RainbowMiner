@@ -1761,11 +1761,7 @@ function Invoke-Core {
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
     #Dynamically adapt current interval
-    if ($Running) {
-        $NextInterval = [Math]::Max($Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval",$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
-    } else {
-        $NextInterval = [Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)
-    }
+    $NextInterval = [Math]::Max($(if ($Running) {$Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}),$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
     if ($Session.IsDonationRun -and $NextInterval -gt $DonateMinutes*60) {$NextInterval = $DonateMinutes*60}
 
     #Apply current interval if changed
