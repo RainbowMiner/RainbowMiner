@@ -16,6 +16,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Region_Default = "eu"
 
+[hashtable]$Pool_RegionsTable = @{}
+@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 try {
     $Pool_Ngix = Invoke-RestMethodAsync "https://cryptoknight.cc/nginx.conf" -tag $Name -cycletime (4*3600)
 } catch {
@@ -75,7 +78,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region}
+    $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
     $Pool_Hashrate = if ($_.hashrate) {$_.hashrate} else {"hashrate"}
 
     $Pool_Fee  = 0.0
@@ -171,7 +174,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
                     Ports         = $Pool_Port
                     User          = "$($Wallets.$($_.symbol)){diff:$(if ($_.diffdot) {$_.diffdot} else {"."})`$difficulty}"
                     Pass          = "{workername:$Worker}"
-                    Region        = Get-Region $Pool_Region
+                    Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $PoolSSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee

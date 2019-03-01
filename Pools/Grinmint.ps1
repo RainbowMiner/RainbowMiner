@@ -36,6 +36,9 @@ catch {
     return
 }
 
+[hashtable]$Pool_RegionsTable = @{}
+@("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pools_Data = @(
     [PSCustomObject]@{port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
     [PSCustomObject]@{port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
@@ -69,7 +72,7 @@ $Pools_Data | ForEach-Object {
         Port          = $_.port
         User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"
         Pass          = $Password
-        Region        = $_.region
+        Region        = $Pool_RegionsTable."$($_.region)"
         SSL           = $_.ssl
         Updated       = $Stat.Updated
         PoolFee       = $Pool_Fee

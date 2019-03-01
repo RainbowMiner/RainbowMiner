@@ -14,7 +14,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "eu"
+$Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 10410; fee = 0.9; walletSymbol = "aeon"; host = "aeon.herominers.com"}
@@ -149,7 +149,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Ports         = $Pool_Port
                 User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
                 Pass          = "{workername:$Worker}"
-                Region        = $Pool_Region
+                Region        = $Pool_Region_Default
                 SSL           = $PoolSSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee

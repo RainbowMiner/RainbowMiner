@@ -16,6 +16,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Region_Default = "eu"
 
+[hashtable]$Pool_RegionsTable = @{}
+@("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Boolberry";  symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
     [PSCustomObject]@{coin = "Purk";       symbol = "PURK"; algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "purk"}
@@ -42,7 +45,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region}
+    $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
 
     $Pool_Port = $_.port
     $Pool_Fee  = $_.fee
@@ -115,7 +118,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Ports         = $Pool_Ports
                 User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
                 Pass          = "w={workername:$Worker}"
-                Region        = Get-Region $Pool_Region
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $False
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee

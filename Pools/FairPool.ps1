@@ -14,7 +14,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "eu"
+$Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 6040; fee = 1.0; walletSymbol = "tube"; host = "mine.tube.fairpool.xyz"; user="%wallet%+%worker%"}
@@ -87,7 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Ports         = $Pool_Ports
             User          = $Pool_User -replace '%wallet%',"$($Wallets.$($_.symbol))" -replace '%worker%',"{workername:$Worker}"
             Pass          = "x"
-            Region        = $Pool_Region
+            Region        = $Pool_Region_Default
             SSL           = $False
             Updated       = $Stat.Updated
             PoolFee       = $Pool_Fee

@@ -16,11 +16,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-[hashtable]$Pool_Regions = @{
-    "eu"   = Get-Region "eu"
-    "us"   = Get-Region "us"
-    "asia" = Get-Region "asia"
-}
+[hashtable]$Pool_RegionsTable = @{}
+@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; coin = "EthereumClassic"; algo = "Ethash";   symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
@@ -70,7 +67,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Port          = $_.port
                 User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
                 Pass          = "x"
-                Region        = $Pool_Regions.$Pool_Region
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $_.ssl
                 Updated       = $Stat.Updated
                 PoolFee       = $_.fee

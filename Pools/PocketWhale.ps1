@@ -14,7 +14,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "us"
+$Pool_Region = Get-Region "us"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 33022; fee = 0.5; livestats = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"; divisor = 32}

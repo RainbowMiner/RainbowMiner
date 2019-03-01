@@ -14,7 +14,7 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region = "us"
+$Pool_Region_Default = Get-Region "us"
 
 $Pools_Data = @(
     #[PSCustomObject]@{coin = "Caliber"; symbol = "CAL"; algo = "CnV8"; port = 5588; fee = 0.9; walletSymbol = "caliber"; host = "caliber.luckypool.io"}
@@ -135,7 +135,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Ports         = $Pool_Port
                 User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
                 Pass          = "{workername:$Worker}"
-                Region        = $Pool_Region
+                Region        = $Pool_Region_Default
                 SSL           = $False
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee

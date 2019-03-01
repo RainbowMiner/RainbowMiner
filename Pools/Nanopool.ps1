@@ -17,9 +17,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 [hashtable]$Pool_Regions = @{
-    "eu"   = "-eu1.nanopool.org"
-    "us"   = "-us-east1.nanopool.org"
-    "asia" = "-asia1.nanopool.org"
+    (Get-Region "eu")   = "-eu1.nanopool.org"
+    (Get-Region "us")   = "-us-east1.nanopool.org"
+    (Get-Region "asia") = "-asia1.nanopool.org"
 }
 
 $Pools_Data = @(
