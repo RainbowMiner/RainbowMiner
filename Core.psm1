@@ -1761,8 +1761,9 @@ function Invoke-Core {
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
     #Dynamically adapt current interval
-    $NextInterval = [Math]::Max($(if ($Running) {$Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}),$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
-    if ($Session.IsDonationRun -and $NextInterval -gt $DonateMinutes*60) {$NextInterval = $DonateMinutes*60}
+    $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
+    if ($Session.IsDonationRun -and $NextIntervalPreset -gt $DonateMinutes*60) {$NextIntervalPreset = $DonateMinutes*60}
+    $NextInterval = [Math]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-15)).TotalSeconds)
 
     #Apply current interval if changed
     if ($NextInterval -ne $Session.CurrentInterval) {
@@ -1771,7 +1772,7 @@ function Invoke-Core {
         $Session.CurrentInterval = $NextInterval
     }
 
-    Update-WatchdogLevels
+    Update-WatchdogLevels -Interval $(if ($NextInterval -gt $NextIntervalPreset) {$NextInterval})
 
     $WaitSeconds = [int]($RoundEnd - $Session.Timer).TotalSeconds
 

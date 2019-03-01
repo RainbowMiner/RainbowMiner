@@ -316,9 +316,11 @@ function Update-WatchdogLevels {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Switch]$Reset = $false
+        [Switch]$Reset = $false,
+        [Parameter(Mandatory = $false)]
+        [Int]$Interval = 0
     )
-    $Interval = $Session.Config.BenchmarkInterval
+    if ($Interval -lt $Session.Config.BenchmarkInterval) {$Interval = $Session.Config.BenchmarkInterval}
     if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
     $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
     $Session.WatchdogResetMiners = ($Session.WatchdogResetMiners / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
@@ -4610,4 +4612,3 @@ function Test-Internet {
         $true
     }
 }
-
