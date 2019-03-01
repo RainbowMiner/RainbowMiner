@@ -320,8 +320,9 @@ function Update-WatchdogLevels {
     )
     $Interval = $Session.Config.BenchmarkInterval
     if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
-    $Session.WatchdogInterval = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
-    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogResetMiners = ($Session.WatchdogResetMiners / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogResetPools  = ($Session.WatchdogResetPools / ($Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
 }
 
 function Set-MinerStats {
