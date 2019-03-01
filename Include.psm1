@@ -323,8 +323,8 @@ function Update-WatchdogLevels {
     if ($Interval -lt $Session.Config.BenchmarkInterval) {$Interval = $Session.Config.BenchmarkInterval}
     if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
     $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
-    $Session.WatchdogResetMiners = ($Session.WatchdogResetMiners / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
-    $Session.WatchdogResetPools  = ($Session.WatchdogResetPools / ($Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
+    $Session.WatchdogPools = ($Session.WatchdogPools / ($Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
 }
 
 function Set-MinerStats {
@@ -2761,7 +2761,7 @@ class Miner {
             $HashRates_Count    = $HashRates_Counts.Values | ForEach-Object {$_} | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
             $HashRates_Average  = ($HashRates_Averages.Values | ForEach-Object {$_} | Measure-Object -Average | Select-Object -ExpandProperty Average) * $HashRates_Averages.Keys.Count
             $HashRates_Variance = if ($HashRates_Average -and $HashRates_Count -gt 2) {($HashRates_Variances.Keys | ForEach-Object {$_} | ForEach-Object {Get-Sigma $HashRates_Variances.$_ | Measure-Object -Maximum} | Select-Object -ExpandProperty Maximum) / $HashRates_Average} else {1}
-            Write-Log "GetHashrate#$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
+            Write-Log "GetHashrate $Algorithm #$($Step) smpl:$HashRates_Count, avg:$([Math]::Round($HashRates_Average,2)), var:$([Math]::Round($HashRates_Variance,3)*100)"
         }
 
         $this.Variance[$this.Algorithm.IndexOf($Algorithm)] = $HashRates_Variance

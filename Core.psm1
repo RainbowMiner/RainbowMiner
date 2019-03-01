@@ -835,7 +835,7 @@ function Invoke-Core {
     if (($Session.AllPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
         $Session.AllPools = $Session.AllPools | Where-Object {
             $Pool = $_
-            $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogResetPools)
+            $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogPools)
             ($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2
         }
     }
@@ -1208,7 +1208,7 @@ function Invoke-Core {
     #Apply watchdog to miners
     $Miners = $Miners | Where-Object {
         $Miner = $_
-        $Miner_WatchdogTimers = $Session.WatchdogTimers | Where-Object MinerName -EQ $Miner.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogResetMiners)
+        $Miner_WatchdogTimers = $Session.WatchdogTimers | Where-Object MinerName -EQ $Miner.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
         ($Miner_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>2 -and ($Miner_WatchdogTimers | Where-Object {$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>1
     }
 
@@ -1500,7 +1500,7 @@ function Invoke-Core {
                         Kicked    = $Session.Timer
                     }
                 }
-                elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogResetMiners))) {
+                elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset))) {
                     $WatchdogTimer.Kicked = $Session.Timer
                 }
             }
@@ -1636,7 +1636,7 @@ function Invoke-Core {
 
     if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {
         #Display watchdog timers
-        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogResetMiners) | Format-Table -Wrap (
+        $Session.WatchdogTimers | Where-Object Kicked -gt $Session.Timer.AddSeconds( - $Session.WatchdogReset) | Format-Table -Wrap (
             @{Label = "Miner"; Expression = {$_.MinerName -replace '\-.*$'}},
             @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}}, 
             @{Label = "Pool"; Expression = {$_.PoolName}}, 
