@@ -583,7 +583,7 @@ function Invoke-Core {
     $API.Config = $Session.Config
     $API.UserConfig = $Session.UserConfig
     $SessionVars = [hashtable]@{}
-    $Session.Keys | Where-Object {$SessionVars[$_] -isnot [hashtable] -and $SessionVars[$_] -isnot [array]} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
+    $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array]} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
     $API.SessionVars = $SessionVars
     Remove-Variable "SessionVars"
 
