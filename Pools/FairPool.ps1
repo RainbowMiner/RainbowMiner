@@ -18,7 +18,6 @@ $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 6040; fee = 1.0; walletSymbol = "tube"; host = "mine.tube.fairpool.xyz"; user="%wallet%+%worker%"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "CnSwap"; port = 6080; fee = 1.0; walletSymbol = "xfh"; host = "mine.xfh.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 5566; fee = 1.0; walletSymbol = "xhv"; host = "mine.xhv.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Lethean"; symbol = "LTHN"; algo = "CnV8"; port = 6070; fee = 1.0; walletSymbol = "lethean"; host = "mine.lethean.fairpool.xyz"; user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 5577; fee = 1.0; walletSymbol = "loki"; host = "mine.loki.fairpool.xyz"; user="%wallet%+%worker%"}

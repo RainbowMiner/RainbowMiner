@@ -14,6 +14,11 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
+$Pool_Region_Default = "eu"
+
+[hashtable]$Pool_RegionsTable = @{}
+@("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_HostStatus = [PSCustomObject]@{}
 
 try {
@@ -137,7 +142,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Port          = $_.port
                 User          = "$($Wallets."$($Pool_Currency)").{workername:$Worker}"
                 Pass          = "x"
-                Region        = Get-Region $(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})
+                Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
