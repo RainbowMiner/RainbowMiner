@@ -189,7 +189,7 @@ $EnableMinerStatus = $true
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version = "3.9.8.3"
+$Session.Version = "3.9.8.4"
 
 $Session.Strikes           = 3
 $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
