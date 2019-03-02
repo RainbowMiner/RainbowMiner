@@ -324,7 +324,6 @@ function Update-WatchdogLevels {
     if ($Session.CurrentInterval -lt 2*$Interval) {$Interval = [Math]::Max($Session.CurrentInterval,$Interval)}
     $Session.WatchdogInterval    = ($Session.WatchdogInterval / $Session.Strikes * ($Session.Strikes - 1))*(-not $Reset) + $Interval
     $Session.WatchdogReset = ($Session.WatchdogReset / ($Session.Strikes * $Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
-    $Session.WatchdogPools = ($Session.WatchdogPools / ($Session.Strikes * $Session.Strikes) * (($Session.Strikes * $Session.Strikes) - 1))*(-not $Reset) + $Interval
 }
 
 function Set-MinerStats {
@@ -4601,14 +4600,16 @@ param(
 }
 
 function Test-Internet {
-    if (Get-Command "Test-Connection" -ErrorAction Ignore) {
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
-        Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
-        $Global:ProgressPreference = $oldProgressPreference
-    } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
-        (Get-NetConnectionProfile -IPv4Connectivity Internet | Measure-Object).Count -gt 0
-    } else {
-        $true
-    }
+    try {
+        if (Get-Command "Test-Connection" -ErrorAction Ignore) {
+            $oldProgressPreference = $Global:ProgressPreference
+            $Global:ProgressPreference = "SilentlyContinue"
+            Foreach ($url in @("www.google.com","www.amazon.com","www.baidu.com","www.coinbase.com","www.rbminer.net")) {if (Test-Connection -ComputerName $url -Count 1 -ErrorAction Ignore -Quiet -InformationAction Ignore) {$true;break}}
+            $Global:ProgressPreference = $oldProgressPreference
+        } elseif (Get-Command "Get-NetConnectionProfile" -ErrorAction Ignore) {
+            (Get-NetConnectionProfile -IPv4Connectivity Internet | Measure-Object).Count -gt 0
+        } else {
+            $true
+        }
+    } catch {$true}
 }

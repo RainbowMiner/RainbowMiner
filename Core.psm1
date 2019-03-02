@@ -288,8 +288,10 @@ function Invoke-Core {
             Write-Host "[X] pressed - stopping script."
             break
         }
-        Update-WatchdogLevels -Reset
-        $Session.WatchdogTimers = @()
+        if ($i -gt $Session.Config.BenchmarkInterval*2) {
+            Update-WatchdogLevels -Reset
+            $Session.WatchdogTimers = @()
+        }
     }
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
@@ -836,7 +838,7 @@ function Invoke-Core {
     if (($Session.AllPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
         $Session.AllPools = $Session.AllPools | Where-Object {
             $Pool = $_
-            $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogPools)
+            $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
             ($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2
         }
     }
