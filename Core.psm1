@@ -1365,6 +1365,8 @@ function Invoke-Core {
         }
     }
 
+    $Session.Profitable = $true
+
     if ($Miners.Count -gt 0) {
         #Get most profitable miner combination
         $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
@@ -1398,8 +1400,7 @@ function Invoke-Core {
             $BestMiners_Combo = Get-BestMinerDeviceCombos $BestMiners -SortBy "Profit_Bias"        
         }
         $BestMiners_Combo_Comparison = Get-BestMinerDeviceCombos $BestMiners_Comparison -SortBy "Profit_Comparison"
-
-        $Session.Profitable = $true
+        
         $PowerOffset_Cost = [Double]0
         if ($Session.AllPools.Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
