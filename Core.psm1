@@ -1810,7 +1810,7 @@ function Invoke-Core {
                 $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
                 if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
                 $SomeMinersFailed = $true
-                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" "*66)"
+                $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" " * 71)"
             }
             if ($LoopWarn -ne "") {
                 $host.UI.RawUI.CursorPosition = $CursorPosition
@@ -1937,7 +1937,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 100)
+    Write-Host (" " * 111)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "
