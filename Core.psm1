@@ -798,7 +798,7 @@ function Invoke-Core {
     }
 
     #Give API access to the current running configuration
-    $API.NewPools = $NewPools | ConvertTo-Json -Depth 10 -Compress
+    #$API.NewPools = $NewPools | ConvertTo-Json -Depth 10 -Compress
 
     #This finds any pools that were already in $Session.AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
