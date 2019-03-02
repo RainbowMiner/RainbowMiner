@@ -582,6 +582,10 @@ function Invoke-Core {
     #Give API access to the current running configuration
     $API.Config = $Session.Config
     $API.UserConfig = $Session.UserConfig
+    $SessionVars = [hashtable]@{}
+    $Session.Keys | Where-Object {@("ActiveMiners","AllDevices","AllPools","Config","Devices","DevicesByTypes","DevicesToVendors","Stats","UserConfig") -notcontains $_} | Foreach-Object {$SessionVars[$_] = $Session[$_]}
+    $API.SessionVars = $SessionVars
+    Remove-Variable "SessionVars"
 
     #Clear pool cache if the pool configuration has changed
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
@@ -1193,7 +1197,7 @@ function Invoke-Core {
     if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
         if ((Get-Command "Get-MpComputerStatus" -ErrorAction Ignore) -and (Get-MpComputerStatus -ErrorAction Ignore)) {
             if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
-                if ($Session.MinerFirewalls -eq $null) {$Session.MinerFirewalls = Get-NetFirewallApplicationFilter | Select-Object -ExpandProperty Program}
+                if ($Session.MinerFirewalls -eq $null) {$Session.MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
                 if (@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Session.MinerFirewalls) | Where-Object SideIndicator -EQ "=>") {
                     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {" -SkipEditionCheck"}); ('$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Session.MinerFirewalls) | Where-Object SideIndicator -EQ '=>' | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Compress)' | ConvertFrom-Json) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
                     $Session.MinerFirewalls = $null

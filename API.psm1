@@ -246,6 +246,10 @@
                     $Data = ConvertTo-Json @($API.Stats | Select-Object)
                     Break
                 }
+                "/sessionvars" {                    
+                    $Data = ConvertTo-Json $API.SessionVars
+                    Break
+                }
                 "/watchdogtimers" {
                     $Data = ConvertTo-Json @($API.WatchdogTimers | Select-Object)
                     Break
