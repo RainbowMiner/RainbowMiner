@@ -72,6 +72,7 @@
 335	GrinProMiner
 336	LolMiner06
 337	SwapMiner
+338	CryptoDredge16
 
 400	Sgminer
 401	SgminerBitcore
