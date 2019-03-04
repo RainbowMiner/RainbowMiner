@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.8.3-fireice/xmr-stak-win64-2.8.3-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.9.0-fireice/xmr-stak-win64-2.9.0-rbm.7z"
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $DevFee = 0.0
@@ -19,6 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v8"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/conceal";    Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_conceal"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_masari"; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_r"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_superfast"; Params = ""}    
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v7_stellite"; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Threads = 1; MinMemGb = 1; Algorithm = "cryptonight_lite"; Params = ""}
@@ -88,7 +89,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 									rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
 								}
 							)
-							currency        = if ($Pools.$Algorithm_Norm.Info) {"$($Pools.$Algorithm_Norm.Info -replace '^monero$', 'monero7' -replace '^aeon$', 'aeon7')"} else {$_.Algorithm}
+							currency        = $_.Algorithm
 							call_timeout    = 10
 							retry_time      = 10
 							giveup_limit    = 0
