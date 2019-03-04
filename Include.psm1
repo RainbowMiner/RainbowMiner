@@ -4134,7 +4134,7 @@ Param(
         }
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}
-            catch {throw "Job $Jobkey contains clutter.";Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore}
+            catch {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
@@ -4245,7 +4245,7 @@ function Invoke-ReportMinerStatus {
         }
     }
     catch {
-        Write-Log -Level Warn "Miner Status $($ReportUrl) has failed. "
+        Write-Log -Level Info "Miner Status $($ReportUrl) has failed. "
     }
 }
 
