@@ -419,7 +419,6 @@ Function Write-Log {
         $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
         $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-        if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
 
@@ -531,16 +530,16 @@ function Set-Stat {
     $Mode     = ""
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
 
-    if ($Name -match '_Profit$') {$Path = "Stats\Pools";$Mode = "Pools"}
-    elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners";$Mode = "Miners"}
-    else {$Path = "Stats";$Mode="Profit"}
+    if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";  $Mode = "Pools"}
+    elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners"; $Mode = "Miners"}
+    else                               {$Path0 = "Stats";        $Mode = "Profit"}
 
     if ($Sub) {
         #legacy
-        if (Test-Path ("$Path\$Name.txt")) {Move-Item "$Path\$Name.txt" "$Path\$Sub-$Name.txt" -Force}
-        $Path = "$Path\$Sub-$Name.txt"
+        if (Test-Path ("$Path0\$Name.txt")) {Move-Item "$Path0\$Name.txt" "$Path0\$Sub-$Name.txt" -Force}
+        $Path = "$Path0\$Sub-$Name.txt"
     } else {
-        $Path = "$Path\$Name.txt"
+        $Path = "$Path0\$Name.txt"
     }
 
     $SmallestValue = 1E-20
@@ -733,9 +732,7 @@ function Set-Stat {
         }
     }
 
-    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
-    if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
-    if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
 
     if ($Stat.Duration -ne 0) {
         $OutStat = [PSCustomObject]@{
@@ -793,7 +790,6 @@ function Get-Stat {
         [Switch]$NoPools = $false
     )
 
-    if (-not (Test-Path "Stats")) {New-Item "Stats" -ItemType "directory" > $null}
     if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
     if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
 
@@ -1004,14 +1000,14 @@ function Get-BalancesContent {
 filter ConvertTo-Hash { 
     [CmdletBinding()]
     $Hash = $_
-    switch ([math]::truncate([math]::log($Hash, 1000))) {
+    switch ([math]::truncate([math]::log($Hash, 1e3))) {
         "-Infinity" {"0  H"}
         0 {"{0:n2}  H" -f ($Hash / 1)}
-        1 {"{0:n2} KH" -f ($Hash / 1000)}
-        2 {"{0:n2} MH" -f ($Hash / 1000000)}
-        3 {"{0:n2} GH" -f ($Hash / 1000000000)}
-        4 {"{0:n2} TH" -f ($Hash / 1000000000000)}
-        Default {"{0:n2} PH" -f ($Hash / 1000000000000000)}
+        1 {"{0:n2} kH" -f ($Hash / 1e3)}
+        2 {"{0:n2} MH" -f ($Hash / 1e6)}
+        3 {"{0:n2} GH" -f ($Hash / 1e9)}
+        4 {"{0:n2} TH" -f ($Hash / 1e12)}
+        Default {"{0:n2} PH" -f ($Hash / 1e15)}
     }
 }
 
