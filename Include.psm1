@@ -131,11 +131,7 @@ function Get-Balance {
     @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange += $_}
     $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Session.Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing += $_}
 
-    if ($CurrenciesMissing.Count) {
-        if ($MissingCurrenciesTicker = Get-TickerGlobal $CurrenciesMissing) {
-            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {$CurrenciesMissing -icontains $_ -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$Session.Rates[$_]=[double](1/$MissingCurrenciesTicker.$_.BTC)}
-        }
-    }
+    if ($CurrenciesMissing.Count) {Update-Rates $CurrenciesMissing}
 
     $CurrenciesWithBalances | Foreach-Object {
         $Currency = $_
@@ -147,36 +143,16 @@ function Get-Balance {
         }
     }
 
-    if ($false) {
-        try {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($CurrenciesWithBalances -join ",")&tsyms=$($CurrenciesToExchange -join ",")&extraParams=https://github.com/rainbowminer/RainbowMiner"
-        }
-        catch {
-            Write-Log -Level Warn "Cryptocompare API for $($CurrenciesWithBalances -join ",") to $($CurrenciesToExchange -join ",") has failed. "
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $RatesAPI = [PSCustomObject]@{}
-            $CurrenciesWithBalances | Foreach-Object {
-                $Currency = $_
-                if ($NewRates.ContainsKey($Currency) -and $NewRates.$Currency -match "^[\d+\.]+$") {
-                    $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-                    $CurrenciesToExchange | Foreach-Object {
-                        $RatesAPI.$Currency | Add-Member $_ ([double]$NewRates.$_/[double]$NewRates.$Currency)
-                    }
-                }
-            }
-        }
-    }
-
     #Add total of totals
     $Totals = [PSCustomObject]@{
         Name    = "*Total*"
         Caption = "*Total*"
     }
 
-    if (Test-Path ".\Data\worldcurrencies.json") {$WorldCurrencies = Get-Content ".\Data\worldcurrencies.json" | ConvertFrom-Json} else {$WorldCurrencies = @("USD","EUR","GBP")}
+    Get-WorldCurrencies -Silent
 
     [hashtable]$Digits = @{}
-    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($WorldCurrencies -icontains $_) {2} else {8}}
+    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($Global:GlobalWorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
@@ -246,30 +222,52 @@ function Get-CoinSymbol {
     if (-not $Silent) {$Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
 }
 
-function Get-TickerGlobal {
+function Update-Rates {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         $Symbols
     )
 
+    if (-not $Symbols) {
+        $Symbols = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+    }
+
+    [hashtable]$NewRates = @{}
+    try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$NewRates.Clear()}
+
+    if (-not $NewRates.Count) {
+        Write-Log -Level Info "Coinbase is down, using fallback. "
+        try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+    }
+
+    $Session.Rates["BTC"] = $NewRates["BTC"] = [Double]1
+
     if (-not (Test-Path Variable:Global:GlobalGetTicker)) {$Global:GlobalGetTicker = @()}
-    $Symbols | Where-Object {$_ -and $Global:GlobalGetTicker -inotcontains $_} | Foreach-Object {$Global:GlobalGetTicker += $_.ToUpper()}
+    Compare-Object $Symbols @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
+        elseif ($Global:GlobalGetTicker -inotcontains $_.InputObject) {$Global:GlobalGetTicker += $_.InputObject.ToUpper()}
+    }
+    Remove-Variable "NewRates" -Force
+
     if ($Global:GlobalGetTicker.Count -gt 0) {
         try {
             $SymbolStr = (@($Global:GlobalGetTicker | Sort-Object) -join ',').ToUpper()
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey "globalticker" -cycletime 1800
+            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
             if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
+                Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
             } else {
-                $RatesAPI
+                $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {[double](1/$_.Value.BTC)} else {0}}
             }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Cryptocompare API for $($SymbolStr) to BTC has failed. "
+            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) to BTC has failed. "
         }
     }
+
+    Get-WorldCurrencies -Silent
+    Compare-Object $Global:GlobalWorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
 }
 
 function Get-Ticker {
@@ -2329,6 +2327,18 @@ function Get-Regions {
         (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalRegions.Keys}
+}
+
+function Get-WorldCurrencies {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
+        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-Content ".\Data\worldcurrencies.json" | ConvertFrom-Json} else {@("USD","INR","RUB","EUR","GBP")}
+    }
+    if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
 
 enum MinerStatus {

@@ -720,34 +720,16 @@ function Invoke-Core {
     $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
 
     #Update the exchange rates
-    [hashtable]$NewRates = @{}
-    Write-Log "Updating exchange rates from Coinbase. "
-    try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {$NewRates.Clear()}
-
-    if (-not $NewRates.Count) {
-        Write-Log -Level Info "Coinbase is down, using fallback. "
-        try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = $_.Value}}} catch {Write-Log -Level Warn "Coinbase down. "}
-    }
-
-    $NewRates["BTC"] = "1.0"
-
-    try {
-        $AllCurrencies = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique | Sort-Object
-        $AllCurrencies | Where-Object {$NewRates.$_} | ForEach-Object {$Session.Rates[$_] = ([Double]$NewRates.$_)}
-        if ($MissingCurrencies = $AllCurrencies | Where-Object {-not $NewRates.ContainsKey($_)}) {
-            $MissingCurrenciesTicker = Get-TickerGlobal $MissingCurrencies
-            Write-Log -Level Info "Updating missing currencies ($($MissingCurrencies -join ",")) "
-            $MissingCurrenciesTicker.PSObject.Properties.Name | Where-Object {-not $NewRates.ContainsKey($_) -and $MissingCurrenciesTicker.$_.BTC} | Foreach-Object {$v = [double](1/$MissingCurrenciesTicker.$_.BTC);$NewRates.$_ = [string][math]::round($v,[math]::max(0,[math]::truncate(16-[math]::log($v,10))));$Session.Rates[$_] = $v}
-        }
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    Write-Log "Updating exchange rates. "
+    Update-Rates
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
-    if ($Session.Config.PowerPrice -gt 0) {
-        if ($NewRates."$($Session.Config.PowerPriceCurrency)") {
-            $PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$NewRates."$($Session.Config.PowerPriceCurrency)"
+    if ($Session.Config.PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
+        if ($Session.Rates."$($Session.Config.PowerPriceCurrency)") {
+            $PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$Session.Rates."$($Session.Config.PowerPriceCurrency)"
         } else {
-            Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found on Coinbase. Cost of electricity will be ignored."
+            Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
     }
 
@@ -1725,7 +1707,7 @@ function Invoke-Core {
             }
             if ($Session.Rates.$Miner_Currency) {$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null}
     }
-    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $NewRates.$_} | Sort-Object | ForEach-Object { "$($_) $($NewRates.$_)"})  -join ' = ')") > $null}
+    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Session.Rates.$_)"})  -join ' = ')") > $null}
 
     $API.CurrentProfit = $CurrentProfitTotal
 
