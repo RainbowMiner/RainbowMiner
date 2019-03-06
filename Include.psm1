@@ -586,7 +586,7 @@ function Set-Stat {
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
             Duration = [TimeSpan]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
-            Failed = [Double]$Stat.Failed
+            Failed = [Int]$Stat.Failed
         }
         if ($AddStat) {$Stat | Add-Member -NotePropertyMembers $AddStat}
 
@@ -598,8 +598,8 @@ function Set-Stat {
         if ($FaultDetection) {
             if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
             if ($FaultTolerance -lt 1) {
-                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1*$Stat.Failed), 0.9))
-                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1*($Stat.Failed+1)), 0.9))
+                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
+                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100 + 0.1), 0.9))
             } elseif ($Stat.Hour -gt 0) {
                 if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
                 $ToleranceMin = $Stat.Hour / $FaultTolerance
@@ -616,8 +616,8 @@ function Set-Stat {
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
             if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "}
             else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString("N2")) is outside fault tolerance $($ToleranceMin.ToString("N2")) to $($ToleranceMax.ToString("N2")). "}
-            $Stat.Failed++
-            if ($Stat.Failed > 3) {$Stat.Failed = 3}
+            $Stat.Failed += 10
+            if ($Stat.Failed > 30) {$Stat.Failed = 30}
         } else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
             $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
@@ -672,7 +672,7 @@ function Set-Stat {
                 ($Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue)))
                 Duration = $Stat.Duration + $Duration
                 Updated = $Updated
-                Failed = [Math]::Max($Stat.Failed-0.1,0)
+                Failed = [Math]::Max($Stat.Failed-1,0)
             }
             if ($AddStat) {$Stat | Add-Member -NotePropertyMembers $AddStat}
         }
@@ -743,7 +743,7 @@ function Set-Stat {
             Week_Fluctuation = [Double]$Stat.Week_Fluctuation
             Duration = [String]$Stat.Duration
             Updated = [DateTime]$Stat.Updated
-            Failed = [Double]$Stat.Failed
+            Failed = [Int]$Stat.Failed
         }
         Switch($Mode) {
             "Miners" {
