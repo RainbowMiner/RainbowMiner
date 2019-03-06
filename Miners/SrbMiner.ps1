@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7.9-srbminer/SRBMiner-CN-V1-7-9.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.0-srbminer/SRBMiner-CN-V1-8-0.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -38,12 +38,13 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "normalv4_64"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV4_64 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv8"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV8 2 thread
+    [PSCustomObject]@{MainAlgorithm = "reversewaltz";Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ReverseWaltz 2 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV4 2 threads
     [PSCustomObject]@{MainAlgorithm = "stellitev8" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV8 2 threads (soon)
     [PSCustomObject]@{MainAlgorithm = "swap"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Swap 2 thread
     [PSCustomObject]@{MainAlgorithm = "turtle"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Turtle 2 thread
     [PSCustomObject]@{MainAlgorithm = "upx"        ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa 2 threads
-    [PSCustomObject]@{MainAlgorithm = "webchain"   ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Webchain 2 threads
+    [PSCustomObject]@{MainAlgorithm = "webchain"   ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Webchain 2 threads    
     [PSCustomObject]@{MainAlgorithm = "xcash"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-HeavyX/Xcash 2 thread
     [PSCustomObject]@{MainAlgorithm = "zelerius"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Zelerius thread
 )
