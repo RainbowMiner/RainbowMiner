@@ -19,7 +19,7 @@ $Pool_Region_Default = Get-Region "us"
 $Pools_Data = @(
     #[PSCustomObject]@{coin = "Caliber"; symbol = "CAL"; algo = "CnV8"; port = 5588; fee = 0.9; walletSymbol = "caliber"; host = "caliber.luckypool.io"}
     #[PSCustomObject]@{coin = "CitiCash"; symbol = "CCH"; algo = "CnHeavy"; port = 3888; fee = 0.9; walletSymbol = "citicash"; host = "citicash.luckypool.io"}
-    #[PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 5588; fee = 0.9; walletSymbol = "graft"; host = "graft.luckypool.io"}
+    #[PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnRwz"; port = 5588; fee = 0.9; walletSymbol = "graft"; host = "graft.luckypool.io"}
     #[PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 7788; fee = 0.9; walletSymbol = "haven"; host = "haven.luckypool.io"}
     #[PSCustomObject]@{coin = "JyoCoin"; symbol = "JYO"; algo = "CnV8"; port = 5008; fee = 0.9; walletSymbol = "jyo"; host = "jyo.luckypool.io"}
     #[PSCustomObject]@{coin = "SafexCash"; symbol = "SFX"; algo = "CnV8"; port = 3388; fee = 0.9; walletSymbol = "sfx"; host = "safex.luckypool.io"}

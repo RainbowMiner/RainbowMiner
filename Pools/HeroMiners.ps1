@@ -23,7 +23,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Block"; symbol = "BLOC"; algo = "CnHaven"; port = 10240; fee = 0.9; walletSymbol = "bloc"; host = "bloc.herominers.com"}
     [PSCustomObject]@{coin = "Citadel"; symbol = "CTL"; algo = "CnV7"; port = 10420; fee = 0.9; walletSymbol = "citadel"; host = "citadel.herominers.com"}
     [PSCustomObject]@{coin = "Conceal"; symbol = "CCX"; algo = "CnFast"; port = 10360; fee = 0.9; walletSymbol = "conceal"; host = "conceal.herominers.com"}
-    [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 10100; fee = 0.9; walletSymbol = "graft"; host = "graft.herominers.com"}
+    [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnRwz"; port = 10100; fee = 0.9; walletSymbol = "graft"; host = "graft.herominers.com"}
     [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 10140; fee = 0.9; walletSymbol = "haven"; host = "haven.herominers.com"}
     [PSCustomObject]@{coin = "Lethean"; symbol = "LTHN"; algo = "CnV8"; port = 10180; fee = 0.9; walletSymbol = "lethean"; host = "lethean.herominers.com"}
     [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 10110; fee = 0.9; walletSymbol = "loki"; host = "loki.herominers.com"}
