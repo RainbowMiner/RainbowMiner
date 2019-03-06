@@ -6,25 +6,28 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.13.0-xmrig/xmrig-nvidia-2.13.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.0-xmrig/xmrig-nvidia-2.14.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"
 $DevFee = 0.0
-$Cuda = "9.2"
+$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          MinMemGb = 2; Params = "--bfactor=12"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        MinMemGb = 4; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       MinMemGb = 2; Params = ""; Algorithm = "cryptonight/msr"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        MinMemGb = 2; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        MinMemGb = 2; Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        MinMemGb = 2; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     MinMemGb = 1; Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     MinMemGb = 1; Params = ""}
     #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  MinMemGb = 2; Params = ""}
