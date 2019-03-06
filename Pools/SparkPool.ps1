@@ -44,31 +44,33 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    $Pool_Currency = $_.symbol
+    $Pool_Symbol = $_.symbol
+    $Pool_Currency = $_.symbol -replace "_.+$"
     $Pool_Coin = $_.coin
     $Pool_Fee = $_.fee
     $Pool_ID = $_.id
     $Pool_Regions = $_.region
+    $Pool_BtcRate = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency} else {0}
 
-    $Pool_Request.data | Where-Object currency -eq $Pool_Currency | Foreach-Object {
+    $Pool_Request.data | Where-Object currency -eq $Pool_Symbol | Foreach-Object {
         if (-not $InfoOnly) {
-            $NewStat = -not (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($_."$(if ($NewStat) {"meanIncome24h"} else {"income"})" / $_.incomeHashrate) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
+            $NewStat = -not (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Symbol)_Profit.txt")
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value ($_."$(if ($NewStat) {"meanIncome24h"} else {"income"})" / $_.incomeHashrate * $Pool_BtcRate) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
         }
 
         foreach ($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Currency -replace '_.+$'
-                Currency      = $Pool_Currency -replace '_.+$'
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
                 Host          = "$(if ($Pool_ID) {"$($Pool_ID)-"})$($Pool_Region).sparkpool.com"
                 Port          = $Pool_Port
-                User          = "$($Wallets."$($Pool_Currency -replace "_.+$")")$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
+                User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
