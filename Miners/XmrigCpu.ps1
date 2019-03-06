@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.13.1-xmrig/xmrig-2.13.1-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.0-xmrig/xmrig-2.14.0-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
 $DevFee = 0.0
@@ -16,14 +16,17 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""}
     #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""}
