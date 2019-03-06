@@ -124,6 +124,9 @@
         "RavenminerEu" = [PSCustomObject]@{
             Currencies=@("RVN")
         }
+        "SparkPool" = [PSCustomObject]@{
+            Currencies=@("ETH","GRIN","BEAM","XMR")
+        }
         "YiiMP" = [PSCustomObject]@{
             Currencies=@("RVN","SUQA")
         }
