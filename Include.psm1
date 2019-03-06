@@ -598,8 +598,8 @@ function Set-Stat {
         if ($FaultDetection) {
             if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
             if ($FaultTolerance -lt 1) {
-                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance), 0.9))
-                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1), 0.9))
+                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1*$Stat.Failed), 0.9))
+                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance +0.1*($Stat.Failed+1)), 0.9))
             } elseif ($Stat.Hour -gt 0) {
                 if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
                 $ToleranceMin = $Stat.Hour / $FaultTolerance
@@ -613,20 +613,13 @@ function Set-Stat {
         
         if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
 
-        $ok = $true
         if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-            $Stat.Failed++
             if ($Stat.Failed -lt 3) {
                 if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "}
                 else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString("N2")) is outside fault tolerance $($ToleranceMin.ToString("N2")) to $($ToleranceMax.ToString("N2")). "}
-                $ok = $false
-            } else {
-                if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was forcefully updated to $($Value | ConvertTo-Hash) because it was outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash) for $($Stat.Failed) times in a row. "}
-                else {Write-Log -Level $LogLevel "Stat file ($Name) was forcefully updated to $($Value.ToString("N2")) because it was outside fault tolerance $($ToleranceMin.ToString("N2")) to $($ToleranceMax.ToString("N2")) for $($Stat.Failed) times in a row. "}
+                $Stat.Failed++
             }
-        }
-
-        if ($ok) {
+        } else {
             $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
             $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
             $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
