@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"  ; MinMemGB = 2; Params = ""} #Ethash2GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 2; Params = ""} #LYRA2V3
+    #[PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 2; Params = ""} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP
     #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""} #MYRGR    
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
