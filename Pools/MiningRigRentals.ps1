@@ -72,6 +72,9 @@ $Pool_Request = $Pool_Request.data
 [hashtable]$Pool_AlgoXlat = @{
     "x16rt"    = "Veil"
     "x16rtgin" = "X16rt"
+    "cuckoocycle" = "Cuckaroo29"
+    "cuckoocycle29swap" = "Cuckaroo29s"
+    "cuckoocycle31" = "Cuckatoo31"
 }
 
 $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.com","us-central01.miningrigrentals.com",
