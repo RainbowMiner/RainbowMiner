@@ -3962,18 +3962,21 @@ Param(
     [Parameter(Mandatory = $False)]   
         [string]$method = "REST",
     [Parameter(Mandatory = $False)]
-        [int]$timeout = 10
+        [int]$timeout = 10,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$body
 )
     $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
     if ($url -match "^https") {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12}
 
+    $RequestMethod = if ($body) {"Post"} else {"Get"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers @{"Cache-Control" = "no-cache"} -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method Get -Headers @{"Cache-Control" = "no-cache"}
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers @{"Cache-Control" = "no-cache"} -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
 }
@@ -4000,9 +4003,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart,
     [Parameter(Mandatory = $False)]
-        [string]$Jobkey = $null
+        [string]$Jobkey = $null,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$body
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body
 }
 
 function Invoke-WebRequestAsync {
@@ -4027,9 +4032,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$nocache,
     [Parameter(Mandatory = $False)]
-        [switch]$noquickstart
+        [switch]$noquickstart,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$body
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body
 }
 
 function Invoke-GetUrlAsync {
@@ -4060,18 +4067,20 @@ Param(
     [Parameter(Mandatory = $False)]
         [bool]$nocache = $false,
     [Parameter(Mandatory = $False)]
-        [bool]$noquickstart = $false
+        [bool]$noquickstart = $false,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$body
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Sleep -Milliseconds $delay}
-        Invoke-GetUrl $url -method $method
+        Invoke-GetUrl $url -method $method -body $body
         return
     }
 
     if (-not $url -and -not $Jobkey) {return}
     
-    if (-not $Jobkey) {$Jobkey = Get-MD5Hash $url}
-    elseif ($url -and $AsyncLoader.Jobs.$Jobkey -and $AsyncLoader.Jobs.$Jobkey.Url -ne $url) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url}
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})"}
+    elseif ($url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or ($AsyncLoader.Jobs.$Jobkey.Body | ConvertTo-Json -Compress) -ne ($body | ConvertTo-Json -Compress))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body}
 
     if ($cycletime -le 0) {$cycletime = $AsyncLoader.Interval}
 
@@ -4082,7 +4091,7 @@ Param(
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
             if (-not $Quickstart -and $delay) {Sleep -Milliseconds $delay}
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
             if ($Quickstart) {
                 $AsyncLoader.Quickstart += $delay
                 if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
@@ -4107,7 +4116,7 @@ Param(
                 }
                 if (-not $Quickstart) {
                     #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
-                    $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -timeout $AsyncLoader.Jobs.$Jobkey.Timeout                    
+                    $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -body $AsyncLoader.Jobs.$Jobkey.Body -timeout $AsyncLoader.Jobs.$Jobkey.Timeout                    
                 }
                 if (-not $Request) {throw "Empty request"}
                 $AsyncLoader.Jobs.$Jobkey.Success++
