@@ -230,7 +230,7 @@ function Update-Rates {
     )
 
     if (-not $Symbols) {
-        $Symbols = $Session.Config.Currency + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+        $Symbols = $Session.Config.Currency + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
     }
 
     [hashtable]$NewRates = @{}
