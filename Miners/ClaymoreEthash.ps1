@@ -17,7 +17,7 @@ $DevFeeDual = 1.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = ""; SecondaryIntensity = 00; Params = ""} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = ""; SecondaryIntensity = 00; Params = ""} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = "blake2s"; SecondaryIntensity = 40; Params = ""} #Ethash/Blake2s
     [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = "blake2s"; SecondaryIntensity = 60; Params = ""} #Ethash/Blake2s
     [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondaryAlgorithm = "blake2s"; SecondaryIntensity = 80; Params = ""} #Ethash/Blake2s
@@ -129,12 +129,15 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
 
-					#Optimize stratum compatibility
-					$EthereumStratumMode = Switch($Pools.$MainAlgorithm_Norm.Name) {
-						"NiceHash"    {3}
-						"2Miners"     {0}
-						"2MinersSolo" {0}
-						default       {2}
+					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
+
+                    $Miner_Wallet_Params = "-ewal $($Pools.$MainAlgorithm_Norm.User)"
+					Switch($Pools.$MainAlgorithm_Norm.Name) {
+						"NiceHash"    {$Miner_Protocol_Params = "-esm 3"}
+						"2Miners"     {$Miner_Protocol_Params = "-esm 0"}
+						"2MinersSolo" {$Miner_Protocol_Params = "-esm 0"}
+                        "F2pool"      {$Miner_Protocol_Params = "-esm 0";$Miner_Wallet_Params = "-ewal $($Pools.$MainAlgorithm_Norm.User -replace "\..+?$") -eworker $($Pools.$MainAlgorithm_Norm.User -replace "^.+?\.")";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
+						default       {$Miner_Protocol_Params = "-esm 2"}
 					}				
 
 					if ($Arguments_Platform) {                
@@ -147,8 +150,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 							$Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
 							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
-							$Pool_Port = if ($Pools.$SecondaryAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondaryAlgorithm_Norm.Ports.GPU) {$Pools.$SecondaryAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondaryAlgorithm_Norm.Port}
-							$Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pool_Port) -dwal $($Pools.$SecondaryAlgorithm_Norm.User)$(if ($Pools.$SecondaryAlgorithm_Norm.Pass) {" -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)"})$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
+							$Pool_Port_Secondary = if ($Pools.$SecondaryAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondaryAlgorithm_Norm.Ports.GPU) {$Pools.$SecondaryAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondaryAlgorithm_Norm.Port}
+							$Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pool_Port_Secondary) -dwal $($Pools.$SecondaryAlgorithm_Norm.User)$(if ($Pools.$SecondaryAlgorithm_Norm.Pass) {" -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)"})$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
 							if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
 						}
 						else {
@@ -158,18 +161,17 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							$Miner_Fee = $Fee
 						}
 
-						$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 						[PSCustomObject]@{
 							Name        = $Miner_Name
 							DeviceName  = $Miner_Device.Name
 							DeviceModel = $Miner_Model
 							Path        = $Path               
-							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -ewal $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins exp -r -1 -esm $($EthereumStratumMode) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
+							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $($Miner_Wallet_Params)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins exp -r -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
 							HashRates   = $Miner_HashRates
 							API         = "Claymore"
 							Port        = $Miner_Port
 							Uri         = $Uri
-							DevFee      = [PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}
+							DevFee      = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
 							ManualUri   = $ManualUri
 							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
