@@ -131,12 +131,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
-                    $Miner_Wallet_Params = "-ewal $($Pools.$MainAlgorithm_Norm.User)"
 					Switch($Pools.$MainAlgorithm_Norm.Name) {
 						"NiceHash"    {$Miner_Protocol_Params = "-esm 3"}
 						"2Miners"     {$Miner_Protocol_Params = "-esm 0"}
 						"2MinersSolo" {$Miner_Protocol_Params = "-esm 0"}
-                        "F2pool"      {$Miner_Protocol_Params = "-esm 0";$Miner_Wallet_Params = "-ewal $($Pools.$MainAlgorithm_Norm.User -replace "\..+?$") -eworker $($Pools.$MainAlgorithm_Norm.User -replace "^.+?\.")";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
+                        "F2pool"      {$Miner_Protocol_Params = "-esm 0";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
 						default       {$Miner_Protocol_Params = "-esm 2"}
 					}				
 
@@ -166,7 +165,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName  = $Miner_Device.Name
 							DeviceModel = $Miner_Model
 							Path        = $Path               
-							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $($Miner_Wallet_Params)$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins exp -r -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
+							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {"-ewal $($Pools.$MainAlgorithm_Norm.Wallet) -eworker $($Pools.$MainAlgorithm_Norm.Worker)"} else {"-ewal $($Pools.$MainAlgorithm_Norm.User)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins exp -r -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
 							HashRates   = $Miner_HashRates
 							API         = "Claymore"
 							Port        = $Miner_Port
