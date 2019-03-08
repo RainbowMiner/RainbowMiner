@@ -79,6 +79,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
+                    StopCommand    = "Sleep 5"
 				}
 			}
 		}
