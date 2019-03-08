@@ -47,7 +47,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "renesis"; Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #SHA256q (Pyrite)
     [PSCustomObject]@{MainAlgorithm = "sha256t"; Params = ""} #SHA256t
-    #[PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "skunk"; Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
