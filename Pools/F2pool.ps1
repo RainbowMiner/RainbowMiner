@@ -75,7 +75,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.currency; $Wallets.$Pool_Currenc
             $ok = $false
         }
 
-        $Pool_BLK = $Pool_Request.data.output24h / $Pool_Request.data.blockreward
+        $Pool_BLK = $Pool_Request.data.output24h_coin / $Pool_Request.data.blockreward
         $Divisor  = Switch($Pool_Request.data.profit_per_hash) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; default {1}}
         if (-not $Session.Rates.$Pool_Currency -and $Pool_Request.data.price -and $Session.Rates.USD) {$Session.Rates.$Pool_Currency = $Session.Rates.USD / $Pool_Request.data.price}
                           
