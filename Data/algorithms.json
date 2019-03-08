@@ -36,7 +36,7 @@
     "blake256r14": "DecredNicehash",
     "blake256r8": "Blake256R8",
     "blake256r8vnl": "BlakeVanilla",
-    "blake2b": "sia",
+    "blake2b": "Sia",
     "blake2s": "Blake2s",
     "blakecoin": "Blakecoin",
     "blakevanilla": "BlakeVanilla",
