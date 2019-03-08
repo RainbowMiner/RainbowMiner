@@ -41,6 +41,9 @@
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
+        "F2pool" = [PSCustomObject]@{
+            Currencies=@("ETH","GRIN","BEAM","XMR","XZC")
+        }
         "FairPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
