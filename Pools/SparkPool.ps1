@@ -68,7 +68,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
+                Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$(if ($Pool_ID) {"$($Pool_ID)-"})$($Pool_Region).sparkpool.com"
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"

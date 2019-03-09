@@ -133,7 +133,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if (($ok -and ($AllowZero -or $Pool_Request.pool.hashrate -gt 0)) -or $InfoOnly) {
-        $PoolSSL = $false
+        $Pool_SSL = $false
         foreach ($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -143,14 +143,14 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
+                Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = $_.host
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
                 User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
                 Pass          = "{workername:$Worker}"
                 Region        = $Pool_Region_Default
-                SSL           = $PoolSSL
+                SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
                 Workers       = $Pool_Request.pool.miners
@@ -158,7 +158,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
             }
-            $PoolSSL = $true
+            $Pool_SSL = $true
         }
     }
 }

@@ -67,7 +67,7 @@ $Pools_Data | ForEach-Object {
         Price         = $Stat.$StatAverage #instead of .Live
         StablePrice   = $Stat.Week
         MarginOfError = $Stat.Week_Fluctuation
-        Protocol      = "stratum+tcp"
+        Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
         Host          = $_.host
         Port          = $_.port
         User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"

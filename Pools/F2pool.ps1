@@ -84,6 +84,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.currency; $Wallets.$Pool_Currenc
 
     if ($ok) {
         $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+        $Pool_SSL = $Pool_Algorithm_Norm -match "Equihash"
         foreach($Region in $_.region) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -93,7 +94,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.currency; $Wallets.$Pool_Currenc
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
+                Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                 Host          = "$($_.host)$(if ($Region -ne "asia") {"-$($Region)"}).f2pool.com"
                 Port          = $_.port
                 User          = "$($Wallets."$($Pool_Currency)").{workername:$Worker}"
@@ -101,7 +102,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.currency; $Wallets.$Pool_Currenc
                 Worker        = "{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Region
-                SSL           = $Pool_Algorithm_Norm -match "Equihash"
+                SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $_.fee
                 DataWindow    = $DataWindow
