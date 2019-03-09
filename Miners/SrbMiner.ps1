@@ -38,7 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "normalv4_64"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV4_64 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv8"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV8 2 thread
-    [PSCustomObject]@{MainAlgorithm = "reversewaltz";Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-ReverseWaltz 2 thread
+    [PSCustomObject]@{MainAlgorithm = "graft"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Graft/ReverseWaltz 2 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV4 2 threads
     [PSCustomObject]@{MainAlgorithm = "stellitev8" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV8 2 threads
     [PSCustomObject]@{MainAlgorithm = "swap"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Swap 2 thread
@@ -59,6 +59,7 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight Fast2 			[fast2]
 #- Cryptonight Fest 			[festival]
 #- Cryptonight GPU 				[gpu]
+#- Cryptonight Graft			[graft]
 #- Cryptonight Haven 			[haven]
 #- Cryptonight Heavy			[heavy]
 #- Cryptonight Hospital 		[hospital]
