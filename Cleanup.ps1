@@ -374,6 +374,10 @@ try {
         $AddAlgorithm += @("CryptonightReverseWaltz")
     }
 
+    if ($Version -le (Get-Version "3.9.9.0")) {
+        Get-ChildItem "Data\f2pool.json" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
