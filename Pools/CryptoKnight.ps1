@@ -41,7 +41,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Arto";        symbol = "RTO";  algo = "CnArto";      port = 51201; fee = 0.0; rpc = "arto"}
     [PSCustomObject]@{coin = "BBS";         symbol = "BBS";  algo = "CnLiteV7";    port = 19931; fee = 0.0; rpc = "bbs"}
     [PSCustomObject]@{coin = "BitcoinNote"; symbol = "BTCN"; algo = "CnLiteV7";    port = 4461;  fee = 0.0; rpc = "btcn"}
-    [PSCustomObject]@{coin = "Bittorium";   symbol = "BTOR"; algo = "CnLiteV7";    port = 10401; fee = 0.0; rpc = "bittorium"}
+    [PSCustomObject]@{coin = "Bittorium";   symbol = "BTOR"; algo = "CnLiteV7";    port = 10401; fee = 0.0; rpc = "btor"; host = "bittorium"}
     [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";     port = 4461;  fee = 0.0; rpc = "ipbc"; host = "tube"}
     [PSCustomObject]@{coin = "Caliber";     symbol = "CAL";  algo = "CnV8";        port = 14101; fee = 0.0; rpc = "caliber"}
     [PSCustomObject]@{coin = "CitiCash";    symbol = "CCH";  algo = "CnHeavy";     port = 4461;  fee = 0.0; rpc = "citi"}
@@ -56,7 +56,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{coin = "Lines";       symbol = "LNS";  algo = "CnV7";        port = 50401; fee = 0.0; rpc = "lines"}
     [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnHeavy";     port = 7731;  fee = 0.0; rpc = "loki"}
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";      port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
-    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnV8";        port = 4441;  fee = 0.0; rpc = "monero"}
+    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnV8";        port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
     [PSCustomObject]@{coin = "MoneroV";     symbol = "XMV";  algo = "CnV7";        port = 9221;  fee = 0.0; rpc = "monerov"}
     [PSCustomObject]@{coin = "Niobio";      symbol = "NBR";  algo = "CnHeavy";     port = 50101; fee = 0.0; rpc = "niobio"}
     [PSCustomObject]@{coin = "Ombre";       symbol = "OMB";  algo = "CnHeavy";     port = 5571;  fee = 0.0; rpc = "ombre"}
@@ -157,7 +157,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
     }
     
     if (($ok -and ($AllowZero -or $Pool_Request.pool.$Pool_Hashrate -gt 0)) -or $InfoOnly) {
-        $PoolSSL = $false
+        $Pool_SSL = $false
         foreach ($Pool_Port in $Pool_Ports) {
             foreach($Pool_Region in $Pool_Regions) {
                 [PSCustomObject]@{
@@ -168,14 +168,14 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+tcp"
+                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($Pool_HostPath).ingest$(if ($Pool_Region -ne $Pool_Region_Default) {"-$Pool_Region"}).cryptoknight.cc"
                     Port          = $Pool_Port.CPU
                     Ports         = $Pool_Port
                     User          = "$($Wallets.$($_.symbol)){diff:$(if ($_.diffdot) {$_.diffdot} else {"."})`$difficulty}"
                     Pass          = "{workername:$Worker}"
                     Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $PoolSSL
+                    SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     Workers       = $Pool_Request.pool.miners
@@ -184,7 +184,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
                     BLK           = $Stat.BlockRate_Average
                 }
             }
-            $PoolSSL = $true
+            $Pool_SSL = $true
         }
     }
 }
