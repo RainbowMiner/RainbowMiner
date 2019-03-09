@@ -205,7 +205,7 @@ function Get-CoinSymbol {
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-RestMethod "http://rbminer.net/api/coins.php" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Request = Invoke-GetUrl "http://rbminer.net/api/data/coins.json"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -4162,9 +4162,8 @@ Param(
 }
 
 function Get-MinerStatusKey {    
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     try {
-        $Response = Invoke-RestMethod -Uri "http://rbminer.net/api/getuserid.php" -Method Get -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        $Response = Invoke-GetUrl "https://rbminer.net/api/getuserid.php"
         if ($Response) {$Response = $Response -split "[\r\n]+" | select-object -first 1}
         Write-Log "Miner Status key created: $Response"
         $Response
@@ -4228,7 +4227,7 @@ function Invoke-ReportMinerStatus {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
-    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "http://rbminer.net/api/report.php"})}
+    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
 
     # Send the request
     try {
