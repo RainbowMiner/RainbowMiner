@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3.10-teamred/teamredminer-v0.3.10-win.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.0-teamred/teamredminer-v0.4.0-win.zip"
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
@@ -14,6 +14,7 @@ $DevFee = 3.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "cnr";    MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8";   MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; MinMemGb = 1; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; MinMemGb = 1; Params = ""; DevFee = 3.0}
