@@ -6,8 +6,8 @@ param(
 )
 
 $Path = ".\Bin\CPU-Binarium\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1-nosuch/cpuminer-nosuch-win64.7z"
-$ManualUri = "https://github.com/patrykwnosuch/cpuminer-opt-3.8.8.1-m1/releases"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-win64.7z"
+$ManualUri = "https://github.com/patrykwnosuch/cpuminer-3.8.8.1-nosuch/releases"
 $Port = "531{0:d2}"
 $DevFee = 0.0
 
