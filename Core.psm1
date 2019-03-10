@@ -401,6 +401,7 @@ function Invoke-Core {
     }
 
     #Check for coins config
+    $CheckCoins = $false
     Set-CoinsConfigDefault $Session.ConfigFiles["Coins"].Path
     if (Test-Path $Session.ConfigFiles["Coins"].Path) {
         if ($CheckConfig -or -not $Session.Config.Coins -or (Get-ChildItem $Session.ConfigFiles["Coins"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Coins"].LastWriteTime -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
@@ -416,6 +417,7 @@ function Invoke-Core {
                 $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
                 $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
             }
+            $CheckCoins = $true
         }
     }
 
@@ -457,7 +459,7 @@ function Invoke-Core {
     $CheckPools = $false
     Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
     if (Test-Path $Session.ConfigFiles["Pools"].Path) {
-        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or $CheckCoins -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
             $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
             $PoolParams = @{
                 Wallet              = $Session.Config.Wallet
