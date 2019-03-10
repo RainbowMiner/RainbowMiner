@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.0-xmrig/xmrig-nvidia-2.14.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-nvidia-2.14.1-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"
 $DevFee = 0.0
