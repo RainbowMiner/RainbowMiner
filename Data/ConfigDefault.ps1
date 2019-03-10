@@ -1,9 +1,33 @@
 ﻿[PSCustomObject]@{
     PoolName = @("Nicehash","MiningPoolHub","NLpool","ZergPool","Zpool")
-    Algorithm = @("AeriumX","Allium","Argon2dDYN","Bcd","Bitcore","Blake2s","C11","CryptoNightHeavy","CryptoNightSuperFast","CryptoNightV8","Cuckaroo29","Cuckoo","Equihash","Equihash16x5","Equihash24x5",
-"Equihash24x7","Equihash25x5","Ethash","GLTPawelHash","Hex","HMQ1725","Keccak","KeccakC","Lyra2RE3","Lyra2z","Lyra2zz","m7m","MTP","NrgHash","Pascal","PHI","PHI2","Polytimos","Skein","
-Skunk","SonoA","Tribus","X16r","X16rt","X16s","X17","X21s","X22i","Xevan","Yescrypt","YescryptR16","YescryptR32","YescryptR8","Yespower")
-    ExcludeMinerName = @("ClaymoreEquihashAmd")
+    ExcludeAlgorithm = @(
+     "Bitcoin",
+     "Blakecoin",
+     "BlakeVanilla",
+     "CryptoLight",
+     "CryptoNight",
+     "Decred",
+     "Keccak",
+     "KeccakC",
+     "Lbry",
+     "Lyra2RE",
+     "Lyra2RE2",
+     "MyriadGroestl",
+     "Nist5",
+     "Pascal",
+     "Quark",
+     "Qubit",
+     "Scrypt",
+     "ScryptN",
+     "SHA256d",
+     "SHA256t",
+     "Sia",
+     "Sib",
+     "X11",
+     "X13",
+     "X14",
+     "X15"        
+    )
     MinerStatusURL = "https://rbminer.net"
     FastestMinerOnly = $true
     RemoteAPI = $false 
