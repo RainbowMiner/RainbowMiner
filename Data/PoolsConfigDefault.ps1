@@ -101,6 +101,8 @@
             Currencies=@("XZC")
         }
         "Nanopool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{Email=""}
+            SetupFields=[PSCustomObject]@{Email="Enter your eMail-Address"}
             Currencies=@("ETH")
         }
         "NiceHash" = [PSCustomObject]@{

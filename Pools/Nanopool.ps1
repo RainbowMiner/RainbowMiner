@@ -9,7 +9,8 @@ param(
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$Email = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -23,14 +24,14 @@ $Pool_Request = [PSCustomObject]@{}
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;  fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = 6666;  fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"}
-    [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightR";  symbol = "XMR";  port = 14444; fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"}
-    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = 13333; fee = 2; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"}
-    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{coin = "Grin";            algo = "Cuckaroo29";    symbol = "GRIN"; port = 12111; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;  fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = 6666;  fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightR";  symbol = "XMR";  port = 14444; fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $true}
+    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = 13333; fee = 2; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $true}
+    [PSCustomObject]@{coin = "Grin";            algo = "Cuckaroo29";    symbol = "GRIN"; port = 12111; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $false; walletsymbol = "GRIN29"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -85,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
                 Port          = $_.port
-                User          = "$($Wallets."$($_.symbol)")/{workername:$Worker}"
+                User          = "$($Wallets."$($_.symbol)")$(if ($_.usepid -and $Wallets."$($_.symbol)" -notmatch "^.+?\.[^\.]+$") {".0"})/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                 Pass          = "x"
                 Region        = $Pool_Region
                 SSL           = $_.ssl
