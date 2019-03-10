@@ -95,6 +95,7 @@
 510	CpuminerTpruvotAvx2
 511	CpuminerTpruvotCore2
 512	CpuminerTpruvotCorei7
+513	CpuminerMulti
 520	ClaymoreCpu
 521	XmrigCpu
 530	CpuminerYespower
