@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.0-xmrig/xmrig-2.14.0-msvc-win64-rbm.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-2.14.1-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
 $DevFee = 0.0
@@ -14,26 +14,26 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; Algorithm = "cryptonight/msr"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""}
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; ExtendInterval = 2; Algorithm = "cryptonight/msr"}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -69,17 +69,18 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				$xmrig_algo = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
 				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path      = $Path
-					Arguments = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API       = "XMRig"
-					Port      = $Miner_Port
-					Uri       = $Uri
-					DevFee    = $DevFee
-					ManualUri = $ManualUri
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "XMRig"
+					Port           = $Miner_Port
+					Uri            = $Uri
+					DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    ExtendInterval = $_.ExtendInterval
 				}
 			}
 		}
