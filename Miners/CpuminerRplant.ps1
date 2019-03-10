@@ -5,20 +5,20 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\CPU-OptBF\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.10-cpumineroptbf/cpuminer-opt-v3.8.10-bf-win64.zip"
-$ManualUri = "https://github.com/bellflower2015/cpuminer-opt/releases"
-$Port = "504{0:d2}"
+$Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}else{'sse2'})).exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1.11-rplant/cpuminer-rplant-win-3.8.8.1.11.zip"
+$ManualUri = "https://pool.rplant.xyz/miners"
+$Port = "532{0:d2}"
 $DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerYespower faster
-    [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #yescryptr8
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #yescryptr16
-    [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""; ExtendInterval = 2} #yescryptr24
-    [PSCustomObject]@{MainAlgorithm = "yespowerr32"; Params = ""; ExtendInterval = 2} #yescryptr32
+    [PSCustomObject]@{MainAlgorithm = "argon2ad"; Params = ""; ExtendInterval = 2} #Argon2ad
+    [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""; ExtendInterval = 2} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""; ExtendInterval = 2} #Argon2d500
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""; ExtendInterval = 2} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""; ExtendInterval = 2} #Argon2m
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -57,7 +57,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -R 10 -r 4 $($DeviceParams) $($_.Params)"
+					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API = "Ccminer"
 					Port = $Miner_Port

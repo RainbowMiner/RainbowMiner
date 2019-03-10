@@ -135,7 +135,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					API = "Ccminer"
 					Port = $Miner_Port
 					Uri = $Uri
-					FaultTolerance = 0.5 #$_.FaultTolerance
+					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					DevFee = $DevFee
 					ManualUri = $ManualUri
