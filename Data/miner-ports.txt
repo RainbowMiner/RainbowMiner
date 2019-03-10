@@ -100,5 +100,7 @@
 521	XmrigCpu
 530	CpuminerYespower
 531	CpuminerBinarium
+532	CpuminerRplant
+533	RhminerCpu
 
 4068    CcminerSpModTribus
