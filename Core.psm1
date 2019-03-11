@@ -1923,7 +1923,7 @@ function Invoke-Core {
         Write-Host -NoNewline "Finished waiting - starting next run "
     }
 
-    Write-Host (" " * 111)
+    Write-Host (" " * 120)
 
     #Save current hash rates
     Write-Log "Saving hash rates. "

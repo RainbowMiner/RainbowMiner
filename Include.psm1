@@ -1580,7 +1580,7 @@ function Invoke-TcpRequest {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        if (-not $Quiet) {Write-Log -Level Warn "Could not request from $($Server):$($Port)"}
+        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not request from $($Server):$($Port)"
     }
     finally {
         if ($Reader) {$Reader.Close();$Reader.Dispose()}
@@ -1617,7 +1617,7 @@ function Invoke-TcpRead {
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        if (-not $Quiet) {Write-Log -Level Warn "Could not read from $($Server):$($Port)"}
+        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read from $($Server):$($Port)"
     }
     finally {
         if ($Reader) {$Reader.Close();$Reader.Dispose()}

@@ -45,7 +45,7 @@ class Jceminer : Miner {
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
-            Write-Log -Level Error "Failed to connect to miner ($($this.Name)). "
+            Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
         $Global:ProgressPreference = $oldProgressPreference
