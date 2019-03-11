@@ -39,6 +39,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Full automatic update**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 - **Central monitoring of all your rigs at [https://rbminer.net](https://rbminer.net)**
+- **Offline notifications via email and/or https://pushover.net**
 
 ## REQUIRED PRE-REQUESITES
 
@@ -393,6 +394,8 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **EnableMinerStatus** = set to 1 to enable central monitoring
 - **MinerStatusURL** = url to central monitoring server [default=https://rbminer.net]
 - **MinerStatusKey** = your unique miner status key (get one at https://rbminer.net, you can reuse MPM keys)
+- **MinerStatusEmail** = if your miningrig goes offline at https://rbminer.net/monitoring, a warning will be sent to this email-address. Leave empty, if you do not want notifications.
+- **PushOverUserKey** = if your miningrig goes offline at https://rbminer.net/monitoring, a notification will be sent via https://pushover.net, using your pushover user key. Leave empty, if you do not want this.
 
 
 #### Select devices ####

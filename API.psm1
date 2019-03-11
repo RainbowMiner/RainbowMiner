@@ -199,7 +199,7 @@
                     $PurgeStrings = @()
                     @($API.Config,$API.UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
-                        @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                        @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                             $CurrentPool = $_
                             $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
