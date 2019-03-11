@@ -337,7 +337,7 @@ function Set-MinerStats {
 
     $Miner_Failed_Total = 0
     $Session.ActiveMiners | Foreach-Object {
-        $Miner = $_        
+        $Miner = $_
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})}
 
@@ -361,7 +361,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$Quiet
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or $Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30))
                     $Statset++                    
                 }
 
@@ -2565,6 +2565,22 @@ class Miner {
 
     [Int]GetActivateCount() {
         return $this.Activated
+    }
+
+    [TimeSpan]GetRunningTime() {
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
+        
+        if ($Begin -and $End) {
+            return ($End - $Begin)
+        }
+        elseif ($Begin) {
+            return ((Get-Date) - $Begin)
+        }
+        else {
+            return [Timespan]0
+        }
     }
 
     [MinerStatus]GetStatus() {
