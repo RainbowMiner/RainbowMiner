@@ -199,20 +199,21 @@
                     $PurgeStrings = @()
                     @($API.Config,$API.UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
-                        @("Wallet","UserName","API_ID","API_Key","MinerStatusKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
+                        @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                             $CurrentPool = $_
                             $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
-                            @("Wallet","User","API_ID","API_Key","API_Secret","Password","PartyPassword") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 2} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                            @("Wallet","User","API_ID","API_Key","API_Secret","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 2} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
                         }
                     }
                     $PurgeStrings = $PurgeStrings | Select-Object -Unique | Foreach-Object {[regex]::Escape($_)}
 
                     if (-not (Test-Path $DebugPath)) {New-Item $DebugPath -ItemType "directory" > $null}
                     @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
+                        $LastWriteTime = $_.LastWriteTime
                         $NewFile = "$DebugPath\$($_.Name)"
                         Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
-                        (Get-Item $NewFile).LastWriteTime = $_.LastWriteTime
+                        (Get-Item $NewFile).LastWriteTime = $LastWriteTime
                     }
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
