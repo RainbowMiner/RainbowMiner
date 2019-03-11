@@ -3790,48 +3790,64 @@ function Get-YiiMPValue {
         }
     }
     if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
+    if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
+
     if ($values.count -eq 3 -and -not $containszero) {
-        if ($DataWindow -ne "actual_last24h" -and ($values["estimate_last24h"]/$values["actual_last24h"] -gt 5 -or $values["estimate_current"]/$values["actual_last24h"] -gt 5)) {$DataWindow = "minimum-3"}
+        $set = $true
+        foreach ($field in $allfields) {
+            $v = $values[$field]
+            if ($set) {$max = $min = $v;$maxf = $minf = "";$set = $false}
+            else {
+                if ($v -lt $min) {$min = $v;$minf = $field}
+                if ($v -gt $max) {$max = $v;$maxf = $field}
+            }
+        }
+        if (($max / $min) -gt 10) {
+            foreach ($field in $allfields) {
+                if (($values[$field] / $min) -gt 10) {$values[$field] = $min}
+            }
+        }
     }
 
-    if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
-    if ($DataWindow -match '^(.+)-(.+)$') {
-        Switch ($Matches[2]) {
-            "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
-            "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
-            "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h")}
-            "3"  {[System.Collections.ArrayList]$fields = $allfields}
+    if ($Value -eq 0) {
+        if ($DataWindow -match '^(.+)-(.+)$') {
+            Switch ($Matches[2]) {
+                "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
+                "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
+                "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h")}
+                "3"  {[System.Collections.ArrayList]$fields = $allfields}
+            }
+            Switch ($Matches[1]) {
+                "minimum" {
+                    $set = $true
+                    foreach ($field in $fields) {
+                        if(-not $values.ContainsKey($field)) {continue}
+                        $v = $values[$field]
+                        if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
+                    }
+                }
+                "maximum" {
+                    $set = $true
+                    foreach ($field in $fields) {
+                        if(-not $values.ContainsKey($field)) {continue}
+                        $v = $values[$field]
+                        if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
+                    }
+                }
+                "average" {
+                    $c=0
+                    foreach ($field in $fields) {                
+                        if(-not $values.ContainsKey($field)) {continue}
+                        $Value+=$values[$field]
+                        $c++
+                    }
+                    if ($c) {$Value/=$c}
+                }
+            }
+        } else {
+            if (-not $DataWindow -or -not $values.ContainsKey($DataWindow)) {foreach ($field in $allfields) {if ($values.ContainsKey($field)) {$DataWindow = $field;break}}}
+            if ($DataWindow -and $values.ContainsKey($DataWindow)) {$Value = $values[$DataWindow]}
         }
-        Switch ($Matches[1]) {
-            "minimum" {
-                $set = $true
-                foreach ($field in $fields) {
-                    if(-not $values.ContainsKey($field)) {continue}
-                    $v = $values[$field]
-                    if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
-                }
-            }
-            "maximum" {
-                $set = $true
-                foreach ($field in $fields) {
-                    if(-not $values.ContainsKey($field)) {continue}
-                    $v = $values[$field]
-                    if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
-                }
-            }
-            "average" {
-                $c=0
-                foreach ($field in $fields) {                
-                    if(-not $values.ContainsKey($field)) {continue}
-                    $Value+=$values[$field]
-                    $c++
-                }
-                if ($c) {$Value/=$c}
-            }
-        }
-    } else {
-        if (-not $DataWindow -or -not $values.ContainsKey($DataWindow)) {foreach ($field in $allfields) {if ($values.ContainsKey($field)) {$DataWindow = $field;break}}}
-        if ($DataWindow -and $values.ContainsKey($DataWindow)) {$Value = $values[$DataWindow]}
     }
     if (-not $hasdetails){$Value*=1e-6/$Factor}
     if ($IncludeErrorRatio) {
