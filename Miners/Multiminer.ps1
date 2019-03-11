@@ -63,7 +63,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --gpu-id=$($DeviceIDsAll) --use-gpu=$(if ($Miner_Vendor -eq "AMD") {"OpenCL"} else {"CUDA"}) -q $($_.Params)"
+					Arguments      = "-R 1 -b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --gpu-id=$($DeviceIDsAll) --use-gpu=$(if ($Miner_Vendor -eq "AMD") {"OpenCL"} else {"CUDA"}) -q $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API            = "Ccminer"
 					Port           = $Miner_Port
@@ -72,7 +72,6 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
-                    NoCPUMining    = $true
 				}
 			}
 		}
