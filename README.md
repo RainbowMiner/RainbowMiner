@@ -995,22 +995,22 @@ To make it easy to handle names, profiles may be assigned to a devices. Just add
 
 Example for a rig, using GTX1070Ti and GTX1060 side by side:
 
-{
-  "MinMemOC-GTX1060": {
-    "PowerLimit": 75,
-    "ThermalLimit": 70,
-    "MemoryClockBoost": "-500",
-    "CoreClockBoost": "150",
-    "LockVoltagePoint": "*"
-  },
-  "MinMemOC-GTX1070Ti": {
-    "PowerLimit": 82,
-    "ThermalLimit": 80,
-    "MemoryClockBoost": "-500",
-    "CoreClockBoost": "50",
-    "LockVoltagePoint": "*"
-  }
-}
+    {
+      "MinMemOC-GTX1060": {
+        "PowerLimit": 75,
+        "ThermalLimit": 70,
+        "MemoryClockBoost": "-500",
+        "CoreClockBoost": "150",
+        "LockVoltagePoint": "*"
+      },
+      "MinMemOC-GTX1070Ti": {
+        "PowerLimit": 82,
+        "ThermalLimit": 80,
+        "MemoryClockBoost": "-500",
+        "CoreClockBoost": "50",
+        "LockVoltagePoint": "*"
+      }
+    }
 
 The name of this exemplary profile is "MinMemOC" - if this name would be put into algorithms.config.txt, for example for algo "X16R", different overclocking settings would be used for the different devices when mining X16R.
 
