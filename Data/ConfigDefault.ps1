@@ -1,7 +1,6 @@
 ﻿[PSCustomObject]@{
     PoolName = @("Nicehash","MiningPoolHub","NLpool","ZergPool","Zpool")
-    ExcludeAlgorithm = @(
-     "Bitcoin",
+    ExcludeAlgorithm = @(     
      "Blakecoin",
      "BlakeVanilla",
      "CryptoLight",
