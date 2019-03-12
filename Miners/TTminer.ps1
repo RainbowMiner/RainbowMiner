@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.15-ttminer/TT-Miner-2.1.15.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1.16-ttminer/TT-Miner-2.1.16.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
