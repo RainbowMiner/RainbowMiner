@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Nanominer\nanominer.exe"
-$URI = "https://github.com/nanopool/nanominer/releases/download/v1.1.0/nanominer-windows-1.1.0.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-nanominer/nanominer-windows-1.1.0.zip"
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $DevFee = 3.0

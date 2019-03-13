@@ -103,5 +103,7 @@
 531	CpuminerBinarium
 532	CpuminerRplant
 533	RhminerCpu
+534	Nanominer
+
 
 4068    CcminerSpModTribus
