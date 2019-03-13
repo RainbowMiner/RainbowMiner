@@ -421,22 +421,22 @@ function Start-Setup {
                                 $Skip = Read-HostBool -Prompt "Do you want to skip the miner and algorithm setup?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 if ($Skip) {throw "Goto devicenamebegin"}
                             }
-                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($Config.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $Config.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "excludeminername" {
                             $Config.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $Config.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "algorithm" {
-                            $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine (leave empty for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.Algorithm = Read-HostArray -Prompt "Enter the algorithm you want to mine ($(if ($Config.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $Config.Algorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "excludealgorithm" {
-                            $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude (leave empty for none)" -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludeAlgorithm = Read-HostArray -Prompt "Enter the algorithm you do want to exclude " -Default $Config.ExcludeAlgorithm -Characters "A-Z0-9" -Valid (Get-Algorithms) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "excludecoinsymbol" {
-                            $Config.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the name of coins by currency symbol, you want to globaly exclude (leave empty for none)" -Default $Config.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter the name of coins by currency symbol, you want to globaly exclude " -Default $Config.ExcludeCoinSymbol -Characters "\`$A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "excludecoin" {
-                            $Config.ExcludeCoin = Read-HostArray -Prompt "Enter the name of coins by name, you want to globaly exclude (leave empty for none)" -Default $Config.ExcludeCoin -Characters "`$A-Z0-9. " | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.ExcludeCoin = Read-HostArray -Prompt "Enter the name of coins by name, you want to globaly exclude " -Default $Config.ExcludeCoin -Characters "`$A-Z0-9. " | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "disabledualmining" {
                             $Config.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $Config.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -465,7 +465,7 @@ function Start-Setup {
                             else {$Config.MiningMode="device"}
                         }
                         "devicename" {
-                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining (leave empty for all)" -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.DeviceName = Read-HostArray -Prompt "Enter the devices you want to use for mining " -Default $Config.DeviceName -Characters "A-Z0-9#" -Valid @($SetupDevices | Foreach-Object {$_.Type.ToUpper();if ($Config.MiningMode -eq "legacy") {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor}} else {if (@("nvidia","amd") -icontains $_.Vendor) {$_.Vendor;$_.Model};$_.Name}} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             if ($GlobalSetupSteps.Contains("devicenameend")) {throw "Goto devicenameend"}
                         }
                         "devicenamewizard" {
@@ -513,7 +513,7 @@ function Start-Setup {
                         }
                         "devicenamewizardamd2" {
                             if ($AvailDeviceCounts["AMD"] -gt 1 -and $NewDeviceName["AMD"].Count -eq 0) {
-                                $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $NewDeviceName["AMD"] = Read-HostArray -Prompt "Enter the AMD devices you want to use for mining " -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -530,7 +530,7 @@ function Start-Setup {
                         }
                         "devicenamewizardnvidia2" {
                             if ($AvailDeviceCounts["NVIDIA"] -gt 1 -and $NewDeviceName["NVIDIA"].Count -eq 0) {
-                                $NewDeviceName["NVIDIA"] = Read-HostArray -Prompt "Enter the NVIDIA devices you want to use for mining (leave empty for none)" -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "NVIDIA" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $NewDeviceName["NVIDIA"] = Read-HostArray -Prompt "Enter the NVIDIA devices you want to use for mining " -Characters "A-Z0-9#" -Valid @($SetupDevices | Where-Object {$_.Vendor -eq "NVIDIA" -and $_.Type -eq "GPU"} | Foreach-Object {$_.Vendor;$_.Model;$_.Name} | Select-Object -Unique | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -560,7 +560,7 @@ function Start-Setup {
                         }
                         "cpuminingthreads" {
                             if ($Config.DeviceName -icontains "CPU") {
-                                $Config.CPUMiningThreads = Read-HostInt -Prompt "How many softwarethreads should be used for CPU mining? (0 or leave empty for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.CPUMiningThreads = Read-HostInt -Prompt "How many softwarethreads should be used for CPU mining? (0 or $(if ($Config.CPUMiningThreads) {"clear"} else {"leave empty"}) for auto)" -Default $Config.CPUMiningThreads -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -580,7 +580,7 @@ function Start-Setup {
                                     Write-Host " (no affinity set)"
                                 }
                                 Write-Host " "
-                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, leave empty for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"clear"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 $Config.CPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                                 if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                     Write-Host "Now mining on the green threads: " -ForegroundColor Yellow -NoNewline
@@ -611,7 +611,7 @@ function Start-Setup {
                                 Write-Host " (no affinity set)"
                             }
                             Write-Host " "
-                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, leave empty for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $NewAffinity = Read-HostArray -Prompt "Choose CPU threads (list of integer, $(if ($CurrentAffinity) {"clear"} else {"leave empty"}) for no assignment)" -Default $CurrentAffinity -Valid ([string[]]@(0..($Global:GlobalCPUInfo.Threads-1))) -Characters "0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             $Config.GPUMiningAffinity = if ($NewAffinity.Count -gt 0) {ConvertTo-CPUAffinity $NewAffinity -ToHex} else {""}
                             if (Compare-Object @($NewAffinity|Select-Object) @($CurrentAffinity|Select-Object)) {
                                 Write-Host "GPU miners now validating on the green threads: " -ForegroundColor Yellow -NoNewline
@@ -635,7 +635,7 @@ function Start-Setup {
 
                             Write-HostSetupDataWindowHints
 
-                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used (or leave empty for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used ($(if ($Config.PoolDataWindow) {"clear"} else {"leave empty"}) for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                         }
                         "poolstataverage" {
                             Write-Host " "
@@ -643,7 +643,7 @@ function Start-Setup {
 
                             Write-HostSetupStatAverageHints
 
-                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used (or leave empty for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                            $Config.PoolStatAverage = Read-HostString -Prompt "Enter which default moving average is to be used ($(if ($Config.PoolStatAverage) {"clear"} else {"leave empty"}) for default)" -Default $Config.PoolStatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                         }
                         "hashrateweight" {
                             Write-Host " "
@@ -1066,7 +1066,7 @@ function Start-Setup {
                             "ocprofile" {
                                 $MinerSetupStepStore = $false
                                 if ($Config.EnableOCProfile) {
-                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile (leave empty for none)" -Default $EditMinerConfig.OCprofile -Valid @($ProfilesActual.PSObject.Properties.Name) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($ProfilesActual.PSObject.Properties.Name) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     $MinerSetupStepStore = $true
                                 }
                             }
@@ -1079,7 +1079,7 @@ function Start-Setup {
                                 }
                             }
                             "difficulty" {
-                                $EditMinerConfig.Difficulty = Read-HostDouble -Prompt "Set static difficulty (leave empty or set to 0 for automatic)" -Default $EditMinerConfig.Difficulty | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $EditMinerConfig.Difficulty = Read-HostDouble -Prompt "Set static difficulty ($(if ($EditMinerConfig.Difficulty) {"clear"} else {"leave empty"}) or set to 0 for automatic)" -Default $EditMinerConfig.Difficulty | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 $EditMinerConfig.Difficulty = $EditMinerConfig.Difficulty -replace ",","." -replace "[^\d\.]+"
                             }
                             "extendinterval" {
@@ -1227,7 +1227,7 @@ function Start-Setup {
                                         Write-Host " "
                                     }
                                     "worker" {
-                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name (leave empty to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
+                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"clear"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
                                     }
                                     "user" {
@@ -1254,22 +1254,22 @@ function Start-Setup {
                                         $PoolConfig.EnableMining = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMining -Default $PoolConfig.EnableMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "algorithm" {
-                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine (leave empty for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludealgorithm" {
-                                        $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "coinname" {
-                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine (leave empty for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludecoin" {
-                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude " -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "coinsymbol" {
-                                        $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine (leave empty for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine ($(if ($PoolConfig.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludecoinsymbol" {
-                                        $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude (leave empty for none)" -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "enableautocoin" {
                                         $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1454,13 +1454,13 @@ function Start-Setup {
                             try {
                                 Switch ($DeviceSetupSteps[$DeviceSetupStep]) {
                                     "algorithm" {
-                                        $DeviceConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine (leave empty for all)" -Default $DeviceConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($DeviceConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $DeviceConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludealgorithm" {
-                                        $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude (leave empty for none)" -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $DeviceConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "minername" {
-                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use (leave empty for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($DeviceConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $DeviceConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "excludeminername" {
                                         $DeviceConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $DeviceConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1469,7 +1469,7 @@ function Start-Setup {
                                         $DeviceConfig.DisableDualMining = Read-HostBool -Prompt "Disable all dual mining algorithm" -Default $DeviceConfig.DisableDualMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "defaultocprofile" {                                                        
-                                        $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device (leave empty for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $DeviceConfig.DefaultOCprofile = Read-HostString -Prompt "Select the default overclocking profile for this device ($(if ($DeviceConfig.DefaultOCprofile) {"clear"} else {"leave empty"}) for none)" -Default $DeviceConfig.DefaultOCprofile -Characters "A-Z0-9" -Valid @($OCprofilesActual.PSObject.Properties.Name | Sort-Object) | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "poweradjust" {                                                        
                                         $DeviceConfig.PowerAdjust = Read-HostDouble -Prompt "Adjust power consumption to this value in percent, e.g. 75 would result in Power x 0.75 (enter 100 for original value)" -Default $DeviceConfig.PowerAdjust -Min 0 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
