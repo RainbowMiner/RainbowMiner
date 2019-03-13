@@ -384,6 +384,8 @@ try {
 
     if ($Version -le (Get-Version "3.9.9.6")) {
         Get-ChildItem "Stats\Pools\*_X16R_Profit.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        Get-ChildItem "Cache\CF6B480CCADD0F94919E433BCFB39B6A.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        Get-ChildItem "Cache\9B8D3F77FF714598BCE6AC505C91A328.asy" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
     }
 
     if ($AddAlgorithm.Count -gt 0) {
