@@ -264,12 +264,13 @@
                         $Balance_BaseName = $_.BaseName
                         $Balance_Currency = $_.Currency
                         $_.Payouts | Foreach-Object {
+                            $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime})"
                             [PSCustomObject]@{
                                 Name     = $Balance_BaseName
                                 Currency = $Balance_Currency
-                                Date     = $(if ("$($_.time)" -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($_.time)} else {(Get-Date $_.time).ToUniversalTime()}).ToString("yyyy-MM-dd HH:mm:ss")
+                                Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()}).ToString("yyyy-MM-dd HH:mm:ss")
                                 Amount   = [Double]$_.amount
-                                Txid     = $_.txid
+                                Txid     = "$(if ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid} elseif ($_.txHash) {$_.txHash})"
                             }
                         }
                     } | Sort-Object Date,Name,Currency | Select-Object)
