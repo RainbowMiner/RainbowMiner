@@ -382,6 +382,10 @@ try {
         $AddAlgorithm += @("RandomHash")
     }
 
+    if ($Version -le (Get-Version "3.9.9.6")) {
+        Get-ChildItem "Stats\Pools\*_X16R_Profit.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
