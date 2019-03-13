@@ -86,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
                 Port          = $_.port
-                User          = "$($Wallets."$($_.symbol)")$(if ($_.usepid -and $Wallets."$($_.symbol)" -notmatch "^.+?\.[^\.]+$") {".0"})/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
+                User          = "$($Wallets.$Pool_Currency)$(if ($_.usepid -and $Wallets.$Pool_Currency -notmatch "^.+?\.[^\.]+$") {".0"})/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                 Pass          = "x"
                 Region        = $Pool_Region
                 SSL           = $_.ssl

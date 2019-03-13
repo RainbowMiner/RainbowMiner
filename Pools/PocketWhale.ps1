@@ -109,7 +109,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Host          = $_.host
             Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
             Ports         = $Pool_Ports
-            User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
+            User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
             Pass          = "{workername:$Worker}"
             Region        = $Pool_Region_Default
             SSL           = $False

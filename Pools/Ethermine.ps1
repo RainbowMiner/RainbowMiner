@@ -65,7 +65,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($Pool_Region)$($_.host)"
                 Port          = $_.port
-                User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
+                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $_.ssl

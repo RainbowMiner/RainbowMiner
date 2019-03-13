@@ -84,7 +84,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Host          = "mine.$($Pool_RpcPath).fairpool.xyz"
             Port          = $_.port
             Ports         = $Pool_Ports
-            User          = $Pool_User -replace '%wallet%',"$($Wallets.$($_.symbol))" -replace '%worker%',"{workername:$Worker}"
+            User          = $Pool_User -replace '%wallet%',"$($Wallets.$Pool_Currency)" -replace '%worker%',"{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_Region_Default
             SSL           = $False

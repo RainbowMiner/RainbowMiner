@@ -147,7 +147,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Host          = "$($Pool_RpcPath).herominers.com"
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
-                User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
+                User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
                 Pass          = "{workername:$Worker}"
                 Region        = $Pool_Region_Default
                 SSL           = $Pool_SSL

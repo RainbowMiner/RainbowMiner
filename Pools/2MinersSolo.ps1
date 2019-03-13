@@ -140,7 +140,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = "stratum+tcp"
                 Host          = "$($_.host)"
                 Port          = $_.port
-                User          = "$($Wallets."$($Pool_Currency)").{workername:$Worker}"
+                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
                 SSL           = $false

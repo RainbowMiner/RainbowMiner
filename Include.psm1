@@ -926,8 +926,11 @@ function Get-PoolsContent {
             $Pool.StablePrice *= $Pool_Factor
             $Pool | Add-Member -NotePropertyMembers @{
                 AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
-                Name =$Pool_Name
-                Penalty = $Config.Penalty
+                Name          = $Pool_Name
+                Penalty       = $Config.Penalty
+                Wallet        = $Config.Wallets."$($Pool.Currency)"
+                Worker        = $Config.Worker
+                Email         = $Config.Email
             } -Force -PassThru
         }
     }

@@ -172,7 +172,7 @@ $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {
                     Host          = "$($Pool_HostPath).ingest$(if ($Pool_Region -ne $Pool_Region_Default) {"-$Pool_Region"}).cryptoknight.cc"
                     Port          = $Pool_Port.CPU
                     Ports         = $Pool_Port
-                    User          = "$($Wallets.$($_.symbol)){diff:$(if ($_.diffdot) {$_.diffdot} else {"."})`$difficulty}"
+                    User          = "$($Wallets.$Pool_Currency){diff:$(if ($_.diffdot) {$_.diffdot} else {"."})`$difficulty}"
                     Pass          = "{workername:$Worker}"
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL

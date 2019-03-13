@@ -117,7 +117,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Host          = "$(if ($Pool_Region -ne $Pool_Region_Default) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
                 Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
                 Ports         = $Pool_Ports
-                User          = "$($Wallets.$($_.symbol)){diff:.`$difficulty}"
+                User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
                 Pass          = "w={workername:$Worker}"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $False
