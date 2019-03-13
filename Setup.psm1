@@ -160,11 +160,11 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","servername","serverport")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","servername","serverport","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","servername","serverport","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -288,6 +288,7 @@ function Start-Setup {
                                 Write-Host " "
                                 Write-Host "RainbowMiner can track this and all of your rig's status at https://rbminer.net (or another compatible service) " -ForegroundColor Cyan
                                 Write-Host "If you enable this feature, you may enter an existing miner status key or create a new one. " -ForegroundColor Cyan
+                                Write-Host "It is possible to enter an email address or a https://pushover.net user key to be notified in case your rig is offline. " -ForegroundColor Cyan
                                 Write-Host " "
                             }
                             $Config.EnableMinerStatus = Read-HostBool -Prompt "Do you want to enable central monitoring?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -319,7 +320,14 @@ function Start-Setup {
                         }
                         "minerstatusemail" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusEmail = Read-HostString -Prompt "Enter a offline notification eMail (leave empty to disable)" -Default $Config.MinerStatusEmail -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusEmail = Read-HostString -Prompt "Enter a offline notification eMail ($(if ($Config.MinerStatusEmail) {"clear"} else {"leave empty"}) to disable)" -Default $Config.MinerStatusEmail -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "pushoveruserkey" {
+                            if (Get-Yes $Config.EnableMinerStatus) {
+                                $Config.PushOverUserKey = Read-HostString -Prompt "Enter your https://pushover.net user key ($(if ($Config.PushOverUserKey) {"clear"} else {"leave empty"}) to disable)" -Default $Config.PushOverUserKey -Characters "A-Z0-9" -MinLength 30 -MaxLength 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -350,7 +358,7 @@ function Start-Setup {
                         }
                         "servername" {
                             if ($Config.RunMode -eq "client") {
-                                $Config.ServerName = Read-HostString -Prompt "Enter the server name (or leave empty for standalone operation)" -Default $Config.ServerName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.ServerName = Read-HostString -Prompt "Enter the server name ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -361,7 +369,7 @@ function Start-Setup {
                                 "server" {"Enter the port to listen for clients"}
                             }
                             if ($ServerPortPrompt) {
-                                $Config.ServerPort = Read-HostInt -Prompt "$($ServerPortPrompt) (or leave empty for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.ServerPort = Read-HostInt -Prompt "$($ServerPortPrompt) ($(if ($Config.ServerPort) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -917,6 +925,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member MinerStatusUrl $Config.MinerStatusUrl -Force
                             $ConfigActual | Add-Member MinerStatusKey $Config.MinerStatusKey -Force
                             $ConfigActual | Add-Member MinerStatusEmail $Config.MinerStatusEmail -Force
+                            $ConfigActual | Add-Member PushOverUserKey $Config.PushOverUserKey -Force
                             $ConfigActual | Add-Member NVSMIpath $Config.NVSMIpath -Force
                             $ConfigActual | Add-Member Quickstart $(if (Get-Yes $Config.Quickstart){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member StartPaused $(if (Get-Yes $Config.StartPaused){"1"}else{"0"}) -Force
@@ -1337,14 +1346,14 @@ function Start-Setup {
                                         Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
 
                                         Write-HostSetupDataWindowHints
-                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool (leave empty for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
+                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}                                        
                                     }
                                     "stataverage" {
                                         Write-Host " "
                                         Write-Host "*** Define the pool's moving average price trendline" -ForegroundColor Green
 
                                         Write-HostSetupStatAverageHints
-                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used (or leave empty for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                        $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverage) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                     }
                                     "focuswallet" {
                                         $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
