@@ -2609,7 +2609,7 @@ class Miner {
         if ($gpu -lt -2) {$gpu=-2} elseif ($gpu -gt 3) {$gpu=3}
         $this.Priorities.CPU = $cpu
         $this.Priorities.GPU = $gpu
-        $this.Priorities.CPUAffinity = if ($this.DeviceName -notlike "CPU*") {ConvertFrom-CPUAffinity $affinity -ToInt} else {0}
+        $this.Priorities.CPUAffinity = ConvertFrom-CPUAffinity $affinity -ToInt
     }
 
     SetStatusRaw([MinerStatus]$Status) {
