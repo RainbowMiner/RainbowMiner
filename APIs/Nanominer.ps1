@@ -11,6 +11,7 @@ class Nanominer : Miner {
             "mport=-$($this.Port)
 webPort = 0
 Watchdog = false
+noLog = true
 
 [$($Parameters.Algo)]
 wallet=$($Parameters.Wallet -split '\.' | Select-Object -First 1)
