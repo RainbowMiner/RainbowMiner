@@ -27,6 +27,7 @@
 126	CcminerMtp
 127	CcminerThe1
 128	CcminerDyn
+129	CcminerVerus
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -105,6 +106,7 @@
 532	CpuminerRplant
 533	RhminerCpu
 534	Nanominer
+535	CpuminerVerus
 
 
 4068    CcminerSpModTribus
