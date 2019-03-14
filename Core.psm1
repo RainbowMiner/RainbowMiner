@@ -655,7 +655,6 @@ function Invoke-Core {
     $API.Devices = $Session.Devices
 
     if (-not $Session.Devices) {
-        Write-Log -Level Warn "No devices available. Running in pause mode, only. "
         $Session.PauseMiners = $API.Pause = $true
     }
 
@@ -1530,7 +1529,11 @@ function Invoke-Core {
 
     #Display mining information
     $Running = $false
-    if (($Session.AllPools | Measure-Object).Count -eq 0) {
+    if (($Session.Devices | Measure-Object).Count -eq 0) {
+        Write-Host " "
+        Write-Log -Level Warn "No devices available. Running in pause mode, only. "
+        Write-Host " "
+    } elseif (($Session.AllPools | Measure-Object).Count -eq 0) {
         Write-Host " "
         Write-Log -Level Warn "No pools available: $(if ($AllPools_BeforeWD_Count -gt 0 ) {"disabled by Watchdog"} else {"check your configuration"})"
         Write-Host " "
