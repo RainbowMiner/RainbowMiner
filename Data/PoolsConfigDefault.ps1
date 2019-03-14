@@ -142,6 +142,15 @@
         "ZergPoolCoins" = [PSCustomObject]@{
             Currencies=@("BTC")
         }
+        "ZergPoolCoinsParty" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
+            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
+            Currencies=@("BTC")
+        }
+        "ZergPoolCoinsSolo" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AllowZero="1"}
+            Currencies=@("BTC")
+        }
         "ZergPoolParty" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
             SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
