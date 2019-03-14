@@ -1179,8 +1179,8 @@ function Invoke-Core {
     $Session.Stats = $null
 
     #Open firewall ports for all miners
-    if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
-        #if ((Get-Command "Get-MpComputerStatus" -ErrorAction Ignore) -and (Get-MpComputerStatus -ErrorAction Ignore)) {
+    try {
+        if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
             if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
                 if ($Session.MinerFirewalls -eq $null) {$Session.MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
                 if (@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Session.MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>") {
@@ -1188,8 +1188,8 @@ function Invoke-Core {
                     $Session.MinerFirewalls = $null
                 }
             }
-        #}
-    }
+        }
+    } catch {}
     Remove-Variable "AllMiners"
 
     #Remove miners with developer fee
