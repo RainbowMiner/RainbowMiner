@@ -599,7 +599,8 @@ function Invoke-Core {
         Write-Log "Device configuration changed. Refreshing now. "
 
         #Load information about the devices
-        $Session.Devices = @(Get-Device $Session.Config.DeviceName | Select-Object)
+        $Session.Devices = @()
+        if (($Session.Config.DeviceName | Measure-Object).Count) {$Session.Devices = @(Get-Device $Session.Config.DeviceName | Select-Object)}
         $Session.DevicesByTypes = [PSCustomObject]@{
             NVIDIA = @($Session.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Select-Object)
             AMD    = @($Session.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Select-Object)
@@ -654,9 +655,8 @@ function Invoke-Core {
     $API.Devices = $Session.Devices
 
     if (-not $Session.Devices) {
-        Write-Log -Level Warn "No devices available. Please check your configuration. "
-        Start-Sleep 60
-        continue
+        Write-Log -Level Warn "No devices available. Running in pause mode, only. "
+        $Session.Config.PauseMiners = $API.Pause = $true
     }
 
     #Check for miner config
