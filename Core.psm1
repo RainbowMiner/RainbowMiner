@@ -656,7 +656,7 @@ function Invoke-Core {
 
     if (-not $Session.Devices) {
         Write-Log -Level Warn "No devices available. Running in pause mode, only. "
-        $Session.Config.PauseMiners = $API.Pause = $true
+        $Session.PauseMiners = $API.Pause = $true
     }
 
     #Check for miner config
