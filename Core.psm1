@@ -380,7 +380,7 @@ function Invoke-Core {
 
     $MSIAenabled = -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
 
-    if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $true}
+    if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
     #Check for algorithms config
     Set-AlgorithmsConfigDefault $Session.ConfigFiles["Algorithms"].Path
