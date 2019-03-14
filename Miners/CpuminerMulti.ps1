@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Multi\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6-cpuminermulti/cpuminer-multi-1.3.6.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6.1-cpuminermulti/cpuminer-multi-1.3.6.1.7z"
 $ManualUri = "https://github.com/tpruvot/cpuminer-multi/releases"
 $Port = "513{0:d2}"
 $DevFee = 0.0
@@ -15,25 +15,25 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "allium"; Params = ""; ExtendInterval = 2} #allium, CpuminerJayddee faster
-    [PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; ExtendInterval = 2} #axiom
-    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""; ExtendInterval = 2} #BMW
-    [PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; ExtendInterval = 2} #Drop
-    [PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""; ExtendInterval = 2} #Fresh
-    [PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""; ExtendInterval = 2} #Heavy
-    [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; ExtendInterval = 2} #JHA
-    [PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""; ExtendInterval = 2} #Luffa
-    [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #Pentablake
-    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
-    [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #Pluck
+    #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; ExtendInterval = 2} #axiom
+    #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""; ExtendInterval = 2} #BMW
+    #[PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; ExtendInterval = 2} #Drop
+    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""; ExtendInterval = 2} #Fresh
+    #[PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""; ExtendInterval = 2} #Heavy
+    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; ExtendInterval = 2} #JHA
+    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""; ExtendInterval = 2} #Luffa
+    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #Pentablake
+    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
+    #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #Pluck
     [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""; ExtendInterval = 2} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
-    [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #SHAvite3
-    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #Skein2
+    #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #SHAvite3
+    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #Skein2
     [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
-    [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #X12
-    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt, CpuminerJayddee faster
-    [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #ZR5
+    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #X12
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt, CpuminerJayddee faster
+    #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #ZR5
 
     #GPU or ASIC - never profitable
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExtendInterval = 2} #Blake2s
