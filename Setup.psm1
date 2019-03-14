@@ -291,7 +291,7 @@ function Start-Setup {
                                 Write-Host "It is possible to enter an email address or a https://pushover.net user key to be notified in case your rig is offline. " -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.EnableMinerStatus = Read-HostBool -Prompt "Do you want to enable central monitoring?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.EnableMinerStatus = Read-HostBool -Prompt "Do you want to enable central monitoring?" -Default $Config.EnableMinerStatus | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
                         "minerstatusurl" {
                             if (Get-Yes $Config.EnableMinerStatus) {
@@ -554,10 +554,14 @@ function Start-Setup {
                             $Config.DeviceName = @($NewDeviceName.Values | Where-Object {$_} | Foreach-Object {$_} | Select-Object -Unique | Sort-Object)
                             if ($Config.DeviceName.Count -eq 0) {
                                 Write-Host " "
-                                Write-Host "No devices selected. You cannot mine without devices. Restarting device input" -ForegroundColor Yellow
+                                if (Read-HostBool -Prompt "No devices selected. Do you want to restart the device setup?" -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}) {
+                                    $GlobalSetupStepBack = $GlobalSetupStepBack.Where({$_ -notmatch "^devicenamewizard"})                                                
+                                    throw "Goto devicenamewizard"
+                                }
                                 Write-Host " "
-                                $GlobalSetupStepBack = $GlobalSetupStepBack.Where({$_ -notmatch "^devicenamewizard"})                                                
-                                throw "Goto devicenamewizard"
+                                Write-Host "No mining on this machine. RainbowMiner will start paused. " -ForegroundColor Yellow
+                                Write-Host " "
+                                $Config.StartPaused = $true
                             }
                             if ($NewDeviceName["AMD"]) {
                                 Write-Host " "
