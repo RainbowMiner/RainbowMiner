@@ -45,7 +45,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
 
-        $Commands | Where-Object {$_.Vendor -icontains "Miner_Vendor"} | ForEach-Object {            
+        $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {            
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
             $MinMemGB = $_.MinMemGB
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
