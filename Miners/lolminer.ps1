@@ -18,8 +18,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 4; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 2.8; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3.5; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
