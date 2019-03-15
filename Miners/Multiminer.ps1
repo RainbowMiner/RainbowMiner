@@ -18,7 +18,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "argon2ad";    MinMemGb = 2; Params = "--gpu-batchsize=512 -t 1"} #Argon2ad
     #[PSCustomObject]@{MainAlgorithm = "argon2d250";  MinMemGb = 2; Params = "--gpu-batchsize=2048 -t 1"} #Argon2d250
     #[PSCustomObject]@{MainAlgorithm = "argon2d500";  MinMemGb = 2; Params = "--gpu-batchsize=1024 -t 1"} #Argon2d500
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2; Params = "--gpu-batchsize=256 -t 1"} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; MinMemGb = 2; Params = "--gpu-batchsize=256 -t 1"; ExtendInterval = 3} #Argon2d4096
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
