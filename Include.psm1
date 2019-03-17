@@ -3305,7 +3305,7 @@ function Set-ContentJson {
                     $FileStream.Dispose()
                     $Exists = $true
             }
-            if ($MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
+            if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
                 if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8}
                 else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8}
             } elseif ($Exists) {
