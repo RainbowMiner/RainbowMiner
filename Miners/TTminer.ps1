@@ -18,13 +18,13 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"  ; MinMemGB = 2; Params = ""} #Ethash2GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 2; Params = ""} #LYRA2V3
-    [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""} #MTP
-    #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""} #MYRGR    
+    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
+    #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #MYRGR    
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW 
-    [PSCustomObject]@{MainAlgorithm = "UBQHASH"    ; MinMemGB = 2; Params = ""} #Ubqhash 
+    [PSCustomObject]@{MainAlgorithm = "UBQHASH"    ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #Ubqhash 
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
