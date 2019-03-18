@@ -60,6 +60,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
         Pending     = $Request.unsold
         Total       = $Request.unpaid
         Paid        = $Request.total - $Request.unpaid
+        Paid24h     = $Request.paid24h
         Earned      = $Request.total
         Payouts     = @($Request.payouts | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()

@@ -42,7 +42,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
                 Balance     = $Request.stats.balance / $Divisor
                 Pending     = $Request.stats.pendingIncome / $Divisor
                 Total       = $Request.stats.balance / $Divisor + $Request.stats.pendingIncome / $Divisor
-                Payed       = $Request.stats.paid / $Divisor
+                Paid        = $Request.stats.paid / $Divisor
                 Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

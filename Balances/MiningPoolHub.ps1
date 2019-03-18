@@ -42,6 +42,7 @@ $Request.getuserallbalances.data | Foreach-Object {
         Balance     = $_.confirmed
         Pending     = $_.unconfirmed + $_.ae_confirmed + $_.ae_unconfirmed + $_.exchange
         Total       = $_.confirmed + $_.unconfirmed + $_.ae_confirmed + $_.ae_unconfirmed + $_.exchange
+        Paid        = 0
         Lastupdated = (Get-Date).ToUniversalTime()
     }
 }

@@ -20,7 +20,7 @@ $Request.PSObject.Properties.Name | Foreach-Object {
         Balance     = [Double]$Request.$_.confirmed
         Pending     = [Double]$Request.$_.unconfirmed
         Total       = [Double]$Request.$_.confirmed + [Double]$Request.$_.unconfirmed
-        Payed       = 0
+        Paid        = 0
         Earned      = 0
         Payouts     = @()
         LastUpdated = (Get-Date).ToUniversalTime()

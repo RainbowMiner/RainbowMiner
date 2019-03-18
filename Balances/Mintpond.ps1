@@ -27,7 +27,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
                 Balance     = [double]$Request.miner.balances.confirmed
                 Pending     = [double]$Request.miner.balances.unconfirmed
                 Total       = [double]$Request.miner.balances.confirmed + [double]$Request.miner.balances.unconfirmed
-                Payed       = [double]$Request.miner.balances.paid
+                Paid        = [double]$Request.miner.balances.paid
                 Earned      = 0
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()

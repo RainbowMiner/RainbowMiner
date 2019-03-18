@@ -36,7 +36,7 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name
                 Balance     = $Request.balance
                 Pending     = $Request.pending
                 Total       = $Request.balance + $Request.pending
-                Payed       = $Request.earnedTotal - $Request.balance - $Request.pending
+                Paid        = $Request.earnedTotal - $Request.balance - $Request.pending
                 Earned      = $Request.earnedTotal
                 Payouts     = @($Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()

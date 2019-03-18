@@ -33,7 +33,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
                 Balance     = [Math]::Max([double]$Request.data.balance,0)
                 Pending     = [double]$Request.data.unconfirmed_balance
                 Total       = [Math]::Max([double]$Request.data.balance,0) + [double]$Request.data.unconfirmed_balance
-                Payed       = 0
+                Paid        = 0
                 Earned      = 0
                 Payouts     = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/payments/$($Pool_User)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
                 LastUpdated = (Get-Date).ToUniversalTime()

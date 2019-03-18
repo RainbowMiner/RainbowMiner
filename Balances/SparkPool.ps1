@@ -32,7 +32,8 @@ $Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";
                 Balance     = $Request.data.balance
                 Pending     = 0
                 Total       = $Request.data.balance
-                Payed       = $Request.data.totalPaid
+                Paid24h     = 0
+                Paid        = $Request.data.totalPaid
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

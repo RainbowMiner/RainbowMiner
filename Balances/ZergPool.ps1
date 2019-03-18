@@ -36,7 +36,9 @@ $Payout_Currencies | Where-Object {@("BTC", "DASH", "LTC") + @($PoolCoins_Reques
                 Balance     = $Request.balance
                 Pending     = $Request.unsold
                 Total       = $Request.unpaid
-                Earned      = $Request.paidtotal
+                Paid        = $Request.total - $Request.unpaid
+                Paid24h     = $Request.paid24h
+                Earned      = $Request.total
                 Payouts     = @($Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

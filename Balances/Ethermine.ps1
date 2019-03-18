@@ -26,7 +26,7 @@ $API_Hosts.PSObject.Properties | Where-Object {$Config.Pools.$Name.Wallets."$($_
                 Balance     = [double]$Request.data.currentStatistics.unpaid/1e18
                 Pending     = [double]$Request.data.currentStatistics.unconfirmed/1e18
                 Total       = [double]$Request.data.currentStatistics.unpaid/1e18 + [double]$Request.data.currentStatistics.unconfirmed/1e18
-                Payed       = 0
+                Paid        = 0
                 Earned      = 0
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
