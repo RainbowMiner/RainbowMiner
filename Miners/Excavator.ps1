@@ -92,7 +92,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $ExtendInterval = $_.ExtendInterval
         $FaultTolerance = $_.FaultTolerance
         
-        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb)})
+        $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)})
 
         if ($Pools.$Main_Algorithm_Norm.Name -eq "Nicehash" -and $Miner_Device) {
             $Pool_Port = if ($Pools.$Main_Algorithm_Norm.Ports -ne $null -and $Pools.$Main_Algorithm_Norm.Ports.GPU) {$Pools.$Main_Algorithm_Norm.Ports.GPU} else {$Pools.$Main_Algorithm_Norm.Port}

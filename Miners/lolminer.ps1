@@ -48,7 +48,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {            
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
             $MinMemGB = $_.MinMemGB
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb)}
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Pools.$Algorithm_Norm.Name -ne "NiceHash" -or $_.MainAlgorithm -eq "Equihash25x5")) {

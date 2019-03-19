@@ -71,7 +71,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			$Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 			$MinMemGB = $_.MinMemGB
 			$Miner_ExtendInterval = $_.ExtendInterval
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge $MinMemGB * 1Gb}
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
