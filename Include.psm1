@@ -1525,7 +1525,9 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [Switch]$ExpandLines,
         [Parameter(Mandatory = $false)]
-        [Switch]$ExcludeEmptyLines
+        [Switch]$ExcludeEmptyLines,
+        [Parameter(Mandatory = $false)]
+        [Switch]$AutoWorkingDirectory = $false
         )
     try {
         $psi = New-object System.Diagnostics.ProcessStartInfo
@@ -1536,6 +1538,7 @@ function Invoke-Exe {
         $psi.FileName = Resolve-Path $FilePath
         $psi.Arguments = $ArgumentList
         if ($WorkingDirectory -ne '') {$psi.WorkingDirectory = $WorkingDirectory}
+        elseif ($AutoWorkingDirectory) {$psi.WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $psi
         [void]$process.Start()
@@ -4642,19 +4645,21 @@ param(
     [Parameter(Mandatory = $True)]
     [String[]]$DeviceName
 )
-	foreach ($Device in ($Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega" -and $_.InstanceId})) {
+    $Device = $Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
+    if ($Device) {
+        $DeviceId   = $Device.Type_Vendor_Index -join ','
+        $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
+        $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
         try {
-            if ($InstanceId = Get-PnpDevice -Class "Display" | Where InstanceId -like $($Device.InstanceId -replace '_','?') | Select-Object -ExpandProperty InstanceId) {
-		        Disable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
-		        Start-Sleep 3
-		        Enable-PnpDevice -DeviceId $InstanceId -ErrorAction Stop -Confirm:$false > $null
-		        Start-Sleep 3
-                Write-Log -Level Info "Disabled/Enabled device $($Device.Model) $($Device.Name)"
-            }
+            Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","on") -AutoWorkingDirectory  >$null
+            Sleep 1
+            Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","off") -AutoWorkingDirectory >$null
+            Sleep 1
+            Write-Log -Level Info "Disabled/Enabled device(s) $DeviceId"
         } catch {
-            Write-Log -Level Info "Failed to disable/enable device $($Device.Model) $($Device.Name): $($_.Exception.Message)"
+            Write-Log -Level Info "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"
         }
-	}
+    }
 }
 
 function Test-Internet {
