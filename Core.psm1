@@ -859,7 +859,7 @@ function Invoke-Core {
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00) * (-not $Pools.$_.PPS))) -Force
             $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
-            $Pools.$_ | Add-Member HasMinerExclusions ((($Session.Config.Pools.$Pool_Name.MinerName | Measure-Object).Count -gt 0) -or (($Session.Config.Pools.$Pool_Name.ExcludeMinerName | Measure-Object).Count -gt 0)) -Force
+            $Pools.$_ | Add-Member HasMinerExclusions ($Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count) -Force
         }
         Remove-Variable "Pools_Hashrates"
     }
@@ -882,6 +882,13 @@ function Invoke-Core {
             Where-Object {$Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | 
             Where-Object {$Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0} |
             Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm -join '-')".Disable} |
+            Where-Object {$Miner_Name = $_.BaseName
+                            ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
+                                $Pool_Name = $Pools.$_.Name
+                                ($Session.Config.Pools.$Pool_Name.MinerName.Count -and $Session.Config.Pools.$Pool_Name.MinerName -inotcontains $Miner_Name) -or
+                                ($Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -icontains $Miner_Name)
+                            } | Measure-Object).Count -eq 0
+            } |
             Where-Object {
                 $MinerOk = $true
                 foreach ($p in @($_.DeviceModel -split '-')) {

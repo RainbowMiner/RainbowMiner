@@ -954,15 +954,7 @@ function Get-MinersContent {
 
     foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore)) {
         $Name = $Miner.BaseName
-        if ($InfoOnly -or (
-                (($Miner.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
-                    $Pool_Name = $Pools.$_.Name
-                    (($Session.Config.Pools.$Pool_Name.MinerName | Measure-Object).Count -gt 0 -and $Session.Config.Pools.$Pool_Name.MinerName -inotcontains $Name) -or 
-                    (($Session.Config.Pools.$Pool_Name.ExcludeMinerName | Measure-Object).Count -gt 0 -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -icontains $Name)
-                } | Measure-Object).Count -eq 0) -and
-                ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)
-            )
-         ) {
+        if ($InfoOnly -or ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
                 $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
                 $c | Add-Member -NotePropertyMembers @{
