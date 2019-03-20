@@ -101,7 +101,7 @@ function Get-NvidiaArchitecture {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and @("API_Key","API_ID","API_Secret","AECurrency","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet","Wallets","AllowZero","StatAverage","Email","Password") -inotcontains $_.Name -and $_.Name -notmatch "-Params$"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and @("API_Key","API_ID","API_Secret","AECurrency","User","Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","AllowZero","StatAverage","Email","Password") -inotcontains $_.Name -and $_.Name -notmatch "-Params$"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -954,7 +954,14 @@ function Get-MinersContent {
 
     foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore)) {
         $Name = $Miner.BaseName
-        if ($InfoOnly -or (Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {
+        if ($InfoOnly -or (
+                (($Miner.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
+                    (($Pools.$_.MinerName | Measure-Object).Count -gt 0 -and $Pools.$_.MinerName -inotcontains $Name) -or 
+                    (($Pools.$_.ExcludeMinerName | Measure-Object).Count -gt 0 -and $Pools.$_.ExcludeMinerName -icontains $Name)
+                } | Measure-Object).Count -eq 0) -and
+                ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)
+            )
+         ) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
                 $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
                 $c | Add-Member -NotePropertyMembers @{
@@ -3601,7 +3608,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";DataWindow="";StatAverage=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";DataWindow="";StatAverage=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             if ($Pools.Count -gt 0) {

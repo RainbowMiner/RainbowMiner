@@ -1172,7 +1172,7 @@ function Start-Setup {
 
             Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
 
-            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";StatAverage = "";DataWindow = ""}
+            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";StatAverage = "";DataWindow = ""}
 
             $PoolSetupDone = $false
             do {
@@ -1214,7 +1214,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin","stataverage")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin","minername","excludeminername","stataverage")) > $null
                         if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -1283,6 +1283,12 @@ function Start-Setup {
                                     }
                                     "excludecoinsymbol" {
                                         $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "minername" {
+                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "excludeminername" {
+                                        $PoolConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $PoolConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "enableautocoin" {
                                         $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1373,6 +1379,8 @@ function Start-Setup {
                                         $PoolConfig | Add-Member ExcludeCoin $($PoolConfig.ExcludeCoin -join ",") -Force
                                         $PoolConfig | Add-Member CoinSymbol $($PoolConfig.CoinSymbol -join ",") -Force
                                         $PoolConfig | Add-Member ExcludeCoinSymbol $($PoolConfig.ExcludeCoinSymbol -join ",") -Force
+                                        $PoolConfig | Add-Member MinerName $($PoolConfig.MinerName -join ",") -Force
+                                        $PoolConfig | Add-Member ExcludeMinerName $($PoolConfig.ExcludeMinerName -join ",") -Force
                                         $PoolConfig | Add-Member EnableAutoCoin $(if (Get-Yes $PoolConfig.EnableAutoCoin){"1"}else{"0"}) -Force
                                         $PoolConfig | Add-Member FocusWallet $($PoolConfig.FocusWallet -join ",") -Force
                                         $PoolConfig | Add-Member AllowZero $(if (Get-Yes $PoolConfig.AllowZero){"1"}else{"0"}) -Force
