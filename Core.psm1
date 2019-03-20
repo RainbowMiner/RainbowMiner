@@ -489,7 +489,7 @@ function Invoke-Core {
 
     if ($CheckPools) {
         foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
-            foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet")) {
+            foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
                 if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @(($Session.Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
                 if ($q -eq "FocusWallet" -and $Session.Config.Pools.$p.$q.Count) {
                     $Session.Config.Pools.$p.$q = @(Compare-Object $Session.Config.Pools.$p.$q $Session.Config.Pools.$p.PSObject.Properties.Name -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject -Unique)
@@ -561,7 +561,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member ExcludePoolName @(Compare-Object @($Session.AvailPools) @($DonationPoolsAvail) | Select-Object -ExpandProperty InputObject) -Force
             }
             foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
-                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet")) {
+                foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
                     if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @(($Session.Config.Pools.$p.$q -split "[,;]" | Select-Object) | Where-Object {$_} | Foreach-Object {$_.Trim()})}
                     $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
                 }
