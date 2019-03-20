@@ -956,8 +956,9 @@ function Get-MinersContent {
         $Name = $Miner.BaseName
         if ($InfoOnly -or (
                 (($Miner.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
-                    (($Pools.$_.MinerName | Measure-Object).Count -gt 0 -and $Pools.$_.MinerName -inotcontains $Name) -or 
-                    (($Pools.$_.ExcludeMinerName | Measure-Object).Count -gt 0 -and $Pools.$_.ExcludeMinerName -icontains $Name)
+                    $Pool_Name = $Pools.$_.Name
+                    (($Session.Config.Pools.$Pool_Name.MinerName | Measure-Object).Count -gt 0 -and $Session.Config.Pools.$Pool_Name.MinerName -inotcontains $Name) -or 
+                    (($Session.Config.Pools.$Pool_Name.ExcludeMinerName | Measure-Object).Count -gt 0 -and $Session.Config.Pools.$Pool_Name.ExcludeMinerName -icontains $Name)
                 } | Measure-Object).Count -eq 0) -and
                 ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)
             )
