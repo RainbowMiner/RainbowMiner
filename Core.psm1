@@ -859,7 +859,7 @@ function Invoke-Core {
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00) * (-not $Pools.$_.PPS))) -Force
             $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
-            $Pools.$_ | Add-Member HasMinerExclusions (($Session.Config.Pools.$Pool_Name.MinerName | Measure-Object).Count -gt 0 -or ($Session.Config.Pools.$Pool_Name.ExcludeMinerName | Measure-Object).Count -gt 0) -Force
+            $Pools.$_ | Add-Member HasMinerExclusions ((($Session.Config.Pools.$Pool_Name.MinerName | Measure-Object).Count -gt 0) -or (($Session.Config.Pools.$Pool_Name.ExcludeMinerName | Measure-Object).Count -gt 0)) -Force
         }
         Remove-Variable "Pools_Hashrates"
     }
