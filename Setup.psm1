@@ -1236,7 +1236,7 @@ function Start-Setup {
                                     }
                                     "algorithmtitle" {
                                         Write-Host " "
-                                        Write-Host "*** Edit pool's algorithms and coins ***" -ForegroundColor Green
+                                        Write-Host "*** Edit pool's algorithms, coins and miners ***" -ForegroundColor Green
                                         Write-Host " "
                                     }
                                     "worker" {
