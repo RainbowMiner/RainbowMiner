@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\GRIN-GrinPro\GrinProMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1-grinprominer/GrinPro_1_1.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0b-grinpro/GrinPro_2_beta_Win64.zip"
 $ManualURI = "https://grinpro.io"
 $Port = "335{0:d2}"
 $DevFee = 2.0
@@ -16,7 +16,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 8; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 8; Params = ""; DevFee = 2.0; ExtendInterval = 2; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 8; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
