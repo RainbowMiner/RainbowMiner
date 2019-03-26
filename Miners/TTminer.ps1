@@ -21,9 +21,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"    ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"        ; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
     #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #MYRGR    
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 3} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 3} #ProgPoW3gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"    ; MinMemGB = 4; Params = ""; ExtendInterval = 3} #ProgPoW 
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"    ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #Ubqhash 
 )
 
