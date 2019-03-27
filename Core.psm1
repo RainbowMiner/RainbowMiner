@@ -742,7 +742,7 @@ function Invoke-Core {
     #Load the stats
     Write-Log "Loading saved statistics. "
 
-    [hashtable]$Session.Stats = Get-Stat -NoPools
+    [hashtable]$Session.Stats = Get-Stat -Miners
 
     #Give API access to the current stats
     $API.Stats = $Session.Stats

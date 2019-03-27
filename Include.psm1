@@ -829,12 +829,14 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
-        [Switch]$NoPools = $false
+        [Switch]$Pools = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Miners = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Totals = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$All = $false
     )
-
-    if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
-    if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
-    if (-not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
 
     if ($Name) {
         # Return single requested stat
@@ -842,6 +844,8 @@ function Get-Stat {
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
         elseif ($Name -match '_Total$') {$Path = "Stats\Totals"}
         else {$Path = "Stats"}
+
+        if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
 
         if ($Sub) {
             #legacy
@@ -855,10 +859,21 @@ function Get-Stat {
         # Return all stats
         [hashtable]$Stats = @{}
 
+        if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+        if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+        if (($Totals -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
+
+        $Match = @()
+        if ($Miners) {$Match += "Hashrate"}
+        if ($Pools)  {$Match += "Profit|BLK|HSR|TTF"}
+        if ($Totals) {$Match += "Total"}
+
+        $MatchStr = $Match -join "|"
+
         foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
-            if ($NoPools -and $BaseName -match '_(Profit|BLK|HSR|TTF)$') {continue}
+            if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
             try {
                 $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }
