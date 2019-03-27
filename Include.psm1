@@ -532,6 +532,7 @@ Function Set-Total {
                     Cost     = $TotalCost
                     Profit   = $TotalProfit
                     Power    = $TotalPower
+                    Started  = $Updated
                     Updated  = $Updated
                 }
     }
