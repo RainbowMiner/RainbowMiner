@@ -227,7 +227,7 @@
 
                     $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).zip"))
                     $ContentType = $MIMETypes[".zip"]
-                    $ContentFileName = "debug-$($DebugDate).zip"
+                    $ContentFileName = "debug_$($DebugDate).zip"
 
                     Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
                     Break
@@ -254,6 +254,9 @@
                 }
                 "/totalscsv" {
                     $Data = @((Get-Stat -Totals).Values | Sort-Object Pool | Select-Object) | ConvertTo-Csv -NoTypeInformation -ErrorAction Ignore
+                    $Data = $Data -join "`r`n"
+                    $ContentType = "text/csv"
+                    $ContentFileName = "totals_$(Get-Date -Format "yyyy-MM-dd_HHmmss").txt"
                     Break
                 }
                 "/poolstats" {
