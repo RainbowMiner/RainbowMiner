@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.2-teamred/teamredminer-v0.4.2-win.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.3-teamred/teamredminer-v0.4.3-win.zip"
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
@@ -19,6 +19,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";  MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8_half"; MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";  MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl"; MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; MinMemGb = 1; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""; DevFee = 3.0}
