@@ -834,11 +834,13 @@ function Get-Stat {
 
     if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
     if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
+    if (-not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
 
     if ($Name) {
         # Return single requested stat
         if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
+        elseif ($Name -match '_Total$') {$Path = "Stats\Totals"}
         else {$Path = "Stats"}
 
         if ($Sub) {
