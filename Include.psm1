@@ -362,7 +362,7 @@ function Set-MinerStats {
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
                     $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or $Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30))
-                    $Statset++                    
+                    $Statset++
                 }
 
                 #Update watchdog timer
@@ -390,6 +390,7 @@ function Set-MinerStats {
                 $Miner_Failed_Total++
             } else {
                 Write-ActivityLog $Miner
+                Set-Total $Miner -Quiet
             }            
         }
     }
@@ -419,6 +420,7 @@ Function Write-Log {
 
         if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+        if (-not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
 
         switch ($Level) {
             'Error' {
@@ -488,6 +490,54 @@ Function Write-ActivityLog {
         }
     }
     End {}
+}
+
+Function Set-Total {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        $Miner,
+        [Parameter(Mandatory = $false)]
+        [DateTime]$Updated = (Get-Date).ToUniversalTime(),
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
+    )
+
+    $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
+
+    $Path0 = "Stats\Totals"
+    $Path = "$Path0\$($Miner.Pool).txt"
+
+    $Duration = $Miner.GetRunningTime($true)
+
+    $TotalProfit = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
+    $TotalCost   = $Miner.Profit_Cost * $Duration.TotalDays
+    $TotalPower  = $Miner.PowerDraw * $Duration.TotalDays
+
+    $Stat = Get-Content $Path -ErrorAction Ignore -Raw
+
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+        $Stat.Duration += $Duration.TotalMinutes
+        $Stat.Cost     += $TotalCost
+        $Stat.Profit   += $TotalProfit
+        $Stat.Power    += $TotalPower
+        $Stat.Updated   = $Updated
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Totals file ($Name) is corrupt and will be reset. "}
+        $Stat = [PSCustomObject]@{
+                    Duration = $Duration.TotalMinutes
+                    Pool     = $Miner.Pool[0]
+                    Cost     = $TotalCost
+                    Profit   = $TotalProfit
+                    Power    = $TotalPower
+                    Updated  = $Updated
+                }
+    }
+
+    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+    $Stat | ConvertTo-Json | Set-Content $Path
 }
 
 function Set-Stat {
@@ -2419,6 +2469,7 @@ class Miner {
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [Array]$OCprofileBackup = @()
     hidden [Int]$EthPill = 0
+    hidden [DateTime]$IntervalBegin = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -2444,6 +2495,7 @@ class Miner {
         $this.New = $true
         $this.Activated++
         $this.Rounds = 0
+        $this.IntervalBegin = 0
 
         if (-not $this.Process) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
@@ -2573,15 +2625,18 @@ class Miner {
         return $this.Activated
     }
 
-    [TimeSpan]GetRunningTime() {
+    [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
         $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
-        $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
+        $Begin = if ($MeasureInterval) {$this.IntervalBegin}
+        if (-not $MeasureInterval -or $Begin -eq 0) {$Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         
         if ($Begin -and $End) {
+            if ($MeasureInterval) {$this.IntervalBegin = $End}
             return ($End - $Begin)
         }
         elseif ($Begin) {
+            if ($MeasureInterval) {$this.IntervalBegin = Get-Date}
             return ((Get-Date) - $Begin)
         }
         else {
