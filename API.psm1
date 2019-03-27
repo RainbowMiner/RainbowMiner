@@ -252,6 +252,10 @@
                     $Data = ConvertTo-Json @(Get-Stat -Totals | Select-Object)
                     Break
                 }
+                "/totalscsv" {
+                    $Data = ConvertTo-Csv @(Get-Stat -Totals | Sort-Object Pool | Select-Object)
+                    Break
+                }
                 "/poolstats" {
                     $Data = ConvertTo-Json @(Get-Stat -Pools | Select-Object)
                     Break
