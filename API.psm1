@@ -36,9 +36,10 @@
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $API.Server = [PowerShell]::Create().AddScript({
-
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+
+        Import-Module ".\Include.psm1"
 
         $BasePath = "$PWD\web"
 
@@ -248,11 +249,11 @@
                     Break
                 }
                 "/totals" {
-                    ConvertTo-Json @(Get-Stat -Totals | Select-Object)
+                    $Data = ConvertTo-Json @(Get-Stat -Totals | Select-Object)
                     Break
                 }
                 "/poolstats" {
-                    ConvertTo-Json @(Get-Stat -Pools | Select-Object)
+                    $Data = ConvertTo-Json @(Get-Stat -Pools | Select-Object)
                     Break
                 }
                 "/sessionvars" {                    
