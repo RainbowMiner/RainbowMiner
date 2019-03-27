@@ -107,6 +107,7 @@
 533	RhminerCpu
 534	Nanominer
 535	CpuminerVerus
+536	Nheqminer
 
 
 4068    CcminerSpModTribus
