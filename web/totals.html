@@ -1,0 +1,71 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navtotals" class="h2">Pool Calculated Totals</h1>
+</div>
+<p>List of calculated totals - compare these values to real profits at pools and adjust penalties, accordingly</p>
+
+<div class="d-flex align-items-center">
+    <div class="m-2">
+        <a href="/totalscsv" id="downloadtotals" class="btn btn-primary">Download as CSV</a>
+    </div>
+    <div class="m-2">
+        <a href="#" id="resettotals" class="btn btn-danger">Reset all totals</a>
+    </div>
+</div>
+
+<table id="pools" class="table"
+       data-toggle="table"
+       data-url="/totals"
+       data-filter-control="true"
+       data-filter-show-clear="true"
+       data-sort-order="asc"
+       data-sort-name="Pool"
+       data-cache="false"
+       data-show-columns="true"
+       data-show-toggle="true"
+       data-show-refresh="true"
+       data-icons-prefix="fa"
+       data-icons="icons"
+       data-detail-view="true"
+       data-detail-formatter="detailFormatter">
+    <thead>
+        <tr>
+            <th data-field="Pool" data-sortable="true" data-filter-control="select">Poolname</th>
+            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+            <th data-field="Cost" data-align="right" data-sortable="true" data-formatter="formatBTC">Cost</th>
+            <th data-field="Power" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
+            <th data-field="Duration" data-align="right" data-sortable="true" data-formatter="formatMinutes">Minutes</th>
+            <th data-field="Started" data-sortable="true" data-formatter="formatDate">Started</th>
+            <th data-field="Updated" data-sortable="true" data-formatter="formatDate">Updated</th>
+        </tr>
+    </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+    $(function () {
+        $('#resettotals').click(function () {
+            $('.modal-body').load('scripts/resettotals.ps1', function () {
+                $('.modal-title').text('Reset All Totals');
+                $('#myModal').modal({ show: true });
+            });
+        });
+    });
+
+    function formatPrices(data) {
+        return data.toFixed(10);
+    }
+
+    function formatMinutes(data) {
+        return data.toFixed(2);
+    }
+
+    function formatPower(data) {
+        return data? (data/1000).toFixed(3) + " kWh" : '- kWh';
+    }
+
+    function formatDate(data) {
+        return new Date(data).toLocaleString();
+    }
+</script>
+<!--#include file="/parts/foot.html" -->
