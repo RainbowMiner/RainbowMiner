@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-OptBF\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.10-cpumineroptbf/cpuminer-opt-v3.8.10-bf-win64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.11-cpumineropt/cpuminer-opt-v3.8.11-bf-win64.zip"
 $ManualUri = "https://github.com/bellflower2015/cpuminer-opt/releases"
 $Port = "504{0:d2}"
 $DevFee = 0.0
@@ -15,6 +15,7 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerYespower faster
+    [PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""; ExtendInterval = 2} #yescryptr16 (old yenten)
     [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #yescryptr8
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #yescryptr16
     [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""; ExtendInterval = 2} #yescryptr24
