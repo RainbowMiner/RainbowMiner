@@ -2625,6 +2625,10 @@ class Miner {
         return $this.Activated
     }
 
+    [TimeSpan]GetRunningTime() {
+        return $this.GetRunningTime($false)
+    }
+
     [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
         $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MeasureInterval) {$this.IntervalBegin}
