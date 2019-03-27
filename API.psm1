@@ -253,7 +253,7 @@
                     Break
                 }
                 "/totalscsv" {
-                    $Data = ConvertTo-Csv @(Get-Stat -Totals | Sort-Object Pool | Select-Object)
+                    $Data = @((Get-Stat -Totals).Values | Sort-Object Pool | Select-Object) | ConvertTo-Csv -NoTypeInformation -ErrorAction Ignore
                     Break
                 }
                 "/poolstats" {
