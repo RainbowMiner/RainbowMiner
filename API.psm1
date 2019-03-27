@@ -247,6 +247,14 @@
                     $Data = ConvertTo-Json @($API.Stats | Select-Object)
                     Break
                 }
+                "/totals" {
+                    ConvertTo-Json @(Get-Stat -Totals | Select-Object)
+                    Break
+                }
+                "/poolstats" {
+                    ConvertTo-Json @(Get-Stat -Pools | Select-Object)
+                    Break
+                }
                 "/sessionvars" {                    
                     $Data = ConvertTo-Json $API.SessionVars
                     Break
