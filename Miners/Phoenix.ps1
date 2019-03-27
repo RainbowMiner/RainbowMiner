@@ -6,19 +6,23 @@ param(
 )
 
 $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.1c-phoenix/PhoenixMiner_4.1c_Windows.zip"
+$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Windows.zip"
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
-$Cuda = "6.5"
+$Cuda = "8.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "ethash2gb"; MinMemGB = 2; Params = @()} #Ethash2GB
-    [PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; Params = @()} #Ethash3GB
-    [PSCustomObject]@{MainAlgorithm = "ethash"   ; MinMemGB = 4; Params = @()} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ethash2gb"  ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash2GB
+    [PSCustomObject]@{MainAlgorithm = "ethash3gb"  ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash3GB
+    [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD"); Params = @()} #ProgPow2GB
+    [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD"); Params = @()} #ProgPow3GB
+    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD"); Params = @()} #ProgPow
 )
+$CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 0"
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -44,12 +48,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		$Miner_Model = $_.Model
 
 		switch($_.Vendor) {
-			"NVIDIA" {$Miner_Deviceparams = "-nvidia"}
+			"NVIDIA" {$Miner_Deviceparams = "-nvidia -nvdo 1"}
 			"AMD" {$Miner_Deviceparams = "-amd"}
 			Default {$Miner_Deviceparams = ""}
 		}
 
-		$Commands | ForEach-Object {
+		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
 			$Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 			$MinMemGB = $_.MinMemGB
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
@@ -59,7 +63,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-					$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^ethash', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
+					$Miner_Name = ((@($Name) + @("$($Algorithm_Norm -replace '^(ethash|progpow)', '')") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-')  -replace "-+", "-"            
 					$DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index}) -join ''
 
                     $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
@@ -72,12 +76,16 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						default {$Miner_Protocol_Params = "-proto 1"}
 					}
 
+                    $Coin = if ($Algorithm_Norm -eq "ProgPow") {"bci"}
+                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"}
+                            else {"auto"}
+
 					[PSCustomObject]@{
 						Name = $Miner_Name
 						DeviceName = $Miner_Device.Name
 						DeviceModel = $Miner_Model
 						Path = $Path
-						Arguments = "-rmode 0 -cdmport $($Miner_Port) -cdm 1 -log 0 -allpools 0 -leaveoc -coin $(if ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"} else {"auto"}) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet) {"-ewal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($_.Params)"
+						Arguments = "-cdmport $($Miner_Port) -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet) {"-ewal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
 						HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
 						API = "Claymore"
 						Port = $Miner_Port
