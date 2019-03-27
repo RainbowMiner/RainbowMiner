@@ -506,7 +506,7 @@ Function Set-Total {
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
 
     $Path0 = "Stats\Totals"
-    $Path = "$Path0\$($Miner.Pool).txt"
+    $Path = "$Path0\$($Miner.Pool[0])_Total.txt"
 
     $Duration = $Miner.GetRunningTime($true)
 
