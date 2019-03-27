@@ -249,7 +249,7 @@
                     Break
                 }
                 "/totals" {
-                    $Data = ConvertTo-Json @(Get-Stat -Totals | Select-Object)
+                    $Data = ConvertTo-Json @((Get-Stat -Totals).Values | Select-Object)
                     Break
                 }
                 "/totalscsv" {
