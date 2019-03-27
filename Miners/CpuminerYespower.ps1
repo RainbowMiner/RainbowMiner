@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-Yespower\cpuminer$($f = $Global:GlobalCPUInfo.Features; if ($f.avx2 -and $f.sha -and $f.aes) {'-avx2-sha'} elseif ($f.sse42 -and $f.sha -and $f.aes) {'-sse42-sha'} elseif ($f.avx2 -and $f.aes) {'-avx2'} elseif ($f.avx -and $f.aes) {'-avx'} elseif ($f.sse42) {'-sse42'} elseif ($f.sse2) {'-sse2'} else {''}).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.3-bubasik/cpuminer-opt-cryply-yespower-ver2.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.4-bubasik/Cpuminer-opt-yespower-ytn-ver3.zip"
 $ManualUri = "https://github.com/bubasik/cpuminer-opt-yespower/releases"
 $Port = "530{0:d2}"
 $DevFee = 0.0
@@ -15,6 +15,7 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower
+    [PSCustomObject]@{MainAlgorithm = "yespowerR16"; Params = ""; ExtendInterval = 2} #YespowerR16
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
