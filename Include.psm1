@@ -527,8 +527,8 @@ Function Set-Total {
         if ($Error.Count){$Error.RemoveAt(0)}
         if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Totals file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
-                    Duration = $Duration.TotalMinutes
                     Pool     = $Miner.Pool[0]
+                    Duration = $Duration.TotalMinutes
                     Cost     = $TotalCost
                     Profit   = $TotalProfit
                     Power    = $TotalPower
