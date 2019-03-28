@@ -88,7 +88,7 @@
 409	ProgPOWAmd
 410	SgminerDyn
 411	SgminerMTP
-412	WildRigPreview
+412	WildRig01538
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42

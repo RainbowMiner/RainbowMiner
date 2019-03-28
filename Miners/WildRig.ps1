@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.3.8b-wildrig/wildrig-multi-windows-0.15.3.8-beta.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.4p11-wildrig/wildrig-multi-windows-0.15.4-preview11.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -30,6 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
+    [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t

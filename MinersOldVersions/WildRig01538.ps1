@@ -5,8 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
-$Path = ".\Bin\AMD-WildRigPreview\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.4p11-wildrig/wildrig-multi-windows-0.15.4-preview11.7z"
+$Path = ".\Bin\AMD-WildRig01538\wildrig.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.3.8b-wildrig/wildrig-multi-windows-0.15.3.8-beta.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "412{0:d2}"
 $DevFee = 1.0
@@ -14,7 +14,38 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "rainforest";      Params = ""} #Rainforest
+    [PSCustomObject]@{MainAlgorithm = "aergo";      Params = ""} #Aergo
+    [PSCustomObject]@{MainAlgorithm = "bcd";        Params = ""} #BCD
+    [PSCustomObject]@{MainAlgorithm = "bitcore";    Params = ""} #BitCore
+    [PSCustomObject]@{MainAlgorithm = "bmw512";     Params = ""} #BMW512
+    [PSCustomObject]@{MainAlgorithm = "c11";        Params = ""} #C11
+    [PSCustomObject]@{MainAlgorithm = "dedal";      Params = ""} #Dedal
+    [PSCustomObject]@{MainAlgorithm = "geek";       Params = ""} #Geek
+    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash
+    [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Params = ""} #GLT-JeongHash
+    [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = ""} #GLT-PadiHash
+    [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
+    [PSCustomObject]@{MainAlgorithm = "hex";        Params = ""} #Hex
+    [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = ""} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
+    [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
+    [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
+    [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
+    [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t
+    [PSCustomObject]@{MainAlgorithm = "skunkhash";  Params = ""} #Skunk
+    [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = ""} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
+    [PSCustomObject]@{MainAlgorithm = "tribus";     Params = ""} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "veil";       Params = ""; Algorithm = "x16rt"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "x16r";       Params = ""} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = ""} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17";        Params = ""} #X17
+    [PSCustomObject]@{MainAlgorithm = "x18";        Params = ""} #X18
+    [PSCustomObject]@{MainAlgorithm = "x20r";       Params = ""} #X20r
+    [PSCustomObject]@{MainAlgorithm = "x21s";       Params = ""} #X21s
+    [PSCustomObject]@{MainAlgorithm = "x22i";       Params = ""} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
