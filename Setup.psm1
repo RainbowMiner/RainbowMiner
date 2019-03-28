@@ -768,7 +768,7 @@ function Start-Setup {
                         }
                         "enableresetvega" {
                             if ($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Model -match "Vega"}) {
-                                $Config.EnableResetVega = Read-HostBool -Prompt "Reset VEGA devices before miner (re-)start (needs admin privileges)" -Default $Config.EnableResetVega | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.EnableResetVega = Read-HostBool -Prompt "Reset VEGA devices before miner (re-)start (needs admin privileges, increases switching time a lot)" -Default $Config.EnableResetVega | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
