@@ -390,7 +390,7 @@ function Set-MinerStats {
                 $Miner_Failed_Total++
             } else {
                 Write-ActivityLog $Miner
-                Set-Total $Miner -Quiet
+                if (-not $Miner.Donator) {Set-Total $Miner -Quiet}
             }            
         }
     }
