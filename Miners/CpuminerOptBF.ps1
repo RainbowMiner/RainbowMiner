@@ -15,11 +15,15 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerYespower faster
-    [PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""; ExtendInterval = 2} #yescryptr16 (old yenten)
-    [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #yescryptr8
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #yescryptr16
-    [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""; ExtendInterval = 2} #yescryptr24
-    [PSCustomObject]@{MainAlgorithm = "yespowerr32"; Params = ""; ExtendInterval = 2} #yescryptr32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #YescryptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16
+    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; Params = ""; ExtendInterval = 2} #YescryptR24
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #YescryptR32
+    #[PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""; ExtendInterval = 2} #yespowerR16 (old yenten)
+    [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #YespowerR8
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YespowerR16
+    [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""; ExtendInterval = 2} #YespowerR24
+    [PSCustomObject]@{MainAlgorithm = "yespowerr32"; Params = ""; ExtendInterval = 2} #YespowerR32
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
