@@ -392,6 +392,10 @@ try {
         $AddAlgorithm += @("RainForest")
     }
 
+    if ($Version -le (Get-Version "4.0.0.3")) {
+        $AddAlgorithm += @("YespowerR16")
+    }
+
     if ($AddAlgorithm.Count -gt 0) {
         $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($ConfigActual.EnableAutoAlgorithmAdd -ne "`$EnableAutoAlgorithmAdd" -and (Get-Yes $ConfigActual.EnableAutoAlgorithmAdd)) {
