@@ -3504,11 +3504,6 @@ function Set-MinersConfigDefault {
                     $Done.$Name | Foreach-Object {
                         $Done1 = $_
                         $Default.PSObject.Properties.Name | Where-Object {$Done1.$_ -eq $null} | Foreach-Object {$Done1 | Add-Member $_ $Default.$_ -Force}
-                        if ($Done1.MSIAprofile -and $Done1.MSIAprofile -notmatch "^[1-5]$") {
-                            Write-Log -Level Warn "Invalid MSIAprofile for $($Name) $($Done1.MainAlgorithm) in miners.config.txt: `"$($Done1.MSIAprofile)`" (empty or 1-5 allowed, only)"
-                            $Done1.MSIAprofile = ""
-                        }
-                        $Done1.Difficulty = $Done1.Difficulty -replace "[^\d]"
                     }
                     $DoneSave | Add-Member $Name @($Done.$Name | Sort-Object MainAlgorithm,SecondaryAlgorithm)
                 }
