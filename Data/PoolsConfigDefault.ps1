@@ -143,15 +143,18 @@
             Currencies=@("BTC")
         }
         "ZergPoolCoins" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
         }
         "ZergPoolCoinsParty" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
-            SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
+            Fields=[PSCustomObject]@{AllowZero="1";PartyPassword="";AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol";PartyPassword="Enter your Party password"}
             Currencies=@("BTC")
         }
         "ZergPoolCoinsSolo" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{AllowZero="1"}
+            Fields=[PSCustomObject]@{AllowZero="1";AECurrency=""}
+            SetupFields=[PSCustomObject]@{AECurrency="Optionally define your autoexchange currency symbol"}
             Currencies=@("BTC")
         }
         "ZergPoolParty" = [PSCustomObject]@{
