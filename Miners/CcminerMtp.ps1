@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.15-ccminermtp/ccminermtp-v1.1.15r.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.16.1-ccminermtp/ccminerMTP1.16.1r.7z"
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
@@ -46,7 +46,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $MinMemGB = $_.MinMemGB        
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Miner_Name = (@("$($Name)$(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"Nh"})") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
         $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
