@@ -24,6 +24,7 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name -cycletime 120
+    $Pool_Time         = Get-UnixTimestamp
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -51,7 +52,7 @@ $Pool_Regions = @("us")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_Currencies = @("BTC", "DASH", "LTC") + @($Wallets.PSObject.Properties.Name | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate_solo -gt 0 -or $AllowZero) -or $InfoOnly} | ForEach-Object {
     $Pool_Host = "$($PoolCoins_Request.$Pool_CoinSymbol.algo).mine.zergpool.com"
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
@@ -118,10 +119,10 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9 * $Pool_Factor
 
-    $Pool_TSL = if ($PoolCoins_Request.$Pool_CoinSymbol.timesincelast_shared -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast_shared} else {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast}
+    $Pool_TSL = if ($PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo -ne $null) {$Pool_Time-$PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo} else {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_shared" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_solo -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_solo" -Quiet
     }
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
@@ -147,7 +148,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_shared
+                    Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_solo
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
@@ -176,7 +177,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                             SSL           = $false
                             Updated       = $Stat.Updated
                             PoolFee       = $Pool_PoolFee
-                            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_shared
+                            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_solo
                             Hashrate      = $Stat.HashRate_Live
                             BLK           = $Stat.BlockRate_Average
                             TSL           = $Pool_TSL
