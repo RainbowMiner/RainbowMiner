@@ -2459,9 +2459,10 @@ class Miner {
     $FaultTolerance = 0.1
     $ExtendInterval = 0
     $Penalty = 0
+    $PostBlockMining = 0
+    $Rounds = 0
     $MinSamples = 1
     $ZeroRounds = 0
-    $Rounds = 0
     $MaxBenchmarkRounds = 3
     $MaxRejectedShareRatio = 0.3
     $MiningPriority
@@ -3576,15 +3577,17 @@ function Set-CoinsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0"}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";Wallet="";EnableAutoPool="0"}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
                 if (-not $Preset.$Coin) {$Preset | Add-Member $Coin $(if ($Setup.$Coin) {$Setup.$Coin} else {[PSCustomObject]@{}}) -Force}
-                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$Coin.$SetupName -eq $null){$Preset.$Coin | Add-Member $SetupName $Default.$SetupName -Force}}
             }
             $Sorted = [PSCustomObject]@{}
-            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
+                $Sorted | Add-Member $_ $Preset.$_ -Force
+            }
             Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
         }
         catch{
@@ -3679,7 +3682,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";DataWindow="";StatAverage=""}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0"; DataWindow="";StatAverage=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             if ($Pools.Count -gt 0) {

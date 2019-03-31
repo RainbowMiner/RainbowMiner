@@ -416,6 +416,7 @@ function Invoke-Core {
                 $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
                 $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
                 $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
+                $Session.Config.Coins.$_ | Add-Member PostBlockMining (ConvertFrom-Time $Session.Config.Coins.$_.PostBlockMining) -Force
             }
             $CheckCoins = $true
         }
@@ -511,6 +512,7 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
             $Session.Config.Pools.$p | Add-Member AllowZero (Get-Yes $Session.Config.Pools.$p.AllowZero) -Force
+            $Session.Config.Pools.$p | Add-Member EnablePostBlockMining (Get-Yes $Session.Config.Pools.$p.EnablePostBlockMining) -Force
             if ($Session.Config.Pools.$p.EnableMining -ne $null) {$Session.Config.Pools.$p | Add-Member EnableMining (Get-Yes $Session.Config.Pools.$p.EnableMining) -Force}
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
@@ -853,7 +855,7 @@ function Invoke-Core {
         $Session.AllPools | Select-Object Algorithm,Hashrate,StablePrice | Group-Object -Property Algorithm | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
 
         Write-Log "Selecting best pool for each algorithm. "    
-        $Session.AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($Session.AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Session.Config.PoolName.Count -eq 0 -or (Compare-Object $Session.Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$(if ($Session.Config.EnableFastSwitching -or $_.PPS) {$_.Price} else {$_.StablePrice * (1 - $_.MarginOfError*($Session.Config.PoolAccuracyWeight/100))}) * $(if ($_.Hashrate -eq $null -or -not $Session.Config.HashrateWeightStrength) {1} else {1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates[$_.Algorithm],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100}) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))}, {$_.Region -EQ $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -EQ $Session.Config.SSL} | Select-Object -First 1)}
+        $Session.AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($Session.AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$Session.Config.PoolName.Count -eq 0 -or (Compare-Object $Session.Config.PoolName $_.Name -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0}, {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)}, {$(if ($Session.Config.EnableFastSwitching -or $_.PPS) {$_.Price} else {$_.StablePrice * (1 - $_.MarginOfError*($Session.Config.PoolAccuracyWeight/100))}) * $(if ($_.Hashrate -eq $null -or -not $Session.Config.HashrateWeightStrength) {1} else {1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates[$_.Algorithm],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100}) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))}, {$_.Region -EQ $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -EQ $Session.Config.SSL} | Select-Object -First 1)}
         $Pools_OutOfSyncMinutes = ($Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Pools.$_.Name} | Select-Object -Unique | ForEach-Object {$Session.AllPools | Where-Object Name -EQ $_ | Where-Object Updated -ge $OutOfSyncTime | Measure-Object Updated -Maximum | Select-Object -ExpandProperty Maximum} | Measure-Object -Minimum -Maximum | ForEach-Object {$_.Maximum - $_.Minimum} | Select-Object -ExpandProperty TotalMinutes)
         if ($Pools_OutOfSyncMinutes -gt $Session.SyncWindow) {
             Write-Log -Level Verbose "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
@@ -1062,7 +1064,7 @@ function Invoke-Core {
         if (-not $Miner.MSIAprofile -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -MemberType NoteProperty -Force}
 
         foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner_OCprofile.$p -eq '') {$Miner_OCprofile.$p=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
-
+        $FirstAlgoName = ""
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
             $Miner_DevFees | Add-Member $_ ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
             $Miner_DevFeeFactor = (1-$Miner_DevFees.$_/100)
@@ -1074,6 +1076,7 @@ function Invoke-Core {
             $Miner_Profits_Comparison | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.StablePrice+1e-32) * $Miner_DevFeeFactor)
             $Miner_Profits_Bias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
             $Miner_Profits_Unbias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
+            if (-not $FirstAlgoName) {$FirstAlgoName = $_}
         }
 
         $Miner_Profit = [Double]($Miner_Profits.PSObject.Properties.Value | Measure-Object -Sum).Sum
@@ -1171,6 +1174,8 @@ function Invoke-Core {
 
         $Miner | Add-Member IsFocusWalletMiner ($Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet -and $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet.Count -gt 0 -and (Compare-Object $Session.Config.Pools."$($Miner.Pools.PSObject.Properties.Value.Name)".FocusWallet $Miner.Pools.PSObject.Properties.Value.Currency -IncludeEqual -ExcludeDifferent)) -Force
         $Miner | Add-Member IsExclusiveMiner   (($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive | Measure-Object).Count -gt 0) -Force
+        $Miner_CoinSymbol = $Miner.Pools.$FirstAlgoName.CoinSymbol
+        $Miner | Add-Member PostBlockMining    $(if ($Miner.Pools.$FirstAlgoName.TSL -ne $null -and $Session.Config.Pools."$($Miner.Pools.$FirstAlgoName.Name)".EnablePostBlockMining -and $Miner_CoinSymbol -and $Session.Config.Coins.$Miner_CoinSymbol.PostBlockMining -and ($Miner.Pools.$FirstAlgoName.TSL -lt $Session.Config.Coins.$Miner_CoinSymbol.PostBlockMining)) {$Session.Config.Coins.$Miner_CoinSymbol.PostBlockMining - $Miner.Pools.$FirstAlgoName.TSL} else {0}) -Force
     }
     Remove-Variable "Miner_Arguments_List" -Force
 
@@ -1246,6 +1251,7 @@ function Invoke-Core {
         $_.Enabled = $false
         $_.IsFocusWalletMiner = $false
         $_.IsExclusiveMiner = $false
+        $_.PostBlockMining = 0
         $_.IsRunningFirstRounds = $false
     }
     $Miners | ForEach-Object {
@@ -1282,6 +1288,7 @@ function Invoke-Core {
             $ActiveMiner.Enabled            = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
             $ActiveMiner.IsExclusiveMiner   = $Miner.IsExclusiveMiner
+            $ActiveMiner.PostBlockMining    = $Miner.PostBlockMining
             $ActiveMiner.MinSamples         = $Miner.MinSamples
             $ActiveMiner.CoinName           = $Miner.Pools.PSObject.Properties.Value.CoinName
             $ActiveMiner.CoinSymbol         = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
@@ -1343,6 +1350,7 @@ function Invoke-Core {
                 Enabled              = $true
                 IsFocusWalletMiner   = $Miner.IsFocusWalletMiner
                 IsExclusiveMiner     = $Miner.IsExclusiveMiner
+                PostBlockMining     =  $Miner.PostBlockMining
                 MinSamples           = $Miner.MinSamples
                 EnvVars              = $Miner.EnvVars
                 NoCPUMining          = $Miner.NoCPUMining
@@ -1368,11 +1376,11 @@ function Invoke-Core {
 
     if (($Miners | Measure-Object).Count -gt 0) {
         #Get most profitable miner combination
-        $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-        $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+        $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+        $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
-        if ($NoCPUMining -and $MinersNeedingBenchmarkCount -eq 0) {$BestMiners2 = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
+        if ($NoCPUMining -and $MinersNeedingBenchmarkCount -eq 0) {$BestMiners2 = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
 
         $Check_Profitability = $false
         if ($Session.Config.UsePowerPrice -and $MinersNeedingBenchmarkCount -eq 0) {
@@ -1637,7 +1645,7 @@ function Invoke-Core {
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd}d/{0:hh}h/{0:mm}m" -f $_.GetActiveTime()}}, 
         @{Label = "Started"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
-        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner -or $_.IsExclusiveMiner) {"(!)"} elseif ($Session.Config.MinimumMiningIntervals -gt 1 -and $MinersNeedingBenchmarkCount -eq 0 -and ($_.IsRunningFirstRounds -or ($_.Rounds -eq 0 -and $_.GetStatus() -eq [MinerStatus]::Running))) {"($($_.Rounds+1)/$($Session.Config.MinimumMiningIntervals))"})"}},
+        @{Label = "Miner"; Expression = {"$($_.Name -replace '\-.*$')$(if ($_.IsFocusWalletMiner -or $_.IsExclusiveMiner) {"(!)"} elseif ($_.PostBlockMining -gt 0) {"($($_.PostBlockMining)s)"} elseif ($Session.Config.MinimumMiningIntervals -gt 1 -and $MinersNeedingBenchmarkCount -eq 0 -and ($_.IsRunningFirstRounds -or ($_.Rounds -eq 0 -and $_.GetStatus() -eq [MinerStatus]::Running))) {"($($_.Rounds+1)/$($Session.Config.MinimumMiningIntervals))"})"}},
         @{Label = "Algorithm"; Expression = {$_.BaseAlgorithm}},
         @{Label = "Coin"; Expression = {$_.CoinName | Foreach-Object {if ($_) {$_} else {"-"}}}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}},

@@ -768,7 +768,7 @@ function Start-Setup {
                         }
                         "enableresetvega" {
                             if ($SetupDevices | Where-Object {$_.Vendor -eq "AMD" -and $_.Model -match "Vega"}) {
-                                $Config.EnableResetVega = Read-HostBool -Prompt "Reset VEGA devices before miner (re-)start (needs admin privileges, increases switching time a lot)" -Default $Config.EnableResetVega | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.EnableResetVega = Read-HostBool -Prompt "Reset VEGA devices before miner (re-)start (needs admin privileges)" -Default $Config.EnableResetVega | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1172,7 +1172,7 @@ function Start-Setup {
 
             Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
 
-            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";StatAverage = "";DataWindow = ""}
+            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";StatAverage = "";DataWindow = ""}
 
             $PoolSetupDone = $false
             do {
@@ -1214,7 +1214,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin","minername","excludeminername","stataverage")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinname","excludecoin","minername","excludeminername","stataverage")) > $null
                         if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -1292,6 +1292,9 @@ function Start-Setup {
                                     }
                                     "enableautocoin" {
                                         $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                    }
+                                    "enablepostblockmining" {
+                                        $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                     }
                                     "penalty" {                                                    
                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -1382,6 +1385,7 @@ function Start-Setup {
                                         $PoolConfig | Add-Member MinerName $($PoolConfig.MinerName -join ",") -Force
                                         $PoolConfig | Add-Member ExcludeMinerName $($PoolConfig.ExcludeMinerName -join ",") -Force
                                         $PoolConfig | Add-Member EnableAutoCoin $(if (Get-Yes $PoolConfig.EnableAutoCoin){"1"}else{"0"}) -Force
+                                        $PoolConfig | Add-Member EnablePostBlockMining $(if (Get-Yes $PoolConfig.EnablePostBlockMining){"1"}else{"0"}) -Force
                                         $PoolConfig | Add-Member FocusWallet $($PoolConfig.FocusWallet -join ",") -Force
                                         $PoolConfig | Add-Member AllowZero $(if (Get-Yes $PoolConfig.AllowZero){"1"}else{"0"}) -Force
                                         if ($PoolConfig.EnableMining -ne $null) {$PoolConfig.EnableMining = $(if (Get-Yes $PoolConfig.AllowZero){"1"}else{"0"})}
@@ -1680,7 +1684,7 @@ function Start-Setup {
             $CoinSetupDone = $false
             do {
                 try {
-                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0"}
+                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                         Write-Host " "
@@ -1693,6 +1697,7 @@ function Start-Setup {
                             @{Label="MinHashrate"; Expression={"$($_.Value.MinHashrate)"}; Align="center"}
                             @{Label="MinWorkers"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
                             @{Label="MaxTimeToFind"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
+                            @{Label="PostBlockMining"; Expression={"$($_.Value.PostBlockMining)"}; Align="center"}
                             @{Label="EAP"; Expression={"$(if (Get-Yes $_.Value.EnableAutoPool) {"Y"} else {"N"})"}; Align="center"}
                             @{Label="Wallet"; Expression={"$($_.Value.Wallet)"}}
                         )
@@ -1734,7 +1739,7 @@ function Start-Setup {
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
                         $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","wallet","enableautopool")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","wallet","enableautopool")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do { 
@@ -1754,6 +1759,10 @@ function Start-Setup {
                                     "maxtimetofind" {
                                         $CoinConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $CoinConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $CoinConfig.MaxTimeToFind = $CoinConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "postblockmining" {
+                                        $CoinConfig.PostBlockMining = Read-HostString -Prompt "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $CoinConfig.PostBlockMining -Characters "0-9smhdw`." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.PostBlockMining = $CoinConfig.PostBlockMining -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "wallet" {
                                         $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}

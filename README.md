@@ -674,6 +674,7 @@ Per default all algorithms of a pool will be used. To define your own set of alg
 - ExcludeCoin: a comma separated list of coin names, you explicitly do not want RainbowMiner to use (leave empty for all coins). The coin's name must be spelled exactly like it is used at the corresponding pool. It applies to the pools, that transmit the coin names, only.
 - CoinSymbol: a comma separated list of coin symbols, you want RainbowMiner to use (leave empty for all). Better alternative to "CoinName"
 - ExcludeCoinSymbol: a comma separated list of coin's, you want RainbowMiner to use (leave empty for all). Better alternative to "ExcludeCoin"
+- EnablePostBlockMining: set to "1" to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.
 
 Example:
 
@@ -688,7 +689,8 @@ Example:
         "ExcludeCoin": "",
         "CoinSymbol": "",
         "ExcludeCoinSymbol": "BTG,XTC",
-        "FocusWallet": ""
+        "FocusWallet": "",
+        "EnablePostBlockMining": "0"
     }
     
 #### Force mining to a pool's wallet
@@ -921,7 +923,8 @@ Example:
           "MinWorkers": "300",
           "MaxTimeToFind": "1.5h",
           "Wallet": "<YOUR_RAVENCOIN_ADDRESS>",
-          "EnableAutoPool": "1"
+          "EnableAutoPool": "1",
+          "PostBlockMining": "5m"
         }
     }
 
@@ -932,6 +935,7 @@ This configuration would:
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
 - each pool, that has it's parameter "EnableAutoCoin" set to "1" will use this RVN wallet
+- if a RVN block has been found within the timespan of 5 minutes (PostBlockMining) at a pool that has "EnablePostBlockMining" set to "1", RainbowMiner will force mining RVN on this pool.
 
 
 ### Config\ocprofiles.config.txt
