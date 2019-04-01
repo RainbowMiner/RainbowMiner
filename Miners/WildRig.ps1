@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
-    [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
+    #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t
