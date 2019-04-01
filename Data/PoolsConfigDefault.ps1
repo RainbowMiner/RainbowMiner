@@ -6,18 +6,18 @@
             Currencies=@("XZC")
         }
         "AHashPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=15}
+            Fields=[PSCustomObject]@{Penalty=20}
             Currencies=@("BTC")
         }
         "BlazePool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=15}
+            Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=18}
             Currencies=@("BTC")
         }
         "Blockcruncher" = [PSCustomObject]@{
             Currencies=@("RVN")            
         }
         "Blockmasters" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=15}
+            Fields=[PSCustomObject]@{Penalty=33}
             Currencies=@("BTC")
         }
         "BlockmastersCoins" = [PSCustomObject]@{
@@ -114,7 +114,7 @@
             Currencies=@("BTC")
         }
         "NLPool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=12}
+            Fields=[PSCustomObject]@{Penalty=18}
             Currencies=@("BTC")
         }
         "NLPoolCoins" = [PSCustomObject]@{
@@ -167,7 +167,7 @@
             Currencies=@("BTC")
         }
         "Zpool" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{Penalty=12}
+            Fields=[PSCustomObject]@{Penalty=16}
             Currencies=@("BTC")
         }
 }
