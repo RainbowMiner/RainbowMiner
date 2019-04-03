@@ -119,7 +119,7 @@ foreach ($Worker1 in $Workers) {
     $Rigs_Ids = ($Rigs_Request | Where-Object {$_.available_status -eq "available"} | Select-Object -ExpandProperty id | Sort-Object) -join ';'
     if (-not $Rigs_Ids) {return}
 
-    $RigInfo_Request = @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids)/port" $API_Key $API_Secret -Timeout 20 -Cache 3600 | Select-Object)
+    $RigInfo_Request = @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids)/port" $API_Key $API_Secret -Timeout 45 -Cache 3600 | Select-Object)
     if (-not $RigInfo_Request) {
         Write-Log -Level Warn "Pool API ($Name) rig $Worker1 info request has failed. "
         return
