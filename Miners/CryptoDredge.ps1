@@ -45,7 +45,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnturtle";  MinMemGb = 4; Params = ""} #Cryptonightturtle
     [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 8; Params = ""} #Cuckaroo29 / GRIN
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 6; Params = ""} #Cuckaroo29 / GRIN
     [PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal
     [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
