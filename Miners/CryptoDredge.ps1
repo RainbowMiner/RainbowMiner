@@ -12,11 +12,15 @@ $DevFee = 1.0
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-cryptodredge/CryptoDredge_0.17.0_cuda_10.0_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_windows.zip"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-cryptodredge/CryptoDredge_0.17.0_cuda_9.2_windows.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_windows.zip"
+        Cuda = "9.2"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_windows.zip"
         Cuda = "9.2"
     }
 )
@@ -27,6 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "aeternity"; MinMemGb = 8; Params = ""} #Aeternity / Cuckoocycle
     [PSCustomObject]@{MainAlgorithm = "allium";    MinMemGb = 1; Params = ""} #Allium
+    [PSCustomObject]@{MainAlgorithm = "argon2d";   MinMemGb = 1; Params = ""} #Argon2d-Dyn
     [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";   MinMemGb = 1; Params = ""} #BitCore
     [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
@@ -103,7 +108,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and ($Algorithm_Norm -notmatch "Cuckaroo29" -or $Pools.$Algorithm_Norm.Name -ne "NiceHash") -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 				$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
