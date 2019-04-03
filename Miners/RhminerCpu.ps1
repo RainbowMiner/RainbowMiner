@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\CPU-RHminer\rhminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-rhminer/rhminer.1.4.Windows.CPU.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-rhminer/rhminer.1.5.Windows.CPU.zip"
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "533{0:d2}"
 $DevFee = 1.0
@@ -57,7 +57,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Path = $Path
 					Arguments = "-apiport $($Miner_Port) -s $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -su $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -pw $($Pools.$Algorithm_Norm.Pass)"}) -cpu$($DeviceParams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "RH"
+					API = "Claymore"
 					Port = $Miner_Port
 					Uri = $Uri
 					FaultTolerance = $_.FaultTolerance
