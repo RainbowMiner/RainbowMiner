@@ -58,7 +58,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Miner_Model = $_.Model
             
         switch($Miner_Vendor) {
-            "NVIDIA" {$Miner_Deviceparams = "--noUAC --noAMD --noCPU"}
+            "NVIDIA" {$Miner_Deviceparams = "--noUAC --noAMD --noCPU --openCLVendor NVIDIA"}
             "AMD" {$Miner_Deviceparams = "--noUAC --noCPU --noNVIDIA"}
             Default {$Miner_Deviceparams = "--noUAC --noAMD --noNVIDIA"}
         }
@@ -80,18 +80,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					$Arguments = [PSCustomObject]@{
 						Params = "-i $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
 						Config = [PSCustomObject]@{
-							pool_list       = @([PSCustomObject]@{
-									pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
-									wallet_address  = "$($Pools.$Algorithm_Norm.User)"
-									pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
-									use_nicehash    = $($Pools.$Algorithm_Norm.Name -eq "Nicehash")
-									use_tls         = $Pools.$Algorithm_Norm.SSL
-									tls_fingerprint = ""
-									pool_weight     = 1
-									rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
-								}
-							)
-							currency        = $_.Algorithm
 							call_timeout    = 10
 							retry_time      = 10
 							giveup_limit    = 0
@@ -104,16 +92,37 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 							daemon_mode     = $false
 							flush_stdout    = $false
 							output_file     = ""
-							httpd_port      = $Miner_Port
+							httpd_port      = [Int]$Miner_Port
 							http_login      = ""
 							http_pass       = ""
 							prefer_ipv4     = $true
 						}
-						Devices = @($Miner_Device.Type_Vendor_Index)
+						Pools = [PSCustomObject]@{
+                            pool_list = @([PSCustomObject]@{
+								    pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
+								    wallet_address  = "$($Pools.$Algorithm_Norm.User)"
+								    pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
+								    use_nicehash    = $($Pools.$Algorithm_Norm.Name -eq "Nicehash")
+								    use_tls         = $Pools.$Algorithm_Norm.SSL
+								    tls_fingerprint = ""
+								    pool_weight     = 1
+								    rig_id = "$($Session.Config.Pools."$($Pools.$Algorithm_Norm.Name)".Worker)"
+							    }
+	    					)
+                            currency        = $_.Algorithm
+                        }
+
+    					Devices = @($Miner_Device.Type_Vendor_Index)
 						Vendor = $Miner_Vendor
+                        Threads = 1
 					}
 
-					if ($Miner_Vendor -ne "CPU") {$Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)}
+					if ($Miner_Vendor -eq "CPU") {
+                        #if ($Session.Config.CPUMiningThreads){$Arguments.Threads = $Session.Config.CPUMiningThreads}
+                        #if ($Session.Config.CPUMiningAffinity -ne ''){$Arguments | Add-Member Affinity (ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -Force}
+                    } else {
+                        $Arguments.Config | Add-Member "platform_index" (($Miner_Device | Select-Object PlatformId -Unique).PlatformId)
+                    }
 
 					[PSCustomObject]@{
 						Name      = $Miner_Name
