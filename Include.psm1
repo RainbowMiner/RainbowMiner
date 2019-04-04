@@ -3390,8 +3390,8 @@ function Set-ContentJson {
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8}
-                else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8}
+                if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8 -Force}
+                else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8 -Force}
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
                 Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
@@ -4685,6 +4685,41 @@ param(
         }
     }
     if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
+}
+
+function Get-MiningRigInfo {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    $id,
+    [Parameter(Mandatory = $True)]
+    [String]$key,
+    [Parameter(Mandatory = $True)]
+    [String]$secret
+)
+    if (-not $id) {return}
+
+    if (-not (Test-Path Variable:Global:MRRInfoCache)) {
+        $Global:MRRInfoCache = [hashtable]::Synchronized(@{})
+        if (Test-Path ".\Data\mrrinfo.json") {
+            try {
+                $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            } catch {
+                $MrrInfo = @()
+            }
+            $MrrInfo | Foreach-Object {$MrrInfoCache[$_.rigid] = $_}
+        }
+    }
+
+    if ($Rigs_Ids = $id | Where-Object {-not $MrrInfoCache.ContainsKey($_) -or $MrrInfoCache.$_.updated -lt (Get-Date).AddHours(-24).ToUniversalTime()}) {
+        $Updated = 0
+        @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $API_Key $API_Secret -Timeout 60 | Select-Object) | Foreach-Object {
+            $MrrInfoCache[$_.rigid] = $_ | Add-Member updated (Get-Date).ToUniversalTime() -Force -PassThru
+            $Updated++
+        }
+        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $MrrInfoCache.Values -Compress > $null}
+    }
+    $id | Where-Object {$MrrInfoCache.ContainsKey($_)} | Foreach-Object {$MrrInfoCache.$_}
 }
 
 function Get-MiningRigRentalsDivisor {

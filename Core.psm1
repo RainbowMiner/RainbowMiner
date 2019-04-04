@@ -759,12 +759,16 @@ function Invoke-Core {
 
     $SelectedPoolNames = @()
     $NewPools = @()
+    $TimerPools = @{}
     if (Test-Path "Pools") {
-        $NewPools = $Session.AvailPools | WHere-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
+        $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
+            $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
+            $TimerPools[$_] = ((Get-UnixTimestamp -Milliseconds) - $start)/1000
         }
     }
+    $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
 
     #Update the pool balances every "BalanceUpdateMinutes" minutes
     if ($Session.Config.ShowPoolBalances) {
