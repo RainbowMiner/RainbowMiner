@@ -42,6 +42,8 @@
             Currencies=@("ETH")
         }
         "F2pool" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{UserName=""}
+            SetupFields=[PSCustomObject]@{UserName="Enter your f2pool username, if you want to see balances"}
             Currencies=@("ETH","GRIN","BEAM","XMR","XZC")
         }
         "FairPool" = [PSCustomObject]@{
