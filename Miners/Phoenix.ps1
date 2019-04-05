@@ -71,6 +71,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					switch($Pools.$Algorithm_Norm.Name) {
                         "F2pool"    {$Miner_Protocol_Params = "";if ($Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
 						"Ethermine" {$Miner_Protocol_Params = "-proto 3"}
+                        "MiningRigRentals"  {$Miner_Protocol_Params = "-proto 2"}
 						"Nanopool"  {$Miner_Protocol_Params = "-proto 2"}
 						"NiceHash"  {$Miner_Protocol_Params = "-proto 4 -stales 0"}
 						default {$Miner_Protocol_Params = "-proto 1"}
