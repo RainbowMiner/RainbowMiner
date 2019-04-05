@@ -19,11 +19,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 6;   Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGB = 6;   Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 11;  Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
-    [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2;   Params = "--algo 144_5";     Vendor = @("AMD,NVIDIA")} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3;   Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA")} #Equihash 150,5/BEAM
-    [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 3.0; Params = "--algo 192_7";     Vendor = @("NVIDIA")} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9";     Vendor = @("NVIDIA")} #Equihash 210,9
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2;   Params = "--algo 144_5";     Vendor = @("AMD","NVIDIA")} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3;   Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA")} #Equihash 150,5/BEAM
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3.0; Params = "--algo 192_7";     Vendor = @("NVIDIA")} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 0.5; Params = "--algo 210_9";     Vendor = @("NVIDIA")} #Equihash 210,9
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
