@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.36-gminer/gminer_1_36_minimal_windows64.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.37-gminer/gminer_1_37_beta_windows64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
@@ -15,12 +15,12 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGB = 8;   Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 8;   Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGB = 8;   Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
+    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGB = 6;   Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 6;   Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGB = 6;   Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 11;  Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
     [PSCustomObject]@{MainAlgorithm = "Equihash965";  MinMemGB = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2;   Params = "--algo 144_5";     Vendor = @("NVIDIA")} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash1445"; MinMemGB = 2;   Params = "--algo 144_5";     Vendor = @("AMD,NVIDIA")} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash1505"; MinMemGB = 3;   Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA")} #Equihash 150,5/BEAM
     [PSCustomObject]@{MainAlgorithm = "Equihash1927"; MinMemGB = 3.0; Params = "--algo 192_7";     Vendor = @("NVIDIA")} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash2109"; MinMemGB = 0.5; Params = "--algo 210_9";     Vendor = @("NVIDIA")} #Equihash 210,9
