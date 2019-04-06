@@ -54,7 +54,7 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 }
 if (-not $Uri) {return}
 
-$Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
+$Session.DevicesByTypes.NVIDIA | Where-Object {$_.Model -eq $Session.DevicesByTypes.FullComboModels.NVIDIA} | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
