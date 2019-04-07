@@ -9,6 +9,9 @@
             Fields=[PSCustomObject]@{Penalty=20}
             Currencies=@("BTC")
         }
+        "Aionmine" = [PSCustomObject]@{
+            Currencies=@("AION")
+        }
         "BlazePool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=18}
             Currencies=@("BTC")
