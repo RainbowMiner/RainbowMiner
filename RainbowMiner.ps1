@@ -200,6 +200,7 @@ $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price 
 $Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias will be 0
 $Session.DecayPeriod       = 60 #seconds
 $Session.DecayBase         = 1 - 0.1 #decimal percentage
+$Session.IsWindows         = [System.Environment]::OSVersion.Platform -eq "Win32NT"
 
 $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
 
@@ -217,16 +218,18 @@ Write-Host " "
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
-    Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
-    Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
-    Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
-    Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
-} else {
-    Import-Module NetSecurity -ErrorAction Ignore
-    Import-Module Defender -ErrorAction Ignore
-    Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
-    Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
+if ($Session.IsWindows) {
+    if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
+        Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
+        Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
+    } else {
+        Import-Module NetSecurity -ErrorAction Ignore
+        Import-Module Defender -ErrorAction Ignore
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
+    }
 }
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
