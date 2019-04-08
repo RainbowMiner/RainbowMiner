@@ -4576,16 +4576,22 @@ param(
     [System.Collections.ArrayList]$Script:AutoexecCommands = @()
     foreach($cmd in @(Get-Content ".\Config\autoexec.txt" -ErrorAction Ignore | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
-            try {
-                $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true -Priority $Priority
-                if ($Job) {
-                    $Job | Add-Member FilePath "$($Matches[1])" -Force
-                    $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
-                    $Job | Add-Member HasOwnMinerWindow $true -Force
-                    Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
-                    $Script:AutoexecCommands.Add($Job) >$null
+            if (Test-Path $Matches[1]) {
+                try {
+                    $Job = Start-SubProcess -FilePath "$($Matches[1])" -ArgumentList "$($Matches[2].Trim())" -WorkingDirectory (Split-Path "$($Matches[1])") -ShowMinerWindow $true -Priority $Priority
+                    if ($Job) {
+                        $Job | Add-Member FilePath "$($Matches[1])" -Force
+                        $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
+                        $Job | Add-Member HasOwnMinerWindow $true -Force
+                        Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
+                        $Script:AutoexecCommands.Add($Job) >$null
+                    }
+                } catch {
+                    Write-Log -Level Warn "Command could not be started in autoexec.txt: $($Matches[1]) $($Matches[2])"
                 }
-            } catch {}
+            } else {
+                Write-Log -Level Warn "Command not found in autoexec.txt: $($Matches[1])"
+            }
         }
     }
 }
