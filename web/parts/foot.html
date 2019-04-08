@@ -61,6 +61,14 @@
               setTimeout(q, 600000);
           })
       })();
+
+      (function conf() {
+          $.getJSON("/config", function (data) {
+              config = data
+              $('.workername').text(config.WorkerName)
+              setTimeout(conf, 600000);
+          })
+      })();
   });
   
 </script>
