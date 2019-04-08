@@ -54,7 +54,7 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 }
 if (-not $Uri) {return}
 
-$Session.DevicesByTypes.NVIDIA | Where-Object {$_.Model -eq $Session.DevicesByTypes.FullComboModels.NVIDIA} | Select-Object Vendor, Model -Unique | ForEach-Object {
+$Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
@@ -77,7 +77,7 @@ $Session.DevicesByTypes.NVIDIA | Where-Object {$_.Model -eq $Session.DevicesByTy
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "--telemetry $($Miner_Port) --cuda-devices $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto") --gpu-line --extra --latency $(if (-not $Session.Config.ShowMinerWindow) {"--nocolor"}) $($_.Params)"
+					Arguments = "--telemetry $($Miner_Port) -cd $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto") --gpu-line --extra --latency $(if (-not $Session.Config.ShowMinerWindow) {"--nocolor"}) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
 					API = "MiniZ"
 					Port = $Miner_Port
