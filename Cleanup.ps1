@@ -9,6 +9,7 @@ $SavedFiles = @("Start.bat")
 $DownloadsCleanup = $true
 $MinersConfigCleanup = $true
 $CacheCleanup = $false
+$OverridePoolPenalties = $false
 $ChangesTotal = 0
 $AddAlgorithm = @()
 try {
@@ -394,6 +395,29 @@ try {
 
     if ($Version -le (Get-Version "4.0.0.3")) {
         $AddAlgorithm += @("YespowerR16")
+    }
+
+    if ($Version -le (Get-Version "4.0.0.8")) {
+        $OverridePoolPenalties = $true
+    }
+
+    if ($OverridePoolPenalties) {
+        if (Test-Path "Data\PoolsConfigDefault.ps1") {
+            $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if ($PoolsActual -and $PoolsDefault.Content) {
+                $Changes = 0
+                $PoolsDefault.Content.PSObject.Properties.Name | Where-Object {$PoolsDefault.Content.$_.Fields.Penalty} | Foreach-Object {
+                    $Penalty = [int]$PoolsDefault.Content.$_.Fields.Penalty
+                    try {$OldPenalty = [int]$PoolsActual.$_.Penalty} catch {$OldPenalty = 0}
+                    if ($PoolsActual.$_ -and (-not $PoolsActual.$_.Penalty -or ($OldPenalty -lt $Penalty))) {$PoolsActual.$_ | Add-Member Penalty $Penalty -Force;$Changes++}
+                }
+                if ($Changes) {
+                    Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                    $ChangesTotal += $Changes
+                }
+            }
+        }
     }
 
     if ($AddAlgorithm.Count -gt 0) {
