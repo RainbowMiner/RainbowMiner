@@ -49,18 +49,21 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "pirl";  coin = "Pirl";            algo = "Ethash";       symbol = "PIRL";  port = 6060; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   coin = "Metaverse ETP";   algo = "Ethash";       symbol = "ETP";   port = 9292; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "ella";  coin = "Ellaism";         algo = "Ethash";       symbol = "ELLA";  port = 3030; fee = 1.5; divisor = 1e18}
+    [PSCustomObject]@{rpc = "dbix";  coin = "Dubaicoin";       algo = "Ethash";       symbol = "DBIX";  port = 2020; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "yoc";   coin = "Yocoin";          algo = "Ethash";       symbol = "YOC";   port = 4040; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "aka";   coin = "Akroma";          algo = "Ethash";       symbol = "AKA";   port = 5050; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "zec";   coin = "Zcash";           algo = "Equihash";     symbol = "ZEC";   port = 1010; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "zcl";   coin = "Zclassic";        algo = "Equihash";     symbol = "ZCL";   port = 2020; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "zen";   coin = "Zencash";         algo = "Equihash";     symbol = "ZEN";   port = 3030; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "hush";  coin = "Hush";            algo = "Equihash";     symbol = "HUSH";  port = 7070; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btcp";  coin = "BitcoinPrivate";  algo = "Equihash";     symbol = "BTCP";  port = 1010; fee = 1.5; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "hush";  coin = "Hush";            algo = "Equihash";     symbol = "HUSH";  port = 7070; fee = 1.5; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "btcp";  coin = "BitcoinPrivate";  algo = "Equihash";     symbol = "BTCP";  port = 1010; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "btg";   coin = "BitcoinGold";     algo = "Equihash24x5"; symbol = "BTG";   port = 4040; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "btcz";  coin = "BitcoinZ";        algo = "Equihash24x5"; symbol = "BTCZ";  port = 2020; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "zel";   coin = "ZelCash";         algo = "Equihash24x5"; symbol = "ZEL";   port = 9090; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   coin = "Monero";          algo = "Monero";       symbol = "XMR";   port = 2222; fee = 1.5; divisor = 1e12}
     [PSCustomObject]@{rpc = "xzc";   coin = "Zсoin";           algo = "MTP";          symbol = "XZC";   port = 8080; fee = 1.5; divisor = 1e8}
+    [PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckaroo29";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42}
+    #[PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckatoo31";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42; primary = $true}
     #[PSCustomObject]@{rpc = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1.5; divisor = 1e18}
 )
 
@@ -118,10 +121,18 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound            
             $reward         = $(if ($blocks) {$blocks | Select-Object -Last 1 -ExpandProperty reward} else {0})/$Pool_Divisor
             $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
-            $btcRewardLive  = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
-            $Divisor        = 1
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
 
+            if ($_.cycles) {
+                $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes.primaryWeight} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+                $btcRewardLive   = $PBR * $reward * $btcPrice
+                $addName         = $_.algo -replace "[^\d]"
+                $Divisor         = 1
+            } else {
+                $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
+                $addName         = ""
+                $Divisor         = 1
+            }
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($addName)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
         }
     }
 
