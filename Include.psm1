@@ -1204,13 +1204,15 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
-        [String[]]$EnvVars = @()
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [Int]$MultiProcess = 0
     )
 
     if ($ShowMinerWindow -and -not $IsWrapper) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     }
 }
 
@@ -1233,7 +1235,9 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
-        [String[]]$EnvVars = @()
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [Int]$MultiProcess = 0
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
@@ -1268,9 +1272,34 @@ function Start-SubProcessInBackground {
         }
     }
 
+    $ProcessIds = @([int]$ProcessId)
+
+    while ($MultiProcess -gt 0) {
+        $ProcessId2 = 0
+        if ($Job) {
+            for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
+                if ($ProcessId2 = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $Running -inotcontains $_.ProcessId -and $ProcessIds -notcontains $_.ProcessId}).ProcessId) {break}
+                Start-Sleep -Milliseconds 100
+            }
+        }
+
+        if ($ProcessId2) {
+            try {
+                $Process2 = Get-Process -Id $ProcessId2
+                $Process2.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+                if ($CPUAffinity -gt 0) {$Process2.ProcessorAffinity = $CPUAffinity}
+            } catch {
+                Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+        $ProcessIds+=[int]$ProcessId2
+        $MultiProcess--
+    }
+
     [PSCustomObject]@{
         Process   = $Job
-        ProcessId = [int]$ProcessId
+        ProcessId = $ProcessIds | Where-Object {$_ -gt 0}
     }
 }
 
@@ -1293,7 +1322,9 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
-        [String[]]$EnvVars = @()
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [int]$MultiProcess = 0
     )
 
     $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
@@ -1488,10 +1519,36 @@ function Start-SubProcessInConsole {
         Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
         if ($Error.Count){$Error.RemoveAt(0)}
     }
+
+    $ProcessIds = @([int]$ProcessId)
+
+    while ($MultiProcess -gt 0) {
+        $ProcessId2 = 0
+        if ($Job) {
+            for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
+                if ($ProcessId2 = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $Running -inotcontains $_.ProcessId -and $ProcessIds -notcontains $_.ProcessId}).ProcessId) {break}
+                Start-Sleep -Milliseconds 100
+            }
+        }
+
+        if ($ProcessId2) {
+            try {
+                $Process2 = Get-Process -Id $ProcessId2
+                $Process2.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+                if ($CPUAffinity -gt 0) {$Process2.ProcessorAffinity = $CPUAffinity}
+            } catch {
+                Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+        $ProcessIds+=[int]$ProcessId2
+        $MultiProcess--
+    }
+
     
     [PSCustomObject]@{
         Process   = $Job
-        ProcessId = [Int]$ProcessId
+        ProcessId = $ProcessIds | Where-Object {$_ -gt 0}
     }
 }
 
@@ -1506,20 +1563,22 @@ function Stop-SubProcess {
         [String]$Name = ""
     )
     if ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
-        if ($Process = Get-Process -Id $Job.ProcessId -ErrorAction Ignore) {
-            $Process.CloseMainWindow() > $null
-            # Wait up to 10 seconds for the miner to close gracefully
-            if($Process.WaitForExit(10000)) { 
-                Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
-            } else {
-                Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
-                if(-not $Process.HasExited) {
-                    Write-Log -Level Warn "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
-                    $Process.Kill()
-                }
-            }            
+        $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
+            if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
+                $Process.CloseMainWindow() > $null
+                # Wait up to 10 seconds for the miner to close gracefully
+                if($Process.WaitForExit(10000)) { 
+                    Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                } else {
+                    Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
+                    if(-not $Process.HasExited) {
+                        Write-Log -Level Warn "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
+                        $Process.Kill()
+                    }
+                }            
+            }
         }
-        $Job.ProcessId = 0
+        $Job.ProcessId = $null
     }
     if ($Job.Process | Get-Job -ErrorAction Ignore) {
         $Job.Process | Remove-Job -Force
@@ -2482,8 +2541,9 @@ class Miner {
     [Bool]$IsRunningFirstRounds = $false
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
+    [Int]$MultiProcess = 0
     hidden [System.Management.Automation.Job]$Process = $null
-    [Int]$ProcessId = 0
+    [Int[]]$ProcessId = @()
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -2535,7 +2595,7 @@ class Miner {
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper" -or $this.API -eq "SwapMiner") -EnvVars $this.EnvVars
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper" -or $this.API -eq "SwapMiner") -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -2570,7 +2630,7 @@ class Miner {
             }
         }
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
-        $this.ProcessId = 0
+        $this.ProcessId = $null
     }
 
     hidden StartMiningPreProcess() {
@@ -2600,7 +2660,7 @@ class Miner {
     }
 
     [DateTime]GetActiveStart() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
 
         if ($Begin) {
@@ -2612,7 +2672,7 @@ class Miner {
     }
 
     [DateTime]GetActiveLast() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
 
@@ -2628,7 +2688,7 @@ class Miner {
     }
 
     [TimeSpan]GetActiveTime() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         
@@ -2652,7 +2712,7 @@ class Miner {
     }
 
     [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
         $Begin = if ($MeasureInterval) {$this.IntervalBegin}
         if (-not $MeasureInterval -or $Begin -eq 0) {$Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
@@ -2671,7 +2731,7 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.ProcessId -ErrorAction Ignore | Select-Object HasExited}
+        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object HasExited}
         
         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited)) {
             return [MinerStatus]::Running
@@ -2685,6 +2745,10 @@ class Miner {
     }
 
     [Int]GetProcessId() {
+        return $this.ProcessId | Select-Object -First 1
+    }
+
+    [Int[]]GetProcessIds() {
         return $this.ProcessId
     }
 
