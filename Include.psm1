@@ -1299,7 +1299,7 @@ function Start-SubProcessInBackground {
 
     [PSCustomObject]@{
         Process   = $Job
-        ProcessId = $ProcessIds | Where-Object {$_ -gt 0}
+        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1548,7 +1548,7 @@ function Start-SubProcessInConsole {
     
     [PSCustomObject]@{
         Process   = $Job
-        ProcessId = $ProcessIds | Where-Object {$_ -gt 0}
+        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1569,16 +1569,23 @@ function Stop-SubProcess {
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($Process.WaitForExit(10000)) { 
                     Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
+                    Sleep 1
                 } else {
                     Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
-                    if(-not $Process.HasExited) {
-                        Write-Log -Level Warn "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
-                        $Process.Kill()
-                    }
-                }            
+                }
             }
         }
-        $Job.ProcessId = $null
+    }
+    if ($Job.ProcessId) {
+        $Job.ProcessId | Foreach-Object {
+            if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
+                if (-not $Process.HasExited) {
+                    Write-Log -Level Info "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
+                    $Process.Kill()
+                }
+            }
+        }
+        $Job.ProcessId = [int[]]@()
     }
     if ($Job.Process | Get-Job -ErrorAction Ignore) {
         $Job.Process | Remove-Job -Force
@@ -2665,7 +2672,7 @@ class Miner {
             }
         }
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
-        $this.ProcessId = @()
+        $this.ProcessId = [int[]]@()
     }
 
     hidden StartMiningPreProcess() {
