@@ -2665,7 +2665,7 @@ class Miner {
             }
         }
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
-        $this.ProcessId = $null
+        $this.ProcessId = @()
     }
 
     hidden StartMiningPreProcess() {
@@ -2766,9 +2766,10 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object HasExited}
+        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object HasExited}
+        #$MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object HasExited}
         
-        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and -not $MiningProcess.HasExited)) {
+        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object -not HasExited | Measure-Object).Count -eq ($this.MultiProcess+1))) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
