@@ -50,7 +50,7 @@ catch {
 $Pool_Regions = @("ru","eu","us","asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate_solo -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = $Pool_CoinSymbol -replace '-.+$';$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate_solo -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
 
     $Pool_Host = "gos.cx"
 
