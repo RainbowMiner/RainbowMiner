@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Fee = 1.9
 
-if (-not $PartyPassword) {return}
+if (-not $PartyPassword -and -not $InfoOnly) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 $PoolCoins_Request = [PSCustomObject]@{}
