@@ -212,6 +212,11 @@ function Start-Setup {
                         }
 
                         "addcoins1" {
+                            if ($IsInitialSetup) {
+                                Write-Host " "
+                                Write-Host "Now is your chance to add other currency wallets (e.g. enter XWP for Swap)" -ForegroundColor Cyan
+                                Write-Host " "
+                            }
                             $addcoins = Read-HostBool -Prompt "Do you want to add/edit $(if ($CoinsAdded.Count) {"another "})wallet addresses of non-BTC currencies?" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
 
