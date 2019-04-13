@@ -84,6 +84,10 @@ function Start-Setup {
         $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
         $SetupDevices = Get-Device "nvidia","amd","cpu" -IgnoreOpenCL
 
+        $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+
+        $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
+
         Clear-Host
               
         if ($SetupMessage.Count -gt 0) {
@@ -107,7 +111,6 @@ function Start-Setup {
                 Write-Host " "
             }
         } catch {}
-
 
         if ($IsInitialSetup) {
             $SetupType = "A" 
@@ -164,7 +167,7 @@ function Start-Setup {
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","servername","serverport")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","servername","serverport","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","wallet","nicehash","addcoins1","addcoins2","addcoins3","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","servername","serverport","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -183,24 +186,61 @@ function Start-Setup {
                 $NicehashWorkerName = "`$WorkerName"
             }
 
+            $CoinsAdded = @()
+            $AutoAddCoins = $IsInitialSetup
+
             do {
                 $GlobalSetupStepStore = $true
                 try {
                     Switch ($GlobalSetupSteps[$GlobalSetupStep]) {
-                        "wallet" {                
-                            if ($SetupType -eq "A") {
-                                # Start setup procedure
-                                Write-Host ' '
-                                Write-Host '(1) Basic Setup' -ForegroundColor Green
-                                Write-Host ' '
-                            }
-                                                                             
+                        "startsetup" {
+                            # Start setup procedure
+                            Write-Host ' '
+                            Write-Host '(1) Basic Setup' -ForegroundColor Green
+                            Write-Host ' '
+
+                            $GlobalSetupStepStore = $false
+                        }
+
+                        "wallet" {                                                                             
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "At first, please lookup your BTC wallet address, you want to mine to. It is easy: copy it into your clipboard and then press the right mouse key in this window to paste" -ForegroundColor Cyan
+                                Write-Host "At first, please lookup your BTC wallet address. It is easy: copy it to your clipboard and then press the right mouse key in this window to paste" -ForegroundColor Cyan
                                 Write-Host " "
                             }
                             $Config.Wallet = Read-HostString -Prompt "Enter your BTC wallet address" -Default $Config.Wallet -Length 34 -Mandatory -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+
+                        "addcoins1" {
+                            $addcoins = Read-HostBool -Prompt "Do you want to add/edit $(if ($CoinsAdded.Count) {"another "})wallet addresses of non-BTC currencies?" -Default $false | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+
+                        "addcoins2" {
+                            if ($addcoins) {
+                                $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
+                                $addcoin = Read-HostString -Prompt "Which currency do you want to add/edit (leave empty for none) " -Default "" -Valid (Get-PoolsInfo "Currency") | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                if (-not $CoinsActual.$addcoin) {
+                                    $CoinsActual | Add-Member $addcoin ($CoinsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
+                                }
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+
+                        "addcoins3" {
+                            if ($addcoins -and $addcoin) {
+                                $CoinsActual.$addcoin.Wallet = Read-HostString -Prompt "Enter your $($addcoin) wallet address " -Default $CoinsActual.$addcoin.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $CoinsActual.$addcoin.Wallet = $CoinsActual.$addcoin.Wallet.Trim()
+                                $CoinsActual.$addcoin | Add-Member EnableAutoPool "1" -Force
+                                $CoinsActualSave = [PSCustomObject]@{}
+                                $CoinsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$CoinsActualSave | Add-Member $_ ($CoinsActual.$_) -Force}
+                                Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActualSave > $null
+                                $CoinsAdded += $addcoin
+                                $CoinsAdded = $CoinsAdded | Select-Object -Unique | Sort-Object
+                                throw "Goto addcoins1"
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
                         }
 
                         "nicehash" {
@@ -409,14 +449,35 @@ function Start-Setup {
                                 Write-Host ' '
                             }
 
+                            $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
+
                             if ($IsInitialSetup) {
                                 Write-Host " "
                                 Write-Host "Choose your mining pools from this list or accept the default for a head start (read the Pools section of our readme for more details): " -ForegroundColor Cyan
-                                $Session.AvailPools | Foreach-Object {Write-Host " $($_)" -ForegroundColor Cyan}
+                                Write-Host "$($Session.AvailPools -join ", ")" -ForegroundColor Cyan
                                 Write-Host " "
                             }
+
+                            if ($CoinsWithWallets = $CoinsActual.PSObject.Properties | Where-Object {$_.Value.Wallet} | Foreach-Object {$_.Name} | Select-Object -Unique | Sort-Object) {
+                                Write-Host "You have entered wallets for the following currencies. Consider adding some of the proposed pools:" -ForegroundColor Cyan
+                                $p = [console]::ForegroundColor
+                                [console]::ForegroundColor = "Cyan"
+                                $CoinsPools = @(Get-PoolsInfo "Minable" $CoinsWithWallets -AsObjects | Select-Object)
+                                $CoinsWithWallets | Foreach-Object {
+                                    $Currency = $_
+                                    [PSCustomObject]@{Currency=$_; "pools without autoexchange"=$(@($CoinsPools | Where-Object {$_.Currencies -icontains $Currency} | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object) -join ",")}
+                                } | Format-Table -Wrap
+                                [console]::ForegroundColor = $p
+                            }
+
                             $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
-                            $Config.ExcludePoolName = $Session.AvailPools | Where-Object {$Config.PoolName -inotcontains $_}                                            
+                        }
+                        "autoaddcoins" {
+                            if ($IsInitialSetup -and $CoinsWithWallets.Count) {
+                                $AutoAddCoins = Read-HostBool -Prompt "Automatically add wallets for $($CoinsWithWallets -join ", ") to pools?" -Default $AutoAddCoins | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
                         }
                         "excludepoolname" {
                             $Config.ExcludePoolName = Read-HostArray -Prompt "Enter the pools you do want to exclude from mining" -Default $Config.ExcludePoolName -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
@@ -950,12 +1011,26 @@ function Start-Setup {
                                 foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","FocusWallet")) {$PoolsActual.NiceHash | Add-Member $q "" -Force}
                             }
 
+                            if ($IsInitialSetup -and $AutoAddCoins) {
+                                $CoinsWithWallets | Foreach-Object {
+                                    $Currency = $_
+                                    $CoinsPools | Where-Object {($ConfigActual.PoolName -icontains $_.Pool) -and (-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool") -and $_.Currencies -icontains $Currency} | Foreach-Object {
+                                        if (-not $PoolsActual."$($_.Pool)".$Currency) {
+                                            $PoolsActual."$($_.Pool)" | Add-Member $Currency "`$$Currency" -Force
+                                        }
+                                        if (-not $PoolsActual."$($_.Pool)"."$($Currency)-Params") {
+                                            $PoolsActual."$($_.Pool)" | Add-Member "$($Currency)-Params" "" -Force
+                                        }
+                                    }
+                                }
+                            }
+
                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8                                             
                             $PoolsActual | ConvertTo-Json | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
 
                             if ($IsInitialSetup) {
                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
-                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null                                                
+                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
                             } else {
                                 $SetupMessage.Add("Changes written to configuration. ") > $null
                             }
@@ -1179,7 +1254,6 @@ function Start-Setup {
                 try {
                     $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
                     $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
-                    $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
                     $Pool_Name = Read-HostString -Prompt "Which pool do you want to configure? (leave empty to end pool config)" -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                     if ($Pool_Name -eq '') {throw}
 
@@ -1196,7 +1270,7 @@ function Start-Setup {
                         Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActual > $null
                     }
 
-                    $Pool = Get-PoolsContent $Pool_Name -Config @{DataWindow="estimate_current"} -StatSpan ([TimeSpan]::FromSeconds(0)) -InfoOnly $true
+                    $Pool = Get-PoolsInfo $Pool_Name
 
                     if ($Pool) {
                         $PoolSetupStepsDone = $false
@@ -1204,6 +1278,8 @@ function Start-Setup {
                         $PoolSetupFields = @{}
                         [System.Collections.ArrayList]$PoolSetupSteps = @()
                         [System.Collections.ArrayList]$PoolSetupStepBack = @()
+
+                        $IsYiimpPool = $PoolsSetup.$Pool_Name.Yiimp
 
                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
@@ -1215,8 +1291,8 @@ function Start-Setup {
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
                         $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage")) > $null
-                        if (($Pool.UsesDataWindow | Measure-Object).Count -gt 0) {$PoolSetupSteps.Add("datawindow") > $null}
-                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0) {$PoolSetupSteps.Add("focuswallet") > $null}
+                        if ($IsYiimpPool) {$PoolSetupSteps.AddRange(@("datawindow")) > $null}
+                        if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
 
                         $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
@@ -1224,7 +1300,7 @@ function Start-Setup {
                         }
                         foreach($SetupName in $PoolDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolDefault.$SetupName -Force}}
 
-                        if ($Pool.UsesDataWindow -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "" -Force}  
+                        if ($IsYiimpPool -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "" -Force}  
                                         
                         do { 
                             try {
@@ -1688,7 +1764,6 @@ function Start-Setup {
             $CoinSetupDone = $false
             do {
                 try {
-                    $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
                         Write-Host " "
