@@ -2446,6 +2446,41 @@ function Get-EquihashCoins {
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
 
+function Get-PoolsInfo {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Name = "",
+        [Parameter(Mandatory = $false)]
+        [String[]]$Values = @(),
+        [Parameter(Mandatory = $false)]
+        [Switch]$AsObjects = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Clear = $false
+    )
+    
+    if (-not (Test-Path Variables:Global:GlobalPoolsInfo)) {
+        $Global:GlobalPoolsInfo = Get-Content "Data\poolsinfo.json" -Raw | ConvertFrom-Json
+        $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
+            $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
+        }
+    }
+    if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
+        if ($Values.Count) {
+            if ($AsObjects) {
+                $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+            } else {
+                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
+            }
+        } else {
+            $Global:GlobalPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+        }
+    } else {
+        $Global:GlobalPoolsInfo.$Name
+    }
+    if ($Clear) {Remove-Variable "GlobalPoolsInfo" -Scope Global -Force}
+}
+
 function Get-Regions {
     [CmdletBinding()]
     param(
