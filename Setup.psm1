@@ -6,7 +6,8 @@ Param(
     [string]$Color = "Yellow"
 )
     Write-Host " "
-    Write-Host "Hints:" -ForegroundColor $Color
+    Write-Host "Hints (read them all! It will make entering data much easier):" -ForegroundColor $Color
+    Write-Host " "
     Write-Host "- press Return to accept the defaults" -ForegroundColor $Color
     Write-Host "- fields marked with * are mandatory" -ForegroundColor $Color
     Write-Host "- use comma `",`" to separate list entries" -ForegroundColor $Color
@@ -474,6 +475,9 @@ function Start-Setup {
                                 } | Format-Table -Wrap
                                 [console]::ForegroundColor = $p
                             }
+
+                            Write-Host "Hint: `"+entryname`" = add an entry to a list, `"-entryname`" = remove an entry from a list" -ForegroundColor Yellow
+                            Write-Host " "
 
                             $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                         }
@@ -1019,7 +1023,7 @@ function Start-Setup {
                             if ($IsInitialSetup -and $AutoAddCoins) {
                                 $CoinsWithWallets | Foreach-Object {
                                     $Currency = $_
-                                    $CoinsPools | Where-Object {($ConfigActual.PoolName -icontains $_.Pool) -and (-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool") -and $_.Currencies -icontains $Currency} | Foreach-Object {
+                                    $CoinsPools | Where-Object {($Config.PoolName -icontains $_.Pool) -and (-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool") -and $_.Currencies -icontains $Currency} | Foreach-Object {
                                         if (-not $PoolsActual."$($_.Pool)".$Currency) {
                                             $PoolsActual."$($_.Pool)" | Add-Member $Currency "`$$Currency" -Force
                                         }
