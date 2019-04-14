@@ -1163,7 +1163,6 @@ function Invoke-Core {
         try {$Miner_Difficulty = [double]($Miner_Difficulty -replace ",","." -replace "[^\d\.]")} catch {$Miner_Difficulty=0.0}
         if ($Miner.Arguments) {$Miner.Arguments = $Miner.Arguments -replace "\`$difficulty",$Miner_Difficulty -replace "{diff:(.+?)}","$(if ($Miner_Difficulty -gt 0){"`$1"})" -replace "{workername}|{workername:$($Session.Config.WorkerName)}",$(@($Miner.DeviceModel -split '\-' | Foreach-Object {if ($Session.Config.Devices.$_.Worker) {$Session.Config.Devices.$_.Worker} else {$Session.Config.WorkerName}} | Select-Object -Unique) -join '_') -replace "{workername:(.+?)}","`$1"}
                 
-        if ($Miner.ExecName -eq $null) {$Miner | Add-Member ExecName ([IO.FileInfo]($Miner.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName -Force}
         if (-not $Miner.ExtendInterval) {$Miner | Add-Member ExtendInterval 1 -Force}
         if (-not $Miner.FaultTolerance) {$Miner | Add-Member FaultTolerance $(if ($Miner.DeviceName -match "^CPU") {0.25} else {0.1}) -Force}
         if (-not $Miner.Penalty) {$Miner | Add-Member Penalty 0 -Force}
@@ -1345,7 +1344,6 @@ function Invoke-Core {
                 ExtendInterval       = $Miner.ExtendInterval
                 ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow)
                 DevFee               = $Miner.DevFee
-                ExecName             = $Miner.ExecName
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri

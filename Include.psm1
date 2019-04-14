@@ -1196,8 +1196,6 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = "",
-        [Parameter(Mandatory = $false)]
         [Bool]$ShowMinerWindow = $false,
         [Parameter(Mandatory = $false)]
         [Bool]$IsWrapper = $false,
@@ -1210,9 +1208,9 @@ function Start-SubProcess {
     )
 
     if ($ShowMinerWindow -and -not $IsWrapper) {
-        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
+        Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
-        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -ProcessName $ProcessName -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
+        Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     }
 }
 
@@ -1231,8 +1229,6 @@ function Start-SubProcessInBackground {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = "",        
-        [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
@@ -1240,9 +1236,8 @@ function Start-SubProcessInBackground {
         [Int]$MultiProcess = 0
     )
 
-    $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
-    if ($ProcessName -ne "" -and $ProcessName -ne $ExecName) {$ExecName = $ProcessName}
-    $Running = @(Get-Process | Where-Object {$_.Name -eq $ExecName} | Select-Object -ExpandProperty Id)
+    [int[]]$Running = @()
+    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
     $ScriptBlock = "Set-Location '$WorkingDirectory'; (Get-Process -Id `$PID).PriorityClass = '$(@{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority])'; "
     $ScriptBlock += "& '$FilePath'"
@@ -1252,50 +1247,14 @@ function Start-SubProcessInBackground {
     if ($LogPath) {$ScriptBlock += " | Tee-Object '$LogPath'"}
 
     $Job = Start-Job ([ScriptBlock]::Create("$(($EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {"`$env:$($Matches[1])=$($Matches[2]); "}))$($ScriptBlock)"))
-
-    $ProcessId = 0
+    
+    [int[]]$ProcessIds = @()
+    
     if ($Job) {
-        for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
-            if ($ProcessId = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like "*$($ArgumentList)*" -and $Running -inotcontains $_.ProcessId}).ProcessId) {break}
-            Start-Sleep -Milliseconds 100
-        }
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
     }
-
-    if ($ProcessId) {
-        try {
-            $Process = Get-Process -Id $ProcessId
-            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
-        } catch {
-            Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-    }
-
-    $ProcessIds = @([int]$ProcessId)
-
-    while ($MultiProcess -gt 0) {
-        $ProcessId2 = 0
-        if ($Job) {
-            for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
-                if ($ProcessId2 = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $Running -inotcontains $_.ProcessId -and $ProcessIds -notcontains $_.ProcessId}).ProcessId) {break}
-                Start-Sleep -Milliseconds 100
-            }
-        }
-
-        if ($ProcessId2) {
-            try {
-                $Process2 = Get-Process -Id $ProcessId2
-                $Process2.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-                if ($CPUAffinity -gt 0) {$Process2.ProcessorAffinity = $CPUAffinity}
-            } catch {
-                Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
-                if ($Error.Count){$Error.RemoveAt(0)}
-            }
-        }
-        $ProcessIds+=[int]$ProcessId2
-        $MultiProcess--
-    }
+    
+    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
 
     [PSCustomObject]@{
         Process   = $Job
@@ -1318,8 +1277,6 @@ function Start-SubProcessInConsole {
         [Parameter(Mandatory = $false)]
         [Int]$Priority = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = "",
-        [Parameter(Mandatory = $false)]
         [Int]$CPUAffinity = 0,
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
@@ -1327,11 +1284,11 @@ function Start-SubProcessInConsole {
         [int]$MultiProcess = 0
     )
 
-    $ExecName = ([io.fileinfo]($FilePath | Split-Path -Leaf -ErrorAction Ignore)).BaseName
-    if ( $ProcessName -eq $ExecName ) { $ProcessName = "" }
+    [int[]]$Running = @()
+    Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName, $EnvVars {
-        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $ProcessName, $EnvVars)
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars {
+        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1339,10 +1296,6 @@ function Start-SubProcessInConsole {
 
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
-
-        if ($ProcessName -ne "") {
-            $Running = @(Get-Process | Where-Object { $_.Name -eq $ProcessName } | Select-Object -ExpandProperty Id)
-        }
 
         Add-Type -TypeDefinition @"
             // http://www.daveamenta.com/2013-08/powershell-start-process-without-taking-focus/
@@ -1471,21 +1424,7 @@ function Start-SubProcessInConsole {
         $lpProcessInformation = New-Object PROCESS_INFORMATION
 
         [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
-        $x = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
         $Process = Get-Process -Id $lpProcessInformation.dwProcessID
-        if ($Process -eq $null) {
-            [PSCustomObject]@{ProcessId = $null}
-            return
-        }
-
-       if ($ProcessName -ne "") {
-            $wait_count = 0;
-            do{
-                Start-Sleep 1;
-                $Process = Get-Process | Where-Object {$_.Name -eq $ProcessName -and $Running -notcontains $_.Id} | Select-Object -First 1
-                $wait_count++;
-            } while ($Process -eq $null -and $wait_count -le 5);
-        }
         if ($Process -eq $null) {
             [PSCustomObject]@{ProcessId = $null}
             return
@@ -1507,48 +1446,76 @@ function Start-SubProcessInConsole {
     do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
     while ($JobOutput -eq $null)
 
-    try {
-        $Process = Get-Process | Where-Object Id -EQ $JobOutput.ProcessId
-        if ($Process) {
-            $ProcessId = $JobOutput.ProcessId
-            $Process.Handle | Out-Null
-            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
-        }
-    } catch {
-        Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
-        if ($Error.Count){$Error.RemoveAt(0)}
-    }
+    [int[]]$ProcessIds = @()
+    
+    if ($JobOutput) {
+        Get-SubProcessIds -FilePath $FilePath -ArgumentList $ArgumentList -MultiProcess $MultiProcess -Running $Running | Foreach-Object {$ProcessIds += $_}
+     }
 
-    $ProcessIds = @([int]$ProcessId)
+    if (-not $ProcessIds.Count -and $JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
 
-    while ($MultiProcess -gt 0) {
-        $ProcessId2 = 0
-        if ($Job) {
-            for ($WaitForPID = 0; $WaitForPID -le 20; $WaitForPID++) {
-                if ($ProcessId2 = (Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $Running -inotcontains $_.ProcessId -and $ProcessIds -notcontains $_.ProcessId}).ProcessId) {break}
-                Start-Sleep -Milliseconds 100
-            }
-        }
-
-        if ($ProcessId2) {
-            try {
-                $Process2 = Get-Process -Id $ProcessId2
-                $Process2.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-                if ($CPUAffinity -gt 0) {$Process2.ProcessorAffinity = $CPUAffinity}
-            } catch {
-                Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
-                if ($Error.Count){$Error.RemoveAt(0)}
-            }
-        }
-        $ProcessIds+=[int]$ProcessId2
-        $MultiProcess--
-    }
-
+    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
     
     [PSCustomObject]@{
         Process   = $Job
         ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+    }
+}
+
+function Get-SubProcessRunningIds {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath
+    )
+    Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath} | Select-Object -ExpandProperty ProcessId
+}
+
+function Get-SubProcessIds {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath,
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "",
+        [Parameter(Mandatory = $false)]
+        [int[]]$Running = @(),
+        [Parameter(Mandatory = $false)]
+        [int]$MultiProcess = 0
+    )
+
+    $WaitCount = 0
+    do {
+        Start-Sleep -Milliseconds 100
+        Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like "*$($ArgumentList)*" -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
+            $Running += $_.ProcessId
+            $_.ProcessId
+            Write-Log -Level Info "$($_.ProcessId) found for $FilePath"
+        }
+        $WaitCount++
+    } until (($WaitCount -gt 100) -or ($ProcessIds.Count -gt $MultiProcess))
+}
+
+function Set-SubProcessPriority {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $ProcessId,
+        [ValidateRange(-2, 3)]
+        [Parameter(Mandatory = $false)]
+        [Int]$Priority = 0,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0
+    )
+    $ProcessId | Where-Object {$_} | Foreach-Object {
+        try {
+            $Process = Get-Process -Id $_
+            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
+        } catch {
+            Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
     }
 }
 
@@ -2559,7 +2526,6 @@ class Miner {
     $OCprofile
     $DevFee
     $BaseName = $null
-    $ExecName = $null
     $FaultTolerance = 0.1
     $ExtendInterval = 0
     $Penalty = 0
@@ -2599,10 +2565,6 @@ class Miner {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
     }
 
-    [String[]]GetExecNames() {
-        return @($this.ExecName)
-    }
-
     [String]GetArguments() {
         return $this.Arguments
     }
@@ -2637,7 +2599,7 @@ class Miner {
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -ProcessName $this.ExecName -IsWrapper ($this.API -eq "Wrapper" -or $this.API -eq "SwapMiner") -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper ($this.API -eq "Wrapper" -or $this.API -eq "SwapMiner") -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -2773,9 +2735,8 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object HasExited}
-        #$MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object HasExited}
-        
+        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+
         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object -not HasExited | Measure-Object).Count -eq ($this.MultiProcess+1))) {
             return [MinerStatus]::Running
         }
