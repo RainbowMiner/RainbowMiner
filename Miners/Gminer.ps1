@@ -16,8 +16,8 @@ if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGb = 6;   MinMemGbW10 = 6;  Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGb = 6;   MinMemGbW10 = 4;  Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGb = 6;   MinMemGbW10 = 4;  Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGb = 8;   MinMemGbW10 = 10; Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGb = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGb = 2;   Params = "--algo 144_5";     Vendor = @("AMD","NVIDIA")} #Equihash 144,5
