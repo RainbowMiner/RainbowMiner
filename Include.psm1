@@ -2306,8 +2306,9 @@ function Update-DeviceInformation {
                     if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}                
                     if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
                     if (-not $CpuData.PowerDraw) {
+                        $CpuName = $_.Name.Trim()
                         if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
-                        if (-not ($CPU_tdp = $Script:CpuTDP.($_.Name.Trim()))) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
+                        if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
                         $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
                     }                    
 
