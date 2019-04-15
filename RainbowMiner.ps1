@@ -227,7 +227,7 @@ Write-Host " "
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-if ($Session.IsWindows) {
+if ($IsWindows) {
     if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
         Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
         Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
