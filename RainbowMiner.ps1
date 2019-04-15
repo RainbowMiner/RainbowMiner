@@ -209,6 +209,8 @@ if ($IsWindows -eq $null) {
     }
 }
 
+if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
+
 $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
 
 $host.ui.RawUI.WindowTitle = $Session.MainWindowTitle

@@ -48,11 +48,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
-            $MinMemGb = if ($_.MinMemGBW10 -and $IsWindows -ne $false -and $PSVersionTable.BuildVersion -ge "10.0.0.0") {$_.MinMemGBW10} else {$_.MinMemGB}
+            $MinMemGb = if ($_.MinMemGBW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGBW10} else {$_.MinMemGB}
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+
             $MainAlgorithm = $_.MainAlgorithm
             $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
-
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm,"$($MainAlgorithm_Norm)-$($Miner_Model)")) {
 				$SecondAlgorithm = $_.SecondaryAlgorithm
