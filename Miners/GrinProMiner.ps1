@@ -15,8 +15,8 @@ $Cuda = "10.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD","NVIDIA"); NoCPUMining = $true} #GRIN/Cuckaroo29
-    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD","NVIDIA"); NoCPUMining = $true} #XWP/Cuckaroo29s
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #XWP/Cuckaroo29s
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -43,11 +43,11 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
-            $MinMemGb = $_.MinMemGb
+            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+
             $Algorithm = $_.MainAlgorithm
             $Algorithm_Norm = Get-Algorithm $Algorithm
-
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {

@@ -15,15 +15,15 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGB = 6;   MinMemGBW10 = 6;  Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGB = 6;   MinMemGBW10 = 4;  Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
-    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGB = 6;   MinMemGBW10 = 4;  Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 8;   MinMemGBW10 = 10; Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2;   Params = "--algo 144_5";     Vendor = @("AMD","NVIDIA")} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3;   Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA")} #Equihash 150,5/BEAM
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3.0; Params = "--algo 192_7";     Vendor = @("NVIDIA")} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 0.5; Params = "--algo 210_9";     Vendor = @("NVIDIA")} #Equihash 210,9
+    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGb = 6;   MinMemGbW10 = 6;  Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGb = 6;   MinMemGbW10 = 4;  Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGb = 6;   MinMemGbW10 = 4;  Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGb = 8;   MinMemGbW10 = 10; Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGb = 2;   Params = "--algo 96_5";      Vendor = @("NVIDIA")} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGb = 2;   Params = "--algo 144_5";     Vendor = @("AMD","NVIDIA")} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGb = 3;   Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA")} #Equihash 150,5/BEAM
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGb = 3.0; Params = "--algo 192_7";     Vendor = @("NVIDIA")} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGb = 0.5; Params = "--algo 210_9";     Vendor = @("NVIDIA")} #Equihash 210,9
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -50,8 +50,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
-            $MinMemGb = if ($_.MinMemGBW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGBW10} else {$_.MinMemGB}
-            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+            $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
