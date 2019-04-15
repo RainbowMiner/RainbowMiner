@@ -4163,10 +4163,7 @@ Param(
         [hashtable]$body
 )
     $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-    if ($url -match "^https") {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-    }
+    if ($url -match "^https") {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12}
 
     $RequestMethod = if ($body) {"Post"} else {"Get"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
