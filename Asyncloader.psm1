@@ -37,6 +37,14 @@ Param(
 
         [System.Collections.ArrayList]$Errors = @()
 
+        if ($IsWindows -eq $null) {
+            if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+                $Global:IsWindows = $true
+                $Global:IsLinux = $false
+                $Global:IsMacOS = $false
+            }
+        }
+
         $Cycle = -1
 
         while (-not $AsyncLoader.Stop) {

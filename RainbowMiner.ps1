@@ -201,7 +201,7 @@ $Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias 
 $Session.DecayPeriod       = 60 #seconds
 $Session.DecayBase         = 1 - 0.1 #decimal percentage
 
-if (@($IsWindows, $IsLinux, $IsMacOS) -eq $null) {
+if ($IsWindows -eq $null) {
     if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
         $Global:IsWindows = $true
         $Global:IsLinux = $false

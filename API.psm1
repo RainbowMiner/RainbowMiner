@@ -43,6 +43,14 @@
 
         $BasePath = "$PWD\web"
 
+        if ($IsWindows -eq $null) {
+            if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+                $Global:IsWindows = $true
+                $Global:IsLinux = $false
+                $Global:IsMacOS = $false
+            }
+        }
+
         # List of possible mime types for files
         $MIMETypes = @{
             ".js" = "application/x-javascript"
