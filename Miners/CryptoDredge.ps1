@@ -21,7 +21,7 @@ $UriCuda = @(
     },
     [PSCustomObject]@{
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_windows.zip"
-        Cuda = "9.2"
+        Cuda = "9.1"
     }
 )
 
