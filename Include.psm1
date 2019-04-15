@@ -1485,15 +1485,17 @@ function Get-SubProcessIds {
     )
 
     $WaitCount = 0
+    $ProcessFound = 0
     do {
         Start-Sleep -Milliseconds 100
         Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath -and $_.CommandLine -like "*$($ArgumentList)*" -and $Running -inotcontains $_.ProcessId} | Foreach-Object {
             $Running += $_.ProcessId
+            $ProcessFound++
             $_.ProcessId
             Write-Log -Level Info "$($_.ProcessId) found for $FilePath"
         }
         $WaitCount++
-    } until (($WaitCount -gt 100) -or ($ProcessIds.Count -gt $MultiProcess))
+    } until (($WaitCount -gt 100) -or ($ProcessFound -gt $MultiProcess))
 }
 
 function Set-SubProcessPriority {
