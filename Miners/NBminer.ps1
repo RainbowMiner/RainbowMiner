@@ -10,7 +10,7 @@ $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.3-n
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
-$Cuda = "9.2"
+$Cuda = "9.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
