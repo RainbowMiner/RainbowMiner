@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\AMD-WildRigPreview\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.4p18-wildrig/wildrig-multi-windows-0.15.4-preview18.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.5-wildrigmulti/wildrig-multi-windows-0.15.5.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "413{0:d2}"
 $DevFee = 1.0
@@ -14,6 +14,7 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
 )
 
