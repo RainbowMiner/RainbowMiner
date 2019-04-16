@@ -6,7 +6,7 @@ param(
 )
 
 $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.16-ccminermtp/ccminerMTP1.1.16r.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.17-ccminermtp/ccminerMTP1.1.17r.7z"
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
