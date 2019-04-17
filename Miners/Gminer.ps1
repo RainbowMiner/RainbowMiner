@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-Gminer\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.38-gminer/gminer_1_38_windows64.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-Gminer\miner"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.38-gminer/gminer_1_38_linux64.tar.xz"
+} else {
+    $Path = ".\Bin\NVIDIA-Gminer\miner.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.38-gminer/gminer_1_38_windows64.zip"
+}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0

@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Verus\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/CCMinerVerus-3.3CPU.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Verus\ccminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/ccminerverus-3.3cpu.tar.gz"
+} else {
+    $Path = ".\Bin\CPU-Verus\ccminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/CCMinerVerus-3.3CPU.7z"
+}
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "535{0:d2}"
 $DevFee = 0.0
