@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-NBMiner\nbminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.3-nbminer/NBMiner_22.3_Win.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-NBMiner\nbminer"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.3-nbminer/NBMiner_22.3_Linux.tgz"
+} else {
+    $Path = ".\Bin\NVIDIA-NBMiner\nbminer.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.3-nbminer/NBMiner_22.3_Win.zip"
+}
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0

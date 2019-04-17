@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\GRIN-GrinPro\GrinProMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Win64.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\GRIN-GrinPro\GrinProMiner"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Linux64.tar.gz"
+} else {
+    $Path = ".\Bin\GRIN-GrinPro\GrinProMiner.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Win64.zip"
+}
 $ManualURI = "https://grinpro.io"
 $Port = "335{0:d2}"
 $DevFee = 2.0

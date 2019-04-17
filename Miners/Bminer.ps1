@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Equihash-BMiner\bminer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.0-bminer/bminer-lite-v15.5.0-f720eee-amd64.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\Equihash-BMiner\bminer"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.0-bminer/bminer-v15.5.0-f720eee-amd64.tar.xz"
+} else {
+    $Path = ".\Bin\Equihash-BMiner\bminer.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.0-bminer/bminer-lite-v15.5.0-f720eee-amd64.zip"
+}
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
