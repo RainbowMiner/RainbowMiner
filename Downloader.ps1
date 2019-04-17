@@ -7,6 +7,14 @@ if ($Script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 $LocalAPIport = $(if (Test-Path ".\Data\localapiport.json") {Get-Content ".\Data\localapiport.json" -Raw | ConvertFrom-Json}).LocalAPIport
 if (-not $LocalAPIport) {$LocalAPIport = 4000}
 
+if ($IsWindows -eq $null) {
+    if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+        $Global:IsWindows = $true
+        $Global:IsLinux = $false
+        $Global:IsMacOS = $false
+    }
+}
+
 $ProtectedMinerFiles = if (Test-Path ".\Data\protectedminerfiles.json") {Get-Content ".\Data\protectedminerfiles.json" -Raw | ConvertFrom-Json}
 if (Test-Path ".\Config\minerconfigfiles.txt") {Get-Content ".\Config\minerconfigfiles.txt" | Where-Object {$_ -match "^([^;]+)"} | Foreach-Object {if ($File = $Matches[1].Trim()) {$ProtectedMinerFiles += $File}}}
 
