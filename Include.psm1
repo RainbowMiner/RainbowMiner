@@ -1633,27 +1633,26 @@ function Invoke-Exe {
         [Parameter(Mandatory = $false)]
         [Switch]$ExcludeEmptyLines,
         [Parameter(Mandatory = $false)]
-        [Switch]$AutoWorkingDirectory = $false
+        [Switch]$AutoWorkingDirectory = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Runas = $false
         )
     try {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
-        if ($IsWindows) {
-            $psi = New-object System.Diagnostics.ProcessStartInfo
-            $psi.CreateNoWindow = $true
-            $psi.UseShellExecute = $false
-            $psi.RedirectStandardOutput = $true
-            $psi.RedirectStandardError = $true
-            $psi.FileName = Resolve-Path $FilePath
-            $psi.Arguments = $ArgumentList
-            $psi.WorkingDirectory = $WorkingDirectory
-            $process = New-Object System.Diagnostics.Process
-            $process.StartInfo = $psi
-            [void]$process.Start()
-            $out = $process.StandardOutput.ReadToEnd()
-        } else {
-            $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory
-        }
+        $psi = New-object System.Diagnostics.ProcessStartInfo
+        $psi.CreateNoWindow = $true
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.FileName = Resolve-Path $FilePath
+        $psi.Arguments = $ArgumentList
+        $psi.WorkingDirectory = $WorkingDirectory
+        if ($Runas) {$psi.Verb = "runas"}
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $psi
+        [void]$process.Start()
+        $out = $process.StandardOutput.ReadToEnd()
         $process.WaitForExit($WaitForExit*1000)>$null
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
 
