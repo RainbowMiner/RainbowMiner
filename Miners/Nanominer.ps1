@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Nanominer\nanominer.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-windows-1.2.1.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Nanominer\nanominer"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-linux-1.2.1.tar.gz"
+} else {
+    $Path = ".\Bin\CPU-Nanominer\nanominer.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-windows-1.2.1.zip"
+}
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $DevFee = 3.0
