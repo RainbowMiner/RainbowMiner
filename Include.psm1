@@ -1538,7 +1538,7 @@ function Stop-SubProcess {
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($Process.WaitForExit(10000)) { 
                     Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
-                    Sleep 1
+                    Start-Sleep 1
                 } else {
                     Write-Log -Level Warn "$($Title) failed to close within 10 seconds$(if ($Name) {": $($Name)"})"
                 }
@@ -2659,7 +2659,7 @@ class Miner {
                 if ($Prescription -ne "" -and $Prescription_Device) {
                     Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"                    
                     $this.EthPill = [int](Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
-                    Sleep -Milliseconds 250 #wait 1/4 second
+                    Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
@@ -2693,7 +2693,7 @@ class Miner {
                     $EthPillProcess.CloseMainWindow() > $null
                     if(-not $EthPillProcess.WaitForExit(1000)) {if(-not $EthPillProcess.HasExited) {$EthPillProcess.Kill()}}
                     $this.EthPill = 0
-                    Sleep -Milliseconds 250 #Sleep for 1/4 second
+                    Start-Sleep -Milliseconds 250 #Sleep for 1/4 second
                 }
             }
         }
@@ -2711,9 +2711,9 @@ class Miner {
     hidden StopMiningPreProcess() { }
 
     hidden StopMiningPostProcess() {
-        Sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 500
         $this.ResetOCprofile() #reset all overclocking
-        Sleep -Milliseconds 500        
+        Start-Sleep -Milliseconds 500        
         $this.New = $false
     }
 
@@ -3531,7 +3531,7 @@ function Set-ContentJson {
             return $true
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         $retry--
-        Sleep -Seconds 1
+        Start-Sleep -Seconds 1
     } until ($retry -le 0)
     Write-Log -Level Warn "Unable to write to file $PathToFile"
     return $false
@@ -4329,7 +4329,7 @@ Param(
         [hashtable]$body
 )
     if (-not (Test-Path Variable:Global:Asyncloader)) {
-        if ($delay) {Sleep -Milliseconds $delay}
+        if ($delay) {Start-Sleep -Milliseconds $delay}
         Invoke-GetUrl $url -method $method -body $body
         return
     }
@@ -4347,7 +4347,7 @@ Param(
         $Quickstart = $false
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
-            if (-not $Quickstart -and $delay) {Sleep -Milliseconds $delay}
+            if (-not $Quickstart -and $delay) {Start-Sleep -Milliseconds $delay}
             $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
             if ($Quickstart) {
                 $AsyncLoader.Quickstart += $delay
@@ -4368,7 +4368,7 @@ Param(
                     if (-not ($Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore)) {
                         Remove-Item ".\Cache\$($Jobkey).asy" -Force
                         $Quickstart = $false                        
-                        if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Sleep -Milliseconds $delay}
+                        if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Start-Sleep -Milliseconds $delay}
                     }
                 }
                 if (-not $Quickstart) {
@@ -4391,7 +4391,7 @@ Param(
             $retry--
             if ($retry) {
                 if (-not $RequestError) {$retry = 0}
-                else {Sleep -Milliseconds $AsyncLoader.Jobs.$Jobkey.RetryWait}
+                else {Start-Sleep -Milliseconds $AsyncLoader.Jobs.$Jobkey.RetryWait}
             }
         } until ($retry -le 0)
 
@@ -4906,6 +4906,7 @@ param(
     [Parameter(Mandatory = $True)]
     [String[]]$DeviceName
 )
+    if (-not $IsWindows) {return}
     $Device = $Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
     if ($Device) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
@@ -4913,9 +4914,9 @@ param(
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
         try {
             Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","on") -AutoWorkingDirectory  >$null
-            Sleep 1
+            Start-Sleep 1
             Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","off") -AutoWorkingDirectory >$null
-            Sleep 1
+            Start-Sleep 1
             Write-Log -Level Info "Disabled/Enabled device(s) $DeviceId"
         } catch {
             Write-Log -Level Info "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"

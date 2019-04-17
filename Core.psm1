@@ -277,7 +277,7 @@ function Invoke-Core {
         $Internet_ok = $false
         do {
             if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
-            Sleep -Milliseconds 500
+            Start-Sleep -Milliseconds 500
             if ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
             $i++
             if (-not ($i % 20)) {$Internet_ok = Test-Internet}
@@ -924,7 +924,7 @@ function Invoke-Core {
     if ($MinersNeedSdk) {
         $MinersNeedSdk | Foreach-Object {Write-Log -Level Warn "$($_.BaseName) requires .NET Core Runtime (min. version $($_.DotNetRuntime)) to be installed! Find the installer here: https://dotnet.microsoft.com/download"}
         $AllMiners = $AllMiners | Where-Object {@($MinersNeedSdk) -notcontains $_}
-        Sleep 2
+        Start-Sleep 2
     }
 
     if ($Session.Config.MiningMode -eq "combo") {
@@ -1925,7 +1925,7 @@ function Invoke-Core {
                 }
                 "Y" {
                     Stop-AsyncLoader
-                    Sleep 2
+                    Start-Sleep 2
                     Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart
                     Write-Host -NoNewline "[Y] pressed - Asyncloader yanked."
                     Write-Log "Asyncloader yanked."
@@ -1939,7 +1939,7 @@ function Invoke-Core {
 
         if (-not $keyPressed) {
             $Waitms = 1000 - ($Session.Timer - $TimerBackup).TotalMilliseconds
-            if ($Waitms -gt 0) {Sleep -Milliseconds $Waitms}
+            if ($Waitms -gt 0) {Start-Sleep -Milliseconds $Waitms}
         }
     } until ($keyPressed -or $Session.SkipSwitchingPrevention -or $Session.StartDownloader -or $Session.Stopp -or $Session.AutoUpdate -or ($Session.Timer -ge $RoundEnd))
 
@@ -1977,7 +1977,7 @@ function Invoke-Core {
                 $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                 if ($NewKid -and $NewKid.ReturnValue -eq 0) {
                     Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
-                    $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Sleep -Milliseconds 500;$wait++}
+                    $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Start-Sleep -Milliseconds 500;$wait++}
                     Write-Host " "
                     if ($NewKid.ProcessId -and (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {$Session.Stopp = $true;$Session.AutoUpdate = $false}
                 }
