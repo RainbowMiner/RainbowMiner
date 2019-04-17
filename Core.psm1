@@ -1967,21 +1967,23 @@ function Invoke-Core {
     if ($Session.Restart -or $Session.AutoUpdate) {
         $Session.Stopp = $false
         try {
-            $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
-            if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
-                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
-                $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
-                $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
-                if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
-                else {$StartCommand = $StartCommand -replace "-command ","-windowstyle $($StartWindowState) -command "}
-                if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
-                Write-Log "Restarting $($StartWindowState) $($StartCommand)"
-                $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
-                if ($NewKid -and $NewKid.ReturnValue -eq 0) {
-                    Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
-                    $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Start-Sleep -Milliseconds 500;$wait++}
-                    Write-Host " "
-                    if ($NewKid.ProcessId -and (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {$Session.Stopp = $true;$Session.AutoUpdate = $false}
+            if ($IsWindows) {
+                $CurrentProcess = Get-CimInstance Win32_Process -filter "ProcessID=$PID" | Select-Object CommandLine,ExecutablePath
+                if ($CurrentProcess.CommandLine -and $CurrentProcess.ExecutablePath) {
+                    if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
+                    $StartWindowState = Get-WindowState -Title $Session.MainWindowTitle
+                    $StartCommand = $CurrentProcess.CommandLine -replace "^pwsh\s+","$($CurrentProcess.ExecutablePath) "
+                    if ($StartCommand -match "-windowstyle") {$StartCommand = $StartCommand -replace "-windowstyle (minimized|maximized|normal)","-windowstyle $($StartWindowState)"}
+                    else {$StartCommand = $StartCommand -replace "-command ","-windowstyle $($StartWindowState) -command "}
+                    if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
+                    Write-Log "Restarting $($StartWindowState) $($StartCommand)"
+                    $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
+                    if ($NewKid -and $NewKid.ReturnValue -eq 0) {
+                        Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
+                        $wait = 0;while ((-not $NewKid.ProcessId -or -not (Get-Process -id $NewKid.ProcessId -ErrorAction Stop)) -and $wait -lt 20) {Write-Host -NoNewline "."; Start-Sleep -Milliseconds 500;$wait++}
+                        Write-Host " "
+                        if ($NewKid.ProcessId -and (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {$Session.Stopp = $true;$Session.AutoUpdate = $false}
+                    }
                 }
             }
         }
@@ -2023,6 +2025,8 @@ function Stop-Core {
             $ExcavatorWindowsClosed.Add($Miner.BaseName) > $null
         }
     }
-    Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty ProcessId | Foreach-Object {Stop-Process -Id $_ -Force -ErrorAction Ignore}
+    if ($IsWindows) {
+        Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty ProcessId | Foreach-Object {Stop-Process -Id $_ -Force -ErrorAction Ignore}
+    }
     Stop-Autoexec
 }
