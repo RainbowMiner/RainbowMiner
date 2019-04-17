@@ -20,7 +20,16 @@ if (-not (Test-Path ".\Data\version.json")) {
 
 if (Test-Path "Start.bat.saved") {
     if ($calledfrom -ne "core") {exit}
-    Remove-Item "Start.bat.saved" -Force    
+    Remove-Item "Start.bat.saved" -Force
+    if (Test-Path "start.sh.saved") {Remove-Item "start.sh.saved" -Force}
+}
+
+if ($IsWindows -eq $null) {
+    if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+        $Global:IsWindows = $true
+        $Global:IsLinux = $false
+        $Global:IsMacOS = $false
+    }
 }
 
 $RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
@@ -43,13 +52,13 @@ try {
 
         Write-Host " (2/3) Deleting and backup old files .."
 
-        @("Start.bat") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
+        @("Start.bat","start.sh") | Foreach-Object {if (Test-Path $_) {Copy-Item $_ "$($_).saved" -Force -ErrorAction Ignore}}
         if (Test-Path "MinersOldVersions") {$PreserveMiners = Compare-Object @(Get-ChildItem "Miners" | Select-Object -ExpandProperty Name) @(Get-ChildItem "MinersOldVersions" | Select-Object -ExpandProperty Name) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject}
         @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}        
 
         Write-Host " (3/3) Extracting new files .."
 
-        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath("."))`" -y -spe" -Wait
+        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath("."))`" -y$(if ($IsWindows) {" -spe"})" -Wait
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
