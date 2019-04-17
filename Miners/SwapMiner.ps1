@@ -15,8 +15,7 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 8; Params = ""; DevFee = 0.0; ExtendInterval = 4; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #SWAP/Cuckaroo29s
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 8; Params = ""; DevFee = 0.0; ExtendInterval = 4; FaultTolerance = 0.3; Penalty = 0; Vendor = @("NVIDIA"); NoCPUMining = $true} #SWAP/Cuckaroo29s
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 8; Params = ""; DevFee = 0.0; ExtendInterval = 4; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD","NVIDIA"); NoCPUMining = $true} #SWAP/Cuckaroo29s
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
