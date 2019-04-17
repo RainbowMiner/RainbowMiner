@@ -57,8 +57,26 @@ try {
         @("Miners","APIs","Balances","Pools") | Foreach-Object {if (Test-Path ".\$($_)") {Remove-Item ".\$($_)" -Recurse -Force -ErrorAction Ignore}}        
 
         Write-Host " (3/3) Extracting new files .."
+        
+        $FromFullPath = [IO.Path]::GetFullPath($FileName)
+        $ToFullPath   = [IO.Path]::GetFullPath(".")
 
-        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath("."))`" -y$(if ($IsWindows) {" -spe"})" -Wait
+        if ($IsLinux) {
+            $Params = @{
+                FilePath     = "7z"
+                ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
+                RedirectStandardOutput = Join-Path ".\Logs" "7z-console.log"
+                RedirectStandardError  = Join-Path ".\Logs" "7z-error.log"
+            }
+        } else {
+            $Params = @{
+                FilePath     = "7z"
+                ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
+            }
+        }
+        $Params.Wait = $true
+
+        Start-Process @Params
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 

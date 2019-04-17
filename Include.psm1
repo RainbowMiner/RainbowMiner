@@ -1643,6 +1643,8 @@ function Expand-WebRequest {
                 $Params = @{
                     FilePath     = "7z"
                     ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
+                    RedirectStandardOutput = Join-Path ".\Logs" "7z-console.log"
+                    RedirectStandardError  = Join-Path ".\Logs" "7z-error.log"
                 }
             }
         } else {
