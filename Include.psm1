@@ -1886,6 +1886,7 @@ function Get-Device {
                         cpu_vendor    = $CIM_CPU[0].Manufacturer
                         tryall        = 1
                     }) -Force
+                    if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
                 }
             } elseif ($IsLinux) {
                 $Data = Get-Content "/proc/cpuinfo"
@@ -2326,10 +2327,10 @@ function Update-DeviceInformation {
             if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
             if ($IsWIndows) {
                 $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
-                if ($CPU_count -gt 0) {$Script:GlobalGetDeviceCacheCIM = Get-CimInstance -ClassName CIM_Processor | ConvertTo-Json -Depth 1 | ConvertFrom-Json}
+                if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
-                    $Script:GlobalGetDeviceCacheCIM | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+                    $CIM_CPU | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
                         if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
                             if ($Script:abMonitor -and $abReload) {$Script:abMonitor.ReloadAll();$abReload=$false}
                             $CpuData = @{                            
@@ -2362,6 +2363,7 @@ function Update-DeviceInformation {
                         }) -Force
                     }
                 }
+                if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
             } 
             elseif ($IsLinux) {
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
