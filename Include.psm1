@@ -1657,16 +1657,16 @@ function Expand-WebRequest {
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
-        if (Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $false) {
+        if (-not (Get-ChildItem $Path_Old -Directory)) {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
         else {
-            Get-ChildItem $Path_Old | Where-Object PSIsContainer -EQ $true | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
+            Get-ChildItem $Path_Old -Directory | ForEach-Object {Move-Item (Join-Path $Path_Old $_.Name) $Path_New}
             Remove-Item $Path_Old -Recurse -Force
         }
         if (Test-Path $Path_Bak) {
             $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {Copy-Item $_ $Path_New -Force}}
-            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") | Where-Object PSIsContainer -EQ $true | Sort-Object Name -Descending | Select-Object -Skip 3 | Foreach-Object {Remove-Item $_ -Recurse -Force}
+            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip 3 | Foreach-Object {Remove-Item $_ -Recurse -Force}
         }
     }
 }
