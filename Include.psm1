@@ -2373,8 +2373,7 @@ function Update-DeviceInformation {
                     }
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
-                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}                    
-                    [int]$CpuData.PowerDraw = $CpuTDP.($Features.Name) * $CpuData.Utilization / 100
+                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
                     $Device | Add-Member Data ([PSCustomObject]@{
                         Cores       = [int]$Global:GlobalCPUInfo.Cores
