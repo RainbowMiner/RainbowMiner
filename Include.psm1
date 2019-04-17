@@ -1599,7 +1599,35 @@ function Expand-WebRequest {
         $Path_Bak = (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).$(Get-Date -Format "yyyyMMdd_HHmmss")")
 
         if (Test-Path $Path_Old) {Remove-Item $Path_Old -Recurse -Force}
-        Start-Process "7z" "x `"$([IO.Path]::GetFullPath($FileName))`" -o`"$([IO.Path]::GetFullPath($Path_Old))`" -y -spe" -Wait -WindowStyle Hidden
+
+        $FromFullPath = [IO.Path]::GetFullPath($FileName)
+        $ToFullPath   = [IO.Path]::GetFullPath($Path_Old)
+        if ($IsLinux) {
+            if (($FileName -split '\.')[-2] -eq 'tar') {
+                $Params = @{
+                    FilePath     = "tar"
+                    ArgumentList = "-xa -f $FromFullPath -C $ToFullPath"
+                }
+            } elseif (($FileName -split '\.')[-1] -in @('tgz')) {
+                $Params = @{
+                    FilePath     = "tar"
+                    ArgumentList = "-xz -f $FromFullPath -C $ToFullPath"
+                }
+            } else {
+                $Params = @{
+                    FilePath     = "7z"
+                    ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
+                }
+            }
+        } else {
+            $Params = @{
+                FilePath     = "7z"
+                ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
+                WindowStyle  = "Hidden"
+            }
+        }
+        $Params.Wait = $true
+        Start-Process @Params
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
