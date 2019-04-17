@@ -1804,7 +1804,7 @@ function Invoke-Core {
 
     Write-Log "Start waiting $($WaitSeconds) seconds before next run. "
 
-    $Host.UI.RawUI.FlushInputBuffer()
+    if ($IsWindows) {$Host.UI.RawUI.FlushInputBuffer()}
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
     Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, [W]D reset, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}))
