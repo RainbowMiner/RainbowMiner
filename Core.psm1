@@ -1987,7 +1987,7 @@ function Invoke-Core {
                 }
             } else {
                 if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
-                $Session.Stop = $true
+                $Session.Stopp = $true
             }
         }
         catch {
