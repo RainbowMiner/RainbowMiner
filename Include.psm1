@@ -4528,8 +4528,10 @@ function Invoke-ReportMinerStatus {
 }
 
 function Confirm-IsAdmin {
- # Returns true/false
-   ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    # Returns true/false
+    if ($IsWindows) {
+       ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    }
 }
 
 function Initialize-User32Dll {
