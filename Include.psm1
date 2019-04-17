@@ -1636,21 +1636,27 @@ function Invoke-Exe {
         [Switch]$AutoWorkingDirectory = $false
         )
     try {
-        $psi = New-object System.Diagnostics.ProcessStartInfo
-        $psi.CreateNoWindow = $true
-        $psi.UseShellExecute = $false
-        $psi.RedirectStandardOutput = $true
-        $psi.RedirectStandardError = $true
-        $psi.FileName = Resolve-Path $FilePath
-        $psi.Arguments = $ArgumentList
-        if ($WorkingDirectory -ne '') {$psi.WorkingDirectory = $WorkingDirectory}
-        elseif ($AutoWorkingDirectory) {$psi.WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
-        $process = New-Object System.Diagnostics.Process
-        $process.StartInfo = $psi
-        [void]$process.Start()
-        $out = $process.StandardOutput.ReadToEnd()
+        if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
+
+        if ($IsWindows) {
+            $psi = New-object System.Diagnostics.ProcessStartInfo
+            $psi.CreateNoWindow = $true
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.FileName = Resolve-Path $FilePath
+            $psi.Arguments = $ArgumentList
+            $psi.WorkingDirectory = $WorkingDirectory
+            $process = New-Object System.Diagnostics.Process
+            $process.StartInfo = $psi
+            [void]$process.Start()
+            $out = $process.StandardOutput.ReadToEnd()
+        } else {
+            $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory
+        }
         $process.WaitForExit($WaitForExit*1000)>$null
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
+
         $psi = $null
         $process.Dispose()
         $process = $null
@@ -1862,7 +1868,7 @@ function Get-Device {
 
     #CPU detection
     try {
-        if (-not (Test-Path Variable:Global:GlobalCPUInfo)) {
+        if ($Refresh -or -not (Test-Path Variable:Global:GlobalCPUInfo)) {
 
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
@@ -1936,7 +1942,7 @@ function Get-Device {
                 Type_Index = $CPUIndex
                 Type_Mineable_Index = $CPUIndex
                 Model = "CPU"
-                Model_Name = $CPUInfo.Name
+                Model_Name = $Global:GlobalCPUInfo.Name
             }
 
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
