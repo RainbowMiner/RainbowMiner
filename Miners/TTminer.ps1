@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.2-ttminer/TT-Miner-2.2.2.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"

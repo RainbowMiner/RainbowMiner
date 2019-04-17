@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Pigeoncoin\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.6-pigeoncoin/Pigeoncoin-Miner.32bit.2.6.zip"
 $ManualUri = "https://github.com/Pigeoncoin-Miner/Pigeoncoin/releases"

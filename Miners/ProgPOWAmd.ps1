@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-ProgPOW\progpowminer-amd.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-amd-windows-0.16_final.7z"
 $Port = "409{0:d2}"

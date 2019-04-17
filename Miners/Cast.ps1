@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.0-cast/cast_xmr-vega-win64_180.zip"
 $Port = "306{0:d2}"

@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-RHminer\rhminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-rhminer/rhminer.1.5.Windows.CPU.zip"
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"

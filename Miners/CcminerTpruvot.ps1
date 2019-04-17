@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-TPruvot\ccminer-x64.exe"
 $ManualUri = "https://github.com/tpruvot/ccminer/releases"
 $Port = "114{0:d2}"

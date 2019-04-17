@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-NBMiner\nbminer.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v22.3-nbminer/NBMiner_22.3_Win.zip"
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"

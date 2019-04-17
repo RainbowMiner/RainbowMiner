@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-win64-2.10.4-rbm.7z"
 $Port = "309{0:d2}"

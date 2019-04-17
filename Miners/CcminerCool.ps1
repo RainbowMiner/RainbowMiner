@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Cool\coolMiner-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7-ccminercool/coolMiner-x64-v1-7.7z"
 $Port = "104{0:d2}"

@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"

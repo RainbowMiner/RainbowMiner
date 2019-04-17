@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-win64-beta5ip3.zip"
 $Port = "409{0:d2}"

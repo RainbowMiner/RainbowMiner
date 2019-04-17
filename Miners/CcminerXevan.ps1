@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Xevan\ccminer_x86.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3-ccminerxevan/ccminerxevan_1.3.7z"
 $Port = "118{0:d2}"

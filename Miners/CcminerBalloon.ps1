@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-CcminerBalloon\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-ccminerballoon/ccminer.balloon.v2.3.monkins9.2.zip"
 $Port = "104{0:d2}"

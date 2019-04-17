@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-Lyra2z\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.3-sgminerlyra2z/kernel.rar"
 $ManualUri = "https://github.com/djm34/sgminer-msvc2015/releases"

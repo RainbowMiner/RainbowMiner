@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.3-srbminer/SRBMiner-CN-V1-8-3.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"

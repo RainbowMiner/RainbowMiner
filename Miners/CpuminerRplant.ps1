@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}else{'sse2'})).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.4-rplant/cpuminer-opt-rplant-4.0.4.zip"
 $ManualUri = "https://pool.rplant.xyz/miners"

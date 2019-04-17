@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "129{0:d2}"

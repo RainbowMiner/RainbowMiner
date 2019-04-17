@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.3-teamred/teamredminer-v0.4.3-win.zip"
 $Port = "409{0:d2}"

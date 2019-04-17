@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-SgminerDyn\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-sgminerdyn/sgminer-dyn-1.0.0-windows-x64.zip"
 $ManualUri = "https://github.com/duality-solutions/Dynamic-GPU-Miner-AMD/releases"

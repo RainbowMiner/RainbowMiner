@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-ProgPOW\progpowminer-cuda.exe"
 $Port = "331{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"

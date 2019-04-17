@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Jceminer\jce_cn_cpu_miner$($f = $Global:GlobalCPUInfo.Features; if($f.'64bit'){'64'}else{'32'}).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33q-jceminer/jce_cn_cpu_miner.windows.033q.zip"
 $Port = "320{0:d2}"

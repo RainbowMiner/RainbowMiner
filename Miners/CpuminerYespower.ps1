@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Yespower\cpuminer$($f = $Global:GlobalCPUInfo.Features; if ($f.avx2 -and $f.sha -and $f.aes) {'-avx2-sha'} elseif ($f.avx2 -and $f.aes) {'-avx2'} elseif ($f.avx -and $f.aes) {'-avx'} elseif ($f.aes -and $f.sse42) {'-aes-sse42'} elseif ($f.sse2) {'-sse2'} else {''}).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.4-bubasik/Cpuminer-opt-yespower-ytn-ver3.zip"
 $ManualUri = "https://github.com/bubasik/cpuminer-opt-yespower/releases"

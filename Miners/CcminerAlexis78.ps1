@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Alexis78\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-ccmineralexis78/ccminerAlexis78v1.4x64.7z"
 $Port = "102{0:d2}"

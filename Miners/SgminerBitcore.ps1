@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-Bitcore\sgminer-x64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.9-sgminerbitcore/sgminer-bitcore-5.6.1.9.zip"
 $Port = "401{0:d2}"

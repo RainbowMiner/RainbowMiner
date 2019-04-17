@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\Equihash-BMiner\bminer.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.0-bminer/bminer-lite-v15.5.0-f720eee-amd64.zip"
 $ManualURI = "https://www.bminer.me/releases/"

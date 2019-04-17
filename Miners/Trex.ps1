@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"

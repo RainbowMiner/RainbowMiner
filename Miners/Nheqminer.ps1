@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Nheqminer\nheqminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-nheqminer/nheqminer-Windows-v0.7.2.zip"
 $ManualUri = "https://github.com/VerusCoin/nheqminer/releases"

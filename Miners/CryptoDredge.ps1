@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "313{0:d2}"

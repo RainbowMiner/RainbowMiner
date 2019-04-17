@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\Argon2d-Multiminer\multiminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.avx){'aes-avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.0-multiminer/multiminer_v1.1.0_24.01.2019.zip"
 $ManualUri = "https://github.com/bogdanadnan/multiminer/releases"

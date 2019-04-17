@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-CcminerX16r\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.0-ccminersupr/suprminer-2.0.7z"
 $ManualUri = "https://github.com/ocminer/suprminer/releases"

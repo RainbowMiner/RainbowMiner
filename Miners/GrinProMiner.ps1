@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\GRIN-GrinPro\GrinProMiner.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Win64.zip"
 $ManualURI = "https://grinpro.io"

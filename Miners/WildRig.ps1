@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-WildRig\wildrig.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.4p14-wildrig/wildrig-multi-windows-0.15.4-preview14.7z"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"

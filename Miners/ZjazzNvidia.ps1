@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-Zjazz\zjazz_cuda.exe"
 $ManualUri = "https://github.com/zjazz/zjazz_cuda_miner/releases"
 $Port = "324{0:d2}"

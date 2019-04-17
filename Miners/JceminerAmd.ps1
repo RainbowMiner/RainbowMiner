@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-Jceminer\jce_cn_gpu_miner64.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33b18-jceminer/jce_cn_gpu_miner.033b18.zip"
 $Port = "321{0:d2}"

@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Nanominer\nanominer.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-windows-1.2.1.zip"
 $ManualURI = "https://github.com/nanopool/nanominer/releases"

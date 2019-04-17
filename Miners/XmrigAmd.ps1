@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-amd-2.14.1-msvc-win64-rbm.7z"
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"

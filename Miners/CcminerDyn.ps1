@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\NVIDIA-CcminerDyn\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ccminerdyn/ccminerdyn-1.0.2.7z"
 $ManualUri = "https://github.com/nemosminer/Dynamic-GPU-Miner-Nvidia/releases"

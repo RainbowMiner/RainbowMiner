@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7-lolminer/lolMiner_v07_Win64.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"

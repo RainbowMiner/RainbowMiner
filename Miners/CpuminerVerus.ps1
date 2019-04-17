@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\CPU-Verus\ccminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/CCMinerVerus-3.3CPU.7z"
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"

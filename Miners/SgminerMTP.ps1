@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.1-sgminermtp/sgminermtp-0.1.1.zip"
 $ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
