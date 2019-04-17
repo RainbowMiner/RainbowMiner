@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-RHminer\rhminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-rhminer/rhminer.1.5.Windows.CPU.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-RHminer\rhminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-rhminer/rhminer.1.5.Linux.CPU.zip"
+} else {
+    $Path = ".\Bin\CPU-RHminer\rhminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-rhminer/rhminer.1.5.Windows.CPU.zip"
+}
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "533{0:d2}"
 $DevFee = 1.0
