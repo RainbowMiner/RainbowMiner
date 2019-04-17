@@ -5,27 +5,45 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "313{0:d2}"
 $DevFee = 1.0
 
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_windows.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_windows.zip"
-        Cuda = "9.2"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_windows.zip"
-        Cuda = "9.1"
-    }
-)
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_linux.tar.gz"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_linux.tar.gz"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_linux.tar.gz"
+            Cuda = "9.1"
+        }
+    )
+} else {
+    $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_windows.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_windows.zip"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_windows.zip"
+            Cuda = "9.1"
+        }
+    )
+}
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
