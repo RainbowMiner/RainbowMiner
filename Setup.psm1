@@ -235,7 +235,7 @@ function Start-Setup {
 
                         "addcoins3" {
                             if ($addcoins -and $addcoin) {
-                                $CoinsActual.$addcoin.Wallet = Read-HostString -Prompt "Enter your $($addcoin) wallet address " -Default $CoinsActual.$addcoin.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $CoinsActual.$addcoin.Wallet = Read-HostString -Prompt "Enter your $($addcoin) wallet address " -Default $CoinsActual.$addcoin.Wallet -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                 $CoinsActual.$addcoin.Wallet = $CoinsActual.$addcoin.Wallet.Trim()
                                 $CoinsActual.$addcoin | Add-Member EnableAutoPool "1" -Force
                                 $CoinsActualSave = [PSCustomObject]@{}
@@ -1418,7 +1418,7 @@ function Start-Setup {
                                                     $params = $PoolConfig."$($PoolEditCurrency)-Params"
                                                     if ($v -eq "`$Wallet" -or (-not $v -and $PoolEditCurrency -eq "BTC") -or $v -eq "`$$PoolEditCurrency") {$v = "default"}
                                                     elseif ($v -eq "`$$PoolEditCurrency") {$v = "default";$t = "coins.config.txt"}
-                                                    $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                                    $v = Read-HostString -Prompt "Enter your wallet address for $PoolEditCurrency (enter `"remove`" to remove this currency, `"default`" to always use current default wallet from your $(if ($PoolEditCurrency -ne "BTC") {"coins."})config.txt)" -Default $v -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
                                                     $v = $v.Trim()
                                                     if (@("back","<") -inotcontains $v) {
                                                         if (@("del","delete","remove","clear","rem") -icontains $v) {
@@ -1853,7 +1853,7 @@ function Start-Setup {
                                         $CoinConfig.PostBlockMining = $CoinConfig.PostBlockMining -replace "([A-Z])[A-Z]+","`$1"
                                     }
                                     "wallet" {
-                                        $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                        $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                                         $CoinConfig.Wallet = $CoinConfig.Wallet -replace "\s+"
                                     }
                                     "enableautopool" {
