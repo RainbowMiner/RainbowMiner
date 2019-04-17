@@ -1985,6 +1985,9 @@ function Invoke-Core {
                         if ($NewKid.ProcessId -and (Get-Process -id $NewKid.ProcessId -ErrorAction Ignore)) {$Session.Stopp = $true;$Session.AutoUpdate = $false}
                     }
                 }
+            } else {
+                if ($Session.AutoUpdate) {$Update_Parameters = @{calledfrom="core"};& .\Updater.ps1 @Update_Parameters}
+                $Session.Stop = $true
             }
         }
         catch {

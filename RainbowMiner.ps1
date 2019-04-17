@@ -291,4 +291,8 @@ Stop-Core
 #Stop the log
 Stop-Transcript
 
-if ($Session.AutoUpdate -and -not $psISE) {Exit 999}
+if ($IsWindows) {
+    if ($Session.AutoUpdate -and -not $psISE) {Exit 999}
+} else {
+    Exit $(if ($Session.AutoUpdate) {19} elseif ($Session.Restart) {29} else {0})
+}
