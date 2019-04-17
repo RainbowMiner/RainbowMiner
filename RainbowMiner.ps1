@@ -294,5 +294,5 @@ Stop-Transcript
 if ($IsWindows) {
     if ($Session.AutoUpdate -and -not $psISE) {Exit 999}
 } else {
-    Exit $(if ($Session.AutoUpdate) {19} elseif ($Session.Restart) {29} else {0})
+    Exit $(if ($Session.AutoUpdate -or $Session.Restart) {99} else {0})
 }
