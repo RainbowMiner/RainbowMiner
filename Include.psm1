@@ -1207,7 +1207,7 @@ function Start-SubProcess {
         [Int]$MultiProcess = 0
     )
 
-    if ($ShowMinerWindow -and -not $IsWrapper) {
+    if (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
@@ -1297,7 +1297,8 @@ function Start-SubProcessInConsole {
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
 
-        Add-Type -TypeDefinition @"
+        if ($IsWindows) {
+            Add-Type -TypeDefinition @"
             // http://www.daveamenta.com/2013-08/powershell-start-process-without-taking-focus/
             using System;
             using System.Diagnostics;
@@ -1406,25 +1407,47 @@ function Start-SubProcessInConsole {
                     out PROCESS_INFORMATION lpProcessInformation);
             }
 "@
-        $lpApplicationName = $FilePath;
-        $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
-        if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
-        $lpProcessAttributes = New-Object SECURITY_ATTRIBUTES
-        $lpProcessAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpProcessAttributes)
-        $lpThreadAttributes = New-Object SECURITY_ATTRIBUTES
-        $lpThreadAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpThreadAttributes)
-        $bInheritHandles = $false
-        $dwCreationFlags = [CreationFlags]::CREATE_NEW_CONSOLE
-        $lpEnvironment = [IntPtr]::Zero
-        if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $pwd}
-        $lpStartupInfo = New-Object STARTUPINFO
-        $lpStartupInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($lpStartupInfo)
-        $lpStartupInfo.wShowWindow = [ShowWindow]::SW_SHOWMINNOACTIVE
-        $lpStartupInfo.dwFlags = [STARTF]::STARTF_USESHOWWINDOW
-        $lpProcessInformation = New-Object PROCESS_INFORMATION
+            $lpApplicationName = $FilePath;
+            $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
+            if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
+            $lpProcessAttributes = New-Object SECURITY_ATTRIBUTES
+            $lpProcessAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpProcessAttributes)
+            $lpThreadAttributes = New-Object SECURITY_ATTRIBUTES
+            $lpThreadAttributes.Length = [System.Runtime.InteropServices.Marshal]::SizeOf($lpThreadAttributes)
+            $bInheritHandles = $false
+            $dwCreationFlags = [CreationFlags]::CREATE_NEW_CONSOLE
+            $lpEnvironment = [IntPtr]::Zero
+            if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $pwd}
+            $lpStartupInfo = New-Object STARTUPINFO
+            $lpStartupInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($lpStartupInfo)
+            $lpStartupInfo.wShowWindow = [ShowWindow]::SW_SHOWMINNOACTIVE
+            $lpStartupInfo.dwFlags = [STARTF]::STARTF_USESHOWWINDOW
+            $lpProcessInformation = New-Object PROCESS_INFORMATION
 
-        [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
-        $Process = Get-Process -Id $lpProcessInformation.dwProcessID
+            [Kernel32]::CreateProcess($lpApplicationName, $lpCommandLine, [ref] $lpProcessAttributes, [ref] $lpThreadAttributes, $bInheritHandles, $dwCreationFlags, $lpEnvironment, $lpCurrentDirectory, [ref] $lpStartupInfo, [ref] $lpProcessInformation)
+            $Process = Get-Process -Id $lpProcessInformation.dwProcessID
+        } else {
+            $ProcessParams = @{
+                FilePath         = $FilePath
+                ArgumentList     = $ArgumentList
+                WorkingDirectory = $WorkingDirectory
+                PassThru         = $true
+            }
+
+            if ($IsLinux) {
+                # Linux requires output redirection, otherwise Receive-Job fails
+                $ProcessParams.RedirectStandardOutput = Join-Path $WorkingDirectory "console.log"
+                $ProcessParams.RedirectStandardError  = Join-Path $WorkingDirectory "error.log"
+
+                # Fix executable permissions
+                & chmod +x $FilePath > $null
+
+                # Set lib path to local
+                $env:LD_LIBRARY_PATH = $env:LD_LIBRARY_PATH + ":./"
+            }
+
+            $Process = Start-Process @ProcessParams
+        }
         if ($Process -eq $null) {
             [PSCustomObject]@{ProcessId = $null}
             return
@@ -1468,7 +1491,7 @@ function Get-SubProcessRunningIds {
         [Parameter(Mandatory = $true)]
         [String]$FilePath
     )
-    Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath} | Select-Object -ExpandProperty ProcessId
+    if ($IsWindows) {Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath} | Select-Object -ExpandProperty ProcessId}
 }
 
 function Get-SubProcessIds {
@@ -1483,6 +1506,8 @@ function Get-SubProcessIds {
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0
     )
+
+    if (-not $IsWindows) {return}
 
     $WaitCount = 0
     $ProcessFound = 0
@@ -1603,6 +1628,7 @@ function Expand-WebRequest {
         $FromFullPath = [IO.Path]::GetFullPath($FileName)
         $ToFullPath   = [IO.Path]::GetFullPath($Path_Old)
         if ($IsLinux) {
+            if (-not (Test-Path $ToFullPath)) {New-Item $ToFullPath -ItemType "directory" > $null}
             if (($FileName -split '\.')[-2] -eq 'tar') {
                 $Params = @{
                     FilePath     = "tar"
