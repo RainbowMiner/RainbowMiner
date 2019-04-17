@@ -3884,6 +3884,12 @@ function Set-OCProfilesConfigDefault {
                         if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
                     }
                 }
+                if (-not $Devices) {
+                    For($i=1;$i -le 5;$i++) {
+                        $Profile = "Profile$($i)"
+                        if (-not $Preset.$Profile) {$Preset | Add-Member $Profile $(if ($Setup.$Profile -ne $null) {$Setup.$Profile} else {$Default}) -Force}
+                    }
+                }
             }
             $Preset.PSObject.Properties.Name | Foreach-Object {
                 $PresetName = $_
