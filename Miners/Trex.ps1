@@ -5,27 +5,45 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
 
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda10.0.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda9.2.zip"
-        Cuda = "9.2"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda9.1.zip"
-        Cuda = "9.1"
-    }
-)
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-Trex\t-rex"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-linux-cuda10.0.tar.gz"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-linux-cuda9.2.tar.gz"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-linux-cuda9.1.tar.gz"
+            Cuda = "9.1"
+        }
+    )
+} else {
+    $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda10.0.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda9.2.zip"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.2-trex/t-rex-0.9.2-win-cuda9.1.zip"
+            Cuda = "9.1"
+        }
+    )
+}
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 

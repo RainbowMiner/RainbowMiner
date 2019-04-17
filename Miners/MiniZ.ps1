@@ -5,23 +5,37 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
 
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_cuda10_win-x64.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_win-x64.zip"
-        Cuda = "8.0"
-    }
-)
+if ($IsLinux) {
+    $Path = ".\Bin\Equihash-MiniZ\miniZ"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_cuda10_linux-x64.tar.gz"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_linux-x64.tar.gz"
+            Cuda = "8.0"
+        }
+    )
+} else {
+    $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_cuda10_win-x64.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2m-miniz/miniZ_v1.2m_win-x64.zip"
+            Cuda = "8.0"
+        }
+    )
+}
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
