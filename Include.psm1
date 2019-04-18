@@ -1642,7 +1642,7 @@ function Expand-WebRequest {
             } else {
                 $Params = @{
                     FilePath     = "7z"
-                    ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
+                    ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y"
                     RedirectStandardOutput = Join-Path ".\Logs" "7z-console.log"
                     RedirectStandardError  = Join-Path ".\Logs" "7z-error.log"
                 }
@@ -1659,7 +1659,7 @@ function Expand-WebRequest {
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
-        if (-not (Get-ChildItem $Path_Old -Directory)) {
+        if (Get-ChildItem $Path_Old -File) {
             Rename-Item $Path_Old (Split-Path $Path -Leaf)
         }
         else {
