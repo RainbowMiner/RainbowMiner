@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7-lolminer/lolMiner_v07_Win64.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\Equihash-lolMiner\lolMiner"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-lolminer/lolMiner_v081_Lin64.tar.gz"
+} else {
+    $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-lolminer/lolMiner_v08_Win64.zip"
+}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
@@ -17,11 +22,12 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 210,9
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 2.8; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3.5; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 4; MinMemGBWin10 = 8; Params = "--coin GRIN-AT31";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 2; MinMemGBWin10 = 2; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; MinMemGBWin10 = 2; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 210,9
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; MinMemGBWin10 = 3; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD")} #Equihash 150,5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
