@@ -1436,8 +1436,8 @@ function Start-SubProcessInConsole {
 
             if ($IsLinux) {
                 # Linux requires output redirection, otherwise Receive-Job fails
-                $ProcessParams.RedirectStandardOutput = Join-Path $WorkingDirectory "console.log"
-                $ProcessParams.RedirectStandardError  = Join-Path $WorkingDirectory "error.log"
+                $ProcessParams.RedirectStandardOutput = $LogPath
+                $ProcessParams.RedirectStandardError  = $LogPath
 
                 # Fix executable permissions
                 & chmod +x $FilePath > $null
@@ -2380,7 +2380,7 @@ function Update-DeviceInformation {
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
-            if ($IsWIndows) {
+            if ($IsWindows) {
                 $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
