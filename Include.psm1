@@ -1437,7 +1437,7 @@ function Start-SubProcessInConsole {
             if ($IsLinux) {
                 # Linux requires output redirection, otherwise Receive-Job fails
                 $ProcessParams.RedirectStandardOutput = $LogPath
-                $ProcessParams.RedirectStandardError  = $LogPath
+                $ProcessParams.RedirectStandardError  = $LogPath -replace ".txt","-err.txt"
 
                 # Fix executable permissions
                 & chmod +x $FilePath > $null
