@@ -10,9 +10,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\GRIN-GrinPro\GrinProMiner"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Linux64.tar.gz"
+    $Vendors = @("AMD","NVIDIA")
 } else {
     $Path = ".\Bin\GRIN-GrinPro\GrinProMiner.exe"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Win64.zip"
+    $Vendors = @("AMD")
 }
 $ManualURI = "https://grinpro.io"
 $Port = "335{0:d2}"
@@ -22,8 +24,8 @@ $Cuda = "10.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #GRIN/Cuckaroo29
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #XWP/Cuckaroo29s
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #GRIN/Cuckaroo29
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #XWP/Cuckaroo29s
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -90,9 +92,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						FaultTolerance = $_.FaultTolerance
 						ExtendInterval = $_.ExtendInterval
 						ManualUri = $ManualUri
-						StopCommand = "Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"
+						StopCommand = if ($IsWindows) {"Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"} else {$null}
 						NoCPUMining = $_.NoCPUMining
-						DotNetRuntime = "2.0"
+						DotNetRuntime = if ($IsWindows) {"2.0"} else {$null}
 					}
 				}
 			}

@@ -5,6 +5,8 @@ param(
     [Bool]$InfoOnly
 )
 
+if (-not $IsWindows) {return}
+
 $Path = ".\Bin\SWAP-Reference\SwapReferenceMinerCLI.exe"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-swap/SwapMiner-v1.2.0-rbm.7z"
 $ManualURI = "https://github.com/swap-dev/SwapReferenceMiner/releases"
