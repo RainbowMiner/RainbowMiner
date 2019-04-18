@@ -5,23 +5,44 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-ProgPOW\progpowminer-cuda.exe"
 $Port = "331{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"
 $DevFee = 0.0
 
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-cuda10.0-windows-0.16_final.7z"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-cuda9.2-windows-0.16_final.7z"
-        Cuda = "9.2"
-    }
-)
+if ($IsLinux) {
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda10"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda9.2"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda9.1"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Cuda = "9.1"
+        }
+    )
+} else {
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Path = ".\Bin\NVIDIA-ProgPOW\progpowminer-cuda.exe"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-cuda10.0-windows-0.16_final.7z"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Path = ".\Bin\NVIDIA-ProgPOW\progpowminer-cuda.exe"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-cuda9.2-windows-0.16_final.7z"
+            Cuda = "9.2"
+        }
+    )
+}
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -35,7 +56,7 @@ if ($InfoOnly) {
     [PSCustomObject]@{
         Type      = @("NVIDIA")
         Name      = $Name
-        Path      = $Path
+        Path      = $UriCuda.Path | Select-Object -First 1
         Port      = $Miner_Port
         Uri       = $UriCuda.Uri
         DevFee    = $DevFee
@@ -45,9 +66,10 @@ if ($InfoOnly) {
     return
 }
 
-$Uri = ""
+$Uri = $Path = ""
 for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        $Path= $UriCuda[$i].Path
         $Uri = $UriCuda[$i].Uri
         $Cuda= $UriCuda[$i].Cuda
     }
