@@ -9,7 +9,8 @@ param(
     [String]$User,
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$AEcurrency = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -45,6 +46,8 @@ $Pool_Regions = @("europe", "us-east", "asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
+
+$Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Host = $_.host
@@ -91,7 +94,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
-                    Currency      = ""
+                    Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
@@ -113,7 +116,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
-                        Currency      = ""
+                        Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation

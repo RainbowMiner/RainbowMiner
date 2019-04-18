@@ -9,7 +9,8 @@ param(
     [String]$User,
     [TimeSpan]$StatSpan,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_10"
+    [String]$StatAverage = "Minute_10",
+    [String]$AEcurrency = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -38,6 +39,8 @@ $Pool_Regions = @("europe", "us-east", "asia")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 0.9 + 0.2
+
+$Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
 $Pool_Request.return | ForEach-Object {
     $Pool_Hosts = $_.all_host_list.split(";")
@@ -72,7 +75,7 @@ $Pool_Request.return | ForEach-Object {
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
-                    Currency      = ""
+                    Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
@@ -92,7 +95,7 @@ $Pool_Request.return | ForEach-Object {
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
-                        Currency      = ""
+                        Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
