@@ -69,8 +69,6 @@ $Pools_Data = @(
 
 $Pool_Currencies = @($Pools_Data | Select-Object -ExpandProperty symbol | Where-Object {$Wallets."$($_)"} | Select-Object -Unique)
 
-if (($Pool_Currencies | Measure-Object).Count) {$Pool_Ticker = Get-TickerGlobal $Pool_Currencies}
-
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.algo
@@ -107,6 +105,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 $ok = $false
             }
 
+
             $timestamp    = Get-UnixTimestamp
             $timestamp24h = $timestamp - 24*3600
 
@@ -119,7 +118,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
             $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
             $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound            
-            $reward         = $(if ($blocks) {$blocks | Select-Object -Last 1 -ExpandProperty reward} else {0})/$Pool_Divisor
+            $reward         = $(if ($blocks) {$blocks | Sort-Object timestamp | Select-Object -Last 1 -ExpandProperty reward} else {0})/$Pool_Divisor
             $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
 
             if ($_.cycles) {
