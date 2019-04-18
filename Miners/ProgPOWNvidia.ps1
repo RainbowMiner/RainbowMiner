@@ -15,17 +15,17 @@ if ($IsLinux) {
     $UriCuda = @(
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda10"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda9.2"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.7z"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
             Path = ".\Bin\NVIDIA-ProgPOW\progpowminer_cuda9.1"
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.7z"
             Cuda = "9.1"
         }
     )
