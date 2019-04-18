@@ -85,7 +85,7 @@ sudo apt install ocl-icd-libopencl1
 
 ## INSTALLATION
 
-### Windows Intallation Steps 1 - 3
+### Windows Installation Steps 1 - 3
 
 1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
@@ -99,7 +99,7 @@ sudo apt install ocl-icd-libopencl1
 
 </details>
 
-### Linux Intallation Steps 1 - 3
+### Linux Installation Steps 1 - 3
 
 1. Download Rainbowminer, you may use git to make it quick and easy:
 ```
