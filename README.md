@@ -43,7 +43,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ## REQUIRED PRE-REQUESITES
 
-### Windows 7/8.1/10
+### Windows 7/8.1/10 pre-requesites
 
 1. Install PowerShell 6: [Download Installer for version 6.1.3](https://github.com/PowerShell/PowerShell/releases/download/v6.1.3/PowerShell-6.1.3-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
@@ -53,7 +53,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
-### Linux
+### Linux pre-requesites
 
 1. Open cmd window and install 7zip and git
 
@@ -78,11 +78,14 @@ dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
 apt install -f
 ```
 
-3. Make sure, you have installed the most uptodate GPU drivers *plus* CUDA and OpenCL. If RainbowMiner does not show your graphic cards, double check that the OpenCL libraries are installed correctly.
+3. Make sure, you have installed the most uptodate GPU drivers *plus* CUDA and OpenCL. If RainbowMiner does not show your graphic cards, double check that the OpenCL libraries are installed correctly. Sometimes you will need to install opencl (the ocl-icd-libopencl1 package) manually:
+```
+sudo apt install ocl-icd-libopencl1
+```
 
 ## INSTALLATION
 
-### Windows Step 1 - 3
+### Windows Intallation Steps 1 - 3
 
 1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
@@ -96,7 +99,7 @@ apt install -f
 
 </details>
 
-### Linux Step 1 - 3
+### Linux Intallation Steps 1 - 3
 
 1. Download Rainbowminer, you may use git to make it quick and easy:
 ```
