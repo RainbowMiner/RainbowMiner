@@ -1696,12 +1696,16 @@ function Invoke-Exe {
     try {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
-        $psi = New-object System.Diagnostics.ProcessStartInfo
-        $psi.CreateNoWindow = $true
-        $psi.UseShellExecute = $false
-        $psi.RedirectStandardOutput = $true
-        $psi.RedirectStandardError = $true
-        $psi.FileName = Resolve-Path $FilePath
+        if ($IsLinux) {
+            $psi = New-object System.Diagnostics.ProcessStartInfo $FilePath
+        } else {
+            $psi = New-object System.Diagnostics.ProcessStartInfo
+            $psi.CreateNoWindow = $true
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.FileName = Resolve-Path $FilePath
+        }
         $psi.Arguments = $ArgumentList
         $psi.WorkingDirectory = $WorkingDirectory
         if ($Runas) {$psi.Verb = "runas"}
