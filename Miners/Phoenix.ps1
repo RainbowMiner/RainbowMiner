@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Windows.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Linux.tar.gz"
+} else {
+    $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Windows.zip"
+}
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65

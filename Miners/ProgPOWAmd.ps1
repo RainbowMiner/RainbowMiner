@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\AMD-ProgPOW\progpowminer-amd.exe"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-amd-windows-0.16_final.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-ProgPOW\progpowminer_opencl_only"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpow_linux_0.16_final.zip"
+} else {
+    $Path = ".\Bin\AMD-ProgPOW\progpowminer-amd.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16-progpowminer/progpowminer-amd-windows-0.16_final.7z"
+}
 $Port = "409{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"
 $DevFee = 0.0

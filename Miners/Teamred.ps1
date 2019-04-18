@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.3-teamred/teamredminer-v0.4.3-win.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-Teamred\teamredminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.3-teamred/teamredminer-v0.4.3-linux.tgz"
+} else {
+    $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.3-teamred/teamredminer-v0.4.3-win.zip"
+}
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0

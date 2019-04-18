@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-win64-beta5ip3.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-FancyIX\sgminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-linux-amd64-beta5ip3.zip"
+} else {
+    $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-win64-beta5ip3.zip"
+}
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0

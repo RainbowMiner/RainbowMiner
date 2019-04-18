@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\AMD-WildRig\wildrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.4p14-wildrig/wildrig-multi-windows-0.15.4-preview14.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-WildRigPreview\wildrig-multi"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.5-wildrigmulti/wildrig-multi-linux-0.15.5.tar.gz"
+} else {
+    $Path = ".\Bin\AMD-WildRigPreview\wildrig.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.5-wildrigmulti/wildrig-multi-windows-0.15.5.7z"
+}
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -28,6 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = ""} #Hex
+    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = ""} #HMQ1725
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban

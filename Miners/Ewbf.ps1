@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Equihash-EWBF\miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6-ewbf/EWBF.Equihash.miner.v0.6.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\Equihash-EWBF\miner"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6-ewbf/EWBF_Equihash_miner_v0.6.tar.gz"
+} else {
+    $Path = ".\Bin\Equihash-EWBF\miner.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6-ewbf/EWBF.Equihash.miner.v0.6.zip"
+}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4466962.0"
 $Port = "311{0:d2}"
 $DevFee = 0.0

@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\Ethash-Claymore\ethdcrminer64"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/ClaymoreDual-12.0.tar.gz"
+} else {
+    $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0.7z"
+}
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "203{0:d2}"
 $Cuda = "6.5"

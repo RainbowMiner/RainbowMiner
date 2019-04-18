@@ -5,27 +5,45 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
 $Port = "302{0:d2}"
 $DevFee = 1.0
 
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda10.0.zip"
-        Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda9.2.zip"
-        Cuda = "9.2"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda9.1.zip"
-        Cuda = "9.1"
-    }
-)
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy-1.28-cuda100.tar.gz"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy-1.28-cuda92.tar.gz"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy-1.28-cuda91.tar.gz"
+            Cuda = "9.1"
+        }
+    )
+} else {
+    $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda10.0.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda9.2.zip"
+            Cuda = "9.2"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.28-zenemy/z-enemy.1-28-cuda9.1.zip"
+            Cuda = "9.1"
+        }
+    )
+}
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
