@@ -19,7 +19,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ## FEATURE SUMMARY
 
-- **Multi-Platform (AMD, NVIDIA, CPU)**
+- **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, F2pool, FairPool, GosCx, GrinMint, HashRefinery, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, SparkPool, YiiMP, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
@@ -43,6 +43,8 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ## REQUIRED PRE-REQUESITES
 
+### Windows 7/8.1/10
+
 1. Install PowerShell 6: [Download Installer for version 6.1.3](https://github.com/PowerShell/PowerShell/releases/download/v6.1.3/PowerShell-6.1.3-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 419.35](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.3.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
@@ -51,8 +53,36 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
+### Linux
+
+1. Open cmd window and install 7zip and git
+
+```
+sudo apt-get update
+sudo apt-get install p7zip-full
+sudo apt-get install git
+```
+
+2. Install Powershell Core
+
+Find the matching version of [Powershell Core v6.2.0 for your Linux distro from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Now, either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
+```
+# if not already done, download the package, change the ubuntu distro version number!
+wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+
+# install powershell package
+dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+
+# install powershell dependecies
+apt install -f
+```
+
+3. Make sure, you have installed the most uptodate GPU drivers *plus* CUDA and OpenCL. If RainbowMiner does not show your graphic cards, double check that the OpenCL libraries are installed correctly.
 
 ## INSTALLATION
+
+### Windows Step 1 - 3
 
 1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
@@ -65,6 +95,26 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 ![Picture](https://raw.githubusercontent.com/RainbowMiner/miner-binaries/master/windowsprotectedyourpc.jpg "Windows protected your PC")
 
 </details>
+
+### Linux Step 1 - 3
+
+1. Download Rainbowminer, you may use git to make it quick and easy:
+```
+git clone https://github.com/rainbowminer/RainbowMiner
+```
+
+2. Finally, change the attributes of start.sh
+```
+cd Rainbowminer
+chmod 755 start.sh
+```
+
+3. Start it
+```
+./start.sh
+```
+
+### Common steps
 
 4. Enter your credentials:
    - your btc-wallet address (one for general use, and one for NiceHash)
