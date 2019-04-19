@@ -1143,7 +1143,7 @@ function Invoke-Core {
         if ($Miner.PrerequisitePath) {$Miner.PrerequisitePath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Miner.PrerequisitePath)}
 
         if (-not $AllMiners_VersionCheck.ContainsKey($Miner.BaseName)) {
-            $Miner_UriJson = Join-Path (Get-MinerInstPath $Path) "_uri.json"
+            $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
             $Miner_Uri = ""
             if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()}
             $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI            

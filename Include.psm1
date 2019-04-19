@@ -5057,10 +5057,11 @@ function Get-MinerInstPath {
     param (
         [string]$Path
     )
-    $InstallationPath = Split-Path $Path
-    if ($Path -match "\.[/\\]Bin[/\\]") {
-        While (($InstallationPath -split "[/\\]" | Measure-Object).Count -gt 3) {$InstallationPath = Split-Path $InstallationPath}
+    if ($Path -match "^(\.[/\\]Bin[/\\][^/\\]+)") {$Matches[1]}
+    else {
+        if (-not (Test-Path Variable:Global:MinersInstallationPath)) {$Global:MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
+        if ($Path.StartsWith($Global:MinersInstallationPath) -and $Path.Substring($Global:MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Global:MinersInstallationPath)$($Matches[1])"}
+        else {Split-Path $Path}
     }
-    $InstallationPath
 }
 
