@@ -5,7 +5,7 @@ class SwapMiner : Miner {
     [String]GetArguments() {
         $Parameters = $this.Arguments | ConvertFrom-Json
 
-        $ConfigPath = "$([IO.Path]::GetFullPath($this.Path) | Split-Path)\$($this.Pool -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"})"
+        $ConfigPath = Join-Path $([IO.Path]::GetFullPath($this.Path) | Split-Path) "$($this.Pool -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"})"
 
         if (Test-Path $this.Path) {
             if (-not (Test-Path $ConfigPath)) {New-Item $ConfigPath -ItemType "directory" > $null}
