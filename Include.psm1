@@ -2389,7 +2389,7 @@ function Update-DeviceInformation {
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
-                    $CIM_CPU | Where-Object {$_.DeviceID -eq $Device.CIM.DeviceID} | ForEach-Object {
+                    $CIM_CPU | Select-Object -Index $Device.Type_Index | ForEach-Object {
                         if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
                             if ($Script:abMonitor -and $abReload) {$Script:abMonitor.ReloadAll();$abReload=$false}
                             $CpuData = @{                            
@@ -2402,7 +2402,7 @@ function Update-DeviceInformation {
                         } else {
                             $CpuData = @{Clock=0;Utilization=0;PowerDraw=0;Temperature=0;Method="tdp"}
                         }
-                        if (-not $CpuData.Clock) {$CpuData.Clock = $_.MaxClockSpeed}                
+                        if (-not $CpuData.Clock)       {$CpuData.Clock = $_.MaxClockSpeed}                
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
                         if (-not $CpuData.PowerDraw) {
                             $CpuName = $_.Name.Trim()
