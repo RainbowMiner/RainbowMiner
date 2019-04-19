@@ -27,7 +27,7 @@ class Lol : Miner {
         $Accepted_Shares = [Int64]$Data.Session.Accepted
         $Rejected_Shares = [Int64]($Data.Session.Submitted - $Data.Session.Accepted)
 
-        $HashRate_Name = Get-Algorithm($Data.Mining.Algorithm -replace "/" -replace "\s+-\s+.+$")
+        $HashRate_Name  = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]$data.Session.Performance_Summary
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
