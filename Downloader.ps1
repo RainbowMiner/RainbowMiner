@@ -60,7 +60,12 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
             }
             else {
-                Expand-WebRequest $URI (Split-Path $Path) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
+                $InstallationPath = Split-Path $Path
+                if ($IsMiner -and $Path -match "\.[/\\]Bin[/\\]") {
+                    While (($InstallationPath -split "[/\\]" | Measure-Object).Count -gt 3) {$InstallationPath = Split-Path $InstallationPath}
+                }
+
+                Expand-WebRequest $URI $InstallationPath -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
             }
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
