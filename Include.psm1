@@ -2136,9 +2136,7 @@ function Get-DeviceName {
         [Parameter(Mandatory = $false)]
         [String]$Vendor = "AMD",
         [Parameter(Mandatory = $false)]
-        [Bool]$UseAfterburner = $true,
-        [Parameter(Mandatory = $false)]
-        [String]$NVSMIpath = ".\Includes"
+        [Bool]$UseAfterburner = $true
     )
     try {
         $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-Content ".\Data\$($Vendor.ToLower())-cards.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}catch{}}
@@ -2191,9 +2189,8 @@ function Get-DeviceName {
                     '--query-gpu=gpu_name,pci.device_id'
                     '--format=csv,noheader'
                 )
-
-                $NVSMIpath = if ($IsWindows) {[IO.Path]::GetDirectoryName($NVSMIpath) + "\nvidia-smi.exe"} elseif ($IsLinux) {"nvidia-smi"}
-                Invoke-Exe "$(if (-not $IsWindows -or (Test-Path($NVSMIpath))) {$NVSMIpath} else {".\Includes\nvidia-smi.exe"})" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
+                
+                Invoke-Exe $(Get-NvidiaSmi) -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
                     $AdlResultSplit = @($_ -split ',' | Select-Object)
                     $DeviceName = $AdlResultSplit[0].Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
@@ -2220,8 +2217,6 @@ function Update-DeviceInformation {
         [String[]]$DeviceName = @(),
         [Parameter(Mandatory = $false)]
         [Bool]$UseAfterburner = $true,
-        [Parameter(Mandatory = $false)]
-        [String]$NVSMIpath = ".\Includes",
         [Parameter(Mandatory = $false)]
         [PSCustomObject]$DeviceConfig = @{}        
     )
@@ -2344,8 +2339,7 @@ function Update-DeviceInformation {
                 )
                 if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
 
-                $NVSMIpath = if ($IsWindows) {[IO.Path]::GetDirectoryName($NVSMIpath) + "\nvidia-smi.exe"} else {"nvidia-smi"}
-                Invoke-Exe "$(if (-not $IsWindows -or (Test-Path($NVSMIpath))) {$NVSMIpath} else {".\Includes\nvidia-smi.exe"})" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
+                Invoke-Exe $(Get-NvidiaSmi) -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
                     $SMIresultSplit = $_ -split ','
                     if ($SMIresultSplit.count -gt 10) {
                         for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
@@ -3160,11 +3154,13 @@ class Miner {
 
                 if ($Vendor -eq "NVIDIA") {
                     foreach($DeviceId in $DeviceIds) {
-                        if ($Profile.PowerLimit -gt 0) {$NvCmd.Add("-setPowerTarget:$($DeviceId),$([math]::max([math]::min($Profile.PowerLimit,200),20))") >$null;$applied_any=$true}
-                        if ($Profile.ThermalLimit -gt 0) {$NvCmd.Add("-setTempTarget:$($DeviceId),0,$([math]::max([math]::min($Profile.ThermalLimit,95),50))") >$null;$applied_any=$true}
-                        if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$')  {$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$([int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500)") >$null;$applied_any=$true}
-                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setBaseClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.CoreClockBoost))") >$null;$applied_any=$true}
-                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$NvCmd.Add("-setMemoryClockOffset:$($DeviceId),0,$([Convert]::ToInt32($Profile.MemoryClockBoost))") >$null;$applied_any=$true}
+                        if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
+                        if (-not $Global:IsLinux) {
+                            if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
+                            if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
+                        }
+                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[3]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[3]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
                     }
                 } elseif ($Pattern.$Vendor -ne $null) {
                     $DeviceId = 0
@@ -3187,7 +3183,10 @@ class Miner {
         }
 
         if ($applied.Count) {
-            if ($Vendor -eq "NVIDIA") {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd} else {$Script:abControl.CommitChanges()}
+            if ($Vendor -eq "NVIDIA") {
+                if ($Global:IsLinux) {Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas >$null}
+                else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
+            } else {$Script:abControl.CommitChanges()}
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
         }
     }
@@ -4962,6 +4961,35 @@ param(
         }
     } else {$MRRStatus[$RigId] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
     if (-not $Stop) {$MRRStatus[$RigId].enable}
+}
+
+function Get-NvidiaSmi {
+    if ($IsLinux) {"nvidia-smi"}
+    elseif ($Session.Config.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.Config.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
+    else {".\Includes\nvidia-smi.exe"}
+}
+
+function Set-NvidiaPowerLimit {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [Int[]]$Device,
+    [Parameter(Mandatory = $true)]
+    [Int[]]$PowerLimitPercent
+
+)
+    if (-not $PowerLimitPercent.Count -or -not $Device.Count) {return}
+    try {
+        $NVSMI = Get-NvidiaSmi
+        While ($PowerLimitPercent.Count -lt $Device.Count) {$PowerLimitPercent += $PowerLimitPercent | Select-Object -Last 1}
+        $index = 0
+        $arglist = "-i $($Device -join ",") --query-gpu=power.default_limit --format=csv,noheader"
+        Invoke-Exe -FilePath $NVSMI -ArgumentList $arglist -ExcludeEmptyLines -ExpandLines | Foreach-Object {
+            $arglist = "-i $($Device[$index]) -pl $([Math]::Round([double]($_ -replace '[^0-9,\.]')*($PowerLimitPercent[$index]/100),2).ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))"
+            Invoke-Exe -FilePath $NVSMI -ArgumentList $arglist -RunAs > $null
+            $index++
+        }
+    } catch {}
 }
 
 function Reset-Vega {

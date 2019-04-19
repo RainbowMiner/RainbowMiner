@@ -183,7 +183,7 @@ function Update-ActiveMiners {
     [CmdletBinding()]
     param([Bool]$FirstRound = $false, [Switch]$Silent = $false)
 
-    Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
+    Update-DeviceInformation $Session.ActiveMiners_DeviceNames -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     $MinersUpdated = 0
     $MinersFailed  = 0
     $ExclusiveMinersFailed = 0
@@ -651,7 +651,7 @@ function Invoke-Core {
         $API.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
 
         #Update device information for the first time
-        Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -NVSMIpath $Session.Config.NVSMIpath -DeviceConfig $Session.Config.Devices
+        Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
     
     $API.Devices = $Session.Devices
