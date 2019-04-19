@@ -25,7 +25,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #GRIN/Cuckaroo29
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = $Vendors; NoCPUMining = $true} #XWP/Cuckaroo29s
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29s"; MinMemGb = 6; MinMemGbW10 = 6; Params = ""; DevFee = 2.0; ExtendInterval = 3; FaultTolerance = 0.3; Penalty = 0; Vendor = @("AMD"); NoCPUMining = $true} #XWP/Cuckaroo29s
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
