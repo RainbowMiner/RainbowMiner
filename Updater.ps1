@@ -74,9 +74,9 @@ try {
                 ArgumentList = "x `"$FromFullPath`" -o`"$ToFullPath`" -y -spe"
             }
         }
-        $Params.Wait = $true
 
-        Start-Process @Params
+        $Params.PassThru = $true
+        (Start-Process @Params).WaitForExit() > $null
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 

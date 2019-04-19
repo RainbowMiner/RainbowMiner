@@ -38,7 +38,7 @@
     $Session.Benchmarking = $false
     try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
 
-    if (Confirm-IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
+    if (Test-IsElevated) {Write-Log -Level Verbose "Run as administrator"}
 
     #Cleanup the log and cache
     if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
@@ -378,7 +378,7 @@ function Invoke-Core {
     #Give API access to all possible devices
     if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices}
 
-    $MSIAenabled = -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
+    $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
 
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
@@ -1203,7 +1203,7 @@ function Invoke-Core {
 
     #Open firewall ports for all miners
     try {
-        if (Get-Command "Get-MpPreference" -ErrorAction Ignore) {
+        if ($IsWindows -and (Get-Command "Get-MpPreference" -ErrorAction Ignore)) {
             if (Get-Command "Get-NetFirewallRule" -ErrorAction Ignore) {
                 if ($Session.MinerFirewalls -eq $null) {$Session.MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
                 if (@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Session.MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>") {
@@ -1998,7 +1998,7 @@ function Invoke-Core {
                 Write-Log -Level Warn "Failed to start new instance of RainbowMiner. Switching to legacy update."                
                 $Session.Stopp = $true
             } else {
-                Write-Log -Level Warn "Restart not possible, since RainbowMiner has not been started with administrator rights"
+                Write-Log -Level Warn "Restart not possible, $(if (Test-IsElevated) {"something went wrong."} else {"since RainbowMiner has not been started with administrator rights"})"
                 $Session.Restart = $false
             }
         }

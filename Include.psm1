@@ -1616,7 +1616,7 @@ function Expand-WebRequest {
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
 
     if (".msi", ".exe" -contains ([IO.FileInfo](Split-Path $Uri -Leaf)).Extension) {
-        Start-Process $FileName "-qb" -Wait
+        (Start-Process $FileName "-qb" -PassThru).WaitForExit()>$null
     }
     else {
         $Path_Old = (Join-Path (Split-Path $Path) ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName)
@@ -1654,8 +1654,9 @@ function Expand-WebRequest {
                 WindowStyle  = "Hidden"
             }
         }
-        $Params.Wait = $true
-        Start-Process @Params
+
+        $Params.PassThru = $true
+        (Start-Process @Params).WaitForExit()>$null
 
         if (Test-Path $Path_Bak) {Remove-Item $Path_Bak -Recurse -Force}
         if (Test-Path $Path_New) {Rename-Item $Path_New (Split-Path $Path_Bak -Leaf) -Force}
@@ -2030,6 +2031,7 @@ function Get-DevicePowerDraw {
 }
 
 function Start-Afterburner {
+    if (-not $IsWindows) {return}
     try {
         Add-Type -Path ".\Includes\MSIAfterburner.NET.dll"
     } catch {
@@ -2061,8 +2063,11 @@ function Start-Afterburner {
 }
 
 function Test-Afterburner {
-    if (-not (Test-Path Variable:Script:abMonitor)) {return -1}
-    if ($Script:abMonitor -and $Script:abControl) {1} else {0}
+    if (-not $IsWindows) {0}
+    else {
+        if (-not (Test-Path Variable:Script:abMonitor)) {return -1}
+        if ($Script:abMonitor -and $Script:abControl) {1} else {0}
+    }
 }
 
 function Get-AfterburnerDevices ($Type) {
@@ -4592,13 +4597,6 @@ function Invoke-ReportMinerStatus {
     }
 }
 
-function Confirm-IsAdmin {
-    # Returns true/false
-    if ($IsWindows) {
-       ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-    }
-}
-
 function Initialize-User32Dll {
     try {
         Add-Type @"
@@ -5003,3 +5001,53 @@ function Test-Internet {
         }
     } catch {$true}
 }
+
+function Wait-UntilTrue
+{
+    [CmdletBinding()]
+    param (
+        [ScriptBlock]$sb,
+        [int]$TimeoutInMilliseconds = 10000,
+        [int]$IntervalInMilliseconds = 1000
+        )
+    # Get the current time
+    $startTime = [DateTime]::Now
+
+    # Loop until the script block evaluates to true
+    while (-not ($sb.Invoke())) {
+        # If the timeout period has passed, return false
+        if (([DateTime]::Now - $startTime).TotalMilliseconds -gt $timeoutInMilliseconds) {
+            return $false
+        }
+        # Sleep for the specified interval
+        Start-Sleep -Milliseconds $intervalInMilliseconds
+    }
+    return $true
+}
+
+function Wait-FileToBePresent
+{
+    [CmdletBinding()]
+    param (
+        [string]$File,
+        [int]$TimeoutInSeconds = 10,
+        [int]$IntervalInMilliseconds = 100
+    )
+
+    Wait-UntilTrue -sb { Test-Path $File } -TimeoutInMilliseconds ($TimeoutInSeconds*1000) -IntervalInMilliseconds $IntervalInMilliseconds > $null
+}
+
+function Test-IsElevated
+{
+    if ($IsWindows) {
+        ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    } else {
+        (whoami) -match "root"
+    }
+}
+
+function Get-RandomFileName
+{
+    [System.IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetRandomFileName())
+}
+
