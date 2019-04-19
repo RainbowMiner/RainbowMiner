@@ -24,10 +24,10 @@
 
         if ($API.RemoteAPI -and (!$urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
             # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-            Start-Process netsh -Verb runas -Wait -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone"
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit()>$null
         }
         if (!$API.RemoteAPI -and ($urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
-            Start-Process netsh -Verb runas -Wait -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/"
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/").WaitForExit()>$null
         }
     }
 
@@ -232,7 +232,23 @@
                         ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
-                    Start-Process "7z" "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip" -Wait -WindowStyle Hidden
+
+                    if ($IsLinux) {
+                        $Params = @{
+                            FilePath     = "7z"
+                            ArgumentList = "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip"
+                        }
+                    } else {
+                        $Params = @{
+                            FilePath     = "7z"
+                            ArgumentList = "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip"
+                            WindowStyle  = "Hidden"
+                        }
+                    }
+
+                    $Params.PassThru = $true
+                    (Start-Process @Params).WaitForExit()>$null
+
                     Remove-Item $DebugPath -Recurse -Force
 
                     $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).zip"))
@@ -320,7 +336,7 @@
                     [System.Collections.ArrayList]$Out = @()
                     ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-'} | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
-                            $JsonUri = "$(Split-Path $_.Path)\_uri.json"
+                            $UriJson = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
                         }
                         [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
