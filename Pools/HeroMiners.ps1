@@ -100,6 +100,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             if ($Pool_Request.config.priceCurrency -ne "BTC" -and $Session.Rates."$($Pool_Request.config.priceCurrency)") {$lastSatPrice *= 1e8/$Session.Rates."$($Pool_Request.config.priceCurrency)"}
             if (-not $lastSatPrice -and $Session.Rates.$Pool_Currency) {$lastSatPrice = 1/$Session.Rates.$Pool_Currency*1e8}
         }
+        if ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Pool_Currency) {$Session.Rates.$Pool_Currency = 1/$lastSatPrice*1e8}
+
         $satRewardLive = $amountLive * $lastSatPrice        
 
         $satRewardDay = 0.0
