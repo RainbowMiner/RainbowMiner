@@ -94,39 +94,33 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $coinUnits    = $Pool_Request.config.coinUnits
         $amountLive   = $profitLive / $coinUnits
 
-        $lastSatPrice = if ($Pool_Request.charts.price) {[Double]($Pool_Request.charts.price | Select-Object -Last 1)[1]} else {0}
-        if (-not $lastSatPrice -and $Session.Rates.$Pool_Currency) {$lastSatPrice = 1/$Session.Rates.$Pool_Currency*1e8}
-        $satRewardLive = $amountLive * $lastSatPrice
-        if ($Pool_Request.config.priceCurrency -ne "BTC") {
-            if (-not $Session.Rates."$($Pool_Request.config.priceCurrency)") {
-                $GetTicker = Get-TickerGlobal $Pool_Request.config.priceCurrency
-                if ($GetTicker."$($Pool_Request.config.priceCurrency)".BTC) {$Session.Rates."$($Pool_Request.config.priceCurrency)" = [double](1/$GetTicker."$($Pool_Request.config.priceCurrency)".BTC)}
-            }
-            $satRewardLive *= $Session.Rates."$($Pool_Request.config.priceCurrency)"
+        if ($Pool_Request.price.btc) {$lastSatPrice = 1e8*[Double]$Pool_Request.price.btc}
+        else {
+            $lastSatPrice = if ($Pool_Request.charts.price) {[Double]($Pool_Request.charts.price | Select-Object -Last 1)[1]} else {0}
+            if ($Pool_Request.config.priceCurrency -ne "BTC" -and $Session.Rates."$($Pool_Request.config.priceCurrency)") {$lastSatPrice *= 1e8/$Session.Rates."$($Pool_Request.config.priceCurrency)"}
+            if (-not $lastSatPrice -and $Session.Rates.$Pool_Currency) {$lastSatPrice = 1/$Session.Rates.$Pool_Currency*1e8}
         }
+        $satRewardLive = $amountLive * $lastSatPrice        
 
-        $amountDay = 0.0
         $satRewardDay = 0.0
-
-        $Divisor = 1e8
 
         $averageDifficulties = ($Pool_Request.charts.difficulty | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average
         if ($averageDifficulties) {
-            $averagePrices = if ($Pool_Request.charts.price) {($Pool_Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {$lastSatPrice}
-            if ($averagePrices) {
-                $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
-                $amountDay = $profitDay/$coinUnits
-                $satRewardDay = $amountDay * $averagePrices
-                if ($Pool_Request.config.priceCurrency -ne "BTC") {
-                    $satRewardDay *= $Session.Rates."$($Pool_Request.config.priceCurrency)"
-                }
-            }
+            $averagePrices = if ($Pool_Request.charts.price) {($Pool_Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
+            if ($Pool_Request.config.priceCurrency -ne "BTC" -and $Session.Rates."$($Pool_Request.config.priceCurrency)") {$averagePrices *= 1e8/$Session.Rates."$($Pool_Request.config.priceCurrency)"}
+            if (-not $averagePrices) {$averagePrices = $lastSatPrice}
+            $profitDay = 86400/$averageDifficulties*$reward/$Pool_Divisor
+            $amountDay = $profitDay/$coinUnits
+            $satRewardDay = $amountDay * $averagePrices
         }
+        if (-not $satRewardDay) {$satRewardDay = $satRewardLive}
 
         $blocks = $Pool_Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | Foreach-Object {$Matches[1]} | Sort-Object -Descending
         $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
         $Pool_BLK = [int]$(if ($blocks_measure.Maximum - $blocks_measure.Minimum) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)*$blocks_measure.Count})
         $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
+
+        $Divisor = 1e8
     
         if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($satRewardDay/$Divisor) -Duration (New-TimeSpan -Days 1) -HashRate ($Pool_Request.charts.hashrate | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average -BlockRate $Pool_BLK -Quiet}
         else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($satRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet}
