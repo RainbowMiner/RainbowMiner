@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\GRIN-GrinPro\GrinProMiner"
+    $Path = ".\Bin\GRIN-GrinPro\bin\GrinProMiner"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.1-grinpro/GrinPro_2_1_Linux64.tar.gz"
     $Vendors = @("AMD","NVIDIA")
 } else {
