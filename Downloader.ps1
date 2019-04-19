@@ -43,7 +43,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
     $IsMiner = $_.IsMiner
 
     if ($IsMiner) {
-        $UriJson = Join-Path (Split-Path $Path) "_uri.json"
+        $UriJson = Join-Path (Get-MinerInstPath $Path) "_uri.json"
         $UriJsonData = [PSCustomObject]@{URI = ""}
 
         if ((Test-Path $Path) -and (Test-Path $UriJson)) {
@@ -60,12 +60,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
             }
             else {
-                $InstallationPath = Split-Path $Path
-                if ($IsMiner -and $Path -match "\.[/\\]Bin[/\\]") {
-                    While (($InstallationPath -split "[/\\]" | Measure-Object).Count -gt 3) {$InstallationPath = Split-Path $InstallationPath}
-                }
-
-                Expand-WebRequest $URI $InstallationPath -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
+                Expand-WebRequest $URI $(if ($IsMiner) {Get-MinerInstPath $Path} else {Split-Path $Path}) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
             }
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }
@@ -82,7 +77,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 $Path_New = $Path
             }
 
-            if ($Path_Old) {
+            if ($Searchable -and $Path_Old) {
                 if (Test-Path (Split-Path $Path_New)) {(Split-Path $Path_New) | Remove-Item -Recurse -Force}
                 (Split-Path $Path_Old) | Copy-Item -Destination (Split-Path $Path_New) -Recurse -Force
             }

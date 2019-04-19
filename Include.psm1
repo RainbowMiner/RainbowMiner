@@ -3122,7 +3122,7 @@ class Miner {
     }
 
     SetOCprofile($Config) {        
-        if (-not $Global:IsWindows -or $this.OCprofile.Count -eq 0 -or $this.DeviceModel -like 'CPU*') {return}
+        if ($this.OCprofile.Count -eq 0 -or $this.DeviceModel -like 'CPU*') {return}
 
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
@@ -3131,6 +3131,7 @@ class Miner {
         $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
+            if (-not $Global:IsWindows) {return}
             try {
                 $Script:abMonitor.ReloadAll()
                 $Script:abControl.ReloadAll()
@@ -5049,5 +5050,17 @@ function Test-IsElevated
 function Get-RandomFileName
 {
     [System.IO.Path]::GetFileNameWithoutExtension([IO.Path]::GetRandomFileName())
+}
+
+function Get-MinerInstPath {
+    [CmdletBinding()]
+    param (
+        [string]$Path
+    )
+    $InstallationPath = Split-Path $Path
+    if ($Path -match "\.[/\\]Bin[/\\]") {
+        While (($InstallationPath -split "[/\\]" | Measure-Object).Count -gt 3) {$InstallationPath = Split-Path $InstallationPath}
+    }
+    $InstallationPath
 }
 
