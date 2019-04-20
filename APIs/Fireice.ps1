@@ -24,9 +24,7 @@ class Fireice : Miner {
                     $Job | Add-Member HasOwnMinerWindow $true -Force
                     While ($wait -lt 60) {
                         if (Test-Path "$Miner_Path\$HwConfigFile") {
-                            $ThreadsConfig = (Get-Content "$Miner_Path\$HwConfigFile") -replace '^\s*//.*' | Out-String
-                            $ThreadsConfig = $ThreadsConfig -replace '"bfactor"\s*:\s*\d,', '"bfactor" : 8,'
-                            $ThreadsConfigJson = "{$($ThreadsConfig -replace '\/\*.*' -replace '\*\/' -replace '\*.+' -replace '\s' -replace ',\},]','}]' -replace ',\},\{','},{' -replace '},]', '}]' -replace ',$','')}" | ConvertFrom-Json
+                            $ThreadsConfigJson = "{$((Get-Content "$Miner_Path\$HwConfigFile" -Raw) -replace '(?ms)/\*.+\*/' -replace '//.*' -replace '\s' -replace '"bfactor":\d+,','"bfactor":8,' -replace ',}','}' -replace ',]',']' -replace ',$')}" | ConvertFrom-Json
                             if ($Miner_Vendor -eq "GPU") {
                                 $ThreadsConfigJson | Add-Member gpu_threads_conf @($ThreadsConfigJson.gpu_threads_conf | Sort-Object -Property Index -Unique) -Force
                             }
