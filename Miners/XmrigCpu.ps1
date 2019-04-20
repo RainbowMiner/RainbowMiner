@@ -5,13 +5,20 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-2.14.1-msvc-win64-rbm.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Xmrig\xmrig"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-2.14.1-xenial-x64.tar.gz"
+    $DevFee = 1.0
+} else {
+    $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-2.14.1-msvc-win64-rbm.7z"
+    $DevFee = 0.0
+}
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
-$DevFee = 0.0
+
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -75,7 +82,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=0 $($_.Params)"
+					Arguments      = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"}) --donate-level=$(if ($IsLinux) {1} else {0}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API            = "XMRig"
 					Port           = $Miner_Port
