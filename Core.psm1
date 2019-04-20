@@ -1289,7 +1289,7 @@ function Invoke-Core {
             $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
             $ActiveMiner.DeviceName         = $Miner.DeviceName
             $ActiveMiner.DeviceModel        = $Miner.DeviceModel
-            $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow)
+            $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
             $ActiveMiner.DevFee             = $Miner.DevFee
             $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
             $ActiveMiner.OCprofile          = $Miner.OCprofile
@@ -1351,7 +1351,7 @@ function Invoke-Core {
                 MSIAprofile          = $Miner.MSIAprofile
                 OCprofile            = $Miner.OCprofile
                 ExtendInterval       = $Miner.ExtendInterval
-                ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow)
+                ShowMinerWindow      = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
                 DevFee               = $Miner.DevFee
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
@@ -2040,7 +2040,9 @@ function Stop-Core {
         }
     }
     if ($IsWindows) {
-        Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty ProcessId | Foreach-Object {Stop-Process -Id $_ -Force -ErrorAction Ignore}
+        Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
+    } elseif ($IsLinux) {
+        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Stop-Process -Force -ErrorAction Ignore
     }
     Stop-Autoexec
 }

@@ -1492,6 +1492,7 @@ function Get-SubProcessRunningIds {
         [String]$FilePath
     )
     if ($IsWindows) {Get-CIMInstance CIM_Process | Where-Object {$_.ExecutablePath -eq $FilePath} | Select-Object -ExpandProperty ProcessId}
+    elseif ($IsLinux) {Get-Process | Where-Object {$_.Path -eq $FilePath} | Select-Object -ExpandProperty Id}
 }
 
 function Get-SubProcessIds {
@@ -1574,7 +1575,7 @@ function Stop-SubProcess {
         $Job.ProcessId | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if (-not $Process.HasExited) {
-                    Write-Log -Level Info "Attempting to kill $($Title) PID $($this.Process.Id)$(if ($Name) {": $($Name)"})"
+                    Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
                     $Process.Kill()
                 }
             }
