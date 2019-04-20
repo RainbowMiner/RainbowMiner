@@ -8,10 +8,10 @@ param(
 if (-not $IsLinux) {return}
 
 $Path = ".\Bin\CPU-Luk\luk-cpu"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-lukminer/lukMiner-0.16.0-cpu-phi.tgz"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.12-lukminer/lukMiner-0.15.12-cpu-phi.tar.gz"
 $ManualUri = "https://github.com/bellflower2015/cpuminer-opt/releases"
 $Port = "537{0:d2}"
-$DevFee = 0.0
+$DevFee = 1.0
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -63,7 +63,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "--status-port $($Miner_Port) ---host $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) $($DeviceParams) $($_.Params)"
+					Arguments = "--status-port $($Miner_Port) --host $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) $($DeviceParams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API = "Luk"
 					Port = $Miner_Port
