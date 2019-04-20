@@ -9,29 +9,29 @@
     'Profile2-GTX1070' = [PSCustomObject]@{
         PowerLimit = 85
         ThermalLimit = 0
-        MemoryClockBoost = if ($IsLinux) {"*"} else {"400"}
-        CoreClockBoost = if ($IsLinux) {"*"} else {"100"}
+        MemoryClockBoost = "400"
+        CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
     'Profile3-GTX1070' = [PSCustomObject]@{
         PowerLimit = 85
         ThermalLimit = 0
-        MemoryClockBoost = if ($IsLinux) {"*"} else {"200"}
-        CoreClockBoost = if ($IsLinux) {"*"} else {"100"}
+        MemoryClockBoost = "200"
+        CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
     'Profile4-GTX1070' = [PSCustomObject]@{
         PowerLimit = 85
         ThermalLimit = 0
-        MemoryClockBoost = if ($IsLinux) {"*"} else {"-500"}
-        CoreClockBoost = if ($IsLinux) {"*"} else {"100"}
+        MemoryClockBoost = "-500"
+        CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
     'Profile5-GTX1070' = [PSCustomObject]@{
         PowerLimit = 85
         ThermalLimit = 0
-        MemoryClockBoost = if ($IsLinux) {"*"} else {"350"}
-        CoreClockBoost = if ($IsLinux) {"*"} else {"100"}
+        MemoryClockBoost = "350"
+        CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
 }
