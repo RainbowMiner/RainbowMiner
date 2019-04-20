@@ -80,6 +80,8 @@ try {
 
         if ($PreserveMiners) {$PreserveMiners | Foreach-Object {if (Test-Path "MinersOldVersions\$_") {Copy-Item "MinersOldVersions\$_" "Miners\$_" -Force}}}
 
+        if ($IsLinux) {@(".\start.sh",".\updater.sh",".\gputest.sh") | Where-Object {Test-Path $_} | Foreach-Object {try {& chmod +x "$($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($_))" > $null} catch {}}}
+
         Write-Host "Update finished. Restarting $Name .." -ForegroundColor Green
     } else {
         Write-Host "RainbowMiner is already uptodate. Restarting .." -ForegroundColor Green
