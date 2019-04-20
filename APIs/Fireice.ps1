@@ -34,7 +34,8 @@ class Fireice : Miner {
                             break
                         }
                         Start-Sleep -Milliseconds 500
-                        $wait++
+                        $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+                        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
                     }
                 }
                 Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
