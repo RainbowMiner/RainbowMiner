@@ -1739,7 +1739,9 @@ function Invoke-TcpRequest {
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet,
         [Parameter(Mandatory = $false)]
-        [Switch]$WriteOnly
+        [Switch]$WriteOnly,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ReadToEnd
     )
     $Response = $null
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
@@ -1753,8 +1755,8 @@ function Invoke-TcpRequest {
         $client.ReceiveTimeout = $Timeout * 1000
         $Writer.AutoFlush = $true
 
-        if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}
-        if (-not $WriteOnly) {$Response = $Reader.ReadLine()}
+        if ($Request) {if ($DoNotSendNewline) {$Writer.Write($Request)} else {$Writer.WriteLine($Request)}}
+        if (-not $WriteOnly) {$Response = if ($ReadToEnd) {$Reader.ReadToEnd()} else {$Reader.ReadLine()}}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
