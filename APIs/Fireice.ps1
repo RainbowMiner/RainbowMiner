@@ -17,7 +17,7 @@ class Fireice : Miner {
         try {
             if (-not (Test-Path "$Miner_Path\$HwConfigFile")) {
                 Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
-                $ArgumentList = "--poolconf $PoolConfigFile --config $ConfigFile --$($Miner_Vendor.ToLower()) $HwConfigFile --disable-ss $($Parameters.Params)".Trim()
+                $ArgumentList = "--poolconf $PoolConfigFile --config $ConfigFile --$($Miner_Vendor.ToLower()) $HwConfigFile $($Parameters.Params)".Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
                 if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
                     $wait = 0

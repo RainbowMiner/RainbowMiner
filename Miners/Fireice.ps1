@@ -71,8 +71,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             Default {$Miner_Deviceparams = "--noUAC --noAMD --noNVIDIA"}
         }
 
-        if ($IsLinux) {$Miner_Deviceparams += " --donate-level 1"}
-
         $Commands | ForEach-Object {
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
             $MinMemGb = $_.MinMemGb
