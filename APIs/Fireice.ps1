@@ -15,6 +15,14 @@ class Fireice : Miner {
         ($Parameters.Pools  | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$","," | Set-Content "$Miner_Path\$PoolConfigFile" -ErrorAction Ignore -Encoding UTF8 -Force
                 
         try {
+            if (Test-Path "$Miner_Path\$HwConfigFile") {
+                try {
+                    Get-Content "$Miner_Path\$HwConfigFile" -Raw | ConvertFrom-Json -ErrorAction Stop
+                } catch {
+                    Write-Log -Level Warn "Bad json file found ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) - creating a new one"
+                    Remove-Item "$Miner_Path\$HwConfigFile" -ErrorAction Ignore -Force
+                }
+            }
             if (-not (Test-Path "$Miner_Path\$HwConfigFile")) {
                 Remove-Item "$Miner_Path\config_$($Miner_Vendor.ToLower())-*.txt" -Force -ErrorAction Ignore
                 $ArgumentList = "--poolconf $PoolConfigFile --config $ConfigFile --$($Miner_Vendor.ToLower()) $HwConfigFile $($Parameters.Params)".Trim()
@@ -44,7 +52,7 @@ class Fireice : Miner {
                 $LegacyDeviceConfigFile = "$($Miner_Vendor.ToLower())-$($this.BaseAlgorithm -join '-').txt"
                 if (Test-Path "$Miner_Path\$LegacyDeviceConfigFile") {$HwConfigFile = $LegacyDeviceConfigFile}
 
-                $ThreadsConfigJson = Get-Content "$Miner_Path\$HwConfigFile" | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $ThreadsConfigJson = Get-Content "$Miner_Path\$HwConfigFile" -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
                 if ($Miner_Vendor -eq "CPU") {
                     if ($Parameters.Affinity -ne $null) {
                         $FirstCpu = $ThreadsConfigJson.cpu_threads_conf | Select-Object -First 1 | ConvertTo-Json -Compress
