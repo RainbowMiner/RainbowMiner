@@ -13,7 +13,7 @@ class Ccminer : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop -Quiet            
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet            
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {

@@ -13,7 +13,7 @@ class Claymore : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
             if (-not $Data -or -not $Data.result -or -not $Data.result[2]) {throw}
         }

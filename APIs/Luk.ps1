@@ -12,7 +12,7 @@ class Luk : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest -Server $Server -Port $this.Port -ReadToEnd $Timeout -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest -Server $Server -Port $this.Port -Timeout $Timeout -ReadToEnd -ErrorAction Stop -Quiet
             if (-not $Response) {throw}
             if ($Response -match 'LOG:') {$Data = $Response -replace 'LOG:' | ConvertFrom-StringData}
         }

@@ -13,7 +13,7 @@ class CryptoDredge : Miner {
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -DoNotSendNewline -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -DoNotSendNewline -ErrorAction Stop -Quiet
             $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
         }
         catch {

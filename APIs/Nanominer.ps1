@@ -40,7 +40,7 @@ $(if ($Parameters.Threads) {"cpuThreads = $($Parameters.Threads)"})
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request $Timeout -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
