@@ -104,6 +104,9 @@
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
         }
+        "Minexmr" = [PSCustomObject]@{
+            Currencies=@("XMR")
+        }
         "MiningPoolHub" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="`$UserName";API_ID="`$API_ID";API_Key="`$API_Key";AECurrency="BTC";Penalty=12}
             SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
@@ -154,6 +157,9 @@
         }
         "PocketWhale" = [PSCustomObject]@{
             Currencies=@("XWP")
+        }
+        "PoolSexy" = [PSCustomObject]@{
+            Currencies=@("DBIX")
         }
         "Ravenminer" = [PSCustomObject]@{
             Currencies=@("RVN")
