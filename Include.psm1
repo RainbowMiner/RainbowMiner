@@ -1731,8 +1731,8 @@ function Invoke-TcpRequest {
         [String]$Server = "localhost", 
         [Parameter(Mandatory = $true)]
         [String]$Port, 
-        [Parameter(Mandatory = $true)]
-        [String]$Request, 
+        [Parameter(Mandatory = $false)]
+        [String]$Request = "",
         [Parameter(Mandatory = $false)]
         [Int]$Timeout = 10, #seconds,
         [Parameter(Mandatory = $false)]
