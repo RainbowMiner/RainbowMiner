@@ -5,13 +5,19 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-win64-2.10.4-rbm.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\CryptoNight-FireIce\xmr-stak"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-linux-2.10.4-cpu_opencl-amd.tar.xz"
+    $DevFee = 1.0
+} else {
+    $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-win64-2.10.4-rbm.7z"
+    $DevFee = 0.0
+}
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
-$DevFee = 0.0
 $Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
@@ -64,6 +70,8 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             "AMD" {$Miner_Deviceparams = "--noUAC --noCPU --noNVIDIA"}
             Default {$Miner_Deviceparams = "--noUAC --noAMD --noNVIDIA"}
         }
+
+        if ($IsLinux) {$Miner_Deviceparams += " --donate-level 1"}
 
         $Commands | ForEach-Object {
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
