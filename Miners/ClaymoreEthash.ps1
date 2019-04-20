@@ -143,6 +143,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						"2Miners"     {$Miner_Protocol_Params = "-esm 0"}
 						"2MinersSolo" {$Miner_Protocol_Params = "-esm 0"}
                         "F2pool"      {$Miner_Protocol_Params = "-esm 0";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
+                        "PoolSexy"    {$Miner_Protocol_Params = "-esm 0"}
 						default       {$Miner_Protocol_Params = "-esm 2"}
 					}				
 
