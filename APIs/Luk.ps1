@@ -7,14 +7,14 @@ class Luk : Miner {
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Response = ""
+        $Response = $Data = ""
 
         $HashRate = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest -Server $Server -Port $this.Port -ReadToEnd $Timeout -ErrorAction Stop -Quiet
             if (-not $Response) {throw}
-            $Data = $Response -replace 'LOG:' | ConvertFrom-StringData
+            if ($Response -match 'LOG:') {$Data = $Response -replace 'LOG:' | ConvertFrom-StringData}
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
