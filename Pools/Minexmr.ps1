@@ -110,8 +110,9 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 Host          = "$(if ($Pool_Region -eq "eu") {"pool"} else {$Pool_Region}).minexmr.com"
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                Pass          = "{workername:$Worker}"
+                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}{diff:+`$difficulty}"
+                Worker        = "{workername:$Worker}"
+                Pass          = "x"
                 Region        = Get-Region $Pool_Region
                 SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
