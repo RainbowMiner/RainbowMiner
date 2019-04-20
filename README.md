@@ -186,8 +186,8 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 
 ## POOLS
 
-<details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine solo, set in pools configuration or edit pools.config.txt</details>
+<details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>AHashPool / AHashPoolCoins</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
 <details><summary>BlazePool</summary> https://www.blazepool.com/ auto-exchange and payout in BTC</details>
 <details><summary>BlockCruncher</summary> https://www.blockcruncher.com/ (pigeoncoin-pool, pays in PGN, set your PGN-address in pools configuration or edit pools.config.txt</details>
@@ -195,38 +195,40 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 </details>
 <details><summary>BlockMastersCoins</summary> https://www.blockmasters.co/ auto-exchange and payout in BTC, mine most profitable coin. Either with auto-exchange to a currency of wish, or mine directly to individual coin wallets. If you setup RainbowMiner with many algorithm, expect a lot of switching.
 </details>
-<details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
-<details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
-<details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
-<details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>GosCxParty</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others, set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
-<details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo, set in pools configuration or edit pools.config.txt</details>
+<details><summary>Bsod</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others. Set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
+<details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine. Set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
+<details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>GosCx</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>GosCxParty</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others. Set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
+<details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
 <details><summary>HashRefinery</summary> https://pool.hashrefinery.com auto-exchange and payout in BTC</details>
-<details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>PocketWhale</summary> https://swap2.luckypool.io/ SWAP-pool for us region, pays in XWP, set your XWP-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
-<details><summary>SparkPool</summary> https://sparkpool.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
-<details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>SparkPool</summary> https://sparkpool.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>MinerRocks</summary> https://miner.rocks/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>Minexmr</summary> https://minexmr.com/ if you are totally in Monero, then this pool might be the best choice: it's monero and no autoexchange, only. A monero XMR wallet address is needed. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MiningPoolHub</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Parameter uses the 17xxx ports therefore allows the pool to decide on which coin is mined of a specific algorithm
 </details>
 <details><summary>MiningPooHubCoins</summary> https://miningpoolhub.com/ auto-exchange and paymout in BTC, username required. Allows for RainbowMiner to calculate and determine what is mined from all of the available coins (20xxx ports).
 </details>
 <details><summary>MiningRigRentals</summary> https://www.miningrigrentals.com/ rent your complete rig to interested users in exchange for BTC, ETC, LTC or DASH. See extra section for more details</details>
-<details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A seperate wallet address is needed for XZC, set in pools configuration or edit pools.config.txt</details>
-<details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC), you want to mine, set in pools configuration or edit pools.config.txt - do not use together with pool Ethermine</details>
+<details><summary>Mintpond</summary> https://mintpond.com/ if you are totally in Zcoin, then this pool might be the best choice. A seperate wallet address is needed for XZC. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>NanoPool</summary> https://nanopool.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC, ETN, SIA, PASC), you want to mine. Set in pools configuration or edit pools.config.txt - do not use together with pool Ethermine</details>
 <details><summary>Nicehash</summary> https://www.nicehash.com/ auto-exchange and payout in BTC, use of Nicehash wallet is recommended, see note below</details>
 <details><summary>NLpool</summary> https://www.nlpool.nl/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool</details>
 <details><summary>PhiPhiPool</summary> https://www.phi-phi-pool.com auto-exchangeand payout in BTC or any coin, that is listed at the pool</details>
 <details><summary>PocketWhale</summary> https://swap.pocketwhale.info/ SWAP-pool for us region, pays in XWP, set your XWP-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
+<details><summary>PoolSexy</summary> https://pool.sexy/ no auto-exchange, mostly DaggerHashimoto (ethash) mined coins, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Ravenminer</summary> https://www.ravenminer.com/ ravencoin-pool for us region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
 <details><summary>RavenminerEu</summary> https://eu.ravenminer.com/ ravencoin-pool for eu region, pays in RVN, set your RVN-address in pools configuration or edit pools.config.txt</details>
-<details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine, set in pools configuration or edit pools.config.txt</details>
+<details><summary>YiiMP</summary> https://yiimp.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>ZergPool</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm.</details>
 <details><summary>ZergPoolParty</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>ZergPoolSolo</summary> https://www.zergpool.com/ auto-exchange and payout in BTC, LTC or any coin, that is listed at the pool. Pool will automatically select the most profitable coin. Switching will be by algorithm. Solo mining!</details>
@@ -728,6 +730,7 @@ Per default all algorithms of a pool will be used. To define your own set of alg
 - CoinSymbol: a comma separated list of coin symbols, you want RainbowMiner to use (leave empty for all). Better alternative to "CoinName"
 - ExcludeCoinSymbol: a comma separated list of coin's, you want RainbowMiner to use (leave empty for all). Better alternative to "ExcludeCoin"
 - EnablePostBlockMining: set to "1" to allow forced mining a specific currency for a timespan (defined in coins.config.txt), after a block has been found.
+- CoinSymbolPBM: if EnablePostBlockMining is set to "1", specify which currency is taken into account for post block mining. Leave empty for all.
 
 Example:
 
@@ -743,7 +746,8 @@ Example:
         "CoinSymbol": "",
         "ExcludeCoinSymbol": "BTG,XTC",
         "FocusWallet": "",
-        "EnablePostBlockMining": "0"
+        "EnablePostBlockMining": "0",
+        "CoinSymbolPBM": ""
     }
     
 #### Force mining to a pool's wallet
