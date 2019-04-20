@@ -63,7 +63,7 @@ class Fireice : Miner {
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
-        return "--poolconf $PoolConfigFile --config $ConfigFile --$($Miner_Vendor.ToLower()) $DeviceConfigFile$(if (-not $Global:IsLinux) {" --disable-ss"})$($Parameters.Params)".Trim()
+        return "--poolconf $PoolConfigFile --config $ConfigFile --$($Miner_Vendor.ToLower()) $DeviceConfigFile $($Parameters.Params)".Trim()
     }
 
     [String[]]UpdateMinerData () {
