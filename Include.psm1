@@ -5096,3 +5096,81 @@ function Get-MinerInstPath {
     }
 }
 
+function Get-PoolDataFromRequest {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)]
+        $Request,
+        [Parameter(Mandatory = $False)]
+        [String]$Currency = "",
+        [Parameter(Mandatory = $False)]
+        [String]$chartCurrency = "",
+        [Parameter(Mandatory = $False)]
+        [int64]$coinUnits = 1,
+        [Parameter(Mandatory = $False)]
+        [int64]$Divisor = 1,
+        [Parameter(Mandatory = $False)]
+        [String]$HashrateField = "hashrate",
+        [Parameter(Mandatory = $False)]
+        $Timestamp = (Get-UnixTimestamp),
+        [Parameter(Mandatory = $False)]
+        [Switch]$addBlockData,
+        [Parameter(Mandatory = $False)]
+        [Switch]$addDay
+    )
+
+    $rewards = [PSCustomObject]@{
+            Live    = @{reward=0.0;hashrate=$Request.pool.$HashrateField}
+            Day     = @{reward=0.0;hashrate=0.0}
+            Workers = if ($Request.pool.workers) {$Request.pool.workers} else {$Request.pool.miners}
+            BLK     = 0
+            TSL     = 0
+    }
+
+    $timestamp24h = $timestamp - 24*3600
+
+    $diffLive     = $Request.network.difficulty
+    $reward       = if ($Request.network.reward) {$Request.network.reward} else {$Request.lastblock.reward}
+    $profitLive   = 86400/$diffLive*$reward/$Divisor
+    if ($Request.config.coinUnits) {$coinUnits = $Request.config.coinUnits}
+    $amountLive   = $profitLive / $coinUnits
+
+    if (-not $Currency) {$Currency = $Request.config.symbol}
+    if (-not $chartCurrency -and $Request.config.priceCurrency) {$chartCurrency = $Request.config.priceCurrency}
+
+    if     ($Request.price.btc)           {$lastSatPrice = 1e8*[Double]$Request.price.btc}
+    elseif ($Request.coinPrice.priceSats) {$lastSatPrice = [Double]$Request.coinPrice.priceSats}
+    elseif ($Request.coinPrice.price)     {$lastSatPrice = 1e8*[Double]$Request.coinPrice.price}
+    elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[Double]$Request.coinPrice."coin-btc"}
+    else {
+        $lastSatPrice = if ($Request.charts.price) {[Double]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
+        if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Session.Rates.$chartCurrency}
+        if (-not $lastSatPrice -and $Session.Rates.$Currency) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
+    }
+    if ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Currency) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
+
+    $rewards.Live.reward = $amountLive * $lastSatPrice        
+
+    if ($addDay) {
+        $averageDifficulties = if ($Request.pool.stats.diffs.wavg24h) {$Request.pool.stats.diffs.wavg24h} else {($Request.charts.difficulty | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average}
+        if ($averageDifficulties) {
+            $averagePrices = if ($Request.charts.price) {($Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$averagePrices *= 1e8/$Session.Rates.$chartCurrency}
+            if (-not $averagePrices) {$averagePrices = $lastSatPrice}
+            $profitDay = 86400/$averageDifficulties*$reward/$Divisor
+            $amountDay = $profitDay/$coinUnits
+            $rewardsDay = $amountDay * $averagePrices
+        }
+        $rewards.Day.reward   = if ($rewardsDay) {$rewardsDay} else {$rewards.Live.reward}
+        $rewards.Day.hashrate = ($Request.charts.hashrate | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average
+        if (-not $rewards.Day.hashrate) {$rewards.Day.hashrate = $rewards.Live.hashrate}
+    }
+
+    if ($addBlockData) {
+        $blocks = $Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | Foreach-Object {$Matches[1]} | Sort-Object -Descending
+        $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
+        $rewards.BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
+        $rewards.TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
+    }
+    $rewards
+}
