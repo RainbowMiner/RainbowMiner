@@ -20,38 +20,50 @@ $Pool_Region_Default = "eu"
 @("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Boolberry";  symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
-    [PSCustomObject]@{coin = "Purk";       symbol = "PURK"; algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "purk"}
-    [PSCustomObject]@{coin = "QRL";        symbol = "QRL";  algo = "CnV7";       port = 9111; fee = 0.9; rpc = "qrl"}
-    [PSCustomObject]@{coin = "Stellite";   symbol = "XTL";  algo = "CnHalf";     port = 4005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "Graft";      symbol = "GRFT"; algo = "CnRwz";      port = 4005; fee = 0.9; rpc = "graft"}
-    [PSCustomObject]@{coin = "Monero";     symbol = "XMR";  algo = "CnR";        port = 5551; fee = 0.9; rpc = "monero"}
-    [PSCustomObject]@{coin = "Loki";       symbol = "LOKI"; algo = "CnHeavy";    port = 5555; fee = 0.9; rpc = "loki"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Ryo";        symbol = "RYO";  algo = "CnGpu";      port = 5555; fee = 0.9; rpc = "ryo"}
-    [PSCustomObject]@{coin = "Haven";      symbol = "XHV";  algo = "CnHaven";    port = 4005; fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Saronite";   symbol = "XRN";  algo = "CnHeavyXhv"; port = 5555; fee = 0.9; rpc = "saronite"; regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "BitTube";    symbol = "TUBE"; algo = "CnSaber";    port = 5555; fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Aeon";       symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
-    [PSCustomObject]@{coin = "Turtlecoin"; symbol = "TRTL"; algo = "CnTurtle";   port = 5555; fee = 0.9; rpc = "turtle"}
-    [PSCustomObject]@{coin = "Masari";     symbol = "MSR";  algo = "CnFast2";    port = 5555; fee = 0.9; rpc = "masari"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
+
+    [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Torque";      symbol = "XTL";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+
+    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551; fee = 0.9; rpc = "monero"}
+    [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003; fee = 0.9; rpc = "sumokoin"}
+
+    [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";    port = 4005; fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
+
+    [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";    port = 5555; fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
+
+    [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
+
+    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{coin = "Loki+Turtle"; symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu"); symbol2 = "TRTL"}
+
+    [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005; fee = 0.9; rpc = "turtle"}
+
+    [PSCustomObject]@{coin = "Ryo";         symbol = "RYO";  algo = "CnGpu";      port = 5555; fee = 1.2; rpc = "ryo"}
+
+    [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";      port = 5005; fee = 0.9; rpc = "graft"}
 )
 
 $Pools_Requests = [hashtable]@{}
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Currency = $_.symbol
-    $Pool_RpcPath = $_.rpc.ToLower()
-    $Pool_HostPath = if ($_.host) {$_.host} else {$Pool_RpcPath}
+$Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
-    $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
+    $Pool_Currency  = $_.symbol
+    $Pool_Currency2 = $_.symbol2
+    $Pool_Fee       = $_.fee
+    $Pool_Port      = $_.port
+    $Pool_RpcPath   = $_.rpc
+
+    $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
+    $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
+
     $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
 
-    $Pool_Port = $_.port
-    $Pool_Fee  = $_.fee
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
-    $Pool_Request = [PSCustomObject]@{}
-    $Pool_Ports   = [PSCustomObject]@{}
+    $Pool_Request  = [PSCustomObject]@{}
+    $Pool_Request2 = [PSCustomObject]@{}
+    $Pool_Ports    = @([PSCustomObject]@{})
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -62,6 +74,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             @("CPU","GPU","RIG") | Foreach-Object {
                 $PortType = $_
                 $Ports | Where-Object desc -match $(if ($PortType -eq "RIG") {"farm"} else {$PortType}) | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
+            }
+            if ($Pool_Currency2) {
+                $Pool_Request2 = Invoke-RestMethodAsync "https://$($Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency2 -and -not $_.symbol2} | Select-Object -ExpandProperty rpc).miner.rocks/api/stats" -tag $Name -cycletime 120
             }
         }
         catch {
@@ -75,35 +90,21 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_Fee = $Pool_Request.config.fee
 
         $timestamp    = Get-UnixTimestamp
-        $timestamp24h = $timestamp - 24*3600
 
-        $diffDay      = $Pool_Request.pool.stats.diffs.wavg24h
-        $diffLive     = $Pool_Request.network.difficulty
-        $reward       = $Pool_Request.network.reward
+        $Pool_StatFn = "$($Name)_$($Pool_Currency)$(if ($Pool_Currency2) {$Pool_Currency2})_Profit"
+        $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
+        $Pool_Reward = if ($dayData) {"Day"} else {"Live"}
+        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -addBlockData -chartCurrency "USD"
 
-        $profitDay    = 86400/$diffDay*$reward/$Pool_Divisor
-        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
+        if ($Pool_Currency2 -and $Pool_Request2) {
+            $Pool_Data2 = Get-PoolDataFromRequest $Pool_Request2 -Currency $Pool_Currency2 -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -chartCurrency "USD"
+            $Pool_Data.$Pool_Reward.reward += $Pool_Data2.$Pool_Reward.reward
+        }
 
-        $coinUnits    = $Pool_Request.config.coinUnits
-        $amountDay    = $profitDay / $coinUnits
-        $amountLive   = $profitLive / $coinUnits
-
-        $btcPrice     = $Pool_Request.coinPrice."coin-btc"
-        if (-not $btcPrice -and $Session.Rates.$Pool_Currency) {$btcPrice = 1/$Session.Rates.$Pool_Currency}
-        $btcRewardDay = $amountDay*$btcPrice
-        $btcRewardLive= $amountLive*$btcPrice
-
-        $Divisor      = 1
-
-        $blocks = $Pool_Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | Foreach-Object {$Matches[1]} | Sort-Object -Descending
-        $Pool_BLK = ($blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object).Count
-        $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
-    
-        if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Currency)_Profit.txt")) {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardDay/$Divisor) -Duration (New-TimeSpan -Days 1) -HashRate ($Pool_Request.charts.hashrate | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average -BlockRate $Pool_BLK -Quiet}
-        else {$Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet}
+        $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $dayData -Quiet
     }
 
-    if (($ok -and $Pool_Port -and ($AllowZero -or $Pool_Request.pool.hashrate -gt 0)) -or $InfoOnly) {
+    if (($ok -and $Pool_Port -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -118,14 +119,14 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
                 Ports         = $Pool_Ports
                 User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                Pass          = "w={workername:$Worker}"
+                Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$($Wallets.$Pool_Currency2)"})"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $False
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Workers       = $Pool_Request.pool.workers
+                Workers       = $Pool_Data.Workers
                 Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
+                TSL           = $Pool_Data.TSL
                 BLK           = $Stat.BlockRate_Average
             }
         }

@@ -5,25 +5,33 @@
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR"; algo = "wildkeccak"; port = 5555; fee = 0.9; walletSymbol = "boolberry"; host = "boolberry.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Purk"; symbol = "PURK"; algo = "wildkeccak"; port = 5555; fee = 0.9; walletSymbol = "purk"; host = "purk.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "QRL"; symbol = "QRL"; algo = "CnV7"; port = 9111; fee = 0.9; walletSymbol = "qrl"; host = "qrl.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Stellite"; symbol = "XTL"; algo = "CnXTL"; port = 4005; fee = 0.9; walletSymbol = "stellite"; host = "stellite.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnV8"; port = 4005; fee = 0.9; walletSymbol = "graft"; host = "graft.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Monero"; symbol = "XMR"; algo = "CnV8"; port = 5555; fee = 0.9; walletSymbol = "monero"; host = "monero.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Loki"; symbol = "LOKI"; algo = "CnHeavy"; port = 5555; fee = 0.9; walletSymbol = "loki"; host = "loki.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Ryo"; symbol = "RYO"; algo = "CnHeavy"; port = 5555; fee = 0.9; walletSymbol = "ryo"; host = "ryo.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHeavyXhv"; port = 4005; fee = 0.9; walletSymbol = "haven"; host = "haven.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Saronite"; symbol = "XRN"; algo = "CnHeavyXhv"; port = 5555; fee = 0.9; walletSymbol = "haven"; host = "saronite.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "BitTube"; symbol = "TUBE"; algo = "CnSaber"; port = 5555; fee = 0.9; walletSymbol = "bittube"; host = "bittube.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Aeon"; symbol = "AEON"; algo = "CnLiteV7"; port = 5555; fee = 0.9; walletSymbol = "aeon"; host = "aeon.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Turtlecoin"; symbol = "TRTL"; algo = "CnLiteV7"; port = 5555; fee = 0.9; walletSymbol = "turtle"; host = "turtle.miner.rocks"; region = "eu"}
-    [PSCustomObject]@{coin = "Masari"; symbol = "MSR"; algo = "CnFast"; port = 5555; fee = 0.9; walletSymbol = "masari"; host = "masari.miner.rocks"; region = "eu"}
+    [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
+
+    [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Torque";      symbol = "XTL";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+
+    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551; fee = 0.9; rpc = "monero"}
+    [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003; fee = 0.9; rpc = "sumokoin"}
+
+    [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";    port = 4005; fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
+
+    [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";    port = 5555; fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
+
+    [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
+
+    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{coin = "Loki+Turtle"; symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu"); symbol2 = "TRTL"}
+
+    [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005; fee = 0.9; rpc = "turtle"}
+
+    [PSCustomObject]@{coin = "Ryo";         symbol = "RYO";  algo = "CnGpu";      port = 5555; fee = 1.2; rpc = "ryo"}
+
+    [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";      port = 5005; fee = 0.9; rpc = "graft"}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
     $Pool_Currency = $_.symbol
-    $Pool_RpcPath = $_.walletSymbol.ToLower()
+    $Pool_RpcPath = $_.rpc
 
     $Pool_Request = [PSCustomObject]@{}
     $Request = [PSCustomObject]@{}
