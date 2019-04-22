@@ -4893,6 +4893,24 @@ param(
     if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
 }
 
+function Get-MiningRigRentalAlgorithm {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$Name
+)
+    Get-Algorithm $(Switch ($Name) {
+            "x16rt"             {"Veil"}
+            "x16rtgin"          {"X16rt"}
+            "cuckoocycle"       {"Cuckaroo29"}
+            "cuckoocycle29swap" {"Cuckaroo29s"}
+            "cuckoocycle31"     {"Cuckatoo31"}
+            "hashimotos"        {"Ethash"}
+            default             {$Name}
+        }
+    )
+}
+
 function Get-MiningRigInfo {
 [cmdletbinding()]   
 param(
@@ -5096,6 +5114,41 @@ function Get-MinerInstPath {
     }
 }
 
+function Get-PoolPortsFromRequest {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)]
+        $Request,
+        [Parameter(Mandatory = $False)]
+        [String]$mCPU = "",
+        [Parameter(Mandatory = $False)]
+        [String]$mGPU = "",
+        [Parameter(Mandatory = $False)]
+        [String]$mRIG = "",
+        [Parameter(Mandatory = $False)]
+        [String]$mAvoid = ""
+    )
+
+    $Portlist = $Request.config.ports | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.desc -notmatch $mAvoid)}
+
+    for($ssl=0; $ssl -lt 2; $ssl++) {
+        $Ports = $Portlist | Where-Object {[int]$ssl -eq [int]$_.ssl}
+        if ($Ports) {
+            $result = [PSCustomObject]@{}
+            foreach($PortType in @("CPU","GPU","RIG")) {
+                $Port = Switch ($PortType) {
+                    "CPU" {$Ports | Where-Object {$mCPU -and $_.desc -match $mCPU} | Select-Object -First 1}
+                    "GPU" {$Ports | Where-Object {$mGPU -and $_.desc -match $mGPU} | Select-Object -First 1}
+                    "RIG" {$Ports | Where-Object {$mRIG -and $_.desc -match $mRIG} | Select-Object -First 1}
+                }
+                if (-not $Port) {$Port = $Ports | Select-Object -First 1}
+                $result | Add-Member $PortType $Port.port -Force
+            }
+            $result
+        } else {$false}
+    }
+}
+
 function Get-PoolDataFromRequest {
     [CmdletBinding()]
     param (
@@ -5145,6 +5198,7 @@ function Get-PoolDataFromRequest {
     else {
         $lastSatPrice = if ($Request.charts.price) {[Double]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
         if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Session.Rates.$chartCurrency}
+        elseif ($chartCurrency -eq "BTC" -and $lastSatPrice -lt 1.0) {$lastSatPrice*=1e8}
         if (-not $lastSatPrice -and $Session.Rates.$Currency) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
     }
     if ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Currency) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
@@ -5156,6 +5210,7 @@ function Get-PoolDataFromRequest {
         if ($averageDifficulties) {
             $averagePrices = if ($Request.charts.price) {($Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
             if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$averagePrices *= 1e8/$Session.Rates.$chartCurrency}
+            elseif ($chartCurrency -eq "BTC" -and $averagePrices -lt 1.0) {$averagePrices*=1e8}
             if (-not $averagePrices) {$averagePrices = $lastSatPrice}
             $profitDay = 86400/$averageDifficulties*$reward/$Divisor
             $amountDay = $profitDay/$coinUnits
