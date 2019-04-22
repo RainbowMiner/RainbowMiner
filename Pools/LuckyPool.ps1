@@ -17,23 +17,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "us"
 
 $Pools_Data = @(
-    #[PSCustomObject]@{coin = "Caliber"; symbol = "CAL"; algo = "CnV8"; port = 5588; fee = 0.9; walletSymbol = "caliber"; host = "caliber.luckypool.io"}
-    #[PSCustomObject]@{coin = "CitiCash"; symbol = "CCH"; algo = "CnHeavy"; port = 3888; fee = 0.9; walletSymbol = "citicash"; host = "citicash.luckypool.io"}
-    #[PSCustomObject]@{coin = "Graft"; symbol = "GRFT"; algo = "CnRwz"; port = 5588; fee = 0.9; walletSymbol = "graft"; host = "graft.luckypool.io"}
-    #[PSCustomObject]@{coin = "Haven"; symbol = "XHV"; algo = "CnHaven"; port = 7788; fee = 0.9; walletSymbol = "haven"; host = "haven.luckypool.io"}
-    #[PSCustomObject]@{coin = "JyoCoin"; symbol = "JYO"; algo = "CnV8"; port = 5008; fee = 0.9; walletSymbol = "jyo"; host = "jyo.luckypool.io"}
-    #[PSCustomObject]@{coin = "SafexCash"; symbol = "SFX"; algo = "CnV8"; port = 3388; fee = 0.9; walletSymbol = "sfx"; host = "safex.luckypool.io"}
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; walletSymbol = "swap2"; host = "swap2.luckypool.io"; divisor = 32}
-    #[PSCustomObject]@{coin = "WowNero"; symbol = "WOW"; algo = "CnWow"; port = 4488; fee = 0.9; walletSymbol = "wownero"; host = "wownero.luckypool.io"}
-    #[PSCustomObject]@{coin = "Xcash"; symbol = "XCASH"; algo = "CnHeavyX"; port = 4488; fee = 0.9; walletSymbol = "xcash"; host = "xcash.luckypool.io"}
+    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $_.symbol
-    $Pool_RpcPath = $_.walletSymbol.ToLower()
+    $Pool_RpcPath = $_.rpc.ToLower()
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
-    $Pool_Host = $_.host
     $Pool_Divisor = if ($_.divisor) {$_.divisor} else {1}
 
     $Pool_Fee  = 0.9
@@ -73,30 +64,17 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.config.fee
 
-        $timestamp    = Get-UnixTimestamp
-        $timestamp24h = $timestamp - 24*3600
+        $timestamp  = Get-UnixTimestamp
 
-        $diffLive     = $Pool_Request.network.difficulty
-        $reward       = $Pool_Request.network.reward
-        $profitLive   = 86400/$diffLive*$reward/$Pool_Divisor
-        $coinUnits    = $Pool_Request.config.coinUnits
-        $amountLive   = $profitLive / $coinUnits
+        $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
+        $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
+        $Pool_Reward = if ($dayData) {"Day"} else {"Live"}
+        $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -addBlockData
 
-        $lastSatPrice = [Double]$Pool_Request.coinPrice.priceSats
-        if (-not $lastSatPrice -and $Session.Rates.$Pool_Currency) {$lastSatPrice = 1/$Session.Rates.$Pool_Currency*1e8}
-        $satRewardLive = $amountLive * $lastSatPrice
-
-        $Divisor = 1e8
-
-        $blocks = $Pool_Request.pool.blocks | Where-Object {$_ -match '^.*?\:(\d+?)\:'} | Foreach-Object {$Matches[1]} | Sort-Object -Descending
-        $blocks_measure = $blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
-        $Pool_BLK = [int]$(if ($blocks_measure.Maximum - $blocks_measure.Minimum) {24*3600/($blocks_measure.Maximum - $blocks_measure.Minimum)*$blocks_measure.Count})
-        $Pool_TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
-    
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($satRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool.hashrate -BlockRate $Pool_BLK -Quiet
+        $Stat = Set-Stat -Name $Pool_StatFn -Value ($Pool_Data.$Pool_Reward.reward/1e8) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $Pool_Data.$Pool_Reward.hashrate -BlockRate $Pool_Data.BLK -ChangeDetection $dayData -Quiet
     }
     
-    if (($ok -and ($AllowZero -or $Pool_Request.pool.hashrate -gt 0)) -or $InfoOnly) {
+    if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         $PoolSSL = $false
         foreach ($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
@@ -108,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = $_.host
+                Host          = "$($Pool_RpcPath).luckypool.io"
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
@@ -117,9 +95,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 SSL           = $False
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee
-                Workers       = $Pool_Request.pool.miners
+                Workers       = $Pool_Data.Workers
                 Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_TSL
+                TSL           = $Pool_Data.TSL
                 BLK           = $Stat.BlockRate_Average
             }
         }
