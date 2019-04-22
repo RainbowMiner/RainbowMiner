@@ -69,12 +69,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name -cycletime 120
-            $Ports = $Pool_Request.config.ports | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true} | Where-Object desc -match '(CPU|GPU)'
-            $Pool_Port = $Ports | Select-Object -First 1 -ExpandProperty port
-            @("CPU","GPU","RIG") | Foreach-Object {
-                $PortType = $_
-                $Ports | Where-Object desc -match $(if ($PortType -eq "RIG") {"farm"} else {$PortType}) | Select-Object -First 1 -ExpandProperty port | Foreach-Object {$Pool_Ports | Add-Member $PortType $_ -Force}
-            }
+            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "low" -mGPU "modern" -mRIG "farm" -mAvoid "PPS"
             if ($Pool_Currency2) {
                 $Pool_Request2 = Invoke-RestMethodAsync "https://$($Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency2 -and -not $_.symbol2} | Select-Object -ExpandProperty rpc).miner.rocks/api/stats" -tag $Name -cycletime 120
             }
@@ -84,9 +79,10 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
+        if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
     }
 
-    if ($ok -and $Pool_Port -and -not $InfoOnly) {
+    if ($ok -and -not $InfoOnly) {
         $Pool_Fee = $Pool_Request.config.fee
 
         $timestamp    = Get-UnixTimestamp
@@ -105,30 +101,36 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     }
 
     if (($ok -and $Pool_Port -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
-        foreach($Pool_Region in $Pool_Regions) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_.coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "$(if ($Pool_Region -ne $Pool_Region_Default) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
-                Port          = if (-not $Pool_Port) {$_.port} else {$Pool_Port}
-                Ports         = $Pool_Ports
-                User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$($Wallets.$Pool_Currency2)"})"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $False
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_Fee
-                Workers       = $Pool_Data.Workers
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_Data.TSL
-                BLK           = $Stat.BlockRate_Average
+        $Pool_SSL = $false
+        foreach ($Pool_Port in $Pool_Ports) {
+            if ($Pool_Port) {
+                foreach($Pool_Region in $Pool_Regions) {
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        CoinName      = $_.coin
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_Currency
+                        Price         = $Stat.$StatAverage #instead of .Live
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                        Host          = "$(if ($Pool_Region -ne $Pool_Region_Default) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
+                        Port          = $Pool_Port.CPU
+                        Ports         = $Pool_Port
+                        User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
+                        Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$($Wallets.$Pool_Currency2)"})"
+                        Region        = $Pool_RegionsTable.$Pool_Region
+                        SSL           = $Pool_SSL
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_Fee
+                        Workers       = $Pool_Data.Workers
+                        Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_Data.TSL
+                        BLK           = $Stat.BlockRate_Average
+                    }
+                }
             }
+            $Pool_SSL = $true
         }
     }
 }
