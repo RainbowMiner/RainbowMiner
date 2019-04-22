@@ -65,24 +65,9 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
     $ok = $true
     if (-not $InfoOnly) {
-        $Pool_Ports_Ok = $false
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
-            @("CPU","GPU","RIG","CPU-SSL","GPU-SSL","RIG-SSL") | Foreach-Object {
-                $PortType = $_ -replace '-.*$'
-                $Ports = if ($_ -match 'SSL') {$Pool_Request.config.ports | Where-Object {$_.ssl}} else {$Pool_Request.config.ports | Where-Object {-not $_.ssl}}
-                if ($Ports) {
-                    $PortIndex = if ($_ -match 'SSL') {1} else {0}
-                    $Port = Switch ($PortType) {                        
-                        "GPU" {$Ports | Where-Object desc -match 'high' | Select-Object -First 1}
-                        "RIG" {$Ports | Where-Object desc -match '(cloud|very high|nicehash)' | Select-Object -First 1}
-                    }
-                    if (-not $Port) {$Port = $Ports | Select-Object -First 1}
-                    if ($Pool_Ports.Count -eq 1 -and $PortIndex -eq 1) {$Pool_Ports += [PSCustomObject]@{}}
-                    $Pool_Ports[$PortIndex] | Add-Member $PortType $Port.port -Force
-                    $Pool_Ports_Ok = $true
-                }
-            }
+            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "high" -mRIG "(cloud|very high|nicehash)"
             if ($Pool_Currency2) {
                 $Pool_Request2 = Invoke-RestMethodAsync "https://$($Pools_Data | Where-Object {$_.symbol -eq $Pool_Currency2 -and -not $_.symbol2} | Select-Object -ExpandProperty rpc).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
             }
@@ -92,7 +77,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
             Write-Log -Level Warn "Pool API ($Name) for $Pool_Currency has failed. "
             $ok = $false
         }
-        if (-not $Pool_Ports_Ok) {$ok = $false}
+        if (-not ($Pool_Ports | Where-Object {$_} | Measure-Object).Count) {$ok = $false}
     }
 
     if ($ok -and -not $InfoOnly) {
@@ -116,28 +101,30 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         $Pool_SSL = $false
         foreach ($Pool_Port in $Pool_Ports) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_.coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                Host          = "$($Pool_HostPath).herominers.com"
-                Port          = $Pool_Port.CPU
-                Ports         = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency){diff:$(if ($Pool_Request.config.fixedDiffEnabled) {$Pool_Request.config.fixedDiffSeparator})`$difficulty}"
-                Pass          = "$(if ($Pool_Currency2) {"$($Wallets.$Pool_Currency2)@"}){workername:$Worker}"
-                Region        = $Pool_Region_Default
-                SSL           = $Pool_SSL
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_Fee
-                Workers       = $Pool_Data.Workers
-                Hashrate      = $Stat.HashRate_Live
-                TSL           = $Pool_Data.TSL
-                BLK           = $Stat.BlockRate_Average
+            if ($Pool_Port) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $_.coin
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_HostPath).herominers.com"
+                    Port          = $Pool_Port.CPU
+                    Ports         = $Pool_Port
+                    User          = "$($Wallets.$Pool_Currency){diff:$(if ($Pool_Request.config.fixedDiffEnabled) {$Pool_Request.config.fixedDiffSeparator})`$difficulty}"
+                    Pass          = "$(if ($Pool_Currency2) {"$($Wallets.$Pool_Currency2)@"}){workername:$Worker}"
+                    Region        = $Pool_Region_Default
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $Pool_Fee
+                    Workers       = $Pool_Data.Workers
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_Data.TSL
+                    BLK           = $Stat.BlockRate_Average
+                }
             }
             $Pool_SSL = $true
         }
