@@ -1899,6 +1899,8 @@ function Get-Device {
     }
 
     try {
+        $AmdModels   = @{}
+        $AmdModelsEx = @()
         $Platform_Devices | Foreach-Object {
             $PlatformId = $_.PlatformId
             $_.Devices | Foreach-Object {    
@@ -1943,6 +1945,11 @@ function Get-Device {
 
                 if ($Device.Type -ne "Cpu" -and ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_}))) {
                     $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
+                    if ($Device.Vendor -eq "AMD" -and $AmdModelsEx -notcontains $Device.Model) {
+                        $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
+                        if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx+=$Device.Model}
+                        else {$AmdModels[$Device.Model]=$AmdGb}
+                    }
                     $Index++
                 }
 
@@ -1959,6 +1966,15 @@ function Get-Device {
                 $Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)"++
                 $Type_Index."$($Device_OpenCL.Type)"++
                 if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
+            }
+        }
+
+        $AmdModelsEx | Foreach-Object {
+            $Model = $_
+            $Devices | Where-Object Model -eq $Model | Foreach-Object {
+                $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
+                $_.Model = "$($_.Model)$AmdGb"
+                $_.Model_Name = "$($_.Model_Name) $AmdGb"
             }
         }
     }
