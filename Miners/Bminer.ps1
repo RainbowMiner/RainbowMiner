@@ -31,9 +31,9 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = ""; NH = $false; MinMemGb = 4; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
     [PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2} #" -nofee" #Bytom
     #[PSCustomObject]@{MainAlgorithm = "zhash";        SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
-    [PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake2s";  NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Blake2s
-    [PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake14r"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Decred
-    [PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + BTM
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake2s";  NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake14r"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Decred
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "vbk"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + VeriBlock
 )
 
@@ -80,7 +80,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					if ($SecondAlgorithm -ne '') {
 						$SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
 					}
-					$Stratum = "$(if ($MainAlgorithm -eq "equihash") {"stratum"} else {$MainAlgorithm})$(if ($Pools.$MainAlgorithm_Norm.SSL) {"+ssl"})"
+   
+                    $Stratum = if ($MainAlgorithm -eq "equihash") {"stratum"}
+                               elseif ($MainAlgorithm -eq "ethash" -and @("F2pool","2Miners","Dwarfpool","Sparkpool") -icontains $Pools.$MainAlgorithm_Norm.Name) {"ethproxy"}
+                               elseif ($MainAlgorithm -eq "ethash" -and @("Coinfoundry","MiningPoolHub","MiningPoolHubCoins") -icontains $Pools.$MainAlgorithm_Norm.Name) {"ethstratum"}
+                               else {$MainAlgorithm}
+
+					$Stratum = "$($Stratum)$(if ($Pools.$MainAlgorithm_Norm.SSL) {"+ssl"})"
 
 					if ($SecondAlgorithm -eq '') {
 						$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
