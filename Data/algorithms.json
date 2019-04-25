@@ -435,6 +435,8 @@
     "ubqhash": "UbqHash",
     "upx": "CryptoNightLiteUpx",
     "vanilla": "BlakeVanilla",
+    "vbk": "VBlake2b",
+    "vblake2b": "VBlake2b",
     "veil": "Veil",
     "veltor": "Veltor",
     "vergeblake2s": "Blake2s",
