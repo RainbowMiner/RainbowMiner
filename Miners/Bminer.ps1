@@ -48,7 +48,7 @@ if ($InfoOnly) {
         Uri       = $Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
-        Commands  = $Commands		
+        Commands  = $Commands
     }
     return
 }
@@ -85,44 +85,44 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					if ($SecondAlgorithm -eq '') {
 						$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 						[PSCustomObject]@{
-							Name = $Miner_Name
-							DeviceName = $Miner_Device.Name
-							DeviceModel = $Miner_Model
-							Path = $Path
-							Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.Pass)"})@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($MainAlgorithm_Norm -eq "Equihash24x5") {" -pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto")"}) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
-							HashRates = [PSCustomObject]@{$MainAlgorithm_Norm = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
-							API = "Bminer"
-							Port = $Miner_Port
-							Uri = $Uri
-							DevFee = $_.DevFee
+							Name           = $Miner_Name
+							DeviceName     = $Miner_Device.Name
+							DeviceModel    = $Miner_Model
+							Path           = $Path
+							Arguments      = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.Pass)"})@$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port)$(if ($MainAlgorithm_Norm -eq "Equihash24x5") {" -pers $(Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto")"}) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
+							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
+							API            = "Bminer"
+							Port           = $Miner_Port
+							Uri            = $Uri
+							DevFee         = $_.DevFee
 							FaultTolerance = $_.FaultTolerance
 							ExtendInterval = $_.ExtendInterval
-							ManualUri = $ManualUri
-							NoCPUMining = $_.NoCPUMining
+							ManualUri      = $ManualUri
+							NoCPUMining    = $_.NoCPUMining
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 						[PSCustomObject]@{
-							Name = $Miner_Name
-							DeviceName = $Miner_Device.Name
-							DeviceModel = $Miner_Model
-							Path = $Path
-							Arguments = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.Pass)"})@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -uri2 $($SecondAlgorithm)://$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.Pass)"})@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
-							HashRates = [PSCustomObject]@{
-								$MainAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
-								$SecondAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
-							}
-							API = "Bminer"
-							Port = $Miner_Port
-							Uri = $Uri
-							DevFee = [PSCustomObject]@{
-								($MainAlgorithm_Norm) = $_.DevFee
-								($SecondAlgorithm_Norm) = 0
-							}
+							Name           = $Miner_Name
+							DeviceName     = $Miner_Device.Name
+							DeviceModel    = $Miner_Model
+							Path           = $Path
+							Arguments      = "-devices $($DeviceIDsAll) -api 127.0.0.1:$($Miner_Port) -uri $($Stratum)://$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$MainAlgorithm_Norm.Pass)"})@$($Pools.$MainAlgorithm_Norm.Host):$($Pools.$MainAlgorithm_Norm.Port) -uri2 $($SecondAlgorithm)://$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.Pass)"})@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port) -watchdog=false -no-runtime-info -gpucheck=0 $($_.Params)"
+							HashRates      = [PSCustomObject]@{
+								                $MainAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
+								                $SecondAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
+							                 }
+							API            = "Bminer"
+							Port           = $Miner_Port
+							Uri            = $Uri
+							DevFee         = [PSCustomObject]@{
+								                ($MainAlgorithm_Norm) = $_.DevFee
+								                ($SecondAlgorithm_Norm) = 0
+							                 }
 							FaultTolerance = $_.FaultTolerance
 							ExtendInterval = $_.ExtendInterval
-							ManualUri = $ManualUri
-							NoCPUMining = $_.NoCPUMining
+							ManualUri      = $ManualUri
+							NoCPUMining    = $_.NoCPUMining
 						}
 					}
 				}
