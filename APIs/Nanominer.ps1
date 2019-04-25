@@ -20,7 +20,7 @@ rigName=$($Parameters.Worker)
 rigPassword=$($Parameters.Pass)
 email=$($Parameters.Email)
 pool1 = $($Parameters.Host):$($Parameters.Port)
-devices =
+devices =$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})
 $(if ($Parameters.Threads) {"cpuThreads = $($Parameters.Threads)"})
 " | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }
@@ -40,7 +40,7 @@ $(if ($Parameters.Threads) {"cpuThreads = $($Parameters.Threads)"})
         $HashRate = [PSCustomObject]@{}
 
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
+            $Response = Invoke-TcpRequest $Server $this.Port $Request -ErrorAction Stop -Quiet
             $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
@@ -55,7 +55,7 @@ $(if ($Parameters.Threads) {"cpuThreads = $($Parameters.Threads)"})
         $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
         $Accepted_Shares -= $Rejected_Shares
 
-        $HashRate_Value = [Int64]$HashRate_Value
+        if ($this.Algorithm -like "ethash*") {$HashRate_Value *= 1000}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}

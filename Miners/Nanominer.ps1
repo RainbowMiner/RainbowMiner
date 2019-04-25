@@ -8,27 +8,33 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-linux-1.2.1.tar.gz"
+    $Path = ".\Bin\ANY-Nanominer\nanominer"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.2-nanominer/nanominer-linux-1.2.2.tar.gz"
 } else {
-    $Path = ".\Bin\CPU-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-nanominer/nanominer-windows-1.2.1.zip"
+    $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.2-nanominer/nanominer-windows-1.2.2.zip"
 }
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
+$Cuda = "8.0"
 $DevFee = 3.0
 
-if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "RandomHash"; Params = ""; ExtendInterval = 2} #RandomHash/PASCcoin
+    [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 8; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
+    [PSCustomObject]@{MainAlgorithm = "CryptonightR";            Params = ""; MinMemGb = 4; MinMemGbW10 = 8; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightR
+    [PSCustomObject]@{MainAlgorithm = "CryptoNightReverseWaltz"; Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightRwz
+    [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "RandomHash";              Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 3.0} #RandomHash/PASCcoin
+    [PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("CPU")
+        Type      = @("AMD","CPU","NVIDIA")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -40,53 +46,60 @@ if ($InfoOnly) {
     return
 }
 
-$Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Session.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-    $Miner_Model = $_.Model
-    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-    #$Miner_Port = 4048
+foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
+    $Session.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+        $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+        $Miner_Model = $_.Model
 
-    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"
+        $DeviceParams = if ($Miner_Vendor -eq "CPU") {"$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"} else {""}
     
-    $Commands | ForEach-Object {
+        $Commands |  Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+            $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+            $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+            $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -ne "Nicehash")) {
+					$Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
+					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-				$Arguments = [PSCustomObject]@{
-                    Algo   = $_.MainAlgorithm
-					Host   = $Pools.$Algorithm_Norm.Host
-					Port   = $Pools.$Algorithm_Norm.Port
-					SSL    = $Pools.$Algorithm_Norm.SSL
-					Wallet = $Pools.$Algorithm_Norm.Wallet
-                    Worker = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
-                    Pass   = $Pools.$Algorithm_Norm.Pass
-                    Email  = $Pools.$Algorithm_Norm.Email
-                    Threads= $Session.Config.CPUMiningThreads
-				}
+				    $Arguments = [PSCustomObject]@{
+                        Algo   = $_.MainAlgorithm
+					    Host   = $Pools.$Algorithm_Norm.Host
+					    Port   = $Pools.$Algorithm_Norm.Port
+					    SSL    = $Pools.$Algorithm_Norm.SSL
+					    Wallet = $Pools.$Algorithm_Norm.Wallet
+                        Worker = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
+                        Pass   = $Pools.$Algorithm_Norm.Pass
+                        Email  = $Pools.$Algorithm_Norm.Email
+                        Threads= if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
+                        Devices= if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null} 
+				    }
 
-				[PSCustomObject]@{
-					Name           = $Miner_Name
-					DeviceName     = $Miner_Device.Name
-					DeviceModel    = $Miner_Model
-					Path           = $Path
-					Arguments      = $Arguments
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API            = "Nanominer"
-					Port           = $Miner_Port
-					Uri            = $Uri
-					FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
-					DevFee         = $DevFee
-					ManualUri      = $ManualUri
-                    MiningAffinity = $Session.Config.CPUMiningAffinity
-				}
-			}
-		}
+                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+
+				    [PSCustomObject]@{
+					    Name           = $Miner_Name
+					    DeviceName     = $Miner_Device.Name
+					    DeviceModel    = $Miner_Model
+					    Path           = $Path
+					    Arguments      = $Arguments
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					    API            = "Nanominer"
+					    Port           = $Miner_Port
+					    Uri            = $Uri
+					    FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = $_.ExtendInterval
+					    DevFee         = $_.DevFee
+					    ManualUri      = $ManualUri
+                        MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}
+				    }
+			    }
+		    }
+        }
     }
 }
