@@ -1678,7 +1678,7 @@ function Expand-WebRequest {
 function Invoke-Exe {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true,ValueFromPipeline = $True)]
         [String]$FilePath, 
         [Parameter(Mandatory = $false)]
         [String]$ArgumentList = "", 
@@ -1858,10 +1858,50 @@ function Get-Device {
     $GPUDeviceNames = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
 
-    try {
+    $Platform_Devices = try {
         [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
-            $OpenCL_DeviceIDs = [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All)
-            $OpenCL_DeviceIDs | ForEach-Object {
+            $Device_Index = 0
+            [PSCustomObject]@{
+                PlatformId=$PlatformId
+                Devices=[OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Foreach-Object {
+                    [PSCustomObject]@{
+                        DeviceIndex     = $Device_Index
+                        Name            = $_.Name
+                        Type            = $_.Type
+                        Vendor          = $_.Vendor
+                        GlobalMemSize   = $_.GlobalMemSize
+                        MaxComputeUnits = $_.MaxComputeUnits
+                        PlatformVersion = $_.Platform.Version
+                    }
+                    $Device_Index++
+                }
+            }
+            $PlatformId++
+         }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
+        if ($Cuda) {
+            $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
+                [PSCustomObject]@{
+                    DeviceIndex     = $_.index
+                    Name            = $_.gpu_name
+                    Type            = "Gpu"
+                    Vendor          = "NVIDIA Corporation"
+                    GlobalMemSize   = 1MB * [int64]$_.memory_total
+                    PlatformVersion = "CUDA $Cuda"
+                }
+            }
+            if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
+        } else {
+            Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
+        }
+    }
+
+    try {
+        $Platform_Devices | Foreach-Object {
+            $PlatformId = $_.PlatformId
+            $_.Devices | Foreach-Object {    
                 $Device_OpenCL = $_ | ConvertTo-Json -Depth 1 | ConvertFrom-Json
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
@@ -1920,13 +1960,11 @@ function Get-Device {
                 $Type_Index."$($Device_OpenCL.Type)"++
                 if (@("NVIDIA","AMD") -icontains $Vendor_Name) {$Type_Mineable_Index."$($Device_OpenCL.Type)"++}
             }
-
-            $PlatformId++
         }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "OpenCL device detection has failed: $($_.Exception.Message)"
+        Write-Log -Level $(if ($IgnoreOpenCL) {"Info"} else {"Warn"}) "GPU detection has failed: $($_.Exception.Message)"
     }
 
     #CPU detection
@@ -2187,23 +2225,15 @@ function Get-DeviceName {
             }
 
             if ($Vendor -eq "NVIDIA") {
-                $DeviceId = 0
-                $Arguments = @(
-                    '--query-gpu=gpu_name,pci.device_id'
-                    '--format=csv,noheader'
-                )
-                
-                Invoke-Exe $(Get-NvidiaSmi) -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
-                    $AdlResultSplit = @($_ -split ',' | Select-Object)
-                    $DeviceName = $AdlResultSplit[0].Trim()
+                Invoke-NvidiaSmi "index","gpu_name","pci.device_id" | ForEach-Object {
+                    $DeviceName = $_.gpu_name.Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
                     [PSCustomObject]@{
-                        Index = $DeviceId
+                        Index      = $_.index
                         DeviceName = $DeviceName
-                        SubId = $SubId
+                        SubId      = if ($_.pci_device_id -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     }
-                    $DeviceId++
                 }
             }
         }
@@ -2336,43 +2366,29 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                $Arguments = @(
-                    '--query-gpu=gpu_name,utilization.gpu,utilization.memory,temperature.gpu,power.draw,power.limit,fan.speed,pstate,clocks.current.graphics,clocks.current.memory,power.max_limit,power.default_limit'
-                    '--format=csv,noheader'
-                )
                 if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
 
-                Invoke-Exe $(Get-NvidiaSmi) -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | ForEach-Object {
-                    $SMIresultSplit = $_ -split ','
-                    if ($SMIresultSplit.count -gt 10) {
-                        for($i = 1; $i -lt $SMIresultSplit.count; $i++) {
-                            $v = $SMIresultSplit[$i].Trim()
-                            if ($v -match '(error|supported)') {$v = "-"}
-                            elseif ($i -ne 7) {
-                                $v = $v -replace "[^\d\.]"
-                                if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = "-"}
-                            }
-                            $SMIresultSplit[$i] = $v                        
+                Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
+                    $Smi = $_
+                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                        $Data = [PSCustomObject]@{
+                            Utilization       = if ($smi.utilization_gpu -ne $null) {$smi.utilization_gpu} else {100}
+                            UtilizationMem    = $smi.utilization_memory
+                            Temperature       = $smi.temperature_gpu
+                            PowerDraw         = $smi.power_draw
+                            PowerLimit        = $smi.power_limit
+                            FanSpeed          = $smi.fan_speed
+                            Pstate            = $smi.pstate
+                            Clock             = $smi.clocks_current_graphics
+                            ClockMem          = $smi.clocks_current_memory
+                            PowerMaxLimit     = $smi.power_max_limit
+                            PowerDefaultLimit = $smi.power_default_limit
+                            Method            = "smi"
                         }
-                        $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                            $Data = [PSCustomObject]@{
-                                Utilization       = if ($SMIresultSplit[1] -eq "-") {100} else {[int]$SMIresultSplit[1]} #If we dont have real Utilization, at least make the watchdog happy
-                                UtilizationMem    = if ($SMIresultSplit[2] -eq "-") {$null} else {[int]$SMIresultSplit[2]}
-                                Temperature       = if ($SMIresultSplit[3] -eq "-") {$null} else {[int]$SMIresultSplit[3]}
-                                PowerDraw         = if ($SMIresultSplit[4] -eq "-") {$null} else {[int]$SMIresultSplit[4] * ($PowerAdjust[$_.Model] / 100)}
-                                PowerLimit        = if ($SMIresultSplit[5] -eq "-") {$null} else {[int]$SMIresultSplit[5]}
-                                FanSpeed          = if ($SMIresultSplit[6] -eq "-") {$null} else {[int]$SMIresultSplit[6]}
-                                Pstate            = $SMIresultSplit[7]
-                                Clock             = if ($SMIresultSplit[8] -eq "-") {$null} else {[int]$SMIresultSplit[8]}
-                                ClockMem          = if ($SMIresultSplit[9] -eq "-") {$null} else {[int]$SMIresultSplit[9]}
-                                PowerMaxLimit     = if ($SMIresultSplit[10] -eq "-") {$null} else {[int]$SMIresultSplit[10]}
-                                PowerDefaultLimit = if ($SMIresultSplit[11] -eq "-") {$null} else {[int]$SMIresultSplit[11]}
-                                Method            = "smi"
-                            }
-                            if ($Data.PowerDefaultLimit -gt 0) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
-                            if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100) * ($PowerAdjust[$_.Model] / 100)}
-                            $_ | Add-Member Data $Data -Force
-                        }
+                        if ($Data.PowerDefaultLimit) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
+                        if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
+                        if ($Data.PowerDraw) {$Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
+                        $_ | Add-Member Data $Data -Force
                         $DeviceId++
                     }
                 }
@@ -2430,9 +2446,7 @@ function Update-DeviceInformation {
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
 
-                    [int]$Utilization = Get-Content "/proc/stat" | Where-Object {$_ -match "cpu\s+(\d+)\s(\d+)\s(\d+)\s(\d+)"} | ForEach-Object {
-                        ([int64]$Matches[1] + [int64]$Matches[3]) * 100 / ([int64]$Matches[1] + [int64]$Matches[3] + [int64]$Matches[4])
-                    }
+                    [int]$Utilization = [math]::min((((& ps -A -o pcpu) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
                     if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
@@ -2710,7 +2724,7 @@ class Miner {
 
         if (-not $this.Process) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
-            if ($Global:IsWindows -and $this.EthPillEnable -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash","MTP") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {
+            if ($this.EthPillEnable -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash","MTP") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {
                 $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
                 $Prescription = ""
                 switch ($this.EthPillEnable) {
@@ -2718,8 +2732,15 @@ class Miner {
                     "RevB" {$Prescription = "revB"}
                 }
                 if ($Prescription -ne "" -and $Prescription_Device) {
-                    Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"                    
-                    $this.EthPill = [int](Start-Process -FilePath ".\Includes\OhGodAnETHlargementPill-r2.exe" -passthru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
+                    Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
+                    if ($Global:IsLinux) {
+                        $Command = ".\IncludesLinux\OhGodAnETHlargementPill-r2"
+                        if (Test-Path $Command) {& chmod +x $Command > $null}
+                    } else {
+                        $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
+                    }
+
+                    $this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
@@ -2862,7 +2883,7 @@ class Miner {
     [MinerStatus]GetStatus() {
         $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
 
-        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq ($this.MultiProcess+1))) {
+        if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $(if ($Global:IsLinux) {1} else {$this.MultiProcess+1}))) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
@@ -3214,19 +3235,6 @@ function Get-GPUVendorList {
     )
     if (-not $Type.Count) {$Type = "AMD","NVIDIA"}
     $Type | Foreach-Object {if ($_ -like "*AMD*" -or $_ -like "*Advanced Micro*"){"AMD","Advanced Micro Devices","Advanced Micro Devices, Inc."}elseif($_ -like "*NVIDIA*" ){"NVIDIA","NVIDIA Corporation"}elseif($_ -like "*INTEL*"){"INTEL","Intel(R) Corporation","GenuineIntel"}else{$_}} | Select-Object -Unique
-}
-
-function Get-GPUplatformID {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $True)]
-        [String]$Type = "" #AMD/NVIDIA
-    )
-    $Types = Get-GPUVendorList $Type
-    $IxFound = -1
-    $Ix = -1
-    [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {$Ix++; if ((Compare-Object $_.Vendor $Types -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) {$IxFound = $Ix}}
-    $IxFound
 }
 
 function Select-Device {
@@ -4297,7 +4305,7 @@ Param(
         [hashtable]$body
 )
     $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-    if ($url -match "^https") {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12}
+    if ($url -match "^https" -and [Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {[Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12}
 
     $RequestMethod = if ($body) {"Post"} else {"Get"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
@@ -4985,9 +4993,52 @@ param(
 }
 
 function Get-NvidiaSmi {
-    if ($IsLinux) {"nvidia-smi"}
-    elseif ($Session.Config.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.Config.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
-    else {".\Includes\nvidia-smi.exe"}
+    $Command =  if ($IsLinux) {"nvidia-smi"}
+                elseif ($Session.Config.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.Config.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
+                else {".\Includes\nvidia-smi.exe"}
+    if (Get-Command $Command -ErrorAction Ignore) {$Command}
+}
+
+function Invoke-NvidiaSmi {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    [String[]]$Query = @(),
+    [Parameter(Mandatory = $False)]
+    [String[]]$Arguments = @(),
+    [Parameter(Mandatory = $False)]
+    [Switch]$Runas
+)
+    if (-not ($NVSMI = Get-NvidiaSmi)) {return}
+
+    if ($Query) {
+        $Arguments += @(
+            "--query-gpu=$($Query -join ',')"
+            "--format=csv,noheader,nounits"
+        )
+        $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
+        Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
+            $obj = $_
+            $obj.PSObject.Properties.Name | Foreach-Object {
+                $v = $obj.$_
+                if ($v -match '(error|supported)') {$v = $null}
+                elseif ($_ -match "^(clocks|fan|index|memory|temperature|utilization)") {
+                    $v = $v -replace "[^\d\.]"
+                    if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
+                    else {$v = [int]$v}
+                }
+                elseif ($_ -match "^(power)") {
+                    $v = $v -replace "[^\d\.]"
+                    if ($v -notmatch "^(\d+|\.\d+|\d+\.\d+)$") {$v = $null}
+                    else {$v = [double]$v}
+                }
+                $obj.$_ = $v
+            }
+            $obj
+        }
+    } else {
+        Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+    }
 }
 
 function Set-NvidiaPowerLimit {
@@ -5001,14 +5052,19 @@ param(
 )
     if (-not $PowerLimitPercent.Count -or -not $Device.Count) {return}
     try {
-        $NVSMI = Get-NvidiaSmi
         While ($PowerLimitPercent.Count -lt $Device.Count) {$PowerLimitPercent += $PowerLimitPercent | Select-Object -Last 1}
-        $index = 0
-        $arglist = "-i $($Device -join ",") --query-gpu=power.default_limit --format=csv,noheader"
-        Invoke-Exe -FilePath $NVSMI -ArgumentList $arglist -ExcludeEmptyLines -ExpandLines | Foreach-Object {
-            $arglist = "-i $($Device[$index]) -pl $([Math]::Round([double]($_ -replace '[^0-9,\.]')*($PowerLimitPercent[$index]/100),2).ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))"
-            Invoke-Exe -FilePath $NVSMI -ArgumentList $arglist -RunAs > $null
-            $index++
+        for($i=0;$i -lt $Device.Count;$i++) {$Device[$i] = [int]$Device[$i]}
+        Invoke-NvidiaSmi "index","power.default_limit","power.min_limit","power.max_limit","power.limit" -Arguments "-i $($Device -join ',')" | Where-Object {$_.index -match "^\d+$"} | Foreach-Object {
+            $index = $Device.IndexOf([int]$_.index)
+            if ($index -ge 0) {
+                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[$index]/100),2)
+                $PCur = [Math]::Round([double]($_.power_limit -replace '[^\d,\.]'))
+                if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [Math]::max($PLim, $lim)}
+                if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [Math]::min($PLim, $lim)}
+                if ($PLim -ne $PCur) {
+                    Invoke-NvidiaSmi -Arguments "-i $($_.index)","-pl $($Plim.ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))" -Runas > $null
+                }
+            }
         }
     } catch {}
 }
@@ -5026,7 +5082,7 @@ param(
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
         $Arguments = "--opencl $($PlatformId) --gpu $($DeviceId) --hbcc %onoff% --admin fullrestart"
         try {
-            Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","on") -AutoWorkingDirectory  >$null
+            Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","on") -AutoWorkingDirectory >$null
             Start-Sleep 1
             Invoke-Exe ".\Includes\switch-radeon-gpu.exe" -ArgumentList ($Arguments -replace "%onoff%","off") -AutoWorkingDirectory >$null
             Start-Sleep 1
