@@ -234,6 +234,19 @@ function Invoke-Core {
     [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
+
+    if (-not (Confirm-ConfigHealth)) {
+        Write-Host " "
+        Write-Host "This or these files in folder Config have an invalid JSON syntax." -ForegroundColor Yellow
+        Write-Host "Please check your files at https://jsonlint.com" -ForegroundColor Yellow
+        Write-Host " "
+        Write-Host " Rainbowminer cannot continue! " -BackgroundColor Yellow -ForegroundColor Black
+        Write-Host " "
+        Start-Sleep 10
+        Write-Log -Level Warn "Stopping Rainbowminer due to JSON syntax error."
+        Break
+    }
+
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
         if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Config"].LastWriteTime)) {
 

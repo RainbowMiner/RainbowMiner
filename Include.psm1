@@ -892,6 +892,22 @@ function Get-Stat {
     }
 }
 
+function Confirm-ConfigHealth {
+    $Ok = $true
+    $Session.ConfigFiles.GetEnumerator() | Where-Object {$_.Value.Path -and (Test-Path $_.Value.Path)} | Where-Object {(Get-ChildItem $_.Value.Path).LastWriteTime.ToUniversalTime() -gt $_.Value.LastWriteTime} | Foreach-Object {
+        $Name = $_.Name
+        $File = $_.Value
+        try {
+            Get-Content $File.Path -ErrorAction Stop -Raw | ConvertFrom-Json -ErrorAction Stop > $null
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "$($Name) configfile $(Split-Path $File.Path -Leaf) has invalid JSON syntax!"
+            $Ok = $false
+        }
+    }
+    $Ok
+}
+
 function Get-ChildItemContent {
     [CmdletBinding()]
     param(
