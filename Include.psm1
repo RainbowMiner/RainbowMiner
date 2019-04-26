@@ -1560,7 +1560,8 @@ function Stop-SubProcess {
     if ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
-                $Process.CloseMainWindow() > $null
+                if ($IsLinux) {Stop-Process -id $Process.Id -Force -ErrorAction Ignore}
+                else {$Process.CloseMainWindow() > $null}
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($Process.WaitForExit(10000)) { 
                     Write-Log "$($Title) closed gracefully$(if ($Name) {": $($Name)"})"
@@ -1906,7 +1907,7 @@ function Get-Device {
         $Platform_Devices | Foreach-Object {
             $PlatformId = $_.PlatformId
             $_.Devices | Foreach-Object {    
-                $Device_OpenCL = $_ | ConvertTo-Json -Depth 1 | ConvertFrom-Json
+                $Device_OpenCL = $_
 
                 $Device_Name = [String]$Device_OpenCL.Name -replace '\(TM\)|\(R\)'
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
@@ -3209,10 +3210,11 @@ class Miner {
                         if (-not $Global:IsLinux) {
                             if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
                             if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
+                        } else {
+                            $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
                         }
                         if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($x)]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
                         if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($x)]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
-                        $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
                     }
                 } elseif ($Pattern.$Vendor -ne $null) {
                     $DeviceId = 0
