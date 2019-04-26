@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.3-srbminer/SRBMiner-CN-V1-8-3.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.6-srbminer/SRBMiner-CN-V1-8-6.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -46,6 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "swap"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Swap 2 thread
     [PSCustomObject]@{MainAlgorithm = "turtle"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Turtle 2 thread
     [PSCustomObject]@{MainAlgorithm = "upx"        ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa 2 threads
+    [PSCustomObject]@{MainAlgorithm = "upx2"       ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa2 2 threads
     #[PSCustomObject]@{MainAlgorithm = "webchain"   ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Webchain 2 threads    
     [PSCustomObject]@{MainAlgorithm = "xcash"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-HeavyX/Xcash 2 thread
     [PSCustomObject]@{MainAlgorithm = "zelerius"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Zelerius thread
@@ -81,6 +82,7 @@ $Commands = [PSCustomObject[]]@(
 #- Cryptonight Swap				[swap]
 #- Cryptonight Turtle 			[turtle]
 #- Cryptonight Upx 				[upx]
+#- Cryptonight Upx2 			[upx2]
 #- Cryptonight Webchain 		[webchain]
 #- Cryptonight Wownero			[wownero]
 #- Cryptonight Xcash			[xcash]
@@ -147,7 +149,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 								nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
 							})
 						}
-						Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disablegpuwatchdog --enablecoinforking --maxnosharesent 120 $($Params)".Trim()
+						Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disabletweaking --disablegpuwatchdog --enablecoinforking --maxnosharesent 120 $($Params)".Trim()
 				}
 
 				[PSCustomObject]@{
