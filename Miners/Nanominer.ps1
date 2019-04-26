@@ -72,12 +72,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    Host   = $Pools.$Algorithm_Norm.Host
 					    Port   = $Pools.$Algorithm_Norm.Port
 					    SSL    = $Pools.$Algorithm_Norm.SSL
-					    Wallet = $Pools.$Algorithm_Norm.Wallet
+					    Wallet = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
                         Worker = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
                         Pass   = $Pools.$Algorithm_Norm.Pass
                         Email  = $Pools.$Algorithm_Norm.Email
                         Threads= if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
-                        Devices= if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Mineable_Index} else {$null} 
+                        Devices= if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Index} else {$null} 
 				    }
 
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
