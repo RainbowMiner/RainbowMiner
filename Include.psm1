@@ -2742,7 +2742,7 @@ class Miner {
 
         if (-not $this.Process) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
-            if ($this.EthPillEnable -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash","MTP") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {
+            if ($this.EthPillEnable -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {
                 $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
                 $Prescription = ""
                 switch ($this.EthPillEnable) {
