@@ -396,10 +396,10 @@ namespace OpenCl
             get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_SLOT_ID_NV); }
         }
 
-        public uint PCITopology
-        {
-            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_TOPOLOGY_AMD); }
-        }
+//        public uint PCITopology
+//        {
+//            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_TOPOLOGY_AMD); }
+//        }
 
         // static factory methods
 
