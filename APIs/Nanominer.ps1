@@ -8,21 +8,26 @@ class Nanominer : Miner {
         $ConfigFile = "config_$($this.Pool -join '-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"}).txt"
 
         if (Test-Path $this.Path) {
-            "mport=-$($this.Port)
-webPort = 0
-Watchdog = false
-noLog = true
+            $FileC = @(
+                ";Automatic config file created by RainbowMiner",
+                ";Do not edit!",
+                "mport=-$($this.Port)",
+                "webPort = 0",
+                "Watchdog = false",
+                "noLog = true",
+                "",
+                "[$($Parameters.Algo)]",
+                "wallet=$($Parameters.Wallet)",
+                "rigName=$($Parameters.Worker)",
+                "pool1 = $($Parameters.Host):$($Parameters.Port)",
+                "devices =$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})"
+            )
+            if ($Parameters.PaymentId -ne $null) {$FileC += "paymentId=$($Parameters.PaymentId)"}
+            if ($Parameters.Pass)                {$FileC += "rigPassword=$($Parameters.Pass)"}
+            if ($Parameters.Email)               {$FileC += "email=$($Parameters.Email)"}
+            if ($Parameters.Threads)             {$FileC += "cpuThreads = $($Parameters.Threads)"}
 
-[$($Parameters.Algo)]
-wallet=$($Parameters.Wallet -split '\.' | Select-Object -First 1)
-paymentId=$(if ($pid = $Parameters.Wallet -split '\.' | Select-Object -Index 1) {$pid} else {0})
-rigName=$($Parameters.Worker)
-rigPassword=$($Parameters.Pass)
-email=$($Parameters.Email)
-pool1 = $($Parameters.Host):$($Parameters.Port)
-devices =$(if ($Parameters.Devices -ne $null) {$Parameters.Devices -join ','})
-$(if ($Parameters.Threads) {"cpuThreads = $($Parameters.Threads)"})
-" | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
+            $FileC | Out-File "$($Miner_Path)\$($ConfigFile)" -Encoding utf8
         }
 
         return $ConfigFile

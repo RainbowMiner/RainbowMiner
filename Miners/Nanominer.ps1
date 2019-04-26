@@ -62,22 +62,34 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -ne "Nicehash")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -ne "Nicehash") -and $Pools.$Algorithm_Norm.Name -notmatch "MiningPoolHub") {
 					$Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
+                    $Wallet    = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
+                    $PaymentId = $null
+                    if ($Algorithm_Norm -eq "RandomHash" -or $Algorithm_Norm -match "^Cryptonight") {
+                        if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
+                            $Wallet    = $Matches[1]
+                            $PaymentId = $Matches[2]
+                        } elseif ($Algorithm_Norm -eq "RandomHash") {
+                            $PaymentId = "0"
+                        }
+                    }
+
 				    $Arguments = [PSCustomObject]@{
-                        Algo   = $_.MainAlgorithm
-					    Host   = $Pools.$Algorithm_Norm.Host
-					    Port   = $Pools.$Algorithm_Norm.Port
-					    SSL    = $Pools.$Algorithm_Norm.SSL
-					    Wallet = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
-                        Worker = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
-                        Pass   = $Pools.$Algorithm_Norm.Pass
-                        Email  = $Pools.$Algorithm_Norm.Email
-                        Threads= if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
-                        Devices= if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Index} else {$null} 
+                        Algo      = $_.MainAlgorithm
+					    Host      = $Pools.$Algorithm_Norm.Host
+					    Port      = $Pools.$Algorithm_Norm.Port
+					    SSL       = $Pools.$Algorithm_Norm.SSL
+					    Wallet    = $Wallet
+                        PaymentId = $PaymentId
+                        Worker    = "{workername:$($Pools.$Algorithm_Norm.Worker)}"
+                        Pass      = $Pools.$Algorithm_Norm.Pass
+                        Email     = $Pools.$Algorithm_Norm.Email
+                        Threads   = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
+                        Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Index} else {$null} 
 				    }
 
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
