@@ -3195,14 +3195,24 @@ class Miner {
                 $applied_any = $false
 
                 if ($Vendor -eq "NVIDIA") {
+                    $x = Switch -Regex ($DeviceModel) {
+                        "1050" {2}
+                        "P106-?100" {2}
+                        "P106-?090" {1}
+                        "P104-?100" {1}
+                        "P102-?100" {1}
+                        "1660" {4}
+                        default {3}
+                    }
                     foreach($DeviceId in $DeviceIds) {
                         if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
                         if (-not $Global:IsLinux) {
                             if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
                             if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
                         }
-                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[3]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
-                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[3]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($x)]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($x)]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                        $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
                     }
                 } elseif ($Pattern.$Vendor -ne $null) {
                     $DeviceId = 0
@@ -3226,10 +3236,29 @@ class Miner {
 
         if ($applied.Count) {
             if ($Vendor -eq "NVIDIA") {
-                if ($Global:IsLinux) {Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas >$null}
+                if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
                 else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
             } else {$Script:abControl.CommitChanges()}
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
+        }
+    }
+}
+
+function Invoke-NvidiaSettings {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Array]$NvCmd = @(),
+        [Parameter(Mandatory = $False)]
+        [Switch]$SetPowerMizer
+    )
+    if ($IsLinux) {
+        if ($SetPowerMizer) {
+            $Devices = Get-Device "nvidia" | Select-Object -ExpandProperty Type_Vendor_index | Foreach-Object {"-a '[gpu:$($_)]/GPUPowerMizerMode=1'"}
+            if ($Devices) {$NvCmd += $Devices}
+        }
+        if ($NvCmd) {
+            Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas >$null
         }
     }
 }
