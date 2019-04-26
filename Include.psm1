@@ -1872,6 +1872,7 @@ function Get-Device {
                         GlobalMemSize   = $_.GlobalMemSize
                         MaxComputeUnits = $_.MaxComputeUnits
                         PlatformVersion = $_.Platform.Version
+                        PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
                     }
                     $Device_Index++
                 }
@@ -1882,7 +1883,7 @@ function Get-Device {
         if ($Error.Count){$Error.RemoveAt(0)}
         $Cuda = Get-NvidiaSmi | Where-Object {$_} | Foreach-Object {Invoke-Exe $_ -ExcludeEmptyLines -ExpandLines | Where-Object {$_ -match "CUDA.+?:\s*(\d+\.\d+)"} | Foreach-Object {$Matches[1]} | Select-Object -First 1 | Foreach-Object {"$_.0"}}
         if ($Cuda) {
-            $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
+            $OpenCL_Devices = Invoke-NvidiaSmi "index","gpu_name","memory.total","pci.bus_id" | Where-Object {$_.index -match "^\d+$"} | Sort-Object index | Foreach-Object {
                 [PSCustomObject]@{
                     DeviceIndex     = $_.index
                     Name            = $_.gpu_name
@@ -1890,6 +1891,7 @@ function Get-Device {
                     Vendor          = "NVIDIA Corporation"
                     GlobalMemSize   = 1MB * [int64]$_.memory_total
                     PlatformVersion = "CUDA $Cuda"
+                    PCIBusId        = if ($_.bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                 }
             }
             if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
