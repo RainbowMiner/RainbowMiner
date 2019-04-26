@@ -100,6 +100,9 @@ namespace OpenCl
         private const uint CL_DEVICE_IL_VERSION =                             0x105B;
         private const uint CL_DEVICE_MAX_NUM_SUB_GROUPS =                     0x105C;
         private const uint CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS = 0x105D;
+        private const uint CL_DEVICE_PCI_BUS_ID_NV                          = 0x4008;
+        private const uint CL_DEVICE_PCI_SLOT_ID_NV                         = 0x4009;
+        private const uint CL_DEVICE_TOPOLOGY_AMD                           = 0x4037;
 
         internal Device(IntPtr handle) : base(handle) { }
 
@@ -381,6 +384,21 @@ namespace OpenCl
         public string DriverVersion
         {
             get { return Cl.GetInfoString(NativeMethods.clGetDeviceInfo, this.handle, CL_DRIVER_VERSION); }
+        }
+
+        public uint PCIBusId
+        {
+            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_BUS_ID_NV ); }
+        }
+
+        public uint PCISlotId
+        {
+            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_PCI_SLOT_ID_NV); }
+        }
+
+        public uint PCITopology
+        {
+            get { return Cl.GetInfo<uint>(NativeMethods.clGetDeviceInfo, this.handle, CL_DEVICE_TOPOLOGY_AMD); }
         }
 
         // static factory methods
