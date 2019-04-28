@@ -193,7 +193,7 @@ $EnableMinerStatus = $true
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version = "4.1.1.2"
+$Session.Version = "4.1.2.0"
 
 $Session.Strikes           = 3
 $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
@@ -211,9 +211,10 @@ if ($IsWindows -eq $null) {
 
 if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
 
-$Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
-
-$host.ui.RawUI.WindowTitle = $Session.MainWindowTitle
+if (-not $psISE) {
+    $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
+    $host.ui.RawUI.WindowTitle = $Session.MainWindowTitle
+}
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
