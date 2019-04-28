@@ -10,14 +10,14 @@
     $Session.WatchdogTimers = @()
     [hashtable]$Session.Rates = @{BTC = [Double]1}
     [hashtable]$Session.ConfigFiles = @{
-        Config     = @{Path='';LastWriteTime=0}
-        Devices    = @{Path='';LastWriteTime=0}
-        Miners     = @{Path='';LastWriteTime=0}
-        OCProfiles = @{Path='';LastWriteTime=0}
-        Pools      = @{Path='';LastWriteTime=0}
-        Algorithms = @{Path='';LastWriteTime=0}
-        Coins      = @{Path='';LastWriteTime=0}
-        GpuGroups  = @{Path='';LastWriteTime=0}
+        Config     = @{Path='';LastWriteTime=0;Healthy=$false}
+        Devices    = @{Path='';LastWriteTime=0;Healthy=$false}
+        Miners     = @{Path='';LastWriteTime=0;Healthy=$false}
+        OCProfiles = @{Path='';LastWriteTime=0;Healthy=$false}
+        Pools      = @{Path='';LastWriteTime=0;Healthy=$false}
+        Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
+        Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
+        GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
     }
     [hashtable]$Session.MinerInfo = @{}
 
@@ -79,60 +79,24 @@
             }
             if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
         }
-        $Session.ConfigFiles["Config"].Path = Get-Item $ConfigFile | Foreach-Object {
-            $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName
+        $Session.ConfigFiles["Config"].Healthy = $true
+        Get-Item $ConfigFile | Foreach-Object {
+            $ConfigFile_Path = $_ | Select-Object -ExpandProperty DirectoryName | Resolve-Path -Relative
             $ConfigFile_Name = $_ | Select-Object -ExpandProperty Name
-            $Session.ConfigFiles["Pools"].Path = @($ConfigFile_Path,"\pools.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["Miners"].Path = @($ConfigFile_Path,"\miners.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["Devices"].Path = @($ConfigFile_Path,"\devices.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["OCProfiles"].Path = @($ConfigFile_Path,"\ocprofiles.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["Algorithms"].Path = @($ConfigFile_Path,"\algorithms.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["Coins"].Path = @($ConfigFile_Path,"\coins.",$ConfigFile_Name) -join ''
-            $Session.ConfigFiles["GpuGroups"].Path = @($ConfigFile_Path,"\gpugroups.",$ConfigFile_Name) -join ''
 
             if (-not $psISE) {
                 $BackupDate = Get-Date -Format "yyyyMMddHHmmss"
                 $BackupDateDelete = (Get-Date).AddMonths(-1).ToString("yyyyMMddHHmmss")
                 Get-ChildItem "$($ConfigFile_Path)\Backup" -Filter "*" | Where-Object {$_.BaseName -match "^(\d{14})" -and $Matches[1] -le $BackupDateDelete} | Remove-Item -Force -ErrorAction Ignore
-                if (Test-Path $ConfigFile) {Copy-Item $ConfigFile -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["Pools"].Path) {Copy-Item $Session.ConfigFiles["Pools"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_pools.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["Miners"].Path) {Copy-Item $Session.ConfigFiles["Miners"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_miners.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["Devices"].Path) {Copy-Item $Session.ConfigFiles["Devices"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_devices.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {Copy-Item $Session.ConfigFiles["OCProfiles"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_ocprofiles.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {Copy-Item $Session.ConfigFiles["Algorithms"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_algorithms.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["Coins"].Path) {Copy-Item $Session.ConfigFiles["Coins"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_coins.$($ConfigFile_Name)"}
-                if (Test-Path $Session.ConfigFiles["GpuGroups"].Path) {Copy-Item $Session.ConfigFiles["GpuGroups"].Path -Destination "$($ConfigFile_Path)\Backup\$($BackupDate)_gpugroups.$($ConfigFile_Name)"}
             }
 
-            # Create and apply gpugroups.config.txt if it is missing
-            Set-GpuGroupsConfigDefault -PathToFile $Session.ConfigFiles["GpuGroups"].Path -Force
-            $Session.ConfigFiles["GpuGroups"].Path = $Session.ConfigFiles["GpuGroups"].Path | Resolve-Path -Relative
-        
-            # Create pools.config.txt if it is missing
-            Set-PoolsConfigDefault -PathToFile $Session.ConfigFiles["Pools"].Path -Force
-            $Session.ConfigFiles["Pools"].Path = $Session.ConfigFiles["Pools"].Path | Resolve-Path -Relative
-
-            # Create miners.config.txt and cpu.miners.config.txt, if they are missing
-            Set-MinersConfigDefault -PathToFile $Session.ConfigFiles["Miners"].Path -Force
-            $Session.ConfigFiles["Miners"].Path = $Session.ConfigFiles["Miners"].Path | Resolve-Path -Relative
-
-            # Create devices.config.txt if it is missing
-            Set-DevicesConfigDefault -PathToFile $Session.ConfigFiles["Devices"].Path -Force
-            $Session.ConfigFiles["Devices"].Path = $Session.ConfigFiles["Devices"].Path | Resolve-Path -Relative
-
-            # Create ocprofiles.config.txt if it is missing
-            Set-OCProfilesConfigDefault -PathToFile $Session.ConfigFiles["OCProfiles"].Path -Force
-            $Session.ConfigFiles["OCProfiles"].Path = $Session.ConfigFiles["OCProfiles"].Path | Resolve-Path -Relative
-
-            # Create algorithms.config.txt if it is missing
-            Set-AlgorithmsConfigDefault -PathToFile $Session.ConfigFiles["Algorithms"].Path -Force
-            $Session.ConfigFiles["Algorithms"].Path = $Session.ConfigFiles["Algorithms"].Path | Resolve-Path -Relative
-
-            # Create algorithms.config.txt if it is missing
-            Set-CoinsConfigDefault -PathToFile $Session.ConfigFiles["Coins"].Path -Force
-            $Session.ConfigFiles["Coins"].Path = $Session.ConfigFiles["Coins"].Path | Resolve-Path -Relative
-
-            $_ | Resolve-Path -Relative
+            $Session.ConfigFiles.Keys | Foreach-Object {
+                $FNtmp   = "$(if ($_ -ne "Config") {"$($_.ToLower())."})$ConfigFile_Name"
+                $Session.ConfigFiles[$_].Path = Join-Path $ConfigFile_Path $FNtmp
+                if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}
+                Set-ConfigDefault $_ -Force > $null
+                if (Test-Path $Session.ConfigFiles[$_].Path) {$Session.ConfigFiles[$_].Path = $Session.ConfigFiles[$_].Path | Resolve-Path -Relative}
+            }
         }
 
         #create special config files
@@ -234,21 +198,8 @@ function Invoke-Core {
     [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
-
-    if (-not (Confirm-ConfigHealth)) {
-        Write-Host " "
-        Write-Host "This or these files in folder Config have an invalid JSON syntax." -ForegroundColor Yellow
-        Write-Host "Please check your files at https://jsonlint.com" -ForegroundColor Yellow
-        Write-Host " "
-        Write-Host " Rainbowminer cannot continue! " -BackgroundColor Yellow -ForegroundColor Black
-        Write-Host " "
-        Start-Sleep 10
-        Write-Log -Level Warn "Stopping Rainbowminer due to JSON syntax error."
-        Break
-    }
-
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
-        if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Config"].LastWriteTime)) {
+        if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime))) {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
@@ -258,7 +209,7 @@ function Invoke-Core {
                     $val = $Session.DefaultValues[$_]
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
-                }                
+                }
                 $Session.Config = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
                 $Session.Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
@@ -293,6 +244,8 @@ function Invoke-Core {
         Start-Sleep 10
         Break
     }
+
+    $Session.ConfigFiles["Config"].Healthy = $true
 
     if (-not (Test-Internet)) {
         $i = 0
@@ -362,7 +315,7 @@ function Invoke-Core {
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
     if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.LocalAPIport -ne $ConfigBackup.LocalAPIport) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
     if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {
-        Start-APIServer -RemoteAPI:$Session.Config.RemoteAPI -LocalAPIport:$Session.Config.LocalAPIport
+        Start-APIServer -RemoteAPI:$Session.Config.RemoteAPI -LocalAPIport $Session.Config.LocalAPIport
     }
     if($psISE -and -not (Test-Path Variable:Global:API)) {
         $Global:API = [hashtable]@{}
@@ -405,85 +358,89 @@ function Invoke-Core {
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
     #Check for algorithms config
-    Set-AlgorithmsConfigDefault $Session.ConfigFiles["Algorithms"].Path
-    if (Test-Path $Session.ConfigFiles["Algorithms"].Path) {
-        if ($CheckConfig -or -not $Session.Config.Algorithms -or (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Algorithms"].LastWriteTime -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
-            $Session.ConfigFiles["Algorithms"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Algorithms"].Path).LastWriteTime.ToUniversalTime()
-            $AllAlgorithms = (Get-ChildItemContent $Session.ConfigFiles["Algorithms"].Path -Quick).Content
-            $Session.Config | Add-Member Algorithms ([PSCustomObject]@{})  -Force
-            $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
-                $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
-                $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
-                $Session.Config.Algorithms.$_ | Add-Member MSIAprofile ([int]$Session.Config.Algorithms.$_.MSIAprofile) -Force
+    if (Set-ConfigDefault "Algorithms") {
+        if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
+            $AllAlgorithms = Get-ConfigContent "Algorithms" -UpdateLastWriteTime
+            if (Test-Config "Algorithms" -Health) {
+                $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
+                $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
+                    $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
+                    $Session.Config.Algorithms.$_ | Add-Member Penalty ([int]$Session.Config.Algorithms.$_.Penalty) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member MSIAprofile ([int]$Session.Config.Algorithms.$_.MSIAprofile) -Force
+                }
             }
+            if ($AllAlgorithms) {Remove-Variable "AllAlgorithms" -Force}
         }
     }
 
     #Check for coins config
     $CheckCoins = $false
-    Set-CoinsConfigDefault $Session.ConfigFiles["Coins"].Path
-    if (Test-Path $Session.ConfigFiles["Coins"].Path) {
-        if ($CheckConfig -or -not $Session.Config.Coins -or (Get-ChildItem $Session.ConfigFiles["Coins"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Coins"].LastWriteTime -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
-            $Session.ConfigFiles["Coins"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Coins"].Path).LastWriteTime.ToUniversalTime()
-            $AllCoins = (Get-ChildItemContent $Session.ConfigFiles["Coins"].Path -Quick).Content
-            $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
-            $AllCoins.PSObject.Properties.Name | Foreach-Object {
-                $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
-                $Session.Config.Coins.$_ | Add-Member Penalty ([int]$Session.Config.Coins.$_.Penalty) -Force
-                $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
-                $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
-                $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
-                $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
-                $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
-                $Session.Config.Coins.$_ | Add-Member PostBlockMining (ConvertFrom-Time $Session.Config.Coins.$_.PostBlockMining) -Force
+    if (Set-ConfigDefault "Coins") {
+        if ($CheckConfig -or -not $Session.Config.Coins -or (Test-Config "Coins" -LastWriteTime) -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
+            $AllCoins = Get-ConfigContent "Coins" -UpdateLastWriteTime
+            if (Test-Config "Coins" -Health) {
+                $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
+                $AllCoins.PSObject.Properties.Name | Foreach-Object {
+                    $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
+                    $Session.Config.Coins.$_ | Add-Member Penalty ([int]$Session.Config.Coins.$_.Penalty) -Force
+                    $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
+                    $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
+                    $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
+                    $Session.Config.Coins.$_ | Add-Member Wallet ($Session.Config.Coins.$_.Wallet -replace "\s+") -Force
+                    $Session.Config.Coins.$_ | Add-Member EnableAutoPool (Get-Yes $Session.Config.Coins.$_.EnableAutoPool) -Force
+                    $Session.Config.Coins.$_ | Add-Member PostBlockMining (ConvertFrom-Time $Session.Config.Coins.$_.PostBlockMining) -Force
+                }
+                $CheckCoins = $true
             }
-            $CheckCoins = $true
+            if ($AllCoins) {Remove-Variable "AllCoins" -Force}
         }
     }
 
     #Check for oc profile config
-    Set-OCProfilesConfigDefault $Session.ConfigFiles["OCProfiles"].Path
-    if (Test-Path $Session.ConfigFiles["OCProfiles"].Path) {
-        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["OCProfiles"].LastWriteTime)) {
-            $Session.ConfigFiles["OCProfiles"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["OCProfiles"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member OCProfiles (Get-ChildItemContent $Session.ConfigFiles["OCProfiles"].Path -Quick).Content -Force
+    if (Set-ConfigDefault "OCProfiles") {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Test-Config "OCProfiles" -LastWriteTime))) {
+            $AllOCProfiles = Get-ConfigContent "OCProfiles" -UpdateLastWriteTime
+            if (Test-Config "OCProfiles" -Health) {
+                $Session.Config | Add-Member OCProfiles $AllOCProfiles -Force
+            }
+            if ($AllOCProfiles) {Remove-Variable "AllOCProfiles" -Force}
         }
     }
 
     #Check for devices config
-    Set-DevicesConfigDefault $Session.ConfigFiles["Devices"].Path
-    if (Test-Path $Session.ConfigFiles["Devices"].Path) {
-        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Devices"].LastWriteTime)) {
-            $Session.ConfigFiles["Devices"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Devices"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member Devices (Get-ChildItemContent $Session.ConfigFiles["Devices"].Path -Quick).Content -Force
-            $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
-            foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
-                $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
-                    if ($Session.Config.Devices.$p.$q -is [string]){$Session.Config.Devices.$p.$q = if ($Session.Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Session.Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
-                }
-                $Session.Config.Devices.$p | Add-Member DisableDualMining ($Session.Config.Devices.$p.DisableDualMining -and (Get-Yes $Session.Config.Devices.$p.DisableDualMining)) -Force
-                if ($p -ne "CPU" -and -not $Session.Config.Devices.$p.DefaultOCprofile) {
-                    $Session.Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
-                    if ($Session.Config.EnableOCprofiles) {
-                        Write-Log -Level Warn "No default overclocking profile defined for `"$p`" in $($Session.ConfigFiles["OCProfiles"].Path). Using `"$OCprofileFirst`" for now!"
+    if (Set-ConfigDefault "Devices") {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Test-Config "Devices" -LastWriteTime))) {
+            $AllDevices = Get-ConfigContent "Devices" -UpdateLastWriteTime
+            if (Test-Config "Devices" -Health) {
+                $Session.Config | Add-Member Devices $AllDevices -Force
+                $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
+                foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
+                    $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                    $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                    foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
+                        if ($Session.Config.Devices.$p.$q -is [string]){$Session.Config.Devices.$p.$q = if ($Session.Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Session.Config.Devices.$p.$q.Trim(),"\s*[,;:]+\s*")}}
                     }
+                    $Session.Config.Devices.$p | Add-Member DisableDualMining ($Session.Config.Devices.$p.DisableDualMining -and (Get-Yes $Session.Config.Devices.$p.DisableDualMining)) -Force
+                    if ($p -ne "CPU" -and -not $Session.Config.Devices.$p.DefaultOCprofile) {
+                        $Session.Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
+                        if ($Session.Config.EnableOCprofiles) {
+                            Write-Log -Level Warn "No default overclocking profile defined for `"$p`" in $($Session.ConfigFiles["OCProfiles"].Path). Using `"$OCprofileFirst`" for now!"
+                        }
+                    }
+                    $Session.Config.Devices.$p | Add-Member PowerAdjust ([double]($Session.Config.Devices.$p.PowerAdjust -replace "[^0-9`.]+")) -Force
                 }
-                $Session.Config.Devices.$p | Add-Member PowerAdjust ([double]($Session.Config.Devices.$p.PowerAdjust -replace "[^0-9`.]+")) -Force
             }
+            if ($AllDevices) {Remove-Variable "AllDevices" -Force}
         }
     }
 
     #Check for pool config
     $CheckPools = $false
-    Set-PoolsConfigDefault $Session.ConfigFiles["Pools"].Path
-    if (Test-Path $Session.ConfigFiles["Pools"].Path) {
-        if (-not $Session.IsDonationRun -and ($CheckConfig -or $CheckCoins -or -not $Session.Config.Pools -or (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Pools"].LastWriteTime)) {
-            $Session.ConfigFiles["Pools"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Pools"].Path).LastWriteTime.ToUniversalTime()
+    if (Set-ConfigDefault "Pools") {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or $CheckCoins -or -not $Session.Config.Pools -or (Test-Config "Pools" -LastWriteTime))) {
             $PoolParams = @{
                 Wallet              = $Session.Config.Wallet
                 UserName            = $Session.Config.UserName
@@ -492,8 +449,12 @@ function Invoke-Core {
                 API_Key             = $Session.Config.API_Key
             }
             $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.Wallet -and -not $PoolParams.ContainsKey($_.Name)} | Foreach-Object {$PoolParams[$_.Name] = $_.Value.Wallet}
-            $Session.Config | Add-Member Pools (Get-ChildItemContent $Session.ConfigFiles["Pools"].Path -Parameters $PoolParams | Select-Object -ExpandProperty Content) -Force
-            $CheckPools = $true
+            $AllPools = Get-ConfigContent "Pools" -Parameters $PoolParams -UpdateLastWriteTime
+            if (Test-Config "Pools" -Health) {
+                $Session.Config | Add-Member Pools $AllPools -Force
+                $CheckPools = $true
+            }
+            if ($AllPools) {Remove-Variable "AllPools" -Force}
         }
     }
 
@@ -683,6 +644,8 @@ function Invoke-Core {
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
     
+    $Session.ConfigFullComboModelNames = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name)
+
     $API.Devices = $Session.Devices
 
     if (-not $Session.Devices) {
@@ -690,38 +653,39 @@ function Invoke-Core {
     }
 
     #Check for miner config
-    Set-MinersConfigDefault -PathToFile $Session.ConfigFiles["Miners"].Path
-    if (Test-Path $Session.ConfigFiles["Miners"].Path) {
-        if ($CheckConfig -or -not $Session.Config.Miners -or (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles["Miners"].LastWriteTime) {        
-            $Session.ConfigFiles["Miners"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Miners"].Path).LastWriteTime.ToUniversalTime()
-            $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
-            $Session.ConfigFullComboModelNames = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name)
-            foreach ($CcMiner in @((Get-ChildItemContent -Path $Session.ConfigFiles["Miners"].Path -Quick).Content.PSObject.Properties)) {
-                $CcMinerName = $CcMiner.Name
-                [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
-                if ($CcMinerName_Array.Count -gt 1 -and ($Session.ConfigFullComboModelNames -icontains $CcMinerName_Array[1]) -and ($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")) {$CcMinerName = "$($CcMinerName_Array[0])-$($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")";$CcMinerName_Array = @($CcMinerName -split '-')}                
-                $CcMinerOk = $true
-                for($i=1;($i -lt $CcMinerName_Array.Count) -and $CcMinerOk;$i++) {if ($Session.Config.DeviceModel -inotcontains $CcMinerName_Array[$i]) {$CcMinerOk=$false}}
-                if ($CcMinerOk) {
-                    foreach($p in @($CcMiner.Value)) {
-                        $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
-                        if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
-                            $CcMinerNameToAdd = $CcMinerName
-                            if ($p.MainAlgorithm -ne '*') {
-                                $CcMinerNameToAdd += "-$(Get-Algorithm $p.MainAlgorithm)"
-                                if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+    if (Set-ConfigDefault "Miners") {
+        if ($CheckConfig -or -not $Session.Config.Miners -or (Test-Config "Miners" -LastWriteTime)) {
+            $AllMiners = Get-ConfigContent "Miners" -UpdateLastWriteTime
+            if (Test-Config "Miners" -Health) {
+                $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
+                foreach ($CcMiner in @($AllMiners.PSObject.Properties)) {
+                    $CcMinerName = $CcMiner.Name
+                    [String[]]$CcMinerName_Array = @($CcMinerName -split '-')
+                    if ($CcMinerName_Array.Count -gt 1 -and ($Session.ConfigFullComboModelNames -icontains $CcMinerName_Array[1]) -and ($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")) {$CcMinerName = "$($CcMinerName_Array[0])-$($Session.DevicesByTypes.FullComboModels."$($CcMinerName_Array[1])")";$CcMinerName_Array = @($CcMinerName -split '-')}                
+                    $CcMinerOk = $true
+                    for($i=1;($i -lt $CcMinerName_Array.Count) -and $CcMinerOk;$i++) {if ($Session.Config.DeviceModel -inotcontains $CcMinerName_Array[$i]) {$CcMinerOk=$false}}
+                    if ($CcMinerOk) {
+                        foreach($p in @($CcMiner.Value)) {
+                            $p | Add-Member Disable $(Get-Yes $p.Disable) -Force
+                            if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
+                                $CcMinerNameToAdd = $CcMinerName
+                                if ($p.MainAlgorithm -ne '*') {
+                                    $CcMinerNameToAdd += "-$(Get-Algorithm $p.MainAlgorithm)"
+                                    if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                                }
+                                if ($p.MSIAprofile -ne $null -and $p.MSIAprofile -and $p.MSIAprofile -notmatch "^[1-5]$") {
+                                    Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
+                                    $p.MSIAprofile = ""
+                                }
+                                if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d]"}
+                                $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
+                                $Session.Config.Miners.$CcMinerNameToAdd.Disable = Get-Yes $Session.Config.Miners.$CcMinerNameToAdd.Disable
                             }
-                            if ($p.MSIAprofile -ne $null -and $p.MSIAprofile -and $p.MSIAprofile -notmatch "^[1-5]$") {
-                                Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
-                                $p.MSIAprofile = ""
-                            }
-                            if ($p.Difficulty -ne $null) {$p.Difficulty = $p.Difficulty -replace "[^\d]"}
-                            $Session.Config.Miners | Add-Member -Name $CcMinerNameToAdd -Value $p -MemberType NoteProperty -Force
-                            $Session.Config.Miners.$CcMinerNameToAdd.Disable = Get-Yes $Session.Config.Miners.$CcMinerNameToAdd.Disable
                         }
                     }
                 }
             }
+            if ($AllMiners) {Remove-Variable "AllMiners" -Force}
         }
     }
 
@@ -1604,6 +1568,16 @@ function Invoke-Core {
     } else {
         $Running = $true
     }
+    if ($Session.ConfigFiles.Values.Healthy -contains $false) {
+        Write-Host " "
+        $Session.ConfigFiles.GetEnumerator() | Where-Object {-not $_.Value.Healthy} | Foreach-Object {
+            Write-Log -Level Warn "Invalid JSON format in $($_.Value.Path)"
+        }
+        Write-Host " "
+        Write-Host "Correct or delete the invalid config files! E.g. use https://jsonlint.com to validate " -ForegroundColor Yellow
+        Write-Host " "
+    }
+
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
         $Miner_DeviceName = $_.DeviceName
         $Miner_DeviceModel = $_.DeviceModel

@@ -24,10 +24,14 @@
 
         if ($API.RemoteAPI -and (!$urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
             # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit()>$null
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit(5000)>$null
         }
         if (!$API.RemoteAPI -and ($urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/").WaitForExit()>$null
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/").WaitForExit(5000)>$null
+        }
+        (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"RainbowMiner API $LocalAPIport`"").WaitForExit(5000)>$null
+        if ($API.RemoteAPI) {            
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"RainbowMiner API $LocalAPIport`" dir=in action=allow protocol=TCP localport=$LocalAPIPort").WaitForExit(5000)>$null
         }
     }
 
@@ -86,7 +90,7 @@
         if ($API.RemoteAPI) {
             $Server.Prefixes.Add("http://+:$($API.LocalAPIport)/")
             # Require authentication when listening remotely
-            $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::IntegratedWindowsAuthentication
+            $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::Anonymous
         } else {
             $Server.Prefixes.Add("http://localhost:$($API.LocalAPIport)/")
         }
@@ -124,7 +128,7 @@
             $Data = ""
             $ContentFileName = ""
             
-            if($API.RemoteAPI -and (!$Request.IsAuthenticated)) {
+            if($false -and $API.RemoteAPI -and (!$Request.IsAuthenticated)) {
                 $Data = "Unauthorized"
                 $StatusCode = 403
                 $ContentType = "text/html"

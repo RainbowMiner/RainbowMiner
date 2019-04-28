@@ -1826,6 +1826,41 @@ function Invoke-TcpRead {
     $Response
 }
 
+function Test-TcpServer {
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$Server = "localhost", 
+        [Parameter(Mandatory = $false)]
+        [String]$Port = 4000, 
+        [Parameter(Mandatory = $false)]
+        [Int]$Timeout = 1 #seconds
+    )
+    if ($Server -eq "localhost") {$Server = "127.0.0.1"}
+    else {
+        try {$Server = [ipaddress]$Server}
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            try {
+                $Server = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                return $false
+            }
+        }
+    }
+    try {
+        $Client = New-Object system.Net.Sockets.TcpClient -ErrorAction Stop
+        $Conn   = $Client.BeginConnect($Server,$Port,$null,$null)
+        $Result = $Conn.AsyncWaitHandle.WaitOne($Timeout*1000,$false)
+        if ($Result) {$Client.EndConnect($Conn)>$null}
+        $Client.Close()
+    } catch {
+        if ($Error.Count){if ($Verbose) {Write-Log -Level Warn $Error[0]};$Error.RemoveAt(0)}
+        $Result = $false
+    }
+    $Result
+}
+
 function Get-Device {
     [CmdletBinding()]
     param(
@@ -3680,38 +3715,37 @@ function Set-ContentJson {
 function Set-MinersConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false,
         [Parameter(Mandatory = $False)]
         [Switch]$UseDefaultParams = $false
     )
+    $ConfigName = "Miners"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MinersConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         $Algo = [hashtable]@{}
         $Done = [PSCustomObject]@{}
         $ChangeTag = $null
         if (Test-Path $PathToFile) {
-            try {
-                $PresetTmp = Get-Content $PathToFile -Raw | ConvertFrom-Json
-                $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
-                #cleanup duplicates in algorithm lists
-                $Preset = [PSCustomObject]@{}
-                if ($PresetTmp.PSObject.Properties.Name.Count -gt 0 ) {
-                    foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
-                        if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
-                        $Preset | Add-Member $Name @(
-                            [System.Collections.ArrayList]$MinerCheck = @()
-                            foreach($cmd in $PresetTmp.$Name) {
-                                $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
-                                $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
-                                $k = "$m-$s"
-                                if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
-                            }) -Force
-                    }
+            $PresetTmp = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+            $ChangeTag = Get-ContentDataMD5hash($PresetTmp)
+            #cleanup duplicates in algorithm lists
+            $Preset = [PSCustomObject]@{}
+            if ($PresetTmp.PSObject.Properties.Name.Count -gt 0 ) {
+                foreach($Name in @($PresetTmp.PSObject.Properties.Name)) {
+                    if (-not $Name -or (Get-Member -inputobject $Preset -name $Name -Membertype Properties)) {continue}
+                    $Preset | Add-Member $Name @(
+                        [System.Collections.ArrayList]$MinerCheck = @()
+                        foreach($cmd in $PresetTmp.$Name) {
+                            $m = $(if (-not $Algo[$cmd.MainAlgorithm]) {$Algo[$cmd.MainAlgorithm]=Get-Algorithm $cmd.MainAlgorithm};$Algo[$cmd.MainAlgorithm])
+                            $s = $(if ($cmd.SecondaryAlgorithm) {if (-not $Algo[$cmd.SecondaryAlgorithm]) {$Algo[$cmd.SecondaryAlgorithm]=Get-Algorithm $cmd.SecondaryAlgorithm};$Algo[$cmd.SecondaryAlgorithm]}else{""})
+                            $k = "$m-$s"
+                            if (-not $MinerCheck.Contains($k)) {$cmd.MainAlgorithm=$m;$cmd.SecondaryAlgorithm=$s;$cmd;$MinerCheck.Add($k)>$null}
+                        }) -Force
                 }
             }
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
         }
 
         try {
@@ -3791,20 +3825,22 @@ function Set-MinersConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-AlgorithmsConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "Algorithms"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\AlgorithmsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
@@ -3825,6 +3861,7 @@ function Set-AlgorithmsConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-PresetDefault {
@@ -3839,15 +3876,16 @@ function Set-PresetDefault {
 function Set-CoinsConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "Coins"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\CoinsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
@@ -3870,20 +3908,22 @@ function Set-CoinsConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-GpuGroupsConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "GpuGroups"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile)) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
@@ -3902,20 +3942,22 @@ function Set-GpuGroupsConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-DevicesConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "Devices"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\DevicesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
@@ -3938,20 +3980,22 @@ function Set-DevicesConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-PoolsConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "Pools"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\PoolsConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
@@ -3994,22 +4038,23 @@ function Set-PoolsConfigDefault {
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
     }
+    Test-Config $ConfigName -Exists
 }
 
 function Set-OCProfilesConfigDefault {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $True)]
-        [String]$PathToFile,
         [Parameter(Mandatory = $False)]
         [Switch]$Force = $false
     )
+    $ConfigName = "OCProfiles"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
     if ($Force -or -not (Test-Path $PathToFile) -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\OCProfilesConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
         if (Test-Path $PathToFile) {
-            try {$Preset = Get-Content $PathToFile -Raw | ConvertFrom-Json}
-            catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.`r`n$($_.Exception.Message)"; return}
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
-
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
@@ -4043,7 +4088,83 @@ function Set-OCProfilesConfigDefault {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
         }
-    }    
+    }
+    Test-Config $ConfigName -Exists
+}
+
+function Test-Config {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [String]$ConfigName,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Exists,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Health,
+        [Parameter(Mandatory = $False)]
+        [Switch]$LastWriteTime
+    )
+    if (-not $Exists -and ($Health -or $LastWriteTime)) {$Exists = $true}
+    $Session.ConfigFiles.ContainsKey($ConfigName) -and $Session.ConfigFiles[$ConfigName].Path -and (-not $Exists -or (Test-Path $Session.ConfigFiles[$ConfigName].Path)) -and (-not $Health -or $Session.ConfigFiles[$ConfigName].Healthy) -and (-not $LastWriteTime -or (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime() -gt $Session.ConfigFiles[$ConfigName].LastWriteTime)
+}
+
+function Set-ConfigLastWriteTime {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [string]$ConfigName
+    )
+    if (Test-Config $ConfigName -Exists) {
+        $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $Session.ConfigFiles[$ConfigName].Path).LastWriteTime.ToUniversalTime()        
+    }
+}
+
+function Set-ConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [string]$ConfigName,
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+
+    Switch ($ConfigName) {
+        "GpuGroups"  {Set-GpuGroupsConfigDefault -Force:$Force}
+        "Pools"      {Set-PoolsConfigDefault -Force:$Force}
+        "Miners"     {Set-MinersConfigDefault -Force:$Force}
+        "Devices"    {Set-DevicesConfigDefault -Force:$Force}
+        "OCProfiles" {Set-OCProfilesConfigDefault -Force:$Force}
+        "Algorithms" {Set-AlgorithmsConfigDefault -Force:$Force}
+        "Coins"      {Set-CoinsConfigDefault -Force:$Force}
+    }
+}
+
+function Get-ConfigContent {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [string]$ConfigName,
+        [Parameter(Mandatory = $False)]
+        [hashtable]$Parameters = @{},
+        [Parameter(Mandatory = $False)]
+        [Switch]$UpdateLastWriteTime
+    )
+    if (Test-Config $ConfigName -Exists) {        
+        try {
+            $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+            if ($UpdateLastWriteTime) {
+                $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
+            }
+            $Result = Get-Content $PathToFile -Raw
+            if ($Parameters.Count) {
+                $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)",$_.Value}
+                $Result = $Result -replace "\`$[A-Z0-9_]+"
+            }
+            $Result | ConvertFrom-Json
+            $Session.ConfigFiles[$ConfigName].Healthy=$true
+        }
+        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log -Level Info "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; $Session.ConfigFiles[$ConfigName].Healthy=$false}
+    }
 }
 
 function ConvertFrom-CPUAffinity {
