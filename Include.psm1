@@ -4504,12 +4504,13 @@ Param(
     [Parameter(Mandatory = $False)]
         $JobData,
     [Parameter(Mandatory = $False)]
-        [string]$JobKey = ""
+        [string]$JobKey = "",
+    [Parameter(Mandatory = $False)]
+        [switch]$ForceLocal
 )
-
     if ($JobKey -and $JobData) {
         Write-Log -Level Info "Try to get $($JobData.url) from $($Session.Config.ServerName):$($Session.Config.ServerPort)"
-        if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+        if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
             $serverbody = @{
                 url       = $JobData.url
                 method    = $JobData.method
@@ -4525,7 +4526,7 @@ Param(
                 rigname   = $Session.Computername
                 myip      = $Session.MyIP
             }
-            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/geturl" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword
+            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
             if ($Result.Status) {$Result.Content;return}
         }
 
