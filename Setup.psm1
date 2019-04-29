@@ -384,7 +384,7 @@ function Start-Setup {
                                 Write-Host "RainbowMiner can be monitored using your webbrowser via an API:" -Foreground Cyan
                                 Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
                                 if ($IsWindows) {
-                                    Write-Host "- on another windows device in the network: http://$($Session.Computername):$($Config.APIPort)" -ForegroundColor Cyan
+                                    Write-Host "- on another windows device in the network: http://$($Session.MachineName):$($Config.APIPort)" -ForegroundColor Cyan
                                 }
                                 Write-Host "- on any other device in the network: http://$($Session.MyIP):$($Config.APIPort)" -ForegroundColor Cyan
                                 Write-Host " "
@@ -428,7 +428,7 @@ function Start-Setup {
                             if ($Config.RunMode -eq "server") {
                                 Write-Host " "
                                 Write-Host "Write down the following:" -ForegroundColor Yellow
-                                Write-Host "- Servername: $($Session.Computername)" -ForegroundColor Yellow
+                                Write-Host "- Servername: $($Session.MachineName)" -ForegroundColor Yellow
                                 Write-Host "- IP-Address: $($Session.MyIP)" -Foreground Yellow
                                 Write-Host " "
                             }

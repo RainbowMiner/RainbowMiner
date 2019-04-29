@@ -38,7 +38,7 @@
     $Session.Stopp = $false
     $Session.Benchmarking = $false
     $Session.IsAdmin = Test-IsElevated
-    $Session.Computername = $env:COMPUTERNAME.ToLower()
+    $Session.MachineName = [System.Environment]::MachineName
     try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
 
     if ($Session.IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
@@ -203,7 +203,6 @@ function Invoke-Core {
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
     $Session.MyIP = Get-MyIP
-    $Session.Computername = $env:COMPUTERNAME.ToLower()
 
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
         if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime))) {
@@ -1779,7 +1778,7 @@ function Invoke-Core {
     }
     if ($Session.Config.RunMode -eq "Server") {
         if ($API.RemoteAPI) {
-            Write-Host "[Server-Mode] Name=$($Session.Computername) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
+            Write-Host "[Server-Mode] Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
         } else {
             Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
         }

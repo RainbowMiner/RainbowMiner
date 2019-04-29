@@ -564,7 +564,7 @@
 
             # Send the response
 			$Response.Headers.Add("Accept-Encoding","gzip");
-			$Response.Headers.Add("Server","RainbowMiner API on $($Session.Computername)");
+			$Response.Headers.Add("Server","RainbowMiner API on $($Session.MachineName)");
 			$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
             $Response.Headers.Add("Content-Type", $ContentType)
             #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}

@@ -4523,7 +4523,7 @@ Param(
                 user      = $JobData.user
                 password  = $JobData.password
                 jobkey    = $JobKey
-                rigname   = $Session.Computername
+                rigname   = $Session.MachineName
                 myip      = $Session.MyIP
             }
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal

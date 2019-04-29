@@ -39,7 +39,7 @@ $Config | Add-Member ServerUser $(if ($Config.ServerUser -eq "`$ServerUser") {""
 $Config | Add-Member ServerPassword $(if ($Config.ServerPassword -eq "`$ServerPassword") {""} else {$Config.ServerPassword}) -Force
 
 do {
-    if (-not (Read-HostBool "Setup $($env:COMPUTERNAME) as CLIENT?" -default ($Config.RunMode -eq "Client"))) {exit}
+    if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as CLIENT?" -default ($Config.RunMode -eq "Client"))) {exit}
 
     Write-Host " "
     Write-Host "Please check your server's credentials first:"

@@ -34,7 +34,7 @@ try {
 $Config | Add-Member RunMode $(if ($Config.RunMode -eq "`$RunMode") {"Standalone"} else {$Config.RunMode}) -Force
 $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Config.APIport) {4000} else {[int]$Config.APIport}) -Force
 
-if (-not (Read-HostBool "Setup $($env:COMPUTERNAME) as STANDALONE?" -default ($Config.RunMode -ne "Server" -and $Config.RunMode -ne "Client"))) {exit}
+if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as STANDALONE?" -default ($Config.RunMode -ne "Server" -and $Config.RunMode -ne "Client"))) {exit}
 
 Write-Host " "
 Write-Host "Initializing Standalone"

@@ -38,7 +38,7 @@ $Config | Add-Member APIuser $(if ($Config.APIuser -eq "`$APIuser") {""} else {$
 $Config | Add-Member APIpassword $(if ($Config.APIpassword -eq "`$APIPassword") {""} else {$Config.APIpassword}) -Force
 
 do {
-    if (-not (Read-HostBool "Setup $($env:COMPUTERNAME) as SERVER?" -default ($Config.RunMode -eq "Server"))) {exit}
+    if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as SERVER?" -default ($Config.RunMode -eq "Server"))) {exit}
 
     Write-Host " "
     Write-Host "Please check your credentials first:"
