@@ -4515,7 +4515,7 @@ Param(
                 url       = $JobData.url
                 method    = $JobData.method
                 timeout   = $JobData.timeout
-                body      = $JobData.body
+                body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
                 cycletime = $JobData.cycletime
                 retry     = $JobData.retry
                 retrywait = $Jobdata.retrywait
