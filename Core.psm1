@@ -36,9 +36,11 @@
     $Session.IsExclusiveRun = $false
     $Session.Stopp = $false
     $Session.Benchmarking = $false
+    $Session.IsAdmin = Test-IsElevated
+    $Session.Computername = $env:COMPUTERNAME.ToLower()
     try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
 
-    if (Test-IsElevated) {Write-Log -Level Verbose "Run as administrator"}
+    if ($Session.IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
 
     #Cleanup the log and cache
     if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
@@ -77,6 +79,7 @@
                 if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
                 elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
             }
+            if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force;$ConfigForUpdate.PSObject.Properties.Remove("LocalAPIport");$ConfigForUpdate_changed=$true}
             if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
         }
         $Session.ConfigFiles["Config"].Healthy = $true
@@ -198,6 +201,9 @@ function Invoke-Core {
     [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
+    $Session.MyIP = Get-MyIP
+    $Session.Computername = $env:COMPUTERNAME.ToLower()
+
     if (Test-Path $Session.ConfigFiles["Config"].Path) {
         if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime))) {
 
@@ -296,9 +302,8 @@ function Invoke-Core {
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
-        if (-not $Session.Config.LocalAPIport) {$Session.Config | Add-Member LocalAPIport 4000 -Force}
-        Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.LocalAPIport} > $null
-
+        if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
+        Set-ContentJson -PathToFile ".\Data\localapiport.json" -Data @{LocalAPIport = $Session.Config.APIport} > $null
 
         #For backwards compatibility        
         if ($Session.Config.LegacyMode -ne $null) {$Session.Config.MiningMode = if (Get-Yes $Session.Config.LegacyMode){"legacy"}else{"device"}}
@@ -313,17 +318,19 @@ function Invoke-Core {
     if (($Session.Config.DisableAsyncLoader -or $Session.Config.Interval -ne $ConfigBackup.Interval) -and (Test-Path Variable:Global:Asyncloader)) {Stop-AsyncLoader}
     if (-not $Session.Config.DisableAsyncLoader -and -not (Test-Path Variable:Global:AsyncLoader)) {Start-AsyncLoader -Interval $Session.Config.Interval -Quickstart $Session.Config.Quickstart}
     if (-not $Session.Config.DisableMSIAmonitor -and (Test-Afterburner) -eq -1 -and ($Session.RoundCounter -eq 0 -or $Session.Config.DisableMSIAmonitor -ne $ConfigBackup.DisableMSIAmonitor)) {Start-Afterburner}
-    if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.LocalAPIport -ne $ConfigBackup.LocalAPIport) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
-    if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {
-        Start-APIServer -RemoteAPI:$Session.Config.RemoteAPI -LocalAPIport $Session.Config.LocalAPIport
-    }
+    if (-not $psISE -and ($Session.Config.DisableAPI -or $Session.Config.APIport -ne $ConfigBackup.APIport -or $Session.Config.APIauth -ne $ConfigBackup.APIauth -or $Session.Config.APIuser -ne $ConfigBackup.APIuser -or $Session.Config.APIpassword -ne $ConfigBackup.APIpassword) -and (Test-Path Variable:Global:API)) {Stop-APIServer}
+    if (-not $psISE -and -not $Session.Config.DisableAPI -and -not (Test-Path Variable:Global:API)) {Start-APIServer}
     if($psISE -and -not (Test-Path Variable:Global:API)) {
         $Global:API = [hashtable]@{}
         $API.Stop = $false
         $API.Pause = $false
         $API.Update = $false
-        $API.RemoteAPI = $Session.Config.RemoteAPI
-        $API.LocalAPIport = $Session.Config.LocalAPIport
+        $API.RemoteAPI = $true
+        $API.APIport = $Session.Config.APIport
+        $API.APIAuth = $Session.Config.APIAuth
+        $API.APIport = $Session.Config.APIport
+        $API.APIUser = $Session.Config.APIUser
+        $API.APIPassword = $Session.Config.APIPassword
     }
 
     if ($CheckConfig) {Update-WatchdogLevels -Reset}
@@ -778,7 +785,9 @@ function Invoke-Core {
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)
-    $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_ -or -not (($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
+    if ($Session.Config.RunMode -ne "Server") {
+        $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_ -or -not (($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_))} | Foreach-Object {Stop-AsyncJob -tag $_}
+    }
 
     #Remove stats from pools & miners not longer in use
     if (-not $Session.IsDonationRun -and (Test-Path "Stats")) {
@@ -1756,6 +1765,27 @@ function Invoke-Core {
     Write-Host " "
     Remove-Variable "StatusLine"
 
+    #Check if server is up
+    if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort) {
+        $ServerConnected = Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1
+        if ($ServerConnected) {            
+            Write-Host "[Client-Mode] Connected to $($Session.Config.ServerName):$($Session.Config.ServerPort)" -ForegroundColor Green
+        } else {
+            Write-Host "[Client-Mode] Server $($Session.Config.ServerName):$($Session.Config.ServerPort) does not respond." -ForegroundColor Red
+        }
+        Write-Host " "
+        Write-Log -Level Info "Client-Mode: $(if ($ServerConnected) {"Connected"} else {"Not connected"}) to $($Session.Config.ServerName):$($Session.Config.ServerPort)"
+    }
+    if ($Session.Config.RunMode -eq "Server") {
+        if ($API.RemoteAPI) {
+            Write-Host "[Server-Mode] Name=$($Session.Computername) IP=$($Session.MyIP) Port=$($Session.Config.APIport) " -ForegroundColor Green
+        } else {
+            Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
+        }
+        Write-Host " "
+        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.Computername) IP=$($Session.MyIP) Port=$($Session.Config.APIport)"} else {"not started!"})"
+    }
+
     #Check for updated RainbowMiner
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {
         if ($Session.Config.EnableAutoUpdate) {
@@ -2003,7 +2033,7 @@ function Invoke-Core {
                 Write-Log -Level Warn "Failed to start new instance of RainbowMiner. Switching to legacy update."                
                 $Session.Stopp = $true
             } else {
-                Write-Log -Level Warn "Restart not possible, $(if (Test-IsElevated) {"something went wrong."} else {"since RainbowMiner has not been started with administrator rights"})"
+                Write-Log -Level Warn "Restart not possible, $(if ($Session.IsAdmin) {"something went wrong."} else {"since RainbowMiner has not been started with administrator rights"})"
                 $Session.Restart = $false
             }
         }

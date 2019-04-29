@@ -37,13 +37,7 @@ Param(
 
         [System.Collections.ArrayList]$Errors = @()
 
-        if ($IsWindows -eq $null) {
-            if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
-                $Global:IsWindows = $true
-                $Global:IsLinux = $false
-                $Global:IsMacOS = $false
-            }
-        }
+        Set-OsFlags
 
         $Cycle = -1
 
@@ -51,6 +45,7 @@ Param(
             $Start = (Get-Date).ToUniversalTime()
             $Cycle++            
             foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
+                if ($AsyncLoader.Jobs.$Jobkey.CycleTime -le 0) {$AsyncLoader.Jobs.$Jobkey.CycleTime = $AsyncLoader.Interval}
                 $Job = $AsyncLoader.Jobs.$Jobkey
                 if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
                     try {

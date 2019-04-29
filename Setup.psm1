@@ -164,11 +164,11 @@ function Start-Setup {
 
             Switch ($SetupType) {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","workername","username","apiid","apikey")) > $null}
-                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
+                "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","servername","serverport")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","wallet","nicehash","addcoins1","addcoins2","addcoins3","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","localapiport","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","servername","serverport","donate")) > $null}
+                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("apiport","apiinit","apiauth","apiuser","apipassword","runmode","serverinit","servername","serverport","serveruser","serverpassword")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","wallet","nicehash","addcoins1","addcoins2","addcoins3","workername","username","apiid","apikey","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","apiport","apiinit","apiauth","apiuser","apipassword","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","runmode","serverinit","servername","serverport","serveruser","serverpassword","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -378,44 +378,99 @@ function Start-Setup {
                                 $GlobalSetupStepStore = $false
                             }
                         }
-                        "localapiport" {
+                        "apiport" {
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "RainbowMiner can be monitored using your webbrowser at http://localhost:$($Config.LocalAPIPort)" -ForegroundColor Cyan
+                                Write-Host "RainbowMiner can be monitored using your webbrowser via an API:" -Foreground Cyan
+                                Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
+                                if ($IsWindows) {
+                                    Write-Host "- on another windows device in the network: http://$($Session.Computername):$($Config.APIPort)" -ForegroundColor Cyan
+                                }
+                                Write-Host "- on any other device in the network: http://$($Session.MyIP):$($Config.APIPort)" -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $Config.LocalAPIport = Read-HostInt -Prompt "Choose the web interface localhost port" -Default $Config.LocalAPIPort -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            $Config.APIport = Read-HostInt -Prompt "If needed, choose a different API port" -Default $Config.APIPort -Mandatory -Min 1000 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+                        "apiinit" {
+                            if (-not (Test-APIServer -Port $Config.APIPort)) {
+                                Write-Host " "
+                                Write-Host "Warning: the API is currently visible locally on http://localhost:$($Config.APIport), only." -ForegroundColor Yellow
+                                Write-Host " "
+                                $InitAPIServer = Read-HostBool -Prompt "Do you want to enable the API in your network? " -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                Write-Host " "
+                                Write-Host "Ok, enable remote access to your API now.$(if (-not $Session.IsAdmin) {" Please click 'Yes' for all UACL prompts!"})"
+                                Write-Host " " 
+                                if ($InitAPIServer) {Initialize-APIServer -Port $Config.APIport}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "apiauth" {
+                            $Config.APIauth = Read-HostBool -Prompt "Enable username/password to protect access to the API?" -Default $Config.APIAuth | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+                        "apiuser" {
+                            if (Get-Yes $Config.APIauth) {
+                                $Config.APIUser = Read-HostString -Prompt "Enter an API username ($(if ($Config.APIUser) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIUser -Characters "A-Z0-9" -MinLength 3 -MaxLength 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "apipassword" {
+                            if (Get-Yes $Config.APIauth) {
+                                $Config.APIPassword = Read-HostString -Prompt "Enter an API password ($(if ($Config.APIpassword) {"clear"} else {"leave empty"}) to disable auth)" -Default $Config.APIpassword -Characters "" -MinLength 3 -MaxLength 30 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
                         }
                         "runmode" {
-                            Write-Host " "
-                            Write-Host "WARNING: the client/server feature is not yet implemented. Rigs will always work in standalone mode." -ForegroundColor Yellow
-                            Write-Host " "
-                            Write-Host "Be aware, if the mode is set to client, RainbowMiner will wait for a server, at startup." -ForegroundColor Cyan
-                            Write-Host "If it doesn't find a server, it will wait for ever, so make sure that a server is running." -ForegroundColor Cyan
-                            Write-Host " "
                             $Config.RunMode = Read-HostString -Prompt "Select the operation mode of this rig (standalone,server,client)" -Default $Config.RunMode -Valid @("standalone","server","client") | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             if ($Config.RunMode -eq "") {$Config.RunMode = "standalone"}
                             if ($Config.RunMode -eq "server") {
                                 Write-Host " "
-                                Write-Host "Write down the servername: $($env:COMPUTERNAME)" -ForegroundColor Yellow
+                                Write-Host "Write down the following:" -ForegroundColor Yellow
+                                Write-Host "- Servername: $($Session.Computername)" -ForegroundColor Yellow
+                                Write-Host "- IP-Address: $($Session.MyIP)" -Foreground Yellow
                                 Write-Host " "
-                                $Config.ServerName = $env:COMPUTERNAME
+                            }
+                        }
+                        "serverinit" {
+                            if ($Config.RunMode -eq "Server" -and -not (Test-APIServer -UseServer)) {
+                                Write-Host " "
+                                Write-Host "Warning: For server operation, an additional firewall rule will be needed." -ForegroundColor Yellow
+                                Write-Host " "
+                                $InitAPIServer = Read-HostBool -Prompt "Do you want to add this rule to the firewall? " -Default $true | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                Write-Host " "
+                                Write-Host "Ok, adding a rule to your firewall now.$(if (-not $Session.IsAdmin) {" Please click 'Yes' for all UACL prompts!"})"
+                                Write-Host " " 
+                                if ($InitAPIServer) {Initialize-APIServer -Port $Config.APIport -UseServer}
+                            } else {
+                                $GlobalSetupStepStore = $false
                             }
                         }
                         "servername" {
                             if ($Config.RunMode -eq "client") {
-                                $Config.ServerName = Read-HostString -Prompt "Enter the server name ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                                $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9\-_\." | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "serverport" {
-                            $ServerPortPrompt = Switch($Config.RunMode) {
-                                "client" {"Enter the server port"}
-                                "server" {"Enter the port to listen for clients"}
+                            if ($Config.RunMode -eq "client") {
+                                $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port ($(if ($Config.ServerPort) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
                             }
-                            if ($ServerPortPrompt) {
-                                $Config.ServerPort = Read-HostInt -Prompt "$($ServerPortPrompt) ($(if ($Config.ServerPort) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerPort -Min 0 -Max 9999 | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                        }
+                        "serveruser" {
+                            if ($Config.RunMode -eq "client") {
+                                $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username ($(if ($Config.ServerUser) {"clear"} else {"leave empty"}) for no auth)" -Default $Config.ServerUser -Characters "A-Z0-9" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "serverpassword" {
+                            if ($Config.RunMode -eq "client") {
+                                $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password ($(if ($Config.ServerPassword) {"clear"} else {"leave empty"}) for no auth)" -Default $Config.ServerPassword -Characters "" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -981,7 +1036,10 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableAutoBenchmark $(if (Get-Yes $Config.EnableAutoBenchmark){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableResetVega $(if (Get-Yes $Config.EnableResetVega){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member Delay $Config.Delay -Force
-                            $ConfigActual | Add-Member LocalAPIport $Config.LocalAPIport -Force
+                            $ConfigActual | Add-Member APIport $Config.APIport -Force
+                            $ConfigActual | Add-Member APIauth $(if (Get-Yes $Config.APIauth){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member APIuser $Config.APIuser -Force
+                            $ConfigActual | Add-Member APIpassword $Config.APIpassword -Force
                             $ConfigActual | Add-Member EnableAutoMinerPorts $(if (Get-Yes $Config.EnableAutoMinerPorts){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member DisableMSIAmonitor $(if (Get-Yes $Config.DisableMSIAmonitor){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member DisableAPI $(if (Get-Yes $Config.DisableAPI){"1"}else{"0"}) -Force
@@ -1005,7 +1063,9 @@ function Start-Setup {
                             $ConfigActual | Add-Member StartPaused $(if (Get-Yes $Config.StartPaused){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member RunMode $Config.RunMode -Force
                             $ConfigActual | Add-Member ServerName $Config.ServerName -Force
-                            $COnfigActual | Add-Member ServerPort $Config.ServerPort -Force
+                            $ConfigActual | Add-Member ServerPort $Config.ServerPort -Force
+                            $ConfigActual | Add-Member ServerUser $Config.ServerUser -Force
+                            $ConfigActual | Add-Member ServerPassword $Config.ServerPassword -Force
 
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force

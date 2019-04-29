@@ -89,9 +89,13 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$DisableDualMining = $false,
     [Parameter(Mandatory = $false)]
-    [int]$LocalAPIPort = 4000,
+    [int]$APIPort = 4000,
     [Parameter(Mandatory = $false)]
-    [Switch]$RemoteAPI = $false,
+    [String]$APIUser = "",
+    [Parameter(Mandatory = $false)]
+    [String]$APIPassword = "",
+    [Parameter(Mandatory = $false)]
+    [Bool]$APIAuth = $false,
     [Parameter(Mandatory = $false)]
     [String]$ConfigFile = "Config\config.txt", # Path to config file
     [Parameter(Mandatory = $false)]
@@ -181,19 +185,21 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$ServerName = "", # if RunMode=client: this is the name of the main RainbowMiner server
     [Parameter(Mandatory = $false)]
-    [int]$ServerPort = 9005,  # if RunMode=server or client: main RainbowMiner server port address
+    [int]$ServerPort = 4000,  # if RunMode=server or client: main RainbowMiner server port address
+    [Parameter(Mandatory = $false)]
+    [String]$ServerUser = "",
+    [Parameter(Mandatory = $false)]
+    [String]$ServerPassword = "",
     [Parameter(Mandatory = $false)]
     [String]$RunMode = "standalone" # enter standalone, server or client
 )
-
-Clear-Host
 
 $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version = "4.1.2.0"
+$Session.Version = "4.2.0.0"
 
 $Session.Strikes           = 3
 $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
@@ -201,20 +207,28 @@ $Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias 
 $Session.DecayPeriod       = 60 #seconds
 $Session.DecayBase         = 1 - 0.1 #decimal percentage
 
-if ($IsWindows -eq $null) {
-    if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
-        $Global:IsWindows = $true
-        $Global:IsLinux = $false
-        $Global:IsMacOS = $false
-    }
-}
+Set-OsFlags
 
 if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
 
 if (-not $psISE) {
     $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
-    $host.ui.RawUI.WindowTitle = $Session.MainWindowTitle
+    $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
+    $Host.UI.RawUI.BackgroundColor = ($bckgrnd = "Black")
+    $Host.UI.RawUI.ForegroundColor = "White"
+    $Host.PrivateData.ErrorForegroundColor   = "Red"
+    $Host.PrivateData.ErrorBackgroundColor   = $bckgrnd
+    $Host.PrivateData.WarningForegroundColor = "Yellow"
+    $Host.PrivateData.WarningBackgroundColor = $bckgrnd
+    $Host.PrivateData.DebugForegroundColor   = "Yellow"
+    $Host.PrivateData.DebugBackgroundColor   = $bckgrnd
+    $Host.PrivateData.VerboseForegroundColor = "Yellow"
+    $Host.PrivateData.VerboseBackgroundColor = $bckgrnd
+    $Host.PrivateData.ProgressForegroundColor= "Yellow"
+    $Host.PrivateData.ProgressBackgroundColor= "DarkCyan"
 }
+
+Clear-Host
 
 Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
 Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
@@ -262,7 +276,7 @@ if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -
 [hashtable]$Session.DefaultValues = @{}
 
 if (-not $psISE) {$MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}}
-if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","DefaultPoolRegion","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","SwitchingPrevention","MaxRejectedShareRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","RemoteAPI","LocalAPIPort","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","Quickstart","PoolDataWindow","PoolStatAverage","EnableAutoAlgorithmAdd","EnableResetVega","StartPaused","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","RunMode")}
+if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","UserName","WorkerName","API_ID","API_Key","Interval","Region","DefaultPoolRegion","SSL","DeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","SwitchingPrevention","MaxRejectedShareRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","APIPort","APIUser","APIPassword","APIAuth","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","CheckProfitability","DisableExtendInterval","EthPillEnable","EnableOCProfiles","EnableOCVoltage","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","Quickstart","PoolDataWindow","PoolStatAverage","EnableAutoAlgorithmAdd","EnableResetVega","StartPaused","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","RunMode")}
 $MyCommandParameters | Where-Object {Get-Variable $_ -ErrorAction Ignore} | Foreach-Object {$Session.DefaultValues[$_] = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 if (-not (Start-Core -ConfigFile $ConfigFile)) {Exit}

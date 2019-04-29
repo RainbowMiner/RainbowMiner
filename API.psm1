@@ -1,44 +1,27 @@
 ﻿Function Start-APIServer {
-    Param(
-        [Parameter(Mandatory = $false)]
-        [Switch]$RemoteAPI = $false,
-        [Parameter(Mandatory = $false)]
-        [int]$LocalAPIport = 4000
-    )
 
     # Create a global synchronized hashtable that all threads can access to pass data between the main script and API
     $Global:API = [hashtable]::Synchronized(@{})
+
+    # Initialize firewall and prefix
+    if ($Session.IsAdmin -and $Session.Config.APIport) {Initialize-APIServer -Port $Session.Config.APIport -UseServer:$($Session.Config.RunMode -eq "Server")}
   
     # Setup flags for controlling script execution
-    $API.Stop = $false
-    $API.Pause = $false
-    $API.Update = $false
-    $API.RemoteAPI = $RemoteAPI
-    $API.LocalAPIport = $LocalAPIport
+    $API.Stop        = $false
+    $API.Pause       = $false
+    $API.Update      = $false
+    $API.APIport     = $Session.Config.APIport
+    $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
+    $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
 
-    if ($IsWindows) {
-        # Starting the API for remote access requires that a reservation be set to give permission for non-admin users.
-        # If switching back to local only, the reservation needs to be removed first.
-        # Check the reservations before trying to create them to avoid unnecessary UAC prompts.
-        $urlACLs = & netsh http show urlacl | Out-String
-
-        if ($API.RemoteAPI -and (!$urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
-            # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($LocalAPIport)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit(5000)>$null
-        }
-        if (!$API.RemoteAPI -and ($urlACLs.Contains("http://+:$($LocalAPIport)/"))) {
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($LocalAPIport)/").WaitForExit(5000)>$null
-        }
-        (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"RainbowMiner API $LocalAPIport`"").WaitForExit(5000)>$null
-        if ($API.RemoteAPI) {            
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"RainbowMiner API $LocalAPIport`" dir=in action=allow protocol=TCP localport=$LocalAPIPort").WaitForExit(5000)>$null
-        }
-    }
+    Set-APICredentials
 
     # Setup runspace to launch the API webserver in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("API", $API)
+    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
+    $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $API.Server = [PowerShell]::Create().AddScript({
@@ -49,13 +32,7 @@
 
         $BasePath = "$PWD\web"
 
-        if ($IsWindows -eq $null) {
-            if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
-                $Global:IsWindows = $true
-                $Global:IsLinux = $false
-                $Global:IsMacOS = $false
-            }
-        }
+        Set-OsFlags
 
         # List of possible mime types for files
         $MIMETypes = @{
@@ -88,11 +65,11 @@
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
         if ($API.RemoteAPI) {
-            $Server.Prefixes.Add("http://+:$($API.LocalAPIport)/")
+            $Server.Prefixes.Add("http://+:$($API.APIport)/")
             # Require authentication when listening remotely
-            $Server.AuthenticationSchemes = [System.Net.AuthenticationSchemes]::Anonymous
+            $Server.AuthenticationSchemes = if ($API.APIauth) {[System.Net.AuthenticationSchemes]::Basic} else {[System.Net.AuthenticationSchemes]::Anonymous}
         } else {
-            $Server.Prefixes.Add("http://localhost:$($API.LocalAPIport)/")
+            $Server.Prefixes.Add("http://localhost:$($API.APIport)/")
         }
         $Server.Start()
 
@@ -117,8 +94,18 @@
             }
 
             if($Request.HasEntityBody) {
-                $Reader = New-Object System.IO.StreamReader($Request.InputStream)
-                $NewParameters = $Reader.ReadToEnd()
+                $length = $Request.ContentLength64
+                $buffer = new-object "byte[]" $length
+                [void]$request.inputstream.read($buffer, 0, $length)
+                $body = [system.text.encoding]::ascii.getstring($buffer)
+                $body.split('&') | %{
+                    $key, $value = $_ -Split '='
+                    $key = [URI]::UnescapeDataString($key)
+                    $value = [URI]::UnescapeDataString($value)
+                    if ($key -and $value) {
+                        $Parameters | Add-Member $key $value -Force
+                    }
+                }
             }
 
             # Create a new response and the defaults for associated settings
@@ -127,10 +114,12 @@
             $StatusCode = 200
             $Data = ""
             $ContentFileName = ""
+
+            if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIAuth = $false}
             
-            if($false -and $API.RemoteAPI -and (!$Request.IsAuthenticated)) {
-                $Data = "Unauthorized"
-                $StatusCode = 403
+            if($API.RemoteAPI -and $API.APIauth -and (-not $Context.User.Identity.IsAuthenticated -or $Context.User.Identity.Name -ne $API.APIuser -or $Context.User.Identity.Password -ne $API.APIpassword)) {
+                $Data = "Access denied"
+                $StatusCode = 401
                 $ContentType = "text/html"
             } else {
                 # Set the proper content type, status code and data for each resource
@@ -433,6 +422,15 @@
                     $Data = [PSCustomObject]@{Pause=$API.Pause} | ConvertTo-Json
                     Break
                 }
+                "/geturl" {
+                    $Status = $false        
+                    try {
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $Parameters.body -jobkey $Parameters.jobkey
+                        if ($Result) {$Status = $true}
+                    } catch {}
+                    $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                    break
+                }
                 default {
                     # Set index page
                     if ($Path -eq "/") {
@@ -489,6 +487,7 @@
 
             # Send the response
             $Response.Headers.Add("Content-Type", $ContentType)
+            #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
             if ($ContentFileName -ne "") {$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")}
             $Response.StatusCode = $StatusCode
             $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
@@ -511,9 +510,7 @@
 }
 
 Function Stop-APIServer {
-    if (-not $Global:API.Stop) {
-        try {$result = Invoke-WebRequest -Uri "http://localhost:$($API.LocalAPIport)/stop" } catch { Write-Host "Listener ended"}
-    }
+    try {Invoke-GetUrl "http://localhost:$($API.APIport)/$($API.RandTag)" -user $API.APIUser -password $API.APIpassword -method Web -timeout 5 > $null} catch {Write-Host "Listener ended"}
     if ($Global:API.Server) {$Global:API.Server.dispose()}
     $Global:API.Server = $null
     $Global:API.Handle = $null
@@ -530,4 +527,84 @@ function Set-APIInfo {
     )
     if (-not $API.Info) {$API.Info = [hashtable]@{}}
     $API.Info[$Name] = $Value
+}
+
+function Set-APICredentials {
+    $API.APIAuth     = $Session.Config.APIAuth -and $Session.Config.APIUser -and $Session.Config.APIPassword
+    $API.APIUser     = $Session.Config.APIUser
+    $API.APIPassword = $Session.Config.APIPassword
+}
+
+function Get-APIServerName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$Port
+    )
+    "RainbowMiner API $($Port)"
+}
+
+function Test-APIServer {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$Port,
+        [Parameter(Mandatory = $false)]
+        [Switch]$UseServer
+    )
+    if ($IsWindows) {
+        if ($UseServer) {
+            $FWLname = Get-APIServerName -Port $Port
+            $fwlACLs = & netsh advfirewall firewall show rule name="$($FWLname)" | Out-String
+            $fwlACLs.Contains($FWLname)
+        } else {
+            $urlACLs = & netsh http show urlacl | Out-String
+            $urlACLs.Contains("http://+:$($Port)/")
+        }
+    } else {
+        $true
+    }
+}
+
+function Initialize-APIServer {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$Port,
+        [Parameter(Mandatory = $false)]
+        [Switch]$UseServer
+    )
+
+    if ($IsWindows) {
+        if (-not (Test-APIServer -Port $Port)) {
+            # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($Port)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit(5000)>$null
+        }
+
+        if ($UseServer -and -not (Test-APIServer -UseServer)) {
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"$(Get-APIServerName -Port $Port)`" dir=in action=allow protocol=TCP localport=$($Port)").WaitForExit(5000)>$null
+        }
+    }
+}
+
+function Reset-APIServer {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$Port,
+        [Parameter(Mandatory = $false)]
+        [Switch]$RemoveServer,
+        [Parameter(Mandatory = $false)]
+        [Switch]$RemoveUrlAcl
+    )
+
+    if ($IsWindows) {
+        if ($RemoveUrlAcl -and (Test-APIServer -Port $Port)) {
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($Port)/").WaitForExit(5000)>$null
+        }
+
+        if ($RemoveServer -and (Test-APIServer -UseServer))  {
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"$(Get-APIServerName -Port $Port)`"").WaitForExit(5000)>$null
+        }
+    }
 }

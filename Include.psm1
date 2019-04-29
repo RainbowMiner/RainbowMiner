@@ -1861,6 +1861,15 @@ function Test-TcpServer {
     $Result
 }
 
+function Get-MyIP {
+    if ($IsWindows) {
+        ipconfig | where {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' } >$null
+        $Matches[1]
+    } elseif ($IsLinux) {
+        try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Error.Count){$Error.RemoveAt(0)};try {hostname -I} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+    }
+}
+
 function Get-Device {
     [CmdletBinding()]
     param(
@@ -4488,19 +4497,58 @@ Param(
     [Parameter(Mandatory = $False)]
         [int]$timeout = 10,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body
+        [hashtable]$body,
+    [Parameter(Mandatory = $False)]
+        [string]$user = "",
+    [Parameter(Mandatory = $False)]
+        [string]$password = "",
+    [Parameter(Mandatory = $False)]
+        $JobData,
+    [Parameter(Mandatory = $False)]
+        [string]$JobKey = ""
 )
+
+    if ($JobKey -and $JobData) {
+        if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+            $serverbody = @{
+                url       = $JobData.url
+                method    = $JobData.method
+                timeout   = $JobData.timeout
+                body      = $JobData.body
+                cycletime = $JobData.cycletime
+                retry     = $JobData.retry
+                retrywait = $Jobdata.retrywait
+                tag       = $JobData.tag
+                user      = $JobData.user
+                password  = $JobData.password
+                jobkey    = $JobKey
+            }
+            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/geturl" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword
+            if ($Result.Status) {$Result.Content;return}
+        }
+
+        $url      = $JobData.url
+        $method   = $JobData.method
+        $timeout  = $JobData.timeout
+        $body     = $JobData.body
+        $user     = $JobData.user
+        $password = $JobData.password
+    }
+
     $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
     if ($url -match "^https" -and [Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {[Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12}
 
     $RequestMethod = if ($body) {"Post"} else {"Get"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+
+    $headers = @{"Cache-Control" = "no-cache"}
+    if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers @{"Cache-Control" = "no-cache"} -Body $body
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers @{"Cache-Control" = "no-cache"} -Body $body
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
 }
@@ -4595,18 +4643,19 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$body
 )
+    if (-not $url -and -not $Jobkey) {return}
+  
+    $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})";$StaticJobKey = $false} else {$StaticJobKey = $true}
+
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
-        Invoke-GetUrl $url -method $method -body $body
+        Invoke-GetUrl -JobData $JobData -JobKey $JobKey
         return
     }
-
-    if (-not $url -and -not $Jobkey) {return}
     
-    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})"}
-    elseif ($url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or ($AsyncLoader.Jobs.$Jobkey.Body | ConvertTo-Json -Compress) -ne ($body | ConvertTo-Json -Compress))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body}
-
-    if ($cycletime -le 0) {$cycletime = $AsyncLoader.Interval}
+    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or ($AsyncLoader.Jobs.$Jobkey.Body | ConvertTo-Json -Compress) -ne ($body | ConvertTo-Json -Compress))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body}
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
@@ -4615,7 +4664,7 @@ Param(
         if (-not $AsyncLoader.Jobs.$Jobkey) {
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
             if (-not $Quickstart -and $delay) {Start-Sleep -Milliseconds $delay}
-            $AsyncLoader.Jobs.$Jobkey = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+            $AsyncLoader.Jobs.$Jobkey = $JobData
             if ($Quickstart) {
                 $AsyncLoader.Quickstart += $delay
                 if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
@@ -4640,7 +4689,7 @@ Param(
                 }
                 if (-not $Quickstart) {
                     #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
-                    $Request = Invoke-GetUrl $AsyncLoader.Jobs.$Jobkey.Url -method $AsyncLoader.Jobs.$Jobkey.Method -body $AsyncLoader.Jobs.$Jobkey.Body -timeout $AsyncLoader.Jobs.$Jobkey.Timeout                    
+                    $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
                 }
                 if (-not $Request) {throw "Empty request"}
                 $AsyncLoader.Jobs.$Jobkey.Success++
@@ -5335,6 +5384,16 @@ function Test-IsElevated
         ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
     } else {
         (whoami) -match "root"
+    }
+}
+
+function Set-OsFlags {
+    if ($IsWindows -eq $null) {
+        if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+            $Global:IsWindows = $true
+            $Global:IsLinux = $false
+            $Global:IsMacOS = $false
+        }
     }
 }
 
