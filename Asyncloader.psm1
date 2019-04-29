@@ -22,6 +22,7 @@ Param(
     $newRunspace = [runspacefactory]::CreateRunspace()
     $newRunspace.Open()
     $newRunspace.SessionStateProxy.SetVariable("AsyncLoader", $AsyncLoader)
+    $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
     $AsyncLoader.Loader = [PowerShell]::Create().AddScript({        
