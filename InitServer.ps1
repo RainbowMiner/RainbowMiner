@@ -36,6 +36,7 @@ $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Con
 $Config | Add-Member APIauth $(if ($Config.APIauth -eq "`$APIauth") {$false} else {Get-Yes $Config.APIauth}) -Force
 $Config | Add-Member APIuser $(if ($Config.APIuser -eq "`$APIuser") {""} else {$Config.APIuser}) -Force
 $Config | Add-Member APIpassword $(if ($Config.APIpassword -eq "`$APIPassword") {""} else {$Config.APIpassword}) -Force
+$Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 
 do {
     if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as SERVER?" -default ($Config.RunMode -eq "Server"))) {exit}
@@ -50,8 +51,11 @@ do {
     if (Get-Yes $Config.APIauth) {
         $Config.APIuser = Read-HostString -Prompt "Enter an API username (leave empty to disable auth) " -Default $Config.APIuser -Characters "A-Z0-9"
         $Config.APIPassword = Read-HostString -Prompt "Enter an API password " -Default $Config.APIPassword -Characters ""
-    }
+    }    
+    $Config.StartPaused = Read-HostBool "Start the Server machine in pause/no-mining mode automatically? " -Default $Config.StartPaused
+
     $Config.APIauth = if (Get-Yes $Config.APIauth) {"1"} else {"0"}
+    $Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
 
     Write-Host " "
     Write-Host "Check your data:"
@@ -65,6 +69,7 @@ do {
     Write-Host "Write down the following:" -ForegroundColor Green
     Write-Host "- Servername: $([System.Environment]::MachineName)" -ForegroundColor Green
     Write-Host "- IP-Address: $(Get-MyIP)" -Foreground Green
+    Write-Host "- Serverport: $($Config.APIport)" -Foreground Green
     Write-Host " "
 } until (Read-HostBool "Safe the data and initialize Server? (press Ctrl-C to exit)")
 

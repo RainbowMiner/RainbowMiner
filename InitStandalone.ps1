@@ -33,8 +33,14 @@ try {
 
 $Config | Add-Member RunMode $(if ($Config.RunMode -eq "`$RunMode") {"Standalone"} else {$Config.RunMode}) -Force
 $Config | Add-Member APIport $(if ($Config.APIport -eq "`$APIport" -or -not $Config.APIport) {4000} else {[int]$Config.APIport}) -Force
+$Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 
 if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as STANDALONE?" -default ($Config.RunMode -ne "Server" -and $Config.RunMode -ne "Client"))) {exit}
+
+if (Get-Yes $Config.StartPaused) {
+    $Config.StartPaused = -not (Read-HostBool -Prompt "RainbowMiner is currently configured to start in pause/no-mining mode. Do you want to disable that?" -Default $true)
+}
+$Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
 
 Write-Host " "
 Write-Host "Initializing Standalone"

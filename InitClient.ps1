@@ -37,6 +37,7 @@ $Config | Add-Member ServerName $(if ($Config.ServerName -eq "`$ServerName") {""
 $Config | Add-Member ServerPort $(if ($Config.ServerPort -eq "`$ServerPort" -or -not $Config.ServerPort) {4000} else {[int]$Config.ServerPort}) -Force
 $Config | Add-Member ServerUser $(if ($Config.ServerUser -eq "`$ServerUser") {""} else {$Config.ServerUser}) -Force
 $Config | Add-Member ServerPassword $(if ($Config.ServerPassword -eq "`$ServerPassword") {""} else {$Config.ServerPassword}) -Force
+$Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 
 do {
     if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as CLIENT?" -default ($Config.RunMode -eq "Client"))) {exit}
@@ -50,6 +51,11 @@ do {
     $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port " -Default $Config.ServerPort -Min 0 -Max 9999
     $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username " -Default $Config.ServerUser -Characters "A-Z0-9"
     $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password " -Default $Config.ServerPassword -Characters ""
+
+    if (Get-Yes $Config.StartPaused) {
+        $Config.StartPaused = -not (Read-HostBool -Prompt "RainbowMiner is currently configured to start in pause/no-mining mode. Do you want to disable that?" -Default $true)
+    }
+    $Config.StartPaused = if (Get-Yes $Config.StartPaused) {"1"} else {"0"}
 
     Write-Host " "
     Write-Host "Check your data:"
