@@ -62,6 +62,8 @@
             $Out
         }
 
+        $API.Clients = @{}
+
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
         if ($API.RemoteAPI) {
@@ -478,8 +480,13 @@
                     $Data = [PSCustomObject]@{Pause=$API.Pause} | ConvertTo-Json
                     Break
                 }
-                "/geturl" {
-                    $Status = $false        
+                "/clients" {
+                    $Data = $API.Clients | ConvertTo-Json
+                    Break
+                }
+                "/getjob" {
+                    $Status = $false
+                    $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
                     try {
                         $pbody = @{}
                         if ($Parameters.body) {
