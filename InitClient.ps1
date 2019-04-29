@@ -69,7 +69,7 @@ do {
 Write-Host " "
 Write-Host "Initializing Client"
 Write-Host " "
-if (-not (Test-IsElevated)) {
+if ($IsWindows -and -not (Test-IsElevated)) {
     Write-Host " Please select `"Yes`" for all UACL prompts! " -BackgroundColor Yellow -ForegroundColor Black
     Write-Host " "
 }

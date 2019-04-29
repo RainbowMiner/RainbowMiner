@@ -63,7 +63,7 @@ do {
     }
     Write-Host " "
     Write-Host "Write down the following:" -ForegroundColor Green
-    Write-Host "- Servername: $($env:COMPUTERNAME.ToLower())" -ForegroundColor Green
+    Write-Host "- Servername: $([System.Environment]::MachineName)" -ForegroundColor Green
     Write-Host "- IP-Address: $(Get-MyIP)" -Foreground Green
     Write-Host " "
 } until (Read-HostBool "Safe the data and initialize Server? (press Ctrl-C to exit)")
@@ -73,7 +73,7 @@ $Config | Add-Member RunMode "Server" -Force
 Write-Host " "
 Write-Host "Initializing API-Server"
 Write-Host " "
-if (-not (Test-IsElevated)) {
+if ($IsWindows -and -not (Test-IsElevated)) {
     Write-Host " Please select `"Yes`" for all UACL prompts! " -BackgroundColor Yellow -ForegroundColor Black
     Write-Host " "
 }

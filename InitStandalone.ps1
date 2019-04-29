@@ -39,7 +39,7 @@ if (-not (Read-HostBool "Setup $([System.Environment]::MachineName) as STANDALON
 Write-Host " "
 Write-Host "Initializing Standalone"
 Write-Host " "
-if (-not (Test-IsElevated)) {
+if ($IsWindows -and -not (Test-IsElevated)) {
     Write-Host " Please select `"Yes`" for all UACL prompts! " -BackgroundColor Yellow -ForegroundColor Black
     Write-Host " "
 }
