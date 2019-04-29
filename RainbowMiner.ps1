@@ -214,18 +214,20 @@ if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Versi
 if (-not $psISE) {
     $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
     $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
-    $Host.UI.RawUI.BackgroundColor = ($bckgrnd = "Black")
-    $Host.UI.RawUI.ForegroundColor = "White"
-    $Host.PrivateData.ErrorForegroundColor   = "Red"
-    $Host.PrivateData.ErrorBackgroundColor   = $bckgrnd
-    $Host.PrivateData.WarningForegroundColor = "Yellow"
-    $Host.PrivateData.WarningBackgroundColor = $bckgrnd
-    $Host.PrivateData.DebugForegroundColor   = "Yellow"
-    $Host.PrivateData.DebugBackgroundColor   = $bckgrnd
-    $Host.PrivateData.VerboseForegroundColor = "Yellow"
-    $Host.PrivateData.VerboseBackgroundColor = $bckgrnd
-    $Host.PrivateData.ProgressForegroundColor= "Yellow"
-    $Host.PrivateData.ProgressBackgroundColor= "DarkCyan"
+    if ($IsWindows) {
+        $Host.UI.RawUI.BackgroundColor = ($bckgrnd = "Black")
+        $Host.UI.RawUI.ForegroundColor = "White"
+        $Host.PrivateData.ErrorForegroundColor   = "Red"
+        $Host.PrivateData.ErrorBackgroundColor   = $bckgrnd
+        $Host.PrivateData.WarningForegroundColor = "Yellow"
+        $Host.PrivateData.WarningBackgroundColor = $bckgrnd
+        $Host.PrivateData.DebugForegroundColor   = "Yellow"
+        $Host.PrivateData.DebugBackgroundColor   = $bckgrnd
+        $Host.PrivateData.VerboseForegroundColor = "Yellow"
+        $Host.PrivateData.VerboseBackgroundColor = $bckgrnd
+        $Host.PrivateData.ProgressForegroundColor= "Yellow"
+        $Host.PrivateData.ProgressBackgroundColor= "DarkCyan"
+    }
 }
 
 Clear-Host
