@@ -434,7 +434,7 @@ function Start-Setup {
                             }
                         }
                         "serverinit" {
-                            if ($Config.RunMode -eq "Server" -and -not (Test-APIServer -UseServer)) {
+                            if ($Config.RunMode -eq "Server" -and -not (Test-APIServer -Port $Config.APIport)) {
                                 Write-Host " "
                                 Write-Host "Warning: For server operation, an additional firewall rule will be needed." -ForegroundColor Yellow
                                 Write-Host " "
@@ -442,7 +442,7 @@ function Start-Setup {
                                 Write-Host " "
                                 Write-Host "Ok, adding a rule to your firewall now.$(if (-not $Session.IsAdmin) {" Please click 'Yes' for all UACL prompts!"})"
                                 Write-Host " " 
-                                if ($InitAPIServer) {Initialize-APIServer -Port $Config.APIport -UseServer}
+                                if ($InitAPIServer) {Initialize-APIServer -Port $Config.APIport}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }

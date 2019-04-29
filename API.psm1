@@ -4,7 +4,7 @@
     $Global:API = [hashtable]::Synchronized(@{})
 
     # Initialize firewall and prefix
-    if ($Session.IsAdmin -and $Session.Config.APIport) {Initialize-APIServer -Port $Session.Config.APIport -UseServer:$($Session.Config.RunMode -eq "Server")}
+    if ($Session.IsAdmin -and $Session.Config.APIport) {Initialize-APIServer -Port $Session.Config.APIport}
   
     # Setup flags for controlling script execution
     $API.Stop        = $false
@@ -74,39 +74,91 @@
         $Server.Start()
 
         While ($Server.IsListening -and -not $API.Stop) {
-            $Context = $Server.GetContext()
-            $Request = $Context.Request
-            $URL = $Request.Url.OriginalString
+            $task = $Server.GetContextAsync();
+            $Context = $null
+            while(-not $Context){
+                if( $task.Wait(500) ){$Context = $task.Result}
+                 Start-Sleep -Milliseconds 100
+            }
+
+            $Request         = $Context.Request
+		    $InputStream     = $Request.InputStream
+			$ContentEncoding = $Request.ContentEncoding
+
+            $Parameters = [PSCustomObject]@{}
+
+            # Get query parameters		
+    		foreach ($Query in $Request.QueryString) {
+			    $QueryString = $Request.QueryString["$Query"]
+			    if ($QueryString -and $Query) {
+                    $Parameters | Add-Member $Query $QueryString -Force
+			    }
+		    }
+
+            # Get post parameters
+            if($Request.HasEntityBody -and $Request.HttpMethod -in @("POST","PUT")) {
+	            $PostCommand = New-Object IO.StreamReader ($InputStream,$ContentEncoding)
+	            $PostCommand = $PostCommand.ReadToEnd()
+	            $PostCommand = $PostCommand.ToString()
+	
+	            if ($PostCommand) {
+		            $PostCommand = $PostCommand -replace('\+'," ")
+		            $PostCommand = $PostCommand -replace("%20"," ")
+		            $PostCommand = $PostCommand -replace("%21","!")
+		            $PostCommand = $PostCommand -replace('%22','"')
+		            $PostCommand = $PostCommand -replace("%23","#")
+		            $PostCommand = $PostCommand -replace("%24","$")
+		            $PostCommand = $PostCommand -replace("%25","%")
+		            $PostCommand = $PostCommand -replace("%27","'")
+		            $PostCommand = $PostCommand -replace("%28","(")
+		            $PostCommand = $PostCommand -replace("%29",")")
+		            $PostCommand = $PostCommand -replace("%2A","*")
+		            $PostCommand = $PostCommand -replace("%2B","+")
+		            $PostCommand = $PostCommand -replace("%2C",",")
+		            $PostCommand = $PostCommand -replace("%2D","-")
+		            $PostCommand = $PostCommand -replace("%2E",".")
+		            $PostCommand = $PostCommand -replace("%2F","/")
+		            $PostCommand = $PostCommand -replace("%3A",":")
+		            $PostCommand = $PostCommand -replace("%3B",";")
+		            $PostCommand = $PostCommand -replace("%3C","<")
+		            $PostCommand = $PostCommand -replace("%3E",">")
+		            $PostCommand = $PostCommand -replace("%3F","?")
+		            $PostCommand = $PostCommand -replace("%5B","[")
+		            $PostCommand = $PostCommand -replace("%5C","\")
+		            $PostCommand = $PostCommand -replace("%5D","]")
+		            $PostCommand = $PostCommand -replace("%5E","^")
+		            $PostCommand = $PostCommand -replace("%5F","_")
+		            $PostCommand = $PostCommand -replace("%7B","{")
+		            $PostCommand = $PostCommand -replace("%7C","|")
+		            $PostCommand = $PostCommand -replace("%7D","}")
+		            $PostCommand = $PostCommand -replace("%7E","~")
+		            $PostCommand = $PostCommand -replace("%7F","_")
+		            $PostCommand = $PostCommand -replace("%7F%25","%")
+		            $PostCommand = $PostCommand.Split("&")
+
+		            foreach ($Post in $PostCommand) {
+			            $PostValue = $Post.Replace("%26","&")
+			            $PostContent = $PostValue.Split("=")
+			            $PostName = $PostContent[0] -replace("%3D","=")
+			            $PostValue = $PostContent[1] -replace("%3D","=")
+
+			            if ($PostName.EndsWith("[]")) {
+				            $PostName = $PostName.Substring(0,$PostName.Length-2)
+				            if (!(New-Object PSObject -Property @{PostName=@()}).PostName) {
+					            $Parameters | Add-Member $Postname (@()) -Force
+					            $Parameters."$PostName" += $PostValue
+				            } else {
+					            $Parameters."$PostName" += $PostValue
+				            }
+			            } else {
+				            $Parameters | Add-Member $PostName $PostValue -Force
+			            }
+		            }
+                }
+          	}
 
             # Determine the requested resource and parse query strings
             $Path = $Request.Url.LocalPath
-
-            # Parse any parameters in the URL - $Request.Url.Query looks like "+ ?a=b&c=d&message=Hello%20world"
-            $Parameters = [PSCustomObject]@{}
-            $Request.Url.Query -Replace "\?", "" -Split '&' | Foreach-Object {
-                $key, $value = $_ -Split '='
-                # Decode any url escaped characters in the key and value
-                $key = [URI]::UnescapeDataString($key)
-                $value = [URI]::UnescapeDataString($value)
-                if ($key -and $value) {
-                    $Parameters | Add-Member $key $value
-                }
-            }
-
-            if($Request.HasEntityBody) {
-                $length = $Request.ContentLength64
-                $buffer = new-object "byte[]" $length
-                [void]$request.inputstream.read($buffer, 0, $length)
-                $body = [system.text.encoding]::ascii.getstring($buffer)
-                $body.split('&') | %{
-                    $key, $value = $_ -Split '='
-                    $key = [URI]::UnescapeDataString($key)
-                    $value = [URI]::UnescapeDataString($value)
-                    if ($key -and $value) {
-                        $Parameters | Add-Member $key $value -Force
-                    }
-                }
-            }
 
             # Create a new response and the defaults for associated settings
             $Response = $Context.Response
@@ -124,6 +176,10 @@
             } else {
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
+                "/reqx" {
+                    $data = $Request | ConvertTo-Json -Depth 10
+                    break
+                }
                 "/version" {
                     $Data = $API.Version
                     break
@@ -425,7 +481,28 @@
                 "/geturl" {
                     $Status = $false        
                     try {
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $Parameters.body -jobkey $Parameters.jobkey
+                        $pbody = @{}
+                        if ($Parameters.body) {
+                            $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
+                            if ($pbody_in) {
+                                $pbody_in.PSObject.Properties | Foreach-Object {$pbody[$_.Name] = $_.Value}
+                            }
+                        }
+                        if ($Parameters.jobkey -eq "rates") {
+                            try {
+                                $RatesUri = [System.Uri]$Parameters.url
+                                $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
+                                $NewSyms = Compare-Object $Session.GlobalGetTicker @($RatesQry["fsyms"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$_.InputObject}
+                                if ($NewSyms) {
+                                    $Session.GlobalGetTicker = $Session.GlobalGetTicker + @($NewSyms) | Select-Object -Unique | Sort-Object
+                                }
+                                $Parameters.url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$(($Session.GlobalGetTicker -join ',').ToUpper())&tsyms=BTC&extraParams=https://rbminer.net"
+                                Remove-Variable "RatesUri"
+                                Remove-Variable "RatesQry"
+                                Remove-Variable "NewSyms"
+                            } catch {}
+                        }
+                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $body -jobkey $Parameters.jobkey
                         if ($Result) {$Status = $true}
                     } catch {}
                     $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
@@ -486,6 +563,9 @@
             }
 
             # Send the response
+			$Response.Headers.Add("Accept-Encoding","gzip");
+			$Response.Headers.Add("Server","RainbowMiner API on $($Session.Computername)");
+			$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
             $Response.Headers.Add("Content-Type", $ContentType)
             #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
             if ($ContentFileName -ne "") {$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")}
@@ -550,38 +630,37 @@ function Test-APIServer {
         [Parameter(Mandatory = $true)]
         [Int]$Port,
         [Parameter(Mandatory = $false)]
-        [Switch]$UseServer
+        [string]$Type = "all"
     )
+    $rv = $true
     if ($IsWindows) {
-        if ($UseServer) {
+        if ($rv -and ($Type -eq "firewall" -or $Type -eq "all")) {
             $FWLname = Get-APIServerName -Port $Port
             $fwlACLs = & netsh advfirewall firewall show rule name="$($FWLname)" | Out-String
-            $fwlACLs.Contains($FWLname)
-        } else {
-            $urlACLs = & netsh http show urlacl | Out-String
-            $urlACLs.Contains("http://+:$($Port)/")
+            if (-not $fwlACLs.Contains($FWLname)) {$rv = $false}
         }
-    } else {
-        $true
+        if ($rv -and ($Type -eq "url" -or $Type -eq "all")) {
+            $urlACLs = & netsh http show urlacl | Out-String
+            if (-not $urlACLs.Contains("http://+:$($Port)/")) {$rv = $false}
+        }
     }
+    $rv
 }
 
 function Initialize-APIServer {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [Int]$Port,
-        [Parameter(Mandatory = $false)]
-        [Switch]$UseServer
+        [Int]$Port
     )
 
     if ($IsWindows) {
-        if (-not (Test-APIServer -Port $Port)) {
+        if (-not (Test-APIServer -Port $Port -Type "url")) {
             # S-1-5-32-545 is the well known SID for the Users group. Use the SID because the name Users is localized for different languages
             (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($Port)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit(5000)>$null
         }
 
-        if ($UseServer -and -not (Test-APIServer -UseServer)) {
+        if (-not (Test-APIServer -Port $Port -Type "firewall")) {
             (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"$(Get-APIServerName -Port $Port)`" dir=in action=allow protocol=TCP localport=$($Port)").WaitForExit(5000)>$null
         }
     }
@@ -591,19 +670,15 @@ function Reset-APIServer {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [Int]$Port,
-        [Parameter(Mandatory = $false)]
-        [Switch]$RemoveServer,
-        [Parameter(Mandatory = $false)]
-        [Switch]$RemoveUrlAcl
+        [Int]$Port
     )
 
     if ($IsWindows) {
-        if ($RemoveUrlAcl -and (Test-APIServer -Port $Port)) {
+        if (Test-APIServer -Port $Port -Type "url") {
             (Start-Process netsh -Verb runas -PassThru -ArgumentList "http delete urlacl url=http://+:$($Port)/").WaitForExit(5000)>$null
         }
 
-        if ($RemoveServer -and (Test-APIServer -UseServer))  {
+        if (Test-APIServer -Port $Port -Type "firewall")  {
             (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"$(Get-APIServerName -Port $Port)`"").WaitForExit(5000)>$null
         }
     }

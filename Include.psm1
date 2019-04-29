@@ -208,7 +208,7 @@ function Get-CoinSymbol {
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-GetUrl "http://rbminer.net/api/data/coins.json"
+            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -246,16 +246,15 @@ function Update-Rates {
 
     $Session.Rates["BTC"] = $NewRates["BTC"] = [Double]1
 
-    if (-not (Test-Path Variable:Global:GlobalGetTicker)) {$Global:GlobalGetTicker = @()}
     Compare-Object $Symbols @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
-        elseif ($Global:GlobalGetTicker -inotcontains $_.InputObject) {$Global:GlobalGetTicker += $_.InputObject.ToUpper()}
+        elseif ($Session.GlobalGetTicker -inotcontains $_.InputObject) {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
     }
     Remove-Variable "NewRates" -Force
 
-    if ($Global:GlobalGetTicker.Count -gt 0) {
+    if ($Session.GlobalGetTicker.Count -gt 0) {
         try {
-            $SymbolStr = (@($Global:GlobalGetTicker | Sort-Object) -join ',').ToUpper()
+            $SymbolStr = (@($Session.GlobalGetTicker | Sort-Object) -join ',').ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
@@ -4509,7 +4508,7 @@ Param(
 )
 
     if ($JobKey -and $JobData) {
-        #Write-Log -Level Info "Try to get $($JobData.url) from $($Session.Config.ServerName):$($Session.Config.ServerPort)"
+        Write-Log -Level Info "Try to get $($JobData.url) from $($Session.Config.ServerName):$($Session.Config.ServerPort)"
         if ($Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
             $serverbody = @{
                 url       = $JobData.url
@@ -4523,9 +4522,10 @@ Param(
                 user      = $JobData.user
                 password  = $JobData.password
                 jobkey    = $JobKey
+                rigname   = $Session.Computername
+                myip      = $Session.MyIP
             }
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/geturl" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword
-            #Write-Log -Level Info "That is what we got: $($Result | ConvertTo-Json -Depth 10)"
             if ($Result.Status) {$Result.Content;return}
         }
 

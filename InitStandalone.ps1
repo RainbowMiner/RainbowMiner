@@ -44,7 +44,6 @@ if (-not (Test-IsElevated)) {
     Write-Host " "
 }
 
-Reset-APIServer -Port $Config.APIport -RemoveServer
 Initialize-APIServer -Port $Config.APIport
 
 $Config | ConvertTo-Json | Out-File ".\Config\config.txt" -Encoding utf8 

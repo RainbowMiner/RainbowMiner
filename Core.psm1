@@ -21,6 +21,7 @@
     }
     [hashtable]$Session.MinerInfo = @{}
 
+    $Session.GlobalGetTicker = @()
     $Session.RoundCounter = 0
 
     $Session.SkipSwitchingPrevention = $false

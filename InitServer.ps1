@@ -78,7 +78,7 @@ if (-not (Test-IsElevated)) {
     Write-Host " "
 }
 
-Initialize-APIServer -Port $Config.APIport -UseServer
+Initialize-APIServer -Port $Config.APIport
 
 $Config | ConvertTo-Json | Out-File ".\Config\config.txt" -Encoding utf8 
 
