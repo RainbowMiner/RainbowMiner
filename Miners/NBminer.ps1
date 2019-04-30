@@ -68,7 +68,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 				if ($SecondAlgorithm -ne '') {
 					$SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
 				}
-				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and ($_.NH -or ($Pools.$MainAlgorithm_Norm.Name -ne "Nicehash" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Name -ne "Nicehash")))) {
+				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and 
+                        ($MainAlgorithm -ne "Ethash" -or $Pools.$MainAlgorithm_Norm.Name -ne "MiningRigRentals") -and 
+                        ($SecondAlgorithm -ne "Ethash" -or $Pools.$SecondAlgorithm_Norm.Name -ne "MiningRigRentals") -and 
+                        ($_.NH -or ($Pools.$MainAlgorithm_Norm.Name -ne "Nicehash" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Name -ne "Nicehash")))
+                    ) {
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
@@ -76,7 +80,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 					$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
                     $Stratum = $Pools.$MainAlgorithm_Norm.Protocol
-                    if ($MainAlgorithm_Norm -eq "Ethash") {$Stratum = $Stratum -replace "stratum","$(if ($Pools.$MainAlgorithm_Norm.Name -in @("MiningRigRentals","Nicehash")) {"ethnh"} else {"ethproxy"})"}
+                    if ($MainAlgorithm_Norm -eq "Ethash") {$Stratum = $Stratum -replace "stratum","$(if ($Pools.$MainAlgorithm_Norm.Name -eq "Nicehash") {"ethnh"} else {"ethproxy"})"}
 
 					if ($SecondAlgorithm -eq '') {
 						$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
