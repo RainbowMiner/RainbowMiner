@@ -283,7 +283,8 @@ function Start-Setup {
                         }
 
                         "nicehashapiid" {
-                            if ($Config.PoolName -icontains "NiceHash") {
+                            $PoolNames = if ($Config.PoolName -isnot [array]) {if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}} else {$Config.PoolName}
+                            if ($PoolNames -icontains "NiceHash") {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
                                     Write-Host "You will mine on Nicehash. If you want to see your balance in RainbowMiner, you can now enter your API ID (a number) and the read-only API Key. You find these two values on Nicehash's `"Settings`" page. " -ForegroundColor Cyan
@@ -296,7 +297,8 @@ function Start-Setup {
                         }
 
                         "nicehashapikey" {
-                            if ($Config.PoolName -icontains "NiceHash") {
+                            $PoolNames = if ($Config.PoolName -isnot [array]) {if ($Config.PoolName -ne ''){[regex]::split($Config.PoolName.Trim(),"\s*[,;:]+\s*")}else{@()}} else {$Config.PoolName}
+                            if ($PoolNames -icontains "NiceHash") {
                                 $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if (@("cancel","exit","back","<") -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
