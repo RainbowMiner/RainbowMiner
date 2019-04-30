@@ -180,10 +180,6 @@
             } else {
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
-                "/reqx" {
-                    $data = $Request | ConvertTo-Json -Depth 10
-                    break
-                }
                 "/version" {
                     $Data = $API.Version
                     break
@@ -599,7 +595,7 @@
 }
 
 Function Stop-APIServer {
-    try {Invoke-GetUrl "http://localhost:$($API.APIport)/$($API.RandTag)" -user $API.APIUser -password $API.APIpassword -method Web -timeout 5 > $null} catch {Write-Host "Listener ended"}
+    try {Invoke-GetUrl "http://localhost:$($API.APIport)/$($API.RandTag)" -user $API.APIUser -password $API.APIpassword -method Web -timeout 5 > $null} catch {$API.Stop = $true}
     if ($Global:API.Server) {$Global:API.Server.dispose()}
     $Global:API.Server = $null
     $Global:API.Handle = $null
