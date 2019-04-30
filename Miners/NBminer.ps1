@@ -76,7 +76,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 					$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
                     $Stratum = $Pools.$MainAlgorithm_Norm.Protocol
-                    if ($MainAlgorithm_Norm -eq "Ethash") {$Stratum = $Stratum -replace "stratum","$(if ($Pools.$MainAlgorithm_Norm.Name -eq "Nicehash") {"ethnh"} else {"ethproxy"})"}
+                    if ($MainAlgorithm_Norm -eq "Ethash") {$Stratum = $Stratum -replace "stratum","$(if ($Pools.$MainAlgorithm_Norm.Name -in @("MiningRigRentals","Nicehash")) {"ethnh"} else {"ethproxy"})"}
 
 					if ($SecondAlgorithm -eq '') {
 						$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
