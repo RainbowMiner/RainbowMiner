@@ -13,6 +13,7 @@
     $API.APIport     = $Session.Config.APIport
     $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
+    $API.IsServer    = $Session.Config.RunMode -eq "Server"
 
     Set-APICredentials
 
@@ -483,34 +484,36 @@
                     Break
                 }
                 "/getjob" {
-                    $Status = $false
-                    $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
-                    try {
-                        $pbody = @{}
-                        if ($Parameters.body) {
-                            $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
-                            if ($pbody_in) {
-                                $pbody_in.PSObject.Properties | Foreach-Object {$pbody[$_.Name] = $_.Value}
-                            }
-                        }
-                        if ($Parameters.jobkey -eq "rates") {
-                            try {
-                                $RatesUri = [System.Uri]$Parameters.url
-                                $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                                $NewSyms = Compare-Object $Session.GlobalGetTicker @($RatesQry["fsyms"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$_.InputObject}
-                                if ($NewSyms) {
-                                    $Session.GlobalGetTicker = $Session.GlobalGetTicker + @($NewSyms) | Select-Object -Unique | Sort-Object
+                    if ($API.IsServer) {
+                        $Status = $false
+                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                        try {
+                            $pbody = @{}
+                            if ($Parameters.body) {
+                                $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
+                                if ($pbody_in) {
+                                    $pbody_in.PSObject.Properties | Foreach-Object {$pbody[$_.Name] = $_.Value}
                                 }
-                                $Parameters.url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$(($Session.GlobalGetTicker -join ',').ToUpper())&tsyms=BTC&extraParams=https://rbminer.net"
-                                Remove-Variable "RatesUri"
-                                Remove-Variable "RatesQry"
-                                Remove-Variable "NewSyms"
-                            } catch {}
-                        }
-                        $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $body -jobkey $Parameters.jobkey
-                        if ($Result) {$Status = $true}
-                    } catch {}
-                    $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                            }
+                            if ($Parameters.jobkey -eq "rates") {
+                                try {
+                                    $RatesUri = [System.Uri]$Parameters.url
+                                    $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
+                                    $NewSyms = Compare-Object $Session.GlobalGetTicker @($RatesQry["fsyms"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$_.InputObject}
+                                    if ($NewSyms) {
+                                        $Session.GlobalGetTicker = $Session.GlobalGetTicker + @($NewSyms) | Select-Object -Unique | Sort-Object
+                                    }
+                                    $Parameters.url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$(($Session.GlobalGetTicker -join ',').ToUpper())&tsyms=BTC&extraParams=https://rbminer.net"
+                                    Remove-Variable "RatesUri"
+                                    Remove-Variable "RatesQry"
+                                    Remove-Variable "NewSyms"
+                                } catch {}
+                            }
+                            $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $body -jobkey $Parameters.jobkey
+                            if ($Result) {$Status = $true}
+                        } catch {}
+                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                    }
                     break
                 }
                 default {
