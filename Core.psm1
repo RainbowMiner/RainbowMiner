@@ -444,6 +444,20 @@ function Invoke-Core {
         }
     }
 
+    #Check for gpugroups config
+    if (Set-ConfigDefault "GpuGroups") {
+        if ($CheckConfig -or -not $Session.Config.GpuGroups -or (Test-Config "GpuGroups" -LastWriteTime) -or ($ConfigBackup.GpuGroups -and (Compare-Object $Session.Config.GpuGroups $ConfigBackup.GpuGroups | Measure-Object).Count)) {
+            $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
+            if (Test-Config "GpuGroups" -Health) {
+                $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
+                $AllGpuGroups.PSObject.Properties.Name | Foreach-Object {
+                    $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
+                }
+            }
+            if ($AllGpuGroups) {Remove-Variable "AllGpuGroups" -Force}
+        }
+    }
+
     #Check for pool config
     $CheckPools = $false
     if (Set-ConfigDefault "Pools") {
