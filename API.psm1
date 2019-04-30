@@ -78,10 +78,12 @@
         While ($Server.IsListening -and -not $API.Stop) {
             $task = $Server.GetContextAsync();
             $Context = $null
-            while(-not $Context){
-                if( $task.Wait(500) ){$Context = $task.Result}
-                 Start-Sleep -Milliseconds 100
+            while(-not $Context -and -not $API.Stop){
+                if($task.Wait(500)){$Context = $task.Result}
+                if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
+
+            if ($API.Stop) {Break}
 
             $Request         = $Context.Request
 		    $InputStream     = $Request.InputStream
