@@ -36,8 +36,9 @@ function formatHashRateValue(value) {
   if (value == 0) return '0 H/s';
   if (isNaN(value)) return '-';
   var i = Math.floor(Math.log(value) / Math.log(1000));
+  if (i<0) {i=0;} else if (i>4) {i=4;}
   return parseFloat((value / Math.pow(1000, i)).toFixed(2)) + ' ' + sizes[i];
-};
+}
 
 function formatHashRate(value) {
   if (Array.isArray(value)) {
