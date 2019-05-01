@@ -4512,8 +4512,9 @@ Param(
         [switch]$ForceLocal
 )
     if ($JobKey -and $JobData) {
-        Write-Log -Level Info "Try to get $($JobData.url) from $($Session.Config.ServerName):$($Session.Config.ServerPort)"
         if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+            Write-Log -Level Info "Try to get $($JobData.url) from $($Session.Config.ServerName):$($Session.Config.ServerPort)"
+
             $serverbody = @{
                 url       = $JobData.url
                 method    = $JobData.method
