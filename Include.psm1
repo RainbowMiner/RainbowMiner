@@ -1833,15 +1833,17 @@ function Test-TcpServer {
         [Parameter(Mandatory = $false)]
         [String]$Port = 4000, 
         [Parameter(Mandatory = $false)]
-        [Int]$Timeout = 1 #seconds
+        [Int]$Timeout = 1, #seconds,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ConvertToIP
     )
     if ($Server -eq "localhost") {$Server = "127.0.0.1"}
-    else {
+    elseif ($ConvertToIP) {      
         try {$Server = [ipaddress]$Server}
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             try {
-                $Server = [system.Net.Dns]::GetHostByName($Server).AddressList | select-object -index 0
+                $Server = [system.Net.Dns]::GetHostByName($Server).AddressList | Where-Object {$_.IPAddressToString -match "^\d+\.\d+\.\d+\.\d+$"} | select-object -index 0
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 return $false
