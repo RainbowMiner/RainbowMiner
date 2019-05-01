@@ -25,6 +25,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
+- **CLient/Server networking for multiple rigs, to minimize internet traffic and avoid pool bans**
 - **Build-in automatic update**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
@@ -109,7 +110,7 @@ git clone https://github.com/rainbowminer/RainbowMiner
 2. Finally, change the attributes of start.sh
 ```
 cd Rainbowminer
-chmod 755 start.sh
+chmod +x *.sh
 ```
 
 3. Start it
@@ -183,6 +184,51 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 - Active Miners: lists the best possible miners for each algorithm
 - Benchmarks: monitor and reset benchmarks of failed and updated miners, reset all benchmarks
 
+## CLIENT/SERVER NETWORKING
+
+Choose on PC to be the Server (it may be a dusty old notebook). No need to let it mine, just let RainbowMiner start in paused mode. Select all other Rigs to act as Clients. All pool API communication will then be managed by the server: no more being blocked by the pools due to excessive use of their API
+
+There is a Network setup build-in the configuration (press [C], then enter [N]) to help with the setup.
+
+If you want it quicker, just run one of the following init scripts for very convenient pre-setup:
+`InitServer.bat / initserver.sh` : make this rig a server
+`InitClient.bat / initclient.sh` : make this rig a client
+`InitStandalone.bat / initstandalone.sh` : make this rig a standalone machine
+
+Of course, you may also edit the `Config\config.txt` directly.
+
+If you change the RunMode of a rig, RainbowMiner needs to be restarted.
+
+### Setup as Server
+
+- one PC takes the role as Server
+- it will act as gateway to the pool APIs for all Clients 
+- enable auth: choose an username and a password.
+- the server will be running on the API port
+
+These are the server-fields to fill in the config.txt (or use the initscripts or the build-in config)
+```
+  "RunMode": "server",
+  "APIport": 4000,
+  "APIauth": "1",
+  "APIuser": "serverusername",
+  "APIpassword": "serverpassword",
+```
+
+### Setup as Client
+- all other Rigs shall be clients
+- if you have enable auth at the server: set the username and password.
+- the RainbowMiner running on the server will tell you the machinename, ip address and port
+- use either the machinename or the ip address of the server as servername
+
+These are the client-fields to fill in the config.txt (or use the initscripts or the build-in config)
+```
+  "RunMode": "client",
+  "ServerName": "machinenameofserver",
+  "ServerPort": 4000,
+  "ServerUser": "serverusername",
+  "ServerPassword": "serverpassword"
+```
 
 ## POOLS
 
@@ -450,7 +496,7 @@ You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
 - **API_ID** = your MiningPoolHub USER ID (found at MPH on page "Edit account")
 - **API_Key** = your MiningPoolHub API KEY (found at MPH on page "Edit account")
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
-- **LocalAPIport** = enter a free web-interface port localhost:<port> [default=4000]
+- **APIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
 - **EnableAutoAlgorithmAdd** = set to 1 if Rainbowminer should add all newly added algorithms to your config.txt, during (automatic) update
 - **EnableMinerStatus** = set to 1 to enable central monitoring
@@ -536,8 +582,20 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
   - "standalone": this mining rig will handle everything on it's own
   - "server": this mining rig will act as server in a multiple rig setup
   - "client": this mining rig will not create network traffic but pull the data from the server rig
-- **ServerName** = if RunMode is set to "client", enter the server's name
-- **ServerPort** = if setup as server, this will be the listening port, if in client mode, enter the server's port.
+  
+For Client (Runmode=client) setup:
+- **ServerName** = enter the server's machinename or ip
+- **ServerPort** = enter the server's ports
+- **ServerUser** = enter the server's username (if auth)
+- **ServerPassword** = enter the server's password
+
+For Server (Runmode=server) setup:
+- **APIport** = enter a free web-interface port localhost:<port> [default=4000]
+- **APIauth** = set to "1" for username/password auth on localhost [default=0]
+- **APIuser** = enter an username for localhost accessability
+- **APIpassword** = enter a password for localhost accessability
+
+
 
 #### Set electricity cost handling ####
 
