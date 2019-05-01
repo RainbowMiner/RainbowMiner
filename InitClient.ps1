@@ -47,7 +47,7 @@ do {
     Write-Host " "
 
     $Config.RunMode    = "Client"
-    $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address " -Default $Config.ServerName -Characters "A-Z0-9\-_\."
+    $Config.ServerName = Read-HostString -Prompt "Enter the server's name or IP-address " -Default $Config.ServerName -Characters "A-Z0-9\-_\."
     $Config.ServerPort = Read-HostInt -Prompt "Enter the server's API port " -Default $Config.ServerPort -Min 0 -Max 9999
     $Config.ServerUser = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the username " -Default $Config.ServerUser -Characters "A-Z0-9"
     $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password " -Default $Config.ServerPassword -Characters ""
