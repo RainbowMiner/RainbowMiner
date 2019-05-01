@@ -650,13 +650,13 @@ function Send-APIServerUdp {
         [Parameter(Mandatory = $false)]
         [String]$IPaddress = ""
     )
-
-    $Buffer = "RBM:$($MachineName):$(if ($IPaddress) {$IPaddress} else {Get-MyIP}):$($Port)"
+    
     try {
-        $UpdClient   = new-Object system.Net.Sockets.Udpclient 
+        $UdpClient   = new-Object system.Net.Sockets.Udpclient 
         if ($UdpClient) {
-            $ByteBuffer = [System.Text.Encoding]::ASCII.GetBytes($Buffer)
-            $Client.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $remoteudpport)
+            $Buffer = "RBM:$($MachineName):$(if ($IPaddress) {$IPaddress} else {Get-MyIP}):$($Port)"
+            $byteBuffer = [System.Text.Encoding]::ASCII.GetBytes($Buffer)
+            $Client.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $Port)
         }
         $true
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
