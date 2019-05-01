@@ -76,10 +76,16 @@
         }
         $Server.Start()
 
+        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+
         While ($Server.IsListening -and -not $API.Stop) {
             $task = $Server.GetContextAsync();
             $Context = $null
             while(-not $Context -and -not $API.Stop){
+                if ($API.IsServer -and (-not $StopWatch.IsRunning -or $StopWatch.ElapsedMilliseconds -gt 1000)) {
+                    Send-APIServerUdp -Port $API.APIport -MachineName $Session.MachineName -IPaddress $Session.MyIP > $null
+                    $StopWatch.Restart()
+                }
                 if($task.Wait(500)){$Context = $task.Result}
                 if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
@@ -627,9 +633,33 @@ function Get-APIServerName {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [Int]$Port
+        [Int]$Port,
+        [Parameter(Mandatory = $false)]
+        [String]$Protocol = "TCP"
     )
-    "RainbowMiner API $($Port)"
+    "RainbowMiner API $($Port)$(if ($Protocol -ne "TCP") {" $Protocol"})"
+}
+
+function Send-APIServerUdp {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [Int]$Port,
+        [Parameter(Mandatory = $false)]
+        [String]$MachineName = [System.Environment]::MachineName,
+        [Parameter(Mandatory = $false)]
+        [String]$IPaddress = ""
+    )
+
+    $Buffer = "RBM:$($MachineName):$(if ($IPaddress) {$IPaddress} else {Get-MyIP}):$($Port)"
+    try {
+        $UpdClient   = new-Object system.Net.Sockets.Udpclient 
+        if ($UdpClient) {
+            $ByteBuffer = [System.Text.Encoding]::ASCII.GetBytes($Buffer)
+            $Client.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $remoteudpport)
+        }
+        $true
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 }
 
 function Test-APIServer {
@@ -642,8 +672,13 @@ function Test-APIServer {
     )
     $rv = $true
     if ($IsWindows) {
-        if ($rv -and ($Type -eq "firewall" -or $Type -eq "all")) {
-            $FWLname = Get-APIServerName -Port $Port
+        if ($rv -and ($Type -eq "firewall" -or $Type -eq "firewall-tcp" -or $Type -eq "all")) {
+            $FWLname = Get-APIServerName -Port $Port -Protocol "TCP"
+            $fwlACLs = & netsh advfirewall firewall show rule name="$($FWLname)" | Out-String
+            if (-not $fwlACLs.Contains($FWLname)) {$rv = $false}
+        }
+        if ($rv -and ($Type -eq "firewall" -or $Type -eq "firewall-udp" -or $Type -eq "all")) {
+            $FWLname = Get-APIServerName -Port $Port -Protocol "UDP"
             $fwlACLs = & netsh advfirewall firewall show rule name="$($FWLname)" | Out-String
             if (-not $fwlACLs.Contains($FWLname)) {$rv = $false}
         }
@@ -668,8 +703,12 @@ function Initialize-APIServer {
             (Start-Process netsh -Verb runas -PassThru -ArgumentList "http add urlacl url=http://+:$($Port)/ sddl=D:(A;;GX;;;S-1-5-32-545) user=everyone").WaitForExit(5000)>$null
         }
 
-        if (-not (Test-APIServer -Port $Port -Type "firewall")) {
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"$(Get-APIServerName -Port $Port)`" dir=in action=allow protocol=TCP localport=$($Port)").WaitForExit(5000)>$null
+        if (-not (Test-APIServer -Port $Port -Type "firewall-tcp")) {
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"$(Get-APIServerName -Port $Port -Protocol "TCP")`" dir=in action=allow protocol=TCP localport=$($Port)").WaitForExit(5000)>$null
+        }
+
+        if (-not (Test-APIServer -Port $Port -Type "firewall-udp")) {
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall add rule name=`"$(Get-APIServerName -Port $Port -Protocol "UDP")`" dir=in action=allow protocol=UDP localport=$($Port)").WaitForExit(5000)>$null
         }
     }
 }
@@ -687,7 +726,8 @@ function Reset-APIServer {
         }
 
         if (Test-APIServer -Port $Port -Type "firewall")  {
-            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"$(Get-APIServerName -Port $Port)`"").WaitForExit(5000)>$null
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"$(Get-APIServerName -Port $Port -Protocol "TCP")`"").WaitForExit(5000)>$null
+            (Start-Process netsh -Verb runas -PassThru -ArgumentList "advfirewall firewall delete rule name=`"$(Get-APIServerName -Port $Port -Protocol "UDP")`"").WaitForExit(5000)>$null
         }
     }
 }
