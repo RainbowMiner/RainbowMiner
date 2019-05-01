@@ -222,6 +222,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{}) -Force
+                $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.IsInitialSetup = -not $Session.Config.Wallet -or -not $Session.Config.WorkerName
