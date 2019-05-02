@@ -391,7 +391,7 @@ function Invoke-Core {
             $AllCoins = Get-ConfigContent "Coins" -UpdateLastWriteTime
             if (Test-Config "Coins" -Health) {
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
-                $AllCoins.PSObject.Properties.Name | Foreach-Object {
+                $AllCoins.PSObject.Properties.Name | Select-Object | Foreach-Object {
                     $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
                     $Session.Config.Coins.$_ | Add-Member Penalty ([int]$Session.Config.Coins.$_.Penalty) -Force
                     $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
@@ -451,10 +451,8 @@ function Invoke-Core {
             $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
             if (Test-Config "GpuGroups" -Health) {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
-                if ($AllGpuGroups.PSObject.Properties.Name) {
-                    $AllGpuGroups.PSObject.Properties.Name | Foreach-Object {
-                        $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
-                    }
+                $AllGpuGroups.PSObject.Properties.Name | Select-Object | Foreach-Object {
+                    $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
                 }
             }
             if ($AllGpuGroups) {Remove-Variable "AllGpuGroups" -Force}
