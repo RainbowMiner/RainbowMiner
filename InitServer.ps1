@@ -71,7 +71,7 @@ do {
     Write-Host "- IP-Address: $(Get-MyIP)" -Foreground Green
     Write-Host "- Serverport: $($Config.APIport)" -Foreground Green
     Write-Host " "
-} until (Read-HostBool "Safe the data and initialize Server? (press Ctrl-C to exit)")
+} until (Read-HostBool "Save the data and initialize Server? (press Ctrl-C to exit)" -Default $true)
 
 $Config | Add-Member RunMode "Server" -Force
 
