@@ -451,8 +451,10 @@ function Invoke-Core {
             $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
             if (Test-Config "GpuGroups" -Health) {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
-                $AllGpuGroups.PSObject.Properties.Name | Foreach-Object {
-                    $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
+                if ($AllGpuGroups.PSObject.Properties.Name) {
+                    $AllGpuGroups.PSObject.Properties.Name | Foreach-Object {
+                        $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
+                    }
                 }
             }
             if ($AllGpuGroups) {Remove-Variable "AllGpuGroups" -Force}
@@ -1798,7 +1800,7 @@ function Invoke-Core {
             Write-Host "[Server-Mode] Server has not been started. Run RainbowMiner with admin privileges." -ForegroundColor Red
         }
         Write-Host " "
-        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.Computername) IP=$($Session.MyIP) Port=$($Session.Config.APIport)"} else {"not started!"})"
+        Write-Log -Level Info "Server-Mode: $(if ($API.RemoteAPI) {"Name=$($Session.MachineName) IP=$($Session.MyIP) Port=$($Session.Config.APIport)"} else {"not started!"})"
     }
 
     #Check for updated RainbowMiner

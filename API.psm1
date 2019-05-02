@@ -83,7 +83,7 @@
             $Context = $null
             while(-not $Context -and -not $API.Stop){
                 if ($API.IsServer -and (-not $StopWatch.IsRunning -or $StopWatch.ElapsedMilliseconds -gt 1000)) {
-                    Send-APIServerUdp -Port $API.APIport -MachineName $Session.MachineName -IPaddress $Session.MyIP > $null
+                    #Send-APIServerUdp -Port $API.APIport -MachineName $Session.MachineName -IPaddress $Session.MyIP > $null
                     $StopWatch.Restart()
                 }
                 if($task.Wait(500)){$Context = $task.Result}
@@ -656,7 +656,7 @@ function Send-APIServerUdp {
         if ($UdpClient) {
             $Buffer = "RBM:$($MachineName):$(if ($IPaddress) {$IPaddress} else {Get-MyIP}):$($Port)"
             $byteBuffer = [System.Text.Encoding]::ASCII.GetBytes($Buffer)
-            $Client.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $Port)
+            $UdpClient.Send($byteBuffer, $byteBuffer.length, [system.net.IPAddress]::Broadcast, $Port)
         }
         $true
     } catch {if ($Error.Count){$Error.RemoveAt(0)}}
