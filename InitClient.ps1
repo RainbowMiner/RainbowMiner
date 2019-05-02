@@ -70,7 +70,7 @@ do {
         Write-Host "Server not found!" -ForegroundColor Red
     }    
     Write-Host " "
-} until (Read-HostBool "Safe the data and initialize Client? (press Ctrl-C to exit)")
+} until (Read-HostBool "Save the data and initialize Client? (press Ctrl-C to exit)" -Default $true)
 
 Write-Host " "
 Write-Host "Initializing Client"
