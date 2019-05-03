@@ -401,6 +401,13 @@ try {
         $OverridePoolPenalties = $true
     }
 
+    if ($Version -le (Get-Version "4.2.0.6")) {
+        if (Test-Path ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt") {
+            Remove-Item ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt" -Force -ErrorAction Ignore
+            $ChangesTotal++
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
