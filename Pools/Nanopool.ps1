@@ -40,6 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Currency = $_.symbol
     $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
+    $Pool_Wallet = "$($Wallets.$Pool_Currency)$(if ($_.usepid -and $Wallets.$Pool_Currency -notmatch "^.+?\.[^\.]+$") {".0"})"
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -86,7 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = $_.protocol
                 Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
                 Port          = $_.port
-                User          = "$($Wallets.$Pool_Currency)$(if ($_.usepid -and $Wallets.$Pool_Currency -notmatch "^.+?\.[^\.]+$") {".0"})/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
+                User          = "$($Pool_Wallet)/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                 Pass          = "x"
                 Region        = $Pool_Region
                 SSL           = $_.ssl
