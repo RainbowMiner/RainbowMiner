@@ -1757,7 +1757,7 @@ function Test-TcpServer {
 
 function Get-MyIP {
     if ($IsWindows) {
-        Invoke-Exe "ipconfig" -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' } >$null
+        & ipconfig | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' } >$null
         $Matches[1]
     } elseif ($IsLinux) {
         try {ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}'} catch {if ($Error.Count){$Error.RemoveAt(0)};try {hostname -I} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
