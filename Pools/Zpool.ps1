@@ -79,6 +79,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -ErrorRatio 0.000 -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
     }
 
+    #Quickfix 05/03/2019
+    if ($Pool_Algorithm_Norm -eq "Equihash16x5") {
+        $Pool_Algorithm_All = @()
+    }
+
     foreach($Pool_Region in $Pool_Regions) {
         foreach($Pool_Currency in $Pool_Currencies) {
             $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
