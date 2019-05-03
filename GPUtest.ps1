@@ -70,6 +70,13 @@ if ($IsWindows) {
    $Arguments = @('-console-only','-getcurrent')
    Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
 
+    "7. OdVII" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+   
+   $Arguments = @('s')
+   Invoke-Exe ".\Includes\odvii.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+
 }
 
 if ($IsLinux) {

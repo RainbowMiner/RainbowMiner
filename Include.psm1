@@ -1813,8 +1813,10 @@ function Get-Device {
     $GPUDeviceNames = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
 
+    $AllPlatforms = @()
     $Platform_Devices = try {
-        [OpenCl.Platform]::GetPlatformIDs() | ForEach-Object {
+        [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
+            $AllPlatforms +=  "$($_.Name) $($_.Version)"
             $Device_Index = 0
             [PSCustomObject]@{
                 PlatformId=$PlatformId
@@ -1877,6 +1879,8 @@ function Get-Device {
                     if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
                         if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
                         elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
+                    } elseif ($Device_Name -eq "gfx906") {
+                        $Device_Name = "Radeon VII"
                     }
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
