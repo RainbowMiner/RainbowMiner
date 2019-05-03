@@ -62,6 +62,14 @@ if ($IsWindows) {
         [OpenCl.Device]::GetDeviceIDs($_, [OpenCl.DeviceType]::All) | Out-File $TestFileName -Encoding utf8 -Append
         "."*80 | Out-File $TestFileName -Append
     }
+
+    "6. OverdriveNTool" | Out-File $TestFileName -Append
+    "-"*80 | Out-File $TestFileName -Append
+    " " | Out-File $TestFileName -Append
+   
+   $Arguments = @('-console-only','-getcurrent')
+   Invoke-Exe ".\Includes\overdriventool.exe" -ArgumentList ($Arguments -join ' ') -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines  | Out-File $TestFileName -Encoding utf8 -Append
+
 }
 
 if ($IsLinux) {
