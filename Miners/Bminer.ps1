@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-BMiner\bminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.1-bminer/bminer-v15.5.1-4583b73-amd64.tar.xz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.2-bminer/bminer-v15.5.2-ed2038c-amd64.tar.xz"
 } else {
     $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.1-bminer/bminer-lite-v15.5.1-4583b73-amd64.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.5.2-bminer/bminer-lite-v15.5.2-ed2038c-amd64.zip"
 }
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
