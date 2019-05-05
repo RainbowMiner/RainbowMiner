@@ -22,14 +22,14 @@ $count = 0
     $Miners_Key  = "$($Miner_Name)-$($Algo)"
     if ($JsonUri_Dates[$_.BaseName] -ne $null -and -not $Miners_List.ContainsKey($Miners_Key)) {
         $Miners_List[$Miners_Key] = $true                            
-        $Miners_Path = Get-ChildItem ".\Stats\Miners\*$($Miner_Name)_$($Algo)_HashRate.txt" | Where-Object -FilterScript {$_.Name -match "^(AMD|CPU|NVIDIA)-$($Miner_Name)_$($Algo)_HashRate.txt$"}
+        $Miners_Path = Get-ChildItem ".\Stats\Miners\*-$($Miner_Name)_$($Algo)_HashRate.txt" | Where-Object -FilterScript {$_.Name -match "^(AMD|CPU|NVIDIA)-$($Miner_Name)_$($Algo)_HashRate.txt$"}
 
         if ($Miners_Path -and $Miners_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]) {
-            Get-ChildItem ".\Stats\Miners\*$($Miner_Name -replace '-','*')*_$($Algo)_HashRate.txt" | Remove-Item -ErrorAction Ignore
+            Get-ChildItem ".\Stats\Miners\*-$($Miner_Name -replace '-','*')*_$($Algo)_HashRate.txt" | Remove-Item -ErrorAction Ignore
             $text += "$($Miner_Name -replace '-GPU.+$')/$($_.DeviceModel)/$($Algo)`n"
             $count++
             if ($SecondAlgo -ne '') {
-                Get-ChildItem ".\Stats\Miners\*$($Miner_Name -replace '-','*')*_$($SecondAlgo)_HashRate.txt" | Remove-Item -ErrorAction Ignore
+                Get-ChildItem ".\Stats\Miners\*-$($Miner_Name -replace '-','*')*_$($SecondAlgo)_HashRate.txt" | Remove-Item -ErrorAction Ignore
             }
         }
     }

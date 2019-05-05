@@ -954,7 +954,7 @@ function Invoke-Core {
                     Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.HashRates.PSObject.Properties.Value -notcontains $null -and $_.DeviceModel -match '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($_.DeviceModel -split '-') -icontains $Miner.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Foreach-Object {
                         $Name = $_.Name
-                        $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
+                        $ComboAlgos | Foreach-Object {Get-ChildItem ".\Stats\Miners\*-$($Name)_$($_)_HashRate.txt" | Remove-Item -ErrorAction Ignore}
                     }
             }
             $AllMiners = $AllMiners | Where-Object {$_.DeviceModel -notmatch '-'}
@@ -1168,8 +1168,8 @@ function Invoke-Core {
         $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
 
         if ($Session.Config.EnableAutoBenchmark -and $Miner.DeviceModel -notmatch '-' -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Session.Stats.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate") -and $Session.Stats["$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {            
-            Get-ChildItem ".\Stats\Miners\*$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
-            if ($Miner.BaseAlgorithm[1]) {Get-ChildItem ".\Stats\Miners\*$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore}
+            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
+            if ($Miner.BaseAlgorithm[1]) {Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore}
         }
 
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
