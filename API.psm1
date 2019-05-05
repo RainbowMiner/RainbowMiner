@@ -489,6 +489,26 @@
                     $Data = $API.Clients | ConvertTo-Json
                     Break
                 }
+                "/getconfig" {
+                    if ($API.IsServer) {
+                        $Status = $false
+                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                        $Result = [PSCustomObject]@{}
+                        $GetConfig = $Parameters.config -split ','
+                        $Result = [PSCustomObject]@{}
+                        $GetConfig | Foreach-Object {
+                            $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
+                            $GetConfigNew = ($GetConfigA.Count -lt 2) -or ($GetConfigA[1] -lt $Session.ConfigFiles[$GetConfigA[0]].LastWriteTime)
+                            $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
+                                                        isnew = $GetConfigNew
+                                                        data  = if ($GetConfigNew -and (Test-Path $Session.ConfigFiles[$GetConfigA[0]].Path)) {Get-ConfigContent $GetConfigA[0]}
+                                                      }) -Force
+                            $Status = $true
+                        }
+                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                    }
+                    Break
+                }
                 "/getjob" {
                     if ($API.IsServer) {
                         $Status = $false
