@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.5-wildrigmulti/wildrig-multi-linux-0.15.5.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-wildrig/wildrig-multi-linux-0.16.0-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.5-wildrigmulti/wildrig-multi-windows-0.15.5.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-wildrig/wildrig-multi-windows-0.16.0-beta.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -24,17 +24,19 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aergo";      Params = ""} #Aergo
     [PSCustomObject]@{MainAlgorithm = "bcd";        Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";    Params = ""} #BitCore
+    [PSCustomObject]@{MainAlgorithm = "blake2b";    Params = ""} #Blake2b
     [PSCustomObject]@{MainAlgorithm = "bmw512";     Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";        Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal";      Params = ""} #Dedal
+    [PSCustomObject]@{MainAlgorithm = "exosis";     Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = ""} #Geek
     [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = ""} #Hex
-    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = ""} #HMQ1725
+    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
