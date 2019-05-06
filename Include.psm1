@@ -1614,7 +1614,9 @@ function Expand-WebRequest {
         [Parameter(Mandatory = $false)]
         [String[]]$ProtectedFiles = @(),
         [Parameter(Mandatory = $false)]
-        [String]$Sha256 = ""
+        [String]$Sha256 = "",
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "-qb"
     )
 
     # Set current path used by .net methods to the same as the script's path
@@ -1634,7 +1636,7 @@ function Expand-WebRequest {
     if ($Sha256 -and (Test-Path $FileName)) {if ($Sha256 -ne (Get-FileHash $FileName -Algorithm SHA256).Hash) {Remove-Item $FileName; throw "Downloadfile $FileName has wrong hash! Please open an issue at github.com."}}
 
     if (".msi", ".exe" -contains ([IO.FileInfo](Split-Path $Uri -Leaf)).Extension) {
-        (Start-Process $FileName "-qb" -PassThru).WaitForExit()>$null
+        (Start-Process $FileName $ArgumentList -PassThru).WaitForExit()>$null
     }
     else {
         $Path_Old = (Join-Path (Split-Path $Path) ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName)
