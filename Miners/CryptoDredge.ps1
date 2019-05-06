@@ -15,15 +15,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_10.0_linux.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_9.1_linux.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -31,15 +31,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_10.0_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_10.0_windows.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_9.2_windows.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.18.0-cryptodredge/CryptoDredge_0.18.0_cuda_9.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-cryptodredge/CryptoDredge_0.19.0_cuda_9.1_windows.zip"
             Cuda = "9.1"
         }
     )
@@ -51,34 +51,36 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
     [PSCustomObject]@{MainAlgorithm = "aeternity"; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
     [PSCustomObject]@{MainAlgorithm = "allium";    MinMemGb = 1; Params = ""} #Allium
-    [PSCustomObject]@{MainAlgorithm = "argon2d";   MinMemGb = 1; Params = ""} #Argon2d-Dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn";  MinMemGb = 1; Params = ""} #Argon2d-Dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2d250";   MinMemGb = 1; Params = ""} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096";  MinMemGb = 1; Params = ""} #Argon2d4096
     [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";   MinMemGb = 1; Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11
-    [PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast
+    #[PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11, disabled v0.19.0
+    #[PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "cnfast2";   MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
     [PSCustomObject]@{MainAlgorithm = "cngpu";     MinMemGb = 4; Params = ""} #CryptonightGPU
     [PSCustomObject]@{MainAlgorithm = "cnhaven";   MinMemGb = 4; Params = ""} #Cryptonighthaven
     [PSCustomObject]@{MainAlgorithm = "cnheavy";   MinMemGb = 4; Params = ""} #Cryptonightheavy
     [PSCustomObject]@{MainAlgorithm = "cnsaber";   MinMemGb = 4; Params = ""} #Cryptonightheavytube
-    [PSCustomObject]@{MainAlgorithm = "cnsuperfast"; MinMemGb = 2; Params = ""} #CryptonightSuperFast / Swap
+    #[PSCustomObject]@{MainAlgorithm = "cnsuperfast"; MinMemGb = 2; Params = ""} #CryptonightSuperFast, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "cnturtle";  MinMemGb = 4; Params = ""} #Cryptonightturtle
-    [PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7
+    #[PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
-    [PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal
+    #[PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
-    [PSCustomObject]@{MainAlgorithm = "Lyra2vc0banHash";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "lyra2zz";   MinMemGb = 1; Params = ""} #Lyra2zz
     [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
-    [PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI
+    #[PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pipe";      MinMemGb = 1; Params = ""} #Pipe
     [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
-    [PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite
+    #[PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
     [PSCustomObject]@{MainAlgorithm = "veil";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
