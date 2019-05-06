@@ -2819,7 +2819,7 @@ class Miner {
                 if ($Prescription -ne "" -and $Prescription_Device) {
                     Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
                     if ($Global:IsLinux) {
-                        $Command = ".\IncludesLinux\OhGodAnETHlargementPill-r2"
+                        $Command = ".\IncludesLinux\bin\OhGodAnETHlargementPill-r2"
                         if (Test-Path $Command) {& chmod +x $Command > $null}
                     } else {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
@@ -3506,13 +3506,15 @@ function Read-HostString {
         [Parameter(Mandatory = $False)]
         [Int]$MaxLength = 0,
         [Parameter(Mandatory = $False)]
-        [Int]$Length = 0
+        [Int]$Length = 0,
+        [Parameter(Mandatory = $False)]
+        [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
+        if ($Controls -icontains $Result){$Result;return}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}                
         if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",");Write-Host " "}
@@ -3552,12 +3554,14 @@ function Read-HostDouble {
         [Parameter(Mandatory = $False)]
         $Min = $null,
         [Parameter(Mandatory = $False)]
-        $Max = $null
+        $Max = $null,
+        [Parameter(Mandatory = $False)]
+        [Array]$Controls = @("exit","cancel","back","save","done","<")
     )        
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
+        if ($Controls -icontains $Result){$Result;return}
         [Double]$Result = $Result -replace "[^0-9\.,\-]","" -replace ",","."
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
@@ -3579,12 +3583,14 @@ function Read-HostInt {
         [Parameter(Mandatory = $False)]
         $Min = $null,
         [Parameter(Mandatory = $False)]
-        $Max = $null
+        $Max = $null,
+        [Parameter(Mandatory = $False)]
+        [Array]$Controls = @("exit","cancel","back","save","done","<")
     )    
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default -ne $null){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
-        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
+        if ($Controls -icontains $Result){$Result;return}
         [Int]$Result = $Result -replace "[^0-9\-]",""
         if ($Mandatory -or $Result) {            
             if ($Min -ne $null -and $Result -lt $Min) {Write-Host "The input is lower than the minimum of $($Min)";Write-Host " ";$Repeat = $true}
@@ -3608,14 +3614,16 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Array]$Valid = @(),
         [Parameter(Mandatory = $False)]
-        [Switch]$AllowDuplicates = $False
+        [Switch]$AllowDuplicates = $False,
+        [Parameter(Mandatory = $False)]
+        [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
     if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
     if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = @([regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default.Count){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
-        if ("exit","cancel","back","<" -icontains $Result){$Result;return}
+        if ($Controls -icontains $Result){$Result;return}
         if ("del","delete","dele","clr","cls","clear","cl" -icontains $Result){$Result=''}        
         if ("help","list" -icontains $Result) {
             if ($Valid.Count -gt 0) {Write-Host "Valid inputs are from the following list:";Write-Host $($Valid -join ",")}
@@ -3653,11 +3661,13 @@ function Read-HostBool {
         [Parameter(Mandatory = $True)]
         [String]$Prompt,
         [Parameter(Mandatory = $False)]
-        $Default = $false
+        $Default = $false,
+        [Parameter(Mandatory = $False)]
+        [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
     $Default = if (Get-Yes $Default){"yes"}else{"no"}
     $Result = if (([String]$Result=(Read-Host "$($Prompt) (yes/no) [default=$($Default)]").Trim()) -eq ''){$Default}else{$Result.Trim()}
-    if ("exit","cancel","back","<" -icontains $Result){$Result;return}
+    if ($Controls -icontains $Result){$Result;return}
     Get-Yes $Result
 }
 
