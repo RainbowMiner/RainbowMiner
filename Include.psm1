@@ -4166,6 +4166,33 @@ function Set-ConfigDefault {
     }
 }
 
+function Get-ConfigArray {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        $Config
+    )
+    if ($Config -isnot [array]) {if ($Config -ne ''){[regex]::split($Config.Trim(),"\s*[,;:]+\s*")}else{@()}} else {$Config}
+}
+
+function Get-ConfigPath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $True)]
+        [string]$ConfigName,
+        [Parameter(Mandatory = $False)]
+        [string]$WorkerName = ""
+    )
+    if (Test-Config $ConfigName -Exists) {
+        $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+        if ($WorkerName) {
+            $PathToFileM = Join-Path (Join-Path (Split-Path $PathToFile) $WorkerName.ToLower()) (Split-Path -Leaf $PathToFile)
+            if (Test-Path $PathToFileM) {$PathToFile = $PathToFileM}
+        }
+        $PathToFile
+    }
+}
+
 function Get-ConfigContent {
     [CmdletBinding()]
     param(
@@ -4174,25 +4201,80 @@ function Get-ConfigContent {
         [Parameter(Mandatory = $False)]
         [hashtable]$Parameters = @{},
         [Parameter(Mandatory = $False)]
-        [Switch]$UpdateLastWriteTime
+        [string]$WorkerName = "",
+        [Parameter(Mandatory = $False)]
+        [Switch]$UpdateLastWriteTime,
+        [Parameter(Mandatory = $False)]
+        [Switch]$ConserveUnkownParameters
     )
-    if (Test-Config $ConfigName -Exists) {        
+    if ($PathToFile = Get-ConfigPath $ConfigName $WorkerName) {
+        if ($UpdateLastWriteTime) {$WorkerName = ""}
         try {
-            $PathToFile = $Session.ConfigFiles[$ConfigName].Path
             if ($UpdateLastWriteTime) {
                 $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
             }
-            $Result = Get-Content $PathToFile -Raw
+            $Result = Get-Content $PathToFile -Raw -ErrorAction Stop
             if ($Parameters.Count) {
                 $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)",$_.Value}
-                $Result = $Result -replace "\`$[A-Z0-9_]+"
+                if (-not $ConserveUnkownParameters) {
+                    $Result = $Result -replace "\`$[A-Z0-9_]+"
+                }
             }
-            $Result | ConvertFrom-Json
-            $Session.ConfigFiles[$ConfigName].Healthy=$true
+            $Result | ConvertFrom-Json -ErrorAction Stop
+            if (-not $WorkerName) {
+                $Session.ConfigFiles[$ConfigName].Healthy=$true
+            }
         }
-        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log -Level Info "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; $Session.ConfigFiles[$ConfigName].Healthy=$false}
+        catch {if ($Error.Count){$Error.RemoveAt(0)}; Write-Log -Level Warn "Your $(([IO.FileInfo]$PathToFile).Name) seems to be corrupt. Check for correct JSON format or delete it.";Write-Log -Level Info "Your $(([IO.FileInfo]$PathToFile).Name) error: `r`n$($_.Exception.Message)"; if (-not $WorkerName) {$Session.ConfigFiles[$ConfigName].Healthy=$false}}
     }
 }
+
+function Get-SessionServerConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [switch]$Force
+    )
+    if ($Session.Config -and $Session.Config.RunMode -eq "client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerConfig -and ($Session.Config.ServerConfigName | Measure-Object).Count) {
+        Get-ServerConfig -ConfigName $Session.Config.ServerConfigName -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
+    }
+}
+
+function Get-ServerConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [array]$ConfigName = @(),
+        [Parameter(Mandatory = $False)]
+        [string]$Server = "",
+        [Parameter(Mandatory = $False)]
+        [int]$Port = 0,
+        [Parameter(Mandatory = $False)]
+        [string]$Username = "",
+        [Parameter(Mandatory = $False)]
+        [string]$Password = "",
+        [Parameter(Mandatory = $False)]
+        [switch]$Force
+    )
+    $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
+    if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
+        $Params = ($ConfigName | Foreach-Object {$PathToFile = $Session.ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile)) {"0"} else {Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()})"}) -join ','
+        $Result = Invoke-GetUrl "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($Session.Config.WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)" -user $Username -password $Password -ForceLocal -timeout 5
+        if ($Result.Status -and $Result.Content) {
+            $ConfigName | Where-Object {$Result.Content.$_.isnew -and $Result.Content.$_.data} | Foreach-Object {
+                $PathToFile = $Session.ConfigFiles[$_].Path
+                $Data = $Result.Content.$_.data
+                if ($_ -eq "config") {
+                    $Preset = Get-ConfigContent "config"
+                    $Data.PSObject.Properties.Name | Where-Object {$Session.Config.ExcludeServerConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
+                    $Data = $Preset
+                }
+                Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
+            }
+        }
+    }
+}
+
 
 function ConvertFrom-CPUAffinity {
     [CmdletBinding()]
@@ -4948,9 +5030,11 @@ function Get-UnixTimestamp {
 [cmdletbinding()]
 param(
     [Parameter(Mandatory = $False)]
+    [DateTime]$DateTime = [DateTime]::UtcNow,
+    [Parameter(Mandatory = $False)]
     [Switch]$Milliseconds = $false
 )
-    [Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})")
+    [Math]::Floor(($DateTime - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})")
 }
 
 function Get-UnixToUTC {

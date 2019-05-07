@@ -76,11 +76,12 @@
         } else {
             $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
             $ConfigForUpdate_changed = $false
+            if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
+            $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
             Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
                 if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
-                elseif ($_.SideIndicator -eq "<=" -and @("ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
+                elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
             }
-            if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force;$ConfigForUpdate.PSObject.Properties.Remove("LocalAPIport");$ConfigForUpdate_changed=$true}
             if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
         }
         $Session.ConfigFiles["Config"].Healthy = $true
@@ -100,6 +101,11 @@
                 if (-not $psISE -and (Test-Path $Session.ConfigFiles[$_].Path)) {Copy-Item $Session.ConfigFiles[$_].Path -Destination (Join-Path (Join-Path $ConfigFile_Path "Backup") "$($BackupDate)_$($FNtmp)")}
                 Set-ConfigDefault $_ -Force > $null
                 if (Test-Path $Session.ConfigFiles[$_].Path) {$Session.ConfigFiles[$_].Path = $Session.ConfigFiles[$_].Path | Resolve-Path -Relative}
+            }
+
+            if ($MPHLegacyUpdate -and ($PoolsPath = Get-ConfigPath "pools")) {
+                $PoolsData = Get-ConfigContent "pools" -Parameters $MPHLegacyUpdate -ConserveUnkownParameters
+                Set-ContentJson -PathToFile $PoolsPath -Data $PoolsData > $null
             }
         }
 
@@ -204,8 +210,11 @@ function Invoke-Core {
 
     $Session.MyIP = Get-MyIP
 
-    if (Test-Path $Session.ConfigFiles["Config"].Path) {
-        if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime))) {
+    if (-not $Session.IsDonationRun -and (Test-Path $Session.ConfigFiles["Config"].Path)) {
+
+        Get-SessionServerConfig
+
+        if (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime)) {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}

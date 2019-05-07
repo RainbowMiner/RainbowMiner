@@ -195,6 +195,10 @@
                     $Data = ConvertTo-Json $API.Info
                     break
                 }
+                "/isserver" {
+                    $Data = [PSCustomObject]@{Status=$API.IsServer} | ConvertTo-Json
+                    break
+                }
                 "/activeminers" {
                     $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     break
@@ -490,23 +494,23 @@
                     Break
                 }
                 "/getconfig" {
-                    if ($API.IsServer) {
-                        $Status = $false
-                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                    $Status = $false
+                    if ($API.IsServer -and $Session.Version -eq $Parameters.version) {
+                        if ($Parameters.machinename) {$API.Clients[$Parameters.machinename] = Get-UnixTimestamp}
                         $Result = [PSCustomObject]@{}
-                        $GetConfig = $Parameters.config -split ','
-                        $Result = [PSCustomObject]@{}
-                        $GetConfig | Foreach-Object {
+                        $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
-                            $GetConfigNew = ($GetConfigA.Count -lt 2) -or ($GetConfigA[1] -lt $Session.ConfigFiles[$GetConfigA[0]].LastWriteTime)
-                            $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
-                                                        isnew = $GetConfigNew
-                                                        data  = if ($GetConfigNew -and (Test-Path $Session.ConfigFiles[$GetConfigA[0]].Path)) {Get-ConfigContent $GetConfigA[0]}
-                                                      }) -Force
-                            $Status = $true
+                            if ($PathToFile = Get-ConfigPath $GetConfigA[0] $Parameters.workername) {
+                                $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt (Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()))
+                                $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
+                                                            isnew = $GetConfigNew
+                                                            data  = if ($GetConfigNew) {Get-ConfigContent $GetConfigA[0] -WorkerName $Parameters.workername}
+                                                            }) -Force
+                                $Status = $true
+                            }
                         }
-                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
                     }
+                    $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
                     Break
                 }
                 "/getjob" {

@@ -49,4 +49,14 @@
     Delay = 1
     EthPillEnable = "disable"
     MinimumMiningIntervals = 1
+    EnableServerConfig = $false
+    ServerConfigName = @("config","coins","pools","algorithms")
+    ExcludeServerConfigVars = @(
+        "WorkerName","DeviceName","Proxy",
+        "APIPort","APIUser","APIPassword","APIAuth",
+        "MSIApath","NVSMIpath",
+        "CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity",
+        "ServerName","ServerPort","ServerUser","ServerPassword","UseServerConfig","ExcludeServerConfigVars",
+        "RunMode","StartPaused"
+    )
 }
