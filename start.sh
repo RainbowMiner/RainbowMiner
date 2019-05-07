@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 command="& {./RainbowMiner.ps1 -configfile ./Config/config.txt; exit \$lastexitcode}"
 
