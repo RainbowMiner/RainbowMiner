@@ -495,7 +495,7 @@
                 }
                 "/getconfig" {
                     $Status = $false
-                    if ($API.IsServer -and $Session.Version -eq $Parameters.version) {
+                    if ($API.IsServer -and ($Session.Version -eq $Parameters.version)) {
                         if ($Parameters.machinename) {$API.Clients[$Parameters.machinename] = Get-UnixTimestamp}
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
@@ -509,6 +509,11 @@
                                 $Status = $true
                             }
                         }
+                    }
+                    if (-not $Status) {
+                        $Result = if (-not $API.IsServer) {"$($Session.MachineName) is not a server"}
+                              elseif ($Session.Version -ne $Parameters.version) {"Server runs on wrong Version v$($Session.Version)"}
+                              else {"No data found"}
                     }
                     $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
                     Break

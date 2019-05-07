@@ -1332,8 +1332,11 @@ function Start-Setup {
                             }
 
                             if ($DownloadServerNow) {
-                                Get-ServerConfig -ConfigName @(Get-ConfigArray $ConfigActual.ServerConfigName) -Server $ConfigActual.ServerName -Port $ConfigActual.ServerPort -Username $ConfigActual.ServerUser -Password $ConfigActual.ServerPassword -Force
-                                $SetupMessage.Add("Configuration downloaded from server. Eventually check all values. ") > $null
+                                if (Get-ServerConfig -ConfigName @(Get-ConfigArray $ConfigActual.ServerConfigName) -Server $ConfigActual.ServerName -Port $ConfigActual.ServerPort -Username $ConfigActual.ServerUser -Password $ConfigActual.ServerPassword -Force) {
+                                    $SetupMessage.Add("Configuration downloaded from server. Eventually check all values. ") > $null
+                                } else {
+                                    $SetupMessage.Add("Error downloading from server. ") > $null
+                                }
                             }
 
                             $IsInitialSetup = $false

@@ -4235,9 +4235,11 @@ function Get-SessionServerConfig {
         [Parameter(Mandatory = $False)]
         [switch]$Force
     )
+    $rv = $true
     if ($Session.Config -and $Session.Config.RunMode -eq "client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerConfig -and ($Session.Config.ServerConfigName | Measure-Object).Count) {
-        Get-ServerConfig -ConfigName $Session.Config.ServerConfigName -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
+        $rv = Get-ServerConfig -ConfigName $Session.Config.ServerConfigName -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
     }
+    $rv
 }
 
 function Get-ServerConfig {
@@ -4256,6 +4258,7 @@ function Get-ServerConfig {
         [Parameter(Mandatory = $False)]
         [switch]$Force
     )
+    $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $Session.ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile)) {"0"} else {Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()})"}) -join ','
@@ -4271,8 +4274,11 @@ function Get-ServerConfig {
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
             }
+        } elseif (-not $Result.Status) {
+            Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
         }
     }
+    $rv
 }
 
 
