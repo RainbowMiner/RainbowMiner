@@ -79,7 +79,7 @@ Write-Host " "
 Write-Host "Initializing API-Server"
 Write-Host " "
 if ($IsWindows -and -not (Test-IsElevated)) {
-    Write-Host " Please select `"Yes`" for all UACL prompts! " -BackgroundColor Yellow -ForegroundColor Black
+    Write-Host " Please select `"Yes`" for all UAC prompts! " -BackgroundColor Yellow -ForegroundColor Black
     Write-Host " "
 }
 
