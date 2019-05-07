@@ -656,6 +656,9 @@ function Start-Setup {
                                         Get-ConfigArray $Config.ServerConfigName | Foreach-Object {
                                             if ($Var = $ConfigFiles.Keys -match $_) {
                                                 Set-Variable "$($Var)Actual" -Value $(Get-Content $ConfigFiles[$Var].Path | ConvertFrom-Json)
+                                                if ($Var -eq "Config") {
+                                                    $ConfigActual.PSObject.Properties | Foreach-Object {$Config | Add-Member $_.Name $_.Value -Force}
+                                                }
                                             }
                                         }
                                         $GlobalSetupStepStore = $false
