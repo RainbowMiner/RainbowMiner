@@ -658,6 +658,30 @@ function Start-Setup {
                                                 Set-Variable "$($Var)Actual" -Value $(Get-Content $ConfigFiles[$Var].Path | ConvertFrom-Json)
                                                 if ($Var -eq "Config") {
                                                     $ConfigActual.PSObject.Properties | Foreach-Object {$Config | Add-Member $_.Name $_.Value -Force}
+                                                } elseif ($Var -eq "Pools") {
+                                                    if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
+                                                        $NicehashWallet = $PoolsActual.Nicehash.BTC
+                                                        $NicehashAPIID  = $PoolsActual.Nicehash.API_ID
+                                                        $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
+                                                    }
+
+                                                    if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
+                                                        $MPHUser        = $PoolsActual.MiningPoolHub.User
+                                                        $MPHAPIID       = $PoolsActual.MiningPoolHub.API_ID
+                                                        $MPHAPIKey      = $PoolsActual.MiningPoolHub.API_Key
+                                                    }
+
+                                                    if ($PoolsActual | Get-Member MiningPoolHubCoins -MemberType NoteProperty) {
+                                                        if (-not $MPHUser)   {$MPHUser   = $PoolsActual.MiningPoolHubCoins.User}
+                                                        if (-not $MPHAPIID)  {$MPHAPIID  = $PoolsActual.MiningPoolHubCoins.API_ID}
+                                                        if (-not $MPHAPIKey) {$MPHAPIKey = $PoolsActual.MiningPoolHubCoins.API_Key}
+                                                    }
+
+                                                    if ($PoolsActual | Get-Member MiningRigRentals -MemberType NoteProperty) {
+                                                        $MRRUser        = $PoolsActual.MiningRigRentals.User
+                                                        $MRRAPIKey      = $PoolsActual.MiningRigRentals.API_Key
+                                                        $MRRAPISecret   = $PoolsActual.MiningRigRentals.API_Secret
+                                                    }
                                                 }
                                             }
                                         }
