@@ -652,27 +652,30 @@ function Start-Setup {
                                 if ($DownloadServerNow) {
                                     if (Get-ServerConfig -ConfigFiles $ConfigFiles -ConfigName @(Get-ConfigArray $Config.ServerConfigName) -ExcludeConfigVars @(Get-ConfigArray $Config.ExcludeServerConfigVars) -Server $Config.ServerName -Port $Config.ServerPort -Workername $Config.WorkerName -Username $Config.ServerUser -Password $Config.ServerPassword -Force) {
                                         Write-Host "Configfiles downloaded successfully!" -ForegroundColor Green
+                                        $GlobalSetupStepStore = $false
                                     } else {
                                         Write-Host "Error downloading configfiles!" -ForegroundColor Yellow
                                     }
                                 }
 
-                                if (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2) {
-                                    if (Read-HostBool "Download server configuration now? This will end the setup." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                        $DownloadServerNow = $true
-                                        throw "Goto save"
-                                    }
-                                } else {
-                                    Write-Host " "
-                                    Write-Host "Server not found!" -ForegroundColor Red
-                                    Write-Host " "
-                                    if (Read-HostBool "Retry to connect?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                        $GlobalSetupStepStore = $false
-                                        throw "Goto clientinit"
-                                    }
-                                    if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                        $GlobalSetupStepStore = $false
-                                        throw "Goto runmode"
+                                if ($GlobalSetupStepStore) {
+                                    if (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2) {
+                                        if (Read-HostBool "Download server configuration now? This will end the setup." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                            $DownloadServerNow = $true
+                                            throw "Goto save"
+                                        }
+                                    } else {
+                                        Write-Host " "
+                                        Write-Host "Server not found!" -ForegroundColor Red
+                                        Write-Host " "
+                                        if (Read-HostBool "Retry to connect?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                            $GlobalSetupStepStore = $false
+                                            throw "Goto clientinit"
+                                        }
+                                        if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                            $GlobalSetupStepStore = $false
+                                            throw "Goto runmode"
+                                        }
                                     }
                                 }
                             } else {
@@ -1275,6 +1278,7 @@ function Start-Setup {
                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8
 
                             if ($DownloadServerNow) {
+                                $GlobalSetupStepStore = $false
                                 throw "Goto clientinit"
                             }
 
