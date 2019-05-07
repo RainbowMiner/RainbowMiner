@@ -168,12 +168,12 @@ function Start-Setup {
             $DownloadServerNow = $false
 
             Switch ($SetupType) {
-                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehashapiid","nicehashapikey","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
+                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit","wallet","nicehash","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit","wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -292,11 +292,14 @@ function Start-Setup {
 
                             if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
                             $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-
+                        }
+                        "nicehash2" {
                             if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
-                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. NiceHash will have a minimum payout of 0.1BTC. Do you want to disable NiceHash mining for now?" -Default $true) {
+                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. NiceHash will have a minimum payout of 0.1BTC. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                     $NiceHashWallet = ''
                                 }
+                            } else {
+                                $GlobalSetupStepStore = $false
                             }
 
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)                                            
@@ -489,9 +492,7 @@ function Start-Setup {
                                 }
                                 Write-Host "RainbowMiner can be monitored using your webbrowser via API:" -Foreground Cyan
                                 Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
-                                if ($IsWindows) {
-                                    Write-Host "- on another windows device in the network: http://$($Session.MachineName):$($Config.APIPort)" -ForegroundColor Cyan
-                                }
+                                Write-Host "- on most devices in the network: http://$($Session.MachineName):$($Config.APIPort)" -ForegroundColor Cyan
                                 Write-Host "- on any other device in the network: http://$($Session.MyIP):$($Config.APIPort)" -ForegroundColor Cyan
                                 Write-Host " "
                             }
@@ -502,11 +503,12 @@ function Start-Setup {
                                 Write-Host " "
                                 Write-Host "Warning: the API is currently visible locally, on http://localhost:$($Config.APIport), only." -ForegroundColor Yellow
                                 Write-Host " "
-                                $InitAPIServer = Read-HostBool -Prompt "Do you want to enable the API in your network? " -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                Write-Host " "
-                                Write-Host "Ok, enable remote access to your API now.$(if (-not $Session.IsAdmin) {" Please click 'Yes' for all UAC prompts!"})"
-                                Write-Host " " 
-                                if ($InitAPIServer) {Initialize-APIServer -Port $Config.APIport}
+                                if ($InitAPIServer = Read-HostBool -Prompt "Do you want to enable the API in your network? " -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                    Write-Host " "
+                                    Write-Host "Ok, enable remote access to your API now.$(if (-not $Session.IsAdmin) {" Please click 'Yes' for all UAC prompts!"})"
+                                    Write-Host " "
+                                    Initialize-APIServer -Port $Config.APIport
+                                }
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
