@@ -212,7 +212,7 @@ function Invoke-Core {
 
     if (-not $Session.IsDonationRun -and (Test-Path $Session.ConfigFiles["Config"].Path)) {
 
-        Get-SessionServerConfig > $null
+        Get-SessionServerConfig
 
         if (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime)) {
 

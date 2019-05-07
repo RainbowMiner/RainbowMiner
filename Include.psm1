@@ -4237,7 +4237,7 @@ function Get-SessionServerConfig {
     )
     $rv = $true
     if ($Session.Config -and $Session.Config.RunMode -eq "client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerConfig -and ($Session.Config.ServerConfigName | Measure-Object).Count) {
-        $rv = Get-ServerConfig -ConfigName $Session.Config.ServerConfigName -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
+        $rv = Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $Session.Config.ServerConfigName -ExcludeConfigVars $Session.Config.ExcludeServerConfigVars -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -WorkerName $Session.Config.WorkerName -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
     }
     $rv
 }
@@ -4245,12 +4245,18 @@ function Get-SessionServerConfig {
 function Get-ServerConfig {
     [CmdletBinding()]
     param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$ConfigFiles,
         [Parameter(Mandatory = $False)]
         [array]$ConfigName = @(),
+        [Parameter(Mandatory = $False)]
+        [array]$ExcludeConfigVars = @(),
         [Parameter(Mandatory = $False)]
         [string]$Server = "",
         [Parameter(Mandatory = $False)]
         [int]$Port = 0,
+        [Parameter(Mandatory = $False)]
+        [string]$WorkerName = "",
         [Parameter(Mandatory = $False)]
         [string]$Username = "",
         [Parameter(Mandatory = $False)]
@@ -4261,15 +4267,16 @@ function Get-ServerConfig {
     $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
-        $Params = ($ConfigName | Foreach-Object {$PathToFile = $Session.ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile)) {"0"} else {Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()})"}) -join ','
-        $Result = Invoke-GetUrl "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($Session.Config.WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)" -user $Username -password $Password -ForceLocal -timeout 5
+        $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile)) {"0"} else {Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()})"}) -join ','
+        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)"
+        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 5
         if ($Result.Status -and $Result.Content) {
             $ConfigName | Where-Object {$Result.Content.$_.isnew -and $Result.Content.$_.data} | Foreach-Object {
-                $PathToFile = $Session.ConfigFiles[$_].Path
+                $PathToFile = $ConfigFiles[$_].Path
                 $Data = $Result.Content.$_.data
                 if ($_ -eq "config") {
                     $Preset = Get-ConfigContent "config"
-                    $Data.PSObject.Properties.Name | Where-Object {$Session.Config.ExcludeServerConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
+                    $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
                     $Data = $Preset
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null

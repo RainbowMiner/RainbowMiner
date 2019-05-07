@@ -172,8 +172,8 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit","wallet","nicehash","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit","wallet","nicehash","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -590,6 +590,32 @@ function Start-Setup {
                                 $GlobalSetupStepStore = $false
                             }
                         }
+
+                        "clientconnect" {
+                            if ($Config.RunMode -eq "client") {
+
+                                if ($Config.ServerName -and $Config.ServerPort -and (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
+                                    Write-Host " "
+                                    Write-Host "Server connected successfully!" -ForegroundColor Green
+                                    Write-Host " "
+                                } else {
+                                    Write-Host " "
+                                    Write-Host "Server not found!" -ForegroundColor Red
+                                    Write-Host " "
+                                    if (Read-HostBool "Retry to connect?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        $GlobalSetupStepStore = $false
+                                        throw "Goto clienconnect"
+                                    }
+                                    if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        $GlobalSetupStepStore = $false
+                                        throw "Goto runmode"
+                                    }
+                                }
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+
                         "enableserverconfig" {
                             if ($Config.RunMode -eq "client") {
                                 if ($IsInitialSetup) {
@@ -608,43 +634,45 @@ function Start-Setup {
                         }
                         "serverconfigname" {
                             if ($Config.RunMode -eq "client" -and (Get-Yes $Config.EnableServerConfig)) {
-                                Write-Host " "
                                 $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","ocprofiles","pools") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "excludeserverconfigvars" {
-                            if ($Config.RunMode -eq "client" -and $Config.UseServerConfig -match "config" -and (Get-Yes $Config.EnableServerConfig)) {
-                                Write-Host " "
+                            if ($Config.RunMode -eq "client" -and $Config.ServerConfigName -match "config" -and (Get-Yes $Config.EnableServerConfig)) {
                                 $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter parameters, that should not be overwritten with the server's config (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9" -Valid $Session.DefaultValues.Keys | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
                         }
                         "clientinit" {
-                            if ($Config.RunMode -eq "client") {
-                                if ($Config.ServerName -and $Config.ServerPort -and (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
-                                    Write-Host " "
-                                    Write-Host "Server connected successfully!" -ForegroundColor Green
-                                    Write-Host " "
-                                    if ($Config.ServerConfigName -and (Get-Yes $Config.EnableServerConfig)) {
-                                        if (Read-HostBool "Download server configuration now? This will end the setup." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                            $DownloadServerNow = $true
-                                            throw "Goto save"
-                                        }
+                            if ($Config.RunMode -eq "client" -and $Config.ServerConfigName -and (Get-Yes $Config.EnableServerConfig)) {
+
+                                if ($DownloadServerNow) {
+                                    if (Get-ServerConfig -ConfigFiles $ConfigFiles -ConfigName @(Get-ConfigArray $Config.ServerConfigName) -ExcludeConfigVars @(Get-ConfigArray $Config.ExcludeServerConfigVars) -Server $Config.ServerName -Port $Config.ServerPort -Workername $Config.WorkerName -Username $Config.ServerUser -Password $Config.ServerPassword -Force) {
+                                        Write-Host "Configfiles downloaded successfully!" -ForegroundColor Green
+                                    } else {
+                                        Write-Host "Error downloading configfiles!" -ForegroundColor Yellow
+                                    }
+                                }
+
+                                if (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2) {
+                                    if (Read-HostBool "Download server configuration now? This will end the setup." -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        $DownloadServerNow = $true
+                                        throw "Goto save"
                                     }
                                 } else {
                                     Write-Host " "
                                     Write-Host "Server not found!" -ForegroundColor Red
                                     Write-Host " "
-                                    if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
-                                        $GlobalSetupStepStore = $false
-                                        throw "Goto runmode"
-                                    }
                                     if (Read-HostBool "Retry to connect?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                         $GlobalSetupStepStore = $false
                                         throw "Goto clientinit"
+                                    }
+                                    if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        $GlobalSetupStepStore = $false
+                                        throw "Goto runmode"
                                     }
                                 }
                             } else {
@@ -1244,6 +1272,12 @@ function Start-Setup {
                             $ConfigActual | Add-Member ServerConfigName $($Config.UseServerConfig -join ",") -Force
                             $ConfigActual | Add-Member ExcludeServerConfigVars $($Config.ExcludeServerConfigVars -join ",") -Force
 
+                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8
+
+                            if ($DownloadServerNow) {
+                                throw "Goto clientinit"
+                            }
+
                             $CheckPools = @()
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
@@ -1321,7 +1355,6 @@ function Start-Setup {
                                 }
                             }
 
-                            $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8                                             
                             $PoolsActual  | ConvertTo-Json | Out-File $ConfigFiles["Pools"].Path -Encoding utf8
 
                             if ($IsInitialSetup) {
@@ -1329,14 +1362,6 @@ function Start-Setup {
                                 $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
                             } else {
                                 $SetupMessage.Add("Changes written to configuration. ") > $null
-                            }
-
-                            if ($DownloadServerNow) {
-                                if (Get-ServerConfig -ConfigName @(Get-ConfigArray $ConfigActual.ServerConfigName) -Server $ConfigActual.ServerName -Port $ConfigActual.ServerPort -Username $ConfigActual.ServerUser -Password $ConfigActual.ServerPassword -Force) {
-                                    $SetupMessage.Add("Configuration downloaded from server. Eventually check all values. ") > $null
-                                } else {
-                                    $SetupMessage.Add("Error downloading from server. ") > $null
-                                }
                             }
 
                             $IsInitialSetup = $false

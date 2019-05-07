@@ -56,7 +56,7 @@
         "APIPort","APIUser","APIPassword","APIAuth",
         "MSIApath","NVSMIpath",
         "CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity",
-        "ServerName","ServerPort","ServerUser","ServerPassword","UseServerConfig","ExcludeServerConfigVars",
+        "ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars",
         "RunMode","StartPaused"
     )
 }
