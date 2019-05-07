@@ -4235,11 +4235,9 @@ function Get-SessionServerConfig {
         [Parameter(Mandatory = $False)]
         [switch]$Force
     )
-    $rv = $true
     if ($Session.Config -and $Session.Config.RunMode -eq "client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerConfig -and ($Session.Config.ServerConfigName | Measure-Object).Count) {
-        $rv = Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $Session.Config.ServerConfigName -ExcludeConfigVars $Session.Config.ExcludeServerConfigVars -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -WorkerName $Session.Config.WorkerName -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force
+        Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $Session.Config.ServerConfigName -ExcludeConfigVars $Session.Config.ExcludeServerConfigVars -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -WorkerName $Session.Config.WorkerName -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force > $null
     }
-    $rv
 }
 
 function Get-ServerConfig {
