@@ -1306,7 +1306,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member ServerUser $Config.ServerUser -Force
                             $ConfigActual | Add-Member ServerPassword $Config.ServerPassword -Force
                             $ConfigActual | Add-Member EnableServerConfig $(if (Get-Yes $Config.EnableServerConfig){"1"}else{"0"}) -Force
-                            $ConfigActual | Add-Member ServerConfigName $($Config.UseServerConfig -join ",") -Force
+                            $ConfigActual | Add-Member ServerConfigName $($Config.ServerConfigName -join ",") -Force
                             $ConfigActual | Add-Member ExcludeServerConfigVars $($Config.ExcludeServerConfigVars -join ",") -Force
 
                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8
