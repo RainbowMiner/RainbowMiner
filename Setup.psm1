@@ -652,9 +652,16 @@ function Start-Setup {
                                 if ($DownloadServerNow) {
                                     if (Get-ServerConfig -ConfigFiles $ConfigFiles -ConfigName @(Get-ConfigArray $Config.ServerConfigName) -ExcludeConfigVars @(Get-ConfigArray $Config.ExcludeServerConfigVars) -Server $Config.ServerName -Port $Config.ServerPort -Workername $Config.WorkerName -Username $Config.ServerUser -Password $Config.ServerPassword -Force) {
                                         Write-Host "Configfiles downloaded successfully!" -ForegroundColor Green
+                                        Write-Host " "
+                                        Get-ConfigArray $Config.ServerConfigName | Foreach-Object {
+                                            if ($Var = $ConfigFiles.Keys -match $_) {
+                                                Set-Variable "$($Var)Actual" -Value $(Get-Content $ConfigFiles[$Var].Path | ConvertFrom-Json)
+                                            }
+                                        }
                                         $GlobalSetupStepStore = $false
                                     } else {
                                         Write-Host "Error downloading configfiles!" -ForegroundColor Yellow
+                                        Write-Host " "
                                     }
                                 }
 
