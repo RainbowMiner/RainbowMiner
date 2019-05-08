@@ -210,11 +210,11 @@ function Invoke-Core {
 
     $Session.MyIP = Get-MyIP
 
-    if (-not $Session.IsDonationRun -and (Test-Path $Session.ConfigFiles["Config"].Path)) {
+    if (Test-Path $Session.ConfigFiles["Config"].Path) {
 
-        Get-SessionServerConfig
+        if (-not $Session.IsDonationRun) {Get-SessionServerConfig}
 
-        if (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime)) {
+        if (-not $Session.IsDonationRun -and (-not $Session.Config -or $Session.RunSetup -or (Test-Config "Config" -LastWriteTime))) {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
