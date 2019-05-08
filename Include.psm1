@@ -4207,8 +4207,8 @@ function Get-ConfigContent {
         [Parameter(Mandatory = $False)]
         [Switch]$ConserveUnkownParameters
     )
+    if ($UpdateLastWriteTime) {$WorkerName = ""}
     if ($PathToFile = Get-ConfigPath $ConfigName $WorkerName) {
-        if ($UpdateLastWriteTime) {$WorkerName = ""}
         try {
             if ($UpdateLastWriteTime) {
                 $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
