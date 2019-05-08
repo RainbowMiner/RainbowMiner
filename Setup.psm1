@@ -1615,10 +1615,7 @@ function Start-Setup {
             Write-HostSetupHints
             Write-Host " "
 
-            $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"\s*[,;:]+\s*")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
-
             Set-ConfigDefault "Pools" -Force > $null
-
 
             $PoolSetupDone = $false
             do {
