@@ -46,43 +46,13 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ### Windows 7/8.1/10 pre-requesites
 
-1. Install PowerShell 6: [Download Installer for version 6.1.3](https://github.com/PowerShell/PowerShell/releases/download/v6.1.3/PowerShell-6.1.3-win-x64.msi)
+1. Install PowerShell 6: [Download Installer for version 6.2.0](https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/PowerShell-6.2.0-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
-3. Update GPU drivers: [Nvidia 419.35](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.3.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
+3. Update GPU drivers: [Nvidia 430.39](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.3.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 5. If you plan on using [GrinProMiner](https://grinpro.io) or [SwapMiner](https://github.com/swap-dev/SwapReferenceMiner/releases): Install Microsoft [.NET Core 2.2 Runtime](https://dotnet.microsoft.com/download) - download and install "Run Apps .NET Core Runtime", click the button "** Download .NET Core Runtime (see here: https://github.com/RainbowMiner/RainbowMiner/issues/441#issuecomment-465932125) **"
 
-Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6.1.0. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
-
-### Linux pre-requesites
-
-1. Open cmd window and install 7zip and git
-
-```
-sudo apt-get update
-sudo apt-get install p7zip-full
-sudo apt-get install git
-```
-
-2. Install Powershell Core
-
-Find the matching version of [Powershell Core v6.2.0 for your Linux distro from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
-Now, either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
-```
-# if not already done, download the package, change the ubuntu distro version number!
-wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell_6.2.0-1.ubuntu.18.04_amd64.deb
-
-# install powershell package
-dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
-
-# install powershell dependecies
-apt install -f
-```
-
-3. Make sure, you have installed the most uptodate GPU drivers *plus* CUDA and OpenCL. If RainbowMiner does not show your graphic cards, double check that the OpenCL libraries are installed correctly. Sometimes you will need to install opencl (the ocl-icd-libopencl1 package) manually:
-```
-sudo apt install ocl-icd-libopencl1
-```
+Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 ## INSTALLATION
 
@@ -102,36 +72,76 @@ sudo apt install ocl-icd-libopencl1
 
 ### Linux Installation Steps 1 - 3
 
-1. Download Rainbowminer, you may use git to make it quick and easy:
+1. Download Rainbowminer
+
+Either download the current release and unpack into a folder of your choice, or use git, to make it quick and easy:
 ```
+sudo apt-get update
+sudo apt-get install git
 git clone https://github.com/rainbowminer/RainbowMiner
 ```
 
-2. Finally, change the attributes of start.sh
+2. Run the RainbowMiner installer
+
+Now cd into your Rainbowminer folder and change the attributes of install.sh, start.sh and others and run the Installer as root (sudo)
 ```
-cd Rainbowminer
+cd RainbowMiner
 chmod +x *.sh
+sudo ./install.sh
+```
+
+**If the installer fails to install PowerShell, this is the way to install it manually:**
+
+Find the matching version of [Powershell Core v6.2.0 for your Linux distro from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Now, either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
+```
+# if not already done, download the package, change the ubuntu distro version number!
+wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+
+# install powershell package
+dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+
+# install powershell dependecies
+apt install -f
 ```
 
 3. Start it
+
 ```
 ./start.sh
 ```
 
 ### Common steps
 
-4. Enter your credentials:
+4. Enter basic information
+
+   - choose your rig's WorkerName [default=rainbowminer]
+   - choose your RunMode:
+     - **standalone** = all config locally and direct connect to pool APIs
+     - **server** = act as server for many Clients, may also run as mining rig
+     - **client** = opionally use server's config files, connect to server for pool API data
+   - enter API port for webinterface at http://localhost:<APIport>
+   - optionally protect access to the webinterface with username and password
+   - for client-mode:
+     - enter the server's name (or IP)
+     - enter the server's API port
+     - optionally enter username and password, if you have protected the access to the servers's webinterface
+
+
+5. Enter your credentials:
+
    - your btc-wallet address (one for general use, and one for NiceHash)
-   - your desired workername (or accept the default)
-   - your MiningPoolHub username, if you plan to use this pool
+   - your MiningPoolHub credentials, if you plan to use this pool
+   - your MiningRigRental credentials, if you plan to use this pool   
    - your region. Valid names are: US, Europe, Asia
    - your currencies. Valid currencies are: BTC, USD, EUR, GBP, ETH, ..
    - the pools, you want to mine as comma separated list. 
    - the algorithm, you want to mine as comma separated list.
    - the devices, you want to use for mining. Valid descriptors are: gpu, cpu, nvidia, amd (RainbowMiner will show you, which devices are available on your machine)
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
-     
-5. Let the downloads and benchmarking finish (be patient! This might take a while. Anyway: it will already mine to your wallets)
+
+
+6. Let the downloads and benchmarking finish (be patient! This might take a while. Anyway: it will already mine to your wallets)
 
 Done!
 
@@ -186,14 +196,17 @@ For your convenience, you can monitor and setup RainbowMiner using your web brow
 
 ## CLIENT/SERVER NETWORKING
 
-Choose on PC to be the Server (it may be a dusty old notebook). No need to let it mine, just let RainbowMiner start in paused mode. Select all other Rigs to act as Clients. All pool API communication will then be managed by the server: no more being blocked by the pools due to excessive use of their API
+Choose one PC to be the Server (it may be a dusty old notebook). No need to let it mine, just let RainbowMiner start in paused mode. Select all other Rigs to act as Clients. All pool API communication will then be managed by the server: no more being blocked by the pools due to excessive use of their API
 
 There is a Network setup build-in the configuration (press [C], then enter [N]) to help with the setup.
 
 If you want it quicker, just run one of the following init scripts for very convenient pre-setup:
-`InitServer.bat / initserver.sh` : make this rig a server
-`InitClient.bat / initclient.sh` : make this rig a client
-`InitStandalone.bat / initstandalone.sh` : make this rig a standalone machine
+
+|Windows|Linux|Description|
+|---|---|---|
+|`InitServer.bat`|`sudo ./initserver.sh`|make this rig a server|
+|`InitClient.bat`|`sudo ./initclient.sh`|make this rig a client|
+|`InitStandalone.bat`|`sudo ./initstandalone.sh`|make this rig a standalone machine|
 
 Of course, you may also edit the `Config\config.txt` directly.
 
@@ -227,8 +240,12 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "ServerName": "machinenameofserver",
   "ServerPort": 4000,
   "ServerUser": "serverusername",
-  "ServerPassword": "serverpassword"
+  "ServerPassword": "serverpassword",
+  "EnableServerConfig": "1",
+  "ServerConfigName": "config,coins,pools",
 ```
+
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory ".\Config\<workername>". Use lowercase letters for this subdirectoy name.
 
 ## POOLS
 
@@ -478,23 +495,20 @@ The config file will contain variables to reflect default values. You can safely
 
 An example:
 
-    "API_ID": "$API_ID",
-    "API_Key": "$API_Key",
+    "StartPaused": "$StartPaused",
+    "Interval": "$Interval",
 
-You may replace $API_ID and $API_Key with your MiningPoolHub USER ID/API KEY
+You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API KEY
 
-    "API_ID": "12345",
-    "API_Key": "0123456789abcdef0123456789abcdef0123456789abcdef",
+    "StartPaused": "0",
+    "Interval": "90",
 
 #### Basic setup ####
 
 - **Wallet** = your general BTC wallet address
 - **WorkerName** = your desired worker name
-- **UserName** = your MiningPoolHub user name
 - **Currency** = currencies, you want to be shown [default=BTC,USD,EUR]
 - **Region** = your region, [default=US]
-- **API_ID** = your MiningPoolHub USER ID (found at MPH on page "Edit account")
-- **API_Key** = your MiningPoolHub API KEY (found at MPH on page "Edit account")
 - **UIstyle** = set to "full" for complete listing, set to "lite" for reduced listing [default=full]
 - **APIport** = enter a free web-interface port localhost:<port> [default=4000]
 - **EnableAutoUpdate** = set to 1 if you want RainbowMiner to be updated automatically
@@ -588,6 +602,9 @@ For Client (Runmode=client) setup:
 - **ServerPort** = enter the server's ports
 - **ServerUser** = enter the server's username (if auth)
 - **ServerPassword** = enter the server's password
+- **EnableServerConfig** = set to "1" to use the server's config files on this rig
+- **ServerConfigName** = list of config files to be downloaded if "EnableServerConfig" is set to "1". Possible values are "algorithms","coins","config","miners","ocprofiles","pools"
+- **ExcludeServerConfigVars** = list of parameter names if config.txt, that should -not- be overwritten with server values (best is to leave it as is)
 
 For Server (Runmode=server) setup:
 - **APIport** = enter a free web-interface port localhost:<port> [default=4000]

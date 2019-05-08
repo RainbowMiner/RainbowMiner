@@ -4,7 +4,7 @@
 param(
     [Parameter(Mandatory = $false)]
     [Alias("BTC")]
-    [String]$Wallet, 
+    [String]$Wallet,
     [Parameter(Mandatory = $false)]
     [Alias("Worker")]
     [String]$WorkerName = "rainbowminer", 
