@@ -401,6 +401,10 @@ try {
         $OverridePoolPenalties = $true
     }
 
+    if ($Version -le (Get-Version "4.3.0.1")) {
+        $AddAlgorithm += @("CuckooCycle")
+    }
+
     if ($Version -le (Get-Version "4.2.0.6")) {
         if (Test-Path ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt") {
             Remove-Item ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt" -Force -ErrorAction Ignore
