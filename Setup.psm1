@@ -110,7 +110,7 @@ function Start-Setup {
 
         try {
             $TotalMem = (($Session.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
-            $TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB
+            if ($IsWindows) {$TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB}
             if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
                 Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
                 Write-Host " "
@@ -1430,7 +1430,7 @@ function Start-Setup {
                         $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                             "^Goto\s+(.+)$" {$Matches[1]}
                                             "^done$"  {"save"}
-                                            default {$_.Exception.Message}
+                                            default {$_}
                                         }
                         $GlobalSetupStep = $GlobalSetupSteps.IndexOf($NextSetupStep)
                         if ($GlobalSetupStep -lt 0) {
@@ -1593,7 +1593,7 @@ function Start-Setup {
                             $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                 "^Goto\s+(.+)$" {$Matches[1]}
                                                 "^done$"  {"save"}
-                                                default {$_.Exception.Message}
+                                                default {$_}
                                             }
                             $MinerSetupStep = $MinerSetupSteps.IndexOf($NextSetupStep)
                             if ($MinerSetupStep -lt 0) {
@@ -1617,9 +1617,8 @@ function Start-Setup {
 
             $Config_Avail_Algorithm = @(if ($Config.Algorithm -ne ''){[regex]::split($Config.Algorithm.Trim(),"\s*[,;:]+\s*")}else{@()}) | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object
 
-            Set-PoolsConfigDefault -PathToFile $ConfigFiles["Pools"].Path -Force
+            Set-ConfigDefault "Pools" -Force > $null
 
-            $PoolDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";StatAverage = "";DataWindow = ""}
 
             $PoolSetupDone = $false
             do {
@@ -1670,22 +1669,25 @@ function Start-Setup {
                         $PoolsSetup.$Pool_Name.Fields.PSObject.Properties.Name | Select-Object | Foreach-Object {                                                                                
                             if ($PoolConfig.PSObject.Properties.Name -inotcontains $_) {$PoolConfig | Add-Member $_ ($PoolsSetup.$Pool_Name.Fields.$_) -Force}
                         }
-                        foreach($SetupName in $PoolDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolDefault.$SetupName -Force}}
+                        foreach($SetupName in $PoolsDefault.PSObject.Properties.Name) {if ($PoolConfig.$SetupName -eq $null){$PoolConfig | Add-Member $SetupName $PoolsDefault.$SetupName -Force}}
 
                         if ($IsYiimpPool -and $PoolConfig.PSObject.Properties.Name -inotcontains "DataWindow") {$PoolConfig | Add-Member DataWindow "" -Force}  
                                         
-                        do { 
+                        do {
+                            $PoolSetupStepStore = $true
                             try {
                                 Switch ($PoolSetupSteps[$PoolSetupStep]) {
                                     "basictitle" {
                                         Write-Host " "
                                         Write-Host "*** Edit pool's basic settings ***" -ForegroundColor Green
                                         Write-Host " "
+                                        $PoolSetupStepStore = $false
                                     }
                                     "algorithmtitle" {
                                         Write-Host " "
                                         Write-Host "*** Edit pool's algorithms, coins and miners ***" -ForegroundColor Green
                                         Write-Host " "
+                                        $PoolSetupStepStore = $false
                                     }
                                     "worker" {
                                         $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"clear"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
@@ -1721,19 +1723,39 @@ function Start-Setup {
                                         $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "coinname" {
-                                        $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Pool_Avail_CoinName) {
+                                            $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
                                     }
                                     "excludecoin" {
-                                        $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude " -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Pool_Avail_CoinName) {
+                                            $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude " -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
                                     }
                                     "coinsymbol" {
-                                        $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine ($(if ($PoolConfig.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Pool_Avail_CoinSymbol) {
+                                            $PoolConfig.CoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you want to mine ($(if ($PoolConfig.CoinSymbol) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
                                     }
                                     "excludecoinsymbol" {
-                                        $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Pool_Avail_CoinSymbol) {
+                                            $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
                                     }
                                     "coinsymbolpbm" {
-                                        $PoolConfig.CoinSymbolPBM = Read-HostArray -Prompt "Enter coins by currency-symbol, to be included if Postblockmining, only " -Default $PoolConfig.CoinSymbolPBM -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Pool_Avail_CoinSymbol) {
+                                            $PoolConfig.CoinSymbolPBM = Read-HostArray -Prompt "Enter coins by currency-symbol, to be included if Postblockmining, only " -Default $PoolConfig.CoinSymbolPBM -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
                                     }
                                     "minername" {
                                         $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1854,7 +1876,7 @@ function Start-Setup {
                                         $PoolSetupStepsDone = $true                                                  
                                     }
                                 }
-                                if ($PoolSetupSteps[$PoolSetupStep] -notmatch "title") {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
+                                if ($PoolSetupStepStore) {$PoolSetupStepBack.Add($PoolSetupStep) > $null}                                                
                                 $PoolSetupStep++
                             }
                             catch {
@@ -1870,11 +1892,11 @@ function Start-Setup {
                                     $PoolSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    if ($PoolSetupSteps[$PoolSetupStep] -notmatch "title") {$PoolSetupStepBack.Add($PoolSetupStep) > $null}
+                                    if ($PoolSetupStepStore) {$PoolSetupStepBack.Add($PoolSetupStep) > $null}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
-                                                        default {$_.Exception.Message}
+                                                        default {$_}
                                                     }
                                     $PoolSetupStep = $PoolSetupSteps.IndexOf($NextSetupStep)
                                     if ($PoolSetupStep -lt 0) {
@@ -1994,7 +2016,7 @@ function Start-Setup {
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
-                                                        default {$_.Exception.Message}
+                                                        default {$_}
                                                     }
                                     $DeviceSetupStep = $DeviceSetupSteps.IndexOf($NextSetupStep)
                                     if ($DeviceSetupStep -lt 0) {
@@ -2106,7 +2128,7 @@ function Start-Setup {
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
-                                                        default {$_.Exception.Message}
+                                                        default {$_}
                                                     }
                                     $AlgorithmSetupStep = $AlgorithmSetupSteps.IndexOf($NextSetupStep)
                                     if ($AlgorithmSetupStep -lt 0) {
@@ -2262,7 +2284,7 @@ function Start-Setup {
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
-                                                        default {$_.Exception.Message}
+                                                        default {$_}
                                                     }
                                     $CoinSetupStep = $CoinSetupSteps.IndexOf($NextSetupStep)
                                     if ($CoinSetupStep -lt 0) {
@@ -2434,7 +2456,7 @@ function Start-Setup {
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
-                                                        default {$_.Exception.Message}
+                                                        default {$_}
                                                     }
                                     $OCProfileSetupStep = $OCProfileSetupSteps.IndexOf($NextSetupStep)
                                     if ($OCProfileSetupStep -lt 0) {
