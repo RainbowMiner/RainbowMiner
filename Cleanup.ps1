@@ -8,6 +8,7 @@ $SavedFiles = @("Start.bat")
 
 $DownloadsCleanup = $true
 $MinersConfigCleanup = $true
+$PoolsConfigCleanup = $true
 $CacheCleanup = $false
 $OverridePoolPenalties = $false
 $ChangesTotal = 0
@@ -401,15 +402,19 @@ try {
         $OverridePoolPenalties = $true
     }
 
-    if ($Version -le (Get-Version "4.3.0.1")) {
-        $AddAlgorithm += @("CuckooCycle")
-    }
-
     if ($Version -le (Get-Version "4.2.0.6")) {
         if (Test-Path ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt") {
             Remove-Item ".\Stats\Pools\Zpool_Equihash16x5_Profit.txt" -Force -ErrorAction Ignore
             $ChangesTotal++
         }
+    }
+
+    if ($Version -le (Get-Version "4.3.0.1")) {
+        $AddAlgorithm += @("CuckooCycle")
+    }
+
+    if ($Version -le (Get-Version "4.3.0.3")) {
+        $AddAlgorithm += @("ProgPoWZ","Rainforest2")
     }
 
     if ($OverridePoolPenalties) {
@@ -422,6 +427,26 @@ try {
                     $Penalty = [int]$PoolsDefault.Content.$_.Fields.Penalty
                     try {$OldPenalty = [int]$PoolsActual.$_.Penalty} catch {$OldPenalty = 0}
                     if ($PoolsActual.$_ -and (-not $PoolsActual.$_.Penalty -or ($OldPenalty -lt $Penalty))) {$PoolsActual.$_ | Add-Member Penalty $Penalty -Force;$Changes++}
+                }
+                if ($Changes) {
+                    Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
+                    $ChangesTotal += $Changes
+                }
+            }
+        }
+    }
+
+    if ($PoolsConfigCleanup) {
+        if (Test-Path "Data\PoolsConfigDefault.ps1") {
+            $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if ($PoolsActual -and $PoolsDefault.Content) {
+                $Changes = 0
+                foreach ($rapi in @("API_ID","API_Key","User")) {
+                    $PoolsDefault.Content.PSObject.Properties.Name | Where-Object {$PoolsActual.$_ -and $PoolsActual.$_.PSObject.Properties.Name -icontains $rapi} | Where-Object {-not $PoolsDefault.Content.$_.Fields -or $PoolsDefault.Content.$_.Fields.PSObject.Properties.Name -inotcontains $rapi} | Foreach-Object {
+                        $PoolsActual.$_.PSObject.Properties.Remove($rapi)
+                        $Changes++
+                    }
                 }
                 if ($Changes) {
                     Set-ContentJson -PathToFile $PoolsConfigFile -Data $PoolsActual > $null
