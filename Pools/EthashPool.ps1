@@ -28,7 +28,7 @@ catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
 }
 
-$Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets.$_ -or $InfoOnly} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$_ -ne "GRIN"} | Where-Object {$Wallets.$_ -or $InfoOnly} | ForEach-Object {
     $Pool_Currency  = $_
     $Pool_Request1  = $Pool_Request.$Pool_Currency
     $Pool_Algorithm = $Pool_Request1.algo
