@@ -21,7 +21,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, Ethermine, F2pool, FairPool, GosCx, GrinMint, HashRefinery, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, SparkPool, YiiMP, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, GosCx, GrinMint, HashRefinery, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, SparkPool, YiiMP, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -145,7 +145,7 @@ apt install -f
 
 Done!
 
-<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethermine, f2pool, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, herominers, icemining, luckypool, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, sparkpool, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zergpoolcoinsparty, zergpoolcoinssolo, zpool, zpoolcoins</details>
+<details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethashpool, ethermine, f2pool, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, herominers, icemining, luckypool, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, sparkpool, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zergpoolcoinsparty, zergpoolcoinssolo, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 
@@ -262,6 +262,7 @@ If "EnableServerConfig" is set to "1", the client will try to download the confi
 <details><summary>BsodParty</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others. Set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>BsodSolo</summary> https://bsod.pw/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>CryptoKnight</summary> https://cryptoknight.cc/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>EthashPool</summary> https://ethashpool.com/ auto-exchange to ETH and BTC, registration is mandatory for autoexchange to work. Either set wallet address or username (autoexchange) in pools configuration or edit pools.config.txt</details>
 <details><summary>Ethermine</summary> https://ethermine.org/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, ETC, ZEC) you want to mine. Set in pools configuration or edit pools.config.txt - do not use together with pool Nanopool</details>
 <details><summary>F2Pool</summary> https://www.f2pool.com/ no auto-exchange, either enter your f2pool username as wallet address, or a real wallet address for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>FairPool</summary> https://fairpool.xyz/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -836,8 +837,6 @@ Example:
         "ZEC": "$ZEC",
         "User": "$UserName",
         "Worker": "$WorkerName",
-        "API_ID": "$API_ID",
-        "API_Key": "$API_Key",
         "Algorithm": "",
         "ExcludeAlgorithm": "",
         "CoinName": "",
