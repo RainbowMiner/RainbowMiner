@@ -63,6 +63,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
 			$Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 			$MinMemGB = $_.MinMemGB
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {

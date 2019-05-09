@@ -129,6 +129,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			$MainAlgorithm = $_.MainAlgorithm
 			$MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm        
 			$MinMemGB = $_.MinMemGB
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
 			$Miner_Device = $Miner_Device_hash[$MinMemGB]
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm,"$($MainAlgorithm_Norm)-$($Miner_Model)")) {
