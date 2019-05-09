@@ -28,6 +28,7 @@
 127	CcminerThe1
 128	CcminerDyn
 129	CcminerVerus
+130	CcminerRfv2
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
