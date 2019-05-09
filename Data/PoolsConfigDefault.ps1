@@ -50,6 +50,9 @@
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
+        "EthashPool" = [PSCustomObject]@{
+            Currencies=@("ETC","ETH","ETP","GRIN")
+        }
         "Ethermine" = [PSCustomObject]@{
             Currencies=@("ETH")
         }
@@ -109,13 +112,13 @@
         }
         "MiningPoolHub" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC";Penalty=12}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
             Autoexchange=$true
         }
         "MiningPoolHubCoins" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{User="";API_ID="";API_Key="";AECurrency="BTC"}
-            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username (leave empty to use config.txt default)";API_ID="Enter your MiningPoolHub user ID (leave empty to use config.txt default)";API_Key = "Enter your MiningPoolHub API key (leave empty to use config.txt default)";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
+            SetupFields=[PSCustomObject]@{User="Enter your MiningPoolHub username";API_ID="Enter your MiningPoolHub user ID";API_Key = "Enter your MiningPoolHub API key";AECurrency = "Enter your MiningPoolHub autoexchange currency"}
             Currencies=@()
             Autoexchange=$true
         }
