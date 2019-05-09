@@ -138,13 +138,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
-					Switch($Pools.$MainAlgorithm_Norm.Name) {
-						"NiceHash"    {$Miner_Protocol_Params = "-esm 3"}
-						"2Miners"     {$Miner_Protocol_Params = "-esm 0"}
-						"2MinersSolo" {$Miner_Protocol_Params = "-esm 0"}
-                        "F2pool"      {$Miner_Protocol_Params = "-esm 0";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
-                        "PoolSexy"    {$Miner_Protocol_Params = "-esm 0"}
-						default       {$Miner_Protocol_Params = "-esm 2"}
+					$Miner_Protocol_Params = Switch($Pools.$MainAlgorithm_Norm.Name) {
+						"NiceHash"    {"-esm 3"}
+						"2Miners"     {"-esm 0"}
+						"2MinersSolo" {"-esm 0"}
+                        "EthashPool"  {"-esm 0"}
+                        "F2pool"      {"-esm 0";if ($Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
+                        "PoolSexy"    {"-esm 0"}
+						default       {"-esm 2"}
 					}				
 
 					if ($Arguments_Platform) {                

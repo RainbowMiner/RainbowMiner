@@ -75,13 +75,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
-					switch($Pools.$Algorithm_Norm.Name) {
-                        "F2pool"    {$Miner_Protocol_Params = "";if ($Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
-						"Ethermine" {$Miner_Protocol_Params = "-proto 3"}
-                        "MiningRigRentals"  {$Miner_Protocol_Params = "-proto 2"}
-						"Nanopool"  {$Miner_Protocol_Params = "-proto 2"}
-						"NiceHash"  {$Miner_Protocol_Params = "-proto 4 -stales 0"}
-						default {$Miner_Protocol_Params = "-proto 1"}
+					$Miner_Protocol_Params = Switch ($Pools.$Algorithm_Norm.Name) {
+                        "F2pool"           {"";if ($Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
+						"Ethermine"        {"-proto 3"}
+                        "EthashPool"       {"-proto 2"}
+                        "MiningRigRentals" {"-proto 2"}
+						"Nanopool"         {"-proto 2"}
+						"NiceHash"         {"-proto 4 -stales 0"}
+						default            {"-proto 1"}
 					}
 
                     $Coin = if ($Algorithm_Norm -eq "ProgPow") {"bci"}
