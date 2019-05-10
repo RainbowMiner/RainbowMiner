@@ -37,7 +37,7 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.result.simplemultialgo | Where-Object {$_.name -ne "cuckoocycle"} | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
     $Pool_Host = "nicehash.com"
     $Pool_Port = $_.port
     $Pool_Algorithm = $_.name
