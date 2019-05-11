@@ -196,50 +196,14 @@ param(
 $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
-$Global:Session = [hashtable]::Synchronized(@{}) 
-
-$Session.Version = "4.3.0.5"
-
-$Session.Strikes           = 3
-$Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
-$Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias will be 0
-$Session.DecayPeriod       = 60 #seconds
-$Session.DecayBase         = 1 - 0.1 #decimal percentage
-
 Set-OsFlags
 
+$Global:Session = [hashtable]::Synchronized(@{}) 
+
+$Session.Version         = "4.3.0.5"
+$Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
+
 if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
-
-if (-not $psISE) {
-    $Session.MainWindowTitle   = "RainbowMiner v$($Session.Version)"
-    $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
-    if ($IsWindows) {
-        $Host.UI.RawUI.BackgroundColor = ($bckgrnd = "Black")
-        $Host.UI.RawUI.ForegroundColor = "White"
-        $Host.PrivateData.ErrorForegroundColor   = "Red"
-        $Host.PrivateData.ErrorBackgroundColor   = $bckgrnd
-        $Host.PrivateData.WarningForegroundColor = "Yellow"
-        $Host.PrivateData.WarningBackgroundColor = $bckgrnd
-        $Host.PrivateData.DebugForegroundColor   = "Yellow"
-        $Host.PrivateData.DebugBackgroundColor   = $bckgrnd
-        $Host.PrivateData.VerboseForegroundColor = "Yellow"
-        $Host.PrivateData.VerboseBackgroundColor = $bckgrnd
-        $Host.PrivateData.ProgressForegroundColor= "Yellow"
-        $Host.PrivateData.ProgressBackgroundColor= "DarkCyan"
-    }
-}
-
-Clear-Host
-
-Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
-Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
-Write-Host " |       _/\__  \ |  |/    \| __ \ /  _ \ \/ \/ /  \ /  \|  |/    \_/ __ \_  __ \" -ForegroundColor Yellow
-Write-Host " |    |   \ / __ \|  |   |  \ \_\ (  <_> )     /    Y    \  |   |  \  ___/|  | \/" -ForegroundColor Green
-Write-Host " |____|_  /(____  /__|___|  /___  /\____/ \/\_/\____|__  /__|___|  /\___  >__|   " -ForegroundColor Blue
-Write-Host "        \/      \/        \/    \/                     \/        \/     \/       " -ForegroundColor DarkMagenta
-Write-Host " "
-Write-Host "Starting up v$($Session.Version)! Please wait.."
-Write-Host " "
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 

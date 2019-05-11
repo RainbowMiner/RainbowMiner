@@ -2784,7 +2784,7 @@ class Miner {
     hidden [Array]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [Array]$OCprofileBackup = @()
-    hidden [Int]$EthPill = 0
+    hidden [PSCustomObject]$EthPill = $null
     hidden [DateTime]$IntervalBegin = 0
 
     [String[]]GetProcessNames() {
@@ -2826,8 +2826,9 @@ class Miner {
                     } else {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
                     }
-
-                    $this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
+                    $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
+                    #$this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
+                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
@@ -2857,13 +2858,9 @@ class Miner {
                 $this.Status = [MinerStatus]::Idle
             }
             if ($this.EthPill) {
-                if ($EthPillProcess = Get-Process -Id $this.EthPill) {
-                    Write-Log "Stopping OhGodAnETHlargementPill"
-                    $EthPillProcess.CloseMainWindow() > $null
-                    if(-not $EthPillProcess.WaitForExit(1000)) {if(-not $EthPillProcess.HasExited) {$EthPillProcess.Kill()}}
-                    $this.EthPill = 0
-                    Start-Sleep -Milliseconds 250 #Sleep for 1/4 second
-                }
+                Write-Log "Stopping OhGodAnETHlargementPill"
+                Stop-SubProcess $this.EthPill -Title "OhGodAnETHlargementPill"
+                $this.EthPill = $null
             }
         }
         if ($this.StopCommand) {try {Invoke-Expression $this.StopCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StopCommand failed for miner $($this.Name)"}}
@@ -3900,6 +3897,37 @@ function Set-PresetDefault {
     }
 }
 
+function Set-ColorsConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "Colors"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {$Preset = [PSCustomObject]@{}}
+        }
+        try {
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Host.UI.RawUI.PSObject.Properties.Name    | Where-Object {$_ -match "Color$" -and $Preset.PSObject.Properties.Name -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ "$($Host.UI.RawUI.$_)" -Force}
+            $Host.PrivateData.PSObject.Properties.Name | Where-Object {$_ -match "Color$" -and $Preset.PSObject.Properties.Name -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ "$($Host.PrivateData.$_)" -Force}
+            $Preset.PSObject.Properties.Name | Where-Object {@($Host.UI.RawUI.PSObject.Properties.Name)+@($Host.PrivateData.PSObject.Properties.Name) -inotcontains $_} | Foreach-Object {$Preset.PSObject.Properties.Remove($_)}
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            $Session.ConfigFiles[$ConfigName].Healthy = $true
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
 function Set-CoinsConfigDefault {
     [CmdletBinding()]
     param(
@@ -4156,6 +4184,7 @@ function Set-ConfigDefault {
     )
 
     Switch ($ConfigName) {
+        "Colors"     {Set-ColorsConfigDefault -Force:$Force}
         "GpuGroups"  {Set-GpuGroupsConfigDefault -Force:$Force}
         "Pools"      {Set-PoolsConfigDefault -Force:$Force}
         "Miners"     {Set-MinersConfigDefault -Force:$Force}

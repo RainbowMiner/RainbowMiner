@@ -5,70 +5,112 @@
         [String]$ConfigFile = ".\Config\config.txt"
     )
 
-    $Session.ActiveMiners = @()
-    $Session.AllPools = $null
-    $Session.WatchdogTimers = @()
-    [hashtable]$Session.Rates = @{BTC = [Double]1}
-    [hashtable]$Session.ConfigFiles = @{
-        Config     = @{Path='';LastWriteTime=0;Healthy=$false}
-        Devices    = @{Path='';LastWriteTime=0;Healthy=$false}
-        Miners     = @{Path='';LastWriteTime=0;Healthy=$false}
-        OCProfiles = @{Path='';LastWriteTime=0;Healthy=$false}
-        Pools      = @{Path='';LastWriteTime=0;Healthy=$false}
-        Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
-        Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
-        GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
-    }
-    [hashtable]$Session.MinerInfo = @{}
-
-    $Session.GlobalGetTicker = @()
-    $Session.RoundCounter = 0
-
-    $Session.SkipSwitchingPrevention = $false
-    $Session.StartDownloader = $false
-    $Session.PauseMiners = $false
-    $Session.RestartMiners = $false
-    $Session.Restart = $false
-    $Session.AutoUpdate = $false
-    $Session.MSIAcurrentprofile = -1
-    $Session.RunSetup = $false
-    $Session.IsInitialSetup = $false
-    $Session.IsDonationRun = $false
-    $Session.IsExclusiveRun = $false
-    $Session.Stopp = $false
-    $Session.Benchmarking = $false
-    $Session.IsAdmin = Test-IsElevated
-    $Session.MachineName = [System.Environment]::MachineName
-    try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
-
-    if ($Session.IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
-
-    #Cleanup the log and cache
-    if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
-    if (Test-Path ".\Cache"){Get-ChildItem -Path ".\Cache" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-14)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Cache" -ItemType "directory" -Force > $null}
-
-    #Set env variables
-    if ($env:GPU_FORCE_64BIT_PTR -ne 1)          {$env:GPU_FORCE_64BIT_PTR = 1}
-    if ($env:GPU_MAX_HEAP_SIZE -ne 100)          {$env:GPU_MAX_HEAP_SIZE = 100}
-    if ($env:GPU_USE_SYNC_OBJECTS -ne 1)         {$env:GPU_USE_SYNC_OBJECTS = 1}
-    if ($env:GPU_MAX_ALLOC_PERCENT -ne 100)      {$env:GPU_MAX_ALLOC_PERCENT = 100}
-    if ($env:GPU_SINGLE_ALLOC_PERCENT -ne 100)   {$env:GPU_SINGLE_ALLOC_PERCENT = 100}
-    if ($env:GPU_MAX_WORKGROUP_SIZE -ne 256)     {$env:GPU_MAX_WORKGROUP_SIZE = 256}
-    if ($env:CUDA_DEVICE_ORDER -ne 'PCI_BUS_ID') {$env:CUDA_DEVICE_ORDER = 'PCI_BUS_ID'}
-
-    Write-Host "Detecting devices .."
-
-    $Session.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
-
-    Write-Host "Initialize configuration .."
     try {
-        Set-PresetDefault
+        #Setup config file name and path
         $RunCleanup = $true
         $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
         if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
         if (-not (Test-Path $ConfigPath)) {$RunCleanup = $false;New-Item $ConfigPath -ItemType "directory" -Force > $null}
         if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}    
         if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
+
+        #Setup console and display logo
+        $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
+        if (-not $psISE -and $IsWindows) {
+            $ColorConfigPath = Join-Path $ConfigPath "colors.$(Split-Path $ConfigFile -Leaf)"
+            if (Test-Path $ColorConfigPath) {
+                try {
+                    $Colors = Get-Content $ColorConfigPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                    $Colors.PSObject.Properties.Name | Where-Object {$_ -match    "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.UI.RawUI.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.UI.RawUI.$_ = $Colors.$_}
+                    $Colors.PSObject.Properties.Name | Where-Object {$_ -notmatch "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.PrivateData.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.PrivateData.$_ = $Colors.$_}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Your $ColorConfigPath file is corrupted. Resetting to defaults."
+                    if (Test-Path $ColorConfigPath) {Remove-Item $ColorConfigPath -Force}
+                }
+            }
+        }
+
+        Clear-Host
+
+        Write-Host "__________        .__      ___.                   _____  .__                     " -ForegroundColor Red
+        Write-Host "\______   \_____  |__| ____\_ |__   ______  _  __/     \ |__| ____   ___________ " -ForegroundColor DarkYellow
+        Write-Host " |       _/\__  \ |  |/    \| __ \ /  _ \ \/ \/ /  \ /  \|  |/    \_/ __ \_  __ \" -ForegroundColor Yellow
+        Write-Host " |    |   \ / __ \|  |   |  \ \_\ (  <_> )     /    Y    \  |   |  \  ___/|  | \/" -ForegroundColor Green
+        Write-Host " |____|_  /(____  /__|___|  /___  /\____/ \/\_/\____|__  /__|___|  /\___  >__|   " -ForegroundColor Blue
+        Write-Host "        \/      \/        \/    \/                     \/        \/     \/       " -ForegroundColor DarkMagenta
+        Write-Host " "
+        Write-Host "Starting up v$($Session.Version)! Please wait.."
+        Write-Host " "
+
+        #Setup session variables
+        $Session.ActiveMiners = @()
+        $Session.AllPools = $null
+        $Session.WatchdogTimers = @()
+        [hashtable]$Session.Rates = @{BTC = [Double]1}
+        [hashtable]$Session.ConfigFiles = @{
+            Config     = @{Path='';LastWriteTime=0;Healthy=$false}
+            Colors     = @{Path='';LastWriteTime=0;Healthy=$false}
+            Devices    = @{Path='';LastWriteTime=0;Healthy=$false}
+            Miners     = @{Path='';LastWriteTime=0;Healthy=$false}
+            OCProfiles = @{Path='';LastWriteTime=0;Healthy=$false}
+            Pools      = @{Path='';LastWriteTime=0;Healthy=$false}
+            Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
+            Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
+            GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
+        }
+        [hashtable]$Session.MinerInfo = @{}
+
+        $Session.Strikes           = 3
+        $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
+        $Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias will be 0
+        $Session.DecayPeriod       = 60 #seconds
+        $Session.DecayBase         = 1 - 0.1 #decimal percentage
+
+        $Session.GlobalGetTicker = @()
+        $Session.RoundCounter = 0
+
+        $Session.SkipSwitchingPrevention = $false
+        $Session.StartDownloader = $false
+        $Session.PauseMiners = $false
+        $Session.RestartMiners = $false
+        $Session.Restart = $false
+        $Session.AutoUpdate = $false
+        $Session.MSIAcurrentprofile = -1
+        $Session.RunSetup = $false
+        $Session.IsInitialSetup = $false
+        $Session.IsDonationRun = $false
+        $Session.IsExclusiveRun = $false
+        $Session.Stopp = $false
+        $Session.Benchmarking = $false
+        $Session.IsAdmin = Test-IsElevated
+        $Session.MachineName = [System.Environment]::MachineName
+        try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
+
+        if ($Session.IsAdmin) {Write-Log -Level Verbose "Run as administrator"}
+
+
+        #Cleanup the log and cache
+        if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
+        if (Test-Path ".\Cache"){Get-ChildItem -Path ".\Cache" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-14)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Cache" -ItemType "directory" -Force > $null}
+
+        #Set env variables
+        if ($env:GPU_FORCE_64BIT_PTR -ne 1)          {$env:GPU_FORCE_64BIT_PTR = 1}
+        if ($env:GPU_MAX_HEAP_SIZE -ne 100)          {$env:GPU_MAX_HEAP_SIZE = 100}
+        if ($env:GPU_USE_SYNC_OBJECTS -ne 1)         {$env:GPU_USE_SYNC_OBJECTS = 1}
+        if ($env:GPU_MAX_ALLOC_PERCENT -ne 100)      {$env:GPU_MAX_ALLOC_PERCENT = 100}
+        if ($env:GPU_SINGLE_ALLOC_PERCENT -ne 100)   {$env:GPU_SINGLE_ALLOC_PERCENT = 100}
+        if ($env:GPU_MAX_WORKGROUP_SIZE -ne 256)     {$env:GPU_MAX_WORKGROUP_SIZE = 256}
+        if ($env:CUDA_DEVICE_ORDER -ne 'PCI_BUS_ID') {$env:CUDA_DEVICE_ORDER = 'PCI_BUS_ID'}
+
+        Write-Host "Detecting devices .."
+
+        $Session.AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
+
+        Write-Host "Initialize configuration .."
+
+        Set-PresetDefault
+
         if (-not (Test-Path $ConfigFile)) {
             $Parameters = @{VersionCompatibility=$Session.Version}
             $Session.DefaultValues.Keys | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
@@ -117,17 +159,11 @@
             if ($RunCleanup) {
                 Write-Host "Cleanup legacy data .."
                 [hashtable]$Cleanup_Parameters = @{
-                    ConfigFile = $Session.ConfigFiles["Config"].Path
-                    PoolsConfigFile = $Session.ConfigFiles["Pools"].Path
-                    MinersConfigFile = $Session.ConfigFiles["Miners"].Path
-                    DevicesConfigFile = $Session.ConfigFiles["Devices"].Path
-                    OCProfilesConfigFile = $Session.ConfigFiles["OCProfiles"].Path
-                    AlgorithmsConfigFile = $Session.ConfigFiles["Algorithms"].Path
-                    CoinsConfigFile = $Session.ConfigFiles["Coins"].Path
                     AllDevices = $Session.AllDevices
                     MyCommandParameters = $Session.DefaultValues.Keys
                     Version = if (Test-Path ".\Data\version.json") {(Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
-                }        
+                }
+                $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
                 Get-Item ".\Cleanup.ps1" | Foreach-Object {
                     $Cleanup_Result = & {
                         foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
