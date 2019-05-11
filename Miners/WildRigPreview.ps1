@@ -21,7 +21,7 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
+    [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""; NoCPUMining = $true} #Rainforest
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -71,6 +71,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					EnvVars     = @("GPU_MAX_WORKGROUP_SIZE=256")
+                    NoCPUMining = $_.NoCPUMining
 				}
 			}
 		}

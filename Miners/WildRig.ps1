@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-wildrig/wildrig-multi-linux-0.16.0-beta.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.2-wildrig/wildrig-multi-linux-0.16.2-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.0-wildrig/wildrig-multi-windows-0.16.0-beta.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.2-wildrig/wildrig-multi-windows-0.16.2-beta.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
     [PSCustomObject]@{MainAlgorithm = "hex";        Params = ""} #Hex
     [PSCustomObject]@{MainAlgorithm = "hmq1725";    Params = ""} #HMQ1725
-    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
+    [PSCustomObject]@{MainAlgorithm = "honeycomb";  Params = ""; DevFee = 2.0} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
@@ -49,6 +49,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";     Params = ""} #Tribus
     [PSCustomObject]@{MainAlgorithm = "veil";       Params = ""; Algorithm = "x16rt"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "wildkeccak"; Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
     [PSCustomObject]@{MainAlgorithm = "x16r";       Params = ""} #X16r
     [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = ""} #X16rt
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
@@ -57,6 +58,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x20r";       Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";       Params = ""} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";       Params = ""} #X22i
+    [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -90,22 +92,25 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
+        $Params = "$(if ($Pools.$Algorithm_Norm.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm.CoinSymbol.ToLower()).bin "})$($_.Params)"
+
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
-					Name        = $Miner_Name
-					DeviceName  = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path        = $Path
-					Arguments   = "--api-port $($Miner_Port) --algo $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($Params)"
-					HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API         = "XMRig"
-					Port        = $Miner_Port
-					Uri         = $Uri
-					DevFee      = $DevFee
-					ManualUri   = $ManualUri
-					EnvVars     = @("GPU_MAX_WORKGROUP_SIZE=256")
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "--api-port $($Miner_Port) --algo $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "XMRig"
+					Port           = $Miner_Port
+					Uri            = $Uri
+					DevFee         = if ($_.DevFee) {$_.DevFee} else {$DevFee}
+					ManualUri      = $ManualUri
+                    ExtendInterval = $_.ExtendInterval
+					EnvVars        = @("GPU_MAX_WORKGROUP_SIZE=256")
 				}
 			}
 		}

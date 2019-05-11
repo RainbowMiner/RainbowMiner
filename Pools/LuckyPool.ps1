@@ -14,22 +14,22 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region_Default = Get-Region "us"
-
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32}
+    [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR"; algo = "wildkeccak";  port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
+    [PSCustomObject]@{coin = "Swap";      symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm = $_.algo
-    $Pool_Currency  = $_.symbol
-    $Pool_Currency2 = $_.symbol2
-    $Pool_Fee       = $_.fee
-    $Pool_Port      = $_.port
-    $Pool_RpcPath   = $_.rpc
+    $Pool_Algorithm     = $_.algo
+    $Pool_Currency      = $_.symbol
+    $Pool_Currency2     = $_.symbol2
+    $Pool_Fee           = $_.fee
+    $Pool_Port          = $_.port
+    $Pool_RpcPath       = $_.rpc
+    $Pool_ScratchPadUrl = $_.scratchpad
 
-    $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
+    $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
+    $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
@@ -64,34 +64,37 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
-        $Pool_SSL = $false
-        foreach ($Pool_Port in $Pool_Ports) {
-            if ($Pool_Port) {
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $_.coin
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = $Stat.$StatAverage #instead of .Live
-                    StablePrice   = $Stat.Week
-                    MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                    Host          = "$($Pool_HostPath).luckypool.io"
-                    Port          = $Pool_Port.CPU
-                    Ports         = $Pool_Port
-                    User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                    Pass          = "{workername:$Worker}"
-                    Region        = $Pool_Region_Default
-                    SSL           = $Pool_SSL
-                    Updated       = $Stat.Updated
-                    PoolFee       = $Pool_Fee
-                    Workers       = $Pool_Data.Workers
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $Pool_Data.TSL
-                    BLK           = $Stat.BlockRate_Average
+        foreach ($Pool_Region in $_.Region) {
+            $Pool_SSL = $false
+            foreach ($Pool_Port in $Pool_Ports) {
+                if ($Pool_Port) {
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        CoinName      = $_.coin
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_Currency
+                        Price         = $Stat.$StatAverage #instead of .Live
+                        StablePrice   = $Stat.Week
+                        MarginOfError = $Stat.Week_Fluctuation
+                        Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                        Host          = "$($Pool_HostPath).luckypool.io"
+                        Port          = $Pool_Port.CPU
+                        Ports         = $Pool_Port
+                        User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
+                        Pass          = "{workername:$Worker}"
+                        Region        = Get-Region $Pool_Region
+                        SSL           = $Pool_SSL
+                        Updated       = $Stat.Updated
+                        PoolFee       = $Pool_Fee
+                        Workers       = $Pool_Data.Workers
+                        Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_Data.TSL
+                        BLK           = $Stat.BlockRate_Average
+                        ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region}
+                    }
                 }
+                $Pool_SSL = $true
             }
-            $Pool_SSL = $true
         }
     }
 }

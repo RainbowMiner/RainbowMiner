@@ -20,7 +20,7 @@ $Pool_Region_Default = "eu"
 @("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
+    [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"; scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
 
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
     [PSCustomObject]@{coin = "Torque";      symbol = "XTC";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
@@ -47,17 +47,18 @@ $Pools_Data = @(
 $Pools_Requests = [hashtable]@{}
 
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm = $_.algo
-    $Pool_Currency  = $_.symbol
-    $Pool_Currency2 = $_.symbol2
-    $Pool_Fee       = $_.fee
-    $Pool_Port      = $_.port
-    $Pool_RpcPath   = $_.rpc
+    $Pool_Algorithm     = $_.algo
+    $Pool_Currency      = $_.symbol
+    $Pool_Currency2     = $_.symbol2
+    $Pool_Fee           = $_.fee
+    $Pool_Port          = $_.port
+    $Pool_RpcPath       = $_.rpc
+    $Pool_ScratchPadUrl = $_.scratchpad
 
-    $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
-    $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
+    $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
+    $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Regions = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
+    $Pool_Regions       = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
@@ -127,6 +128,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
+                        ScratchPadUrl = $Pool_ScratchPadUrl
                     }
                 }
             }
