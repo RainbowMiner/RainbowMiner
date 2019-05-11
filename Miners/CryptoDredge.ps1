@@ -49,7 +49,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeon";        NH = $true;  MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
-    [PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
     [PSCustomObject]@{MainAlgorithm = "allium";      NH = $true;  MinMemGb = 1; Params = ""} #Allium
     [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Dyn
     [PSCustomObject]@{MainAlgorithm = "argon2d250";  NH = $true;  MinMemGb = 1; Params = ""} #Argon2d250
@@ -67,7 +67,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnturtle";    NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightturtle
     #[PSCustomObject]@{MainAlgorithm = "cnv7";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "cnv8";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
     #[PSCustomObject]@{MainAlgorithm = "dedal";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3
