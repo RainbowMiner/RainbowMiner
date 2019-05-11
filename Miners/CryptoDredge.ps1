@@ -48,47 +48,47 @@ if ($IsLinux) {
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "aeon";      MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
-    [PSCustomObject]@{MainAlgorithm = "aeternity"; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
-    [PSCustomObject]@{MainAlgorithm = "allium";    MinMemGb = 1; Params = ""} #Allium
-    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn";  MinMemGb = 1; Params = ""} #Argon2d-Dyn
-    [PSCustomObject]@{MainAlgorithm = "argon2d250";   MinMemGb = 1; Params = ""} #Argon2d250
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096";  MinMemGb = 1; Params = ""} #Argon2d4096
-    [PSCustomObject]@{MainAlgorithm = "bcd";       MinMemGb = 1; Params = ""} #BCD
-    [PSCustomObject]@{MainAlgorithm = "bitcore";   MinMemGb = 1; Params = ""} #BitCore
-    #[PSCustomObject]@{MainAlgorithm = "c11";       MinMemGb = 1; Params = ""} #C11, disabled v0.19.0
-    #[PSCustomObject]@{MainAlgorithm = "cnfast";    MinMemGb = 2; Params = ""} #CryptonightFast, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnfast2";   MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
-    [PSCustomObject]@{MainAlgorithm = "cngpu";     MinMemGb = 4; Params = ""} #CryptonightGPU
-    [PSCustomObject]@{MainAlgorithm = "cnhaven";   MinMemGb = 4; Params = ""} #Cryptonighthaven
-    [PSCustomObject]@{MainAlgorithm = "cnheavy";   MinMemGb = 4; Params = ""} #Cryptonightheavy
-    [PSCustomObject]@{MainAlgorithm = "cnsaber";   MinMemGb = 4; Params = ""} #Cryptonightheavytube
-    #[PSCustomObject]@{MainAlgorithm = "cnsuperfast"; MinMemGb = 2; Params = ""} #CryptonightSuperFast, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnturtle";  MinMemGb = 4; Params = ""} #Cryptonightturtle
-    #[PSCustomObject]@{MainAlgorithm = "cnv7";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29"; MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
-    #[PSCustomObject]@{MainAlgorithm = "dedal";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "hmq1725";   MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
-    [PSCustomObject]@{MainAlgorithm = "lyra2v3";   MinMemGb = 1; Params = ""} #Lyra2Re3
-    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";   MinMemGb = 1; Params = ""} #Lyra2vc0banHash
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "lyra2zz";   MinMemGb = 1; Params = ""} #Lyra2zz
-    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
-    [PSCustomObject]@{MainAlgorithm = "neoscrypt"; MinMemGb = 1; Params = ""} #Neoscrypt
-    #[PSCustomObject]@{MainAlgorithm = "phi";       MinMemGb = 1; Params = ""} #PHI, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""} #PHI2
-    [PSCustomObject]@{MainAlgorithm = "pipe";      MinMemGb = 1; Params = ""} #Pipe
-    [PSCustomObject]@{MainAlgorithm = "skunk";     MinMemGb = 1; Params = ""} #Skunk
-    #[PSCustomObject]@{MainAlgorithm = "stellite";  MinMemGb = 1; Params = ""} #Stellite, disabled v0.19.0
-    [PSCustomObject]@{MainAlgorithm = "tribus";    MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "veil";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
-    [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
-    [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""} #X16s
-    [PSCustomObject]@{MainAlgorithm = "x17";       MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
-    [PSCustomObject]@{MainAlgorithm = "x21s";      MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
-    [PSCustomObject]@{MainAlgorithm = "x22i";      MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
+    [PSCustomObject]@{MainAlgorithm = "aeon";        NH = $true;  MinMemGb = 1; Params = ""} #Cryptolightv7 / Aeon
+    [PSCustomObject]@{MainAlgorithm = "aeternity";   NH = $false; MinMemGb = 6; MinMemGbW10 = 8; Params = ""} #Aeternity / Cuckoocycle
+    [PSCustomObject]@{MainAlgorithm = "allium";      NH = $true;  MinMemGb = 1; Params = ""} #Allium
+    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d-Dyn
+    [PSCustomObject]@{MainAlgorithm = "argon2d250";  NH = $true;  MinMemGb = 1; Params = ""} #Argon2d250
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; NH = $true;  MinMemGb = 1; Params = ""} #Argon2d4096
+    [PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD
+    [PSCustomObject]@{MainAlgorithm = "bitcore";     NH = $true;  MinMemGb = 1; Params = ""} #BitCore
+    #[PSCustomObject]@{MainAlgorithm = "c11";         NH = $true;  MinMemGb = 1; Params = ""} #C11, disabled v0.19.0
+    #[PSCustomObject]@{MainAlgorithm = "cnfast";      NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnfast2";     NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
+    [PSCustomObject]@{MainAlgorithm = "cngpu";       NH = $true;  MinMemGb = 4; Params = ""} #CryptonightGPU
+    [PSCustomObject]@{MainAlgorithm = "cnhaven";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonighthaven
+    [PSCustomObject]@{MainAlgorithm = "cnheavy";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightheavy
+    [PSCustomObject]@{MainAlgorithm = "cnsaber";     NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightheavytube
+    #[PSCustomObject]@{MainAlgorithm = "cnsuperfast";   NH = $true;  MinMemGb = 2; Params = ""} #CryptonightSuperFast, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnturtle";    NH = $true;  MinMemGb = 4; Params = ""} #Cryptonightturtle
+    #[PSCustomObject]@{MainAlgorithm = "cnv7";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV7, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "cnv8";        NH = $true;  MinMemGb = 2; Params = ""; ExtendInterval = 2} #CryptonightV8 / Monero
+    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
+    #[PSCustomObject]@{MainAlgorithm = "dedal";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3
+    [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; NH = $true;  MinMemGb = 1; Params = ""} #Lyra2vc0banHash
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";      NH = $true;  MinMemGb = 1; Params = ""} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "lyra2zz";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2zz
+    [PSCustomObject]@{MainAlgorithm = "mtp";         NH = $true;  MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
+    [PSCustomObject]@{MainAlgorithm = "neoscrypt";   NH = $true;  MinMemGb = 1; Params = ""} #Neoscrypt
+    #[PSCustomObject]@{MainAlgorithm = "phi";         NH = $true;  MinMemGb = 1; Params = ""} #PHI, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "phi2";        NH = $true;  MinMemGb = 1; Params = ""} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "pipe";        NH = $true;  MinMemGb = 1; Params = ""} #Pipe
+    [PSCustomObject]@{MainAlgorithm = "skunk";       NH = $true;  MinMemGb = 1; Params = ""} #Skunk
+    #[PSCustomObject]@{MainAlgorithm = "stellite";    NH = $true;  MinMemGb = 1; Params = ""} #Stellite, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "tribus";      NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #Tribus
+    [PSCustomObject]@{MainAlgorithm = "veil";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"; Algorithm = "x16rt"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "x16r";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16s";        NH = $true;  MinMemGb = 1; Params = ""} #X16s
+    [PSCustomObject]@{MainAlgorithm = "x17";         NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
+    [PSCustomObject]@{MainAlgorithm = "x21s";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
+    [PSCustomObject]@{MainAlgorithm = "x22i";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
 )
 
 
@@ -129,7 +129,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -ne "Nicehash")) {
 				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 				$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
