@@ -523,12 +523,10 @@
                         $Status = $false
                         $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
                         try {
-                            $pbody = @{}
-                            if ($Parameters.body) {
+                            $pbody = $null
+                            if ($Parameters.body -match "^{.+}$") {
                                 $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
-                                if ($pbody_in) {
-                                    $pbody_in.PSObject.Properties | Foreach-Object {$pbody[$_.Name] = $_.Value}
-                                }
+                                $pbody_in.PSObject.Properties | Foreach-Object {if ($pbody -eq $null) {$pbody = @{}};$pbody[$_.Name] = $_.Value}
                             }
                             if ($Parameters.jobkey -eq "rates") {
                                 try {
@@ -544,10 +542,10 @@
                                     Remove-Variable "NewSyms"
                                 } catch {}
                             }
-                            $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $body -jobkey $Parameters.jobkey
+                            $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -jobkey $Parameters.jobkey
                             if ($Result) {$Status = $true}
                         } catch {}
-                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                        $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
                     }
                     break
                 }
