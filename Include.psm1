@@ -4325,6 +4325,7 @@ function Get-ServerConfig {
             }
         } elseif (-not $Result.Status) {
             Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
+            $rv = $false
         }
     }
     $rv
