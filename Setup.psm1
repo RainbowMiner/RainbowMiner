@@ -489,6 +489,9 @@ function Start-Setup {
                                 if ($Config.RunMode -eq "server") {
                                     Write-Host "All clients will be connected to this machines API port. Please write it down!" -ForegroundColor Cyan
                                     Write-Host " "
+                                } else {
+                                    Write-Host "Let's start with the local setup of this machine's API." -ForegroundColor Cyan
+                                    Write " "
                                 }
                                 Write-Host "RainbowMiner can be monitored using your webbrowser via API:" -Foreground Cyan
                                 Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
@@ -566,6 +569,11 @@ function Start-Setup {
                         }
                         "servername" {
                             if ($Config.RunMode -eq "client") {
+                                if ($IsInitialSetup) {
+                                    Write-Host " "
+                                    Write-Host "Now let us continue with your server's credentials" -ForegroundColor Cyan
+                                    Write-Host " "
+                                }
                                 $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9\-_\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
@@ -692,6 +700,7 @@ function Start-Setup {
                                         Write-Host "Error downloading configfiles!" -ForegroundColor Yellow
                                         Write-Host " "
                                     }
+                                    $DownloadServerNow = $false
                                 }
 
                                 if ($GlobalSetupStepStore) {
