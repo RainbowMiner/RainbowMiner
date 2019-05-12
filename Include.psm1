@@ -4279,7 +4279,7 @@ function Get-SessionServerConfig {
 
     $ServerConfigName = Get-ConfigArray $CurrentConfig.ServerConfigName
 
-    if ($Session.Config -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig) -and ($ServerConfigName | Measure-Object).Count) {
+    if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig) -and ($ServerConfigName | Measure-Object).Count) {
         Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force > $null
     }
 }
@@ -4309,7 +4309,9 @@ function Get-ServerConfig {
     $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
-        $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile)) {"0"} else {Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()})"}) -join ','
+        $ServerLWT = if (Test-Path ".\Data\serverlwt.json") {try {Get-Content ".\Data\serverlwt.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {}}
+        if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
+        $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)"
         $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 5
         if ($Result.Status -and $Result.Content) {
@@ -4322,7 +4324,9 @@ function Get-ServerConfig {
                     $Data = $Preset
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
+                $ServerLWT | Add-Member $_ $Result.Content.$_.lwt -Force
             }
+            Set-ContentJson ".\Data\serverlwt.json" -Data $ServerLWT
         } elseif (-not $Result.Status) {
             Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
             $rv = $false

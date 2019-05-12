@@ -501,9 +501,11 @@
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
                             if ($PathToFile = Get-ConfigPath $GetConfigA[0] $Parameters.workername) {
-                                $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt (Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()))
+                                $ConfigLwt = Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
+                                $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt $ConfigLwt)
                                 $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
                                                             isnew = $GetConfigNew
+                                                            lwt   = $ConfigLwt
                                                             data  = if ($GetConfigNew) {Get-ConfigContent $GetConfigA[0] -WorkerName $Parameters.workername}
                                                             }) -Force
                                 $Status = $true
