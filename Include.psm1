@@ -4265,8 +4265,22 @@ function Get-SessionServerConfig {
         [Parameter(Mandatory = $False)]
         [switch]$Force
     )
-    if ($Session.Config -and $Session.Config.RunMode -eq "client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and $Session.Config.EnableServerConfig -and ($Session.Config.ServerConfigName | Measure-Object).Count) {
-        Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $Session.Config.ServerConfigName -ExcludeConfigVars $Session.Config.ExcludeServerConfigVars -Server $Session.Config.ServerName -Port $Session.Config.ServerPort -WorkerName $Session.Config.WorkerName -Username $Session.Config.ServerUser -Password $Session.Config.ServerPassword -Force:$Force > $null
+    if (-not (Test-Config "Config" -Exists)) {return}
+
+    $CurrentConfig = if ($Session.Config) {$Session.Config} else {
+        $Parameters = @{}
+        $Session.DefaultValues.Keys | ForEach-Object {
+            $val = $Session.DefaultValues[$_]
+            if ($val -is [array]) {$val = $val -join ','}
+            $Parameters.Add($_ , $val)
+        }
+        Get-ConfigContent "Config" -Parameters $Parameters
+    }
+
+    $ServerConfigName = Get-ConfigArray $CurrentConfig.ServerConfigName
+
+    if ($Session.Config -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig) -and ($ServerConfigName | Measure-Object).Count) {
+        Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force > $null
     }
 }
 
