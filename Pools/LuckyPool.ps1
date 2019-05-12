@@ -64,7 +64,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
-        foreach ($Pool_Region in $_.Region) {
+        foreach ($Pool_Region in $_.region) {
             $Pool_SSL = $false
             foreach ($Pool_Port in $Pool_Ports) {
                 if ($Pool_Port) {

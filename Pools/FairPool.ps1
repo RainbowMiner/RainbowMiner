@@ -36,7 +36,9 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Nekonium";        symbol = "NUKO"; algo = "Ethash";      port = 7777; fee = 1.0; rpc = "nuko";    user="%wallet%.%worker%"}
     [PSCustomObject]@{coin = "Pegascoin";       symbol = "PGC";  algo = "Ethash";      port = 1111; fee = 1.0; rpc = "pgc";     user="%wallet%.%worker%"}
 
-    [PSCustomObject]@{coin = "Purk";            symbol = "PURK"; algo = "WildKeccak";  port = 2244; fee = 1.0; rpc = "purk";    user="%wallet%+%worker%"}
+    [PSCustomObject]@{coin = "Zano";            symbol = "ZANO"; algo = "ProgPowZ";    port = 7020; fee = 1.0; rpc = "zano";    user="%wallet%.%worker%"}
+
+    #[PSCustomObject]@{coin = "Purk";            symbol = "PURK"; algo = "WildKeccak";  port = 2244; fee = 1.0; rpc = "purk";    user="%wallet%+%worker%"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
