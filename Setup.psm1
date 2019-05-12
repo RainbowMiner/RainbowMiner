@@ -606,7 +606,7 @@ function Start-Setup {
                                     Write-Host " "
                                     if (Read-HostBool "Retry to connect?" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                         $GlobalSetupStepStore = $false
-                                        throw "Goto clienconnect"
+                                        throw "Goto clientconnect"
                                     }
                                     if (Read-HostBool "Restart client/server queries?" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                         $GlobalSetupStepStore = $false
