@@ -12,10 +12,11 @@ function Get-Version {
 
 function Compare-Version {
     [CmdletBinding()]
-    param($Version1,$Version2)
+    param($Version1,$Version2,[int]$revs = -1)
     $ver1 = $Version1 -split '\.'
     $ver2 = $Version2 -split '\.'
     $max = [Math]::min($ver1.Count,$ver2.Count)
+    if ($revs -gt 0 -and $revs -lt $max) {$max = $revs}
 
     for($i=0;$i -lt $max;$i++) {
         if ($ver1[$i] -lt $ver2[$i]) {return -1}

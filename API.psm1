@@ -495,7 +495,7 @@
                 }
                 "/getconfig" {
                     $Status = $false
-                    if ($API.IsServer -and ($Session.Version -eq $Parameters.version)) {
+                    if ($API.IsServer -and -not (Compare-Version $Session.Version $Parameters.version -revs 2)) {
                         if ($Parameters.machinename) {$API.Clients[$Parameters.machinename] = Get-UnixTimestamp}
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
