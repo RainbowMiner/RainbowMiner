@@ -1036,8 +1036,10 @@ function Start-Setup {
                         }
                         "hashrateweight" {
                             Write-Host " "
-                            Write-Host "Adjust hashrate weight"
-                            Write-Host "Formula: price * (1-(hashrate weight/100)*(1-(rel. hashrate)^(hashrate weight strength/100))" -ForegroundColor Yellow
+                            Write-Host "Adjust hashrate weight" -ForegroundColor Green
+                            Write-Host " "
+                            Write-Host "Formula: price * (1-(hashrate weight/100)*(1-(rel. hashrate)^(hashrate weight strength/100))" -ForegroundColor Cyan
+                            Write-Host " "
                             $Config.HashrateWeight = Read-HostInt -Prompt "Adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable)" -Default $Config.HashrateWeight -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "hashrateweightstrength" {
