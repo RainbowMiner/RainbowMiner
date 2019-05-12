@@ -4309,12 +4309,15 @@ function Get-ServerConfig {
     $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
-        $ServerLWT = if (Test-Path ".\Data\serverlwt.json") {try {Get-Content ".\Data\serverlwt.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {}}
+        if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
+        $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
+        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)"
         $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 5
         if ($Result.Status -and $Result.Content) {
+            $ChangeTag = Get-ContentDataMD5hash($ServerLWT) 
             $ConfigName | Where-Object {$Result.Content.$_.isnew -and $Result.Content.$_.data} | Foreach-Object {
                 $PathToFile = $ConfigFiles[$_].Path
                 $Data = $Result.Content.$_.data
@@ -4326,7 +4329,7 @@ function Get-ServerConfig {
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
                 $ServerLWT | Add-Member $_ $Result.Content.$_.lwt -Force
             }
-            Set-ContentJson ".\Data\serverlwt.json" -Data $ServerLWT
+            if ($ChangeTag -ne (Get-ContentDataMD5hash($ServerLWT))) {Set-ContentJson $ServerLWTFile -Data $ServerLWT}
         } elseif (-not $Result.Status) {
             Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
             $rv = $false
