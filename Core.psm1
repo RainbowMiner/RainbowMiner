@@ -575,10 +575,10 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if (-not $Session.LastDonated) {
-        $Session.LastDonated = Get-LastDrun
+    if (-not $Session.LastDonated -or $Session.PauseMiners) {
+        if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
         $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)        
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
         $Session.IsDonationRun = $false
@@ -586,7 +586,7 @@ function Invoke-Core {
         $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         $Session.UserConfig = $null
         $Session.AllPools = $null
-        Write-Log "Donation run finished. "        
+        Write-Log "Donation run finished. "
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
