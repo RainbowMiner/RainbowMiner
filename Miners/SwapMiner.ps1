@@ -76,7 +76,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						Path = $Path                    
 						Arguments = $Arguments
 						HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
-						API = "SwapMiner"
+						API = "SwapminerWrapper"
 						Port = $Miner_Port
 						Uri = $Uri
 						DevFee = $_.DevFee
