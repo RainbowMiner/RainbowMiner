@@ -4268,19 +4268,20 @@ function Get-SessionServerConfig {
     if (-not (Test-Config "Config" -Exists)) {return}
 
     $CurrentConfig = if ($Session.Config) {$Session.Config} else {
-        $Parameters = @{}
-        $Session.DefaultValues.Keys | ForEach-Object {
+        $Result = Get-ConfigContent "Config"
+        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","WorkerName") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
             $val = $Session.DefaultValues[$_]
             if ($val -is [array]) {$val = $val -join ','}
-            $Parameters.Add($_ , $val)
+            $Result.$_ = $val
         }
-        Get-ConfigContent "Config" -Parameters $Parameters
+        $Result
     }
 
-    $ServerConfigName = Get-ConfigArray $CurrentConfig.ServerConfigName
-
-    if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig) -and ($ServerConfigName | Measure-Object).Count) {
-        Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force > $null
+    if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig)) {
+        $ServerConfigName = if ($CurrentConfig.ServerConfigName) {Get-ConfigArray $CurrentConfig.ServerConfigName}
+        if (($ServerConfigName | Measure-Object).Count) {
+            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force > $null
+        }
     }
 }
 
