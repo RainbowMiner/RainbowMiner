@@ -76,6 +76,7 @@
 337	SwapMiner
 338	CryptoDredge16
 339	MultiMiner
+340	ProgPOWZNvidia
 
 400	Sgminer
 401	SgminerBitcore
@@ -90,6 +91,7 @@
 410	SgminerDyn
 411	SgminerMTP
 412	WildRig01538
+413	ProgPOWZAMD
 
 500	CpuminerJayddee
 501	CpuminerJayddeeAessse42
