@@ -491,7 +491,7 @@ function Start-Setup {
                                     Write-Host " "
                                 } else {
                                     Write-Host "Let's start with the local setup of this machine's API." -ForegroundColor Cyan
-                                    Write " "
+                                    Write-Host " "
                                 }
                                 Write-Host "RainbowMiner can be monitored using your webbrowser via API:" -Foreground Cyan
                                 Write-Host "- on this machine: http://localhost:$($Config.APIPort)" -ForegroundColor Cyan
