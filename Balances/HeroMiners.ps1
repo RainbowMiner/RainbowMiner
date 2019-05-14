@@ -8,14 +8,15 @@ $Pools_Data = @(
     #[PSCustomObject]@{coin = "Aeon";          symbol = "AEON";  algo = "CnLiteV7";    port = 10410; fee = 0.9; rpc = "aeon"}
     [PSCustomObject]@{coin = "Arqma";         symbol = "ARQ";   algo = "CnLiteV7";    port = 10320; fee = 0.9; rpc = "arqma"}
     [PSCustomObject]@{coin = "BitTube";       symbol = "TUBE";  algo = "CnSaber";     port = 10280; fee = 0.9; rpc = "tube"}
-    [PSCustomObject]@{coin = "Bloc";          symbol = "BLOC";  algo = "CnHaven";     port = 10240; fee = 0.9; rpc = "bloc"}
+    #[PSCustomObject]@{coin = "Bloc";          symbol = "BLOC";  algo = "CnHaven";     port = 10240; fee = 0.9; rpc = "bloc"}
     [PSCustomObject]@{coin = "Citadel";       symbol = "CTL";   algo = "CnV7";        port = 10420; fee = 0.9; rpc = "citadel"}
     [PSCustomObject]@{coin = "Conceal";       symbol = "CCX";   algo = "CnFast";      port = 10360; fee = 0.9; rpc = "conceal"}
     [PSCustomObject]@{coin = "Graft";         symbol = "GRFT";  algo = "CnRwz";       port = 10100; fee = 0.9; rpc = "graft"}
     [PSCustomObject]@{coin = "Haven";         symbol = "XHV";   algo = "CnHaven";     port = 10140; fee = 0.9; rpc = "haven"}
     [PSCustomObject]@{coin = "Haven+Bloc";    symbol = "XHV";   algo = "CnHaven";     port = 10450; fee = 0.9; rpc = "havenbloc";  symbol2 = "BLOC"}
-    [PSCustomObject]@{coin = "Lethean";       symbol = "LTHN";  algo = "CnR";         port = 10180; fee = 0.9; rpc = "lethean"}
+    #[PSCustomObject]@{coin = "Lethean";       symbol = "LTHN";  algo = "CnR";         port = 10180; fee = 0.9; rpc = "lethean"}
     [PSCustomObject]@{coin = "Loki";          symbol = "LOKI";  algo = "CnTurtle";    port = 10110; fee = 0.9; rpc = "loki"}
+    [PSCustomObject]@{coin = "Loki+Plenteum"; symbol = "LOKI";  algo = "CnTurtle";    port = 10420; fee = 0.9; rpc = "plenteum";  symbol2 = "PLE"}
     [PSCustomObject]@{coin = "Loki+Turtle";   symbol = "LOKI";  algo = "CnTurtle";    port = 10520; fee = 0.9; rpc = "lokiturtle";  symbol2 = "TRTL"}
     [PSCustomObject]@{coin = "Masari";        symbol = "MSR";   algo = "CnHalf";      port = 10150; fee = 0.9; rpc = "masari"}
     [PSCustomObject]@{coin = "Monero";        symbol = "XMR";   algo = "CnR";         port = 10190; fee = 0.9; rpc = "monero"}
@@ -26,10 +27,14 @@ $Pools_Data = @(
     #[PSCustomObject]@{coin = "Saronite";      symbol = "XRN";   algo = "CnHeavy";     port = 10230; fee = 0.9; rpc = "saronite"}
     #[PSCustomObject]@{coin = "Stellite";      symbol = "XTL";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "stellite"}
     [PSCustomObject]@{coin = "Swap";          symbol = "XWP";   algo = "Cuckaroo29s"; port = 10441; fee = 0.9; rpc = "swap"; divisor = 32}
+    [PSCustomObject]@{coin = "Triton";        symbol = "XTRI";  algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "triton"}
+    [PSCustomObject]@{coin = "Triton+Iridium";symbol = "XTRI";  algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "triton"; symbol2 = "IRD"}
+    [PSCustomObject]@{coin = "Torque";        symbol = "XTC";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "torque"}
     [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "CnTurtle";    port = 10380; fee = 0.9; rpc = "turtlecoin"}
     [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx";       port = 10470; fee = 0.9; rpc = "uplexa"}
     [PSCustomObject]@{coin = "Xcash";         symbol = "XCASH"; algo = "CnHeavyX";    port = 10440; fee = 0.9; rpc = "xcash"}
     [PSCustomObject]@{coin = "Xtend";         symbol = "XTNC";  algo = "CnTurtle";    port = 10390; fee = 0.9; rpc = "xtendcash"}
+    [PSCustomObject]@{coin = "Xtend+Plenteum";symbol = "XTNC";  algo = "CnTurtle";    port = 10620; fee = 0.9; rpc = "xtncple"; symbol2 = "PLE"}
     [PSCustomObject]@{coin = "Xtend+Turtle";  symbol = "XTNC";  algo = "CnTurtle";    port = 10390; fee = 0.9; rpc = "xtendcash"; symbol2 = "TRTL"}
     [PSCustomObject]@{coin = "Obscure";       symbol = "XSC";   algo = "CnTurtle";    port = 10480; fee = 0.9; rpc = "obscure"}
 )
@@ -46,7 +51,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
         $Divisor = $Pool_Request.config.coinUnits
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
