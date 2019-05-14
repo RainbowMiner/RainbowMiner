@@ -12,8 +12,9 @@ Param(
 
     $Global:AsyncLoader = [hashtable]::Synchronized(@{})
 
-    $AsyncLoader.Stop = $false
-    $AsyncLoader.Jobs = [hashtable]::Synchronized(@{})
+    $AsyncLoader.Stop       = $false
+    $AsyncLoader.Pause      = $true
+    $AsyncLoader.Jobs       = [hashtable]::Synchronized(@{})
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
@@ -42,13 +43,17 @@ Param(
 
         $Cycle = -1
 
+        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+
         while (-not $AsyncLoader.Stop) {
-            $Start = (Get-Date).ToUniversalTime()
-            $Cycle++            
-            foreach ($Jobkey in @($AsyncLoader.Jobs.Keys | Select-Object)) {
-                if ($AsyncLoader.Jobs.$Jobkey.CycleTime -le 0) {$AsyncLoader.Jobs.$Jobkey.CycleTime = $AsyncLoader.Interval}
-                $Job = $AsyncLoader.Jobs.$Jobkey
-                if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+            $StopWatch.Restart()
+            $Cycle++
+            $AsyncLoader.Jobs.Keys | Where-Object {$AsyncLoader.Jobs.$_.CycleTime -le 0} | Foreach-Object {$AsyncLoader.Jobs.$Jobkey.CycleTime = $AsyncLoader.Interval}
+
+            if (-not $AsyncLoader.Pause) {
+                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value -and -not $_.Value.Running -and -not $_.Value.Paused -and $_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Sort-Object {$_.Value.LastRequest - (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Foreach-Object {
+                    $JobKey = $_.Name
+                    $Job    = $_.Value
                     try {
                         Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
                         if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
@@ -61,7 +66,7 @@ Param(
                     }
                 }
             }
-            $Delta = $AsyncLoader.CycleTime-((Get-Date).ToUniversalTime() - $Start).TotalSeconds
+            $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0) {Start-Sleep -Milliseconds ($Delta*1000)}
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Error.Clear()}
             if ($Errors.Count) {$Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Errors.Clear()}

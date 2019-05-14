@@ -1877,7 +1877,10 @@ function Invoke-Core {
     [System.GC]::Collect()
     Get-MemoryUsage -ForceFullCollection >$null
 
-    $Session.Timer = (Get-Date).ToUniversalTime()         
+    $Session.Timer = (Get-Date).ToUniversalTime()
+
+    #Start asyncloader after first run
+    if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = $false}
 
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false

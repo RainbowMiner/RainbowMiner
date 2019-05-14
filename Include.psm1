@@ -4846,9 +4846,11 @@ Param(
 
         $retry = $AsyncLoader.Jobs.$Jobkey.Retry + 1
 
+        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
         do {
-            $Request = $RequestError = $null            
-            try {
+            $Request = $RequestError = $null
+            $StopWatch.Restart()
+            try {                
                 if ($Quickstart) {
                     if (-not ($Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore)) {
                         Remove-Item ".\Cache\$($Jobkey).asy" -Force
@@ -4876,9 +4878,17 @@ Param(
             $retry--
             if ($retry) {
                 if (-not $RequestError) {$retry = 0}
-                else {Start-Sleep -Milliseconds $AsyncLoader.Jobs.$Jobkey.RetryWait}
+                else {
+                    $Passed = $StopWatch.ElapsedMilliseconds
+                    if ($AsyncLoader.Jobs.$Jobkey.RetryWait -gt $Passed) {
+                        Start-Sleep -Milliseconds ($AsyncLoader.Jobs.$Jobkey.RetryWait - $Passed)
+                    }
+                }
             }
         } until ($retry -le 0)
+
+        $StopWatch.Stop()
+        Remove-Variable "StopWatch"
 
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
@@ -4978,8 +4988,7 @@ function Invoke-ReportMinerStatus {
         $ReportDone = $false
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Valid = (Get-UnixTimestamp) + $Session.Config.BenchmarkInterval
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; valid = $Valid; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
