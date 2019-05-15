@@ -780,6 +780,8 @@ function Invoke-Core {
     if ($Session.Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Session.Config.Proxy}
     else {$PSDefaultParameterValues.Remove("*:Proxy")}
 
+    if ($Session.RoundCounter -eq 0) {Write-Host "Loading API modules .."}
+
     Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
 
     if ($UseTimeSync) {Test-TimeSync}
@@ -819,15 +821,19 @@ function Invoke-Core {
     #Load information about the pools
     Write-Log "Loading pool information. "
 
+    if ($Session.RoundCounter -eq 0) {Write-Host "Loading pool modules .."}
+
     $SelectedPoolNames = @()
     $NewPools = @()
     $TimerPools = @{}
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
+            if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
             $TimerPools[$_] = ((Get-UnixTimestamp -Milliseconds) - $start)/1000
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($([Math]::Round($TimerPools[$_],3))s) "}
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
@@ -841,6 +847,9 @@ function Invoke-Core {
         } else {
             Write-Log "Updating pool balances. "
         }
+
+        if ($Session.RoundCounter -eq 0) {Write-Host "Loading balance modules .."}
+
         $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {$API.Balances = $BalancesData | ConvertTo-Json -Depth 10}
@@ -945,6 +954,9 @@ function Invoke-Core {
  
     #Load information about the miners
     Write-Log "Getting miner information. "
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Loading miner modules .."}
+
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName    
     if ($Session.Config.EnableAutoMinerPorts) {Set-ActiveMinerPorts @($Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object);Set-ActiveTcpPorts} else {Set-ActiveTcpPorts -Disable}
