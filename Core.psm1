@@ -832,8 +832,9 @@ function Invoke-Core {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms
-            $TimerPools[$_] = ((Get-UnixTimestamp -Milliseconds) - $start)/1000
-            if ($Session.RoundCounter -eq 0) {Write-Host "done ($([Math]::Round($TimerPools[$_],3))s) "}
+            $TimerPools[$_] = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
+            Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
@@ -868,6 +869,8 @@ function Invoke-Core {
 
     #Give API access to the current running configuration
     #$API.NewPools = $NewPools | ConvertTo-Json -Depth 10 -Compress
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
 
     #This finds any pools that were already in $Session.AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
@@ -1002,6 +1005,8 @@ function Invoke-Core {
         $AllMiners = $AllMiners | Where-Object {@($MinersNeedSdk) -notcontains $_}
         Start-Sleep 2
     }
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best miners .."}
 
     if ($Session.Config.MiningMode -eq "combo") {
         if (($AllMiners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null -and $_.DeviceModel -notmatch '-'} | Measure-Object).Count -gt 0) {
@@ -1266,6 +1271,7 @@ function Invoke-Core {
         if ($Miners_DownloadList.Count -gt 0 -and $Session.Downloader.State -ne "Running") {
             Clear-Host
             Write-Log "Starting download of $($Miners_DownloadList.Count) files."
+            if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) files) .."}
             $Session.Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
         }
         $Session.StartDownloader = $false
@@ -1503,6 +1509,8 @@ function Invoke-Core {
             $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
         }
     }
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Starting mining operation .."}
 
     #Stop failed miners
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | Foreach-Object {
