@@ -100,7 +100,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Int]$MSIAprofile = 0, # default MSI Afterburner profile to be set
     [Parameter(Mandatory = $false)]
-    [String]$UIstyle = "full", # ui style: full=show all, lite=show only active miner
+    [String]$UIstyle = "lite", # ui style: full=show all, lite=show only active miner
     [Parameter(Mandatory = $false)]
     [Switch]$UseTimeSync = $false, # if set to $true, the windows time service will be used to synchronize the PC time with world time (needs admin rights)
     [Parameter(Mandatory = $false)]
