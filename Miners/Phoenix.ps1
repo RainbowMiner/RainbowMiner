@@ -102,6 +102,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						Uri = $Uri
 						DevFee = $DevFee
 						ManualUri = $ManualUri
+                        StartCommand = "Get-ChildItem `"$(Join-Path ($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) | Split-Path) "*pools.txt")`" | Remove-Item -Force"
 					}
 				}
 			}
