@@ -5,18 +5,43 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $IsLinux -and -not $IsWindows) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Ethash-Claymore\ethdcrminer64"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/ClaymoreDual-12.0.tar.gz"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/ClaymoreDual-12.0.tar.gz"
+            Cuda = "8.0"
+        }
+    )
 } else {
     $Path = ".\Bin\Ethash-Claymore\EthDcrMiner64.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0.7z"
+    $UriCuda = @(
+        [PSCustomObject]@{            
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0_cuda10.0.7z"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0_cuda9.1.7z"
+            Cuda = "9.1"
+        },
+        [PSCustomObject]@{
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0_cuda8.0.7z"
+            Cuda = "8.0"
+        },
+        [PSCustomObject]@{
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0_cuda7.5.7z"
+            Cuda = "7.5"
+        },
+        [PSCustomObject]@{
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v12.0-claymoredual/claymoredual_v12.0_cuda6.5.7z"
+            Cuda = "6.5"
+        }
+    )
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "203{0:d2}"
-$Cuda = "6.5"
 
 $DevFee = 1.0
 $DevFeeDual = 1.0
@@ -75,7 +100,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; SecondaryAlgorithm = "pascal"; SecondaryIntensity = 30; Params = ""} #Ethash/Pascal
     [PSCustomObject]@{MainAlgorithm = "ethash3gb"; MinMemGB = 3; SecondaryAlgorithm = "pascal"; SecondaryIntensity = 33; Params = ""} #Ethash/Pascal
 )
-#-logsmaxsize 1
 
 #
 # Internal presets, do not change from here on
@@ -97,12 +121,19 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
     }
     return
+}
+
+for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    if (-not $Session.DevicesByTypes.NVIDIA -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda)) {
+        $Uri = $UriCuda[$i].Uri
+        $Cuda= $UriCuda[$i].Cuda
+    }
 }
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
@@ -175,7 +206,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceName  = $Miner_Device.Name
 							DeviceModel = $Miner_Model
 							Path        = $Path               
-							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {"-ewal $($Pools.$MainAlgorithm_Norm.Wallet) -eworker $($Pools.$MainAlgorithm_Norm.Worker)"} else {"-ewal $($Pools.$MainAlgorithm_Norm.User)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins exp -r -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
+							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {"-ewal $($Pools.$MainAlgorithm_Norm.Wallet) -eworker $($Pools.$MainAlgorithm_Norm.Worker)"} else {"-ewal $($Pools.$MainAlgorithm_Norm.User)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins 1 -wd 0 -logsmaxsize 10 -r -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
 							HashRates   = $Miner_HashRates
 							API         = "Claymore"
 							Port        = $Miner_Port
