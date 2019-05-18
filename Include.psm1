@@ -3207,8 +3207,13 @@ class Miner {
         return @($this.HashRates.PSObject.Properties.Name | Foreach-Object {$this.DevFee.$_})
     }
 
+    [bool]HasOCprofile() {
+        foreach ($model in @($this.DeviceModel -split '-' | Select-Object)) {if ($this.OCProfile.$model) {return $true}}
+        return $false
+    }
+
     ResetOCprofile() {
-        if ($this.OCprofile.Count -eq 0 -or $this.OCprofileBackup.Count -eq 0) {return}
+        if ($this.OCprofileBackup.Count -eq 0 -or -not $this.HasOCprofile()) {return}
 
         try {
             $Script:abMonitor.ReloadAll()
@@ -3224,13 +3229,14 @@ class Miner {
         Write-Log "OC reset for $($this.BaseName)"
     }
 
-    SetOCprofile($Config) {        
-        if ($this.OCprofile.Count -eq 0 -or $this.DeviceModel -like 'CPU*') {return}
+    SetOCprofile($Config) {
+        $this.OCprofileBackup = @()
+
+        if (-not $this.HasOCprofile()) {return}
 
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
 
-        $this.OCprofileBackup = @()
         $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Vendor -ne "NVIDIA") {
