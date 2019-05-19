@@ -2787,6 +2787,7 @@ class Miner {
     hidden [Array]$OCprofileBackup = @()
     hidden [PSCustomObject]$EthPill = $null
     hidden [DateTime]$IntervalBegin = 0
+    hidden [DateTime]$LastSetOCTime = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
@@ -2878,9 +2879,7 @@ class Miner {
     hidden StopMiningPreProcess() { }
 
     hidden StopMiningPostProcess() {
-        Start-Sleep -Milliseconds 500
-        $this.ResetOCprofile() #reset all overclocking
-        Start-Sleep -Milliseconds 500        
+        $this.ResetOCprofile(500) #reset all overclocking
         $this.New = $false
     }
 
@@ -3212,7 +3211,7 @@ class Miner {
         return $false
     }
 
-    ResetOCprofile() {
+    ResetOCprofile([int]$Sleep=500) {
         if ($this.OCprofileBackup.Count -eq 0 -or -not $this.HasOCprofile()) {return}
 
         try {
@@ -3223,13 +3222,21 @@ class Miner {
             Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
             return
         }
+        if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
         foreach($Profile in $this.OCprofileBackup) {foreach($Name in $Profile.Keys) {if ($Name -ne "Index") {$Script:abControl.GpuEntries[$Profile.Index].$Name = $Profile.$Name}}}
         $Script:abControl.CommitChanges()
         $this.OCprofileBackup = @()
         Write-Log "OC reset for $($this.BaseName)"
+        if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
     }
 
-    SetOCprofile($Config) {
+    [DateTime]GetLastSetOCTime() {
+        return $this.LastSetOCTime
+    }
+
+    SetOCprofile($Config,[int]$Sleep=500) {
+        $this.LastSetOCTime = (Get-Date).ToUniversalTime()
+
         $this.OCprofileBackup = @()
 
         if (-not $this.HasOCprofile()) {return}
@@ -3309,11 +3316,13 @@ class Miner {
         }
 
         if ($applied.Count) {
+            if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
             if ($Vendor -eq "NVIDIA") {
                 if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
                 else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
             } else {$Script:abControl.CommitChanges()}
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
+            if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
         }
     }
 }

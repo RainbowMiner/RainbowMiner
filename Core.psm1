@@ -221,7 +221,7 @@ function Update-ActiveMiners {
         }
 
         Switch ($Miner.GetStatus()) {
-            "Running"       {$MinersUpdated++}
+            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime())) {$Miner.SetOCprofile($Session.Config,500)};$MinersUpdated++}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }        
     }
@@ -1558,24 +1558,25 @@ function Invoke-Core {
 
     $Session.ActiveMiners | Where-Object {$_.Best -EQ $true -and $_.GetStatus() -ne [MinerStatus]::Running} | ForEach-Object {
 
-        if ($Session.Config.EnableResetVega) {Reset-Vega $_.DeviceName}
+        if ($_.DeviceName -notlike "CPU*") {
+            if ($Session.Config.EnableResetVega) {Reset-Vega $_.DeviceName}
 
-        #Set MSI Afterburner profile
-        if ($MSIAenabled) {
-            $MSIAplannedprofile = $Session.ActiveMiners | Where-Object {$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0} | Select-Object -ExpandProperty MSIAprofile -Unique
-            if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Session.Config.MSIAprofile}                
-            else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
-            Start-Process -FilePath "$($Session.Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
-            if ($MSIAplannedprofile -ne $Session.MSIAcurrentprofile) {
-                Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
-                $Session.MSIAcurrentprofile = $MSIAplannedprofile
-                Start-Sleep 1
+            #Set MSI Afterburner profile
+            if ($MSIAenabled) {
+                $MSIAplannedprofile = $Session.ActiveMiners | Where-Object {$_.Best -eq $true -and $_.MSIAprofile -ne $null -and $_.MSIAprofile -gt 0} | Select-Object -ExpandProperty MSIAprofile -Unique
+                if (-not $MSIAplannedprofile.Count) {$MSIAplannedprofile = $Session.Config.MSIAprofile}                
+                else {$MSIAplannedprofile = $MSIAplannedprofile | Select-Object -Index 0}
+                Start-Process -FilePath "$($Session.Config.MSIApath)" -ArgumentList "-Profile$($MSIAplannedprofile)" -Verb RunAs
+                if ($MSIAplannedprofile -ne $Session.MSIAcurrentprofile) {
+                    Write-Log "New MSI Afterburner profile set: $($MSIAplannedprofile)"                
+                    $Session.MSIAcurrentprofile = $MSIAplannedprofile
+                    Start-Sleep 1
+                }
+            } elseif ($Session.Config.EnableOCprofiles) {
+                $_.SetOCprofile($Session.Config,500)
             }
-        } elseif ($Session.Config.EnableOCprofiles) {
-            Start-Sleep -Milliseconds 500
-            $_.SetOCprofile($Session.Config)
-            Start-Sleep -Milliseconds 500
         }
+
         if ($_.Speed -contains $null) {
             Write-Log "Benchmarking miner ($($_.Name)): '$($_.Path) $($_.Arguments)' (Extend Interval $($_.ExtendInterval))"
         }
