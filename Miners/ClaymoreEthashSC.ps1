@@ -10,11 +10,11 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\Ethash-ClaymoreSC\EthDcrMiner64.exe"
 $UriCuda = @(
     [PSCustomObject]@{            
-        Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.4b-claymoredual/claymoredual_v14.4_beta_cuda10.7z"
+        Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.5b-claymoredual/claymoredual_v14.5_beta_cuda10.7z"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.4b-claymoredual/claymoredual_v14.4_beta_cuda8.7z"
+        Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.5b-claymoredual/claymoredual_v14.5_beta_cuda8.7z"
         Cuda = "8.0"
     }
 )
