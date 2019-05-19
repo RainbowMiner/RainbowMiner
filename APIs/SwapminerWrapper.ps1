@@ -1,6 +1,6 @@
 ﻿using module ..\Include.psm1
 
-class SwapMiner : Miner {
+class SwapminerWrapper : Miner {
 
     [String]GetArguments() {
         $Parameters = $this.Arguments | ConvertFrom-Json
