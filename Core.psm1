@@ -18,7 +18,7 @@
 
         #Setup console and display logo
         $host.UI.RawUI.WindowTitle = $Session.MainWindowTitle
-        if (-not $psISE -and $IsWindows) {
+        if ($false -and -not $psISE -and $IsWindows) {
             $ColorConfigPath = Join-Path $ConfigPath "colors.$(Split-Path $ConfigFile -Leaf)"
             if (Test-Path $ColorConfigPath) {
                 try {
