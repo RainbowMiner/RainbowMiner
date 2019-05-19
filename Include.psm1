@@ -448,14 +448,14 @@ Function Write-Log {
             }
         }
 
-        # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
-        if ($mutex.WaitOne(1000)) {
+        # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
+        if ($mutex.WaitOne(2000)) {
             $proc = Get-Process -id $PID
             "$date [$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
         else {
-            Write-Error -Message "Log file is locked, unable to write message to $FileName."
+            Write-Warning -Message "Log file is locked, unable to write message to $FileName."
         }
     }
     End {}
@@ -3741,7 +3741,6 @@ function Set-ContentJson {
                 else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8 -Force}
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
-                Write-Log -Level Verbose "No changes in $(([IO.FileInfo]$PathToFile).Name)"
             }
             return $true
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
