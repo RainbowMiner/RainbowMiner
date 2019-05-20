@@ -200,7 +200,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.3.1.4"
+$Session.Version         = "4.3.1.5"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 
 if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
@@ -236,7 +236,7 @@ Write-Log "Starting RainbowMiner v$($Session.Version)"
 #Set process priority to BelowNormal to avoid hash rate drops on systems with weak CPUs
 if (-not $psISE) {(Get-Process -Id $PID).PriorityClass = "BelowNormal"}
 
-if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File}
+if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -Recurse | Unblock-File -ErrorAction Ignore}
 
 [hashtable]$Session.DefaultValues = @{}
 
