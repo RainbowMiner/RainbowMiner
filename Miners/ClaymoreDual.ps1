@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\Ethash-ClaymoreSC\EthDcrMiner64.exe"
+$Path = ".\Bin\Ethash-ClaymoreDual\EthDcrMiner64.exe"
 $UriCuda = @(
     [PSCustomObject]@{            
         Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.5b-claymoredual/claymoredual_v14.5_beta_cuda10.7z"
