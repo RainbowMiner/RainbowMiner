@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.42-gminer/gminer_1_42_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.43-gminer/gmine_1_43_linux64.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.42-gminer/gminer_1_42_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.43-gminer/gminer_1_43_windows64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
@@ -22,7 +22,7 @@ $Cuda = "9.0"
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; NH = $false} #Equihash Cuckoo29/Aeternity
+    [PSCustomObject]@{MainAlgorithm = "Aeternity";    MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo aeternity"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; NH = $true} #Equihash Cuckoo29/Aeternity
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29";   MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo grin29";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; NH = $true} #Equihash Cuckaroo29/GRIN
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";  MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo swap";      Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; NH = $true} #Equihash Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGb = 8;   MinMemGbW10 = 10; Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true; NH = $true} #Equihash Cuckatoo31/GRIN31
