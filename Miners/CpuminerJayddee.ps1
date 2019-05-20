@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1-jayddee/cpuminer-opt-3.8.8.1-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.0-jayddee/cpuminer-opt-3.9.0-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -32,9 +32,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""; ExtendInterval = 2} #heavy
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""; ExtendInterval = 2} #HODL
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; ExtendInterval = 2} #JHA
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""; ExtendInterval = 2} #Lyra2v3
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #lyra2z330
     [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #m7m
     [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #pentablake
+    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #pluck
     [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
@@ -48,6 +50,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #yescryptr16, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #yescryptr32, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #yescryptr8, CpuminerOptBF faster
+    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #YesPower
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YesPowerR16
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #zr5
 
     #GPU or ASIC - never profitable
