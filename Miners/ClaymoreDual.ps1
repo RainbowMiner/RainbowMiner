@@ -191,7 +191,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							Uri         = $Uri
 							DevFee      = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
 							ManualUri   = $ManualUri
-                            StopCommand = "Sleep 5"
+                            StopCommand = "Start-Sleep 5"
 							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}
