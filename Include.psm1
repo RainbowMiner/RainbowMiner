@@ -1304,8 +1304,8 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars {
-        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars)
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
+        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1314,7 +1314,7 @@ function Start-SubProcessInConsole {
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
 
-        if ($IsWindows) {
+        if ($StartWithoutTakingFocus) {
             Add-Type -TypeDefinition @"
 // http://www.daveamenta.com/2013-08/powershell-start-process-without-taking-focus/
 using System;
