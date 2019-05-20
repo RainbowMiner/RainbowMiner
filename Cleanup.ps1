@@ -417,6 +417,10 @@ try {
         $AddAlgorithm += @("ProgPoWZ","Rainforest2")
     }
 
+    if ($Version -le (Get-Version "4.3.1.2")) {
+        $AddAlgorithm += @("X25x")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
