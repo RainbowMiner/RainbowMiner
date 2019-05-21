@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-Multi\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}elseif($f.sse42){'sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6.1-cpuminermulti/cpuminer-multi-1.3.6.1.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.6.2-cpuminermulti/cpuminer-multi-1.3.6.2.7z"
 $ManualUri = "https://github.com/tpruvot/cpuminer-multi/releases"
 $Port = "513{0:d2}"
 $DevFee = 0.0
@@ -27,7 +27,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #Pentablake
     #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
     #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #Pluck
-    [PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""; ExtendInterval = 2} #Rainforest
+    [PSCustomObject]@{MainAlgorithm = "rfv2"; Params = ""; ExtendInterval = 2} #Rainforest2
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
     #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #SHAvite3
