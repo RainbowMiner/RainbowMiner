@@ -407,7 +407,9 @@ Function Write-Log {
         [Parameter(Mandatory = $false)][ValidateSet("Error", "Warn", "Info", "Verbose", "Debug")][string]$Level = "Info"
     )
 
-    Begin { }
+    Begin { 
+        if ($Session.SetupOnly) {return}
+    }
     Process {
         # Inherit the same verbosity settings as the script importing this
         if (-not $PSBoundParameters.ContainsKey('InformationPreference')) { $InformationPreference = $PSCmdlet.GetVariableValue('InformationPreference') }

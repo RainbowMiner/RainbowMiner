@@ -29,9 +29,15 @@ if ($IsLinux) {
 }
 
 if ($IsWindows) {
+    $EnvBits = if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}
+
+    Write-Host "Install Microsoft Visual C++ 2013 .."
+    if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
+    Expand-WebRequest "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+
     Write-Host "Install Microsoft Visual C++ 2017 .."
     if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
-    Expand-WebRequest "https://aka.ms/vs/15/release/vc_redist.$(if ([Environment]::Is64BitOperatingSystem) {"x64"} else {"x86"}).exe" -ArgumentList "/q" -ErrorAction Ignore
+    Expand-WebRequest "https://aka.ms/vs/15/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
 }
 
 Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green

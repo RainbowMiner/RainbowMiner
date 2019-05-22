@@ -2,7 +2,9 @@
     [cmdletbinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [String]$ConfigFile = ".\Config\config.txt"
+        [String]$ConfigFile = ".\Config\config.txt",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetupOnly = $false
     )
 
     try {
@@ -42,7 +44,7 @@
         Write-Host " |____|_  /(____  /__|___|  /___  /\____/ \/\_/\____|__  /__|___|  /\___  >__|   " -ForegroundColor Blue
         Write-Host "        \/      \/        \/    \/                     \/        \/     \/       " -ForegroundColor DarkMagenta
         Write-Host " "
-        Write-Host "Starting up v$($Session.Version)! Please wait.."
+        Write-Host "Starting $(if ($SetupOnly) {"setup for "})v$($Session.Version)! Please wait.."
         Write-Host " "
 
         #Setup session variables
@@ -79,7 +81,8 @@
         $Session.Restart = $false
         $Session.AutoUpdate = $false
         $Session.MSIAcurrentprofile = -1
-        $Session.RunSetup = $false
+        $Session.RunSetup = $SetupOnly
+        $Session.SetupOnly = $SetupOnly
         $Session.IsInitialSetup = $false
         $Session.IsDonationRun = $false
         $Session.IsExclusiveRun = $false
@@ -257,7 +260,7 @@ function Invoke-Core {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
                 $Session.ConfigFiles["Config"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
-                $Session.DefaultValues.Keys | ForEach-Object {
+                $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
                     $val = $Session.DefaultValues[$_]
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
@@ -271,19 +274,22 @@ function Invoke-Core {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
-                    $Session.IsInitialSetup = -not $Session.Config.Wallet -or -not $Session.Config.WorkerName
                     $Session.RunSetup = $true
                 }
 
                 $ReReadConfig = $false
                 if ($Session.RunSetup) {
                     Import-Module .\Setup.psm1
-                    Start-Setup -Config $Session.Config -ConfigFiles $Session.ConfigFiles -IsInitialSetup $Session.IsInitialSetup
+                    Start-Setup -Config $Session.Config -ConfigFiles $Session.ConfigFiles -SetupOnly:$Session.SetupOnly
                     Remove-Module "Setup" -ErrorAction Ignore
                     $Session.RestartMiners = $true
                     $ReReadConfig = $true
                     $Session.RunSetup = $false
                     $Session.RoundStart = $null
+
+                    Write-Host " "
+                    Write-Host "Exiting configuration setup - $(if ($Session.SetupOnly) {"now run $(if ($IsWindows) {"Start.bat"} else {"start.sh"}). Happy mining!"} else {"all miners will be restarted. Please be patient!"})" -ForegroundColor Yellow
+                    Write-Host " "
                 }
             } until (-not $ReReadConfig)
         } else {
@@ -297,6 +303,8 @@ function Invoke-Core {
         Start-Sleep 10
         Break
     }
+
+    if ($Session.SetupOnly) {Break}
 
     $Session.ConfigFiles["Config"].Healthy = $true
 

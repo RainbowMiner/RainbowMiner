@@ -71,7 +71,7 @@ function Start-Setup {
         [Parameter(Mandatory = $true)]
         [hashtable]$ConfigFiles,
         [Parameter(Mandatory = $false)]
-        [Bool]$IsInitialSetup = $false
+        [Switch]$SetupOnly = $false
     )
 
     $RunSetup = $true
@@ -117,6 +117,8 @@ function Start-Setup {
             }
         } catch {}
 
+        $IsInitialSetup = -not $Config.Wallet -or -not $Config.WorkerName
+
         if ($IsInitialSetup) {
             $SetupType = "A" 
             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
@@ -153,8 +155,10 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, [N]etwork, E[x]it configuration and start mining" -Default "X"  -Mandatory -Characters "WCESAMPDLIONX"
+            $SetupType = Read-HostString -Prompt "$(if ($SetupOnly) {"Wi[z]ard, "})[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, [N]etwork, E[x]it $(if ($SetupOnly) {"setup"} else {"configuration and start mining"})" -Default "X"  -Mandatory -Characters "ZWCESAMPDLIONX"
         }
+
+        if ($SetupType -eq "Z") {$IsInitialSetup = $true;$SetupType = "A"}
 
         if ($SetupType -eq "X") {
             $RunSetup = $false
@@ -1410,7 +1414,9 @@ function Start-Setup {
 
                             if ($IsInitialSetup) {
                                 $SetupMessage.Add("Well done! You made it through the setup wizard - an initial configuration has been created ") > $null
-                                $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
+                                if (-not $SetupOnly) {
+                                    $SetupMessage.Add("If you want to start mining, please select to exit the configuration at the following prompt. After this, in the next minutes, RainbowMiner will download all miner programs. So please be patient and let it run. There will pop up some windows, from time to time. If you happen to click into one of those black popup windows, they will hang: press return in this window to resume operation") > $null
+                                }
                             } else {
                                 $SetupMessage.Add("Changes written to configuration. ") > $null
                             }
@@ -1434,7 +1440,8 @@ function Start-Setup {
                         Write-Host " "
                         Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
                         Write-Host " "
-                        $ReReadConfig = $GlobalSetupDone = $true
+                        $GlobalSetupDone = $true
+                        $ReReadConfig = -not $SetupOnly -or -not $IsInitialSetup
                     }
                     else {
                         if ($GlobalSetupStepStore) {$GlobalSetupStepBack.Add($GlobalSetupStep) > $null}
@@ -2486,8 +2493,4 @@ function Start-Setup {
             } until ($OCProfileSetupDone)
         }
     } until (-not $RunSetup)
-
-    Write-Host " "
-    Write-Host "Exiting configuration setup - all miners will be restarted. Please be patient!" -ForegroundColor Yellow
-    Write-Host " "
 }
