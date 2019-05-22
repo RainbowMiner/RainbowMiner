@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.3-ttminer/TT-Miner-2.2.3.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.4-ttminer/TT-Miner-2.2.4.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
@@ -17,19 +17,26 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"  ; MinMemGB = 2; Params = ""} #Ethash2GB 
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"  ; MinMemGB = 3; Params = ""} #Ethash3GB 
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH"     ; MinMemGB = 4; Params = ""} #Ethash 
-    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"     ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #LYRA2V3
-    [PSCustomObject]@{MainAlgorithm = "MTP"         ; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
-    #[PSCustomObject]@{MainAlgorithm = "MYRGR"      ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #MYRGR    
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"  ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"  ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"     ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ      
-    [PSCustomObject]@{MainAlgorithm = "UBQHASH"     ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #Ubqhash 
+    #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"    ; MinMemGB = 2; Params = ""} #Ethash2GB 
+    #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"    ; MinMemGB = 3; Params = ""} #Ethash3GB 
+    #[PSCustomObject]@{MainAlgorithm = "ETHASH"       ; MinMemGB = 4; Params = ""} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #LYRA2V3
+    [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
+    #[PSCustomObject]@{MainAlgorithm = "MYRGR"        ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #MYRGR    
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; Params = ""; ExtendInterval = 2} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #ProgPoW3gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; Params = ""; ExtendInterval = 2} #ProgPoW
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW0922gb" ; MinMemGB = 2; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW0922gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW0923gb" ; MinMemGB = 3; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW0923gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW092"    ; MinMemGB = 4; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW092
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH2gb"   ; MinMemGB = 2; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH3gb"   ; MinMemGB = 3; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 4; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 2; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 3; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 4; Params = ""; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ
+    [PSCustomObject]@{MainAlgorithm = "TETHASHV1"     ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #TEThash 
+    [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 3; Params = ""; ExtendInterval = 2} #Ubqhash 
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -57,7 +64,8 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Commands | Where-Object {$_.Cuda -eq $null -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $_.Cuda -Warning "$($Name)-$($_.MainAlgorithm)")} | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        $MinMemGB = $_.MinMemGB        
+        $MinMemGB = $_.MinMemGB
+        if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
