@@ -49,51 +49,46 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 1. Install PowerShell 6: [Download Installer for version 6.2.0](https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/PowerShell-6.2.0-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 430.64](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.3.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
-4. RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
+4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
 5. If you plan on using [GrinProMiner](https://grinpro.io) or [SwapMiner](https://github.com/swap-dev/SwapReferenceMiner/releases): Install Microsoft [.NET Core 2.2 Runtime](https://dotnet.microsoft.com/download) - download and install "Run Apps .NET Core Runtime", click the button "** Download .NET Core Runtime (see here: https://github.com/RainbowMiner/RainbowMiner/issues/441#issuecomment-465932125) **"
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 ## INSTALLATION
 
-### Windows Installation Steps 1 - 3
+#### 1. Download RainbowMiner and extract to a folder of you choice: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
 
-1. Download and extract to your desktop: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
+**Important:** Add the RainbowMiner directory to the exceptions of your antivirus program. Otherwise, some miner will cause false virus alerts.
 
-2. Add the directory of RainbowMiner to the exceptions of your antivirus program. Some miner cause false virus alerts.
-
-3. Right-click "Start.bat", choose "Run as administrator".
-<details>
-<summary>If windows prompts with "Windows protected your PC", click on "More info", then "Run anyway"</summary>
-
-![Picture](https://raw.githubusercontent.com/RainbowMiner/miner-binaries/master/windowsprotectedyourpc.jpg "Windows protected your PC")
-
-</details>
-
-### Linux Installation Steps 1 - 3
-
-1. Download Rainbowminer
-
-Either download the current release and unpack into a folder of your choice, or use git, to make it quick and easy:
+On Linux, you may use git for a shortcut:
 ```
 sudo apt-get update
 sudo apt-get install git
 git clone https://github.com/rainbowminer/RainbowMiner
 ```
 
-2. Run the RainbowMiner installer
+#### 2. Run the RainbowMiner installer
 
-Now cd into your Rainbowminer folder and change the attributes of install.sh, start.sh and others and run the Installer as root (sudo)
+On Windows:
+- open RainbowMiner folder with Explorer
+- right-click "Install.bat" and choose "Run as administrator"
+
+On Linux, cd into your RainbowMiner folder, change the attributes of install.sh, start.sh and others and run the Installer as root (sudo):
 ```
 cd RainbowMiner
 chmod +x *.sh
 sudo ./install.sh
 ```
 
+At the end of the install, you will be asked to start RainbowMiner.
+
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v6.2.0 for your Linux distro from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
-Now, either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
+Find the matching version of [Powershell Core v6.2.0 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+
+On Windows, just run the Installer
+
+On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 ```
 # if not already done, download the package, change the ubuntu distro version number!
 wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell_6.2.0-1.ubuntu.18.04_amd64.deb
@@ -105,15 +100,18 @@ dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
 apt install -f
 ```
 
-3. Start it
+#### 3. Start it (if not yet running)
 
+On Windows:
+- open RainbowMiner folder with Explorer
+- right-click "Start.bat" and choose "Run as administrator"
+
+On Linux:
 ```
 ./start.sh
 ```
 
-### Common steps
-
-4. Enter basic information
+#### 4. Enter basic information
 
    - choose your rig's WorkerName [default=rainbowminer]
    - choose your RunMode:
@@ -128,7 +126,7 @@ apt install -f
      - optionally enter username and password, if you have protected the access to the servers's webinterface
 
 
-5. Enter your credentials:
+#### 5. Enter your credentials:
 
    - your btc-wallet address (one for general use, and one for NiceHash)
    - your MiningPoolHub credentials, if you plan to use this pool
@@ -141,9 +139,12 @@ apt install -f
      or use your device names (without spaces, without leading geforce): gtx1070, gtx1080ti ..
 
 
-6. Let the downloads and benchmarking finish (be patient! This might take a while. Anyway: it will already mine to your wallets)
+#### 6. Let the downloads and benchmarking finish
 
-Done!
+   - **be patient!** This might take a while
+   - Anyway: it will already mine to your wallets
+
+### Done!
 
 <details><summary>Valid poolnames</summary>2miners, 2minersolo, ahashpool, ahashpoolcoins, blazepool, blockcruncher, blockmasters, blockmasterscoins, bsod, bsodparty, bsodsolo, cryptoknight, ethashpool, ethermine, f2pool, fairpool, goscx, goscxparty, goscxsolo, grinmint, hashrefinery, herominers, icemining, luckypool, minermore, minerrocks, miningpoolhub, miningpoolhubcoins, mininigrigrentals, mintpond, nanopool, nicehash, nlpool, phiphipool, ravenminer, sparkpool, yiimp, zergpool, zergpoolcoins, zergpoolparty, zergpoolsolo, zergpoolcoinsparty, zergpoolcoinssolo, zpool, zpoolcoins</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, CryptoNightV8, CryptoNight-Swap, Cuckaroo29, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
@@ -164,22 +165,33 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 
 ## RECOMMENDATIONS & HELPERS
 
-- Set your Windows virtual memory size to a fixed size of at least 16GB, or better to the sum of your GPU memories x 1.5, e.g. if you have 6x GTX1070 8GB installed, use at least 72GB (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
+- Set your Windows virtual memory size to a fixed size, to the sum of your GPU memories x 1.1, e.g. if you have 6x GTX1070 8GB installed, use at least 53000 (Computer Properties->Advanced System Settings->Performance->Advanced->Virtual Memory)
 - Submit bugs and feature requests here: https://github.com/RainbowMiner/RainbowMiner/issues 
-- if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to disable "Force P2 State", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
-- Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupate. If you want to add tools to the batch, make a copy of the Start.bat and edit and use this to start RainbowMiner.
+- if mining on GeForce GTX 1070/GTX 1070Ti/GTX 1080/GTX 1080Ti, it is recommended to set "Force P2-State" to "Off", so that the card will always operate in P0 state. [How to set P0 state for my GTX1070 and GTX1080](https://github.com/RainbowMiner/RainbowMiner/issues/36)
+- Important: **NEVER EDIT THE "Start.bat" !** It will break the autoupate. If you want to add commands to the start, edit .\Config\autoexec.txt
 - the root directory of RainbowMiner contains the following, additional batch files:
-  - **ListDevices.bat**: if clicked, a window will popup and list all available devices
-  - **MinerLog.bat**: it reopens the window to show the output of the miners. Useful, if you unintentionally closed this log window.
-  - **RemoveLogs.bat**: delete all log files to save some disk space
-  - **RemovePresets.bat**: block presets from being written to miners.config.txt (see section MINERS)
-  - **ResetBenchmark.bat**: reset all benchmarks
-  - **ResetBenchmarkAMD.bat**: reset all AMD benchmarks
-  - **ResetBenchmarkCPU.bat**: reset all CPU benchmarks
-  - **ResetBenchmarkNVIDIA.bat**: reset all NVIDIA benchmarks
-  - **ResetProfit.bat**: reset RainbowMiner's profit calculation
-  - **Stopp.bat**: halt RainbowMiner at once
-  - **Updater.bat**: update to newest release of RainbowMiner manually. Make sure, you stop RainbowMiner before running this helper
+
+|Windows|Linux|Description|
+|---|---|---|
+|`Start.bat`|`./start.sh`|start RainbowMiner|
+|`Setup.bat`|`./setup.sh`|start RainbowMiner configuration|
+|`Install.bat`|`sudo ./install.sh`|install pre-requisites|
+|`InitServer.bat`|`sudo ./initserver.sh`|make this rig a server|
+|`InitClient.bat`|`sudo ./initclient.sh`|make this rig a client|
+|`InitStandalone.bat`|`sudo ./initstandalone.sh`|make this rig a standalone machine|
+|`GPUtest.bat`|`sudo ./gputest.sh`|create gputestresults.txt with tech details|
+|`Updater.bat`|`./updater.sh`|manually update to newest release of RainbowMiner. Make sure, you stop RainbowMiner before running this helper|
+|`ListDevices.bat`|-|list all available devices|
+|`MinerLog.bat`|-|opens window to show the output of the miners|
+|`RemoveLogs.bat`|-|delete all log files to save some disk space|
+|`RemovePresets.bat`|-|block presets from being written to miners.config.txt (see section MINERS)|
+|`ResetBenchmark.bat`|-|reset all benchmarks|
+|`ResetBenchmarkAMD.bat`|-|reset all AMD benchmarks|
+|`ResetBenchmarkCPU.bat`|-|reset all CPU benchmarks|
+|`ResetBenchmarkNVIDIA.bat`|-|reset all NVIDIA benchmarks|
+|`ResetProfit.bat`|-|reset RainbowMiner's profit calculation|
+|`TouchBenchmark.bat`|-|avoid benchmark of new miners, will set the timestamp of all miner stat files to now|
+|`Stopp.bat`|-|halt RainbowMiner at once|
   	
 
 ## WEB-INTERFACE
