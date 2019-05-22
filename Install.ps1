@@ -40,4 +40,8 @@ if ($IsWindows) {
     Expand-WebRequest "https://aka.ms/vs/15/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
 }
 
-Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
+if (Read-HostBool "Start RainbowMiner ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"})) now?") {
+    Exit 10
+} else {
+    Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
+}

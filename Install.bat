@@ -2,7 +2,7 @@
 
 @if not "%CUDA_DEVICE_ORDER%"=="PCI_BUS_ID" (setx CUDA_DEVICE_ORDER PCI_BUS_ID) > nul
 
-@set "command=& .\Install.ps1"
+@set "command=& {.\Install.ps1; exit $lastexitcode}"
 
 @echo off
 
@@ -15,4 +15,11 @@ pwsh -windowstyle normal -executionpolicy Bypass -command "%command%"
 
 :end
 
+if %errorlevel%==10 (
+    .\Start.bat
+    goto final
+)
+
 pause
+
+:final

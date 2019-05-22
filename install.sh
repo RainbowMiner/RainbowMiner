@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-command="& ./Install.ps1"
+command="& {./Install.ps1; exit \$lastexitcode}"
 
 if ! [ -x "$(command -v pwsh)" ]; then
 wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell-6.2.0-linux-x64.tar.gz -O /tmp/powershell.tar.gz
@@ -12,4 +12,9 @@ sudo rm -rf /tmp/powershell.tar.gz
 fi
 
 sudo pwsh -ExecutionPolicy bypass -Command ${command}
+exitcode=$?
 sudo chmod 777 -R $HOME/.local/share/powershell
+
+if [ "$exitcode" == "10" ]; then
+./start.sh
+fi
