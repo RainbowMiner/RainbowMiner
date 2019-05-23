@@ -1954,9 +1954,11 @@ function Invoke-Core {
             if ((-not $MinersUpdateStatus.MinersUpdated -and $MinersUpdateStatus.MinersFailed) -or $MinersUpdateStatus.ExclusiveMinersFailed) {
                 $RoundEnd = $Session.Timer.AddSeconds(0)
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
-            } elseif (-not $Session.Benchmarking -and $MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
-                $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
-                if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
+            } elseif ($MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
+                if (-not $Session.Benchmarking) {
+                    $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
+                    if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
+                }
                 $SomeMinersFailed = $true
                 $LoopWarn = "$($MinersUpdateStatus.MinersFailed) miner$(if ($MinersUpdateStatus.MinersFailed -gt 1) {"s"}) crashed. Restarting loop asap. $(" " * 71)"
             }

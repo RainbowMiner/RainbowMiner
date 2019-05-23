@@ -94,6 +94,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             "polytimos" {1}
             "quark" {1000}
             "qubit" {1000}
+            "rfv2" {1}
             "scrypt" {1000}
             "sha256" {1000000000}
             "skein" {1000}
