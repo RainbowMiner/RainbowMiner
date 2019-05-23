@@ -4943,7 +4943,7 @@ function Invoke-ReportMinerStatus {
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
-    $Status = if ($Session.Paused) {"Paused"} else {"Running"}
+    $Status = if ($Session.Paused) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
     $Rates = [PSCustomObject]@{}
     $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
 
