@@ -135,7 +135,7 @@
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
 
-.Running {
+.Running, .Benchmarking {
     background-color: rgb(127,191,144);
 }
 
@@ -143,6 +143,6 @@
     background-color: rgb(213,142,176);
 }
 
-.Paused {
+.Paused, .Waiting {
     background-color: rgb(247,252,168);
 }
