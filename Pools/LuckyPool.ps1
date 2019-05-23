@@ -15,8 +15,9 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR"; algo = "wildkeccak";  port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
-    [PSCustomObject]@{coin = "Swap";      symbol = "XWP"; algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
+    [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR";  algo = "wildkeccak";  port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
+    [PSCustomObject]@{coin = "Swap";      symbol = "XWP";  algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
+    [PSCustomObject]@{coin = "Zano";      symbol = "ZANO"; algo = "ProgPowZ";    port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
