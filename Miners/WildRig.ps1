@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.5-wildrig/wildrig-multi-linux-0.16.5-beta.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-wildrig/wildrig-multi-linux-0.17.0-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.16.5-wildrig/wildrig-multi-windows-0.16.5-beta.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.0-wildrig/wildrig-multi-windows-0.17.0-beta.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -58,6 +58,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x20r";       Params = ""} #X20r
     [PSCustomObject]@{MainAlgorithm = "x21s";       Params = ""} #X21s
     [PSCustomObject]@{MainAlgorithm = "x22i";       Params = ""} #X22i
+    [PSCustomObject]@{MainAlgorithm = "x25x";       Params = ""} #X25x
     [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
 
