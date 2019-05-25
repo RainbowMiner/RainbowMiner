@@ -36,7 +36,8 @@ class Jceminer : Miner {
         $Request = ""
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
 
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
@@ -50,8 +51,9 @@ class Jceminer : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $Accepted_Shares = [Double]$Data.results.shares_good
-        $Rejected_Shares = [Double]($Data.results.shares_total - $Data.results.shares_good)
+        $Difficulty_Value = [Double]$Data.results.diff_current
+        $Accepted_Shares  = [Double]$Data.results.shares_good
+        $Rejected_Shares  = [Double]($Data.results.shares_total - $Data.results.shares_good)
 
         $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm $Data.algo))
         if (-not $HashRate_Name) {$HashRate_Name = [String]($this.Algorithm -like "$(Get-Algorithm $Data.algo)*")} #temp fix
@@ -61,14 +63,16 @@ class Jceminer : Miner {
         if (-not $HashRate_Value) {$HashRate_Value = [Double]$Data.hashrate.total[2]} #fix
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
         $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
+            Raw        = $Response
+            HashRate   = $HashRate
+            Difficulty = $Difficulty
+            Device     = @()
         })
 
         $this.CleanupMinerData()

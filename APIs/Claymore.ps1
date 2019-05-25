@@ -10,7 +10,7 @@ class Claymore : Miner {
         $Request = @{id = 1; jsonrpc = "2.0"; method = "miner_getstat1"} | ConvertTo-Json -Compress
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
@@ -24,9 +24,9 @@ class Claymore : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
-        $HashRate_Value = [Double]($Data.result[2] -split ";")[0]
-        $Accepted_Shares = [Int64]($Data.result[2] -split ";")[1]
-        $Rejected_Shares = [Int64]($Data.result[2] -split ";")[2]
+        $HashRate_Value   = [Double]($Data.result[2] -split ";")[0]
+        $Accepted_Shares  = [Int64]($Data.result[2] -split ";")[1]
+        $Rejected_Shares  = [Int64]($Data.result[2] -split ";")[2]
         $Accepted_Shares -= $Rejected_Shares
 
         if ($this.Algorithm -like "ethash*" -and $Data.result[0] -notmatch "^TT-Miner") {$HashRate_Value *= 1000}

@@ -10,7 +10,8 @@ class NBminer : Miner {
         $Request = ""
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
 
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
@@ -26,43 +27,48 @@ class NBminer : Miner {
 
         $HashRate_Name = [String]$this.Algorithm[0]
 
-        $HashRate_Value = 0.0
+        $HashRate_Value = $Difficulty_Value = 0.0
         $Accepted_Shares = $Rejected_Shares = 0
 
         $Data.stratum | Select-Object -Index 0 | Foreach-Object {
-            $Accepted_Shares = [Int64]$_.accepted_shares
-            $Rejected_Shares = [Int64]$_.rejected_shares
+            $Accepted_Shares  = [Int64]$_.accepted_shares
+            $Rejected_Shares  = [Int64]$_.rejected_shares
+            $Difficulty_Value = [Double]$_.difficulty
         }
 
         $HashRate_Value = [Double]$Data.miner.total_hashrate_raw
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
             if ($this.Algorithm[1]) {
                 $HashRate_Name = [String]$this.Algorithm[1]
 
-                $HashRate_Value = 0.0
+                $HashRate_Value = $Difficulty_Value = 0.0
                 $Accepted_Shares = $Rejected_Shares = 0
 
                 $HashRate_Value = [Double]$Data.miner.total_hashrate_raw2
                 $Data.stratum | Select-Object -Index 1 | Foreach-Object {
-                    $Accepted_Shares = [Int64]$_.accepted_shares
-                    $Rejected_Shares = [Int64]$_.rejected_shares
+                    $Accepted_Shares  = [Int64]$_.accepted_shares
+                    $Rejected_Shares  = [Int64]$_.rejected_shares
+                    $Difficulty_Value = [Double]$_.difficulty
                 }
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                    $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+                    $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
             }
         }
 
         $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
+            Raw        = $Response
+            HashRate   = $HashRate
+            Difficulty = $Difficulty
+            Device     = @()
         })
 
         $this.CleanupMinerData()

@@ -10,7 +10,8 @@ class Xgminer : Miner {
         $Request = @{command = "summary"; parameter = ""} | ConvertTo-Json -Compress
         $Response = ""
 
-        $HashRate = [PSCustomObject]@{}
+        $HashRate   = [PSCustomObject]@{}
+        $Difficulty = [PSCustomObject]@{}
 
         try {
             $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
@@ -21,8 +22,9 @@ class Xgminer : Miner {
             return @($Request, $Response)
         }
 
-        $Accepted_Shares = [Int64]$Data.SUMMARY.accepted
-        $Rejected_Shares = [Int64]$Data.SUMMARY.rejected
+        $Difficulty_Value = [Double]$Data.SUMMARY.Difficulty_Accepted
+        $Accepted_Shares  = [Int64]$Data.SUMMARY.accepted
+        $Rejected_Shares  = [Int64]$Data.SUMMARY.rejected
 
         $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = if ($Data.SUMMARY.HS_5s) {[Double]$Data.SUMMARY.HS_5s * [Math]::Pow(1000, 0)}
@@ -39,14 +41,16 @@ class Xgminer : Miner {
         elseif ($Data.SUMMARY.PHS_av) {[Double]$Data.SUMMARY.PHS_av * [Math]::Pow(1000, 5)}
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
+            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}            
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
         $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
+            Raw        = $Response
+            HashRate   = $HashRate
+            Difficulty = $Difficulty
+            Device     = @()
         })
 
         $this.CleanupMinerData()

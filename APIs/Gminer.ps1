@@ -28,8 +28,7 @@ class Gminer : Miner {
         $Accepted_Shares = [Int64]($Data.devices.accepted_shares | Measure-Object -Sum).Sum
         $Rejected_Shares = [Int64]($Data.devices.rejected_shares | Measure-Object -Sum).Sum
 
-        $HashRate_Name = [String]($this.Algorithm -like (Get-Algorithm($Data.algorithm -replace '".+' -replace ',')))
-        if (-not $HashRate_Name) {$HashRate_Name = [String]$this.Algorithm[0]}
+        $HashRate_Name = [String]$this.Algorithm[0]
         $HashRate_Value = [Double]($Data.devices.speed | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
