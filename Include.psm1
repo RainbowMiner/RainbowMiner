@@ -357,6 +357,7 @@ function Set-MinerStats {
             $Miner.Algorithm | ForEach-Object {
                 $Miner_Algorithm = $_
                 $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
+                $Miner_Diff  = $Miner.GetDifficulty($Miner_Algorithm)
 
                 $Miner.Speed_Live += [Double]$Miner_Speed
 
@@ -364,7 +365,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or $Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30))
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or $Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30))
                     $Statset++
                 }
 
@@ -550,9 +551,11 @@ function Set-Stat {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [String]$Name, 
+        [String]$Name,
         [Parameter(Mandatory = $true)]
-        [Double]$Value, 
+        [Double]$Value,
+        [Parameter(Mandatory = $false)]
+        [Double]$Difficulty = 0.0,
         [Parameter(Mandatory = $false)]
         [DateTime]$Updated = (Get-Date).ToUniversalTime(), 
         [Parameter(Mandatory = $true)]
@@ -608,17 +611,19 @@ function Set-Stat {
         $AddStat = Switch($Mode) {
             "Miners" {
                 @{
-                    PowerDraw_Live = [Double]$Stat.PowerDraw_Live
-                    PowerDraw_Average = [Double]$Stat.PowerDraw_Average
+                    PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
+                    PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
+                    Diff_Live          = [Double]$Stat.Diff_Live
+                    Diff_Average       = [Double]$Stat.Diff_Average
                 }
             }
             "Pools" {
                 @{
-                    HashRate_Live = [Double]$Stat.HashRate_Live
-                    HashRate_Average = [Double]$Stat.HashRate_Average
-                    BlockRate_Live = [Double]$Stat.BlockRate_Live
-                    BlockRate_Average = [Double]$Stat.BlockRate_Average
-                    ErrorRatio = if ($Stat.ErrorRatio -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio}
+                    HashRate_Live      = [Double]$Stat.HashRate_Live
+                    HashRate_Average   = [Double]$Stat.HashRate_Average
+                    BlockRate_Live     = [Double]$Stat.BlockRate_Live
+                    BlockRate_Average  = [Double]$Stat.BlockRate_Average
+                    ErrorRatio         = if ($Stat.ErrorRatio -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio}
                     ErrorRatio_Average = if ($Stat.ErrorRatio_Average -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio_Average}
                 }
             }
@@ -689,17 +694,19 @@ function Set-Stat {
             Switch($Mode) {
                 "Miners" {
                     $AddStat = @{
-                        PowerDraw_Live = $PowerDraw
-                        PowerDraw_Average = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
+                        PowerDraw_Live     = $PowerDraw
+                        PowerDraw_Average  = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
+                        Diff_Live          = $Difficulty
+                        Diff_Average       = ((1 - $Span_Day) * $Stat.Diff_Average) + ($Span_Day * $Difficulty)
                     }
                 }
                 "Pools" {
                     $AddStat = @{
-                        HashRate_Live = $HashRate
-                        HashRate_Average = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
-                        BlockRate_Live = $BlockRate
-                        BlockRate_Average = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
-                        ErrorRatio_Live = $ErrorRatio
+                        HashRate_Live      = $HashRate
+                        HashRate_Average   = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
+                        BlockRate_Live     = $BlockRate
+                        BlockRate_Average  = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
+                        ErrorRatio_Live    = $ErrorRatio
                         ErrorRatio_Average = ((1 - $Span_ThreeDay) * $Stat.ErrorRatio_Average) + ($Span_ThreeDay * [Double]$ErrorRatio)
                     }
                 }
@@ -763,17 +770,19 @@ function Set-Stat {
         Switch($Mode) {
             "Miners" {
                 $Stat | Add-Member -NotePropertyMembers @{
-                    PowerDraw_Live = $PowerDraw
-                    PowerDraw_Average = $PowerDraw
+                    PowerDraw_Live     = $PowerDraw
+                    PowerDraw_Average  = $PowerDraw
+                    Diff_Live          = $Difficulty
+                    Diff_Average       = $Difficulty
                 }
             }
             "Pools" {
                 $Stat | Add-Member -NotePropertyMembers @{
-                    HashRate_Live = $HashRate
-                    HashRate_Average = $HashRate
-                    BlockRate_Live = $BlockRate
-                    BlockRate_Average = $BlockRate
-                    ErrorRatio = $ErrorRatio
+                    HashRate_Live      = $HashRate
+                    HashRate_Average   = $HashRate
+                    BlockRate_Live     = $BlockRate
+                    BlockRate_Average  = $BlockRate
+                    ErrorRatio         = $ErrorRatio
                     ErrorRatio_Average = $ErrorRatio
                 }
             }
@@ -806,17 +815,19 @@ function Set-Stat {
         Switch($Mode) {
             "Miners" {
                 $OutStat | Add-Member -NotePropertyMembers @{
-                    PowerDraw_Live = [Decimal]$Stat.PowerDraw_Live
-                    PowerDraw_Average = [Decimal]$Stat.PowerDraw_Average
+                    PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
+                    PowerDraw_Average  = [Decimal]$Stat.PowerDraw_Average
+                    Diff_Live          = [Decimal]$Stat.Diff_Live
+                    Diff_Average       = [Decimal]$Stat.Diff_Average
                 }
             }
             "Pools" {
                 $OutStat | Add-Member -NotePropertyMembers @{
-                    HashRate_Live = [Decimal]$Stat.HashRate_Live
-                    HashRate_Average = [Decimal]$Stat.HashRate_Average
-                    BlockRate_Live = [Decimal]$Stat.BlockRate_Live
-                    BlockRate_Average = [Decimal]$Stat.BlockRate_Average
-                    ErrorRatio_Live = [Decimal]$Stat.ErrorRatio_Live
+                    HashRate_Live      = [Decimal]$Stat.HashRate_Live
+                    HashRate_Average   = [Decimal]$Stat.HashRate_Average
+                    BlockRate_Live     = [Decimal]$Stat.BlockRate_Live
+                    BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
+                    ErrorRatio_Live    = [Decimal]$Stat.ErrorRatio_Live
                     ErrorRatio_Average = [Decimal]$Stat.ErrorRatio_Average
                 }
             }
@@ -3028,11 +3039,6 @@ class Miner {
         $this.Stratum[$Index].Rejected = $Rejected
     }
 
-    UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
-        $this.Stratum[$Index].Accepted = $Accepted
-        $this.Stratum[$Index].Rejected = $Rejected
-    }
-
     [Int64]GetShareCount([Int]$Index) {
         return [Int64]($this.Stratum[$Index].Accepted + $this.Stratum[$Index].Rejected)
     }
@@ -3145,6 +3151,16 @@ class Miner {
 
     ResetMinerData() {
         $this.Data = @()
+    }
+
+    [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm) {
+        $Intervals  = [Math]::Max($this.ExtendInterval,1)
+        $Timeframe  = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
+        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Select-Object -ExpandProperty Difficulty | Measure-Object -Average).Average
+    }
+
+    [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm) {
+        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Select-Object -ExpandProperty Difficulty
     }
 
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {
