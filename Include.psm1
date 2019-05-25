@@ -2739,7 +2739,7 @@ class Miner {
     $Profit_Unbias
     $Profit_Cost
     $PowerDraw
-    $Shares
+    $Stratum
     $Speed
     $Speed_Live
     [double[]]$Variance = @()
@@ -2872,8 +2872,8 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
-        $this.Shares = @()
-        $this.Algorithm | Foreach-Object {$this.Shares += [PSCustomObject]@{Accepted=0;Rejected=0}}
+        $this.Stratum = @()
+        $this.Algorithm | Foreach-Object {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;Difficulty=0}}
     }
 
     hidden StartMiningPostProcess() { }
@@ -3024,16 +3024,21 @@ class Miner {
     }
 
     UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
-        $this.Shares[$Index].Accepted = $Accepted
-        $this.Shares[$Index].Rejected = $Rejected
+        $this.Stratum[$Index].Accepted = $Accepted
+        $this.Stratum[$Index].Rejected = $Rejected
+    }
+
+    UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
+        $this.Stratum[$Index].Accepted = $Accepted
+        $this.Stratum[$Index].Rejected = $Rejected
     }
 
     [Int64]GetShareCount([Int]$Index) {
-        return [Int64]($this.Shares[$Index].Accepted + $this.Shares[$Index].Rejected)
+        return [Int64]($this.Stratum[$Index].Accepted + $this.Stratum[$Index].Rejected)
     }
 
     [Double]GetRejectedShareRatio([Int]$Index) {
-        return [Double]$(if ($this.GetShareCount($Index) -ge 10) {$this.Shares[$Index].Rejected / $this.GetShareCount($Index)})
+        return [Double]$(if ($this.GetShareCount($Index) -ge 10) {$this.Stratum[$Index].Rejected / $this.GetShareCount($Index)})
     }
 
     [Double]GetMaxRejectedShareRatio() {
