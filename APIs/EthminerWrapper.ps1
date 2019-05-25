@@ -1,19 +1,18 @@
 ﻿using module ..\Include.psm1
 
 class EthminerWrapper : Miner {
+    [Double]$Difficulty_Value = 0.0
 
     [String[]]UpdateMinerData () {
         if ($this.Process.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
-
-            $Difficulty_Value = 0.0
 
             $this.Process | Receive-Job | ForEach-Object {
                 $Line = $_ -replace "`n|`r", ""
                 $Line_Simple = $Line -replace "\x1B\[[0-?]*[ -/]*[@-~]", ""
                 if ($Line_Simple) {
                     if ($Line_Simple -match "^\s+i\s+.+?Difficulty\s*:\s*([\d\.\,]+?)\s*([hkMGT]+)") {
-                        $Difficulty_Value  = [double]($Matches[1] -replace ',','.') * $(Switch ($Matches[2]) {
+                        $this.Difficulty_Value  = [double]($Matches[1] -replace ',','.') * $(Switch ($Matches[2]) {
                             "Th" {1e12}
                             "Gh" {1e9}
                             "Mh" {1e6}
@@ -38,7 +37,7 @@ class EthminerWrapper : Miner {
 
                         if ($HashRate_Value -gt 0) {
                             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
-                            $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
+                            $Difficulty | Add-Member @{$HashRate_Name = $this.Difficulty_Value}
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
