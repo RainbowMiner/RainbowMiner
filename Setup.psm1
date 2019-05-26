@@ -88,8 +88,9 @@ function Start-Setup {
 
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
 
-        $CoinsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
-        $PoolsDefault = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
+        $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
+        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
+        $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
 
         $Controls = @("cancel","exit","back","save","done","<")
 
@@ -1543,7 +1544,7 @@ function Start-Setup {
                             "ocprofile" {
                                 $MinerSetupStepStore = $false
                                 if ($Config.EnableOCProfile) {
-                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($ProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     $MinerSetupStepStore = $true
                                 }
                             }
@@ -1945,7 +1946,6 @@ function Start-Setup {
             do {
                 try {
                     $DevicesActual = Get-Content $ConfigFiles["Devices"].Path | ConvertFrom-Json
-                    $OCprofilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
                     $Device_Name = Read-HostString -Prompt "Which device do you want to configure? (leave empty to end device config)" -Characters "A-Z0-9" -Valid @($SetupDevices.Model | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                     if ($Device_Name -eq '') {throw}
 
@@ -1965,7 +1965,8 @@ function Start-Setup {
                         $DeviceSetupSteps.AddRange(@("algorithm","excludealgorithm","minername","excludeminername","disabledualmining","defaultocprofile","poweradjust")) > $null
                         $DeviceSetupSteps.Add("save") > $null
                                         
-                        do { 
+                        do {
+                            $DeviceSetupStepStore = $true
                             try {
                                 Switch ($DeviceSetupSteps[$DeviceSetupStep]) {
                                     "algorithm" {
@@ -2012,7 +2013,7 @@ function Start-Setup {
                                         $DeviceSetupStepsDone = $true
                                     }
                                 }
-                                $DeviceSetupStepBack.Add($DeviceSetupStep) > $null
+                                if ($DeviceSetupStepStore) {$DeviceSetupStepBack.Add($DeviceSetupStep) > $null}
                                 $DeviceSetupStep++
                             }
                             catch {
@@ -2027,7 +2028,7 @@ function Start-Setup {
                                     $DeviceSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    $DeviceSetupStepBack.Add($DeviceSetupStep) > $null
+                                    if ($DeviceSetupStepStore) {$DeviceSetupStepBack.Add($DeviceSetupStep) > $null}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -2070,7 +2071,7 @@ function Start-Setup {
                     if ($Algorithm_Name -eq '') {throw}
 
                     if (-not $AlgorithmsActual.$Algorithm_Name) {
-                        $AlgorithmsActual | Add-Member $Algorithm_Name ([PSCustomObject]@{Penalty="0";MinHashrate="0";MinWorkers="0";MaxTimeToFind="0"}) -Force
+                        $AlgorithmsActual | Add-Member $Algorithm_Name ($AlgorithmsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
                         Set-ContentJson -PathToFile $ConfigFiles["Algorithms"].Path -Data $AlgorithmsActual > $null
                     }
 
@@ -2081,11 +2082,13 @@ function Start-Setup {
                         [System.Collections.ArrayList]$AlgorithmSetupStepBack = @()
 
                         $AlgorithmConfig = $AlgorithmsActual.$Algorithm_Name.PSObject.Copy()
+                        foreach($SetupName in $AlgorithmsDefault.PSObject.Properties.Name) {if ($AlgorithmConfig.$SetupName -eq $null){$AlgorithmConfig | Add-Member $SetupName $AlgorithmsDefault.$SetupName -Force}}
 
-                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind")) > $null
+                        $AlgorithmSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","ocprofile","msiaprofile")) > $null
                         $AlgorithmSetupSteps.Add("save") > $null
-                                        
-                        do { 
+
+                        do {
+                            $AlgorithmSetupStepStore = $true
                             try {
                                 Switch ($AlgorithmSetupSteps[$AlgorithmSetupStep]) {
                                     "penalty" {
@@ -2103,6 +2106,20 @@ function Start-Setup {
                                         $AlgorithmConfig.MaxTimeToFind = Read-HostString -Prompt "Enter maximum average time to find a block (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $AlgorithmConfig.MaxTimeToFind -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $AlgorithmConfig.MaxTimeToFind = $AlgorithmConfig.MaxTimeToFind -replace "([A-Z])[A-Z]+","`$1"
                                     }
+                                    "ocprofile" {
+                                        $AlgorithmSetupStepStore = $false
+                                        if ($Config.EnableOCProfile) {
+                                            $AlgorithmConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($AlgorithmConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $AlgorithmConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            $AlgorithmSetupStepStore = $true
+                                        }
+                                    }
+                                    "msiaprofile" {
+                                        $AlgorithmSetupStepStore = $false
+                                        if (-not $Config.EnableOCProfile) {
+                                            $AlgorithmConfig.MSIAprofile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $AlgorithmConfig.MSIAprofile -Characters "012345" -Length 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            $AlgorithmSetupStepStore = $true
+                                        }
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -2110,7 +2127,8 @@ function Start-Setup {
                                         $AlgorithmConfig | Add-Member Penalty "$($AlgorithmConfig.Penalty)" -Force
                                         $AlgorithmConfig | Add-Member MinHashrate $AlgorithmConfig.MinHashrate -Force
                                         $AlgorithmConfig | Add-Member MinWorkers $AlgorithmConfig.MinWorkers -Force
-                                        $AlgorithmConfig | Add-Member MaxTimeToFind $AlgorithmConfig.MaxTimeToFind -Force
+                                        $AlgorithmConfig | Add-Member OCprofile $AlgorithmConfig.OCprofile -Force
+                                        $AlgorithmConfig | Add-Member MSIAprofile $AlgorithmConfig.MSIAprofile -Force
 
                                         $AlgorithmsActual | Add-Member $Algorithm_Name $AlgorithmConfig -Force
                                         $AlgorithmsActualSave = [PSCustomObject]@{}
@@ -2124,7 +2142,7 @@ function Start-Setup {
                                         $AlgorithmSetupStepsDone = $true
                                     }
                                 }
-                                $AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null
+                                if ($AlgorithmSetupStepStore) {$AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null}
                                 $AlgorithmSetupStep++
                             }
                             catch {
@@ -2139,7 +2157,7 @@ function Start-Setup {
                                     $AlgorithmSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    $AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null
+                                    if ($AlgorithmSetupStepStore) {$AlgorithmSetupStepBack.Add($AlgorithmSetupStep) > $null}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -2201,7 +2219,7 @@ function Start-Setup {
 
                         if (-not $CoinsActual.$Coin_Symbol) {
                             if (Read-HostBool "Do you want to add a new coin `"$($Coin_Symbol)`"?" -Default $true) {
-                                $CoinsActual | Add-Member $Coin_Symbol $CoinsDefault -Force
+                                $CoinsActual | Add-Member $Coin_Symbol ($CoinsDefault | ConvertTo-Json | ConvertFrom-Json) -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Coins"].Path -Data $CoinsActual > $null
                             } else {
                                 $Coin_Symbol = ''
@@ -2233,7 +2251,8 @@ function Start-Setup {
                         $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","wallet","enableautopool")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
-                        do { 
+                        do {
+                            $CoinSetupStepStore = $true
                             try {
                                 Switch ($CoinSetupSteps[$CoinSetupStep]) {
                                     "penalty" {
@@ -2280,7 +2299,7 @@ function Start-Setup {
                                         $CoinSetupStepsDone = $true
                                     }
                                 }
-                                $CoinSetupStepBack.Add($CoinSetupStep) > $null
+                                if ($CoinSetupStepStore) {$CoinSetupStepBack.Add($CoinSetupStep) > $null}
                                 $CoinSetupStep++
                             }
                             catch {
@@ -2295,7 +2314,7 @@ function Start-Setup {
                                     $CoinSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    $CoinSetupStepBack.Add($CoinSetupStep) > $null
+                                    if ($CoinSetupStepStore) {$CoinSetupStepBack.Add($CoinSetupStep) > $null}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
@@ -2403,7 +2422,8 @@ function Start-Setup {
                         if (Get-Yes $ConfigActual.EnableOCVoltage) {$OCProfileSetupSteps.Add("lockvoltagepoint") >$null}
                         $OCProfileSetupSteps.Add("save") > $null
                                         
-                        do { 
+                        do {
+                            $OCProfileSetupStepStore = $true
                             try {
                                 Switch ($OCProfileSetupSteps[$OCProfileSetupStep]) {
                                     "powerlimit" {
@@ -2452,7 +2472,7 @@ function Start-Setup {
                                         $OCProfileSetupStepsDone = $true
                                     }
                                 }
-                                $OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null
+                                if ($OCProfileSetupStepStore) {$OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null}
                                 $OCProfileSetupStep++
                             }
                             catch {
@@ -2467,7 +2487,7 @@ function Start-Setup {
                                     $OCProfileSetupStepsDone = $true                                               
                                 }
                                 else {
-                                    $OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null
+                                    if ($OCProfileSetupStepStore) {$OCProfileSetupStepBack.Add($OCProfileSetupStep) > $null}
                                     $NextSetupStep = Switch -Regex ($_.Exception.Message) {
                                                         "^Goto\s+(.+)$" {$Matches[1]}
                                                         "^done$"  {"save"}
