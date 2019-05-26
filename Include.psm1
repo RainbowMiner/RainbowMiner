@@ -2895,7 +2895,7 @@ class Miner {
 
     hidden StartMiningPreProcess() {
         $this.Stratum = @()
-        $this.Algorithm | Foreach-Object {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0;Difficulty=0}}
+        $this.Algorithm | Foreach-Object {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
     }
 
     hidden StartMiningPostProcess() { }
