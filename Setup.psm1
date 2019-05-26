@@ -2115,7 +2115,7 @@ function Start-Setup {
                                     }
                                     "msiaprofile" {
                                         $AlgorithmSetupStepStore = $false
-                                        if (-not (Get-Yes $Config.EnableOCProfile)) {
+                                        if (-not (Get-Yes $Config.EnableOCProfiles)) {
                                             $AlgorithmConfig.MSIAprofile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $AlgorithmConfig.MSIAprofile -Characters "012345" -Length 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             $AlgorithmSetupStepStore = $true
                                         }
