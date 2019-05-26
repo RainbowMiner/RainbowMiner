@@ -1543,14 +1543,14 @@ function Start-Setup {
                             }
                             "ocprofile" {
                                 $MinerSetupStepStore = $false
-                                if ($Config.EnableOCProfile) {
+                                if (Get-Yes $Config.EnableOCProfiles) {
                                     $EditMinerConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($EditMinerConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $EditMinerConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     $MinerSetupStepStore = $true
                                 }
                             }
                             "msiaprofile" {
                                 $MinerSetupStepStore = $false
-                                if (-not $Config.EnableOCProfile) {
+                                if (-not (Get-Yes $Config.EnableOCProfiles)) {
                                     $EditMinerConfig.MSIAprofile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $EditMinerConfig.MSIAprofile -Characters "012345" -Length 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     if ($EditMinerConfig.MSIAprofile -eq "0") {$EditMinerConfig.MSIAprofile = ""}
                                     $MinerSetupStepStore = $true
@@ -2108,14 +2108,14 @@ function Start-Setup {
                                     }
                                     "ocprofile" {
                                         $AlgorithmSetupStepStore = $false
-                                        if ($Config.EnableOCProfile) {
+                                        if (Get-Yes $Config.EnableOCProfiles) {
                                             $AlgorithmConfig.OCprofile = Read-HostString -Prompt "Custom overclocking profile ($(if ($AlgorithmConfig.OCprofile) {"clear"} else {"leave empty"}) for none)" -Default $AlgorithmConfig.OCprofile -Valid @($OCProfilesActual.PSObject.Properties.Name) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             $AlgorithmSetupStepStore = $true
                                         }
                                     }
                                     "msiaprofile" {
                                         $AlgorithmSetupStepStore = $false
-                                        if (-not $Config.EnableOCProfile) {
+                                        if (-not (Get-Yes $Config.EnableOCProfile)) {
                                             $AlgorithmConfig.MSIAprofile = Read-HostString -Prompt "MSI Afterburner Profile" -Default $AlgorithmConfig.MSIAprofile -Characters "012345" -Length 1 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             $AlgorithmSetupStepStore = $true
                                         }
