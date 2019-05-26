@@ -1,34 +1,36 @@
-﻿using module ..\Include.psm1
+using module ..\Include.psm1
 
-class Ccminer : Miner {
+class EnemyZ : Miner {
     [String[]]UpdateMinerData () {
         if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
 
-        $Request = "summary"
+        $Request = ""
         $Response = ""
 
         $HashRate   = [PSCustomObject]@{}
         $Difficulty = [PSCustomObject]@{}
 
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
         try {
-            $Response = Invoke-TcpRequest $Server $this.Port $Request -Timeout $Timeout -ErrorAction Stop -Quiet
-            $Data = $Response -split ";" | ConvertFrom-StringData -ErrorAction Stop
+            $Response = Invoke-WebRequest "http://$($Server):$($this.Port)/summary" -UseBasicParsing -TimeoutSec $Timeout -ErrorAction Stop
+            $Data = $Response | ConvertFrom-Json -ErrorAction Stop
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
             return @($Request, $Response)
         }
+        $Global:ProgressPreference = $oldProgressPreference
 
-        $HashRate_Name = $this.Algorithm[0]
-        $HashRate_Value = if ($Data.NAME -match "zjazz" -and ($Data.ALGO -eq "bitcash" -or $Data.ALGO -eq "merit")) {[Double]$Data.HS} else {[Double]$Data.KHS * 1000}
+        $HashRate_Name = [String]$this.Algorithm[0]
 
-        $Difficulty_Value = [Double]$Data.DIFF
-
-        $Accepted_Shares = [Int64]($Data.ACC | Measure-Object -Sum).Sum
-        $Rejected_Shares = [Int64]($Data.REJ | Measure-Object -Sum).Sum
+        $Accepted_Shares  = [Int64]$Data.accepted_count
+        $Rejected_Shares  = [Int64]$Data.rejected_count
+        $Difficulty_Value = [Double]$Data.pool_difficulty
+        $HashRate_Value   = [Double]$Data.hashrate
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
