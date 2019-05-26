@@ -365,7 +365,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or $Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30))
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
                     $Statset++
                 }
 
@@ -695,19 +695,19 @@ function Set-Stat {
                 "Miners" {
                     $AddStat = @{
                         PowerDraw_Live     = $PowerDraw
-                        PowerDraw_Average  = ((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)
+                        PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)} else {$PowerDraw}
                         Diff_Live          = $Difficulty
-                        Diff_Average       = ((1 - $Span_Day) * $Stat.Diff_Average) + ($Span_Day * $Difficulty)
+                        Diff_Average       = if ($Stat.Diff_Average -gt 0) {((1 - $Span_Day) * $Stat.Diff_Average) + ($Span_Day * $Difficulty)} else {$Difficulty}
                     }
                 }
                 "Pools" {
                     $AddStat = @{
                         HashRate_Live      = $HashRate
-                        HashRate_Average   = ((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)
+                        HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)} else {$HashRate}
                         BlockRate_Live     = $BlockRate
-                        BlockRate_Average  = ((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)
+                        BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)} else {$BlockRate}
                         ErrorRatio_Live    = $ErrorRatio
-                        ErrorRatio_Average = ((1 - $Span_ThreeDay) * $Stat.ErrorRatio_Average) + ($Span_ThreeDay * [Double]$ErrorRatio)
+                        ErrorRatio_Average = if ($Stat.ErrorRatio_Average -gt 0) {((1 - $Span_ThreeDay) * $Stat.ErrorRatio_Average) + ($Span_ThreeDay * [Double]$ErrorRatio)} else {$ErrorRatio}
                     }
                 }
             }
@@ -1092,18 +1092,25 @@ function Get-BalancesContent {
     }
 }
 
-filter ConvertTo-Hash { 
+filter ConvertTo-Float {
     [CmdletBinding()]
-    $Hash = $_
-    switch ([math]::truncate([math]::log($Hash, 1e3))) {
-        "-Infinity" {"0  H"}
-        0 {"{0:n2}  H" -f ($Hash / 1)}
-        1 {"{0:n2} kH" -f ($Hash / 1e3)}
-        2 {"{0:n2} MH" -f ($Hash / 1e6)}
-        3 {"{0:n2} GH" -f ($Hash / 1e9)}
-        4 {"{0:n2} TH" -f ($Hash / 1e12)}
-        Default {"{0:n2} PH" -f ($Hash / 1e15)}
+    $Num = $_
+
+    switch ([math]::floor([math]::log($Num, 1e3))) {
+        "-Infinity" {"0  "}
+        -2 {"{0:n2} µ" -f ($Num * 1e6)}
+        -1 {"{0:n2} m" -f ($Num * 1e3)}
+         0 {"{0:n2}  " -f ($Num / 1)}
+         1 {"{0:n2} k" -f ($Num / 1e3)}
+         2 {"{0:n2} M" -f ($Num / 1e6)}
+         3 {"{0:n2} G" -f ($Num / 1e9)}
+         4 {"{0:n2} T" -f ($Num / 1e12)}
+         Default {"{0:n2} P" -f ($Num / 1e15)}
     }
+}
+
+filter ConvertTo-Hash { 
+    "$($_ | ConvertTo-Float)H"
 }
 
 function ConvertFrom-Hash {
@@ -2814,6 +2821,10 @@ class Miner {
         return "$($this.BaseName)-$(($this.DeviceName | Sort-Object) -join '-')"
     }
 
+    [Bool]IsWrapper() {
+        return $this.API -match "Wrapper"
+    }
+
     hidden StartMining() {
         $this.StopMining();
 
@@ -2848,7 +2859,7 @@ class Miner {
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper ($this.API -match "Wrapper") -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $this.GetArguments() -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
             $this.Process   = $Job.Process
             $this.ProcessId = $Job.ProcessId
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
@@ -3156,11 +3167,11 @@ class Miner {
     [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm) {
         $Intervals  = [Math]::Max($this.ExtendInterval,1)
         $Timeframe  = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval * $Intervals)
-        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Select-Object -ExpandProperty Difficulty | Measure-Object -Average).Average
+        return ($this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Where-Object {$_.Date -ge $Timeframe} | Foreach-Object {$_.Difficulty."$($Algorithm -replace '\-.*$')"} | Measure-Object -Average).Average
     }
 
     [Double]GetCurrentDifficulty([String]$Algorithm = [String]$this.Algorithm) {
-        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Select-Object -ExpandProperty Difficulty
+        return $this.Data | Where-Object {$_.Difficulty -and ($_.Difficulty.$Algorithm -or $_.Difficulty."$($Algorithm -replace '\-.*$')")} | Select-Object -Last 1 | Foreach-Object {$_.Difficulty."$($Algorithm -replace '\-.*$')"}
     }
 
     [Double]GetHashRate([String]$Algorithm = [String]$this.Algorithm,[Bool]$Safe = $true) {

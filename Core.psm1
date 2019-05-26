@@ -1071,6 +1071,7 @@ function Invoke-Core {
         $Miner = $_
 
         $Miner_HashRates = [PSCustomObject]@{}
+        $Miner_Difficulties = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
         $Miner_Pools_Comparison = [PSCustomObject]@{}
@@ -1166,6 +1167,7 @@ function Invoke-Core {
             $Miner_DevFeeFactor = (1-$Miner_DevFees.$_/100)
             if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
             $Miner_HashRates | Add-Member $_ ([Double]$Miner.HashRates.$_)
+            $Miner_Difficulties | Add-Member $_ ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Pools_Comparison | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Profits | Add-Member $_ ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
@@ -1192,6 +1194,7 @@ function Invoke-Core {
         $Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
             if (-not [String]$Miner.HashRates.$_) {
                 $Miner_HashRates.$_ = $null
+                $Miner_Difficulties.$_ = $null
                 $Miner_Profits.$_ = $null
                 $Miner_Profits_Comparison.$_ = $null
                 $Miner_Profits_Bias.$_ = $null
@@ -1206,6 +1209,7 @@ function Invoke-Core {
         }
 
         $Miner | Add-Member HashRates $Miner_HashRates -Force
+        $Miner | Add-Member Difficulties $Miner_Difficulties -Force
         $Miner | Add-Member DevFee $Miner_DevFees -Force
         $Miner | Add-Member OCprofile $Miner_OCprofile -Force
 
@@ -1693,7 +1697,9 @@ function Invoke-Core {
             @{Label = "Fee"; Expression = {($_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {'{0:p2}' -f ($_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
             @{Label = "Algorithm"; Expression = {$_.HashRates.PSObject.Properties.Name}},
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'},
+            @{Label = "Diff"; Expression = {$_.Difficulties.PSObject.Properties.Value | ForEach-Object {if ($_) {($_ | ConvertTo-Float) -replace " "} else {"-"}}}; Align = 'right'},
             @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
+            #@{Label = "Diff"; Expression = {$_.HashRates.PSObject.Properties.Name | ForEach-Object {if ($_) {$_} else {"-"}}}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Session.Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Session.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
