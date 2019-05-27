@@ -1745,6 +1745,10 @@ function Start-Setup {
                                         $PoolConfig.EnablePriceUpdates = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnablePriceUpdates -Default $PoolConfig.EnablePriceUpdates | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.EnablePriceUpdates = if ($PoolConfig.EnablePriceUpdates) {"1"} else {"0"}
                                     }
+                                    "enableminimumprice" {
+                                        $PoolConfig.EnableMinimumPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMinimumPrice -Default $PoolConfig.EnableMinimumPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableMinimumPrice = if ($PoolConfig.EnableMinimumPrice) {"1"} else {"0"}
+                                    }
                                     "pricebtc" {
                                         $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }

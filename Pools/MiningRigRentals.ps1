@@ -62,6 +62,28 @@ if (-not $Pool_Request.success) {
 }
 $Pool_Request = $Pool_Request.data
 
+$Pool_Request_Tag = Get-MD5Hash "$($Pool_Request.name | Sort-Object)"
+if ($Session.MRRTag -ne $Pool_Request_Tag) {
+    Set-MRRConfigDefault -Data $Pool_Request > $null
+    $Session.MRRTag    = $Pool_Request_Tag
+}
+
+if (-not $Session.Config.MRR -or (Test-Config "MRR" -LastWriteTime)) {
+    $AllMRRConfig = Get-ConfigContent "MRR" -UpdateLastWriteTime
+    if (Test-Config "MRR" -Health) {
+        $Session.Config | Add-Member MRR ([PSCustomObject]@{}) -Force
+        $AllMRRConfig.PSObject.Properties.Name | Foreach-Object {
+            $Session.Config.MRR | Add-Member $_ $AllMRRConfig.$_ -Force
+            $Session.Config.MRR.$_ | Add-Member EnableAutoCreate (Get-Yes $Session.Config.MRR.$_.EnableAutoCreate) -Force
+            $Session.Config.MRR.$_ | Add-Member EnablePriceUpdates (Get-Yes $Session.Config.MRR.$_.EnablePriceUpdates) -Force
+            $Session.Config.MRR.$_ | Add-Member EnableAutoPrice (Get-Yes $Session.Config.MRR.$_.EnableAutoPrice) -Force
+            $Session.Config.MRR.$_ | Add-Member PriceBTC ([double]$Session.Config.MRR.$_.PriceBTC) -Force
+            $Session.Config.MRR.$_ | Add-Member PriceOffset ([double]$Session.Config.MRR.$_.PriceOffset) -Force
+        }
+    }
+    if ($AllMRRConfig) {Remove-Variable "AllMRRConfig" -Force}
+}
+
 [hashtable]$Pool_Regions = @{
     "eu"   = Get-Region "eu"
     "us"   = Get-Region "us"
