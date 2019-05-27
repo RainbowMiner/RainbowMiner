@@ -425,6 +425,10 @@ try {
         $AddAlgorithm += @("ProgPow092","ProgPowH","TEThashV1")
     }
 
+    if ($Version -le (Get-Version "4.3.1.8")) {
+        $AddAlgorithm += @("Lux")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
