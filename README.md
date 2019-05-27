@@ -257,7 +257,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "ServerConfigName": "config,coins,pools",
 ```
 
-If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory ".\Config\<workername>". Use lowercase letters for this subdirectoy name.
+If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
 
 ## POOLS
 
