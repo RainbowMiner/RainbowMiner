@@ -4196,6 +4196,49 @@ function Set-OCProfilesConfigDefault {
     Test-Config $ConfigName -Exists
 }
 
+function Set-MRRConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false,
+        [Parameter(Mandatory = $False)]
+        $Data = $null
+    )
+    $ConfigName = "MRR"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile) -or $Data -or (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime() -lt (Get-ChildItem ".\Data\MRRConfigDefault.ps1").LastWriteTime.ToUniversalTime()) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {
+            if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            $Default = [PSCustomObject]@{PriceBTC = "";PriceOffset = "";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";Title="";Description=""}
+            $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            
+            foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
+                if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
+            }
+
+            $Sorted = [PSCustomObject]@{}
+            $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {                
+                foreach($SetupName in $Default.PSObject.Properties.Name) {if ($Preset.$_.$SetupName -eq $null){$Preset.$_ | Add-Member $SetupName $Default.$SetupName -Force}}
+                $Sorted | Add-Member $_ $Preset.$_ -Force
+            }
+            Set-ContentJson -PathToFile $PathToFile -Data $Sorted -MD5hash $ChangeTag > $null
+            $Session.ConfigFiles[$ConfigName].Healthy = $true
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            $Session.ConfigFiles[$ConfigName].Healthy = $false
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
 function Test-Config {
     [CmdletBinding()]
     param(
@@ -4241,6 +4284,7 @@ function Set-ConfigDefault {
         "OCProfiles" {Set-OCProfilesConfigDefault -Force:$Force}
         "Algorithms" {Set-AlgorithmsConfigDefault -Force:$Force}
         "Coins"      {Set-CoinsConfigDefault -Force:$Force}
+        "MRR"        {Set-MRRConfigDefault -Force:$Force}
     }
 }
 

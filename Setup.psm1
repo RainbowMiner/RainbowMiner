@@ -1732,6 +1732,27 @@ function Start-Setup {
                                     "enablemining" {
                                         $PoolConfig.EnableMining = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMining -Default $PoolConfig.EnableMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
+                                    "enableautocreate" {
+                                        $PoolConfig.EnableAutoCreate = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoCreate -Default $PoolConfig.EnableAutoCreate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "enableautoprice" {
+                                        $PoolConfig.EnableAutoPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoPrice -Default $PoolConfig.EnableAutoPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "enablepriceupdates" {
+                                        $PoolConfig.EnablePriceUpdates = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnablePriceUpdates -Default $PoolConfig.EnablePriceUpdates | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "pricebtc" {
+                                        $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "priceoffset" {
+                                        $PoolConfig.PriceOffset = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceOffset -Default $PoolConfig.PriceOffset | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "title" {
+                                        $PoolConfig.Title = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "description" {
+                                        $PoolConfig.Description = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
                                     "algorithm" {
                                         $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }

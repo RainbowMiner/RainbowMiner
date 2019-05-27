@@ -62,6 +62,7 @@
             Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
             Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
+            MRR        = @{Path='';LastWriteTime=0;Healthy=$false}
         }
         [hashtable]$Session.MinerInfo = @{}
 
