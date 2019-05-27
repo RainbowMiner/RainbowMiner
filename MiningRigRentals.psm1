@@ -194,7 +194,12 @@ function Invoke-MiningRigRentalCreateRigs {
 }
 
 function Invoke-MiningRigRentalUpdatePrices {
+    Write-Host "Not implemented"
+    return
+
     $MRRActual = (Get-ConfigContent "Pools").MiningRigRentals
+    $MRRActual.Worker = $MRRActual.Worker -replace "^\`$.+"
+    if (-not $MRRActual.Worker) {$MRRActual.Worker = $Session.Config.WorkerName}
 
     if (-not $MRRActual.API_Key -or -not $MRRActual.API_Secret -or -not (Test-Config "Pools" -Health)) {return}
 
@@ -211,16 +216,23 @@ function Invoke-MiningRigRentalUpdatePrices {
 
     $AllMRRConfig = Get-ConfigContent "MRR" -UpdateLastWriteTime
     if (Test-Config "MRR" -Health) {
-        $MRRConfig | Add-Member Algorithms ([PSCustomObject]@{}) -Force
+        $MRRActual | Add-Member Algorithms ([PSCustomObject]@{}) -Force
         $AllMRRConfig.PSObject.Properties.Name | Foreach-Object {
-            $MRRConfig.Algorithms | Add-Member $_ $AllMRRConfig.$_ -Force
-            $MRRConfig.Algorithms.$_ | Add-Member EnableAutoCreate (Get-Yes $MRRConfig.Algorithms.$_.EnableAutoCreate) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member EnablePriceUpdates (Get-Yes $MRRConfig.Algorithms.$_.EnablePriceUpdates) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member EnableAutoPrice (Get-Yes $MRRConfig.Algorithms.$_.EnableAutoPrice) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member EnableMinimumPrice (Get-Yes $MRRConfig.Algorithms.$_.EnableMinimumPrice) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member PriceBTC ([double]$MRRConfig.Algorithms.$_.PriceBTC) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member PriceFactor ([double]$MRRConfig.Algorithms.$_.PriceFactor) -Force
+            $m = $_
+            $MRRActual.Algorithms | Add-Member $m $AllMRRConfig.$m -Force
+            $MRRActual.Algorithms.$m | Add-Member EnableAutoCreate ($MRRActual.EnableAutoCreate -and (Get-Yes $MRRActual.Algorithms.$m.EnableAutoCreate)) -Force
+            $MRRActual.Algorithms.$m | Add-Member EnablePriceUpdates ($MRRActual.EnablePriceUpdates -and (Get-Yes $MRRActual.Algorithms.$m.EnablePriceUpdates)) -Force
+            $MRRActual.Algorithms.$m | Add-Member EnableAutoPrice ($MRRActual.EnableAutoPrice -and (Get-Yes $MRRActual.Algorithms.$m.EnableAutoPrice)) -Force
+            $MRRActual.Algorithms.$m | Add-Member EnableMinimumPrice ($MRRActual.EnableMinimumPrice -and (Get-Yes $MRRActual.Algorithms.$m.EnableMinimumPrice)) -Force
+            $MRRActual.Algorithms.$m | Add-Member PriceBTC ([double]$MRRActual.Algorithms.$m.PriceBTC) -Force
+            $MRRActual.Algorithms.$m | Add-Member PriceFactor ([double]$MRRActual.Algorithms.$m.PriceFactor) -Force
+            if (-not $MRRActual.Algorithms.$m.PriceBTC) {$MRRActual.Algorithms.$m.PriceBTC = $MRRActual.PriceBTC}
+            if (-not $MRRActual.Algorithms.$m.PriceFactor) {$MRRActual.Algorithms.$m.PriceFactor = $MRRActual.PriceFactor}
         }
     }
     if ($AllMRRConfig) {Remove-Variable "AllMRRConfig" -Force}
+
+    $Models = Get-Device (Get-ConfigArray $Session.Config.DeviceName) | Select-Object -ExpandProperty Model | Select-Object -Unique | Sort-Object
+
+    $DevicesActual = Get-ConfigContent "Devices"
 }
