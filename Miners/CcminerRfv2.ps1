@@ -17,7 +17,7 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminerrfv2/ccminerrfv2-1.0.1.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerRfv2\ccminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminerrfv2/ccminerrfv2-1.0.1.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ccminerrfv2/ccminerrfv2-1.0.2.7z"
 }
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
