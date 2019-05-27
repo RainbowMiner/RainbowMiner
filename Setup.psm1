@@ -90,7 +90,7 @@ function Start-Setup {
 
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
         $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
-        $MRRDefault        = [PSCustomObject]@{PriceBTC = "";PriceOffset = "";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
+        $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
         $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
 
         $Controls = @("cancel","exit","back","save","done","<")
@@ -1751,12 +1751,12 @@ function Start-Setup {
                                         $PoolConfig.EnableMinimumPrice = if ($PoolConfig.EnableMinimumPrice) {"1"} else {"0"}
                                     }
                                     "pricebtc" {
-                                        $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $PoolConfig.PriceBTC = "$($PoolConfig.PriceBTC)"
                                     }
-                                    "priceoffset" {
-                                        $PoolConfig.PriceOffset = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceOffset -Default $PoolConfig.PriceOffset | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.PriceOffset = "$($PoolConfig.PriceOffset)"
+                                    "pricefactor" {
+                                        $PoolConfig.PriceFactor = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceFactor -Default $PoolConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.PriceFactor = "$($PoolConfig.PriceFactor)"
                                     }
                                     "pricecurrencies" {
                                         $PoolConfig.PriceCurrencies = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceCurrencies -Default $PoolConfig.PriceCurrencies -Characters "A-Z" -Valid @("BCH","BTC","DASH","ETH","LTC") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2586,7 +2586,7 @@ function Start-Setup {
                                 $MRRConfig = $MRRActual.$MRR_Name.PSObject.Copy()
                                 foreach($SetupName in $MRRDefault.PSObject.Properties.Name) {if ($MRRConfig.$SetupName -eq $null){$MRRConfig | Add-Member $SetupName $MRRDefault.$SetupName -Force}}
 
-                                $MRRSetupSteps.AddRange(@("enableautocreate","enablepriceupdates","enableautoprice","enableminimumprice","pricebtc","priceoffset","title","description")) > $null
+                                $MRRSetupSteps.AddRange(@("enableautocreate","enablepriceupdates","enableautoprice","enableminimumprice","pricebtc","pricefactor","title","description")) > $null
                                 $MRRSetupSteps.Add("save") > $null
 
                                 do {
@@ -2622,16 +2622,16 @@ function Start-Setup {
                                                 }
                                             }
                                             "pricebtc" {
-                                                $MRRConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $MRRConfig.PriceBTC | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                                $MRRConfig.PriceBTC = Read-HostDouble -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.PriceBTC) (enter 0 to use pool's default)" -Default $MRRConfig.PriceBTC -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
-                                            "priceoffset" {
-                                                $MRRConfig.PriceOffset = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceOffset -Default $MRRConfig.PriceOffset | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            "pricefactor" {
+                                                $MRRConfig.PriceFactor = Read-HostDouble -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.PriceFactor) (enter 0 to use pool's default)" -Default $MRRConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
                                             "title" {
-                                                $MRRConfig.Title = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Title) (leave empty to use pool's default)" -Default $MRRConfig.Title | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                                $MRRConfig.Title = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Title) ($(if ($MRRConfig.Title) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Title | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
                                             "description" {
-                                                $MRRConfig.Description = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Description) (leave empty to use pool's default)" -Default $MRRConfig.Description | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                                $MRRConfig.Description = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Description) ($(if ($MRRConfig.Description) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Description | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
 
                                             "save" {
@@ -2643,7 +2643,7 @@ function Start-Setup {
                                                 $MRRConfig | Add-Member EnablePriceUpdates $(if (Get-Yes $MRRConfig.EnablePriceUpdates) {"1"} else {"0"}) -Force
                                                 $MRRConfig | Add-Member EnableMinimumPrice $(if (Get-Yes $MRRConfig.EnableMinimumPrice) {"1"} else {"0"}) -Force
                                                 $MRRConfig | Add-Member PriceBTC "$($MRRConfig.PriceBTC)" -Force
-                                                $MRRConfig | Add-Member PriceOffset "$($MRRConfig.PriceOffset)" -Force
+                                                $MRRConfig | Add-Member PriceFactor "$($MRRConfig.PriceFactor)" -Force
 
                                                 $MRRActual | Add-Member $MRR_Name $MRRConfig -Force
                                                 $MRRActualSave = [PSCustomObject]@{}

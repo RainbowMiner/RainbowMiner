@@ -19,7 +19,7 @@ function Set-MiningRigRentalConfigDefault {
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{PriceBTC = "";PriceOffset = "";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
+            $Default = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
             $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
@@ -219,7 +219,7 @@ function Invoke-MiningRigRentalUpdatePrices {
             $MRRConfig.Algorithms.$_ | Add-Member EnableAutoPrice (Get-Yes $MRRConfig.Algorithms.$_.EnableAutoPrice) -Force
             $MRRConfig.Algorithms.$_ | Add-Member EnableMinimumPrice (Get-Yes $MRRConfig.Algorithms.$_.EnableMinimumPrice) -Force
             $MRRConfig.Algorithms.$_ | Add-Member PriceBTC ([double]$MRRConfig.Algorithms.$_.PriceBTC) -Force
-            $MRRConfig.Algorithms.$_ | Add-Member PriceOffset ([double]$MRRConfig.Algorithms.$_.PriceOffset) -Force
+            $MRRConfig.Algorithms.$_ | Add-Member PriceFactor ([double]$MRRConfig.Algorithms.$_.PriceFactor) -Force
         }
     }
     if ($AllMRRConfig) {Remove-Variable "AllMRRConfig" -Force}
