@@ -29,6 +29,7 @@
 128	CcminerDyn
 129	CcminerVerus
 130	CcminerRfv2
+131	RhminerCpu
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
@@ -108,7 +109,7 @@
 530	CpuminerYespower
 531	CpuminerBinarium
 532	CpuminerRplant
-533	RhminerCpu
+533	
 534	Nanominer
 535	CpuminerVerus
 536	Nheqminer

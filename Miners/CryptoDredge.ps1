@@ -15,15 +15,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_10.0_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-cryptodredge/CryptoDredge_0.20.0_cuda_10.1_linux.tar.gz"
+            Cuda = "10.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-cryptodredge/CryptoDredge_0.20.0_cuda_10.0_linux.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-cryptodredge/CryptoDredge_0.20.0_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-cryptodredge/CryptoDredge_0.20.0_cuda_9.1_linux.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -74,6 +78,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";  NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = ""; ExtendInterval = 2} #Cuckaroo29 / GRIN
     #[PSCustomObject]@{MainAlgorithm = "dedal";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
+    [PSCustomObject]@{MainAlgorithm = "lux";         NH = $true;  MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; NH = $true;  MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";      NH = $true;  MinMemGb = 1; Params = ""} #Lyra2z
