@@ -62,7 +62,7 @@
             Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
             Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
-            MRR        = @{Path='';LastWriteTime=0;Healthy=$false}
+            MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
         [hashtable]$Session.MinerInfo = @{}
 
@@ -561,7 +561,11 @@ function Invoke-Core {
                 $Session.Config.Pools.$p | Add-Member $q @(($Session.Config.Pools.$p.$q | Select-Object) | Where-Object {$_} | Foreach-Object {if ($q -match "algorithm"){Get-Algorithm $_}else{$_}} | Select-Object -Unique | Sort-Object) -Force
             }
 
-            $Session.Config.Pools.$p | Add-Member EnableAutoCoin (Get-Yes $Session.Config.Pools.$p.EnableAutoCoin) -Force
+            $Session.Config.Pools.$p.PSObject.Properties | Where-Object {$_.Name -match "^(Allow|Enable)" -and $_.Value -isnot [bool]} | Foreach-Object {
+                $AddEnable = $_
+                $Session.Config.Pools.$p | Add-Member $AddEnable.Name (Get-Yes $AddEnable.Value) -Force
+            }
+
             if ($Session.Config.Pools.$p.EnableAutoCoin) {
                 $Session.Config.Coins.PSObject.Properties | Where-Object {$_.Value.EnableAutoPool -and $_.Value.Wallet} | Sort-Object Name | Foreach-Object {
                     if (-not $Session.Config.Pools.$p."$($_.Name)") {$Session.Config.Pools.$p | Add-Member $_.Name $_.Value.Wallet -Force}
@@ -574,9 +578,6 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member Params $cparams -Force
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.]+")) -Force
-            $Session.Config.Pools.$p | Add-Member AllowZero (Get-Yes $Session.Config.Pools.$p.AllowZero) -Force
-            $Session.Config.Pools.$p | Add-Member EnablePostBlockMining (Get-Yes $Session.Config.Pools.$p.EnablePostBlockMining) -Force
-            if ($Session.Config.Pools.$p.EnableMining -ne $null) {$Session.Config.Pools.$p | Add-Member EnableMining (Get-Yes $Session.Config.Pools.$p.EnableMining) -Force}
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
     }
@@ -1794,6 +1795,10 @@ function Invoke-Core {
         [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -replace '\-.*$')-$($_.Algorithm -join '/')"}}
 
         $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $RoundSpan
+
+        if (($BestMiners_Combo | Where-Object {$_.Pool -contains "MiningRigRentals"} | Measure-Object).Count -eq 0) {
+            Set-Stat -Name "ProfitNonMRR" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $RoundSpan > $null
+        }
 
         $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
         $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
