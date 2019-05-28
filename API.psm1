@@ -394,7 +394,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-'} | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {
+                    ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -413,14 +413,15 @@
                             $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
                             $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
                             $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
-                            if ($_.DeviceModel -notmatch "-" -or $Miner_Path) {
+                            $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -or $true) {$d = $_.DeviceName | Select-Object -First 1;($Session.Devices | Where-Object Name -eq $d).Vendor} else {$_.DeviceModel}
+                            if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
                                 $Out.Add([PSCustomObject]@{
                                     BaseName = $_.BaseName
                                     Name = $_.Name
                                     Algorithm = $Algo
                                     SecondaryAlgorithm = $SecondAlgo
                                     Speed = $Speed                                    
-                                    DeviceModel = $_.DeviceModel
+                                    DeviceModel = $Miner_DeviceModel
                                     Benchmarking = -not $Miner_Path
                                     NeedsBenchmark = $Miner_NeedsBenchmark
                                     BenchmarkFailed = $Miner_Failed
