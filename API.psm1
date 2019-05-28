@@ -413,7 +413,7 @@
                             $Miner_Path = Get-ChildItem "Stats\Miners\*-$($Miners_Key)_HashRate.txt" -ErrorAction Ignore
                             $Miner_Failed = @($_.HashRates.PSObject.Properties.Value) -contains 0 -or @($_.HashRates.PSObject.Properties.Value) -contains $null
                             $Miner_NeedsBenchmark = $Miner_Path -and $Miner_Path.LastWriteTime.ToUniversalTime() -lt $JsonUri_Dates[$_.BaseName]
-                            $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -or $true) {$d = $_.DeviceName | Select-Object -First 1;($Session.Devices | Where-Object Name -eq $d).Vendor} else {$_.DeviceModel}
+                            $Miner_DeviceModel = if ($Session.Config.MiningMode -eq "legacy" -and $_.DeviceModel -match "-") {$Session.DevicesToVendors."$($_.DeviceModel)"} else {$_.DeviceModel}
                             if ($Miner_DeviceModel -notmatch "-" -or $Miner_Path) {
                                 $Out.Add([PSCustomObject]@{
                                     BaseName = $_.BaseName
