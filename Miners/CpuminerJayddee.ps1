@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.0.1-jayddee/cpuminer-opt-3.9.0.1-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1-jayddee/cpuminer-opt-jayddee-3.9.1-win.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -44,6 +44,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""; ExtendInterval = 2} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #skein2
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; ExtendInterval = 2} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; ExtendInterval = 2} #Veltor
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #x12
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt
