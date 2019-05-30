@@ -33,7 +33,7 @@ class NBminer : Miner {
         $Data.stratum | Select-Object -Index 0 | Foreach-Object {
             $Accepted_Shares  = [Int64]$_.accepted_shares
             $Rejected_Shares  = [Int64]$_.rejected_shares
-            $Difficulty_Value = [Double]$_.difficulty
+            $Difficulty_Value = [Double](ConvertFrom-Hash($_.difficulty))
         }
 
         $HashRate_Value = [Double]$Data.miner.total_hashrate_raw
@@ -53,7 +53,7 @@ class NBminer : Miner {
                 $Data.stratum | Select-Object -Index 1 | Foreach-Object {
                     $Accepted_Shares  = [Int64]$_.accepted_shares
                     $Rejected_Shares  = [Int64]$_.rejected_shares
-                    $Difficulty_Value = [Double]$_.difficulty
+                    $Difficulty_Value = [Double](ConvertFrom-Hash($_.difficulty))
                 }
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
