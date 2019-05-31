@@ -150,7 +150,7 @@
                 if (Test-Path $Session.ConfigFiles[$_].Path) {$Session.ConfigFiles[$_].Path = $Session.ConfigFiles[$_].Path | Resolve-Path -Relative}
             }
 
-            if ($MPHLegacyUpdate -and ($PoolsPath = Get-ConfigPath "pools")) {
+            if ($false -and $MPHLegacyUpdate -and ($PoolsPath = Get-ConfigPath "pools")) {
                 $PoolsData = Get-ConfigContent "pools" -Parameters $MPHLegacyUpdate -ConserveUnkownParameters
                 Set-ContentJson -PathToFile $PoolsPath -Data $PoolsData > $null
             }
