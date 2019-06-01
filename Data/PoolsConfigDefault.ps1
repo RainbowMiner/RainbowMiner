@@ -33,18 +33,18 @@
             Yiimp=$true
         }
         "Bsod" = [PSCustomObject]@{
-            Currencies=@("RVN","SUQA")
+            Currencies=@("RVN","SIN")
             Yiimp=$true
         }
         "BsodParty" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1";PartyPassword=""}
             SetupFields=[PSCustomObject]@{PartyPassword="Enter your Party password"}
-            Currencies=@("RVN","SUQA")
+            Currencies=@("RVN","SIN")
             Yiimp=$true
         }
         "BsodSolo" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{AllowZero="1"}
-            Currencies=@("RVN","SUQA")
+            Currencies=@("RVN","SIN")
             Yiimp=$true
         }
         "CryptoKnight" = [PSCustomObject]@{
@@ -96,13 +96,13 @@
             Currencies=@("XWP")
         }
         "Icemining" = [PSCustomObject]@{
-            Currencies=@("BCD","RVN","SUQA")
+            Currencies=@("BCD","RVN","SIN")
         }
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
         "MinerMore" = [PSCustomObject]@{
-            Currencies=@("RVN","SUQA")
+            Currencies=@("RVN","SIN")
         }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
@@ -171,7 +171,7 @@
             Currencies=@("ETH","GRIN","BEAM","XMR")
         }
         "YiiMP" = [PSCustomObject]@{
-            Currencies=@("RVN","SUQA")
+            Currencies=@("RVN","SIN")
         }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=12}
