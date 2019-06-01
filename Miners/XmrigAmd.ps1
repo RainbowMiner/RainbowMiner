@@ -9,11 +9,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Xmrig\xmrig-amd"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-amd-2.14.1-xenial-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-amd-2.14.4-xenial-x64.tar.gz"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\AMD-Xmrig\xmrig-amd.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.1-xmrig/xmrig-amd-2.14.1-msvc-win64-rbm.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-amd-2.14.4-msvc-win64-rbm.7z"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"

@@ -16,12 +16,8 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.3-xmrig/xmrig-nvidia-2.14.3-msvc-win64-cuda101-rbm.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-nvidia-2.14.4-msvc-win64-cuda101-rbm.7z"
         Cuda = "10.1"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.3-xmrig/xmrig-nvidia-2.14.3-msvc-win64-cuda100-rbm.7z"
-        Cuda = "10.0"
     }
 )
 
