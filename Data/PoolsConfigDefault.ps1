@@ -47,6 +47,9 @@
             Currencies=@("RVN","SIN")
             Yiimp=$true
         }
+        "CoinFoundry" = [PSCustomObject]@{
+            Currencies=@("BCD")
+        }
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
