@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-FancyIX\sgminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-linux-amd64-beta5ip3.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b6-fancyix/sgminer-phi2-fancyIX-linux-amd64-0.6.0.0.zip"
 } else {
     $Path = ".\Bin\AMD-FancyIX\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b5ip3-fancyix/sgminer-phi2-fancyIX-win64-beta5ip3.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1.3.b6-fancyix/sgminer-phi2-fancyIX-win64-0.6.0.0.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
@@ -29,6 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "mtp";     Params = "-I 20"}
     [PSCustomObject]@{MainAlgorithm = "phi2";    Params = "--gpu-threads 1 --worksize 256 -I 22"}
     [PSCustomObject]@{MainAlgorithm = "x22i";    Params = "--gpu-threads 2 --worksize 256 -I 22"; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x25x";    Params = "--gpu-threads 4 --worksize 256 -I 22"; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
