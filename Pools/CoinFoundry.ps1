@@ -53,7 +53,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?start=0&pageSize=50" -tag $Name -timeout 15 -delay 250 -cycletime 120
+            $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?page=0&pageSize=50" -body @{page=0;pageSize=50} -tag $Name -timeout 15 -delay 250 -cycletime 120
             if (-not $PoolBlocks_Request.success) {throw}
         }
         catch {
