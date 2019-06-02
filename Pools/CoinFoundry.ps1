@@ -55,13 +55,6 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
         try {
             $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?page=0&pageSize=50" -body @{page=0;pageSize=50} -tag $Name -timeout 15 -delay 250 -cycletime 120
             if (-not $PoolBlocks_Request.success) {throw}
-            $lastCount = $PoolBlocks_Request.result.Count
-            $nextPage  = 1
-            while ($PoolBlocks_Request.result.Count -lt 50 -and $lastCount -eq 15) {
-                $NextPage_Request = Invoke-GetUrl "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?page=$($nextPage)&pageSize=$(50-$PoolBlocks_Request.result.Count)" -body @{page=$nextPage;pageSize=(50-$PoolBlocks_Request.result.Count)}
-                if ($NextPage_Request.success) {$PoolBlocks_Request.result += $NextPage_Request.result;$lastCount = $NextPage_Request.result.Count} else {$lastCount = 0}
-                $nextPage++
-            }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -74,11 +67,11 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
 
         $timestamp    = (Get-Date).ToUniversalTime()
         $timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
-                
-        $Pool_Blocks = $PoolBlocks_Request.result.created | Foreach-Object {Get-Date -date $_} | Sort-Object -Descending
-        $reward      = ($PoolBlocks_Request.result.reward | Where-Object {$_ -gt 0} | Select-Object -First 10 | Measure-Object -Average).Average
 
-        $Pool_BLK    = ($Pool_Blocks | Where {$_ -ge $timestamp24h} | Measure-Object).Count
+        $Pool_Blocks  = $PoolBlocks_Request.result.created | Foreach-Object {Get-Date -date $_} | Sort-Object -Descending date
+        $reward       = ($PoolBlocks_Request.result.reward | Where-Object {$_ -gt 0} | Select-Object -First 10 | Measure-Object -Average).Average
+        $blocks_measure = $Pool_Blocks | Where-Object {$_ -gt $timestamp24h} | Measure-Object -Minimum -Maximum
+        $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum).TotalDays) {1/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalDays} else {1})*$blocks_measure.Count)            
         $Pool_TSL    = if ($Pool_Blocks.Count) {($timestamp - $Pool_Blocks[0]).TotalSeconds}
 
         if (($Stat = Get-Stat -Name "$($Name)_$($Pool_Currency)_Profit").HashRate_Average) {
