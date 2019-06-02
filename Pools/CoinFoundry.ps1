@@ -55,6 +55,13 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
         try {
             $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?page=0&pageSize=50" -body @{page=0;pageSize=50} -tag $Name -timeout 15 -delay 250 -cycletime 120
             if (-not $PoolBlocks_Request.success) {throw}
+            $lastCount = $PoolBlocks_Request.result.Count
+            $nextPage  = 1
+            while ($PoolBlocks_Request.result.Count -lt 50 -and $lastCount -eq 15) {
+                $NextPage_Request = Invoke-GetUrl "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?page=$($nextPage)&pageSize=$(50-$PoolBlocks_Request.result.Count)" -body @{page=$nextPage;pageSize=(50-$PoolBlocks_Request.result.Count)}
+                if ($NextPage_Request.success) {$PoolBlocks_Request.result += $NextPage_Request.result;$lastCount = $NextPage_Request.result.Count} else {$lastCount = 0}
+                $nextPage++
+            }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
