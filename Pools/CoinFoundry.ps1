@@ -53,7 +53,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?pageSize=50" -tag $Name -timeout 15 -delay 250 -cycletime 120
+            $PoolBlocks_Request = Invoke-RestMethodAsync "https://coinfoundry.org/api/pools/$($Pool_RpcPath)/blocks?start=0&pageSize=50" -tag $Name -timeout 15 -delay 250 -cycletime 120
             if (-not $PoolBlocks_Request.success) {throw}
         }
         catch {
@@ -68,18 +68,23 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
         $timestamp    = (Get-Date).ToUniversalTime()
         $timestamp24h = (Get-Date).AddHours(-24).ToUniversalTime()
                 
-        $Pool_Blocks = $PoolBlocks_Request.result.created | Foreach-Object {Get-Date -date $_} | Where {$_ -ge $timestamp24h} | Sort-Object -Descending
-        $reward = ($PoolBlocks_Request.result.reward | Where-Object {$_ -gt 0} | Select-Object -First 10 | Measure-Object -Average).Average
-        $blocks_measure = $Pool_Blocks | Measure-Object -Minimum -Maximum
+        $Pool_Blocks = $PoolBlocks_Request.result.created | Foreach-Object {Get-Date -date $_} | Sort-Object -Descending
+        $reward      = ($PoolBlocks_Request.result.reward | Where-Object {$_ -gt 0} | Select-Object -First 10 | Measure-Object -Average).Average
 
-        $Pool_BLK = $(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {1/($blocks_measure.Maximum - $blocks_measure.Minimum).TotalDays} else {1})*$blocks_measure.Count
-        $Pool_TSL = if ($Pool_Blocks.Count) {($timestamp - $Pool_Blocks[0]).TotalSeconds}
+        $Pool_BLK    = ($Pool_Blocks | Where {$_ -ge $timestamp24h} | Measure-Object).Count
+        $Pool_TSL    = if ($Pool_Blocks.Count) {($timestamp - $Pool_Blocks[0]).TotalSeconds}
 
-        $hashrate = if (($Stat = Get-Stat -Name "$($Name)_$($Pool_Currency)_Profit").HashRate_Average) {$Stat.HashRate_Average} else {$_.hashrate}
+        if (($Stat = Get-Stat -Name "$($Name)_$($Pool_Currency)_Profit").HashRate_Average) {
+            $blocks   = $Stat.BlockRate_Average
+            $hashrate = $Stat.HashRate_Average
+        } else {
+            $blocks   = $Pool_BLK
+            $hashrate = $_.hashrate
+        }
 
         $lastBTCPrice = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency}
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_BLK*$reward*$lastBTCPrice/$hashrate) -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate $Pool_BLK -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($blocks*$reward*$lastBTCPrice/$hashrate) -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate $Pool_BLK -Quiet
     }
     
     if ($ok -or $InfoOnly) {
