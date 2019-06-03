@@ -1645,6 +1645,7 @@ function Expand-WebRequest {
 
     if (-not $Path) {$Path = Join-Path ".\Downloads" ([IO.FileInfo](Split-Path $Uri -Leaf)).BaseName}
     if (-not (Test-Path ".\Downloads")) {New-Item "Downloads" -ItemType "directory" > $null}
+    if (-not (Test-Path ".\Bin"))       {New-Item "Bin" -ItemType "directory" > $null}
     $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
 
     if (Test-Path $FileName) {Remove-Item $FileName}
