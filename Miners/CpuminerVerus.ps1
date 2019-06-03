@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Verus\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/ccminerverus-3.3cpu.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5-ccminerverus/ccminerverus-3.5cpu-linux.7z"
 } else {
     $Path = ".\Bin\CPU-Verus\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.3-ccminerverus/CCMinerVerus-3.3CPU.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5-ccminerverus/ccminerverus-3.5cpu-win.7z"
 }
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "535{0:d2}"
