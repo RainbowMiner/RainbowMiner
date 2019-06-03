@@ -15,15 +15,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_10.0_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.1_linux.tar.gz"
+            Cuda = "10.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.0_linux.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.1_linux.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -31,19 +35,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_10.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.1_windows.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_10.0_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.0_windows.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.2_windows.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-cryptodredge/CryptoDredge_0.19.1_cuda_9.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.1_windows.zip"
             Cuda = "9.1"
         }
     )
