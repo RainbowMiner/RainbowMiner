@@ -2624,6 +2624,18 @@ function Get-EquihashCoinPers {
     if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
 }
 
+function Get-NimqHashrate {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$GPU = "",
+        [Parameter(Mandatory = $false)]
+        [Int]$Default = 100
+    )
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}        
+    if ($GPU -and $Global:GlobalNimqHashrates.ContainsKey($GPU)) {$Global:GlobalNimqHashrates[$GPU]} else {$Default}
+}
+
 function Get-Region {
     [CmdletBinding()]
     param(
@@ -2665,6 +2677,19 @@ function Get-EquihashCoins {
         (Get-Content "Data\equihashcoins.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
+}
+
+function Get-NimqHashrates {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
+        [hashtable]$Global:GlobalNimqHashrates = @{}
+        (Get-Content "Data\nimqhashrates.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+    }
+    if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
 
 function Get-PoolsInfo {
