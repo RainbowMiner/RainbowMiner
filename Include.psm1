@@ -3584,7 +3584,7 @@ function Read-HostString {
         [Parameter(Mandatory = $False)]
         [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
-    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*")}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;]") {[Array]$Valid = [regex]::split($Valid[0].Trim(),"\s*[,;]+\s*")}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default){" [default=$($Default)]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default}else{$Result.Trim()}
@@ -3692,8 +3692,8 @@ function Read-HostArray {
         [Parameter(Mandatory = $False)]
         [Array]$Controls = @("exit","cancel","back","save","done","<")
     )
-    if ($Default.Count -eq 1 -and $Default[0] -match "[,;:]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
-    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;:]") {[Array]$Valid = @([regex]::split($Valid[0].Trim(),"\s*[,;:]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
+    if ($Default.Count -eq 1 -and $Default[0] -match "[,;]") {[Array]$Default = @([regex]::split($Default[0].Trim(),"\s*[,;]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
+    if ($Valid.Count -eq 1 -and $Valid[0] -match "[,;]") {[Array]$Valid = @([regex]::split($Valid[0].Trim(),"\s*[,;]+\s*") | Where-Object {$_ -ne ""} | Select-Object)}
     do{
         $Repeat = $false
         $Result = if (([String]$Result=(Read-Host "$($Prompt)$(if ($Default.Count){" [default=$($Default -join ",")]"})$(if ($Mandatory){"*"})").Trim()) -eq ''){$Default -join ","}else{$Result.Trim()}
@@ -3710,7 +3710,7 @@ function Read-HostArray {
                 $Result = $Matches[2]
             }
             if ($Characters -eq $null -or $Characters -eq $false) {[String]$Characters=''}
-            [Array]$Result = @($Result -replace "[^$($Characters),;:]+","" -split "\s*[,;:]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
+            [Array]$Result = @($Result -replace "[^$($Characters),;]+","" -split "\s*[,;]+\s*" | Where-Object {$_ -ne ""} | Select-Object)
             Switch ($Mode) {
                 "+" {$Result = @($Default | Select-Object) + @($Result | Select-Object); break}
                 "-" {$Result = @($Default | Where-Object {$Result -inotcontains $_}); break}
@@ -4273,9 +4273,11 @@ function Get-ConfigArray {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $True)]
-        $Config
+        $Config,
+        [Parameter(Mandatory = $False)]
+        $Split = ",;"
     )
-    if ($Config -isnot [array]) {if ($Config -ne ''){[regex]::split($Config.Trim(),"\s*[,;:]+\s*")}else{@()}} else {$Config}
+    if ($Config -isnot [array]) {if ($Config -ne ''){[regex]::split($Config.Trim(),"\s*[$($Split)]+\s*")}else{@()}} else {$Config}
 }
 
 function Get-ConfigPath {
@@ -4389,7 +4391,7 @@ function Get-ServerConfig {
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)"
-        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 5
+        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 8
         if ($Result.Status -and $Result.Content) {
             $ChangeTag = Get-ContentDataMD5hash($ServerLWT) 
             $ConfigName | Where-Object {$Result.Content.$_.isnew -and $Result.Content.$_.data} | Foreach-Object {
@@ -4399,6 +4401,16 @@ function Get-ServerConfig {
                     $Preset = Get-ConfigContent "config"
                     $Data.PSObject.Properties.Name | Where-Object {$ExcludeConfigVars -inotcontains $_} | Foreach-Object {$Preset | Add-Member $_ $Data.$_ -Force}
                     $Data = $Preset
+                } elseif ($_ -eq "pools") {
+                    $Preset = Get-ConfigContent "pools"
+                    $Preset.PSObject.Properties.Name | Where-Object {$Data.$_ -eq $null -or $ExcludeConfigVars -match "^pools:$($_)$"} | Foreach-Object {$Data | Add-Member $_ $Preset.$_ -Force}
+                    $ExcludeConfigVars -match "^pools:.+:.+$" | Foreach-Object {
+                        $PoolName = ($_ -split ":")[1]
+                        $PoolKey  = ($_ -split ":")[2]
+                        if ($Preset.$PoolName.$PoolKey -ne $null) {
+                            $Data.$PoolName | Add-Member $PoolKey $Preset.$PoolName.$PoolKey -Force
+                        }
+                    }
                 }
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
                 $ServerLWT | Add-Member $_ $Result.Content.$_.lwt -Force

@@ -657,7 +657,15 @@ function Start-Setup {
                         }
                         "excludeserverconfigvars" {
                             if ($Config.RunMode -eq "client" -and $Config.ServerConfigName -match "config" -and (Get-Yes $Config.EnableServerConfig)) {
-                                $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter parameters, that should not be overwritten with the server's config (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9" -Valid $Session.DefaultValues.Keys | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                Write-Host " "
+                                Write-Host "Select all config parameters, that should not be overwritten with the server's config" -ForegroundColor Cyan
+                                Write-Host "- config.txt: use the parameter name" -ForegroundColor Cyan
+                                Write-Host "- pools.config.txt:" -ForegroundColor Cyan
+                                Write-Host "  `"pools:<poolname>`" to protect all parameters of a pool" -ForegroundColor Cyan
+                                Write-Host "  `"pools:<poolname>:<parameter>`" to protect a specific parameter of a pool" -ForegroundColor Cyan
+                                Write-Host "   e.g. `"pools:MiningRigRentals:API_Key`" will protect API_Key for MiningRigRentals" -ForegroundColor Cyan
+                                Write-Host " "
+                                $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter all config parameters, that should not be overwritten (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9:" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
