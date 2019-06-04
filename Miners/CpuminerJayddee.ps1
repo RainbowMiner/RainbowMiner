@@ -7,8 +7,8 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.1.1-jayddee/cpuminer-opt-jayddee-3.9.1.1-win.zip"
+$Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'zen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.2-jayddee/cpuminer-opt-3.9.2-jayddee-win.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -42,6 +42,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""; ExtendInterval = 2} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""; ExtendInterval = 2} #sha256q
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; ExtendInterval = 2} #Sonoa
