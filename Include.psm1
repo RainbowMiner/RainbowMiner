@@ -1005,6 +1005,8 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $false)]
         [PSCustomObject]$Algorithms = $null,
         [Parameter(Mandatory = $false)]
+        [PSCustomObject]$Coins = $null,
+        [Parameter(Mandatory = $false)]
         [Bool]$InfoOnly = $false,
         [Parameter(Mandatory = $false)]
         [Bool]$IgnoreFees = $false
@@ -1020,7 +1022,7 @@ function Get-PoolsContent {
         foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         foreach($Pool in @(& $_.FullName @Parameters)) {
-            $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty)/100
+            $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty)/100
             if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
             $Pool.Price *= $Pool_Factor
             $Pool.StablePrice *= $Pool_Factor
