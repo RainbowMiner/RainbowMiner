@@ -2136,7 +2136,7 @@ function Start-Setup {
                             try {
                                 Switch ($AlgorithmSetupSteps[$AlgorithmSetupStep]) {
                                     "penalty" {
-                                        $AlgorithmConfig.Penalty = Read-HostInt -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $AlgorithmConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $AlgorithmConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $AlgorithmConfig.Penalty -Min -100 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "minhashrate" {
                                         $AlgorithmConfig.MinHashrate = Read-HostString -Prompt "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)" -Default $AlgorithmConfig.MinHashrate -Characters "0-9kMGTPH`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2300,7 +2300,7 @@ function Start-Setup {
                             try {
                                 Switch ($CoinSetupSteps[$CoinSetupStep]) {
                                     "penalty" {
-                                        $CoinConfig.Penalty = Read-HostInt -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $CoinConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $CoinConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $CoinConfig.Penalty -Min -100 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "minhashrate" {
                                         $CoinConfig.MinHashrate = Read-HostString -Prompt "Enter minimum hashrate at a pool (units allowed, e.g. 12GH)" -Default $CoinConfig.MinHashrate -Characters "0-9kMGTPH`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
