@@ -14,7 +14,7 @@ $DevFee = 0.0
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerRfv2\ccminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ccminerrfv2/ccminerrfv2-1.0.1.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ccminerrfv2/ccminerrfv2-1.0.2.tar.gz"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerRfv2\ccminer.exe"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ccminerrfv2/ccminerrfv2-1.0.2.7z"
