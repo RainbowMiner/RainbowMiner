@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.5-teamred/teamredminer-v0.4.5-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.0-teamred/teamredminer-v0.5.0-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.4.5-teamred/teamredminer-v0.4.5-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.0-teamred/teamredminer-v0.5.0-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
@@ -21,6 +21,9 @@ $DevFee = 3.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "cn_haven";  MinMemGb = 4; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_heavy";  MinMemGb = 4; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_saber";  MinMemGb = 4; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnr";       MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";  MinMemGb = 2; Params = ""; DevFee = 2.5}
@@ -31,6 +34,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; MinMemGb = 1; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""; DevFee = 2.5}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
