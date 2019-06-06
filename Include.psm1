@@ -4418,7 +4418,7 @@ function Get-ServerConfig {
                 Set-ContentJson -PathToFile $PathToFile -Data $Data > $null
                 $ServerLWT | Add-Member $_ $Result.Content.$_.lwt -Force
             }
-            if ($ChangeTag -ne (Get-ContentDataMD5hash($ServerLWT))) {Set-ContentJson $ServerLWTFile -Data $ServerLWT}
+            if ($ChangeTag -ne (Get-ContentDataMD5hash($ServerLWT))) {Set-ContentJson $ServerLWTFile -Data $ServerLWT > $null}
         } elseif (-not $Result.Status) {
             Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
             $rv = $false
