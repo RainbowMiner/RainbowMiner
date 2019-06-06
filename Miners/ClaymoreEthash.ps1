@@ -211,6 +211,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							API         = "Claymore"
 							Port        = $Miner_Port
 							Uri         = $Uri
+                            ExtendInterval = 2
 							DevFee      = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
 							ManualUri   = $ManualUri
 							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}

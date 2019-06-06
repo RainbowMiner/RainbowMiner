@@ -125,6 +125,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri = $ManualUri
 							NoCPUMining = $_.NoCPUMining
+                            EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}
 				}

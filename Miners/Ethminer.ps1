@@ -83,7 +83,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			$Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 			$MinMemGB = $_.MinMemGB
             if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
-			$Miner_ExtendInterval = $_.ExtendInterval
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
@@ -114,7 +113,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						Port = $Miner_Port
 						Uri = $Uri
 						ManualUri = $ManualUri
-						ExtendInterval = $Miner_ExtendInterval
+						ExtendInterval = $_.ExtendInterval
+                        FaultTolerance = $_.FaultTolerance
+                        EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 					}
 				}
 			}
