@@ -3,7 +3,7 @@
 command="& {./Install.ps1; exit \$lastexitcode}"
 
 if ! [ -x "$(command -v pwsh)" ]; then
-wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell-6.2.0-linux-x64.tar.gz -O /tmp/powershell.tar.gz
+wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.1/powershell-6.2.1-linux-x64.tar.gz -O /tmp/powershell.tar.gz
 sudo mkdir -p /opt/microsoft/powershell/6
 sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/6
 sudo chmod +x /opt/microsoft/powershell/6/pwsh

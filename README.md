@@ -46,7 +46,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 ### Windows 7/8.1/10 pre-requesites
 
-1. Install PowerShell 6: [Download Installer for version 6.2.0](https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/PowerShell-6.2.0-win-x64.msi)
+1. Install PowerShell 6: [Download Installer for version 6.2.1](https://github.com/PowerShell/PowerShell/releases/download/v6.2.1/PowerShell-6.2.1-win-x64.msi)
 2. Install Microsoft .NET Framework 4.5.1 or later: [Web Installer](https://www.microsoft.com/net/download/dotnet-framework-runtime)
 3. Update GPU drivers: [Nvidia 430.64](https://www.nvidia.com/Download/index.aspx) and [AMD Adrenalin 2019 Edition 19.3.1](https://support.amd.com/en-us/download/desktop?os=Windows+10+-+64)
 4. If your rig contains AMD graphic cards, RainbowMiner's overclocking features rely on MSI Afterburner, you should install and run it: [Download](http://download.msi.com/uti_exe//vga/MSIAfterburnerSetup.zip)
