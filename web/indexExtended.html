@@ -1,0 +1,336 @@
+<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 id="title" data-navbaractive="navdashboard" class="h2">Dashboard</h1>
+</div>
+
+<h3>Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a></h3>
+<table id="miners" class="table mb-4"
+       data-toggle="table"
+       data-url="/runningminers"
+       data-response-handler="formatRunningMiners"
+       data-sort-order="desc"
+       data-sort-name="Profit"
+       data-cache="false"
+       data-show-columns="true"
+       data-show-toggle="true"
+       data-show-refresh="true"
+       data-icons-prefix="fa"
+       data-icons="icons"
+       data-detail-view="true"
+       data-detail-formatter="detailFormatter">
+    <thead>
+        <tr>
+            <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+            <th data-field="Pool" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Pool</th>
+            <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
+            <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
+            <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+            <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
+            <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
+            <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+            <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+        </tr>
+    </thead>
+</table>
+
+<p>These are the devices (GPUs and CPUs) detected by MultiPoolMiner.</p>
+<table id="devices" class="table"
+  data-toggle="table"
+  data-url="/devices"
+  data-response-handler="formatDevices"
+  data-cache="false"
+  data-show-columns="true"
+  data-show-toggle="true"
+  data-show-refresh="true"
+  data-icons-prefix="fa"
+  data-icons="icons"
+  data-detail-view="true"
+  data-detail-formatter="detailFormatter"
+>
+  <thead>
+      <tr>
+          <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
+          <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
+          <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB">Mem</th>
+          <th data-field="tCores" data-sortable="true" data-title-tooltip="Number if cores on the device">Cores</th>
+          <th data-field="tUtilization" data-sortable="true" data-title-tooltip="Current load in %">Load</th>
+          <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
+          <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
+          <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
+          <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
+          <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
+          <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
+      </tr>
+  </thead>
+</table>
+
+<div id="remoteworkers">
+    <h3 class="mt-4">Remote Workers</h3>
+    <table id="remoteminers" class="table mb-4"
+           data-toggle="table"
+           data-url="/remoteminers"
+           data-response-handler="formatRemoteMiners"
+           data-sort-order="desc"
+           data-sort-name="Profit"
+           data-cache="false"
+           data-show-columns="true"
+           data-show-toggle="true"
+           data-show-refresh="true"
+           data-icons-prefix="fa"
+           data-icons="icons"
+           data-detail-view="true"
+           data-detail-formatter="detailFormatterRemoteMiners"
+           data-row-style="colorStatus">
+        <thead>
+            <tr>
+                <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+                <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
+                <th data-field="tlastseen" data-sortable="true">Last seen</th>
+                <th data-field="tversion" data-sortable="true">Version</th>
+                <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+                <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<h3 class="mt-4">Balances</h3>
+<div id="balanceboxes" class="card-deck"></div>
+
+<!-- End of page scripts -->
+<script id="poolbalance_template" type="text/x-handlebars-template">
+    <div class="mb-2 card {{#if total}}text-white bg-primary {{else}}text-dark bg-light{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}" ;>
+        <div class="card-header text-center">
+            <h5>{{name}}</h5>
+        </div>
+        <div class="card-body text-center">
+            <p class="card-text currencies">
+                {{#each balances}}
+                <span class="currencyname font-weight-bold">{{@key}}:</span> <span>{{this}}</span><br />
+                {{/each}}
+            </p>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript">
+    $(function () {
+        var template = Handlebars.compile($("#poolbalance_template").html());
+        $("#pauseminers").click(function () {
+            $.ajax({
+                url: '/pause', success: function (result) {
+                    $("#pauseminers").html(result ? "Restart" : "Pause");
+                }
+            })
+        });
+        var nDecimalSeparator = ".", tDecimalSeparator = ",";
+        $.ajax({
+            url: '/decsep', success: function (result) {
+                nDecimalSeparator = result
+                tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
+            }
+        });
+
+        (function updatePoolBalances() {
+            $.ajax({
+                url: '/balances', success: function (result) {
+                    //console.log(result);
+                    $("#balanceboxes").empty();
+                    var boxes = [], boxes_ix = {};
+                    $.each(result, function (index, item) {
+                        var properties = Object.keys(item);
+                        var currencies = properties.filter((properties) => properties.startsWith("Value in "));
+                        var balance = properties.filter((properties) => properties.startsWith("Balance "));
+                        var maincur = [];
+
+                        if (boxes_ix[item.Name] === undefined) {
+                            boxes_ix[item.Name] = boxes.length;
+                            if (item.Name == "*Total*") {
+                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true });
+                            } else {
+                                boxes.push({ name: item.Name, balances: {}, digits: {} });
+                            }
+                        }
+                        $.each(currencies, function (cindex, currency) {
+                            var name = currency.replace("Value in ", "");
+                            item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                            var csplit = item[currency].split(".");
+                            var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+                            if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                            if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; maincur.push(name); }
+                            else if (digits != -1) {
+                                if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
+                                boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                            }
+                        });
+                        $.each(balance, function (cindex, currency) {
+                            var name = currency.replace("Balance (", "").replace(")", "");
+                            if ($.inArray(name,maincur)===-1) {
+                                item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
+                                var csplit = item[currency].split(".");
+                                var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+                                if (digits != -1) { item[currency] = parseFloat(item[currency]) }
+                                if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; }
+                                else if (digits != -1) {
+                                    if (boxes[boxes_ix[item.Name]]["balances"][name] === "-") boxes[boxes_ix[item.Name]]["balances"][name] = 0.0;
+                                    boxes[boxes_ix[item.Name]]["balances"][name] += parseFloat(item[currency]);
+                                }
+                            }
+                        });
+                    });
+                    $.each(boxes, function (index, item) {
+                        $.each(item["balances"], function (bindex, bitem) {if (item["digits"][bindex] != -1) item["balances"][bindex] = bitem.toFixed(item["digits"][bindex]).replace(".", ",");});
+                        $("#balanceboxes").append(template(item));
+                    });
+                    window.setTimeout(updatePoolBalances, 60000);
+                }
+            });
+        })();
+        (function updateStatus() {
+            $.ajax({
+                url: '/status', success: function (result) {
+                    $("#pauseminers").html(result.Pause? "Restart" : "Pause");
+                    window.setTimeout(updateStatus, 10000);
+                }
+            });
+        })();
+        function refreshTable() {
+            $("table#miners").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTable, 10000);
+        }
+        window.setTimeout(refreshTable, 10000);
+        function refreshTableRemoteMiners() {
+            $("table#remoteminers").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTableRemoteMiners, 60000);
+        }
+        window.setTimeout(refreshTableRemoteMiners, 60000);
+
+    });
+
+  function formatRunningMiners(data) {
+      // This function can alter the returned data before building the table, formatting it in a way
+      // that is easier to display and manipulate in a table
+      $.each(data, function (index, item) {
+          // Format the type(s)
+          //console.log(data);
+          //console.log(item);
+          item.tDevices = item.DeviceModel.toString();
+          item.Name = item.Name.split(/\-/)[0];
+
+          // Format the algorithms and hashrates
+
+          // Algorithm is always an array, sometimes has 2 elements
+          item.tPrimaryAlgorithm = item.Algorithm[0];
+          try { item.tSecondaryAlgorithm = item.Algorithm[1]; } catch (error) { /* ignore */ }
+
+          // Speed is an array if there are multiple algorithms, or a single number otherwise
+          if (Array.isArray(item.Speed)) {
+              item.tPrimaryHashRate = item.Speed[0];
+              item.tSecondaryHashRate = item.Speed[1];
+          } else {
+              item.tPrimaryHashRate = item.Speed;
+          }
+
+          if (Array.isArray(item.Speed_Live)) {
+              item.tPrimaryHashRateLive = item.Speed_Live[0];
+              item.tSecondaryHashRateLive = item.Speed_Live[1];
+          } else {
+              item.tPrimaryHashRateLive = item.Speed_Live;
+          }
+          item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+
+          item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== ""? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== ""? item.CoinName : '-')
+      });
+      return data;
+  }
+
+  function formatRemoteMiners(data) {
+      // This function can alter the returned data before building the table, formatting it in a way
+      // that is easier to display and manipulate in a table
+      if (data && data.length) $("div#remoteworkers").show()
+      else $("div#remoteworkers").hide()
+      now = new Date();
+      $.each(data, function (index, item) {
+          // Format the type(s)
+          //console.log(data);
+          //console.log(item);                   
+          item.tlastseen = timeSince(new Date(item.lastseen * 1000));
+          var vb = item.version.split(" ");
+          item.tversion = vb.length > 1 ? vb[1] : item.version
+
+          // If worker hasn't reported in 10 minutes, mark as offline
+          if (((now - new Date(item.lastseen * 1000)) / 1000) > 10 * 60) {
+              item.status = "Offline";
+          }
+
+          item.tpowerdraw = Math.round(parseFloat(item.powerdraw)) + ' W';
+      });
+      return data;
+  }
+
+  function colorStatus(row, index) {
+      return { classes: row.status };
+  }
+
+  function detailFormatterRemoteMiners(index, row) {
+      var html = [];
+      html.push("<strong>Running Miners</strong>");
+      html.push("<table class='table table-responsive table-details'>");
+      html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th></tr></thead>");
+      jQuery.each(row.data, function (key, value) {
+          html.push('<tr>');
+          html.push('<td>' + value.Name + '</td>');
+          html.push('<td>' + value.Algorithm + '</td>');
+          html.push('<td>' + value.Pool + '</td>');
+          html.push('<td>' + value.Type + '</td>');
+          html.push('<td>' + formatBTC(value.Profit) + '</td>');
+          html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
+          html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
+          html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
+          html.push('</tr>');
+      });
+      html.push("</table>");
+      return html.join('');
+  }
+</script>
+
+<script type="text/javascript">
+  function formatDevices(data) {
+  // This function can alter the returned data before building the table, formatting it in a way
+  // that is easier to display and manipulate in a table
+  $.each(data, function(index, item) {
+    // Format the device(s)
+    if (item.OpenCL) {
+        item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+        item.tDriverVersion = item.OpenCL.DriverVersion
+    } else {
+        item.tMemory = "N/A"
+        item.tDriverVersion = "N/A"
+    }
+    
+    if (item.OpenCL) {
+        item.tClockSpeed = item.OpenCL.MaxClockFrequency
+        item.tCores = item.OpenCL.MaxComputeUnits
+    } else if (item.CIM) {
+        item.tClockSpeed = item.CIM.MaxClockSpeed
+        item.tCores = item.CIM.NumberOfLogicalProcessors
+        item.tPowerDraw = item.Data.PowerDraw
+    } else {
+        item.tClockSpeed = "N/A"
+        item.tCores = "N/A"
+    }
+
+    item.tPowerDraw = typeof(item.Data.PowerDraw) !== "undefined"? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
+    item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' %' : "N/A"
+    item.tClock = typeof(item.Data.Clock) !== "undefined"? item.Data.Clock + ' MHz' : "N/A"
+    item.tClockMem = typeof(item.Data.ClockMem) !== "undefined"? item.Data.ClockMem + ' MHz' : "N/A"
+    item.tPowerLimitPercent = typeof(item.Data.PowerLimitPercent) !== "undefined"? item.Data.PowerLimitPercent + ' %' : "N/A"
+    item.tTemperature = typeof(item.Data.Temperature) !== "undefined"? item.Data.Temperature + ' °C' : "N/A"
+    item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
+
+  });
+  return data;
+}
+</script>
+<!--#include file="/parts/foot.html" -->
