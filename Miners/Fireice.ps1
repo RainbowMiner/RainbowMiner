@@ -5,20 +5,26 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows -and -not $IsLinux) {return}
+if (-not $IsWindows) {return}
 
-if ($IsLinux) {
-    $Path = ".\Bin\CryptoNight-FireIce\xmr-stak"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-linux-2.10.4-cpu_opencl-amd.tar.xz"
-    $DevFee = 1.0
-} else {
-    $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.4-fireice/xmr-stak-win64-2.10.4-rbm.7z"
-    $DevFee = 0.0
-}
+$UriCuda = @(
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.5-fireice/xmr-stak-win64-2.10.5-rbm-cuda10.1.7z"
+        Cuda = "10.1"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.5-fireice/xmr-stak-win64-2.10.5-rbm-cuda10.0.7z"
+        Cuda = "10.0"
+    },
+    [PSCustomObject]@{
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.5-fireice/xmr-stak-win64-2.10.5-rbm-cuda9.0.7z"
+        Cuda = "9.0"
+    }
+)
+$Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
+$DevFee = 0.0
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
-$Cuda = "10.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -50,12 +56,24 @@ if ($InfoOnly) {
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
-        Uri       = $Uri
+        Uri       = $UriCuda.Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
         Commands  = $Commands
     }
     return
+}
+
+$Uri = ""
+for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
+    if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda -Warning $(if ($i -lt $UriCuda.Count-1) {""}else{$Name})) {
+        $Uri = $UriCuda[$i].Uri
+        $Cuda= $UriCuda[$i].Cuda
+    }
+}
+if (-not $Uri) {
+    $Uri  = $UriCuda[2].Uri
+    $Cuda = $UriCuda[2].Cuda
 }
 
 if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
