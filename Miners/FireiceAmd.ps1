@@ -77,7 +77,7 @@ foreach ($Miner_Vendor in @("AMD")) {
 
 					$Pool_Port = if ($Miner_Model -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 					$Arguments = [PSCustomObject]@{
-						Params = "--httpd $($Miner_Port) $($Miner_Deviceparams)$(if (-not $IsLinux) {" --disable-ss"}) $($_.Params)".Trim()
+						Params = "--httpd $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
 						Config = [PSCustomObject]@{
 							call_timeout    = 10
 							retry_time      = 10
