@@ -42,6 +42,7 @@
     "blake256r8": "Blake256R8",
     "blake256r8vnl": "BlakeVanilla",
     "blake2b": "Blake2b",
+    "blake2bglt": "Blake2b",
     "blake2s": "Blake2s",
     "blakecoin": "Blakecoin",
     "blakevanilla": "BlakeVanilla",
