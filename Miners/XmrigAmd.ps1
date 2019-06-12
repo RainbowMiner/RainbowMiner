@@ -64,14 +64,14 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
     $Miner_Model = $_.Model
 
-    $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
-
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         $MinMemGb = $_.MinMemGb
         $Params = $_.Params
         
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
+
+        $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
