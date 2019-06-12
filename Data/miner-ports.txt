@@ -79,6 +79,9 @@
 338	CryptoDredge16
 339	MultiMiner
 340	ProgPOWZNvidia
+341	FireIceAmd (linux)
+342	FireIceCpu (linux)
+343	FireIceNvidia (linux)
 
 400	Sgminer
 401	SgminerBitcore
