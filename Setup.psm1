@@ -356,10 +356,10 @@ function Start-Setup {
                                 Write-Host "If you plan to use MiningPoolHub for mining, you will have to register an account with them and choose a username. Enter this username now, or leave empty to disable MiningPoolHub (can be activated, later) " -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $MPHUserName = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $MPHUserName -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $MPHUser = Read-HostString -Prompt "Enter your Miningpoolhub user name" -Default $MPHUser -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
 
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if (-not $MPHUserName) {
+                            if (-not $MPHUser) {
                                 $PoolNames = $PoolNames | Where-Object {$_ -notmatch "MiningPoolHub"}
                             } else {
                                 if ($PoolNames -inotcontains "MiningPoolHub") {$PoolNames += "MiningPoolHub"}
@@ -373,7 +373,7 @@ function Start-Setup {
                             if ($PoolNames -match "MiningPoolHub") {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
-                                    Write-Host "You will mine on MiningPoolHub as $($MPHUserName). If you want to see your balance in RainbowMiner, you can now enter your USER ID (a number) and the API KEY. You find these two values on MiningPoolHub's `"Edit account`" page. " -ForegroundColor Cyan
+                                    Write-Host "You will mine on MiningPoolHub as $($MPHUser). If you want to see your balance in RainbowMiner, you can now enter your USER ID (a number) and the API KEY. You find these two values on MiningPoolHub's `"Edit account`" page. " -ForegroundColor Cyan
                                     Write-Host " "
                                 }
                                 $MPHApiID = Read-HostString -Prompt "Enter your Miningpoolhub USER ID (found on `"Edit account`" page)" -Default $MPHApiID -Characters "0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -397,10 +397,10 @@ function Start-Setup {
                                 Write-Host "If you plan to offer your rig for rent at MiningRigRentals, you will have to register an account with them and choose a username. Enter this username now, or leave empty to disable MiningRigRentals (can be activated, later) " -ForegroundColor Cyan
                                 Write-Host " "
                             }
-                            $MRRUserName = Read-HostString -Prompt "Enter your MiningRigRentals user name" -Default $MRRUserName -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $MRRUser = Read-HostString -Prompt "Enter your MiningRigRentals user name" -Default $MRRUser -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
 
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if (-not $MRRUserName) {
+                            if (-not $MRRUser) {
                                 $PoolNames = $PoolNames | Where-Object {$_ -notmatch "MiningRigRentals"}
                             } elseif ($PoolNames -inotcontains "MiningRigRentals") {
                                 $PoolNames += "MiningRigRentals"
@@ -1358,7 +1358,7 @@ function Start-Setup {
                             }
 
                             if (Get-Member -InputObject $PoolsActual -Name MiningPoolHub) {
-                                $PoolsActual.MiningPoolHub | Add-Member User $MPHUserName -Force
+                                $PoolsActual.MiningPoolHub | Add-Member User $MPHUser -Force
                                 $PoolsActual.MiningPoolHub | Add-Member API_ID $MPHAPIID -Force
                                 $PoolsActual.MiningPoolHub | Add-Member API_Key $MPHAPIKey -Force
                             } else {
@@ -1371,7 +1371,7 @@ function Start-Setup {
                             }
 
                             if (Get-Member -InputObject $PoolsActual -Name MiningPoolHubCoins) {
-                                $PoolsActual.MiningPoolHubCoins | Add-Member User $MPHUserName -Force
+                                $PoolsActual.MiningPoolHubCoins | Add-Member User $MPHUser -Force
                                 $PoolsActual.MiningPoolHubCoins | Add-Member API_ID $MPHAPIID -Force
                                 $PoolsActual.MiningPoolHubCoins | Add-Member API_Key $MPHAPIKey -Force
                             } else {
@@ -1384,7 +1384,7 @@ function Start-Setup {
                             }
 
                             if (Get-Member -InputObject $PoolsActual -Name MiningRigRentals) {
-                                $PoolsActual.MiningRigRentals | Add-Member User $MRRUserName -Force
+                                $PoolsActual.MiningRigRentals | Add-Member User $MRRUser -Force
                                 $PoolsActual.MiningRigRentals | Add-Member API_Key $MRRAPIKey -Force
                                 $PoolsActual.MiningRigRentals | Add-Member API_Secret $MRRAPISecret -Force
                             } else {
