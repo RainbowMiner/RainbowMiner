@@ -665,7 +665,7 @@ function Start-Setup {
                                 Write-Host "  `"pools:<poolname>:<parameter>`" to protect a specific parameter of a pool" -ForegroundColor Cyan
                                 Write-Host "   e.g. `"pools:MiningRigRentals:API_Key`" will protect API_Key for MiningRigRentals" -ForegroundColor Cyan
                                 Write-Host " "
-                                $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter all config parameters, that should not be overwritten (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9:" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter all config parameters, that should not be overwritten (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9:_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
