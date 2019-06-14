@@ -96,7 +96,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                     })
                 }
 
-                if ($Pool_Algorithm_Norm -match "^(equihash|cryptonight)") {
+                if (@("Cryptonight","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = $Pool_Coin
@@ -117,9 +117,9 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
                         PPS           = $true
                         Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
                             [PSCustomObject]@{
-                                Protocol = "stratum+tcp"
+                                Protocol = "stratum+ssl"
                                 Host     = $_
-                                Port     = $This_Port
+                                Port     = $This_Port + 30000
                                 User     = "$($Wallets.BTC).{workername:$Worker}"
                                 Pass     = "x"
                             }
