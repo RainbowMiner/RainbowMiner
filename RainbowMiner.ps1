@@ -216,6 +216,7 @@ if ($IsWindows) {
         Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore -SkipEditionCheck
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore -SkipEditionCheck
+        Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetTCPIP\NetTCPIP.psd1" -ErrorAction Ignore -SkipEditionCheck
     } else {
         Import-Module NetSecurity -ErrorAction Ignore
         Import-Module Defender -ErrorAction Ignore
