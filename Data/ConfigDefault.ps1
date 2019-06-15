@@ -56,7 +56,6 @@
         "MSIApath","NVSMIpath",
         "CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity",
         "ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars",
-        "RunMode","StartPaused",
-        "pools:MiningRigRentals:API_Key","pools:MiningRigRentals:API_Secret"
+        "RunMode","StartPaused"
     )
 }
