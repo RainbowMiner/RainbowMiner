@@ -88,8 +88,12 @@ param(
                 machinename = $Session.MachineName
                 myip      = $Session.MyIP
             }
-            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-            if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+            try {
+                $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
+                if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+            } catch {            
+                Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
+            }
             Remove-Variable "Result" -ErrorAction Ignore -Force
         }
 
