@@ -20,7 +20,6 @@
      "ScryptN",
      "SHA256d",
      "SHA256t",
-     "Sia",
      "Sib",
      "X11",
      "X13",
