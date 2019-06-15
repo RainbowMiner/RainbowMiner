@@ -68,7 +68,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
+    $DeviceParams = "$(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
 
     $Commands | ForEach-Object {
 
@@ -76,13 +76,36 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				$xmrig_algo = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+
+                $Arguments = [PSCustomObject]@{
+                    PoolParams = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
+                    DeviceParams = $DeviceParams
+                    Config = [PSCustomObject]@{
+                        "algo"            = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+                        "api" = [PSCustomObject]@{
+                            "port"         = $Miner_Port
+                            "access-token" = $null
+                            "worker-id"    = $null
+                        }
+                        "background"   = $false
+                        "cuda-bfactor" = 10
+                        "colors"       = $true
+                        "donate-level" = if ($IsLinux) {1} else {0}
+                        "log-file"     = $null
+                        "print-time"   = 5
+                        "retries"      = 5
+                        "retry-pause"  = 1
+                    }
+                    Params  = $Params
+                    Threads = if ($Session.Config.CPUMiningThreads){$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}
+                }
+
 				[PSCustomObject]@{
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-R 1 --api-port $($Miner_Port) -a $($xmrig_algo) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) --keepalive$(if ($Pools.$Algorithm_Name.Name -eq "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) --donate-level=$(if ($IsLinux) {1} else {0}) $($_.Params)"
+					Arguments      = $Arguments
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API            = "XMRig"
 					Port           = $Miner_Port
