@@ -61,31 +61,59 @@ param(
     [Parameter(Mandatory = $False)]
     [int]$Timeout = 10,
     [Parameter(Mandatory = $False)]
-    [int]$Cache = 0
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [int64]$nonce = 0,
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal
 )
     $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
     if (-not (Test-Path Variable:Global:MRRCache)) {$Global:MRRCache = [hashtable]::Synchronized(@{})}
     if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
-        $nonce = Get-UnixTimestamp -Milliseconds
-        $str = "$key$nonce$endpoint"
-        $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
-        $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
-        $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
-        $headers = [hashtable]@{
-	        'x-api-sign' = ($sign -replace '\-').ToLower()
-	        'x-api-key'  = $key
-	        'x-api-nonce'= $nonce
-            'Cache-Control' = 'no-cache'
-        }
-        $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-        try {
-            $body = Switch($method) {
-                "PUT" {$params | ConvertTo-Json -Depth 10}
-                "GET" {if ($params.Count) {$params} else {$null}}
+
+       $Remote = $false
+
+       if ($nonce -le 0) {$nonce = Get-UnixTimestamp -Milliseconds}
+
+       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+            $serverbody = @{
+                endpoint  = $endpoint
+                key       = $key
+                secret    = $secret
+                params    = $params | ConvertTo-Json -Depth 10 -Compress
+                method    = $method
+                base      = $base
+                timeout   = $timeout
+                nonce     = $nonce
+                machinename = $Session.MachineName
+                myip      = $Session.MyIP
             }
-            $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-        } catch {            
-            Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
+            $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
+            if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+            Remove-Variable "Result" -ErrorAction Ignore -Force
+        }
+
+        if (-not $Remote) {
+            $str = "$key$nonce$endpoint"
+            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA1")
+            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))    
+            $headers = [hashtable]@{
+	            'x-api-sign' = ($sign -replace '\-').ToLower()
+	            'x-api-key'  = $key
+	            'x-api-nonce'= $nonce
+                'Cache-Control' = 'no-cache'
+            }
+            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+            try {
+                $body = Switch($method) {
+                    "PUT" {$params | ConvertTo-Json -Depth 10}
+                    "GET" {if ($params.Count) {$params} else {$null}}
+                }
+                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+            } catch {            
+                Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
+            }
         }
         if ($Request.success -ne $null -and -not $Request.success) {
             Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"

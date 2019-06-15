@@ -30,6 +30,7 @@
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
         Import-Module ".\Include.psm1"
+        Import-Module ".\MiningRigRentals.psm1"
 
         $BasePath = "$PWD\web"
 
@@ -549,6 +550,29 @@
                             if ($Result) {$Status = $true}
                         } catch {}
                         $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
+                    }
+                    break
+                }
+                "getmrr" {
+                    if ($API.IsServer) {
+                        $Status = $false
+                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                        try {
+                            if (-not $Parameters.key) {
+                                $Parameters.key    = $Session.Config.Pools.MiningRigRentals.API_Key
+                            }
+                            if ($Parameters.key -eq $Session.Config.Pools.MiningRigRentals.API_Key) {
+                                $Parameters.secret = $Session.Config.Pools.MiningRigRentals.API_Secret
+                                $Parameters.nonce  = 0
+                            }
+                            if ($Parameters.key -and $Parameters.secret) {
+                                $Params = [hashtable]@{}
+                                ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
+                                $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore) -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce
+                                $Status = $true
+                            }
+                        } catch {}
+                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
                     }
                     break
                 }
