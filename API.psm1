@@ -553,7 +553,7 @@
                     }
                     break
                 }
-                "getmrr" {
+                "/getmrr" {
                     if ($API.IsServer) {
                         $Status = $false
                         $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
