@@ -255,9 +255,14 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "ServerPassword": "serverpassword",
   "EnableServerConfig": "1",
   "ServerConfigName": "config,coins,pools",
+  "EnableServerExcludeList": "0",
+  "ExcludeServerConfigVars": "WorkerName,DeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,Serve
+rPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 ```
 
 If "EnableServerConfig" is set to "1", the client will try to download the config files specified with "ServerConfigName" from the server. If you want to provide the indiviual rig with specific config files, put them into a subdirectory `.\Config\<workername>` (linux: `./Config/<workername>`) . Use lowercase letters for the subdirectoy `<workername>`.
+Setting the field "EnableServerExcludeList" to "1" lets your client use the servers "ExcludeServerConfigVars" field, instead of the local one in config.txt
+All variables defined in "ExcludeServerConfig" will not be overwritten by the server's values.
 
 ## POOLS
 
@@ -617,7 +622,11 @@ For Client (Runmode=client) setup:
 - **ServerPassword** = enter the server's password
 - **EnableServerConfig** = set to "1" to use the server's config files on this rig
 - **ServerConfigName** = list of config files to be downloaded if "EnableServerConfig" is set to "1". Possible values are "algorithms","coins","config","miners","ocprofiles","pools"
-- **ExcludeServerConfigVars** = list of parameter names if config.txt, that should -not- be overwritten with server values (best is to leave it as is)
+- **ExcludeServerConfigVars** = list of parameter names in config.txt or pools.config.txt, that should -not- be overwritten with server values (best is to leave it as is).
+  For pools.config.txt:
+  - `pools:<poolname>` = protect all values of pool "poolname"
+  - `pools:<poolname>:<variablename>` = protect "variablename" in pool "poolname"
+- **EnableServerExcludeList** = set to "1" to always use the server's "ExcludeServerConfigVars", instead of the local one in config.txt
 
 For Server (Runmode=server) setup:
 - **APIport** = enter a free web-interface port localhost:<port> [default=4000]
