@@ -89,7 +89,7 @@ function Start-Setup {
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
 
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
-        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0"}
+        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
         $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
 
@@ -1782,10 +1782,10 @@ function Start-Setup {
                                         $PoolConfig.PriceCurrencies = $PoolConfig.PriceCurrencies -join ","
                                     }
                                     "title" {
-                                        $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "description" {
-                                        $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "algorithm" {
                                         $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2302,7 +2302,7 @@ function Start-Setup {
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
                         $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","wallet","enableautopool")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","wallet","enableautopool","comment")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do {
@@ -2334,6 +2334,9 @@ function Start-Setup {
                                     }
                                     "enableautopool" {
                                         $CoinConfig.EnableAutoPool = Read-HostBool -Prompt "Automatically enable `"$Coin_Symbol`" for pools activated in pools.config.txt with EnableAutoCoin=`"1`"" -Default $CoinConfig.EnableAutoPool | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "comment" {
+                                        $CoinConfig.Comment = Read-HostString -Prompt "Optionally enter a comment (e.g. name of exchange)" -Default $CoinConfig.Comment -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "save" {
                                         Write-Host " "
@@ -2646,10 +2649,10 @@ function Start-Setup {
                                                 $MRRConfig.PriceFactor = Read-HostDouble -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.PriceFactor) (enter 0 to use pool's default)" -Default $MRRConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
                                             "title" {
-                                                $MRRConfig.Title = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Title) ($(if ($MRRConfig.Title) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Title | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                                $MRRConfig.Title = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Title) ($(if ($MRRConfig.Title) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
                                             "description" {
-                                                $MRRConfig.Description = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Description) ($(if ($MRRConfig.Description) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Description | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                                $MRRConfig.Description = Read-HostString -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.Description) ($(if ($MRRConfig.Description) {"clear"} else {"leave empty"}) to use pool's default)" -Default $MRRConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                             }
 
                                             "save" {
