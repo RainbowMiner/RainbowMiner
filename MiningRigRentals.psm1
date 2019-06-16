@@ -65,7 +65,9 @@ param(
     [Parameter(Mandatory = $False)]
     [int64]$nonce = 0,
     [Parameter(Mandatory = $False)]
-    [switch]$ForceLocal
+    [switch]$ForceLocal,
+    [Parameter(Mandatory = $False)]
+    [switch]$Raw
 )
     $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
     if (-not (Test-Path Variable:Global:MRRCache)) {$Global:MRRCache = [hashtable]::Synchronized(@{})}
@@ -127,7 +129,10 @@ param(
             $Global:MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
+    if ($Raw) {$Global:MRRCache[$keystr].request}
+    else {
+        if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
+    }
 }
 
 function Get-MiningRigRentalAlgorithm {

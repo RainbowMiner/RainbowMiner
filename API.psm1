@@ -568,7 +568,7 @@
                             if ($Parameters.key -and $Parameters.secret) {
                                 $Params = [hashtable]@{}
                                 ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
-                                $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore) -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce
+                                $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore) -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
                                 $Status = $true
                             }
                         } catch {}
