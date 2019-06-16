@@ -7,8 +7,8 @@ class Xmrig : Miner {
 
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
-        $ConfigFileString  = "$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.Devices -ne $null) {"-$(($Parameters.Devices | Foreach-Object {'{0:x}' -f $_}) -join '')"})"
-        $ConfigFile        = "config_$($ConfigFileString)-$($Parameters.Threads).json"
+        $ConfigFileString  = "$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if (($Parameters.Devices | Measure-Object).Count) {"-$(($Parameters.Devices | Foreach-Object {'{0:x}' -f $_}) -join '')"})-$()"
+        $ConfigFile        = "config_$($ConfigFileString)-$($Parameters.Config.api.port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "default_$($ConfigFileString).json"
         $ThreadsConfig     = [PSCustomObject]@{}
                 
