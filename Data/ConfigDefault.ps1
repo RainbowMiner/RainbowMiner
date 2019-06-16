@@ -58,4 +58,5 @@
         "ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars",
         "RunMode","StartPaused"
     )
+    EnableServerExcludeList = $false
 }
