@@ -41,8 +41,8 @@ $Config | Add-Member ServerUser $(if ($Config.ServerUser -eq "`$ServerUser") {""
 $Config | Add-Member ServerPassword $(if ($Config.ServerPassword -eq "`$ServerPassword") {""} else {$Config.ServerPassword}) -Force
 $Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 $Config | Add-Member EnableServerConfig $(if ($Config.EnableServerConfig -eq "`$EnableServerConfig") {$ConfigSetup.EnableServerConfig} else {$Config.EnableServerConfig}) -Force
-$Config | Add-Member ServerConfigName $(if ($Config.ServerConfigName -eq "`$ServerConfigName") {$ConfigSetup.ServerConfigName} else {@(Get-ConfigArray $Config.ServerConfigName)}) -Force
-$Config | Add-Member ExcludeServerConfigVars $(if ($Config.ExcludeServerConfigVars -eq "`$ExcludeServerConfigVars") {$ConfigSetup.ExcludeServerConfigVars} else {@(Get-ConfigArray $Config.ExcludeServerConfigVars)}) -Force
+$Config | Add-Member ServerConfigName $(if ($Config.ServerConfigName -eq "`$ServerConfigName" -or $Config.ServerConfigName -eq "") {$ConfigSetup.ServerConfigName} else {@(Get-ConfigArray $Config.ServerConfigName)}) -Force
+$Config | Add-Member ExcludeServerConfigVars $(if ($Config.ExcludeServerConfigVars -eq "`$ExcludeServerConfigVars" -or $Config.ExcludeServerConfigVars -eq "") {$ConfigSetup.ExcludeServerConfigVars} else {@(Get-ConfigArray $Config.ExcludeServerConfigVars)}) -Force
 $Config | Add-Member EnableServerExcludeList $(if ($Config.EnableServerExcludeList -eq "`$EnableServerExcludeList") {$ConfigSetup.EnableServerExcludeList} else {$Config.EnableServerExcludeList}) -Force
 
 do {
@@ -84,6 +84,10 @@ do {
     Write-Host " ServerPassword = $($Config.ServerPassword)"
     if (Get-Yes $Config.EnableServerConfig) {
         Write-Host " ServerConfigName = $($Config.ServerConfigName) (automatic download from server enabled)"
+        Write-Host " EnableServerExcludeList = $($Config.EnableServerExcludeList) $(if (Get-Yes $Config.EnableServerExcludeList) {"(server's list will be used)"} else {"(the following list will be used)"})"
+        if (-not (Get-Yes $Config.EnableServerExcludeList)) {
+            Write-Host " ExcludeServerConfigVars = $($Config.ExcludeServerConfigVars)"
+        }
     }
     Write-Host " "
     if ($Config.ServerName -and $Config.ServerPort -and (Test-TcpServer -Server $Config.ServerName -Port $Config.ServerPort -Timeout 2)) {
