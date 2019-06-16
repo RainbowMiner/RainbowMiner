@@ -519,7 +519,7 @@
                               elseif ($Session.Version -ne $Parameters.version) {"Server runs on wrong Version v$($Session.Version)"}
                               else {"No data found"}
                     }
-                    $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10
+                    $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
                     Break
                 }
                 "/getjob" {

@@ -178,8 +178,8 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","excludecoinsymbol","excludecoin")) > $null}
-                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars","clientinit","wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -655,12 +655,21 @@ function Start-Setup {
                                 $GlobalSetupStepStore = $false
                             }
                         }
-                        "excludeserverconfigvars" {
+                        "excludeserverconfigvars1" {
                             if ($Config.RunMode -eq "client" -and $Config.ServerConfigName -match "config" -and (Get-Yes $Config.EnableServerConfig)) {
                                 Write-Host " "
                                 Write-Host "Select all config parameters, that should not be overwritten with the server's config" -ForegroundColor Cyan
-                                Write-Host "- config.txt: use the parameter name" -ForegroundColor Cyan
-                                Write-Host "- pools.config.txt:" -ForegroundColor Cyan
+                                Write-Host " "
+                                $Config.EnableServerExcludeList = Read-HostBool -Prompt "Use the server's exclusion list?" -Default $Config.EnableServerExcludeList | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "excludeserverconfigvars2" {
+                            if (-not $Config.EnableServerExcludeList -and $Config.RunMode -eq "client" -and $Config.ServerConfigName -match "config" -and (Get-Yes $Config.EnableServerConfig)) {
+                                Write-Host " "
+                                Write-Host "- exclude in config.txt: use the parameter name" -ForegroundColor Cyan
+                                Write-Host "- exclude in pools.config.txt:" -ForegroundColor Cyan
                                 Write-Host "  `"pools:<poolname>`" to protect all parameters of a pool" -ForegroundColor Cyan
                                 Write-Host "  `"pools:<poolname>:<parameter>`" to protect a specific parameter of a pool" -ForegroundColor Cyan
                                 Write-Host "   e.g. `"pools:MiningRigRentals:API_Key`" will protect API_Key for MiningRigRentals" -ForegroundColor Cyan
@@ -674,7 +683,7 @@ function Start-Setup {
                             if ($Config.RunMode -eq "client" -and $Config.ServerConfigName -and (Get-Yes $Config.EnableServerConfig)) {
 
                                 if ($DownloadServerNow) {
-                                    if (Get-ServerConfig -ConfigFiles $ConfigFiles -ConfigName @(Get-ConfigArray $Config.ServerConfigName) -ExcludeConfigVars @(Get-ConfigArray $Config.ExcludeServerConfigVars) -Server $Config.ServerName -Port $Config.ServerPort -Workername $Config.WorkerName -Username $Config.ServerUser -Password $Config.ServerPassword -Force) {
+                                    if (Get-ServerConfig -ConfigFiles $ConfigFiles -ConfigName @(Get-ConfigArray $Config.ServerConfigName) -ExcludeConfigVars @(Get-ConfigArray $Config.ExcludeServerConfigVars) -Server $Config.ServerName -Port $Config.ServerPort -Workername $Config.WorkerName -Username $Config.ServerUser -Password $Config.ServerPassword -Force -EnableServerExcludeList:$Config.EnableServerExcludeList) {
                                         Write-Host "Configfiles downloaded successfully!" -ForegroundColor Green
                                         Write-Host " "
                                         Get-ConfigArray $Config.ServerConfigName | Foreach-Object {
@@ -1335,6 +1344,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member EnableServerConfig $(if (Get-Yes $Config.EnableServerConfig){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member ServerConfigName $($Config.ServerConfigName -join ",") -Force
                             $ConfigActual | Add-Member ExcludeServerConfigVars $($Config.ExcludeServerConfigVars -join ",") -Force
+                            $ConfigActual | Add-Member EnableServerExcludeList $(if (Get-Yes $Config.EnableServerExcludeList){"1"}else{"0"}) -Force
 
                             $ConfigActual | ConvertTo-Json | Out-File $ConfigFiles["Config"].Path -Encoding utf8
 
