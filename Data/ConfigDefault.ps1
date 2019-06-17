@@ -51,7 +51,7 @@
     EnableServerConfig = $false
     ServerConfigName = @("config","coins","pools","algorithms")
     ExcludeServerConfigVars = @(
-        "WorkerName","DeviceName","Proxy",
+        "WorkerName","DeviceName","ExcludeDeviceName","Proxy",
         "APIPort","APIUser","APIPassword","APIAuth",
         "MSIApath","NVSMIpath",
         "CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity",

@@ -256,7 +256,7 @@ These are the client-fields to fill in the config.txt (or use the initscripts or
   "EnableServerConfig": "1",
   "ServerConfigName": "config,coins,pools",
   "EnableServerExcludeList": "0",
-  "ExcludeServerConfigVars": "WorkerName,DeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,Serve
+  "ExcludeServerConfigVars": "WorkerName,DeviceName,ExcludeDeviceName,Proxy,APIPort,APIUser,APIPassword,APIAuth,MSIApath,NVSMIpath,CPUMiningThreads,CPUMiningAffinity,GPUMiningAffinity,ServerName,Serve
 rPort,ServerUser,ServerPassword,EnableServerConfig,ServerConfigName,ExcludeServerConfigVars,RunMode,StartPaused",
 ```
 
@@ -552,6 +552,7 @@ You may replace $StartPaused and $Interval with your MiningPoolHub USER ID/API K
     - "gtx1070,gtx1080,cpu"
     - "cpu,gpu"
     - "gpu#01,gpu#03"
+- **ExcludeDeviceName** = list of device descriptors to exclude from mining (see DeviceName for explanation)
 - **CPUMiningThreads** = enter the number of softwarethreads being used by CPU miners. Adds "-t [threads]" to commandline of cpuminer forks
 - **CPUMiningAffinity** = enter a hex number to define CPU mining core affinity (e.g. 0xAAAA). Adds "--cpu-affinity [affinity]" to commandline of cpuminer forks
 - **GPUMiningAffinity** = enter a hex number to define GPU miner's CPU core affinity for validating results (e.g. 0xAAAA). Especially useful, when mining CPU and GPU in parallel.

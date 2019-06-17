@@ -334,10 +334,11 @@ function Invoke-Core {
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($CheckConfig) {
         #for backwards compatibility
-        if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force}
+        if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force;$Session.Config | Add-Member ExcludeDeviceName @() -Force}
         if ($Session.Config.GPUs -ne $null -and $Session.Config.GPUs) {
             if ($Session.Config.GPUs -is [string]) {$Session.Config.GPUs = [regex]::split($Session.Config.GPUs,"\s*[,;:]+\s*")}
             $Session.Config | Add-Member DeviceName @() -Force
+            $Session.Config | Add-Member ExcludeDeviceName @() -Force
             Get-Device "nvidia" | Where-Object {$Session.Config.GPUs -contains $_.Type_Vendor_Index} | Foreach-Object {$Session.Config.DeviceName += [string]("GPU#{0:d2}" -f $_.Type_Vendor_Index)}
         }
 
@@ -661,12 +662,12 @@ function Invoke-Core {
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
 
     #load device(s) information and device combos
-    if ($CheckConfig -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0) {
+    if ($CheckConfig -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
         Write-Log "Device configuration changed. Refreshing now. "
 
         #Load information about the devices
         $Session.Devices = @()
-        if (($Session.Config.DeviceName | Measure-Object).Count) {$Session.Devices = @(Get-Device $Session.Config.DeviceName | Select-Object)}
+        if (($Session.Config.DeviceName | Measure-Object).Count) {$Session.Devices = @(Get-Device $Session.Config.DeviceName $Session.Config.ExcludeDeviceName | Select-Object)}
         $Session.DevicesByTypes = [PSCustomObject]@{
             NVIDIA = @($Session.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "NVIDIA"} | Select-Object)
             AMD    = @($Session.Devices | Where-Object {$_.Type -eq "GPU" -and $_.Vendor -eq "AMD"} | Select-Object)

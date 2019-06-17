@@ -1907,14 +1907,30 @@ function Get-Device {
         [Parameter(Mandatory = $false)]
         [String[]]$Name = @(),
         [Parameter(Mandatory = $false)]
+        [String[]]$ExcludeName = @(),
+        [Parameter(Mandatory = $false)]
         [Switch]$Refresh = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$IgnoreOpenCL = $false
     )
 
+    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}
+
     if ($Name) {
-        if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}        
         $Name_Devices = $Name | ForEach-Object {
+            $Name_Split = $_ -split '#'
+            $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
+            $Name_Split += @("*") * (100 - $Name_Split.Count)
+
+            $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
+
+            $Name_Device
+        }
+    }
+
+    if ($ExcludeName) {
+        $ExcludeName_Devices = $ExcludeName | ForEach-Object {
             $Name_Split = $_ -split '#'
             $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
             $Name_Split += @("*") * (100 - $Name_Split.Count)
@@ -1930,7 +1946,10 @@ function Get-Device {
     if ((Test-Path Variable:Script:GlobalCachedDevices) -and -not $Refresh) {
         $Script:GlobalCachedDevices | Foreach-Object {
             $Device = $_
-            if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) {
+            if (
+                ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
+                ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
+             ) {
                 $Device
             }
         }
@@ -2041,7 +2060,10 @@ function Get-Device {
                     InstanceId = [String]$InstanceId
                 }
 
-                if ($Device.Type -ne "Cpu" -and ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_}))) {
+                if ($Device.Type -ne "Cpu" -and 
+                    ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
+                    ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
+                ) {
                     $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
                     if ($Device.Vendor -eq "AMD" -and $AmdModelsEx -notcontains $Device.Model) {
                         $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
