@@ -1077,7 +1077,8 @@ Example:
           "MaxTimeToFind": "1.5h",
           "Wallet": "<YOUR_RAVENCOIN_ADDRESS>",
           "EnableAutoPool": "1",
-          "PostBlockMining": "5m"
+          "PostBlockMining": "5m",
+          "MinProfitPercent": "80"
         }
     }
 
@@ -1088,7 +1089,8 @@ This configuration would:
 - set a maximum time to find for the next block of 1.5 hours (units allowed: s=seconds, m=minutes, h=hours)
 - define a global RVN wallet with value <YOUR_RAVENCOIN_ADDRESS>. Every occurence of "$RVN" in pools.config.txt will be automatically substituted with this wallet.
 - each pool, that has it's parameter "EnableAutoCoin" set to "1" will use this RVN wallet
-- if a RVN block has been found within the timespan of 5 minutes (PostBlockMining) at a pool that has "EnablePostBlockMining" set to "1", RainbowMiner will force mining RVN on this pool.
+- if a RVN block has been found within the timespan of 5 minutes (PostBlockMining) at a pool that has "EnablePostBlockMining" set to "1", RainbowMiner will force mining RVN on this pool
+- switching to postblock mining only, if the post block miner's profit is at least 80% of the best miner's profit (field "MinProfitPercent")
 
 
 ### Config\ocprofiles.config.txt
