@@ -4047,7 +4047,7 @@ function Set-CoinsConfigDefault {
         try {            
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
-            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";Wallet="";EnableAutoPool="0";Comment=""}
+            $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
             $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
@@ -5537,11 +5537,9 @@ function Test-IsElevated
 
 function Set-OsFlags {
     if ($IsWindows -eq $null) {
-        if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
-            $Global:IsWindows = $true
-            $Global:IsLinux = $false
-            $Global:IsMacOS = $false
-        }
+        $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
+        $Global:IsLinux   = -not $Global:IsWindows
+        $Global:IsMacOS   = $false
     }
 }
 

@@ -89,7 +89,7 @@ function Start-Setup {
         $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
 
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
-        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0";Comment=""}
+        $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0";MinProfitPercent="0";Comment=""}
         $MRRDefault        = [PSCustomObject]@{PriceBTC = "0";PriceFactor = "0";EnableAutoCreate = "1";EnablePriceUpdates = "1";EnableAutoPrice = "1";EnableMinimumPrice = "1";Title="";Description=""}
         $PoolsDefault      = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = ""}
 
@@ -2265,6 +2265,7 @@ function Start-Setup {
                             @{Label="MinWorkers"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
                             @{Label="MaxTimeToFind"; Expression={"$($_.Value.MinWorkers)"}; Align="center"}
                             @{Label="PostBlockMining"; Expression={"$($_.Value.PostBlockMining)"}; Align="center"}
+                            @{Label="MinProfit%"; Expression={"$($_.Value.MinProfitPercent)"}; Align="center"}
                             @{Label="EAP"; Expression={"$(if (Get-Yes $_.Value.EnableAutoPool) {"Y"} else {"N"})"}; Align="center"}
                             @{Label="Wallet"; Expression={"$($_.Value.Wallet)"}}
                         )
@@ -2306,7 +2307,7 @@ function Start-Setup {
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
                         $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","wallet","enableautopool","comment")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","minprofitpercent","wallet","enableautopool","comment")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do {
@@ -2331,6 +2332,9 @@ function Start-Setup {
                                     "postblockmining" {
                                         $CoinConfig.PostBlockMining = Read-HostString -Prompt "Enter timespan to force mining, after a block has been found at enabled pools (units allowed, e.h. 1h=one hour, default unit is s=seconds)" -Default $CoinConfig.PostBlockMining -Characters "0-9smhdw`." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         $CoinConfig.PostBlockMining = $CoinConfig.PostBlockMining -replace "([A-Z])[A-Z]+","`$1"
+                                    }
+                                    "minprofitpercent" {
+                                        $CoinConfig.MinProfitPercent = Read-HostDouble -Prompt "Enter allowed minimum profit for post block mining (in percent of best miner's profit)" -Default $CoinConfig.MinProfitPercent -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "wallet" {
                                         $CoinConfig.Wallet = Read-HostString -Prompt "Enter global wallet address (optional, will substitute string `"`$$Coin_Symbol`" in pools.config.txt)" -Default $CoinConfig.Wallet -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
