@@ -30,7 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = "-N 1"} #Allium
     #[PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
-    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""} #Blake2b
+    [PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; ExtendInterval = 2} #Blake2b
     #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
     #[PSCustomObject]@{MainAlgorithm = "c11/flax"; Params = ""} #C11
     #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""} # CryptoNight-Lite
