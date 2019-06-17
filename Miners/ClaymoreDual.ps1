@@ -11,7 +11,7 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-Claymore\ethdcrminer64"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.6-claymoredual/claymoredual_v14.6_linux.tar.gz"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -19,11 +19,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-ClaymoreDual\EthDcrMiner64.exe"
     $UriCuda = @(
         [PSCustomObject]@{            
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.6-claymoredual/claymoredual_v14.6_win_cuda10.7z"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_win_cuda10.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.6-claymoredual/claymoredual_v14.6_win_cuda8.7z"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_win_cuda8.7z"
             Cuda = "8.0"
         }
     )
