@@ -5,10 +5,17 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Binarium\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-win64.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'}))"
+    $PathBinarium = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'}))"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-ubuntu18.7z"
+} else {
+    $Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'})).exe"
+    $PathBinarium = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'})).exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-win64.7z"
+}
 $ManualUri = "https://github.com/patrykwnosuch/cpuminer-3.8.8.1-nosuch/releases"
 $Port = "531{0:d2}"
 $DevFee = 0.0
@@ -18,6 +25,14 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "binarium-v1"; Params = ""; ExtendInterval = 2} #Binarium
 )
+
+if ($IsLinux) {
+    $Commands += [PSCustomObject[]]@(
+        [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""; ExtendInterval = 2} #HODL
+        [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #M7M
+        [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt
+    )
+}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -54,7 +69,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Name = $Miner_Name
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
-					Path = $Path
+					Path = if ($_.MainAlgorithm -eq "binarium-v1") {$PathBinarium} else {$Path}
 					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API = "Ccminer"
