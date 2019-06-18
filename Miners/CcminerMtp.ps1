@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.17-ccminermtp/ccminerMTP1.1.17r.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.19t-ccminermtp/ccminermtp-v1.1.19tr.7z"
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
@@ -45,10 +45,12 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
+        $IsNh = $Pools.$Algorithm_Norm.Name -eq "NiceHash"
+
         $MinMemGB = $_.MinMemGB
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-        $Miner_Name = (@("$($Name)$(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"Nh"})") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Miner_Name = (@("$($Name)$(if ($IsNh) {"Nh"})") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
         $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
@@ -60,7 +62,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
-					Path           = "$(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {$Path -replace "ccminer.exe","ccminer-nh.exe"} else {$Path})"
+					Path           = "$(if ($IsNh) {$Path -replace "ccminer.exe","ccminer-nh.exe"} else {$Path})"
 					Arguments      = "-R 1 -N 3 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API            = "Ccminer"
