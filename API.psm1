@@ -571,11 +571,11 @@
                         }
                         try {
                             if (-not $Parameters.key) {
-                                $Parameters.key    = $Session.Config.Pools.MiningRigRentals.API_Key
+                                $Parameters | Add-Member key $Session.Config.Pools.MiningRigRentals.API_Key -Force
                             }
                             if ($Parameters.key -eq $Session.Config.Pools.MiningRigRentals.API_Key) {
-                                $Parameters.secret = $Session.Config.Pools.MiningRigRentals.API_Secret
-                                $Parameters.nonce  = 0
+                                $Parameters | Add-Member secret $Session.Config.Pools.MiningRigRentals.API_Secret -Force
+                                $Parameters | Add-Member nonce 0 -Force
                             }
                             if ($Parameters.key -and $Parameters.secret) {
                                 $Params = [hashtable]@{}
