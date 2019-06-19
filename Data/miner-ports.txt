@@ -30,6 +30,7 @@
 129	CcminerVerus
 130	CcminerRfv2
 131	RhminerCpu
+132	CcminerHoney
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
