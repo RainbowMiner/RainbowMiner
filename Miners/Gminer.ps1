@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.45-gminer/gminer_1_45_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.46-gminer/gminer_1_46_linux64.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.45-gminer/gminer_1_45_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.46-gminer/gminer_1_46_windows64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
@@ -28,6 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGb = 8;   MinMemGbW10 = 10; Params = "--algo grin31";    Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGb = 2;                     Params = "--algo 96_5";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGb = 2;                     Params = "--algo 144_5";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGb = 2;                     Params = "--algo 125_4";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true} #Equihash 125,4/ZelHash
     [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGb = 3;                     Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true} #Equihash 150,5/BEAM
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGb = 3.0;                   Params = "--algo 192_7";     Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGb = 0.5;                   Params = "--algo 210_9";     Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 210,9
