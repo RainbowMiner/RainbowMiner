@@ -64,7 +64,7 @@
             $Out
         }
 
-        $API.Clients = @{}
+        $API.Clients = @()
 
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
@@ -492,13 +492,17 @@
                     Break
                 }
                 "/clients" {
-                    $Data = $API.Clients | ConvertTo-Json
+                    $Data = ConvertTo-Json @($API.Clients | Select-Object)
                     Break
                 }
                 "/getconfig" {
                     $Status = $false
                     if ($API.IsServer -and -not (Compare-Version $Session.Version $Parameters.version -revs 2)) {
-                        if ($Parameters.machinename) {$API.Clients[$Parameters.machinename] = Get-UnixTimestamp}
+                        if ($Parameters.workername -and $Parameters.machinename) {
+                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
+                        }
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
@@ -525,7 +529,11 @@
                 "/getjob" {
                     if ($API.IsServer) {
                         $Status = $false
-                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                        if ($Parameters.workername -and $Parameters.machinename) {
+                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
+                        }
                         try {
                             $pbody = $null
                             if ($Parameters.body -match "^{.+}$") {
@@ -556,7 +564,11 @@
                 "/getmrr" {
                     if ($API.IsServer) {
                         $Status = $false
-                        $API.Clients[$Parameters.machinename] = Get-UnixTimestamp
+                        if ($Parameters.workername -and $Parameters.machinename) {
+                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
+                        }
                         try {
                             if (-not $Parameters.key) {
                                 $Parameters.key    = $Session.Config.Pools.MiningRigRentals.API_Key
