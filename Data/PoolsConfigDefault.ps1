@@ -173,6 +173,9 @@
         "SparkPool" = [PSCustomObject]@{
             Currencies=@("ETH","GRIN","BEAM","XMR")
         }
+        "SuprNova" = [PSCustomObject]@{
+            Currencies=@("BTG")
+        }
         "YiiMP" = [PSCustomObject]@{
             Currencies=@("RVN","SIN")
         }
