@@ -15,15 +15,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-linux-cuda10.0.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-linux-cuda10.0.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-linux-cuda9.2.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-linux-cuda9.2.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-linux-cuda9.1.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-linux-cuda9.1.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -31,15 +31,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.11.1-trex/t-rex-0.11.1-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.12.0-trex/t-rex-0.12.0-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -56,6 +56,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal (broken in v0.8.6, fixed in v0.8.8)
     [PSCustomObject]@{MainAlgorithm = "geek"; Params = ""} #Geek (new with v0.7.5)
     [PSCustomObject]@{MainAlgorithm = "hmq1725"; Params = ""} #HMQ1725 (new with v0.6.4)
+    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb (new with 0.12.0)
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
