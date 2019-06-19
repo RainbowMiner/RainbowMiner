@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.5-wildrig/wildrig-multi-linux-0.17.5-beta.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.6-wildrig/wildrig-multi-linux-0.17.6-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.5-wildrig/wildrig-multi-windows-0.17.5-beta.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.6-wildrig/wildrig-multi-windows-0.17.6-beta.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -46,6 +46,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
     [PSCustomObject]@{MainAlgorithm = "sha256q";    Params = ""} #SHA256q
     [PSCustomObject]@{MainAlgorithm = "sha256t";    Params = ""} #SHA256t
+    [PSCustomObject]@{MainAlgorithm = "skein2";     Params = ""} #Skein2
     [PSCustomObject]@{MainAlgorithm = "skunkhash";  Params = ""} #Skunk
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
