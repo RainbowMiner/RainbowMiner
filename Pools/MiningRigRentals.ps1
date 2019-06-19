@@ -170,7 +170,7 @@ foreach ($Worker1 in $Workers) {
                     Protocol      = "stratum+tcp"
                     Host          = $Pool_Rig.server
                     Port          = $Pool_Rig.port
-                    User          = "$($User).$($Pool_RigId)"
+                    User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
                     Pass          = "x"
                     Region        = $Pool_Regions."$($_.region)"
                     SSL           = $false

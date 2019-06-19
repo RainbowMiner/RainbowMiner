@@ -12,6 +12,7 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Fee = 1
+$Pool_Region = Get-Region "US"
 
 $Pool_Request = [PSCustomObject]@{}
 
@@ -78,7 +79,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Port          = $Port
             User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
             Pass          = "x"
-            Region        = $Pool_Regions.$Pool_Region
+            Region        = $Pool_Region
             SSL           = $Pool_SSL
             Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_Fee

@@ -100,6 +100,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.Name) {
                         "F2pool" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})";if ($Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
                         "EthashPool" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+                        "MiningRigRentals" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
                         default {"stratum"}
                     }
 					[PSCustomObject]@{
