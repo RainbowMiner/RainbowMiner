@@ -8,10 +8,10 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\NVIDIA-Alexis78\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4-ccmineralexis78/ccminerAlexis78v1.4x64.7z"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5-ccmineralexis78/ccminerAlexis78v1.5.7z"
 $Port = "102{0:d2}"
 $DevFee = 0.0
-$Cuda = "10.0"
+$Cuda = "10.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
