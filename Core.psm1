@@ -246,7 +246,7 @@ function Invoke-Core {
     $ConfigBackup = if ($Session.Config -is [object]){$Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json}else{$null}
     $CheckConfig = $true
     
-    [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
+    [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
 
     $Session.MyIP = Get-MyIP
@@ -937,6 +937,24 @@ function Invoke-Core {
     $Pools = [PSCustomObject]@{}
     
     if (($Session.AllPools | Measure-Object).Count -gt 0) {
+
+        $Pools_WTM = $Session.AllPools | Where-Object {$_.WTM}
+        if (($Pools_WTM | Measure-Object).Count) {
+            $Pools_WTM_Coins = $Pools_WTM | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
+
+            if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
+            $start = Get-UnixTimestamp -Milliseconds
+            Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Wallets = $Pool_WTM_Coins}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
+                $Pool_WTM = $_
+                $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
+                   $_.Price = $Pool_WTM.Price * $_.PenaltyFactor
+                   $_.StablePrice = $Pool_WTM.StablePrice * $_.PenaltyFactor
+                }
+            }
+            $TimerPools[$_] = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
+            Write-Log "$($_) loaded in $($TimerPools[$_])s "
+        }
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}

@@ -273,6 +273,63 @@ function Update-Rates {
     Compare-Object $Global:GlobalWorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
 }
 
+function Get-WhatToMineData {
+    [CmdletBinding()]
+    param([Switch]$Silent)
+    
+    if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
+        try {
+            $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10
+            $WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
+                [PSCustomObject]@{
+                    algo   = Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)
+                    id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
+                    factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
+                }
+            }
+            if ($WtmKeys -and $WtmKeys.count -gt 10) {
+                $WtmFactors = Get-Content ".\Data\wtmfactors.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                if ($WtmFactors) {
+                    $WtmFactors.PSObject.Properties.Name | Where-Object {@($WtmKeys.algo) -inotcontains $_} | Foreach-Object {
+                        $WtmKeys += [PSCustomObject]@{
+                            algo = $_
+                            factor = $WtmFactors.$_
+                        }
+                    }
+                }
+                Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
+                if (Test-Path Variable:Global:WTMData) {Remove-Variable "WTMData" -Force -ErrorAction Ignore}
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "WhatToMiner datagrabber failed. "
+            return
+        }
+    }
+
+    if (-not (Test-Path Variable:Global:WTMData)) {
+        $Global:WTMData = Get-Content ".\Data\wtmdata.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+    }
+
+    if (-not $Silent) {$Global:WTMData}
+}
+
+function Get-WhatToMinerUrl {
+    "https://whattomine.com/coins.json?$(@(Get-WhatToMineData | Where-Object {$_.id} | Foreach-Object {"$($_.id)=true&factor[$($_.id)_hr]=10&factor[$($_.id)_p]=0"}) -join '&')"
+}
+
+function Get-WhatToMineFactor {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Algo
+    )
+    if ($Algo) {
+        if (-not (Test-Path Variable:Global:WTMData)) {Get-WhatToMineData -Silent}
+        $Global:WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * 10}
+    }
+}
+
 function Get-Ticker {
     [CmdletBinding()]
     param(
@@ -1022,18 +1079,23 @@ function Get-PoolsContent {
         foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         foreach($Pool in @(& $_.FullName @Parameters)) {
-            $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty)/100
-            if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
-            $Pool.Price *= $Pool_Factor
-            $Pool.StablePrice *= $Pool_Factor
-            $Pool | Add-Member -NotePropertyMembers @{
-                AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
-                Name          = $Pool_Name
-                Penalty       = $Config.Penalty
-                Wallet        = $Config.Wallets."$($Pool.Currency)"
-                Worker        = $Config.Worker
-                Email         = $Config.Email
-            } -Force -PassThru
+            if ($PoolName -eq "WhatToMine") {
+                $Pool
+            } else {
+                $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty)/100
+                if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
+                $Pool.Price *= $Pool_Factor
+                $Pool.StablePrice *= $Pool_Factor
+                $Pool | Add-Member -NotePropertyMembers @{
+                    AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
+                    Name          = $Pool_Name
+                    Penalty       = $Config.Penalty
+                    PenaltyFactor = $Pool_Factor
+                    Wallet        = $Config.Wallets."$($Pool.Currency)"
+                    Worker        = $Config.Worker
+                    Email         = $Config.Email
+                } -Force -PassThru
+            }
         }
     }
 }
@@ -5595,6 +5657,20 @@ function Get-PoolPortsFromRequest {
             $result
         } else {$false}
     }
+}
+
+function Get-LastSatPrice {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)]
+        [String]$Currency = "",
+        [Parameter(Mandatory = $False)]
+        [Double]$lastSatPrice = 0
+    )
+
+    if ($Session.Rates.$Currency -and -not $lastSatPrice) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
+    if (-not $Session.Rates.$Currency -and $lastSatPrice) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
+    $lastSatPrice
 }
 
 function Get-PoolDataFromRequest {
