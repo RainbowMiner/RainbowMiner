@@ -88,11 +88,13 @@ param(
                 timeout   = $timeout
                 nonce     = $nonce
                 machinename = $Session.MachineName
+                workername  = $Session.Config.Workername
                 myip      = $Session.MyIP
             }
             try {
                 $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
                 if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+                #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
             } catch {            
                 Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
             }
