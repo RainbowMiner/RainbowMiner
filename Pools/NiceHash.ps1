@@ -54,7 +54,7 @@ $Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
     }
 
-    $Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$($Pool_Algorithm_Norm)-NHMP")
+    $Pool_Algorithm_All = @($Pool_Algorithm_Norm) #,"$($Pool_Algorithm_Norm)-NHMP")
 
     foreach($Pool_Region in $Pool_Regions) {
         if ($Wallets.BTC -or $InfoOnly) {

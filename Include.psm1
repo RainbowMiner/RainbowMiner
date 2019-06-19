@@ -1077,7 +1077,6 @@ function Get-PoolsContent {
             InfoOnly = $InfoOnly
         }
         foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
-
         foreach($Pool in @(& $_.FullName @Parameters)) {
             if ($PoolName -eq "WhatToMine") {
                 $Pool

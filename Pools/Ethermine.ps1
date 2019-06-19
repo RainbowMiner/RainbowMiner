@@ -34,45 +34,26 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Currency = $_.symbol
 
-    $ok = $true
-    if (-not $InfoOnly) {
-        try {
-            $Pool_Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/approximated_earnings/1000" -tag $Name -retry 5 -retrywait 200 -cycletime 120
-            if ($Pool_Request.status -ne "OK") {throw}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
-            $ok = $false
-        }
-
-        if ($ok) {
-            $Pool_ExpectedEarning = [double]$Pool_Request.data.day.bitcoins / $_.divisor / 1000    
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $Pool_ExpectedEarning -Duration $StatSpan -ChangeDetection $true -Quiet
-        }
-    }
-
-    if ($ok) {
-        foreach($Pool_Region in $_.regions) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_.coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = $_.protocol
-                Host          = "$($Pool_Region)$($_.host)"
-                Port          = $_.port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                Pass          = "x"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $_.ssl
-                Updated       = $Stat.Updated
-                PoolFee       = $_.fee
-                DataWindow    = $DataWindow
-            }
+    foreach($Pool_Region in $_.regions) {
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $_.coin
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = $_.protocol
+            Host          = "$($Pool_Region)$($_.host)"
+            Port          = $_.port
+            User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+            Pass          = "x"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $_.ssl
+            Updated       = (Get-Date).ToUniversalTime()
+            PoolFee       = $_.fee
+            DataWindow    = $DataWindow
+            WTM           = $true
         }
     }
 }

@@ -944,7 +944,7 @@ function Invoke-Core {
 
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
-            Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Wallets = $Pool_WTM_Coins}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
+            Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Wallets = $Pools_WTM_Coins}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
                 $Pool_WTM = $_
                 $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
                    $_ | Add-Member Price ($Pool_WTM.Price * $_.PenaltyFactor) -Force
@@ -953,9 +953,9 @@ function Invoke-Core {
                    $_ | Add-Member Updated $Pool_WTM.Updated -Force
                 }
             }
-            $TimerPools[$_] = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
-            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
-            Write-Log "$($_) loaded in $($TimerPools[$_])s "
+            $done = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($done)s) "}
+            Write-Log "WhatToMine loaded in $($done)s "
         }
 
         #Decrease compare prices, if out of sync window

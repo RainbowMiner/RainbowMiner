@@ -28,7 +28,6 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 $Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
 
 $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.$_.tag} | ForEach-Object {
-    $Pool_CoinName   = $_
     $Pool_Currency   = $Pool_Request.$_.tag
     $Pool_Algorithm  = $Pool_Request.$_.algorithm -replace "[^a-z0-9]+"
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -48,9 +47,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
 
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $_
             CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
             Price         = $Stat.Minute_10 #instead of .Live
             StablePrice   = $Stat.Week
             MarginOfError = $Stat.Week_Fluctuation
@@ -79,7 +76,6 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 $Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
 
 $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.$_.tag} | ForEach-Object {
-    $Pool_CoinName   = $_
     $Pool_Currency   = $Pool_Request.$_.tag
     $Pool_Algorithm  = $Pool_Request.$_.algorithm -replace "[^a-z0-9]+"
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -113,9 +109,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
 
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_
                 CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
                 Price         = $Stat.Minute_10 #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
