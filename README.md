@@ -371,6 +371,7 @@ RainbowMiner uses the following nameing convention:
 - Equihash20x9 = Equihash (200, 9)
 - Equihash21x9 = Equihash (210, 9)
 - Equihash24x5 = Equihash (144,5), e.g. BTG
+- Equihash25x5 = Equihash (125,4), e.g. ZelHash
 - Equihash25x5 = Equihash (150,5), e.g. BEAM
 - Equihash24x7 = Equihash (192,7), e.g. ZEROcoin
 
