@@ -39,10 +39,10 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
 
         $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
-        if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit") {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+        if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
         } else {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
         }
 
         [PSCustomObject]@{
