@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.19t-ccminermtp/ccminermtp-v1.1.19tr.7z"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.20t-ccminermtp/ccminermtp-v1.1.20tr-linux.7z"
+} else {
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.20t-ccminermtp/ccminermtp-v1.1.20tr-win.7z"
+}
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
