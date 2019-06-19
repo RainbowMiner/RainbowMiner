@@ -4484,7 +4484,7 @@ function Get-ServerConfig {
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
-        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&version=$($Session.Version)"
+        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$($Session.Version)"
         $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 8
         if ($Result.Status -and $Result.Content) {
             if ($EnableServerExcludeList -and $Result.ExcludeList) {$ExcludeConfigVars = $Result.ExcludeList}
@@ -5166,7 +5166,7 @@ function Invoke-ReportMinerStatus {
         $ReportDone = $false
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status

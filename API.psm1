@@ -500,10 +500,12 @@
                     if ($API.IsServer -and -not (Compare-Version $Session.Version $Parameters.version -revs 2)) {
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
-                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
-                        }
-                        $Result = [PSCustomObject]@{}
+                            if ($Client) {
+                                $Client | Add-Member machineip $Parameters.myip -Force
+                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                            }
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                        }                        $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
                             if ($PathToFile = Get-ConfigPath $GetConfigA[0] $Parameters.workername) {
@@ -531,8 +533,11 @@
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
-                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
+                            if ($Client) {
+                                $Client | Add-Member machineip $Parameters.myip -Force
+                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                            }
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
                         try {
                             $pbody = $null
@@ -566,8 +571,11 @@
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
-                            if ($Client) {$Client.timestamp = Get-UnixTimestamp}
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername;machinename = $Parameters.machinename;timestamp = Get-UnixTimestamp}}
+                            if ($Client) {
+                                $Client | Add-Member machineip $Parameters.myip -Force
+                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                            }
+                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
                         try {
                             if (-not $Parameters.key) {
@@ -580,7 +588,7 @@
                             if ($Parameters.key -and $Parameters.secret) {
                                 $Params = [hashtable]@{}
                                 ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
-                                $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore) -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
+                                $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
                                 $Status = $true
                             }
                         } catch {}
