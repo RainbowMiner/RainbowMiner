@@ -1084,6 +1084,8 @@ function Get-PoolsContent {
             } else {
                 $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty)/100
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
+                if ($Pool.Price -eq $null) {$Pool | Add-Member Price 0 -Force}
+                if ($Pool.StablePrice -eq $null) {$Pool | Add-Member StablePrice 0 -Force}
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
                 $Pool | Add-Member -NotePropertyMembers @{

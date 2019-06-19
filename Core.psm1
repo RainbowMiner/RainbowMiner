@@ -947,8 +947,10 @@ function Invoke-Core {
             Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Wallets = $Pool_WTM_Coins}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
                 $Pool_WTM = $_
                 $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
-                   $_.Price = $Pool_WTM.Price * $_.PenaltyFactor
-                   $_.StablePrice = $Pool_WTM.StablePrice * $_.PenaltyFactor
+                   $_ | Add-Member Price ($Pool_WTM.Price * $_.PenaltyFactor) -Force
+                   $_ | Add-Member StablePrice ($Pool_WTM.StablePrice * $_.PenaltyFactor) -Force
+                   $_ | Add-Member MarginOfError $Pool_WTM.MarginOfError -Force
+                   $_ | Add-Member Updated $Pool_WTM.Updated -Force
                 }
             }
             $TimerPools[$_] = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
