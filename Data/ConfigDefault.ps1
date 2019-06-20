@@ -1,32 +1,5 @@
 ﻿[PSCustomObject]@{
     PoolName = @("Nicehash","MiningPoolHub","NLpool","ZergPool","Zpool")
-    ExcludeAlgorithm = @(     
-     "Blakecoin",
-     "BlakeVanilla",
-     "CryptoLight",
-     "CryptoNight",
-     "Decred",
-     "Keccak",
-     "KeccakC",
-     "Lbry",
-     "Lyra2RE",
-     "Lyra2RE2",
-     "Lyra2z",
-     "MyriadGroestl",
-     "Nist5",
-     "Pascal",
-     "Quark",
-     "Qubit",
-     "Scrypt",
-     "ScryptN",
-     "SHA256d",
-     "SHA256t",
-     "Sib",
-     "X11",
-     "X13",
-     "X14",
-     "X15"        
-    )
     MinerStatusURL = "https://rbminer.net"
     FastestMinerOnly = $true
     RemoteAPI = $false 
@@ -43,6 +16,7 @@
     EnableAutoAlgorithmAdd = $true
     EnableAutoBenchmark = $true
     EnableMinerStatus = $true
+    DisableUnprofitableAlgolist = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex
     GPUMiningAffinity = ""
