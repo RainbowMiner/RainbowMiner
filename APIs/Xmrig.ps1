@@ -11,6 +11,7 @@ class Xmrig : Miner {
         $ConfigFile        = "config_$($ConfigFileString)_$($Parameters.Config.api.port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "default_$($ConfigFileString).json"
         $ThreadsConfig     = [PSCustomObject]@{}
+        $LogFile           = "$Miner_Path\log_$($ConfigFileString).txt"
                 
         try {
             if (-not (Test-Path "$Miner_Path\$ThreadsConfigFile") -or -not ($ThreadsConfig = @(Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
@@ -19,7 +20,7 @@ class Xmrig : Miner {
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -Force
 
                 $ArgumentList = ("$($Parameters.PoolParams) --config=$ThreadsConfigFile $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
                 if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
                     $wait = 0
                     $Job | Add-Member HasOwnMinerWindow $true -Force
