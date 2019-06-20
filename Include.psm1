@@ -203,6 +203,27 @@ function Get-Balance {
     $Balances
 }
 
+function Set-UnprofitableAlgos {
+    if ($Session.UnprofitableAlgos -eq $null) {
+        $Session.UnprofitableAlgos = try{Get-Content ".\Data\unprofitable.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
+    }
+
+    if (-not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
+        $Key = Get-ContentDataMD5hash $Session.UnprofitableAlgos
+        try {
+            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable.json" -cycletime 3600 -Jobkey "unprofitable"
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Unprofitable algo API failed. "
+        }
+        if ($Request -and $Request.Count -gt 10) {
+            $Session.UnprofitableAlgos = @($Request | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
+            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Session.UnprofitableAlgos -MD5hash $Key > $null
+        }
+    }
+}
+
 function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent)
