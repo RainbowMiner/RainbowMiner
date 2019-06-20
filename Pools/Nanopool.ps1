@@ -24,18 +24,17 @@ $Pool_Request = [PSCustomObject]@{}
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;  fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = 6666;  fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightR";  symbol = "XMR";  port = 14444; fee = 1; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $true}
-    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = 13333; fee = 2; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $true}
-    [PSCustomObject]@{coin = "Grin";            algo = "Cuckaroo29";    symbol = "GRIN"; port = 12111; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $false; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "Monero";          algo = "CrypotnightR";  symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $true; usepid = $true}
+    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true; usepid = $true}
+    [PSCustomObject]@{coin = "Grin";            algo = "Cuckaroo29";    symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Port = $_.port
     $Pool_Algorithm = $_.algo
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Currency = $_.symbol
@@ -76,26 +75,30 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     if ($ok) {
         foreach($Pool_Region in $Pool_Regions.Keys) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_.coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = $_.protocol
-                Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
-                Port          = $_.port
-                User          = "$($Pool_Wallet)/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
-                Pass          = "x"
-                Region        = $Pool_Region
-                SSL           = $_.ssl
-                Updated       = $Stat.Updated
-                PoolFee       = $_.fee
-                DataWindow    = $DataWindow
-                Workers       = $Pool_RequestWorkers.data
-                Hashrate      = $Stat.HashRate_Live
+            $Pool_SSL = $false
+            foreach($Pool_Port in @($_.port | Select-Object)) {
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $_.coin
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
+                    Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
+                    Port          = $Pool_Port
+                    User          = "$($Pool_Wallet)/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
+                    Pass          = "x"
+                    Region        = $Pool_Region
+                    SSL           = $Pool_SSL
+                    Updated       = $Stat.Updated
+                    PoolFee       = $_.fee
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_RequestWorkers.data
+                    Hashrate      = $Stat.HashRate_Live
+                }
+                $Pool_SSL = $true
             }
         }
     }
