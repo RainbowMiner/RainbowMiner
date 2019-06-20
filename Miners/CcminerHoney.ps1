@@ -23,7 +23,7 @@ if ($IsLinux) {
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "honeycomb"; MinMemGB = 1; Params = ""} #HoneyComb
+    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; MinMemGB = 1; Params = ""} #HoneyComb
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
