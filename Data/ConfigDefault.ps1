@@ -11,6 +11,7 @@
      "Lbry",
      "Lyra2RE",
      "Lyra2RE2",
+     "Lyra2z",
      "MyriadGroestl",
      "Nist5",
      "Pascal",
