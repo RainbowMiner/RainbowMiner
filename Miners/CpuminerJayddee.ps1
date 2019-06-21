@@ -33,7 +33,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""; ExtendInterval = 2} #HODL
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; ExtendInterval = 2} #JHA
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""; ExtendInterval = 2} #Lyra2v3
-    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #lyra2z330
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #lyra2z330, CpuminerRplant faster
     [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #m7m
     [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #pentablake
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
@@ -53,7 +53,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #yescryptr32, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #yescryptr8, CpuminerOptBF faster
     [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #YesPower
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YesPowerR16
+    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YesPowerR16, CpuminerRplant faster
     [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #zr5
 
     #GPU or ASIC - never profitable

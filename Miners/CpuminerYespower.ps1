@@ -16,8 +16,8 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower
-    [PSCustomObject]@{MainAlgorithm = "yespowerR16"; Params = ""; ExtendInterval = 2} #YespowerR16
+    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerJayddee faster
+    #[PSCustomObject]@{MainAlgorithm = "yespowerR16"; Params = ""; ExtendInterval = 2} #YespowerR16, , CpuminerRplant faster
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName

@@ -34,26 +34,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #Skein2
     [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
     #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #X12
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt, CpuminerJayddee faster
+    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt, CpuminerJayddee faster
     #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #ZR5
-
-    #GPU or ASIC - never profitable
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExtendInterval = 2} #Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""; ExtendInterval = 2} #Bitcore
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""; ExtendInterval = 2} #C11
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""; ExtendInterval = 2} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "keccakc"; Params = ""; ExtendInterval = 2} #KeccakC
-    #[PSCustomObject]@{MainAlgorithm = "lyra2re"; Params = ""; ExtendInterval = 2} #Lyra2RE
-    #[PSCustomObject]@{MainAlgorithm = "lyra2rev2"; Params = ""; ExtendInterval = 2} #Lyra2REV2
-    #[PSCustomObject]@{MainAlgorithm = "phi"; Params = ""; ExtendInterval = 2} #PHI
-    #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""; ExtendInterval = 2} #S3
-    #[PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; ExtendInterval = 2} #SonoA
-    #[PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""; ExtendInterval = 2} #Timetravel
-    #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""; ExtendInterval = 2} #X11evo
-    #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""; ExtendInterval = 2} #X16r
-    #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""; ExtendInterval = 2} #X16s
-    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""; ExtendInterval = 2} #X17
-    #[PSCustomObject]@{MainAlgorithm = "xevan"; Params = ""; ExtendInterval = 2} #Xevan
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
