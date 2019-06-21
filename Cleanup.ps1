@@ -437,6 +437,10 @@ try {
         $CacheCleanup = $true
     }
 
+    if ($Version -le (Get-Version "4.3.4.1")) {
+        $AddAlgorithm += @("EquihashVds")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
