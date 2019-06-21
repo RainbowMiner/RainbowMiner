@@ -176,6 +176,9 @@
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
         }
+        "UUpool" = [PSCustomObject]@{
+            Currencies=@("VOLLAR")
+        }
         "YiiMP" = [PSCustomObject]@{
             Currencies=@("RVN","SIN")
         }
