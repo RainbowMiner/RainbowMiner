@@ -18,7 +18,9 @@ $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
     #[PSCustomObject]@{coin = "Aeon";          symbol = "AEON";  algo = "CnLiteV7";    port = 10410; fee = 0.9; rpc = "aeon"}
-    [PSCustomObject]@{coin = "Arqma";         symbol = "ARQ";   algo = "CnLiteV7";    port = 10320; fee = 0.9; rpc = "arqma"}
+    [PSCustomObject]@{coin = "Arqma";         symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma"}
+    [PSCustomObject]@{coin = "Arqma+Plenteum";symbol = "ARQ";   algo = "CnTurtle";    port = 10630; fee = 0.9; rpc = "arqple"; symbol2 = "PLE"}
+    [PSCustomObject]@{coin = "Arqma+Turtle";  symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma"; symbol2 = "TRTL"}
     [PSCustomObject]@{coin = "BitTube";       symbol = "TUBE";  algo = "CnSaber";     port = 10280; fee = 0.9; rpc = "tube"}
     #[PSCustomObject]@{coin = "Bloc";          symbol = "BLOC";  algo = "CnHaven";     port = 10240; fee = 0.9; rpc = "bloc"}
     [PSCustomObject]@{coin = "Citadel";       symbol = "CTL";   algo = "CnV7";        port = 10420; fee = 0.9; rpc = "citadel"}
