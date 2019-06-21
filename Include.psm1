@@ -1660,9 +1660,10 @@ function Set-SubProcessPriority {
     )
     $ProcessId | Where-Object {$_} | Foreach-Object {
         try {
-            $Process = Get-Process -Id $_
-            $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-            if ($CPUAffinity -gt 0) {$Process.ProcessorAffinity = $CPUAffinity}
+            if ($Process = Get-Process -Id $_ -ErrorAction Stop) {
+                $Process.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+                if ($CPUAffinity) {$Process.ProcessorAffinity = $CPUAffinity}
+            }
         } catch {
             Write-Log -Level Warn "Could not set process priority/affinity: $($_.Exception.Message)"
             if ($Error.Count){$Error.RemoveAt(0)}

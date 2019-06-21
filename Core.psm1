@@ -1614,7 +1614,7 @@ function Invoke-Core {
 
     $Session.ActiveMiners | Where-Object {$_.Best -EQ $true -and $_.GetStatus() -ne [MinerStatus]::Running} | ForEach-Object {
 
-        if ($_.DeviceName -notlike "CPU*") {
+        if ($_.DeviceModel -ne "CPU") {
             if ($Session.Config.EnableResetVega) {Reset-Vega $_.DeviceName}
 
             #Set MSI Afterburner profile
@@ -1644,7 +1644,7 @@ function Invoke-Core {
         $_.SetPriorities(
             $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityCPU}),
             $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityGPU}),
-            $(if ($_.MiningAffinity -ne $null) {$_.MiningAffinity} elseif ($_.DeviceName -notlike "CPU*") {$Session.Config.GPUMiningAffinity})
+            $(if ($_.MiningAffinity -ne $null) {$_.MiningAffinity} elseif ($_.DeviceModel -ne "CPU") {$Session.Config.GPUMiningAffinity})
         )
 
         $_.SetStatus([MinerStatus]::Running)
