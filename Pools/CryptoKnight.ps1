@@ -37,7 +37,7 @@ $Pool_Algorithms = ([regex]"\/rpc\/([a-z]+)\/").Matches($Pool_Ngix) | Foreach-Ob
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";    port = 5541;  fee = 0.0; rpc = "aeon"}
     [PSCustomObject]@{coin = "Alloy";       symbol = "XAO";  algo = "CnAlloy";     port = 5661;  fee = 0.0; rpc = "alloy"}
-    [PSCustomObject]@{coin = "Arqma";       symbol = "ARQ";  algo = "CnLiteV7";    port = 3731;  fee = 0.0; rpc = "arq"}
+    [PSCustomObject]@{coin = "Arqma";       symbol = "ARQ";  algo = "CnTurtle";    port = 3731;  fee = 0.0; rpc = "arq"}
     [PSCustomObject]@{coin = "Arto";        symbol = "RTO";  algo = "CnArto";      port = 51201; fee = 0.0; rpc = "arto"}
     [PSCustomObject]@{coin = "BBS";         symbol = "BBS";  algo = "CnLiteV7";    port = 19931; fee = 0.0; rpc = "bbs"}
     [PSCustomObject]@{coin = "BitcoinNote"; symbol = "BTCN"; algo = "CnLiteV7";    port = 9732;  fee = 0.0; rpc = "btcn"}
