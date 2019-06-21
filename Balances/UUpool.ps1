@@ -24,16 +24,16 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
     try {
         $Request = Invoke-RestMethodAsync "https://uupool.cn/api/getWallet.php?coin=$($_.coin)&address=$(if ($Config.Pools.$Name.Wallets.$Pool_Currency) {$Config.Pools.$Name.Wallets.$Pool_Currency} else {$Config.Pools.$Name.Wallets."$($_.coin)"})" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
-        if ($Request.status -ne "OK") {
+        if (-not $Request) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
-                Currency    = $_.Name
-                Balance     = [double]$Request.balance
+                Currency    = if ($Session.Rates."$($_.coin)") {$_.coin} else {$Pool_Currency}
+                Balance     = [double]$Request.balance / 1e8
                 Pending     = 0
-                Total       = [double]$Request.balance
-                Paid        = [double]$Request.paid
+                Total       = [double]$Request.balance / 1e8
+                Paid        = [double]$Request.paid / 1e8
                 Earned      = 0
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()

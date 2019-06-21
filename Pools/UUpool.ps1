@@ -98,7 +98,6 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         DataWindow    = $DataWindow
                         Workers       = $Pool_RequestWorkers.data
                         Hashrate      = $Stat.HashRate_Live
-                        PPS           = $true
                     }
                 }
             }
