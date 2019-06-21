@@ -34,7 +34,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
     #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "-N 1"} #Lyra2RE3
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-N 1"} #Lyra2z330
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-N 1"} #Lyra2z330
     #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-N 1"} #NeoScrypt
     #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake

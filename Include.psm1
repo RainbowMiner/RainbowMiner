@@ -218,7 +218,22 @@ function Set-UnprofitableAlgos {
             Write-Log -Level Warn "Unprofitable algo API failed. "
         }
         if ($Request -and $Request.Count -gt 10) {
-            $Session.UnprofitableAlgos = @($Request | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
+            $Session.UnprofitableAlgos = [PSCustomObject]@{
+                "Global" = @($Request | Where-Object {$_ -notmatch ':'} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
+                "Pools"  = [PSCustomObject]@{}
+            }
+            $AddPools = [PSCustomObject]@{}
+            $Request | Where-Object {$_ -match ':'} | Foreach-Object {
+                $a = $_ -split ':'
+                $pool = $a[0]
+                $algo = Get-Algorithm $a[1]
+                if ($AddPools.$pool -eq $null) {$AddPools | Add-Member $pool @() -Force}
+                if ($AddPools.$pool -inotcontains $algo) {$AddPools.$pool += $algo}
+            }
+            $AddPools.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+                $pool = $_
+                $Session.UnprofitableAlgos.Pools | Add-Member $pool @($AddPools.$pool | Sort-Object) -Force
+            }
             Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Session.UnprofitableAlgos -MD5hash $Key > $null
         }
     }
