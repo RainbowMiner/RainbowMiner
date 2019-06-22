@@ -36,7 +36,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "italo"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Italo 2 threads
     [PSCustomObject]@{MainAlgorithm = "marketcash" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-MarketCash 2 threads
     [PSCustomObject]@{MainAlgorithm = "mox"        ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Mox/Red 2 thread
-    [PSCustomObject]@{MainAlgorithm = "normalv4"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV4/R 2 thread
+    [PSCustomObject]@{MainAlgorithm = "normalv4"   ; Threads = 2; MinMemGb = 2; Params = ""; ExtendInterval = 2} # CryptoNightV4/R 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv4_64"; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV4_64 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv7"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV7 2 thread
     [PSCustomObject]@{MainAlgorithm = "normalv8"   ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNightV8 2 thread
@@ -149,22 +149,24 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 								nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
 							})
 						}
-						Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disabletweaking --disablegpuwatchdog --enablecoinforking --maxnosharesent 120 --enablegpurampup $($Params)".Trim()
+						Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disabletweaking --disablegpuwatchdog --enablecoinforking --maxnosharesent 120 $($Params)".Trim()
 				}
 
 				[PSCustomObject]@{
-					Name        = $Miner_Name
-					DeviceName  = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path        = $Path
-					Arguments   = $Arguments
-					HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API         = "SrbMiner"
-					Port        = $Miner_Port
-					Uri         = $Uri
-					DevFee      = $DevFee
-					ManualUri   = $ManualUri
-					EnvVars     = @("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = $Arguments
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "SrbMiner"
+					Port           = $Miner_Port
+					Uri            = $Uri
+					DevFee         = $DevFee
+					ManualUri      = $ManualUri
+					EnvVars        = @("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = $_.ExtendInterval
 				}
 			}
 		}

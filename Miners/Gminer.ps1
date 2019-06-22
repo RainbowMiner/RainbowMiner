@@ -32,7 +32,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGb = 3;                     Params = "--algo 150_5";     Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true} #Equihash 150,5/BEAM
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGb = 3.0;                   Params = "--algo 192_7";     Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGb = 0.5;                   Params = "--algo 210_9";     Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 210,9
-    [PSCustomObject]@{MainAlgorithm = "EquihashVds";  MinMemGb = 2;                     Params = "--algo vds";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 96,5 + Scrypt "VDS"
+    [PSCustomObject]@{MainAlgorithm = "EquihashVds";  MinMemGb = 2;                     Params = "--algo vds";       Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true} #Equihash 96,5 + Scrypt "VDS"
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
