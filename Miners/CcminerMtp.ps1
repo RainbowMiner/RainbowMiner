@@ -8,17 +8,18 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.20t-ccminermtp/ccminermtp-v1.1.20t-linux.7z"
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer-linux-cuda"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.22-ccminermtp/ccminermtp-v1.1.22-linux.7z"
+    $Cuda = "9.2"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $PathNh = ".\Bin\NVIDIA-CcminerMTP\ccminer-nh.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.20t-ccminermtp/ccminermtp-v1.1.20t-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.22-ccminermtp/ccminermtp-v1.1.22-win.7z"
+    $Cuda = "10.1"
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
-$Cuda = "10.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -43,6 +44,16 @@ if ($InfoOnly) {
 }
 
 if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name)) {return}
+
+if ($IsLinux) {
+    if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.1") {
+        $Path += "101"
+    } elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.0") {
+        $Path += "100"
+    } else {
+        $Path += "92"
+    }
+}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
