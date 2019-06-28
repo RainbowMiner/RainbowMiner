@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'zen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.4-jayddee/cpuminer-opt-3.9.4-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.5-jayddee/cpuminer-opt-3.9.5-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -125,7 +125,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
+    $DeviceParams = "--hash-meter $(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
 
     $Commands | ForEach-Object {
 
