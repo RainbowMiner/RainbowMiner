@@ -15,11 +15,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3n5-miniz/miniZ_v1.3n5_cuda10_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4o-miniz/miniZ_v1.4o_cuda10_linux-x64.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3n5-miniz/miniZ_v1.3n5_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4o-miniz/miniZ_v1.4o_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -27,11 +27,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3n5-miniz/miniZ_v1.3n5_cuda10_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4o-miniz/miniZ_v1.4o_cuda10_win-x64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3n5-miniz/miniZ_v1.3n5_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.4o-miniz/miniZ_v1.4o_win-x64.zip"
             Cuda = "8.0"
         }
     )
@@ -43,7 +43,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--par=96,5"}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--par=144,5"} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 2; Params = "--par=192,7"} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGB = 2; Params = "--par=125,4"} #Equihash 125,4 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; Params = "--par=150,5"} #Equihash 150,5 (BEAM)
+    #[PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 4; Params = "--par=210,9"} #Equihash 210,9 (AION)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
