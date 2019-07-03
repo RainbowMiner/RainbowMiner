@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-lolminer/lolMiner_v081_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-lolminer/lolMiner_v083_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.1-lolminer/lolMiner_v081_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.3-lolminer/lolMiner_v083_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
@@ -22,11 +22,12 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 4; MinMemGBWin10 = 8; Params = "--coin GRIN-AT31"; Fee=1; ExtendInterval = 2; Vendor = @("AMD","NVIDIA"); NH = $true} #Cuckatoo31
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 4; MinMemGBWin10 = 8; Params = "--coin GRIN-AT31"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 2; MinMemGBWin10 = 2; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; MinMemGBWin10 = 2; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; MinMemGBWin10 = 3; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGB = 2; MinMemGBWin10 = 3; Params = "--coin ZEL";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 150,4
     [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Equihash 150,5
 )
 
