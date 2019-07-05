@@ -15,19 +15,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.1_linux.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.0_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.0_linux.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.2_linux.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.1_linux.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -35,19 +35,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.1_windows.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_10.0_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.0_windows.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.2_windows.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.1-cryptodredge/CryptoDredge_0.20.1_cuda_9.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.1_windows.zip"
             Cuda = "9.1"
         }
     )
@@ -98,7 +98,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16s";        NH = $true;  MinMemGb = 1; Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";         NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X17
     [PSCustomObject]@{MainAlgorithm = "x21s";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X21s
-    [PSCustomObject]@{MainAlgorithm = "x22i";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
+    #[PSCustomObject]@{MainAlgorithm = "x22i";        NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 2} #X22i
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
