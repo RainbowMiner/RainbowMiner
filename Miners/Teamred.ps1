@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.3-teamred/teamredminer-v0.5.3-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.5-teamred/teamredminer-v0.5.5-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.3-teamred/teamredminer-v0.5.3-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.5-teamred/teamredminer-v0.5.5-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
@@ -31,8 +31,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";  MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8_trtl"; MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cnv8_upx2"; MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckatoo31";MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; MinMemGb = 1; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
