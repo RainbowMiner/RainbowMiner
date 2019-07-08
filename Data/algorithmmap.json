@@ -1,0 +1,8 @@
+{
+    "Equihash25x4": "Equihash (125,4)",
+    "Equihash24x5": "Equihash (144,5)",
+    "Equihash25x5": "Equihash (150,5)",
+    "Equihash24x7": "Equihash (192,7)",
+    "Equihash21x9": "Equihash (210,9)",
+    "Equihash16x5": "Equihash (96,5)"
+}

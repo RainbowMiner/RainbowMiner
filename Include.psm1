@@ -2740,6 +2740,33 @@ function Get-Algorithm {
     }
 }
 
+function Get-MappedAlgorithm {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Algorithm
+    )
+    if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
+    $Algorithm | Foreach-Object {if ($Global:GlobalAlgorithmMap.ContainsKey($_)) {$Global:GlobalAlgorithmMap[$_]} else {$_}}
+}
+
+function Get-AlgorithmMap {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
+        [hashtable]$Global:GlobalAlgorithmMap = @{}
+        (Get-Content "Data\algorithmmap.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
+        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
+    }
+    if (-not $Silent) {
+        $Global:GlobalAlgorithmMap
+    }
+}
+
 function Get-EquihashCoinPers {
     [CmdletBinding()]
     param(
