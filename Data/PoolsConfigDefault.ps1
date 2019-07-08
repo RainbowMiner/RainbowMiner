@@ -179,9 +179,6 @@
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
-        "YiiMP" = [PSCustomObject]@{
-            Currencies=@("RVN","SIN")
-        }
         "ZergPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=12}
             Currencies=@("BTC")
