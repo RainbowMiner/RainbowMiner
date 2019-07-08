@@ -15,18 +15,45 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-try {
-    $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info" -tag $Name
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
-}
+if ($Platform -in @("2","v2","new")) {
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name
+        $Pool_MiningRequest = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/algorithms/" -tag $Name -cycle 3600
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) has failed. "
+        return
+    }
 
-if (($Pool_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
-    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
-    return
+    if (($Pool_Request.miningAlgorithms | Measure-Object).Count -le 10 -or ($Pool_MiningRequest.miningAlgorithms | Measure-Object).Count -le 10) {
+        Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+        return
+    }
+    $Pool_MiningRequest.miningAlgorithms | Where-Object {$_.Enabled} | Foreach-Object {
+        $Pool_Port = $_.port
+        $Pool_Algo = $_.algorithm
+        $Pool_Request.miningAlgorithms | Where-Object algorithm -eq $Pool_Algo | Foreach-Object {$_ | Add-Member port $Pool_Port -Force}
+    }
+
+    $Pool_Request = $Pool_Request.miningAlgorithms
+
+} else {
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=simplemultialgo.info" -tag $Name
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) has failed. "
+        return
+    }
+
+    if (($Pool_Request.result.simplemultialgo | Measure-Object).Count -le 1) {
+        Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+        return
+    }
+
+    $Pool_Request = $Pool_Request.result.simplemultialgo
 }
 
 [hashtable]$Pool_Algorithms = @{}
@@ -37,10 +64,10 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
-$Pool_Request.result.simplemultialgo | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
+$Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
     $Pool_Host = "nicehash.com"
     $Pool_Port = $_.port
-    $Pool_Algorithm = $_.name
+    $Pool_Algorithm = if ($_.name) {$_.name} else {$_.title}
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = ""
