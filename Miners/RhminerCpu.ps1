@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-RHminer\rhminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.2-rhminer/rhminer.1.5.2.Linux.CPU.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.3-rhminer/rhminer.1.5.3.Linux.CPU.zip"
 } else {
     $Path = ".\Bin\CPU-RHminer\rhminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.2-rhminer/rhminer.1.5.2.Windows.CPU.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.3-rhminer/rhminer.1.5.3.Windows.CPU.zip"
 }
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "131{0:d2}"
