@@ -62,8 +62,8 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Path = $Path
 					Arguments = "-apiport $($Miner_Port) -s $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -su $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -pw $($Pools.$Algorithm_Norm.Pass)"}) -cpu$($DeviceParams) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					#API = "Claymore" api is currently broken
-                    API = "RHWrapper"
+					API = "Claymore"
+                    #API = "RHWrapper" just in case the claymore API is broken
 					Port = $Miner_Port
 					Uri = $Uri
 					FaultTolerance = $_.FaultTolerance
