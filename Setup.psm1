@@ -174,12 +174,12 @@ function Start-Setup {
             $DownloadServerNow = $false
 
             Switch ($SetupType) {
-                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
+                "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashplatform","nicehashapiid","nicehashapikey","nicehashsecret","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","excludedevicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashapiid","nicehashapikey","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashplatform","nicehashapiid","nicehashapikey","nicehashsecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -192,12 +192,16 @@ function Start-Setup {
 
             if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
                 $NicehashWallet = $PoolsActual.Nicehash.BTC
+                $NicehashPlatform = $PoolsActual.Nicehash.Platform
                 $NicehashAPIID  = $PoolsActual.Nicehash.API_ID
                 $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
+                $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
             } else {
                 $NicehashWallet = "`$Wallet"
+                $NicehashPlatform = ""
                 $NicehashAPIID = ""
                 $NicehashAPIKey = ""
+                $NicehashAPISecret = ""
             }
 
             if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
@@ -318,9 +322,28 @@ function Start-Setup {
                             $Config.PoolName = ($PoolNames | Select-Object -Unique | Sort-Object) -join ','
                         }
 
-                        "nicehashapiid" {
+                        "nicehashplatform" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHash") {
+                                if ($IsInitialSetup) {
+                                    Write-Host " "
+                                    Write-Host "Nicehash is currently in a transition to a new platform. You need to select, which platform to use." -ForegroundColor Cyan
+                                    Write-Host "Read all information here: https://www.nicehash.com/news/new-nicehash-platform-now-live-updates" -ForegroundColor Cyan
+                                    Write-Host "- if you have registered on www.nicehash.com, you need to select the old (v1) platform." -ForegroundColor Cyan
+                                    Write-Host "- if you have registered on new.nicehash.com, you need to select the new (v2) platform." -ForegroundColor Cyan
+                                    Write-Host " "
+                                    Write-Host "You may change this setting anytime later" -ForegroundColor Cyan
+                                    Write-Host " "
+                                }
+                                $NicehashPlatform = Read-HostArray -Prompt "Select Nicehash platform (v1=old or v2=new)" -Default $NicehashPlatform -Valid @("1","v1","old","2","v2","new") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+
+                        "nicehashapiid" {
+                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
+                            if ($PoolNames -icontains "NiceHash" -and $NicehashPlatform -notin @("2","v2","new")) {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
                                     Write-Host "You will mine on Nicehash. If you want to see your balance in RainbowMiner, you can now enter your API ID (a number) and the read-only API Key. You find these two values on Nicehash's `"Settings`" page. " -ForegroundColor Cyan
@@ -335,7 +358,25 @@ function Start-Setup {
                         "nicehashapikey" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHash") {
-                                $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                if ($NicehashPlatform -notin @("2","v2","new")) {
+                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                } else {
+                                    if ($IsInitialSetup) {
+                                        Write-Host " "
+                                        Write-Host "You will mine on Nicehash (new platform). If you want to see your balance in RainbowMiner, you can now enter your API Key and the API Secret. Create a new key-pair on `"My Settings->API key`" page, `"Wallet permission`" needs to be set. " -ForegroundColor Cyan
+                                        Write-Host " "
+                                    }
+                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (create a key pair on `"My Settings->API key`", enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+
+                        "nicehashapisecret" {
+                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
+                            if ($PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
+                                $NicehashAPISecret = Read-HostString -Prompt "Enter your Nicehash API Secret (enter including all '-')" -Default $NicehashAPISecret -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -694,8 +735,10 @@ function Start-Setup {
                                                 } elseif ($Var -eq "Pools") {
                                                     if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
                                                         $NicehashWallet = $PoolsActual.Nicehash.BTC
+                                                        $NicehashPlatform = $PoolsActual.Nicehash.Platform
                                                         $NicehashAPIID  = $PoolsActual.Nicehash.API_ID
                                                         $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
+                                                        $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
                                                     }
 
                                                     if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
@@ -1369,13 +1412,17 @@ function Start-Setup {
                             $CheckPools = @()
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
+                                $PoolsActual.NiceHash | Add-Member Platform $NicehashPlatform -Force
                                 $PoolsActual.NiceHash | Add-Member API_ID $NicehashAPIID -Force
                                 $PoolsActual.NiceHash | Add-Member API_Key $NicehashAPIKey -Force
+                                $PoolsActual.NiceHash | Add-Member API_Secret $NicehashAPISecret -Force
                             } else {
                                 $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                         BTC     = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
+                                        Platform = $NicehashPlatform
                                         API_ID  = $NicehashAPIID
                                         API_Key = $NicehashAPIKey
+                                        API_Secret = $NicehashAPISecret
                                 }) -Force
                                 $CheckPools += "NiceHash"
                             }

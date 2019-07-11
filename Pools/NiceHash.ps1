@@ -15,7 +15,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-if ($Platform -in @("2","v2","new")) {
+$Platform_Version = if ($Platform -in @("2","v2","new")) {2} else {1}
+
+if ($Platform_Version -eq 2) {
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name
         $Pool_MiningRequest = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/algorithms/" -tag $Name -cycle 3600
@@ -65,7 +67,6 @@ $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 $Pool_PoolFee = 2.0
 
 $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForEach-Object {
-    $Pool_Host = "nicehash.com"
     $Pool_Port = $_.port
     $Pool_Algorithm = if ($_.name) {$_.name} else {$_.title}
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -75,7 +76,10 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForE
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaNiceHash"} #temp fix
     if ($Pool_Algorithm_Norm -eq "Decred") {$Pool_Algorithm_Norm = "DecredNiceHash"} #temp fix
 
-    $Divisor = 1e9
+    Switch($Platform_Version) {
+        1 {$Divisor = 1e9; $Pool_Host = ".nicehash.com"}
+        2 {$Divisor = 1e8; $Pool_Host = "-new.nicehash.com"}
+    }
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
@@ -91,7 +95,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForE
                     $This_Host = "nhmp.$Pool_Region.$Pool_Host"
                 } else {
                     $This_Port = $Pool_Port
-                    $This_Host = "$Pool_Algorithm.$Pool_Region.$Pool_Host"
+                    $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
                 }
                 $Pool_Failover = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_.$Pool_Host"}})
                 [PSCustomObject]@{
