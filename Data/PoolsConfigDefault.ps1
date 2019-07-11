@@ -145,6 +145,12 @@
             Currencies=@("BTC")
             Autoexchange=$true
         }
+        "NiceHashV2" = [PSCustomObject]@{
+            Fields=[PSCustomObject]@{API_Key="";API_Secret="";StatAverage="Minute_5"}
+            SetupFields=[PSCustomObject]@{API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
+            Currencies=@("BTC")
+            Autoexchange=$true
+        }
         "NLPool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{Penalty=16}
             Currencies=@("BTC")

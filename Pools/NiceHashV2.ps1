@@ -15,7 +15,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-$Platform_Version = if ($Platform -in @("2","v2","new")) {2} else {1}
+$Platform_Version = 2
 
 if ($Platform_Version -eq 2) {
     try {

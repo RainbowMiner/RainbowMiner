@@ -332,7 +332,9 @@ function Start-Setup {
                                     Write-Host "- if you have registered on www.nicehash.com, you need to select the old (v1) platform." -ForegroundColor Cyan
                                     Write-Host "- if you have registered on new.nicehash.com, you need to select the new (v2) platform." -ForegroundColor Cyan
                                     Write-Host " "
-                                    Write-Host "You may change this setting anytime later" -ForegroundColor Cyan
+                                    Write-Host "Hints:" -ForegroundColor Cyan
+                                    Write-Host "- You may change this setting anytime later" -ForegroundColor Cyan
+                                    Write-Host "- If you want to mine on BOTH platforms, select v1 now and setup the temporary pool NiceHashV2 later." -ForegroundColor Cyan
                                     Write-Host " "
                                 }
                                 $NicehashPlatform = Read-HostArray -Prompt "Select Nicehash platform (v1=old or v2=new)" -Default $NicehashPlatform -Valid @("1","v1","old","2","v2","new") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
