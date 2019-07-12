@@ -9,11 +9,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-2.14.4-xenial-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.16.0b-xmrig/xmrig-2.16.0-beta-xenial-x64.tar.gz"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-2.14.4-msvc-win64-rbm.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.16.0b-xmrig/xmrig-2.16.0-beta-msvc-win64-rbm.7z"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
@@ -43,6 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "randomx/wow";            Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -83,9 +84,15 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Config = [PSCustomObject]@{
                         "algo"            = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                         "api" = [PSCustomObject]@{
-                            "port"         = $Miner_Port
-                            "access-token" = $null
+                            "id"           = $null
                             "worker-id"    = $null
+                        }
+                        "http" = [PSCustomObject]@{
+	                        "enabled"      = $true
+	                        "host"         = "127.0.0.1"
+	                        "port"         = [int]$Miner_Port
+	                        "access-token" = $null
+	                        "restricted"   = $true
                         }
                         "background"   = $false
                         "cuda-bfactor" = 10

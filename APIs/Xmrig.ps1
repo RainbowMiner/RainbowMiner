@@ -5,10 +5,11 @@ class Xmrig : Miner {
     [String]GetArguments() {
         if ($this.Arguments -notlike "{*}") {return $this.Arguments}
 
+        $Miner_Port        = if ($Parameters.Config.api.port) {$Parameters.Config.api.port} else {$Parameters.Config.http.port}
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
         $ConfigFileString  = "$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if (($Parameters.Devices | Measure-Object).Count) {"-$(($Parameters.Devices | Foreach-Object {'{0:x}' -f $_}) -join '')"})"
-        $ConfigFile        = "config_$($ConfigFileString)_$($Parameters.Config.api.port)-$($Parameters.Threads).json"
+        $ConfigFile        = "config_$($ConfigFileString)_$($Miner_Port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "default_$($ConfigFileString).json"
         $ThreadsConfig     = [PSCustomObject]@{}
         $LogFile           = "$Miner_Path\log_$($ConfigFileString).txt"
