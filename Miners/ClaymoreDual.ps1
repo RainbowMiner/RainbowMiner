@@ -8,7 +8,7 @@ param(
 if (-not $IsLinux -and -not $IsWindows) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\Ethash-Claymore\ethdcrminer64"
+    $Path = ".\Bin\Ethash-ClaymoreDual\ethdcrminer64"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_linux.tar.gz"
