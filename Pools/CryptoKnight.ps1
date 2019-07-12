@@ -68,7 +68,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Stellite";    symbol = "XTL";  algo = "CnHalf";      port = 16221; fee = 0.0; rpc = "stellite"}
     [PSCustomObject]@{coin = "Swap";        symbol = "XWP";  algo = "Cuckaroo29s"; port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
     [PSCustomObject]@{coin = "Triton";      symbol = "TRIT"; algo = "CnLiteV7";    port = 6631;  fee = 0.0; rpc = "triton"}
-    #[PSCustomObject]@{coin = "WowNero";     symbol = "WOW";  algo = "CnWow";       port = 50901; fee = 0.0; rpc = "wownero"}
+    #[PSCustomObject]@{coin = "WowNero";     symbol = "WOW";  algo = "RandomWow";   port = 50901; fee = 0.0; rpc = "wownero"}
 )
 
 $Pools_Data | Where-Object {$Pool_Algorithms -icontains $_.rpc} | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
