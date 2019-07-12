@@ -27,7 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Ryo";             symbol = "RYO";  algo = "CnGpu";       port = 5555; fee = 1.0; rpc = "ryo";     user="%wallet%+%worker%"}
     #[PSCustomObject]@{coin = "Saronite";        symbol = "XRN";  algo = "CnHaven";     port = 5599; fee = 1.0; rpc = "xrn";     user="%wallet%+%worker%"}
     #[PSCustomObject]@{coin = "Solace";          symbol = "XPP";  algo = "CnHeavy";     port = 5588; fee = 1.0; rpc = "solace";  user="%wallet%+%worker%"}
-    [PSCustomObject]@{coin = "Swap";            symbol = "XWP";  algo = "Cuckaroo29s"; port = 5588; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
+    [PSCustomObject]@{coin = "Swap";            symbol = "XWP";  algo = "Cuckaroo29s"; port = 6080; fee = 1.0; rpc = "xfh";     user="%wallet%+%worker%"; divisor = 32}
     [PSCustomObject]@{coin = "Wow";             symbol = "WOW";  algo = "RandomWow";   port = 6090; fee = 1.0; rpc = "wow";     user="%wallet%+%worker%"}
     [PSCustomObject]@{coin = "Xtend";           symbol = "XTNC"; algo = "CnTurtle";    port = 7010; fee = 1.0; rpc = "xtnc";    user="%wallet%+%worker%"}
 
