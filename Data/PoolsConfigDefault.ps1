@@ -140,14 +140,14 @@
             Currencies=@("ETH")
         }
         "NiceHash" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{API_ID="";API_Key="";API_Secret="";Platform="";StatAverage="Minute_5"}
-            SetupFields=[PSCustomObject]@{Platform="Select Nicehash platform (v1=old or v2=new)";API_ID="Enter your Nicehash API ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
+            Fields=[PSCustomObject]@{OrganizationID="";API_ID="";API_Key="";API_Secret="";Platform="";StatAverage="Minute_5"}
+            SetupFields=[PSCustomObject]@{Platform="Select Nicehash platform (v1=old or v2=new)";OrganizationID="Enter your Nicehash Organization ID (pulls and adds NH balance)";API_ID="Enter your Nicehash API ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
             Currencies=@("BTC")
             Autoexchange=$true
         }
         "NiceHashV2" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{API_Key="";API_Secret="";StatAverage="Minute_5"}
-            SetupFields=[PSCustomObject]@{API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
+            Fields=[PSCustomObject]@{OrganizationID="";API_Key="";API_Secret="";StatAverage="Minute_5"}
+            SetupFields=[PSCustomObject]@{OrganizationID="Enter your Nicehash Organization ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
             Currencies=@("BTC")
             Autoexchange=$true
         }
