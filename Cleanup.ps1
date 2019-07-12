@@ -441,6 +441,10 @@ try {
         $AddAlgorithm += @("EquihashVds")
     }
 
+    if ($Version -le (Get-Version "4.3.5.0")) {
+        $AddAlgorithm += @("Cuckarood29","RandomWow")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
