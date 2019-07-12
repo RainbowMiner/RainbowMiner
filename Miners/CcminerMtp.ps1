@@ -47,11 +47,11 @@ if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersi
 
 if ($IsLinux) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.1") {
-        $Path += "101"
+        $Path += "10.1"
     } elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.0") {
-        $Path += "100"
+        $Path += "10.0"
     } else {
-        $Path += "92"
+        $Path += "9.2"
     }
 }
 
