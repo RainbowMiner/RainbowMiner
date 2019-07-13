@@ -97,7 +97,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForE
                     $This_Port = $Pool_Port
                     $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
                 }
-                $Pool_Failover = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_.$Pool_Host"}})
+                $Pool_Failover = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_$Pool_Host"}})
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
