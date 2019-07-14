@@ -40,6 +40,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #pluck
     [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
     [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
+    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""; ExtendInterval = 2} #Scrypt8k
     [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""; ExtendInterval = 2} #scryptjane:nf
     [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""; ExtendInterval = 2} #sha256q
