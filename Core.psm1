@@ -1804,7 +1804,7 @@ function Invoke-Core {
     }
 
     #Display active miners list
-    $Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking -or $_.GetStatus() -eq [MinerStatus]::Running) -and (-not $_.Donator -or $_.GetStatus() -eq [MinerStatus]::Running)} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
+    $Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking -or $_.GetStatus() -eq [MinerStatus]::Running) -and (-not $_.Donator -or $_.GetStatus() -eq [MinerStatus]::Running) -and ($_.GetStatus() -ne [MinerStatus]::Idle -or $_.GetActiveLast() -gt (Get-Date).AddSeconds(-5*$Session.Config.Interval).ToLocalTime())} | Sort-Object -Property @{Expression = {$_.GetStatus()}; Descending = $False}, @{Expression = {$_.GetActiveLast()}; Descending = $True} | Select-Object -First (1 + 6 + 6) | Format-Table -GroupBy @{Label = "Status"; Expression = {$_.GetStatus()}} -Wrap (
         @{Label = "Last Speed"; Expression = {$_.Speed_Live | ForEach-Object {"$($_ | ConvertTo-Hash)/s"}}; Align = 'right'}, 
         @{Label = "Active"; Expression = {"{0:dd}d/{0:hh}h/{0:mm}m" -f $_.GetActiveTime()}}, 
         @{Label = "Started"; Expression = {Switch ($_.GetActivateCount()) {0 {"Never"} 1 {"Once"} Default {"$_ Times"}}}},      
