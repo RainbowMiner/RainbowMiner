@@ -445,6 +445,11 @@ try {
         $AddAlgorithm += @("Cuckarood29","RandomWow")
     }
 
+    if ($Version -le (Get-Version "4.3.5.4")) {
+        $AddAlgorithm += @("Scrypt8k")
+        $CacheCleanup = $true
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
