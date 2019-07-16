@@ -91,7 +91,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
-                        ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region}
+                        ScratchPadUrl = if ($Pool_ScratchPadUrl) {$Pool_ScratchPadUrl -replace "#region",$Pool_Region} else {$null}
+                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"}
                     }
                 }
                 $Pool_SSL = $true

@@ -187,11 +187,12 @@ foreach ($Worker1 in $Workers) {
                             Pass     = "x"
                         }
                     })
+                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344)) {"ethproxy"}
                 }
             }
 
             if (-not $Pool_RigEnable) {
-                if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented"))) {
+                if (-not (Invoke-PingStratum -Server $Pool_Rig.server -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -in @(3322,3333,3344)) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented"))) {
                     $Pool_Failover | Select-Object | Foreach-Object {if (Invoke-PingStratum -Server $_ -Port $Pool_Rig.port -User "$($User).$($Pool_RigId)" -Pass "x" -Worker $Worker1 -Method $(if ($Pool_Rig.port -eq 3322 -or $Pool_Rig.port -eq 3333 -or $Pool_Rig.port -eq 3344) {"EthProxy"} else {"Stratum"}) -WaitForResponse ($_.status.status -eq "rented")) {return}}
                 }
             }

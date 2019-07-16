@@ -82,6 +82,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
                 Hashrate      = $Stat.HashRate_Live
                 #TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"}
             }
         }
     }
