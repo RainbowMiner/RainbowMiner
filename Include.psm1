@@ -2978,6 +2978,7 @@ class Miner {
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
     [Int]$MultiProcess = 0
+    [DateTime]$ActiveLast = [DateTime]::MinValue
     hidden [System.Management.Automation.Job]$Process = $null
     [Int[]]$ProcessId = @()
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
@@ -3078,6 +3079,7 @@ class Miner {
     hidden StartMiningPreProcess() {
         $this.Stratum = @()
         $this.Algorithm | Foreach-Object {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
+        $this.ActiveLast = Get-Date
     }
 
     hidden StartMiningPostProcess() { }
@@ -3113,6 +3115,11 @@ class Miner {
 
     [DateTime]GetActiveLast() {
         $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+
+        if (-not $MiningProcess -and -not $this.Process) {
+            return $this.ActiveLast
+        }
+
         $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
 
@@ -3333,6 +3340,7 @@ class Miner {
             $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
             $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
         }
+        $this.ActiveLast = Get-Date
     }
 
     [Int]GetMinerDataCount() {
