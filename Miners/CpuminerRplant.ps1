@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}else{'sse2'}))"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.9-rplant/cpuminer-rplant-4.0.9-linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.12-rplant/cpuminer-rplant-4.0.12-linux.tar.gz"
 } else {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}elseif([Environment]::Is64BitOperatingSystem){'sse2'}else{'sse2-w32'})).exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.9-rplant/cpuminer-rplant-4.0.9-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.12-rplant/cpuminer-rplant-4.0.12-win.zip"
 }
 $ManualUri = "https://pool.rplant.xyz/miners"
 $Port = "532{0:d2}"
@@ -25,13 +25,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""; ExtendInterval = 2} #Argon2d500
     [PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""; ExtendInterval = 2} #Argon2d4096
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""; ExtendInterval = 2} #Argon2m
+    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; ExtendInterval = 2} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""; ExtendInterval = 2} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""; ExtendInterval = 2} #Lyra2cz
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #YescryptR32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""; ExtendInterval = 2} #YescryptR8g
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""; ExtendInterval = 2} #YescryptR8g (KOTO)
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YespowerR16
+    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""; ExtendInterval = 2} #Yespower LighningCash-Gold v3
+    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""; ExtendInterval = 2} #Yespower SugarChain
+    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""; ExtendInterval = 2} #Yespower Uranium-X
     [PSCustomObject]@{MainAlgorithm = "Binarium_hash_v1"; Params = ""; ExtendInterval = 2} #Binarium
 )
 
