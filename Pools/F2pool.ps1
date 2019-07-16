@@ -61,7 +61,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             PoolFee       = $_.fee
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"}
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
         }
     }
 }

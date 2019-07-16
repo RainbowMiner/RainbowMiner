@@ -187,7 +187,7 @@ foreach ($Worker1 in $Workers) {
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"}
+                    EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
                 }
             }
 

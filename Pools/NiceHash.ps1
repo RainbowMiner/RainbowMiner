@@ -125,7 +125,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00) -or $InfoOnly} | ForE
                             Pass     = "x"
                         }
                     })
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"}
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
                 }
 
                 if (@("Cryptonight","Equihash","Equihash25x5") -icontains $Pool_Algorithm_Norm) {

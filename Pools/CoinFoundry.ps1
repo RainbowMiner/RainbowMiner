@@ -112,7 +112,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"}
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} else {$null}
             }
             $Pool_SSL = $true
         }

@@ -87,7 +87,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Hashrate      = $Pool_Hashrate
             DataWindow    = $DataWindow
             WTM           = $true
-            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"}
+            EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
         }
         $Pool_SSL = $true
     }

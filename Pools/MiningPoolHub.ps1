@@ -88,7 +88,7 @@ $Pool_Request.return | ForEach-Object {
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"}
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
