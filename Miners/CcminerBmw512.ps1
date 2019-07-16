@@ -7,20 +7,20 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-Cool\coolMiner-x64.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.7-ccminercool/coolMiner-x64-v1-7.7z"
-$Port = "104{0:d2}"
-$ManualUri = "https://bitcointalk.org/index.php?topic=4412370.0"
-$DevFee = 1.0
-$Cuda = "10.0"
+$Path = ".\Bin\NVIDIA-CcminerBMW512\ccminer.exe"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2.5-ccminerbmw512/ccminerbmw512x86.7z"
+$ManualUri = "https://github.com/Minerx117/ccminer-bmw512/releases"
+$Port = "133{0:d2}"
+$DevFee = 0.0
+$Cuda = "9.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1 --submit-stale"} #Lyra2z
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = "-a bmw512"; ExtendInterval = 2} #BMW512
 )
 
-$Name = (Get-Item $script:MyInvocation.MyCommand.Path).BaseName
+$Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 if ($InfoOnly) {
     [PSCustomObject]@{
@@ -53,25 +53,20 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				$Pool_RegionParams = Switch ($Pools.$Algorithm_Norm.Region) {
-					"Europe" {" --FeeServer 0"}
-					"US"     {" --FeeServer 1"}
-					"Asia"   {" --FeeServer 2"}
-				}
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
 					Name = $Miner_Name
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$($Pool_RegionParams) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+					Arguments = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 					API = "Ccminer"
 					Port = $Miner_Port
-					URI = $Uri
+					Uri = $Uri
+					DevFee = 0.0
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
-					DevFee = $DevFee
 					ManualUri = $ManualUri
 				}
 			}
