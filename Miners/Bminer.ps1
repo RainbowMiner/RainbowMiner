@@ -22,14 +22,14 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
-    [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
-    [PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; NH = $true;  MinMemGb = 6; MinMemGbW10 = 8; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
+    #[PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
+    #[PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 4; Params = ""; DevFee = 2.0; Vendor = @("AMD","NVIDIA")} #" -nofee" #Beam
+    #[PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; NH = $true;  MinMemGb = 6; MinMemGbW10 = 8; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
     #[PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; NH = $false; MinMemGb = 8; MinMemGbW10 = 11; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
     #[PSCustomObject]@{MainAlgorithm = "equihash";     SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash
     #[PSCustomObject]@{MainAlgorithm = "equihash1445"; SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Equihash 144,5
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = ""; NH = $false; MinMemGb = 4; Params = ""; DevFee = 0.65; Vendor = @("NVIDIA")} #Ethash (ethminer is faster and no dev fee)
-    [PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2} #" -nofee" #Bytom
+    #[PSCustomObject]@{MainAlgorithm = "tensority";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2} #" -nofee" #Bytom
     #[PSCustomObject]@{MainAlgorithm = "zhash";        SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake2s";  NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake14r"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Decred
@@ -82,8 +82,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					}
    
                     $Stratum = if ($MainAlgorithm -eq "equihash") {"stratum"}
-                               elseif ($MainAlgorithm -eq "ethash" -and @("F2pool","2Miners","Dwarfpool","Sparkpool") -icontains $Pools.$MainAlgorithm_Norm.Name) {"ethproxy"}
-                               elseif ($MainAlgorithm -eq "ethash" -and @("Coinfoundry","MiningPoolHub","MiningPoolHubCoins") -icontains $Pools.$MainAlgorithm_Norm.Name) {"ethstratum"}
+                               elseif ($MainAlgorithm -eq "ethash") {
+                                    Switch($Pools.$MainAlgorithm_Norm.EthMode) {
+                                        "minerproxy" {"ethstratum"}
+                                        "ethproxy"   {"ethproxy"}
+                                        default {"ethash"}
+                                    }
+                               }
                                else {$MainAlgorithm}
 
 					$Stratum = "$($Stratum)$(if ($Pools.$MainAlgorithm_Norm.SSL) {"+ssl"})"

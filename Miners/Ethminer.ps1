@@ -97,12 +97,14 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
-                    $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.Name) {
-                        "F2pool" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})";if ($Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}}
-                        "EthashPool" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                        "MiningRigRentals" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                        default {"stratum"}
-                    }
+                    $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.EthMode) {
+                        "ethproxy"         {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+						"ethstratumnh"     {"stratum2+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
+						default            {"stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})"}
+					}
+
+                    if ($Pools.$Algorithm_Name.Name -eq "F2Pool" -and $Pools.$Algorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
+
 					[PSCustomObject]@{
 						Name = $Miner_Name
 						DeviceName = $Miner_Device.Name

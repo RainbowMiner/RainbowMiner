@@ -74,14 +74,8 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
         $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-        if ($Algorithm_Norm -match "^(Ethash|ProgPow)" -and ($Pools.$Algorithm_Norm.Name -ne "MiningRigRentals" -or $Algorithm_Norm -ne "ProgPow")) {
-            $Miner_Protocol = Switch ($Pools.$Algorithm_Norm.Name) {
-                "EthashPool" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                "F2pool"     {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                "MiningRigRentals" {"stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})"}
-                default {"stratum"}
-            }
-            $Miner_Protocol += "://"
+        if ($Algorithm_Norm -match "^(Ethash|ProgPow)" -and $Pools.$Algorithm_Norm.EthMode -eq "ethproxy" -and ($Pools.$Algorithm_Norm.Name -ne "MiningRigRentals" -or $Algorithm_Norm -ne "ProgPow")) {
+            $Miner_Protocol = "stratum1+$(if ($Pools.$Algorithm_Norm.SSL) {"ssl"} else {"tcp"})://"
         } else {
             $Miner_Protocol = ""
         }
