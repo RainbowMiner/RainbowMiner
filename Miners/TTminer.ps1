@@ -23,21 +23,21 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; Params = "-A LYRA2V3"; ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 6; Params = "-A MTP"; ExtendInterval = 2} #MTP
     #[PSCustomObject]@{MainAlgorithm = "MYRGR"        ; MinMemGB = 2; Params = "-A MYRGR"; ExtendInterval = 2} #MYRGR    
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; Params = "-A PROGPOW"; ExtendInterval = 2} #ProgPoW2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; Params = "-A PROGPOW"; ExtendInterval = 2} #ProgPoW3gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; Params = "-A PROGPOW"; ExtendInterval = 2} #ProgPoW
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW0922gb" ; MinMemGB = 2; Params = "-A PROGPOW092"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW0922gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW0923gb" ; MinMemGB = 3; Params = "-A PROGPOW092"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW0923gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOW092"    ; MinMemGB = 4; Params = "-A PROGPOW092"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoW092
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWH2gb"   ; MinMemGB = 2; Params = "-A PROGPOW092 -coin hora"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWH3gb"   ; MinMemGB = 3; Params = "-A PROGPOW092 -coin hora"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH3gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 4; Params = "-A PROGPOW092 -coin hora"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWH
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO2gb"; MinMemGB = 2; Params = "-A PROGPOW092 -coin sero"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWSero2gb 
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO3gb"; MinMemGB = 3; Params = "-A PROGPOW092 -coin sero"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWSero3gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 4; Params = "-A PROGPOW092 -coin sero"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWSero
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 2; Params = "-A PROGPOWZ"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 3; Params = "-A PROGPOWZ"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb
-    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 4; Params = "-A PROGPOWZ"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; Params = "-A PROGPOW"; ExtendInterval = 3} #ProgPoW2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; Params = "-A PROGPOW"; ExtendInterval = 3} #ProgPoW3gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; Params = "-A PROGPOW"; ExtendInterval = 3} #ProgPoW
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW0922gb" ; MinMemGB = 2; Params = "-A PROGPOW092"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoW0922gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW0923gb" ; MinMemGB = 3; Params = "-A PROGPOW092"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoW0923gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOW092"    ; MinMemGB = 4; Params = "-A PROGPOW092"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoW092
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH2gb"   ; MinMemGB = 2; Params = "-A PROGPOW092 -coin HORA"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWH2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH3gb"   ; MinMemGB = 3; Params = "-A PROGPOW092 -coin HORA"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWH3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWH"      ; MinMemGB = 4; Params = "-A PROGPOW092 -coin HORA"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWH
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO2gb"; MinMemGB = 2; Params = "-A PROGPOW092 -coin SERO"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWSero2gb 
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO3gb"; MinMemGB = 3; Params = "-A PROGPOW092 -coin SERO"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWSero3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWSERO"   ; MinMemGB = 4; Params = "-A PROGPOW092 -coin SERO"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWSero
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 2; Params = "-A PROGPOWZ"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWZ2gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 3; Params = "-A PROGPOWZ"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWZ3gb
+    [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 4; Params = "-A PROGPOWZ"; ExtendInterval = 3; Cuda ="10.1"} #ProgPoWZ
     [PSCustomObject]@{MainAlgorithm = "TETHASHV1"     ; MinMemGB = 3; Params = "-A TETHASHV1"; ExtendInterval = 2} #TEThash 
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 3; Params = "-A UBQHASH"; ExtendInterval = 2} #Ubqhash 
 )
