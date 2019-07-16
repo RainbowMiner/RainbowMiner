@@ -170,16 +170,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
 
-
-					$Miner_Protocol_Params = Switch ($Pools.$Algorithm_Norm.EthMode) {
+					$Miner_Protocol_Params = Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
                         "minerproxy"       {"-esm 2"}
                         "ethproxy"         {"-esm 0"}
                         "qtminer"          {"-esm 1"}
 						"ethstratumnh"     {"-esm 3"}
 						default            {"-esm 2"}
 					}
-
-                    if ($Pools.$MainAlgorithm_Norm.Name -eq "F2Pool" -and $Pools.$MainAlgorithm_Norm.User -match "^0x[0-9a-f]{40}") {$Pool_Port = 8008}
 
 					if ($Arguments_Platform) {                
 						$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)

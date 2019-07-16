@@ -81,9 +81,11 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 					$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
 
                     $Stratum = $Pools.$MainAlgorithm_Norm.Protocol
-                    Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
-                        "ethproxy" {$Stratum = $Stratum -replace "stratum","ethproxy"}
-                        "ethstratumnh" {$Stratum = $Stratum -replace "stratum","nicehash"}
+                    if ($MainAlgorithm_Norm -match "^(Ethash|ProgPow)") {
+                        Switch ($Pools.$MainAlgorithm_Norm.EthMode) {
+                            "ethproxy" {$Stratum = $Stratum -replace "stratum","ethproxy"}
+                            "ethstratumnh" {$Stratum = $Stratum -replace "stratum","nicehash"}
+                        }
                     }
 
 					if ($SecondAlgorithm -eq '') {
