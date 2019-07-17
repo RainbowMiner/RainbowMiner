@@ -5763,6 +5763,10 @@ function Get-PoolDataFromRequest {
         [Parameter(Mandatory = $False)]
         [String]$HashrateField = "hashrate",
         [Parameter(Mandatory = $False)]
+        [String]$NetworkField = "network",
+        [Parameter(Mandatory = $False)]
+        [String]$LastblockField = "lastblock",
+        [Parameter(Mandatory = $False)]
         $Timestamp = (Get-UnixTimestamp),
         [Parameter(Mandatory = $False)]
         [Switch]$addBlockData,
@@ -5780,8 +5784,8 @@ function Get-PoolDataFromRequest {
 
     $timestamp24h = $timestamp - 24*3600
 
-    $diffLive     = $Request.network.difficulty
-    $reward       = if ($Request.network.reward) {$Request.network.reward} else {$Request.lastblock.reward}
+    $diffLive     = $Request.$NetworkField.difficulty
+    $reward       = if ($Request.$NetworkField.reward) {$Request.$NetworkField.reward} else {$Request.$LastblockField.reward}
     $profitLive   = 86400/$diffLive*$reward/$Divisor
     if ($Request.config.coinUnits) {$coinUnits = $Request.config.coinUnits}
     $amountLive   = $profitLive / $coinUnits
