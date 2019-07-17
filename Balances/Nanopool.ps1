@@ -12,7 +12,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = 13333; fee = 2; divisor = 1;   ssl = $true;  protocol = "stratum+ssl"; useemail = $true; usepid = $false}
     [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222; fee = 1; divisor = 1e6; ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $false}
     [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $true; usepid = $true}
-    [PSCustomObject]@{coin = "Grin";            algo = "Cuckaroo29";    symbol = "GRIN"; port = 12111; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $false; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{coin = "Grin";            algo = "Cuckarood29";   symbol = "GRIN"; port = 12111; fee = 2; divisor = 1;   ssl = $false; protocol = "stratum+tcp"; useemail = $false; walletsymbol = "GRIN29"}
 )
 
 $Count = 0

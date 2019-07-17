@@ -17,7 +17,7 @@ $Pools_Data = @(
     #[PSCustomObject]@{coin = "CitiCash";    symbol = "CCH";  algo = "CnHeavy";     port = 4461;  fee = 0.0; rpc = "citi"}
     #[PSCustomObject]@{coin = "Elya";        symbol = "ELYA"; algo = "CnV7";        port = 50201; fee = 0.0; rpc = "elya"}
     [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";       port = 9111;  fee = 0.0; rpc = "graft"}
-    [PSCustomObject]@{coin = "Grin";        symbol = "GRIN"; algo = "Cuckaroo29";  port = 6511;  fee = 0.0; rpc = "grin"; divisor = 32; regions = @("eu","us","asia"); diffdot = "+"; hashrate = "hashrate_ar"}
+    #[PSCustomObject]@{coin = "Grin";        symbol = "GRIN"; algo = "Cuckaroo29";  port = 6511;  fee = 0.0; rpc = "grin"; divisor = 32; regions = @("eu","us","asia"); diffdot = "+"; hashrate = "hashrate_ar"}
     [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";     port = 5831;  fee = 0.0; rpc = "haven"}
     [PSCustomObject]@{coin = "IPBC";        symbol = "IPBC"; algo = "CnSaber";     port = 5631;  fee = 0.0; rpc = "ipbc"; host = "ipbcrocks"}
     [PSCustomObject]@{coin = "Iridium";     symbol = "IRD";  algo = "CnLiteV7";    port = 50501; fee = 0.0; rpc = "iridium"}
