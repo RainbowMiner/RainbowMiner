@@ -38,10 +38,10 @@ catch {
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "Cuckaroo29"; port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckaroo29"; port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
-    [PSCustomObject]@{algo = "Cuckaroo29"; port = 3416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckaroo29"; port = 4416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $true}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $false}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $true}
     [PSCustomObject]@{algo = "Cuckatoo31"; port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
     [PSCustomObject]@{algo = "Cuckatoo31"; port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
     [PSCustomObject]@{algo = "Cuckatoo31"; port = 3416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $false}

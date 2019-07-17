@@ -63,7 +63,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "xmr";   coin = "Monero";          algo = "Monero";       symbol = "XMR";   port = 2222; fee = 1.5; divisor = 1e12}
     [PSCustomObject]@{rpc = "xzc";   coin = "Zсoin";           algo = "MTP";          symbol = "XZC";   port = 8080; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "rvn";   coin = "RavenCoin";       algo = "X16R";         symbol = "RVN";   port = 6060; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckaroo29";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckarood29";  symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42}
     #[PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckatoo31";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42; primary = $true}
     #[PSCustomObject]@{rpc = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1.5; divisor = 1e18}
 )

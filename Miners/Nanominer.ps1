@@ -23,6 +23,7 @@ if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and 
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "Cuckaroo29";              Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD","NVIDIA");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
+    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";             Params = ""; MinMemGb = 6; MinMemGbW10 = 8; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 2.0} #Cuckaroo29
     #[PSCustomObject]@{MainAlgorithm = "CryptonightR";            Params = ""; MinMemGb = 4; MinMemGbW10 = 8; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightR
     [PSCustomObject]@{MainAlgorithm = "CryptoNightReverseWaltz"; Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightRwz
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
