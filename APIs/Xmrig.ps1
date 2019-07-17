@@ -9,13 +9,16 @@ class Xmrig : Miner {
         $Parameters        = $this.Arguments | ConvertFrom-Json
         $ConfigFileString  = "$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if (($Parameters.Devices | Measure-Object).Count) {"-$(($Parameters.Devices | Foreach-Object {'{0:x}' -f $_}) -join '')"})"
         $ConfigFile        = "config_$($ConfigFileString)_$($this.Port)-$($Parameters.Threads).json"
-        $ThreadsConfigFile = "default_$($ConfigFileString).json"
-        $ThreadsConfig     = [PSCustomObject]@{}
+        $ThreadsConfigFile = "threads_$($ConfigFileString).json"
+        $ThreadsConfig     = $null
         $LogFile           = "$Miner_Path\log_$($ConfigFileString).txt"
                 
         try {
-            if (-not (Test-Path "$Miner_Path\$ThreadsConfigFile") -or -not ($ThreadsConfig = @(Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
-                Get-ChildItem "$Miner_Path\default_$($this.BaseAlgorithm -join '-')-*.json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
+            if (Test-Path "$Miner_Path\$ThreadsConfigFile") {
+                $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            }
+            if (-not ($ThreadsConfig | Measure-Object).Count) {
+                Get-ChildItem "$Miner_Path\threads_$($this.BaseAlgorithm -join '-')-*.json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
 
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -Force
 
@@ -25,7 +28,15 @@ class Xmrig : Miner {
                     $wait = 0
                     $Job | Add-Member HasOwnMinerWindow $true -Force
                     While ($wait -lt 60) {
-                        if (Test-Path "$Miner_Path\$ThreadsConfigFile") {break}
+                        if (($ThreadsConfig = @(Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
+                            if ($this.DeviceName -like "GPU*") {
+                                ConvertTo-Json -InputObject @($ThreadsConfig | Sort-Object -Property Index -Unique) -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
+                            }
+                            else {
+                                ConvertTo-Json -InputObject @($ThreadsConfig| Select-Object -Unique) -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
+                            }
+                            break
+                        }
                         Start-Sleep -Milliseconds 500
                         $MiningProcess = $Job.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
                         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq 1)) {$wait++} else {break}
@@ -35,20 +46,21 @@ class Xmrig : Miner {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
                     Remove-Variable "Job"
                 }
-                if ((Test-Path "$Miner_Path\$ThreadsConfigFile") -and -not ($ThreadsConfig = @(Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
+                if ((Test-Path "$Miner_Path\$ThreadsConfigFile") -and -not ($ThreadsConfig | Measure-Object).Count) {
                     Remove-Item "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
                 }
+                $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             }
             if (-not ((Get-Content "$Miner_Path\$ConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads)) {
                 if ($ThreadsConfig -and $ThreadsConfig.Count) {
                     if ($this.DeviceName -like "GPU*") {
-                        $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig | Sort-Object -Property Index -Unique | Where-Object {$Parameters.Devices -contains $_.index}) * $Parameters.Threads) -Force
+                        $Parameters.Config | Add-Member threads ([Array](($ThreadsConfig | Where-Object {$Parameters.Devices -contains $_.index}) * $Parameters.Threads)) -Force
                     }
                     else {
                         if ($Parameters.Threads) {
-                            $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig | Select-Object -Unique) * $Parameters.Threads) -Force
+                            $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig * $Parameters.Threads)) -Force
                         } else {
-                            $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig | Select-Object)) -Force
+                            $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig)) -Force
                         }
                     }
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ConfigFile" -Force
