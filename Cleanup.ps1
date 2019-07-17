@@ -450,7 +450,7 @@ try {
         $CacheCleanup = $true
     }
 
-    if ($Version -le (Get-Version "4.3.5.8")) {
+    if ($Version -le (Get-Version "4.3.5.9")) {
         $CacheCleanup = $true
     }
 
