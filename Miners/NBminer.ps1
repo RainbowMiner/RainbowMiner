@@ -106,6 +106,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri = $ManualUri
 							NoCPUMining = $_.NoCPUMining
+                            EnvVars = if ($IsLinux -and $MainAlgorithm_Norm -eq "ProgPowSero" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
