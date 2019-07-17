@@ -5786,7 +5786,7 @@ function Get-PoolDataFromRequest {
 
     $diffLive     = $Request.$NetworkField.difficulty
     $reward       = if ($Request.$NetworkField.reward) {$Request.$NetworkField.reward} else {$Request.$LastblockField.reward}
-    $profitLive   = 86400/$diffLive*$reward/$Divisor
+    $profitLive   = if ($diffLive) {86400/$diffLive*$reward/$Divisor} else {0}
     if ($Request.config.coinUnits) {$coinUnits = $Request.config.coinUnits}
     $amountLive   = $profitLive / $coinUnits
 
