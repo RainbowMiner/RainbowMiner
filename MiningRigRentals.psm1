@@ -59,7 +59,7 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$base = "https://www.miningrigrentals.com/api/v2",
     [Parameter(Mandatory = $False)]
-    [int]$Timeout = 10,
+    [int]$Timeout = 15,
     [Parameter(Mandatory = $False)]
     [int]$Cache = 0,
     [Parameter(Mandatory = $False)]
@@ -118,8 +118,9 @@ param(
                     "PUT" {$params | ConvertTo-Json -Depth 10}
                     "GET" {if ($params.Count) {$params} else {$null}}
                 }
+                #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
                 $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
-            } catch {            
+            } catch {
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
             }
         }
@@ -146,7 +147,7 @@ param(
     Get-Algorithm $(Switch ($Name) {
             "x16rt"             {"Veil"}
             "x16rtgin"          {"X16rt"}
-            "cuckoocycle"       {"Cuckaroo29"}
+            "cuckoocycle"       {"Cuckarood29"}
             "cuckoocycle29swap" {"Cuckaroo29s"}
             "cuckoocycle31"     {"Cuckatoo31"}
             "hashimotos"        {"Ethash"}
