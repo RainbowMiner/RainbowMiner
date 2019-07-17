@@ -5771,7 +5771,9 @@ function Get-PoolDataFromRequest {
         [Parameter(Mandatory = $False)]
         [Switch]$addBlockData,
         [Parameter(Mandatory = $False)]
-        [Switch]$addDay
+        [Switch]$addDay,
+        [Parameter(Mandatory = $False)]
+        [Switch]$priceFromSession
     )
 
     $rewards = [PSCustomObject]@{
@@ -5793,17 +5795,21 @@ function Get-PoolDataFromRequest {
     if (-not $Currency) {$Currency = $Request.config.symbol}
     if (-not $chartCurrency -and $Request.config.priceCurrency) {$chartCurrency = $Request.config.priceCurrency}
 
-    if     ($Request.price.btc)           {$lastSatPrice = 1e8*[Double]$Request.price.btc}
-    elseif ($Request.coinPrice.priceSats) {$lastSatPrice = [Double]$Request.coinPrice.priceSats}
-    elseif ($Request.coinPrice.price)     {$lastSatPrice = 1e8*[Double]$Request.coinPrice.price}
-    elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[Double]$Request.coinPrice."coin-btc"}
-    else {
-        $lastSatPrice = if ($Request.charts.price) {[Double]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
-        if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Session.Rates.$chartCurrency}
-        elseif ($chartCurrency -eq "BTC" -and $lastSatPrice -lt 1.0) {$lastSatPrice*=1e8}
-        if (-not $lastSatPrice -and $Session.Rates.$Currency) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
+    if ($priceFromSession) {
+        $lastSatPrice = if ($Session.Rates.$Currency) {1/$Session.Rates.$Currency*1e8} else {0}
+    } else {
+        if     ($Request.price.btc)           {$lastSatPrice = 1e8*[Double]$Request.price.btc}
+        elseif ($Request.coinPrice.priceSats) {$lastSatPrice = [Double]$Request.coinPrice.priceSats}
+        elseif ($Request.coinPrice.price)     {$lastSatPrice = 1e8*[Double]$Request.coinPrice.price}
+        elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[Double]$Request.coinPrice."coin-btc"}
+        else {
+            $lastSatPrice = if ($Request.charts.price) {[Double]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Session.Rates.$chartCurrency}
+            elseif ($chartCurrency -eq "BTC" -and $lastSatPrice -lt 1.0) {$lastSatPrice*=1e8}
+            if (-not $lastSatPrice -and $Session.Rates.$Currency) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
+        }
+        if ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Currency) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
     }
-    if ($lastSatPrice -and $Session.Rates -and -not $Session.Rates.$Currency) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
 
     $rewards.Live.reward = $amountLive * $lastSatPrice        
 
