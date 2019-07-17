@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CryptoNight-SRBMiner\srbminer-cn.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.1-srbminer/SRBMiner-CN-V1-9-1.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.9.2-srbminer/SRBMiner-CN-V1-9-2.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3167363.0"
 $Port = "315{0:d2}"
 $DevFee = 0.85
@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "graft"      ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Graft/ReverseWaltz 2 thread
     [PSCustomObject]@{MainAlgorithm = "stellitev4" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV4 2 threads
     [PSCustomObject]@{MainAlgorithm = "stellitev8" ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-StelliteV8 2 threads
-    [PSCustomObject]@{MainAlgorithm = "swap"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Swap 2 thread
+    #[PSCustomObject]@{MainAlgorithm = "swap"       ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Swap 2 thread
     [PSCustomObject]@{MainAlgorithm = "turtle"     ; Threads = 2; MinMemGb = 2; Params = ""} # CryptoNight-Turtle 2 thread
     [PSCustomObject]@{MainAlgorithm = "upx"        ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa 2 threads
     [PSCustomObject]@{MainAlgorithm = "upx2"       ; Threads = 2; MinMemGb = 1; Params = ""} # CryptoNight-Uplexa2 2 threads
