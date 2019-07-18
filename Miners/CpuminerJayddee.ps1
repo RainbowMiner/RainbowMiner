@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'zen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.5.4-jayddee/cpuminer-opt-3.9.5.4-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.6-jayddee/cpuminer-opt-3.9.6-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -25,7 +25,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; ExtendInterval = 2} #axiom
     [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""; ExtendInterval = 2} #bastion
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""; ExtendInterval = 2} #bmw
-    [PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""; ExtendInterval = 2} #CryptoNightV7
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""; ExtendInterval = 2} #bmw512
+    #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""; ExtendInterval = 2} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "deep"; Params = ""; ExtendInterval = 2} #deep
     [PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; ExtendInterval = 2} #drop
     [PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""; ExtendInterval = 2} #fresh
@@ -47,8 +48,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; ExtendInterval = 2} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 2} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; ExtendInterval = 2} #Veltor
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #x12
+    [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""; ExtendInterval = 2} #bcd
+    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 2} #x16rt
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #yescryptr16, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #yescryptr32, CpuminerOptBF faster
