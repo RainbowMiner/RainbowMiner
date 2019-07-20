@@ -10,15 +10,22 @@ class Xmrig : Miner {
         $ConfigFileString  = "$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if (($Parameters.Devices | Measure-Object).Count) {"-$(($Parameters.Devices | Foreach-Object {'{0:x}' -f $_}) -join '')"})"
         $ConfigFile        = "config_$($ConfigFileString)_$($this.Port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "threads_$($ConfigFileString).json"
+        $DevicesFile       = "devices_$($this.DeviceModel).txt"
         $ThreadsConfig     = $null
         $LogFile           = "$Miner_Path\log_$($ConfigFileString).txt"
                 
         try {
+            $Devices = Get-Content "$Miner_Path\$DevicesFile" -Raw -ErrorAction Ignore
+            $DevicesCurrent = if ($this.DeviceName -like "GPU*") {$Parameters.Devices -join ','} else {$Global:GlobalCPUInfo.Name}
+            if ($Devices -ne $DevicesCurrent) {
+                $DevicesCurrent | Set-Content "$Miner_Path\$DevicesFile" -Force
+                Get-ChildItem "$Miner_Path\threads_$($this.BaseAlgorithm -join '-')-*.json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
+            }
+
             if (Test-Path "$Miner_Path\$ThreadsConfigFile") {
                 $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             }
             if (-not ($ThreadsConfig | Measure-Object).Count) {
-                Get-ChildItem "$Miner_Path\threads_$($this.BaseAlgorithm -join '-')-*.json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
 
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -Force
 
