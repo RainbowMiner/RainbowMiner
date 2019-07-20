@@ -2932,7 +2932,6 @@ class Miner {
     [Bool]$Enabled = $false
     [string[]]$Pool = @()
     $Profit
-    $Profit_Comparison
     $Profit_MarginOfError
     $Profit_Bias
     $Profit_Unbias
@@ -2945,7 +2944,6 @@ class Miner {
     $StartCommand
     $StopCommand
     $Best
-    $Best_Comparison
     $New
     $Benchmarked
     $LogFile    

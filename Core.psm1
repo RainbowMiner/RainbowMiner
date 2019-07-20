@@ -1102,9 +1102,7 @@ function Invoke-Core {
         $Miner_Difficulties = [PSCustomObject]@{}
         $Miner_DevFees = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
-        $Miner_Pools_Comparison = [PSCustomObject]@{}
         $Miner_Profits = [PSCustomObject]@{}
-        $Miner_Profits_Comparison = [PSCustomObject]@{}
         $Miner_Profits_MarginOfError = [PSCustomObject]@{}
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
@@ -1197,16 +1195,13 @@ function Invoke-Core {
             $Miner_HashRates | Add-Member $_ ([Double]$Miner.HashRates.$_)
             $Miner_Difficulties | Add-Member $_ ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
-            $Miner_Pools_Comparison | Add-Member $_ ([PSCustomObject]$Pools.$_)
             $Miner_Profits | Add-Member $_ ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
-            $Miner_Profits_Comparison | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.StablePrice+1e-32) * $Miner_DevFeeFactor)
             $Miner_Profits_Bias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
             $Miner_Profits_Unbias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
             if (-not $FirstAlgoName) {$FirstAlgoName = $_}
         }
 
         $Miner_Profit = [Double]($Miner_Profits.PSObject.Properties.Value | Measure-Object -Sum).Sum
-        $Miner_Profit_Comparison = [Double]($Miner_Profits_Comparison.PSObject.Properties.Value | Measure-Object -Sum).Sum
         $Miner_Profit_Bias = [Double]($Miner_Profits_Bias.PSObject.Properties.Value | Measure-Object -Sum).Sum
         $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.PSObject.Properties.Value | Measure-Object -Sum).Sum
         
@@ -1224,11 +1219,9 @@ function Invoke-Core {
                 $Miner_HashRates.$_ = $null
                 $Miner_Difficulties.$_ = $null
                 $Miner_Profits.$_ = $null
-                $Miner_Profits_Comparison.$_ = $null
                 $Miner_Profits_Bias.$_ = $null
                 $Miner_Profits_Unbias.$_ = $null
                 $Miner_Profit = $null
-                $Miner_Profit_Comparison = $null
                 $Miner_Profits_MarginOfError = $null
                 $Miner_Profit_Bias = $null
                 $Miner_Profit_Unbias = $null
@@ -1243,11 +1236,9 @@ function Invoke-Core {
 
         $Miner | Add-Member Pools $Miner_Pools
         $Miner | Add-Member Profits $Miner_Profits
-        $Miner | Add-Member Profits_Comparison $Miner_Profits_Comparison
         $Miner | Add-Member Profits_Bias $Miner_Profits_Bias
         $Miner | Add-Member Profits_Unbias $Miner_Profits_Unbias
         $Miner | Add-Member Profit $Miner_Profit
-        $Miner | Add-Member Profit_Comparison $Miner_Profit_Comparison
         $Miner | Add-Member Profit_MarginOfError $Miner_Profit_MarginOfError
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
@@ -1255,7 +1246,6 @@ function Invoke-Core {
 
         if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             $Miner.Profit -= $Miner.Profit_Cost
-            $Miner.Profit_Comparison -= $Miner.Profit_Cost
             $Miner.Profit_Bias -= $Miner.Profit_Cost
             $Miner.Profit_Unbias -= $Miner.Profit_Cost
         }
@@ -1368,13 +1358,11 @@ function Invoke-Core {
     #Update the active miners
     $Session.ActiveMiners | Foreach-Object {
         $_.Profit = 0
-        $_.Profit_Comparison = 0
         $_.Profit_MarginOfError = 0
         $_.Profit_Bias = 0
         $_.Profit_Unbias = 0
         $_.Profit_Cost = 0
         $_.Best = $false
-        $_.Best_Comparison = $false
         $_.Stopped = $false
         $_.Enabled = $false
         $_.IsFocusWalletMiner = $false
@@ -1395,7 +1383,6 @@ function Invoke-Core {
 
         if ($ActiveMiner) {
             $ActiveMiner.Profit             = $Miner.Profit
-            $ActiveMiner.Profit_Comparison  = $Miner.Profit_Comparison
             $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
             $ActiveMiner.Profit_Unbias      = $Miner.Profit_Unbias
@@ -1447,7 +1434,6 @@ function Invoke-Core {
                 DeviceName           = $Miner.DeviceName
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
-                Profit_Comparison    = $Miner.Profit_Comparison
                 Profit_MarginOfError = $Miner.Profit_MarginOfError
                 Profit_Bias          = $Miner.Profit_Bias
                 Profit_Unbias        = $Miner.Profit_Unbias
@@ -1459,7 +1445,6 @@ function Invoke-Core {
                 StartCommand         = $Miner.StartCommand
                 StopCommand          = $Miner.StopCommand
                 Best                 = $false
-                Best_Comparison      = $false
                 New                  = $false
                 Benchmarked          = 0
                 Pool                 = $Miner.Pools.PSObject.Properties.Value.Name
@@ -1521,8 +1506,6 @@ function Invoke-Core {
             Remove-Variable "Miners_PBM" -Force
         }
 
-        $BestMiners_Comparison  = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Comparison -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
-
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
         if ($NoCPUMining -and $MinersNeedingBenchmarkCount -eq 0) {$BestMiners2 = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
 
@@ -1550,7 +1533,6 @@ function Invoke-Core {
         } else {
             $BestMiners_Combo = Get-BestMinerDeviceCombos $BestMiners -SortBy "Profit_Bias"        
         }
-        $BestMiners_Combo_Comparison = Get-BestMinerDeviceCombos $BestMiners_Comparison -SortBy "Profit_Comparison"
         
         $PowerOffset_Cost = [Double]0
         if (($Session.AllPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
@@ -1563,7 +1545,6 @@ function Invoke-Core {
 
         if (-not $Session.PauseMiners -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
-            $BestMiners_Combo_Comparison | ForEach-Object {$_.Best_Comparison = $true}
         }
     }
 
@@ -1829,41 +1810,6 @@ function Invoke-Core {
 
     if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0) {Write-Host "* net power consumption. A base power offset of $("{0:d}" -f [int]$Session.Config.PowerOffset)W is being added to calculate the final profit."; Write-Host " "}
 
-    #Display profit comparison    
-    if (($BestMiners_Combo | Where-Object Profit -EQ $null | Measure-Object).Count -eq 0 -and $Session.Downloader.State -ne "Running") {
-        $MinerComparisons = 
-        [PSCustomObject]@{"Miner" = "RainbowMiner"}, 
-        [PSCustomObject]@{"Miner" = $BestMiners_Combo_Comparison | ForEach-Object {"$($_.Name -replace '\-.*$')-$($_.Algorithm -join '/')"}}
-
-        $BestMiners_Combo_Stat = Set-Stat -Name "Profit" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $RoundSpan
-
-        if (($BestMiners_Combo | Where-Object {$_.Pool -contains "MiningRigRentals"} | Measure-Object).Count -eq 0) {
-            Set-Stat -Name "ProfitNonMRR" -Value ($BestMiners_Combo | Measure-Object Profit -Sum).Sum -Duration $RoundSpan > $null
-        }
-
-        $MinerComparisons_Profit = $BestMiners_Combo_Stat.Week, ($BestMiners_Combo_Comparison | Measure-Object Profit_Comparison -Sum).Sum
-        $MinerComparisons_MarginOfError = $BestMiners_Combo_Stat.Week_Fluctuation, ($BestMiners_Combo_Comparison | ForEach-Object {$_.Profit_MarginOfError * (& {if ($MinerComparisons_Profit[1]) {$_.Profit_Comparison / $MinerComparisons_Profit[1]}else {1}})} | Measure-Object -Sum).Sum
-
-        if ($Session.Config.UsePowerPrice) {
-            $MinerComparisons_Profit[0] -= $PowerOffset_Cost
-            $MinerComparisons_Profit[1] -= $PowerOffset_Cost
-        }
-        
-        $Session.Config.Currency | ForEach-Object {
-            $MinerComparisons[0] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[0] * $Session.Rates.$_), $MinerComparisons_MarginOfError[0], (($MinerComparisons_Profit[0] * $Session.Rates.$_) / (1 + $MinerComparisons_MarginOfError[0])), (($MinerComparisons_Profit[0] * $Session.Rates.$_) * (1 + $MinerComparisons_MarginOfError[0])))
-            $MinerComparisons[1] | Add-Member $_.ToUpper() ("{0:N5} $([Char]0x00B1){1:P0} ({2:N5}-{3:N5})" -f ($MinerComparisons_Profit[1] * $Session.Rates.$_), $MinerComparisons_MarginOfError[1], (($MinerComparisons_Profit[1] * $Session.Rates.$_) / (1 + $MinerComparisons_MarginOfError[1])), (($MinerComparisons_Profit[1] * $Session.Rates.$_) * (1 + $MinerComparisons_MarginOfError[1])))
-        }
-
-        if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {
-            if ($MinerComparisons_Profit[1] -ne 0 -and [Math]::Round(($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1], 2) -gt 0) {
-                $MinerComparisons_Range = ($MinerComparisons_MarginOfError | Measure-Object -Average | Select-Object -ExpandProperty Average), (($MinerComparisons_Profit[0] - $MinerComparisons_Profit[1]) / $MinerComparisons_Profit[1]) | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum
-                Write-Host -BackgroundColor Yellow -ForegroundColor Black "RainbowMiner is between $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])-$MinerComparisons_Range)*100)))% and $([Math]::Round((((($MinerComparisons_Profit[0]-$MinerComparisons_Profit[1])/$MinerComparisons_Profit[1])+$MinerComparisons_Range)*100)))% more profitable than the fastest miner: "
-            }
-
-            $MinerComparisons | Out-Host
-        }
-    }
-
     #Display pool balances, formatting it to show all the user specified currencies
     if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Count -gt 1) {
         $ColumnMark = if ($Session.EnableColors) {"$([char]27)[93m{value}$([char]27)[0m"} else {"{value}"}
@@ -1950,7 +1896,7 @@ function Invoke-Core {
     }
 
     #Reduce Memory
-    @("BalancesData","BestMiners_Combo","BestMiners_Combo2","BestMiners_Combo_Comparison","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner_Table","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pools","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
+    @("BalancesData","BestMiners_Combo","BestMiners_Combo2","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner_Table","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pools","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
     if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
     $Error.Clear()
     $Global:Error.Clear()
@@ -2206,7 +2152,7 @@ function Stop-Core {
         $Miner = $_
         if ($Miner.GetStatus() -eq [MinerStatus]::Running) {
             Write-Log "Closing $($Miner.Type) miner $($Miner.Name)"
-            $Miner.StopMining()            
+            $Miner.StopMining()
         }
         if ($Miner.BaseName -like "Excavator*" -and -not $ExcavatorWindowsClosed.Contains($Miner.BaseName)) {
             $Miner.ShutDownMiner()
