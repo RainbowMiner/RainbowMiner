@@ -2105,7 +2105,7 @@ function Get-Device {
                     Vendor          = "NVIDIA Corporation"
                     GlobalMemSize   = 1MB * [int64]$_.memory_total
                     PlatformVersion = "CUDA $Cuda"
-                    PCIBusId        = if ($_.bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
+                    PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                 }
             }
             if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
