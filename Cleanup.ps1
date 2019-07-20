@@ -539,7 +539,7 @@ try {
     if ($DownloadsCleanup) {
         if (Test-Path "Downloads"){
             $AllMinersArchives = Get-MinersContent -InfoOnly | Where-Object {$_.Uri} | Foreach-Object {Split-Path $_.Uri -Leaf} | Sort-Object
-            Get-ChildItem -Path "Downloads" -Filter "*" | Where-Object {@(".7z",".rar",".zip") -icontains $_.Extension -and $_.LastWriteTime -lt (Get-Date).AddDays(-5) -and $AllMinersArchives -notcontains $_.Name} | Foreach-Object {
+            Get-ChildItem -Path "Downloads" -Filter "*" -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5) -and $AllMinersArchives -notcontains $_.Name} | Foreach-Object {
                 Remove-Item $_.FullName -Force -ErrorAction Ignore
                 $ChangesTotal++
             }
