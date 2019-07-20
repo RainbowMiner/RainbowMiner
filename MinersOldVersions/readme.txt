@@ -1,1 +1,0 @@
-this folder contains miners, that will be deleted
