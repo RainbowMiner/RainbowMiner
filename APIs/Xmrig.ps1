@@ -7,11 +7,10 @@ class Xmrig : Miner {
 
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
-        $ConfigFileString  = "$($this.BaseAlgorithm -join '-')_$($this.DeviceModel)_$($Parameters.HwSig)"
-        $ConfigFile        = "config_$($ConfigFileString)_$($this.Port)_$($Parameters.Threads).json"
-        $ThreadsConfigFile = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)).json"
+        $ConfigFile        = "config_$($this.BaseAlgorithm -join '-')_$($this.DeviceModel)_$(if ($this.DeviceName -like "GPU*") {"$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')_"})$($this.Port)_$($Parameters.Threads).json"
+        $ThreadsConfigFile = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).json"
         $ThreadsConfig     = $null
-        $LogFile           = "$Miner_Path\log_$($ConfigFileString).txt"
+        $LogFile           = "$Miner_Path\log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
 
         try {
             if (Test-Path "$Miner_Path\$ThreadsConfigFile") {
