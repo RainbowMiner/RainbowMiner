@@ -109,6 +109,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                         "retry-pause"      = 1
                     }
                     Devices = @($Miner_Device.Type_Vendor_Index)
+                    HwSig   = ($Session.DevicesByTypes.NVIDIA | Select-Object -Unique -ExpandProperty Model | Sort-Object | Foreach-Object {$m = $_;"$($m)-$(($Session.DevicesByTypes.NVIDIA | Where-Object Model -eq $m | Select-Object -Unique -ExpandProperty Type_Vendor_Index | Sort-Object | % {"{0:x}" -f $_}) -join '')"}) -join '_'
                     Params  =  $Params
                     Threads = 1
                 }
