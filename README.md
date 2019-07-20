@@ -1101,58 +1101,53 @@ This configuration would:
 
 This file contains all custom overclocking profiles. These profiles can be assigned by name to miners in file Config\miners.config.txt or to algorithms in file Config\algorithms.config.txt, field "OCprofile".
 
+To make it easy to handle names, profiles may be assigned to devices. Just add the device model (see file Config\devices.config.txt for all model names), a specific device's name ("GPU#00","GPU#01",..) or PCI bus id ("00:02","00:03",..) with "-" to the profile name. With this feature, it is very easy to use different overclocking rules for devices under one name.
+
 Example (this is the setup for one of my GTX1070 rigs, basicly substituting the MSI Afterburner profiles I recommended above)
 
     {
-      "Profile1": {
-        "PowerLimit": 0,
+      "Profile1-GTX1070": {
+        "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "0",
         "CoreClockBoost": "0",
         "LockVoltagePoint": "*"
       },
-      "Profile2": {
-        "PowerLimit": 0,
+      "Profile2-GTX1070": {
+        "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "400",
         "CoreClockBoost": "100",
         "LockVoltagePoint": "*"
       },
-      "Profile3": {
-        "PowerLimit": 0,
+      "Profile3-GTX1070": {
+        "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "200",
         "CoreClockBoost": "100",
         "LockVoltagePoint": "*"
       },
-      "Profile4": {
-        "PowerLimit": 0,
+      "Profile4-GTX1070": {
+        "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "-500",
         "CoreClockBoost": "100",
         "LockVoltagePoint": "*"
       },
-      "Profile5": {
-        "PowerLimit": 0,
+      "Profile5-GTX1070": {
+        "PowerLimit": 80,
         "ThermalLimit": 0,
         "MemoryClockBoost": "350",
         "CoreClockBoost": "100",
         "LockVoltagePoint": "*"
       },
-      "Profile6": {
-        "PowerLimit": 0,
+      "Profile2-GPU#02": {
+        "PowerLimit": 85,
         "ThermalLimit": 0,
-        "MemoryClockBoost": "0",
-        "CoreClockBoost": "100",
+        "MemoryClockBoost": "500",
+        "CoreClockBoost": "150",
         "LockVoltagePoint": "*"
-      },
-      "Profile7": {
-        "PowerLimit": 0,
-        "ThermalLimit": 0,
-        "MemoryClockBoost": "*",
-        "CoreClockBoost": "*",
-        "LockVoltagePoint": "1000000"
-      }
+      }      
     }
 
 - PowerLimit: in percent, set to 0, if you do not want this to be changed
@@ -1161,29 +1156,9 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 - CoreClockBoost: in MHz, set to "*", if you do not want this to be changed
 - LockVoltagePoint: in µV set to "*", if you do not want this to be changed or "0", if voltagePoint should be unlocked
 
-To make it easy to handle names, profiles may be assigned to a devices. Just add the device model (see file Config\devices.config.txt for all model names) with "-" to the profile name. With this feature, it is very easy to use different overclocking rules for each device under one name.
-
-Example for a rig, using GTX1070Ti and GTX1060 side by side:
-
-    {
-      "MinMemOC-GTX1060": {
-        "PowerLimit": 75,
-        "ThermalLimit": 70,
-        "MemoryClockBoost": "-500",
-        "CoreClockBoost": "150",
-        "LockVoltagePoint": "*"
-      },
-      "MinMemOC-GTX1070Ti": {
-        "PowerLimit": 82,
-        "ThermalLimit": 80,
-        "MemoryClockBoost": "-500",
-        "CoreClockBoost": "50",
-        "LockVoltagePoint": "*"
-      }
-    }
-
-The name of this exemplary profile is "MinMemOC" - if this name would be put into algorithms.config.txt, for example for algo "X16R", different overclocking settings would be used for the different devices when mining X16R.
-
+Note the last entry: "Profile-GPU#02"
+Imagine a rig with multiple GTX1070 from the same manufacturer, except GPU#02, which is from a different manufacturer. This one GPU might need slightly different overclocking for Profile2. 
+Adding the GPU's name or PCI bus id has priority over the model name selection.
 
 ### Config\autoexec.config.txt
 
