@@ -7,7 +7,7 @@ class Xmrig : Miner {
 
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
-        $ConfigFile        = "config_$($this.BaseAlgorithm -join '-')_$($this.DeviceModel)_$(if ($this.DeviceName -like "GPU*") {"$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')_"})$($this.Port)_$($Parameters.Threads).json"
+        $ConfigFile        = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($this.DeviceName -like "GPU*") {"-$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')"})_$($this.Port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).json"
         $ThreadsConfig     = $null
         $LogFile           = "$Miner_Path\log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
@@ -51,7 +51,7 @@ class Xmrig : Miner {
             if (-not ((Get-Content "$Miner_Path\$ConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads)) {
                 if ($ThreadsConfig -and $ThreadsConfig.Count) {
                     if ($this.DeviceName -like "GPU*") {
-                        $Parameters.Config | Add-Member threads ([Array](($ThreadsConfig | Where-Object {$Parameters.Devices -contains $_.index}) * $Parameters.Threads)) -Force
+                        $Parameters.Config | Add-Member threads ([Array](@($ThreadsConfig | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
                     }
                     else {
                         if ($Parameters.Threads) {
