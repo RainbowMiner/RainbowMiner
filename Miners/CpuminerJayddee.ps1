@@ -25,7 +25,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; ExtendInterval = 2} #axiom
     [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""; ExtendInterval = 2} #bastion
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""; ExtendInterval = 2} #bmw
-    #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""; ExtendInterval = 2} #bmw512
+    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""; ExtendInterval = 2} #bmw512
     #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""; ExtendInterval = 2} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "deep"; Params = ""; ExtendInterval = 2} #deep
     [PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; ExtendInterval = 2} #drop
@@ -49,12 +49,12 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #shavite3
     [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #skein2
     [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""; ExtendInterval = 2} #Sonoa
-    #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 2} #x16rt-veil
+    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 2} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""; ExtendInterval = 2} #Veltor
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #x12
-    #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""; ExtendInterval = 2} #bcd
-    #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 2} #x16rt
-    #[PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; ExtendInterval = 2} #x21s
+    [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""; ExtendInterval = 2} #bcd
+    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 2} #x16rt
+    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""; ExtendInterval = 2} #x21s
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #yescryptr16, CpuminerOptBF faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #yescryptr32, CpuminerOptBF faster
