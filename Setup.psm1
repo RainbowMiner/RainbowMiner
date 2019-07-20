@@ -2503,14 +2503,26 @@ function Start-Setup {
                             @{Label="Core Clock"; Expression={"$(if ($_.Value.CoreClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.CoreClockBoost) -gt 0){'+'})$($_.Value.CoreClockBoost)"})"}; Align="center"}
                             @{Label="Memory Clock"; Expression={"$(if ($_.Value.MemoryClockBoost -eq '*'){'*'}else{"$(if ([Convert]::ToInt32($_.Value.MemoryClockBoost) -gt 0){'+'})$($_.Value.MemoryClockBoost)"})"}; Align="center"}                                        
                         )
+
+                        Write-Host "Available devices:"
+
+                        $SetupDevices | Where-Object Type -eq "gpu" | Sort-Object Index | Format-Table @(
+                            @{Label="Name"; Expression={$_.Name}}
+                            @{Label="Model"; Expression={$_.Model}}
+                            @{Label="PCIBusId"; Expression={$_.OpenCL.PCIBusId}}
+                        )
+
                         [console]::ForegroundColor = $p
+
+                        $ValidDeviceDescriptors = @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -Unique -ExpandProperty Model | Sort-Object) + @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -Unique -ExpandProperty Name | Sort-Object) + @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -ExpandProperty OpenCL | Where-Object PCIBusId -match "^\d+:\d+$" | Select-Object -Unique -ExpandProperty PCIBusId | Sort-Object) + @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -Unique -ExpandProperty Index | Sort-Object)
 
                         $OCProfile_Name = $OCProfile_Device = ""
                         do {
                             $OCProfile_Name = Read-HostString -Prompt "Which profile do you want to edit/create/delete? (leave empty to end profile config)" -Characters "A-Z0-9" -Default $OCProfile_Name | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             if ($OCProfile_Name -eq '') {throw}
                             if (($SetupDevices | Where-Object Type -eq "gpu" | Measure-Object).Count) {
-                                $OCProfile_Device = Read-HostString -Prompt "Assign this profile to a device? (leave empty for none)" -Characters "A-Z0-9" -Valid @($SetupDevices | Where-Object Type -eq "gpu" | Select-Object -Unique -ExpandProperty Model | Sort-Object)| Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                $OCProfile_Device = Read-HostString -Prompt "Assign this profile to a device? (choose Model, PCIBusId or Name - leave empty for none)" -Characters "A-Z0-9\:#" -Valid $ValidDeviceDescriptors | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
+                                if ($OCProfile_Device -match "^\d+$") {$OCProfile_Device = "GPU#{0:d2}" -f $OCProfile_Device}
                             }
                         } until (@("back","<") -inotcontains $OCProfile_Device)
 

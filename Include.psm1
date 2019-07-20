@@ -3488,55 +3488,75 @@ class Miner {
             Intel  = "*Intel*"
         }
 
-        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {            
-            if ($Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"}) {
-                $DeviceIds = @($Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Select-Object -ExpandProperty Type_Vendor_Index)                
-                $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
-                $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
-                $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
-                if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
-
-                $applied_any = $false
-
-                if ($Vendor -eq "NVIDIA") {
-                    $x = Switch -Regex ($DeviceModel) {
-                        "1050" {2}
-                        "P106-?100" {2}
-                        "P106-?090" {1}
-                        "P104-?100" {1}
-                        "P102-?100" {1}
-                        "1660" {4}
-                        default {3}
-                    }
-                    foreach($DeviceId in $DeviceIds) {
-                        if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
-                        if (-not $Global:IsLinux) {
-                            if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
-                            if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
-                        } else {
-                            $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
-                        }
-                        if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($x)]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
-                        if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($x)]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
-                    }
-                } elseif ($Pattern.$Vendor -ne $null) {
-                    $DeviceId = 0
-                    $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
-                        if ($DeviceId -in $DeviceIds) {
-                            $GpuEntry = $Script:abControl.GpuEntries[$_]
-                            $ProfileBackup = [hashtable]@{}
-                            try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$ProfileBackup.PowerLimitCur = $GpuEntry.PowerLimitCur;$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
-                            if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
-                            if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup > $null;$applied_any=$true}
-                        }
-                        $DeviceId++
-                    }                 
-                }
-                if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
+        $Profiles = [PSCustomObject]@{}
+        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
+            $x = Switch -Regex ($DeviceModel) {
+                "1050" {2}
+                "P106-?100" {2}
+                "P106-?090" {1}
+                "P104-?100" {1}
+                "P102-?100" {1}
+                "1660" {4}
+                default {3}
             }
+
+            $DeviceIds = @()
+            $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
+                $VendorIndex = $_.Type_Vendor_Index
+                $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
+                if ($Id) {
+                    $Profiles | Add-Member "$($DeviceModel)[$($Id)]" ([PSCustomObject]@{Index = @($VendorIndex); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
+                } else {
+                    $DeviceIds += $VendorIndex
+                }
+            }
+            if ($DeviceIds.Count -gt 0) {
+                $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"}
+                if ($Profile) {
+                    $Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; Profile = $Profile; x = $x}) -Force
+                }
+            }
+        }
+
+        foreach ($DeviceModel in @($Profiles.PSObject.Properties.Name)) {            
+            $Profile   = $Profiles.$DeviceModel.Profile
+
+            $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
+            $Profile.MemoryClockBoost = $Profile.MemoryClockBoost -replace '[^0-9\-]+'
+            $Profile.LockVoltagePoint = $Profile.LockVoltagePoint -replace '[^0-9]+'
+            if (-not $Config.EnableOCVoltage) {$Profile.LockVoltagePoint = ''}
+
+            $applied_any = $false
+
+            if ($Vendor -eq "NVIDIA") {
+                foreach($DeviceId in $Profiles.$DeviceModel.Index) {
+                    if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
+                    if (-not $Global:IsLinux) {
+                        if ($Profile.ThermalLimit -gt 0) {$val=[math]::max([math]::min($Profile.ThermalLimit,95),50);$NvCmd.Add("-setTempTarget:$($DeviceId),0,$($val)") >$null;$applied_any=$true}
+                        if ($Profile.LockVoltagePoint-match '^\-*[0-9]+$') {$val=[int]([Convert]::ToInt32($Profile.LockVoltagePoint)/12500)*12500;$NvCmd.Add("-lockVoltagePoint:$($DeviceId),$($val)") >$null;$applied_any=$true}
+                    } else {
+                        $NvCmd.Add("-a '[gpu:$($DeviceId)]/GPUPowerMizerMode=1'")
+                    }
+                    if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($Profiles.$DeviceModel.x)]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                    if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($Profiles.$DeviceModel.x)]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
+                }
+            } elseif ($Pattern.$Vendor -ne $null) {
+                $DeviceId = 0
+                $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
+                    if ($DeviceId -in $Profiles.$DeviceModel.Index) {
+                        $GpuEntry = $Script:abControl.GpuEntries[$_]
+                        $ProfileBackup = [hashtable]@{}
+                        try {if (-not ($GpuEntry.PowerLimitMin -eq 0 -and $GpuEntry.PowerLimitMax -eq 0) -and $Profile.PowerLimit -gt 0) {$ProfileBackup.PowerLimitCur = $GpuEntry.PowerLimitCur;$Script:abControl.GpuEntries[$_].PowerLimitCur = [math]::max([math]::min($Profile.PowerLimit,$GpuEntry.PowerLimitMax),$GpuEntry.PowerLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                        try {if (-not ($GpuEntry.ThermalLimitMin -eq 0 -and $GpuEntry.ThermalLimitMax -eq 0) -and $Profile.ThermalLimit -gt 0) {$ProfileBackup.ThermalLimitCur = $GpuEntry.ThermalLimitCur;$Script:abControl.GpuEntries[$_].ThermalLimitCur = [math]::max([math]::min($Profile.ThermalLimit,$GpuEntry.ThermalLimitMax),$GpuEntry.ThermalLimitMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                        try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                        try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
+                        if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
+                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup > $null;$applied_any=$true}
+                    }
+                    $DeviceId++
+                }                 
+            }
+            if ($applied_any) {$applied.Add("OC set for $($this.BaseName)-$($DeviceModel)-$($this.BaseAlgorithm -join '-'): PL=$(if ($Profile.PowerLimit) {"$($Profile.PowerLimit)%"} else {"-"}), TL=$(if ($Profile.ThermalLimit) {"$($Profile.ThermalLimit)°C"} else {"-"}), MEM=$(if ($Profile.MemoryClockBoost -ne '') {"$($Profile.MemoryClockBoost)"} else {"-"}), CORE=$(if ($Profile.CoreClockBoost -ne '') {"$($Profile.CoreClockBoost)"} else {"-"}), LVP=$(if ($Profile.LockVoltagePoint -ne '') {"$($Profile.LockVoltagePoint)µV"} else {"-"})") > $null}
         }
 
         if ($applied.Count) {
