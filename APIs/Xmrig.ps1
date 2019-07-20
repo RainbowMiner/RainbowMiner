@@ -19,7 +19,7 @@ class Xmrig : Miner {
             $DevicesCurrent = if ($this.DeviceName -like "GPU*") {$Parameters.Devices -join ','} else {$Global:GlobalCPUInfo.Name}
             if ($Devices -ne $DevicesCurrent) {
                 $DevicesCurrent | Set-Content "$Miner_Path\$DevicesFile" -Force
-                Get-ChildItem "$Miner_Path\threads_$($this.BaseAlgorithm -join '-')-*.json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
+                Get-ChildItem "$Miner_Path\threads_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if (($Parameters.Devices | Measure-Object).Count) {"-*"}).json" | Foreach-Object {Remove-Item -Path $_.FullName -ErrorAction Ignore -Force}
             }
 
             if (Test-Path "$Miner_Path\$ThreadsConfigFile") {
