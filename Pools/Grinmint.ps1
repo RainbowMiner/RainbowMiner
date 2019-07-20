@@ -64,7 +64,7 @@ if (-not $InfoOnly) {
 }
 
 $Pools_Data | ForEach-Object {
-    $Stat = if ($_.algo -eq "Cuckaroo29") {$Stat29} else {$Stat31}
+    $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
     [PSCustomObject]@{
         Algorithm     = Get-Algorithm $_.algo
         CoinName      = $Pool_Currency
