@@ -23,9 +23,10 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
 - **Profit auto-switch between pools (2Miners, AHashPool, BlazePool, BlockCruncher, BlockMasters, Bsod, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, GosCx, GrinMint, HashRefinery, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningPoolHub, MiningRigRentals, Mintpond, Nanopool, Nicehash, PhiPhiPool, PocketWhale, Ravenminer, SparkPool, SuprNova, UUpool, YiiMP, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
-- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, JceMiner, Sgminer, T-Rex, XmrStak and many more)**
+- **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
 - **CLient/Server networking for multiple rigs, to minimize internet traffic and avoid pool bans**
+- **Scheduler for different power prices and/or pause during specific timespans**
 - **Build-in automatic update**
 - **Mining devices freely selectable**
 - **Finetune miner- and pool-configuration during runtime**
@@ -1159,6 +1160,51 @@ Example (this is the setup for one of my GTX1070 rigs, basicly substituting the 
 Note the last entry: "Profile-GPU#02"
 Imagine a rig with multiple GTX1070 from the same manufacturer, except GPU#02, which is from a different manufacturer. This one GPU might need slightly different overclocking for Profile2. 
 Adding the GPU's name or PCI bus id has priority over the model name selection.
+
+### Config\scheduler.config.txt
+
+Define different power prices and/or pause miners for different timespans.
+
+- DayOfWeek: \*=all 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday
+- From: start of timespan, 24h notation HH:MM, e.g. 15:30
+- To: end of timespan, 24h notation HH:MM, e.g. 22:45
+- PowerPrice: power price for this timespan, leave empty for default powerprice
+- Pause: if set to "1", miners will be paused during this timespan
+- Enable: if set to "1", this timespan will be used
+
+Example
+
+    [
+        {
+            "DayOfWeek":  "*",
+            "From":  "01:15",
+            "To":  "07:30",
+            "PowerPrice":  "0.15",
+            "Pause":  "0",
+            "Enable":  "1"
+        },
+        {
+            "DayOfWeek":  "0",
+            "From":  "00:00",
+            "To":  "23:59",
+            "PowerPrice":  "",
+            "Pause":  "0",
+            "Enable":  "1"
+        },
+        {
+            "DayOfWeek":  "1",
+            "From":  "15:00",
+            "To":  "16:30",
+            "PowerPrice":  "",
+            "Pause":  "1",
+            "Enable":  "1"
+        }
+    ]
+
+- On sunday (dow=0), the default power price from config.txt will be used for the whole day
+- On monday (dow=1), the miners will be paused during 3pm - 4:30pm
+- On all other weekdays (dow=*), a power price of 0.15 will be used during 1am - 7:30am
+- During all other times, the default power price from config.txt will be used
 
 ### Config\autoexec.config.txt
 
