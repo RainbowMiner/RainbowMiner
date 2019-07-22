@@ -149,6 +149,7 @@ function Start-Setup {
             Write-Host "- Coins: finetune global settings for dedicated coins, wallets, penalty, minimum hasrate and more" -ForegroundColor Yellow
             Write-Host "- OC-Profiles: create or edit overclocking profiles" -ForegroundColor Yellow
             Write-Host "- Network: API and client/server setup for multiple rigs within one network" -ForegroundColor Yellow
+            Write-Host "- Scheduler: different power prices and selective pause for timespans" -ForegroundColor Yellow
             Write-Host " "
             if (-not $Config.Wallet -or -not $Config.WorkerName -or -not $Config.PoolName) {
                 Write-Host " WARNING: without the following data, RainbowMiner is not able to start mining. " -BackgroundColor Yellow -ForegroundColor Black
@@ -157,7 +158,7 @@ function Start-Setup {
                 if (-not $Config.PoolName)   {Write-Host "- No pool selected! Please go to [S]elections and add some pools! " -ForegroundColor Yellow}            
                 Write-Host " "
             }
-            $SetupType = Read-HostString -Prompt "$(if ($SetupOnly) {"Wi[z]ard, "})[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, $(if ($Config.PoolName -icontains "MiningRigRentals") {"M[r]r, "})[N]etwork, E[x]it $(if ($SetupOnly) {"setup"} else {"configuration and start mining"})" -Default "X"  -Mandatory -Characters "ZWCESAMPDLIONRX"
+            $SetupType = Read-HostString -Prompt "$(if ($SetupOnly) {"Wi[z]ard, "})[W]allets, [C]ommon, [E]nergycosts, [S]elections, [A]ll, [M]iners, [P]ools, [D]evices, A[l]gorithms, Co[i]ns, [O]C-Profiles, $(if ($Config.PoolName -icontains "MiningRigRentals") {"M[r]r, "})[N]etwork, Sc[h]eduler, E[x]it $(if ($SetupOnly) {"setup"} else {"configuration and start mining"})" -Default "X"  -Mandatory -Characters "ZWCESAMPDLIONRHX"
         }
 
         if ($SetupType -eq "Z") {$IsInitialSetup = $true;$SetupType = "A"}
@@ -2660,6 +2661,159 @@ function Start-Setup {
                         
                 } catch {if ($Error.Count){$Error.RemoveAt(0)};$OCProfileSetupDone = $true}
             } until ($OCProfileSetupDone)
+        }
+        elseif ($SetupType -eq "H") {
+
+            Clear-Host
+
+            Write-Host " "
+            Write-Host "*** Scheduler Configuration ***" -BackgroundColor Green -ForegroundColor Black
+            Write-HostSetupHints
+            Write-Host " "
+
+            $SchedulerSetupDone = $false
+            do {
+                try {
+                    $SchedulerActual = Get-Content $ConfigFiles["Scheduler"].Path | ConvertFrom-Json
+                    $i = 0; $SchedulerActual | Foreach-Object {$_ | Add-Member Index $i -Force;$i++}
+                    Write-Host " "
+                    $p = [console]::ForegroundColor
+                    [console]::ForegroundColor = "Cyan"
+                    Write-Host "Current schedules:"
+
+                    $SchedulerActual | Format-Table @(
+                        @{Label="No"; Expression={$_.Index}}
+                        @{Label="DayOfWeek"; Expression={"$(if ($_.DayOfWeek -eq "*") {"*"} else {$_.DayOfWeek})"};align="center"}
+                        @{Label="From"; Expression={"$((Get-HourMinStr $_.From).SubString(0,5))"}}
+                        @{Label="To"; Expression={"$((Get-HourMinStr $_.To -To).SubString(0,5))"}}
+                        @{Label="Pause"; Expression={"$(if (Get-Yes $_.Pause) {"1"} else {"0"})"};align="center"}
+                        @{Label="Enable"; Expression={"$(if (Get-Yes $_.Enable) {"1"} else {"0"})"};align="center"}
+                    )
+                    Write-Host "DayofWeek: *=all $(((0..6) | %{"$($_)=$([DayOfWeek]$_)"}) -join ' ')"
+                    Write-Host " "
+                    [console]::ForegroundColor = $p
+
+                    $Index = -1                    
+                    $Scheduler_Action = Read-HostString "Please choose: [a]dd, [e]dit, [d]elete (enter exit to end scheduler config)" -Valid @("a","e","d") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                    if ($Scheduler_Action -eq "x") {throw "exit"}
+
+                    $ScheduleDefault = [PSCustomObject]@{
+                        DayOfWeek = ""
+                        From = ""
+                        To = ""
+                        PowerPrice = ""
+                        Enable = "0"
+                        Pause = "0"                            
+                    }
+
+                    if ($Scheduler_Action -eq "a") {
+                        $Schedule = $ScheduleDefault.PSObject.Copy()
+                    } else {
+                        $Index = Read-HostInt "Enter the schedule-number to $(if ($Scheduler_Action -eq "e") {"edit"} else {"delete"})" -Min 0 -Max (($SchedulerActual | Measure-Object).Count-1) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                        $Schedule = ($SchedulerActual | Select-Object -Index $Index).PSObject.Copy()
+                        foreach($SetupName in $ScheduleDefault.PSObject.Properties.Name) {if ($Schedule.$SetupName -eq $null){$Schedule | Add-Member $SetupName $ScheduleDefault.$SetupName -Force}}
+                    }
+
+                    [System.Collections.ArrayList]$SchedulerSetupSteps = @()
+                    [System.Collections.ArrayList]$SchedulerSetupStepBack = @()
+                    $SchedulerSetupStepsDone = $false
+                    $SchedulerSetupStep = 0
+
+                    if ($Scheduler_Action -ne "d") {
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","from","to","powerprice","pause","enable")) > $null
+                    }
+                    $SchedulerSetupSteps.Add("save") > $null
+
+                    do {
+                        $SchedulerSetupStepStore = $true
+                        try {
+                            Switch ($SchedulerSetupSteps[$SchedulerSetupStep]) {
+                                "dayofweek" {
+                                    $Schedule.DayOfWeek = Read-HostString -Prompt "Enter on which day of week this schedule activates" -Default $Schedule.DayOfWeek -Valid @("all","*","0","1","2","3","4","5","6") -Mandatory -Characters "0-9\*" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    if ($Schedule.DayOfWeek -eq "all") {$Schedule.DayOfWeek = "*"}
+                                }
+                                "from" {
+                                    $Schedule.From = Read-HostString -Prompt "Enter when this schedule starts" -Default $Schedule.From -Characters "0-9amp: " | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.From = Get-HourMinStr $Schedule.From
+                                }
+                                "to" {
+                                    $Schedule.To = Read-HostString -Prompt "Enter when this schedule ends" -Default $Schedule.To -Characters "0-9amp: " | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.To = Get-HourMinStr $Schedule.To -To
+                                }
+                                "powerprice" {
+                                    $Schedule.PowerPrice = Read-HostString -Prompt "Enter this schedule's powerprice (leave empty for global default)" -Default $Schedule.PowerPrice -Characters "0-9,\.\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.PowerPrice = $Schedule.PowerPrice -replace ",","." -replace "[^0-9\.\-]+"
+                                }
+                                "pause" {
+                                    $Schedule.Pause = Read-HostBool -Prompt "Pause miners during this schedule?" -Default $Schedule.Pause | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "enable" {
+                                    $Schedule.Enable = Read-HostBool -Prompt "Enable this schedule?" -Default $Schedule.Enable | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "save" {
+                                    Write-Host " "
+                                    if ($Scheduler_Action -eq "d") {
+                                        if (-not (Read-HostBool -Prompt "Do you really want to delete schedule number $($Index)?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                        $SchedulerActual = $SchedulerActual | Where Index -ne $Index
+                                    } else {
+                                        if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
+                                        if ($Index -eq -1) {$SchedulerActual += $Schedule} else {$SchedulerActual[$Index] = $Schedule}
+                                    }
+
+                                    $SchedulerSave = @()
+                                    $SchedulerActual | Foreach-Object {
+                                        $SchedulerSave += [PSCustomObject]@{
+                                            DayOfWeek  = $_.DayOfWeek
+                                            From       = $_.From
+                                            To         = $_.To
+                                            PowerPrice = $_.PowerPrice
+                                            Pause      = if (Get-Yes $_.Pause) {"1"} else {"0"}
+                                            Enable     = if (Get-Yes $_.Enable) {"1"} else {"0"}
+                                        }
+                                    }
+                                    Set-ContentJson -PathToFile $ConfigFiles["Scheduler"].Path -Data $SchedulerSave > $null
+
+                                    Write-Host " "
+                                    Write-Host "Changes written to schedule configuration. " -ForegroundColor Cyan
+                                                    
+                                    $SchedulerSetupStepsDone = $true
+                                }
+                            }
+                            if ($SchedulerSetupStepStore) {$SchedulerSetupStepBack.Add($SchedulerSetupStep) > $null}
+                            $SchedulerSetupStep++
+                        }
+                        catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            if (@("back","<") -icontains $_.Exception.Message) {
+                                if ($SchedulerSetupStepBack.Count) {$SchedulerSetupStep = $SchedulerSetupStepBack[$SchedulerSetupStepBack.Count-1];$SchedulerSetupStepBack.RemoveAt($SchedulerSetupStepBack.Count-1)}
+                            }
+                            elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                Write-Host " "
+                                Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                Write-Host " "
+                                $SchedulerSetupStepsDone = $true                                               
+                            }
+                            else {
+                                if ($SchedulerSetupStepStore) {$SchedulerSetupStepBack.Add($SchedulerSetupStep) > $null}
+                                $NextSetupStep = Switch -Regex ($_.Exception.Message) {
+                                                    "^Goto\s+(.+)$" {$Matches[1]}
+                                                    "^done$"  {"save"}
+                                                    default {$_}
+                                                }
+                                $SchedulerSetupStep = $SchedulerSetupSteps.IndexOf($NextSetupStep)
+                                if ($SchedulerSetupStep -lt 0) {
+                                    Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                    $SchedulerSetupStep = $SchedulerSetupStepBack[$SchedulerSetupStepBack.Count-1];$SchedulerSetupStepBack.RemoveAt($SchedulerSetupStepBack.Count-1)
+                                }
+                            }
+                        }
+                    } until ($SchedulerSetupStepsDone)
+                        
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    if ($Index -eq -1 -or @("back","<") -inotcontains $_.Exception.Message) {$SchedulerSetupDone = $true}
+                }
+            } until ($SchedulerSetupDone)
         }
         elseif ($SetupType -eq "R") {
 

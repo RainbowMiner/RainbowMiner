@@ -62,6 +62,7 @@
             Algorithms = @{Path='';LastWriteTime=0;Healthy=$false}
             Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
+            Scheduler  = @{Path='';LastWriteTime=0;Healthy=$false}
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
         [hashtable]$Session.MinerInfo = @{}
@@ -78,6 +79,7 @@
         $Session.SkipSwitchingPrevention = $false
         $Session.StartDownloader = $false
         $Session.PauseMiners = $false
+        $Session.PauseMinersByScheduler = $false
         $Session.RestartMiners = $false
         $Session.Restart = $false
         $Session.AutoUpdate = $false
@@ -273,6 +275,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
+                $Session.Config | Add-Member Scheduler @() -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.RunSetup = $true
@@ -478,6 +481,29 @@ function Invoke-Core {
         }
     }
 
+    #Check for powerprice config
+    if (Set-ConfigDefault "Scheduler") {
+        if (-not $Session.IsDonationRun -and ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime))) {
+            $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
+            if (Test-Config "Scheduler" -Health) {
+                $Session.Config | Add-Member Scheduler @() -Force
+                $AllScheduler | Foreach-Object {
+                    $_ | Add-Member DayOfWeek "$($_.DayOfWeek -replace "[^0-6\*]+")"[0] -Force
+                    $_ | Add-Member From $(Get-HourMinStr $_.From) -Force
+                    $_ | Add-Member To   $(Get-HourMinStr $_.To -to) -Force
+                    $_ | Add-Member PowerPrice $($_.PowerPrice -replace ",","." -replace "[^0-9\.]+") -Force
+                    $_ | Add-Member Enable $(Get-Yes $_.Enable) -Force
+                    $_ | Add-Member Pause  $(Get-Yes $_.Pause)  -Force
+                    $PowerPrice = if ($_.PowerPrice -eq "") {$Session.Config.PowerPrice} else {$_.PowerPrice}
+                    try {$PowerPrice = [Double]$PowerPrice} catch {$PowerPrice = $Session.Config.PowerPrice}
+                    $_.PowerPrice = $PowerPrice
+                    $Session.Config.Scheduler += $_
+                }
+            }
+            if ($AllScheduler) {Remove-Variable "AllScheduler" -Force}
+        }
+    }
+
     #Check for devices config
     if (Set-ConfigDefault "Devices") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Test-Config "Devices" -LastWriteTime))) {
@@ -583,6 +609,14 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
     }
+
+    #Get PowerPrice and Scheduler events
+    $Session.PauseMinersByScheduler = $false
+    [Double]$PowerPrice = $Session.Config.PowerPrice
+    $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
+    $DayOfWeek = (Get-Date).DayOfWeek
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
     
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
@@ -591,10 +625,10 @@ function Invoke-Core {
         $DonateMinutes /= 2
         $DonateDelayHours /= 2
     }
-    if (-not $Session.LastDonated -or $Session.PauseMiners) {
+    if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
-        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)        
-        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
+        $ShiftDonationRun = $Session.Timer.AddHours(0.5 - $DonateDelayHours).AddMinutes($DonateMinutes)        
+        if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
         $Session.IsDonationRun = $false
@@ -813,7 +847,7 @@ function Invoke-Core {
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
-    if ($Session.Config.PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
+    if ($PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
         if ($Session.Rates."$($Session.Config.PowerPriceCurrency)") {
             $PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$Session.Rates."$($Session.Config.PowerPriceCurrency)"
         } else {
@@ -1543,7 +1577,7 @@ function Invoke-Core {
             }
         }
 
-        if (-not $Session.PauseMiners -and -not $Session.AutoUpdate -and $Session.Profitable) {
+        if (-not $Session.PauseMiners -and -not $Session.PauseMinersByScheduler -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
         }
     }
@@ -1746,6 +1780,11 @@ function Invoke-Core {
         Write-Host -NoNewline "Status: "
         Write-Host -NoNewLine "PAUSED" -ForegroundColor Red
         Write-Host " (press P to resume)"
+        Write-Host " "
+    } elseif ($Session.PauseMinersByScheduler) {
+        Write-Host -NoNewline "Status: "
+        Write-Host -NoNewLine "PAUSED BY SCHEDULER" -ForegroundColor Red
+        Write-Host " (edit scheduler.config.txt to change)"
         Write-Host " "
     } elseif (-not $Session.Profitable) {
         Write-Host -NoNewline "Status: "

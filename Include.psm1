@@ -3979,8 +3979,7 @@ function Set-ContentJson {
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                if ($Compress) {$Data | ConvertTo-Json -Compress | Set-Content $PathToFile -Encoding utf8 -Force}
-                else {$Data | ConvertTo-Json | Set-Content $PathToFile -Encoding utf8 -Force}
+                ConvertTo-Json -InputObject $Data -Compress:$Compress | Set-Content $PathToFile -Encoding utf8 -Force
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
             }
@@ -4404,6 +4403,43 @@ function Set-OCProfilesConfigDefault {
     Test-Config $ConfigName -Exists
 }
 
+function Set-SchedulerConfigDefault {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $False)]
+        [Switch]$Force = $false
+    )
+    $ConfigName = "Scheduler"
+    if (-not (Test-Config $ConfigName)) {return}
+    $PathToFile = $Session.ConfigFiles[$ConfigName].Path
+    if ($Force -or -not (Test-Path $PathToFile)) {
+        if (Test-Path $PathToFile) {
+            $Preset = Get-ConfigContent $ConfigName
+            if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
+        }
+        try {
+            $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1" -Quick | Select-Object -ExpandProperty Content
+            if ($Preset -is [string] -or $Preset -eq $null) {
+                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json | ConvertFrom-Json;$a.DayOfWeek = "$_";$a})
+            }
+            $ChangeTag = Get-ContentDataMD5hash($Preset)
+            
+            $Preset | Foreach-Object {
+                foreach($SetupName in @($Default.PSObject.Properties.Name | Select-Object)) {
+                    if ($_.$SetupName -eq $null) {$_ | Add-Member $SetupName $Default.$SetupName -Force}
+                }
+            }
+
+            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+        }
+        catch{
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+        }
+    }
+    Test-Config $ConfigName -Exists
+}
+
 function Test-Config {
     [CmdletBinding()]
     param(
@@ -4441,14 +4477,15 @@ function Set-ConfigDefault {
     )
 
     Switch ($ConfigName) {
-        "Colors"     {Set-ColorsConfigDefault -Force:$Force}
-        "GpuGroups"  {Set-GpuGroupsConfigDefault -Force:$Force}
-        "Pools"      {Set-PoolsConfigDefault -Force:$Force}
-        "Miners"     {Set-MinersConfigDefault -Force:$Force}
-        "Devices"    {Set-DevicesConfigDefault -Force:$Force}
-        "OCProfiles" {Set-OCProfilesConfigDefault -Force:$Force}
-        "Algorithms" {Set-AlgorithmsConfigDefault -Force:$Force}
-        "Coins"      {Set-CoinsConfigDefault -Force:$Force}
+        "Colors"      {Set-ColorsConfigDefault -Force:$Force}
+        "GpuGroups"   {Set-GpuGroupsConfigDefault -Force:$Force}
+        "Pools"       {Set-PoolsConfigDefault -Force:$Force}
+        "Miners"      {Set-MinersConfigDefault -Force:$Force}
+        "Devices"     {Set-DevicesConfigDefault -Force:$Force}
+        "OCProfiles"  {Set-OCProfilesConfigDefault -Force:$Force}
+        "Algorithms"  {Set-AlgorithmsConfigDefault -Force:$Force}
+        "Coins"       {Set-CoinsConfigDefault -Force:$Force}
+        "Scheduler"   {Set-SchedulerConfigDefault -Force:$Force}
     }
 }
 
@@ -5854,4 +5891,24 @@ function Get-PoolDataFromRequest {
         $rewards.TSL = if ($blocks.Count) {$timestamp - $blocks[0]}
     }
     $rewards
+}
+
+function Get-HourMinStr {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [string]$Str,
+        [Parameter(Mandatory = $False)]
+        [switch]$to,
+        [Parameter(Mandatory = $False)]
+        [switch]$addseconds
+    )
+    $add = 0
+    if ($Str -match "p") {$add = 12}
+    $Str = $Str -replace "[^\d:]+"
+    $Str = if ($Str -match "^\d+$") {"{0:d2}:{1}" -f (([int]$Str+$add) % 24),$(if ($to) {"59:59"} else {"00:00"})}
+    elseif ($Str -match "^(\d+):(\d+)") {"{0:d2}:{1:d2}:{2}" -f (([int]$Matches[1]+$add) % 24),([int]$Matches[2] % 60),$(if ($to) {"59"} else {"00"})}
+    elseif ($to) {"23:59:59"}
+    else {"00:00:00"}
+    if (-not $addseconds) {$Str.Substring(0,5)} else {$Str}
 }

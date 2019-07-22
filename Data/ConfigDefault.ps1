@@ -24,7 +24,7 @@
     EthPillEnable = "disable"
     MinimumMiningIntervals = 1
     EnableServerConfig = $false
-    ServerConfigName = @("config","coins","pools","algorithms")
+    ServerConfigName = @("config","coins","pools","algorithms","scheduler")
     ExcludeServerConfigVars = @(
         "WorkerName","DeviceName","ExcludeDeviceName","Proxy",
         "APIPort","APIUser","APIPassword","APIAuth",
