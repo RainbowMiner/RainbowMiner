@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5b-phoenix/PhoenixMiner_4.5b_Linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Linux.tar.gz"
 } else {
     $Path = ".\Bin\Ethash-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5b-phoenix/PhoenixMiner_4.5b_Windows.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.2c-phoenix/PhoenixMiner_4.2c_Windows.zip"
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
@@ -25,9 +25,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"  ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash2GB
     [PSCustomObject]@{MainAlgorithm = "ethash3gb"  ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash3GB
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow2GB
-    [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow3GB
-    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow
+    [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD"); Params = @()} #ProgPow2GB
+    [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD"); Params = @()} #ProgPow3GB
+    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD"); Params = @()} #ProgPow
 )
 $CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -rmode 0"
 
