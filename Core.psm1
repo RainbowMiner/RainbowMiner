@@ -627,7 +627,7 @@ function Invoke-Core {
     }
     if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
-        $ShiftDonationRun = $Session.Timer.AddHours(0.5 - $DonateDelayHours).AddMinutes($DonateMinutes)        
+        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)        
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
