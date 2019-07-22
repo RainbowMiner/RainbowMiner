@@ -84,6 +84,7 @@
 341	FireIceAmd (linux)
 342	FireIceCpu (linux)
 343	FireIceNvidia (linux)
+344	Phoenix42
 
 400	Sgminer
 401	SgminerBitcore
