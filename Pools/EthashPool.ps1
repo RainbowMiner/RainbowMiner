@@ -21,19 +21,17 @@ $Pool_Region_Default = Get-Region "us"
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/ethashpool.json"  -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/ethashpool.json"  -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
     Write-Log -Level Warn "Pool API ($Name) has failed. "
 }
 
-$Pool_Request.PSObject.Properties.Name | Where-Object {$_ -ne "GRIN"} | Where-Object {$Wallets.$_ -or $InfoOnly} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "[^A-Z]")" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency  = $_
     $Pool_Request1  = $Pool_Request.$Pool_Currency
     $Pool_Algorithm = $Pool_Request1.algo
-
-    $Pool_Divisor   = if ($Pool_Request1.divisor) {$Pool_Request1.divisor} else {1}
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
 
@@ -41,37 +39,30 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$_ -ne "GRIN"} | Where-Ob
         $timestamp      = (Get-Date).ToUniversalTime()
         $timestamp24h   = (Get-Date).AddHours(-24).ToUniversalTime()
 
-        $Pool_Blocks  = $Pool_Request1.blocks | Where-Object {[DateTime]$_.timestamp -gt $timestamp24h}
-        if (-not ($Pool_Blocks | Measure-Object).Count) {
-            $reward   = ($Pool_Request1.blocks | Where-Object reward | Measure-Object reward -Average).Average
-            $Pool_BLK = 0
-            $Pool_TSL = [int64]($timestamp - [DateTime]$Pool_Request1.stats.last_pool_block_found_at.date).TotalSeconds
-        } else {
-            $reward   = ($Pool_Blocks | Where-Object reward | Measure-Object reward -Average).Average
-            $Pool_BLK = ($Pool_Blocks | Measure-Object).Count
-            $Pool_TSL = [int64]($timestamp - [DateTime]$Pool_Blocks[0].timestamp).TotalSeconds
-        }
+        if (-not ($timestamp_lastblock = ($Pool_Request1.blocks | Select-Object -First 1).timestamp)) {$timestamp_lastblock = 0}
 
-        $lastSatPrice = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
-        $profitLive = $(if ($Pool_Currency -eq "GRIN") {$Pool_BLK/$Pool_Request1.stats.pool_hash_rate} else {86400/$Pool_Request1.stats.network_difficulty}) * $reward / $Pool_Divisor * $lastSatPrice
+        $Pool_BLK = ($Pool_Request1.blocks | Where-Object {[DateTime]$_.timestamp -gt $timestamp24h} | Measure-Object).Count
+        $Pool_TSL = [int64]($timestamp - [DateTime]$timestamp_lastblock).TotalSeconds
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $profitLive -Duration $StatSpan -HashRate $Pool_Request1.stats.pool_hash_rate -BlockRate $Pool_BLK -ChangeDetection $true -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request1.stats.pool_hash_rate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
     }
     
     if (($AllowZero -or $Pool_Request1.stats.pool_hash_rate -gt 0) -or $InfoOnly) {
+        $Pool_Currency = $Pool_Currency -replace "[^A-Z]"
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinName      = $Pool_Request1.coin
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
-            Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
             Protocol      = "stratum+tcp"
             Host          = $Pool_Request1.host
             Port          = $Pool_Request1.port
-            User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -eq "GRIN") {"/"} else {"."}){workername:$Worker}"
+            User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
             Pass          = "x"
+            Wallet        = "$($Wallets.$Pool_Currency)"
             Worker        = "{workername:$Worker}"
             Region        = $Pool_Region_Default
             SSL           = $false
@@ -81,6 +72,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$_ -ne "GRIN"} | Where-Ob
             Hashrate      = $Stat.HashRate_Live
             TSL           = $Pool_TSL
             BLK           = $Stat.BlockRate_Average
+            WTM           = $true
             EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
         }
     }

@@ -319,7 +319,7 @@ function Get-WhatToMineData {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10
             $WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
                 [PSCustomObject]@{
-                    algo   = Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)
+                    algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
                     id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
                     factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
                 }
@@ -351,7 +351,7 @@ function Get-WhatToMineData {
     if (-not $Silent) {$Global:WTMData}
 }
 
-function Get-WhatToMinerUrl {
+function Get-WhatToMineUrl {
     "https://whattomine.com/coins.json?$(@(Get-WhatToMineData | Where-Object {$_.id} | Foreach-Object {"$($_.id)=true&factor[$($_.id)_hr]=10&factor[$($_.id)_p]=0"}) -join '&')"
 }
 

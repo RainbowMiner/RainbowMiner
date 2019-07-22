@@ -10,7 +10,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync (Get-WhatToMinerUrl) -tag $Name -cycletime 120 | Select-Object -ExpandProperty coins
+    $Pool_Request = Invoke-RestMethodAsync (Get-WhatToMineUrl) -tag $Name -cycletime 120 | Select-Object -ExpandProperty coins
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
