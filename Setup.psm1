@@ -2523,7 +2523,7 @@ function Start-Setup {
                             if ($OCProfile_Name -eq '') {throw}
                             if (($SetupDevices | Where-Object Type -eq "gpu" | Measure-Object).Count) {
                                 $OCProfile_Device = Read-HostString -Prompt "Assign this profile to a device? (choose Model, PCIBusId or Name - leave empty for none)" -Characters "A-Z0-9\:#" -Valid $ValidDeviceDescriptors | Foreach-Object {if (@("cancel","exit") -icontains $_) {throw $_};$_}
-                                if ($OCProfile_Device -match "^\d+$") {$OCProfile_Device = "GPU#{0:d2}" -f $OCProfile_Device}
+                                if ($OCProfile_Device -match "^\d+$") {$OCProfile_Device = "GPU#{0:d2}" -f [int]$OCProfile_Device}
                             }
                         } until (@("back","<") -inotcontains $OCProfile_Device)
 
