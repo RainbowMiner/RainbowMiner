@@ -32,6 +32,7 @@
 131	RhminerCpu
 132	CcminerHoney
 133	CcminerBmw512
+134	CcminerMtpNh
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd

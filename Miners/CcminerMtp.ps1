@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer-linux-cuda"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.23-ccminermtp/ccminermtp-v1.1.23-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.24-ccminermtp/ccminermtp-v1.1.24-linux.7z"
     $Cuda = "9.2"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $PathNh = ".\Bin\NVIDIA-CcminerMTP\ccminer-nh.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.23-ccminermtp/ccminermtp-v1.1.23-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.24-ccminermtp/ccminermtp-v1.1.24-win.7z"
     $Cuda = "10.1"
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
@@ -47,11 +47,11 @@ if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersi
 
 if ($IsLinux) {
     if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.1") {
-        $Path += "10.1"
+        $Path += "_101"
     } elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.0") {
-        $Path += "10.0"
+        $Path += "_100"
     } else {
-        $Path += "9.2"
+        $Path += "_92"
     }
 }
 
