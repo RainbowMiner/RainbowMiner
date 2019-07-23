@@ -142,7 +142,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				if ($Pools.$Algorithm_Norm.Name -notlike "Nicehash" -or @("graft","monero") -inotcontains $_.MainAlgorithm) {
+				if ($Pools.$Algorithm_Norm.Name -notmatch "Nicehash" -or @("graft","monero") -inotcontains $_.MainAlgorithm) {
 					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 					[PSCustomObject]@{
 						Name = $Miner_Name

@@ -101,7 +101,7 @@ foreach ($Miner_Vendor in @("AMD")) {
 								    pool_address    = "$($Pools.$Algorithm_Norm.Host):$($Pool_Port)"
 								    wallet_address  = "$($Pools.$Algorithm_Norm.User)"
 								    pool_password   = "$($Pools.$Algorithm_Norm.Pass)"
-								    use_nicehash    = $($Pools.$Algorithm_Norm.Name -eq "Nicehash")
+								    use_nicehash    = $($Pools.$Algorithm_Norm.Name -match "Nicehash")
 								    use_tls         = $Pools.$Algorithm_Norm.SSL
 								    tls_fingerprint = ""
 								    pool_weight     = 1

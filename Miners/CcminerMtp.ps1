@@ -62,7 +62,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        $IsNh = $Pools.$Algorithm_Norm.Name -eq "NiceHash"
+        $IsNh = $Pools.$Algorithm_Norm.Name -match "NiceHash"
 
         $MinMemGB = $_.MinMemGB
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}

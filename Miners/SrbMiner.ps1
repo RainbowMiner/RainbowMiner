@@ -146,7 +146,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 								wallet = $($Pools.$Algorithm_Norm.User)
 								password = "$($Pools.$Algorithm_Norm.Pass)"
 								pool_use_tls = $($Pools.$Algorithm_Norm.SSL)
-								nicehash = $($Pools.$Algorithm_Norm.Name -eq 'NiceHash')
+								nicehash = $($Pools.$Algorithm_Norm.Name -match 'NiceHash')
 							})
 						}
 						Params = "--apienable --apiport $($Miner_Port) --apirigname $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) --disabletweaking --disablegpuwatchdog --enablecoinforking --maxnosharesent 120 $($Params)".Trim()

@@ -93,7 +93,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Commands | ForEach-Object {        
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
        
-        $Arguments = [PSCustomObject]@{Params = "--low --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $(if ($Pools.$Algorithm_Norm.Name -eq "NiceHash") {"--nicehash"}) $(if ($Pools.$Algorithm_Norm.SSL) {"--ssl"}) --stakjson --any $($_.Params)"}
+        $Arguments = [PSCustomObject]@{Params = "--low --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) --stakjson --any $($_.Params)"}
 
         if ($Session.Config.CPUMiningThreads) {
             $Arguments | Add-Member Config ([PSCustomObject]@{cpu_threads_conf = @($Miner_Threads | Foreach-Object {[PSCustomObject]@{cpu_architecture="auto";affine_to_cpu=$_;use_cache=$true;multi_hash=6}} | Select-Object)})
