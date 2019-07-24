@@ -21,24 +21,24 @@ $DevFee = 3.0
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cn_haven";  MinMemGb = 4; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_heavy";  MinMemGb = 4; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cn_saber";  MinMemGb = 4; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnr";       MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8";      MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";  MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_half"; MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";  MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl"; MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2"; MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "cuckatoo31";MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; MinMemGb = 1; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "lyra2z";    MinMemGb = 1; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "mtp";       MinMemGb = 2; Params = ""; DevFee = 2.5}
-    [PSCustomObject]@{MainAlgorithm = "phi2";      MinMemGb = 1; Params = ""; DevFee = 3.0}
-    [PSCustomObject]@{MainAlgorithm = "x16r";      MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16rt";     MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "x16s";      MinMemGb = 1; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_haven";        MinMemGb = 4; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_heavy";        MinMemGb = 4; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cn_saber";        MinMemGb = 4; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnr";             MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8";            MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_dbl";        MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_half";       MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_rwz";        MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_trtl";       MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";       MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin"; MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3";       MinMemGb = 1; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "lyra2z";          MinMemGb = 1; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "mtp";             MinMemGb = 2; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "phi2";            MinMemGb = 1; Params = ""; DevFee = 3.0}
+    [PSCustomObject]@{MainAlgorithm = "x16r";            MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rt";           MinMemGb = 1; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16s";            MinMemGb = 1; Params = ""; DevFee = 2.5}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
