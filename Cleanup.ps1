@@ -58,7 +58,7 @@ try {
             $MinersActualSave | ConvertTo-Json | Set-Content $MinersConfigFile -Encoding Utf8
         }
     }
-    if ($Version -le (Get-Version "3.8.4.4")) {
+    if ($Version -le (Get-Version "3.8.4.4") -and $IsWindows) {
         $cpus = @(Get-CimInstance -ClassName CIM_Processor | Select-Object -Unique -ExpandProperty Name | Foreach-Object {[String]$($_ -replace '\(TM\)|\(R\)|([a-z]+?-Core)' -replace "[^A-Za-z0-9]+" -replace "Intel|AMD|CPU|Processor")})
 
         $MinersSave = [PSCustomObject]@{}

@@ -168,7 +168,7 @@
                 [hashtable]$Cleanup_Parameters = @{
                     AllDevices = $Session.AllDevices
                     MyCommandParameters = $Session.DefaultValues.Keys
-                    Version = if (Test-Path ".\Data\version.json") {(Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{"0.0.0.0"}
+                    Version = if (Test-Path ".\Data\version.json") {(Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{$Session.Version}
                 }
                 $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
                 Get-Item ".\Cleanup.ps1" | Foreach-Object {
