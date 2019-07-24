@@ -101,6 +101,14 @@ dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
 apt install -f
 ```
 
+Hint: install Nvidia drivers
+```
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt-get -y install dkms build-essential
+sudo apt-get update
+sudo apt-get -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
+```
+
 #### 3. Start it (if not yet running)
 
 On Windows:
