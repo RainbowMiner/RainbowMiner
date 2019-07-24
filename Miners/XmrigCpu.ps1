@@ -66,8 +66,6 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
-    $DeviceParams = "$(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
-
     $Commands | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
@@ -78,7 +76,6 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                 $Arguments = [PSCustomObject]@{
                     Algorithm    = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                     PoolParams   = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
-                    DeviceParams = $DeviceParams
                     APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=$($Miner_Port)"
                     Config = [PSCustomObject]@{
                         "api" = [PSCustomObject]@{
@@ -97,7 +94,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Params  = $Params
                     HwSig   = "$(($Session.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"
                     Threads = if ($Session.Config.CPUMiningThreads){$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}
-                    Vendor  = "cpu"
+                    Affinity= if ($Session.Config.CPUMiningAffinity -ne '') {$Session.Config.CPUMiningAffinity} else {$null}
                 }
 
 				[PSCustomObject]@{
