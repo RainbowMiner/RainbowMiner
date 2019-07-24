@@ -59,10 +59,15 @@ class Xmrig : Miner {
                             $Parameters.Config.$Device | Add-Member $n $v -Force
                         }
                         $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
+                        try {$Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}} catch {}
                         if ($Parameters.Threads) {
                             $Parameters.Config.$Device | Add-Member $Algo ([array](-1) * $Parameters.Threads) -Force
                         } else {
                             $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsConfig.$Algo)) -Force
+                        }
+                        if (($Aff | Measure-Object).Count) {
+                            $Threads = $Parameters.Config.$Device.$Algo.Count
+                            for($i=0;$i -lt [Math]::Max($Aff.Count,$Threads);$i++) {$Parameters.Config.$Device.$Algo[$i] = $Aff[$i]}
                         }
                     }
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ConfigFile" -Force
