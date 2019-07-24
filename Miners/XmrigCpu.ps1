@@ -9,11 +9,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.16.0b-xmrig/xmrig-2.16.0-beta-xenial-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.99.0b-xmrig/xmrig-2.99.0-beta-xenial-x64.tar.gz"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.16.0b-xmrig/xmrig-2.16.0-beta-msvc-win64-rbm.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.99.0b-xmrig/xmrig-2.99.0-beta-msvc-win64-rbm.7z"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
@@ -23,27 +23,24 @@ $Port = "521{0:d2}"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/double";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/gpu";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/half";       Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Params = ""; ExtendInterval = 2; Algorithm = "cryptonight/msr"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/r";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rto";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/rwz";        Params = ""; ExtendInterval = 2}
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight/wow";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xao";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/xtl";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/zls";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/0";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-lite/1";     Params = ""; ExtendInterval = 2}
-    #[PSCustomObject]@{MainAlgorithm = "cryptonight-lite/ipbc";  Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy";      Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/tube"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-heavy/xhv";  Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight-turtle";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "randomx/wow";            Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/1";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/2";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/double";     Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/half";       Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/fast2";      Params = ""; ExtendInterval = 2; Algorithm = "cn/fast"}
+    [PSCustomObject]@{MainAlgorithm = "cn/r";          Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/rto";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/rwz";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/xao";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn/zls";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";    Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/tube"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv";  Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn-lite/1";     Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "cn-pico";       Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "rx/loki";       Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "rx/wow";        Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -79,20 +76,14 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 
                 $Arguments = [PSCustomObject]@{
-                    PoolParams = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
+                    Algorithm    = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
+                    PoolParams   = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
                     DeviceParams = $DeviceParams
+                    APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=$($Miner_Port)"
                     Config = [PSCustomObject]@{
-                        "algo"            = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                         "api" = [PSCustomObject]@{
                             "id"           = $null
                             "worker-id"    = $null
-                        }
-                        "http" = [PSCustomObject]@{
-	                        "enabled"      = $true
-	                        "host"         = "127.0.0.1"
-	                        "port"         = [int]$Miner_Port
-	                        "access-token" = $null
-	                        "restricted"   = $true
                         }
                         "background"   = $false
                         "cuda-bfactor" = 10
@@ -106,6 +97,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Params  = $Params
                     HwSig   = "$(($Session.DevicesByTypes.CPU | Measure-Object).Count)x$($Global:GlobalCPUInfo.Name -replace "(\(R\)|\(TM\)|CPU|Processor)" -replace "[^A-Z0-9]")"
                     Threads = if ($Session.Config.CPUMiningThreads){$Session.Config.CPUMiningThreads} else {$Global:GlobalCPUInfo.Threads}
+                    Vendor  = "cpu"
                 }
 
 				[PSCustomObject]@{
