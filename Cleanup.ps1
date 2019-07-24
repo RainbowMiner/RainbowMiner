@@ -456,6 +456,10 @@ try {
         $CacheCleanup = $true
     }
 
+    if ($Version -le (Get-Version "4.3.6.5")) {
+        $AddAlgorithm += @("RandomXL")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
