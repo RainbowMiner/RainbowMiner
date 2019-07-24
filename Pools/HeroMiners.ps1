@@ -30,9 +30,9 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Haven";         symbol = "XHV";   algo = "CnHaven";     port = 10140; fee = 0.9; rpc = "haven"}
     [PSCustomObject]@{coin = "Haven+Bloc";    symbol = "XHV";   algo = "CnHaven";     port = 10450; fee = 0.9; rpc = "havenbloc";  symbol2 = "BLOC"}
     #[PSCustomObject]@{coin = "Lethean";       symbol = "LTHN";  algo = "CnR";         port = 10180; fee = 0.9; rpc = "lethean"}
-    [PSCustomObject]@{coin = "Loki";          symbol = "LOKI";  algo = "CnTurtle";    port = 10110; fee = 0.9; rpc = "lokiturtle"}
-    [PSCustomObject]@{coin = "Loki+Plenteum"; symbol = "LOKI";  algo = "CnTurtle";    port = 10420; fee = 0.9; rpc = "plenteum";  symbol2 = "PLE"}
-    [PSCustomObject]@{coin = "Loki+Turtle";   symbol = "LOKI";  algo = "CnTurtle";    port = 10520; fee = 0.9; rpc = "lokiturtle";  symbol2 = "TRTL"}
+    [PSCustomObject]@{coin = "Loki";          symbol = "LOKI";  algo = "RxLoki";      port = 10111; fee = 0.9; rpc = "loki"}
+    #[PSCustomObject]@{coin = "Loki+Plenteum"; symbol = "LOKI";  algo = "CnTurtle";    port = 10420; fee = 0.9; rpc = "plenteum";  symbol2 = "PLE"}
+    #[PSCustomObject]@{coin = "Loki+Turtle";   symbol = "LOKI";  algo = "CnTurtle";    port = 10520; fee = 0.9; rpc = "lokiturtle";  symbol2 = "TRTL"}
     [PSCustomObject]@{coin = "Masari";        symbol = "MSR";   algo = "CnHalf";      port = 10150; fee = 0.9; rpc = "masari"}
     [PSCustomObject]@{coin = "Monero";        symbol = "XMR";   algo = "CnR";         port = 10190; fee = 0.9; rpc = "monero"}
     #[PSCustomObject]@{coin = "MoneroV";       symbol = "XMV";   algo = "CnV7";        port = 10200; fee = 0.9; rpc = "monerov"}

@@ -54,7 +54,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Italo";       symbol = "ITA";  algo = "CnHaven";     port = 50701; fee = 0.0; rpc = "italo"}
     [PSCustomObject]@{coin = "Lethean";     symbol = "LTHN"; algo = "CnR";         port = 8881;  fee = 0.0; rpc = "lethean"}
     #[PSCustomObject]@{coin = "Lines";       symbol = "LNS";  algo = "CnV7";        port = 50401; fee = 0.0; rpc = "lines"}
-    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnTurtle";    port = 7731;  fee = 0.0; rpc = "loki"}
+    #[PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnTurtle";    port = 7731;  fee = 0.0; rpc = "loki"}
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";      port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
     [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";         port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
     [PSCustomObject]@{coin = "MoneroV";     symbol = "XMV";  algo = "CnV7";        port = 9221;  fee = 0.0; rpc = "monerov"}

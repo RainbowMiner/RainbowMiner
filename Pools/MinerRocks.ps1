@@ -34,8 +34,7 @@ $Pools_Data = @(
 
     [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
 
-    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Loki+Turtle"; symbol = "LOKI"; algo = "CnTurtle";   port = 4005; fee = 0.9; rpc = "loki"; regions = @("eu"); symbol2 = "TRTL"}
+    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005; fee = 0.9; rpc = "loki"}
 
     [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005; fee = 0.9; rpc = "turtle"}
 
