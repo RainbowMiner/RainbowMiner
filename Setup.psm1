@@ -298,24 +298,25 @@ function Start-Setup {
                         "nicehash" {
                             if ($IsInitialSetup) {
                                 Write-Host " "
-                                Write-Host "If you plan to mine using the Nicehash-pool, I recommend you register an account with them, to get a NiceHash wallet address (please read the Pools section of our readme!). I would not mine to your standard wallet ($($Config.Wallet)), since Nicehash has a minimum payout amount of 0.1BTC (compared to 0.001BTC, when using their wallet). " -ForegroundColor Cyan
+                                Write-Host "If you plan to mine on Nicehash, you need to register an account with them, to get a NiceHash mining wallet address (please read the Pools section of our readme!). " -ForegroundColor Cyan
                                 Write-Host "If you do not want to use Nicehash as a pool, leave this empty (or enter `"clear`" to make it empty) and press return " -ForegroundColor Cyan
                                 Write-Host " "
                             }
 
                             if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
-                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash-BTC wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+
                         }
                         "nicehash2" {
                             if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
-                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. NiceHash will have a minimum payout of 0.1BTC. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. This is not possible. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                     $NiceHashWallet = ''
                                 }
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
 
-                            $PoolNames = @(Get-ConfigArray $Config.PoolName)                                            
+                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if (-not $NicehashWallet) {
                                 $PoolNames = $PoolNames | Where-Object {$_ -ne "NiceHash"}
                                 $NicehashWallet = "`$Wallet"
@@ -348,7 +349,7 @@ function Start-Setup {
 
                         "nicehashorganizationid" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
+                            if ($false -and $PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
                                     Write-Host "You will mine on Nicehash (new platform). If you want to see your balance in RainbowMiner, you can now enter your API Key and the API Secret. Create a new key-pair on `"My Settings->API key`" page, `"Wallet permission`" needs to be set. " -ForegroundColor Cyan
@@ -378,7 +379,8 @@ function Start-Setup {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHash") {
                                 if ($NicehashPlatform -notin @("2","v2","new")) {
-                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    #$NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $GlobalSetupStepStore = $false
                                 } else {
                                     $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (create a key pair on `"My Settings->API key`", enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
@@ -389,7 +391,7 @@ function Start-Setup {
 
                         "nicehashapisecret" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
+                            if ($false -and $PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
                                 $NicehashAPISecret = Read-HostString -Prompt "Enter your Nicehash API Secret (enter including all '-')" -Default $NicehashAPISecret -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
