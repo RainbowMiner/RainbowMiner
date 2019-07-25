@@ -379,10 +379,10 @@ function Start-Setup {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHash") {
                                 if ($NicehashPlatform -notin @("2","v2","new")) {
-                                    #$NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    $GlobalSetupStepStore = $false
+                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 } else {
-                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (create a key pair on `"My Settings->API key`", enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    #$NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (create a key pair on `"My Settings->API key`", enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $GlobalSetupStepStore = $false
                                 }
                             } else {
                                 $GlobalSetupStepStore = $false
