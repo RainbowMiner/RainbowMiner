@@ -16,10 +16,6 @@ $UriCuda = @(
     [PSCustomObject]@{
         Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3.1-tpruvot/ccminer-2.3.1-cuda10.7z"
         Cuda = "10.0"
-    },
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-tpruvot/ccminer-2.3-cuda9.7z"
-        Cuda = "9.0"
     }
 )
 
