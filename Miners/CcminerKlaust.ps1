@@ -60,7 +60,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
     #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""} #BlakeVanilla
     #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""} #sha256d
-    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""} #SiaCoin
+    [PSCustomObject]@{MainAlgorithm = "sia"; Params = ""} #SiaCoin
     #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #X11
     #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
     #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
