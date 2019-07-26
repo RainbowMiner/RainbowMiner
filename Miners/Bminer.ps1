@@ -9,11 +9,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 #if (-not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\Equihash-BMiner\bminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.7.4-bminer/bminer-v15.7.4-564ee38-amd64.tar.xz"
+    $Path = ".\Bin\GPU-BMiner\bminer"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.7.5-bminer/bminer-v15.7.5-2f06a35-amd64.tar.xz"
 } else {
-    $Path = ".\Bin\Equihash-BMiner\bminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.7.4-bminer/bminer-lite-v15.7.4-564ee38-amd64.zip"
+    $Path = ".\Bin\GPU-BMiner\bminer.exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.7.5-bminer/bminer-lite-v15.7.5-2f06a35-amd64.zip"
 }
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
@@ -23,7 +23,7 @@ $Cuda = "9.2"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $true; MinMemGb = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
+    [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $true; MinMemGb = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
     [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; MinMemGbW10 = 7; Params = ""; DevFee = 2.0; Vendor = @("AMD")} #" -nofee" #Beam
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29d";  SecondaryAlgorithm = ""; NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
     [PSCustomObject]@{MainAlgorithm = "cuckatoo31";   SecondaryAlgorithm = ""; NH = $true; MinMemGb = 8; MinMemGbW10 = 11; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Beam
