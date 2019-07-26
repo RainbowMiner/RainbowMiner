@@ -12,7 +12,7 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.9-wildrig/wildrig-multi-linux-0.17.9-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.17.9-wildrig/wildrig-multi-windows-0.17.9-beta.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.0-wildrig/wildrig-multi-windows-0.19.0-preview.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
@@ -25,14 +25,14 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "anime";      Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "bcd";        Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";    Params = ""} #BitCore
-    [PSCustomObject]@{MainAlgorithm = "blake2b";    Params = ""} #Blake2b
-    [PSCustomObject]@{MainAlgorithm = "blake2b-glt";Params = ""} #Blake2b-GLT
+    [PSCustomObject]@{MainAlgorithm = "blake2b-btcc"; Params = ""} #Blake2b
+    [PSCustomObject]@{MainAlgorithm = "blake2b-glt";  Params = ""} #Blake2b-GLT
     [PSCustomObject]@{MainAlgorithm = "bmw512";     Params = ""} #BMW512
     [PSCustomObject]@{MainAlgorithm = "c11";        Params = ""} #C11
     [PSCustomObject]@{MainAlgorithm = "dedal";      Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";     Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash
+    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash    
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
@@ -64,6 +64,10 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x25x";       Params = ""} #X25x
     [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
+
+if (-not $IsLinux) {
+    $Commands += [PSCustomObject]@{MainAlgorithm = "glt-globalhash"; Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
+}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -99,7 +103,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
         $Params = "$(if ($Pools.$Algorithm_Norm.ScratchPadUrl) {"--scratchpad-url $($Pools.$Algorithm_Norm.ScratchPadUrl) --scratchpad-file scratchpad-$($Pools.$Algorithm_Norm.CoinSymbol.ToLower()).bin "})$($_.Params)"
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm -notmatch "^blake2b" -or ($Algorithm -eq "blake2b-btcc" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "GLT") -or ($Algorithm -eq "blake2b-glt" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "GLT"))) {
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
 					Name           = $Miner_Name
