@@ -37,7 +37,7 @@ $Pools_Data = @(
     [PSCustomObject]@{id = "etc";     coin = "EthereumClassic"; algo = "Ethash";       symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
     [PSCustomObject]@{id = "grin";    coin = "Grin";            algo = "Cuckarood29";  symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("asia","eu","us")}
     [PSCustomObject]@{id = "grin";    coin = "Grin";            algo = "Cuckatoo31";   symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("asia","eu","us")}
-    [PSCustomObject]@{id = "xmr";     coin = "Monero";          algo = "Monero";       symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
+    #[PSCustomObject]@{id = "xmr";     coin = "Monero";          algo = "Monero";       symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnly} | ForEach-Object {
@@ -55,8 +55,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
     $Pool_Request.data | Where-Object currency -eq $Pool_Symbol | Foreach-Object {
         if (-not $InfoOnly) {
             if (-not $Session.Rates.$Pool_Currency -and $_.usd -and $Session.Rates.USD) {$Session.Rates.$Pool_Currency = $Session.Rates.USD / $_.usd}
-            $NewStat = -not (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Symbol)_Profit.txt")
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Session.Rates.$Pool_Currency) {$_."$(if ($NewStat) {"meanIncome24h"} else {"income"})" / $_.incomeHashrate / $Session.Rates.$Pool_Currency} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Session.Rates.$Pool_Currency) {$_.income / $_.incomeHashrate / $Session.Rates.$Pool_Currency} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
         }
 
         foreach ($Pool_Region in $Pool_Regions) {
