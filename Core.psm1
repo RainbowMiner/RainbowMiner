@@ -374,6 +374,10 @@ function Invoke-Core {
 
         #Speed up restart
         if (-not $Session.RoundCounter -and -not $Session.Config.Quickstart -and (Test-Path ".\Logs\timerpools.json") -and (Get-ChildItem ".\Logs\timerpools.json" -ErrorAction Ignore | Where-Object {$_.LastWriteTime -gt (Get-Date).AddHours(-3)} | Measure-Object).Count) {$Session.Config.Quickstart = $true}
+
+        #Add some global arrays
+        $Session.Config | Add-Member AlgorithmMap (Get-AlgorithmMap) -Force
+        $Session.Config | Add-Member EquihashCoins (Get-EquihashCoins) -Force
     }
 
     #Start/stop services
@@ -418,6 +422,18 @@ function Invoke-Core {
             Set-ContentJson -PathToFile ".\Logs\autoupdate.txt" -Data $Last_Autoupdate > $null
             $Session.AutoUpdate = $true
         }
+    }
+
+    if ($CheckConfig) {
+        $API.Info = [PSCustomObject]@{
+                                Version                = $ConfirmedVersion.Version
+                                RemoteVersion          = $ConfirmedVersion.RemoteVersion
+                                ManualURI              = $ConfirmedVersion.ManualURI
+                                WorkerName             = $Session.Config.WorkerName
+                                EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
+                                AlgorithmMap           = $Session.Config.AlgorithmMap
+                                DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
+                            }
     }
 
     #Give API access to all possible devices

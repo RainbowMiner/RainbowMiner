@@ -193,7 +193,7 @@
                     break
                 }
                 "/info" {
-                    $Data = ConvertTo-Json $API.Info
+                    $Data = ConvertTo-Json $API.Info -Depth 10
                     break
                 }
                 "/isserver" {
