@@ -49,8 +49,8 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             // Format the algorithm(s)
-            item.tPrimaryAlgorithm = item.Algorithm[0];
-            item.tSecondaryAlgorithm = item.Algorithm[1];
+            item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
+            item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
 
             // Format the speed(s)
             if (Array.isArray(item.Speed)) {

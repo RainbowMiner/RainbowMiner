@@ -61,7 +61,7 @@
               <thead>
                   <tr>
                       <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
-                      <th data-field="Algorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
+                      <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="DeviceModel" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tSpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
@@ -120,6 +120,7 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             item.tButton = '<button class="btn btn-default" type="button" name="benchmark" title="Start Benchmark" data-name="' + item.Name + '" data-algorithm="' + item.Algorithm + '" data-devicemodel="' + item.DeviceModel + '"><i class="fa fa-sync"></i></button>';
+            item.tAlgorithm = formatAlgorithm(item.Algorithm);
 
             // Format the device(s)
             item.Name = item.Name.replace(/-GPU.+$/,'');

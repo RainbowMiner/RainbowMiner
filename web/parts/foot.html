@@ -3,72 +3,63 @@
     </div>
   </body>
 <script type="text/javascript">
-  // Set the active sidebar item
-  $(function() {
-    $('#'+$('#title').data('navbaractive')).addClass('active');
-  });
   
-  // set the values in the header
-  $(function () {
-      var remoteversion = '0.0.0.0';
-      var text = $('a.navbar-brand').text();
-      var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
-      var out = [];
-      for (var i = 0; i < text.length; i++) {
-          out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
-      }
-      out.push(' <span id="version"></span>')
-      $('a.navbar-brand').html(out.join(''));
-      $('#updatemsg').hide();
+    $(function () {
+    // Set the active sidebar item
+    $('#' + $('#title').data('navbaractive')).addClass('active');
 
-      $("#updatenow").click(function () {
-          $.ajax({
-              url: '/update', success: function (result) {
-                  $('.modal-body').text('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!');
-                  $('.modal-title').text('Update started');
-                  $('#myModal').modal({ show: true });
-                  $('#updatemsg').hide();
-              }
-          })
-      });
+    // set the values in the header
+    var remoteversion = '0.0.0.0';
+    var text = $('a.navbar-brand').text();
+    var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
+    var out = [];
+    for (var i = 0; i < text.length; i++) {
+        out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
+    }
+    out.push(' <span id="version"></span>')
+    $('a.navbar-brand').html(out.join(''));
+    $('#updatemsg').hide();
 
-      (function p() {
-          $.ajax({
-              url: '/currentprofit', success: function (result) {
-                  $("#profit").html("<h6>Current profit: " + formatBTC(result.AllProfitBTC) + " BTC/Day</h6>");
-                  var xchange = new Array();
-                  xchange.push("1 BTC");
-                  $.each(result.Rates, function (key, itm) {
-                      if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
-                  });
-                  $("#exchangerates").html(xchange.join(" = "));
-                  setTimeout(p, 10000);
-              }
-          })
-      })();
+    $("#updatenow").click(function () {
+        $.ajax({
+            url: '/update', success: function (result) {
+                $('.modal-body').text('Rainbowminer will be updated to Version '+remoteversion+'. Please be patient!');
+                $('.modal-title').text('Update started');
+                $('#myModal').modal({ show: true });
+                $('#updatemsg').hide();
+            }
+        })
+    });
 
-      (function q() {
-          $.getJSON("/version", function (data) {
-              var version = formatVersion(data.Version)
-              remoteversion = formatVersion(data.RemoteVersion)
-              $('#version').text('v' + version)
-              if (version < remoteversion) {
-                  $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": data.ManualURI }).text('v' + remoteversion)
-                  $('#updatemsg').show()
-              } else {
-                  $('#updatemsg').hide()
-              }
-              setTimeout(q, 600000);
-          })
-      })();
+    (function p() {
+        $.ajax({
+            url: '/currentprofit', success: function (result) {
+                $("#profit").html("<h6>Current profit: " + formatBTC(result.AllProfitBTC) + " BTC/Day</h6>");
+                var xchange = new Array();
+                xchange.push("1 BTC");
+                $.each(result.Rates, function (key, itm) {
+                    if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
+                });
+                $("#exchangerates").html(xchange.join(" = "));
+                setTimeout(p, 10000);
+            }
+        })
+    })();
 
-      (function conf() {
-          $.getJSON("/config", function (data) {
-              config = data
-              $('.workername').text(config.WorkerName)
-              setTimeout(conf, 600000);
-          })
-      })();
+    (function q() {
+        if (!globalconfig || !globalconfig.Version) { setTimeout(q, 1000); return }
+        $('.workername').text(globalconfig.WorkerName)
+        var version = formatVersion(globalconfig.Version)
+        remoteversion = formatVersion(globalconfig.RemoteVersion)
+        $('#version').text('v' + version)
+        if (version < remoteversion) {
+            $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": globalconfig.ManualURI }).text('v' + remoteversion)
+            $('#updatemsg').show()
+        } else {
+            $('#updatemsg').hide()
+        }
+        setTimeout(q, 600000);
+    })();
   });
   
 </script>

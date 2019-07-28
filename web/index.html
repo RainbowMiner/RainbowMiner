@@ -11,9 +11,6 @@
        data-sort-order="desc"
        data-sort-name="Profit"
        data-cache="false"
-       data-show-columns="true"
-       data-show-toggle="true"
-       data-show-refresh="true"
        data-icons-prefix="fa"
        data-icons="icons"
        data-detail-view="true"
@@ -30,12 +27,37 @@
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
-            <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th>
-            <th data-field="tSecondaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
-            <th data-field="tSecondaryHashRate" data-sortable="true" data-formatter="formatHashRateValue">2nd Benched</th>
         </tr>
     </thead>
 </table>
+
+<div id="devicestatus">
+    <h3 class="mt-4">Device Status</h3>    
+    <table id="devices" class="table"
+           data-toggle="table"
+           data-url="/devices"
+           data-response-handler="formatDevices"
+           data-cache="false"
+           data-icons-prefix="fa"
+           data-icons="icons"
+           data-detail-view="true"
+           data-detail-formatter="detailFormatter">
+        <thead>
+            <tr>
+                <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
+                <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
+                <th data-field="Model" data-sortable="true" data-title-tooltip="Modelname of the device">Model</th>
+                <th data-field="tUtilization" data-sortable="true" data-title-tooltip="Current load in %">Load</th>
+                <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
+                <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
+                <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
+                <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
+                <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
+                <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
+            </tr>
+        </thead>
+    </table>
+</div>
 
 <div id="remoteworkers">
     <h3 class="mt-4">Remote Workers</h3>
@@ -46,9 +68,6 @@
            data-sort-order="desc"
            data-sort-name="Profit"
            data-cache="false"
-           data-show-columns="true"
-           data-show-toggle="true"
-           data-show-refresh="true"
            data-icons-prefix="fa"
            data-icons="icons"
            data-detail-view="true"
@@ -95,13 +114,6 @@
                     $("#pauseminers").html(result ? "Restart" : "Pause");
                 }
             })
-        });
-        var nDecimalSeparator = ".", tDecimalSeparator = ",";
-        $.ajax({
-            url: '/decsep', success: function (result) {
-                nDecimalSeparator = result
-                tDecimalSeparator = nDecimalSeparator == "." ? "," : "."
-            }
         });
 
         (function updatePoolBalances() {
@@ -169,6 +181,7 @@
         })();
         function refreshTable() {
             $("table#miners").bootstrapTable("refresh", { silent: true });
+            $("table#devices").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 10000);
         }
         window.setTimeout(refreshTable, 10000);
@@ -193,8 +206,8 @@
           // Format the algorithms and hashrates
 
           // Algorithm is always an array, sometimes has 2 elements
-          item.tPrimaryAlgorithm = item.Algorithm[0];
-          try { item.tSecondaryAlgorithm = item.Algorithm[1]; } catch (error) { /* ignore */ }
+          item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
+          try { item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]); } catch (error) { /* ignore */ }
 
           // Speed is an array if there are multiple algorithms, or a single number otherwise
           if (Array.isArray(item.Speed)) {
@@ -253,7 +266,7 @@
       jQuery.each(row.data, function (key, value) {
           html.push('<tr>');
           html.push('<td>' + value.Name + '</td>');
-          html.push('<td>' + value.Algorithm + '</td>');
+          html.push('<td>' + formatAlgorithm(value.Algorithm) + '</td>');
           html.push('<td>' + value.Pool + '</td>');
           html.push('<td>' + value.Type + '</td>');
           html.push('<td>' + formatBTC(value.Profit) + '</td>');
@@ -264,6 +277,43 @@
       });
       html.push("</table>");
       return html.join('');
+  }
+
+  function formatDevices(data) {
+      // This function can alter the returned data before building the table, formatting it in a way
+      // that is easier to display and manipulate in a table
+      $.each(data, function (index, item) {
+          // Format the device(s)
+          if (item.OpenCL) {
+              item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+              item.tDriverVersion = item.OpenCL.DriverVersion
+          } else {
+              item.tMemory = "N/A"
+              item.tDriverVersion = "N/A"
+          }
+
+          if (item.OpenCL) {
+              item.tClockSpeed = item.OpenCL.MaxClockFrequency
+              item.tCores = item.OpenCL.MaxComputeUnits
+          } else if (item.CIM) {
+              item.tClockSpeed = item.CIM.MaxClockSpeed
+              item.tCores = item.CIM.NumberOfLogicalProcessors
+              item.tPowerDraw = item.Data.PowerDraw
+          } else {
+              item.tClockSpeed = "N/A"
+              item.tCores = "N/A"
+          }
+
+          item.tPowerDraw = typeof (item.Data.PowerDraw) !== "undefined" ? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
+          item.tFanSpeed = typeof (item.Data.FanSpeed) !== "undefined" ? item.Data.FanSpeed + ' %' : "N/A"
+          item.tClock = typeof (item.Data.Clock) !== "undefined" ? item.Data.Clock + ' MHz' : "N/A"
+          item.tClockMem = typeof (item.Data.ClockMem) !== "undefined" ? item.Data.ClockMem + ' MHz' : "N/A"
+          item.tPowerLimitPercent = typeof (item.Data.PowerLimitPercent) !== "undefined" ? item.Data.PowerLimitPercent + ' %' : "N/A"
+          item.tTemperature = typeof (item.Data.Temperature) !== "undefined" ? item.Data.Temperature + ' °C' : "N/A"
+          item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
+
+      });
+      return data;
   }
 </script>
 <!--#include file="/parts/foot.html" -->

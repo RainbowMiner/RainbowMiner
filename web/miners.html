@@ -56,8 +56,8 @@
 
             // Format the algorithms and hashrates
             var algorithms = Object.keys(item.HashRates);
-            item.tPrimaryAlgorithm = algorithms[0];
-            item.tSecondaryAlgorithm = algorithms[1];
+            item.tPrimaryAlgorithm = formatAlgorithm(algorithms[0]);
+            item.tSecondaryAlgorithm = formatAlgorithm(algorithms[1]);
             item.tPrimaryHashRate = item.HashRates[algorithms[0]];
             item.tSecondaryHashRate = item.HashRates[algorithms[1]];
             item.tDevFee = parseFloat(item.DevFee[algorithms[0]])? parseFloat(item.DevFee[algorithms[0]]) + ' %':'-';

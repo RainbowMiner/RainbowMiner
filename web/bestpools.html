@@ -6,10 +6,11 @@
 <table id="pools" class="table"
   data-toggle="table"
   data-url="/pools"
+  data-response-handler="formatPools"
   data-filter-control="true"
   data-filter-show-clear="true"
   data-sort-order="asc"
-  data-sort-name="Algorithm"
+  data-sort-name="tAlgorithm"
   data-cache="false"
   data-show-columns="true"
   data-show-toggle="true"
@@ -21,7 +22,7 @@
 >
   <thead>
       <tr>
-          <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
+          <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="CoinName" data-sortable="true" data-filter-control="select">Coin</th>
           <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
@@ -45,34 +46,13 @@
     });
 
     function formatPools(data) {
-        data = data[0];
-        var items = new Array();
-        $.each(Object.keys(data), function (index, item) {
-            items.push(data[item]);
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+            item.tAlgorithm = formatAlgorithm(item.Algorithm);
         });
-        return items;
+        return data;
     }
 
-    function formatPrices(data) {
-        return (data * 1000000000).toFixed(10);
-    }
-  
-    function formatDate(data) {
-        return timeSince(new Date(data));
-        return new Date(parseInt(data.replace(/\D/g,''))).toLocaleString();
-    }
-
-    function formatBLK(data) {
-        if (typeof data == "undefined") return data;
-        if (!data) return "Infinity"
-        data = 24/data*60
-        return data.toFixed(1)
-    }
-
-    function formatTSL(data) {
-        if (typeof data == "undefined") return data;
-        data = data / 60
-        return data.toFixed(1)
-    }
 </script>
 <!--#include file="/parts/foot.html" -->

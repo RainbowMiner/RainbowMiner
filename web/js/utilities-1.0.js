@@ -68,6 +68,31 @@ function formatMinerHashRatesValues(value) {
   return hashrates.toString();
 }
 
+function formatPrices(data) {
+    return (data * 1000000000).toFixed(10);
+}
+
+function formatDate(data) {
+    return timeSince(new Date(data));
+}
+
+function formatBLK(data) {
+    if (typeof data == "undefined") return data;
+    if (!data) return "Infinity"
+    data = 24 / data * 60
+    return data.toFixed(1)
+}
+
+function formatTSL(data) {
+    if (typeof data == "undefined") return data;
+    data = data / 60
+    return data.toFixed(1)
+}
+
+function formatAlgorithm(data) {
+    return (globalconfig && globalconfig.EnableAlgorithmMapping && globalconfig.AlgorithmMap[data]) ? globalconfig.AlgorithmMap[data] : data;
+}
+
 function detailFormatter(index, row) {
   var html = [];
   $.each(row, function (key, value) {

@@ -43,9 +43,11 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             // Format the algorithm(s)
-            item.tPrimaryAlgorithm = item.Algorithm[0];
-            item.tSecondaryAlgorithm = item.Algorithm[1];
-            item.tAlgorithms = item.Algorithm.join(",");
+            var algorithms = new Array();
+            for (var i = 0; i < item.Algorithm.length; i++) {
+                algorithms.push(formatAlgorithm(item.Algorithm[i]));
+            }
+            item.tAlgorithms = algorithms.join(",");
             item.tPool = item.Pool.join(",");
 
             // Format the speed(s)
