@@ -254,9 +254,9 @@ function Get-CoinSymbol {
         }
         if (-not $Request -or $Request.PSObject.Properties.Name.Count -le 100) {
             $Request = $null
-            if (Test-Path "Data\Coins.json") {try {$Request = Get-Content "Data\Coins.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
+            if (Test-Path "Data\coins.json") {try {$Request = Get-Content "Data\coins.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
-        } else {Set-ContentJson -PathToFile "Data\Coins.json" -Data $Request > $null}
+        } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
         [hashtable]$Global:GlobalCoinNames = @{}
         $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
