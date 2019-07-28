@@ -424,6 +424,12 @@ function Invoke-Core {
         }
     }
 
+    #Give API access to all possible devices
+    if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices}
+
+    $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
+    $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
+
     if ($CheckConfig) {
         $API.Info = [PSCustomObject]@{
                                 Version                = $ConfirmedVersion.Version
@@ -432,15 +438,10 @@ function Invoke-Core {
                                 WorkerName             = $Session.Config.WorkerName
                                 EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
                                 AlgorithmMap           = $Session.Config.AlgorithmMap
+                                OCmode                 = $Session.OCmode
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                             }
     }
-
-    #Give API access to all possible devices
-    if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices}
-
-    $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
-
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
     #Check for algorithms config
@@ -1603,6 +1604,8 @@ function Invoke-Core {
     #Stop failed miners
     $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::RunningFailed} | Foreach-Object {
         Write-Log -Level Info "Stopping crashed miner ($($_.Name)) "
+        $_.CrashCount++
+        Write-ActivityLog $_ -Crashed 1
         $_.SetStatus([MinerStatus]::Idle)
     }
 
@@ -1624,6 +1627,7 @@ function Invoke-Core {
                 if ($WatchdogTimer) {
                     if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
                         $Miner.SetStatus([MinerStatus]::Failed)
+                        Write-ActivityLog $Miner -Crashed 2
                         Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
                     }
                     else {

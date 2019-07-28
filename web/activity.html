@@ -18,15 +18,18 @@
   data-icons="icons"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
+  data-row-style="colorStatus"
 >
   <thead>
       <tr>
+          <th data-field="tStatus" data-align="center" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">End</th>
           <th data-field="ActiveStart" data-sortable="true">Started</th>
           <th data-field="ActiveLast" data-sortable="true">Last Seen</th>
-          <th data-field="tActive" data-align="right" data-sortable="true">Minutes</th>
+          <th data-field="tActive" data-align="right" data-sortable="true">Min</th>
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="tAlgorithms" data-sortable="true" data-filter-control="select">Algorithms</th>
           <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+          <th data-field="tOC">OC</th>
           <th data-field="tPool" data-sortable="true" data-filter-control="select">Pool</th>
           <th data-field="tProfit" data-align="right" data-sortable="true">Earned</th>
           <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
@@ -38,10 +41,20 @@
 <!-- End of page scripts -->
 <script type="text/javascript">
 
+    function colorStatus(row, index) {
+        return { classes: row.Crashed? (row.Crashed == 1? "Offline":"Paused"):"Standard" };
+    }
+
     function formatActivity(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
+            
+            if (item.Crashed) {
+                item.tStatus = item.Crashed == 1 ? "crash" : "wd";
+            } else {
+                item.tStatus = "ok";
+            }
             // Format the algorithm(s)
             var algorithms = new Array();
             for (var i = 0; i < item.Algorithm.length; i++) {
@@ -61,6 +74,26 @@
             // Format the device(s)
             item.tDevices = item.Device.toString();
             item.Name = item.Name.split(/\-/)[0];
+
+            // Format the Profile(s)
+            var tOC = new Array();
+            if (item.OCP) {
+                if (item.OCmode == "msia") {
+                    if (item.MSIAprofile) { tOC.push("MSIA" + item.OCP); }
+                } else if (item.OCmode == "ocp") {
+                    var cnt = item.Device.length;
+                    $.each(item.Device, function (ix, dev) {
+                        if (dev != "CPU" && item.OCP[dev]) {
+                            if (cnt == 1) { tOC.push(item.OCP[dev]); }
+                            else {
+                                tOC.push(dev + "=" + item.OCP[dev]);
+                            }
+                        }
+                    });
+                }
+            }
+            if (!tOC.length) { tOC.push("-"); }
+            item.tOC = tOC.join('<br />');
 
             var powerdraw = item.TotalPowerDraw? parseFloat(item.TotalPowerDraw) : 0;
             var profit    = item.TotalProfit ? parseFloat(item.TotalProfit)*1000 : 0;

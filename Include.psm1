@@ -467,8 +467,10 @@ function Set-MinerStats {
                 if ($WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
+                        $Miner.CrashCount = 0
                     } elseif ($Miner.IsBenchmarking() -or ($Miner_Speed -and $Miner.Rounds -lt [Math]::Max($Miner.ExtendedInterval,1)-1)) {
                         $WatchdogTimer.Kicked = (Get-Date).ToUniversalTime()
+                        $Miner.CrashCount = 0
                     } elseif ($Watchdog -and $WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) {
                         $Miner_Failed = $true
                     }
@@ -484,6 +486,7 @@ function Set-MinerStats {
             if ($Miner_Failed) {
                 $Miner.SetStatus([MinerStatus]::Failed)
                 $Miner.Stopped = $true
+                Write-ActivityLog $Miner -Crashed 2
                 Write-Log -Level Warn "Miner $($Miner.Name) mining $($Miner.Algorithm -join '/') on pool $($Miner.Pool -join '/') temporarily disabled. "
                 $Miner_Failed_Total++
             } else {
@@ -561,7 +564,8 @@ Function Write-Log {
 Function Write-ActivityLog {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()]$Miner
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()]$Miner,
+        [Parameter(Mandatory = $false)][Int]$Crashed = 0
     )
 
     Begin { }
@@ -572,6 +576,7 @@ Function Write-ActivityLog {
 
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
+            $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
             "$([PSCustomObject]@{
                 ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveStart()
                 ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
@@ -582,6 +587,9 @@ Function Write-ActivityLog {
                 Speed          = @($Miner.Speed_Live)
                 Profit         = $Miner.Profit
                 PowerDraw      = $Miner.PowerDraw
+                Crashed        = $Crashed
+                OCmode         = $ocmode
+                OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
             } | ConvertTo-Json -Compress)," | Out-File -FilePath $filename -Append -Encoding utf8
             $mutex.ReleaseMutex()
         }
@@ -2959,6 +2967,7 @@ class Miner {
     $Rounds = 0
     $MinSamples = 1
     $ZeroRounds = 0
+    $CrashCount = 0
     $MaxBenchmarkRounds = 3
     $MaxRejectedShareRatio = 0.3
     $MiningPriority
