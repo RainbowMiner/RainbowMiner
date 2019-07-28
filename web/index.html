@@ -91,7 +91,7 @@
 
 <!-- End of page scripts -->
 <script id="poolbalance_template" type="text/x-handlebars-template">
-    <div class="mb-2 card {{#if total}}text-white bg-primary {{else}}text-dark bg-light{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}" ;>
+    <div class="mb-2 card {{#if total}}text-white bg-primary{{else if dark}}card-normal text-light bg-dark{{else}}card-normal text-dark bg-light{{/if}}" style="min-width: {{#if total}}200px{{else}}200px{{/if}}">
         <div class="card-header text-center">
             <h5>{{name}}</h5>
         </div>
@@ -131,9 +131,9 @@
                         if (boxes_ix[item.Name] === undefined) {
                             boxes_ix[item.Name] = boxes.length;
                             if (item.Name == "*Total*") {
-                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true });
+                                boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true, dark: theme=="dark" });
                             } else {
-                                boxes.push({ name: item.Name, balances: {}, digits: {} });
+                                boxes.push({ name: item.Name, balances: {}, digits: {}, dark: theme=="dark" });
                             }
                         }
                         $.each(currencies, function (cindex, currency) {
@@ -261,7 +261,7 @@
   function detailFormatterRemoteMiners(index, row) {
       var html = [];
       html.push("<strong>Running Miners</strong>");
-      html.push("<table class='table table-responsive table-details'>");
+      html.push("<table class='table table-responsive table-details"+(theme=="dark"? " table-dark":'')+"'>");
       html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th></tr></thead>");
       jQuery.each(row.data, function (key, value) {
           html.push('<tr>');

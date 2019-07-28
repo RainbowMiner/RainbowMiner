@@ -56,6 +56,10 @@
   color: #333;
 }
 
+.sidebar .nav-link-dark {
+  color: #AAA;
+}
+
 .sidebar .nav-link .feather {
   margin-right: 4px;
   color: #999;
@@ -117,32 +121,9 @@
 
 .navbar div {padding-right: 0.5em}
 
-.form-control-dark {
-  color: #fff;
-  background-color: rgba(255, 255, 255, .1);
-  border-color: rgba(255, 255, 255, .1);
-}
-
-.form-control-dark:focus {
-  border-color: transparent;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
-}
-
 /*
  * Utilities
  */
 
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
-
-.Running, .Benchmarking {
-    background-color: rgb(127,191,144);
-}
-
-.Offline {
-    background-color: rgb(213,142,176);
-}
-
-.Paused, .Waiting {
-    background-color: rgb(247,252,168);
-}

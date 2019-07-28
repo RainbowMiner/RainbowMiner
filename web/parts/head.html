@@ -6,8 +6,14 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.14.2/bootstrap-table.min.css" integrity="sha384-toRUXrKmuk3TrBE87dQXL+VFwwDZopneFKfcW4Q1XY3+NN2WisAeEG+Hpo9mwVDo" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.14.2/extensions/filter-control/bootstrap-table-filter-control.css" integrity="sha384-skttolBckLVrKCe5POlNguLPsa3OA/zpy56LtME3+HGzJYcJUGNm29xGbe58ZtOf" crossorigin="anonymous" />
-    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/dashboard.css" />
+    <link rel="stylesheet" href="/css/theme-nop.css" id="themecss" />
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script src="/js/utilities-1.0.js"></script>
+    <script>
+        var theme = getCookie("rbm-theme");
+        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.14.2/bootstrap-table.min.js" integrity="sha384-bx/ofDpleGvPMVWJAfgP81l+BBfsoGRNmiTILENb4c8qvN8egBS4mqKlJQKcubb/" crossorigin="anonymous"></script>
@@ -18,7 +24,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.2/handlebars.min.js" integrity="sha384-r11LwXDT+FAqmjJLLg2EjmzYbSlNCeRywaNcD0DXcBVzhR+7ieOvEc3SDpcujOJu" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha384-QzN1ywg2QLsf72ZkgRHgjkB/cfI4Dqjg6RJYQUqH6Wm8qp/MvmEYn+2NBsLnhLkr" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/all.js" integrity="sha384-xymdQtn1n3lH2wcu0qhcdaOpQwyoarkgLVxC/wZ5q7h9gHtxICrpcaSUfygqZGOe" crossorigin="anonymous"></script>
-    <script src="/js/utilities-1.0.js"></script>
     <title>RainbowMiner Local Dashboard</title>
     <link href="/images/favicon.ico" rel="icon" type="image/x-icon" />
     <script>
@@ -33,11 +38,10 @@
             })
         })();
     </script>
-
 </head>
     <body>
         <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-            <a class="navbar-brand rainbow" href="/">RainbowMiner</a>
+            <a class="navbar-brand rainbow" href="/">RainbowMiner <span id="version"></span></a>
             <div class="text-white" id="profit">Loading..</div>
             <div class="text-white" id="updatemsg">New Version <a href="" title="" target="_blank" id="updatelink"></a> available <a href="#" id="updatenow" class="btn btn-sm btn-primary">Update now!</a></div>
             <div class="text-white" id="exchangerates"></div>
@@ -46,116 +50,127 @@
     <div class="container-fluid">
       <div class="row">
         <nav class="d-none d-md-block sidebar nav-collapse" id="sidebar">
-          <div class="sidebar-sticky">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <strong>Worker: <span class="workername"></span></strong>
-            </h6>
-            <ul class="nav flex-column">
-              <li class="nav-item">
-                <a id="navdashboard" class="nav-link" href="/">
-                  <span data-feather="home"></span>
-                  Dashboard
-                </a>
-              </li>
-            </ul>
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Devices</span>
-            </h6>
-            <ul class="nav flex-column mb-2">
-              <li class="nav-item">
-                <a id="navdevices" class="nav-link" href="devices.html">
-                  <i class="fas fa-microchip"></i>Selected Devices
-                </a>
-              </li>
-              <li class="nav-item">
-                <a id="navalldevices" class="nav-link" href="alldevices.html">
-                  <i class="fas fa-microchip"></i>All Devices
-                </a>
-              </li>
-            </ul>
+            <div class="sidebar-sticky">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <strong>Worker: <span class="workername"></span></strong>
+                </h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a id="navdashboard" class="nav-link" href="/">
+                            <span data-feather="home"></span>
+                            Dashboard
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Devices</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a id="navdevices" class="nav-link" href="devices.html">
+                            <i class="fas fa-microchip"></i>Selected Devices
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navalldevices" class="nav-link" href="alldevices.html">
+                            <i class="fas fa-microchip"></i>All Devices
+                        </a>
+                    </li>
+                </ul>
 
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Pools</span>
-            </h6>
-            <ul class="nav flex-column mb-2">
-                <li class="nav-item">
-                    <a id="navbestpools" class="nav-link" href="bestpools.html">
-                        <i class="fas fa-folder"></i>Best Pools
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navallpools" class="nav-link" href="allpools.html">
-                        <i class="fas fa-folder-open"></i>All Pools
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navpayouts" class="nav-link" href="payouts.html">
-                        <i class="fas fa-folder-open"></i>Pool Payouts
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navtotals" class="nav-link" href="totals.html">
-                        <i class="fas fa-folder-open"></i>Pool Totals
-                    </a>
-                </li>
-            </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Pools</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a id="navbestpools" class="nav-link" href="bestpools.html">
+                            <i class="fas fa-folder"></i>Best Pools
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navallpools" class="nav-link" href="allpools.html">
+                            <i class="fas fa-folder-open"></i>All Pools
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navpayouts" class="nav-link" href="payouts.html">
+                            <i class="fas fa-folder-open"></i>Pool Payouts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navtotals" class="nav-link" href="totals.html">
+                            <i class="fas fa-folder-open"></i>Pool Totals
+                        </a>
+                    </li>
+                </ul>
 
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Miners</span>
-            </h6>
-            <ul class="nav flex-column mb-2">
-                <li class="nav-item">
-                    <a id="navallminers" class="nav-link" href="miners.html">
-                        <i class="fas fa-folder"></i>Miners
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navactiveminers" class="nav-link" href="activeminers.html">
-                        <i class="fas fa-folder-open"></i>Active Miners
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navminerstats" class="nav-link" href="minerstats.html">
-                        <i class="fas fa-folder-open"></i>Benchmarks
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a id="navactivity" class="nav-link" href="activity.html">
-                        <i class="fas fa-folder-open"></i>Activity
-                    </a>
-                </li>
-            </ul>
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Config</span>
-            </h6>
-            <ul class="nav flex-column mb-2">
-                <li class="nav-item">
-                    <a id="navrunningconfig" class="nav-link" href="runningconfig.html">
-                        <i class="fas fa-folder-open"></i>Running Config
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/debug" title="Download debug file for upload at GitHub">
-                        <i class="fas fa-file"></i>Debug File
-                    </a>
-                </li>
-            </ul>
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-              <span>Links</span>
-            </h6>
-            <ul class="nav flex-column mb-2">
-              <li class="nav-item">
-                <a class="nav-link" href="https://github.com/RainbowMiner/RainbowMiner">
-                  <i class="fab fa-github"></i>Github
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="API.html">
-                  <i class="fas fa-book"></i>API Documentation
-                </a>
-              </li>
-            </ul>
-          </div>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Miners</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a id="navallminers" class="nav-link" href="miners.html">
+                            <i class="fas fa-folder"></i>Miners
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navactiveminers" class="nav-link" href="activeminers.html">
+                            <i class="fas fa-folder-open"></i>Active Miners
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navminerstats" class="nav-link" href="minerstats.html">
+                            <i class="fas fa-folder-open"></i>Benchmarks
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navactivity" class="nav-link" href="activity.html">
+                            <i class="fas fa-folder-open"></i>Activity
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Config</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a id="navrunningconfig" class="nav-link" href="runningconfig.html">
+                            <i class="fas fa-folder-open"></i>Running Config
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/debug" title="Download debug file for upload at GitHub">
+                            <i class="fas fa-file"></i>Debug File
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Links</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/RainbowMiner/RainbowMiner">
+                            <i class="fab fa-github"></i>Github
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="API.html">
+                            <i class="fas fa-book"></i>API Documentation
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Theme</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <select class="form-control" name="theme" id="theme">
+                            <option value="light">Day-Theme</option>
+                            <option value="dark">Night-Theme</option>
+                        </select>
+                    </li>
+                </ul>
+            </div>
         </nav>
         <main role="main" class="main col-sm-12">
         

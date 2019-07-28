@@ -1,0 +1,17 @@
+﻿html,body,.form-control {
+    background: #f8f9fa!important;
+    color: #343a40!important;
+}
+
+.Running, .Benchmarking {
+    background-color: rgb(127,191,144);
+}
+
+.Offline {
+    background-color: rgb(213,142,176);
+}
+
+.Paused, .Waiting {
+    background-color: rgb(247,252,168);
+}
+

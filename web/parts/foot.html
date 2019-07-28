@@ -3,22 +3,36 @@
     </div>
   </body>
 <script type="text/javascript">
-  
-    $(function () {
+
+    function setTheme(val) {
+        if (val == "dark") {
+            $('table.table').addClass("table-dark");
+            $('body').removeClass("text-dark bg-light").addClass("text-light bg-dark");
+            $('.card-normal').removeClass("text-dark bg-light").addClass("text-light bg-dark");
+            $('a.nav-link').addClass("nav-link-dark");            
+        } else {
+            $('table.table').removeClass("table-dark");
+            $('body').removeClass("text-light bg-dark").addClass("text-dark bg-light");
+            $('.card-normal').removeClass("text-light bg-dark").addClass("text-dark bg-light");
+            $('a.nav-link').removeClass("nav-link-dark");
+        }
+        setCookie("rbm-theme", val, -1);
+        theme = val;
+        $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
+    }
+
+$(function () {
     // Set the active sidebar item
     $('#' + $('#title').data('navbaractive')).addClass('active');
 
     // set the values in the header
     var remoteversion = '0.0.0.0';
-    var text = $('a.navbar-brand').text();
-    var colors = ['#FF0000', '#E2571E', '#FF7F00', '#FFFF00', '#00FF00', '#96bf33', '#0000FF', '#4B0082', '#8B00FF'];
-    var out = [];
-    for (var i = 0; i < text.length; i++) {
-        out.push('<span style="color:' + colors[i % 10] + '">' + text.substr(i, 1) + '</span>');
-    }
-    out.push(' <span id="version"></span>')
-    $('a.navbar-brand').html(out.join(''));
     $('#updatemsg').hide();
+
+    theme = getCookie("rbm-theme");
+    if (theme != "") { $('#theme').val(theme); setTheme(theme); }
+
+    $('#theme').change(function () { setTheme($('#theme').val()); });
 
     $("#updatenow").click(function () {
         $.ajax({
@@ -60,7 +74,7 @@
         }
         setTimeout(q, 600000);
     })();
-  });
+});
   
 </script>
 </html>
