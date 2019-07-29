@@ -1765,9 +1765,8 @@ function Invoke-Core {
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
         $Miner_DeviceName = $_.DeviceName
         $Miner_DeviceModel = $_.DeviceModel
-        $Miner_DeviceModels = $Miner_DeviceModel -split '-'
         $Miner_ProfitMin = if ($Miner_DeviceModel -match "CPU") {1E-9} else {1E-7}
-        $Miner_DeviceTitle = @($Session.Devices | Where-Object {$Miner_DeviceModels -icontains $_.Model} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Session.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
+        $Miner_DeviceTitle = @($Session.Devices | Where-Object {$Miner_DeviceName -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Session.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
