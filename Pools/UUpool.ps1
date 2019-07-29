@@ -52,7 +52,7 @@ if (-not $Pool_DataRequest -or ($Pool_DataRequest | Get-Member -MemberType NoteP
     return
 }
 
-$Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR" -replace "^ULORD$","UL";$Wallets.$Pool_Currency -or $Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
+$Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR" -replace "^ULORD$","UT";$Wallets.$Pool_Currency -or $Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Algorithm_Norm = Get-Algorithm $_.algorithm
     $Pool_Id = $_.coin.ToLower()
