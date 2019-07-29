@@ -3525,7 +3525,7 @@ class Miner {
             }
         }
 
-        foreach ($DeviceModel in @($Profiles.PSObject.Properties.Name)) {            
+        foreach ($DeviceModel in @($Profiles.PSObject.Properties.Name | Select-Object)) {            
             $Profile   = $Profiles.$DeviceModel.Profile
 
             $Profile.CoreClockBoost   = $Profile.CoreClockBoost -replace '[^0-9\-]+'
