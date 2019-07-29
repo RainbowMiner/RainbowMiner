@@ -79,7 +79,7 @@
             var tOC = new Array();
             if (item.OCP) {
                 if (item.OCmode == "msia") {
-                    if (item.MSIAprofile) { tOC.push("MSIA" + item.OCP); }
+                    tOC.push("MSIA" + item.OCP);
                 } else if (item.OCmode == "ocp") {
                     var cnt = item.Device.length;
                     $.each(item.Device, function (ix, dev) {

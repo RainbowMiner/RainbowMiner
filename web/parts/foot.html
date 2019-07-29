@@ -8,12 +8,12 @@
         if (val == "dark") {
             $('table.table').addClass("table-dark");
             $('body').removeClass("text-dark bg-light").addClass("text-light bg-dark");
-            $('.card-normal').removeClass("text-dark bg-light").addClass("text-light bg-dark");
+            $('.card:not(.bg-primary)').removeClass("text-dark bg-light").addClass("text-light bg-dark");
             $('a.nav-link').addClass("nav-link-dark");            
         } else {
             $('table.table').removeClass("table-dark");
             $('body').removeClass("text-light bg-dark").addClass("text-dark bg-light");
-            $('.card-normal').removeClass("text-light bg-dark").addClass("text-dark bg-light");
+            $('.card:not(.bg-primary)').removeClass("text-light bg-dark").addClass("text-dark bg-light");
             $('a.nav-link').removeClass("nav-link-dark");
         }
         setCookie("rbm-theme", val, -1);
