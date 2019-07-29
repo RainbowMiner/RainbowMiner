@@ -122,6 +122,7 @@
 535	CpuminerVerus
 536	Nheqminer
 537	CpuminerRfv2
+538	UlordRig
 
 
 4068    CcminerSpModTribus
