@@ -14,7 +14,7 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-Ulord\ulordrig.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-ulordrig/ulordrig-win-v1.2.1.zip"
 }
-$ManualUri = "https://uupool.cn/tutorial/26"
+$ManualUri = "https://github.com/UlordChain/ulordrig/releases"
 $Port = "538{0:d2}"
 $DevFee = 0.0
 
@@ -60,9 +60,9 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "-R 2 -r 10 --api-port $($Miner_Port) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$($DeviceParams) $($_.Params)"
+					Arguments = "--api-port=$($Miner_Port) -o stratum+tcp://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$($DeviceParams) -R 2 -r 10 --print-time=10 $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "Ccminer"
+					API = "XmrigWrapper"
 					Port = $Miner_Port
 					Uri = $Uri
 					FaultTolerance = $_.FaultTolerance
