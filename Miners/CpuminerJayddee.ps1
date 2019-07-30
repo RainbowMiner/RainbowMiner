@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\CPU-JayDDee\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'zen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.6.1-jayddee/cpuminer-opt-3.9.6.1-windows.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.9.6.2-jayddee/cpuminer-opt-3.9.6.2-windows.zip"
 $ManualUri = "https://github.com/JayDDee/cpuminer-opt/releases"
 $Port = "500{0:d2}"
 $DevFee = 0.0
@@ -68,6 +68,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""; ExtendInterval = 2} #blake
     #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""; ExtendInterval = 2} #Blakecoin
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""; ExtendInterval = 2} #Blake2s
+    #[PSCustomObject]@{MainAlgorithm = "blake2b"; Params = ""; ExtendInterval = 2} #Blake2b, new with v3.9.6.2
     #[PSCustomObject]@{MainAlgorithm = "cryptolight"; Params = ""; ExtendInterval = 2} #cryptolight
     #[PSCustomObject]@{MainAlgorithm = "cryptonight"; Params = ""; ExtendInterval = 2} #CryptoNight
     #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""; ExtendInterval = 2} #C11
