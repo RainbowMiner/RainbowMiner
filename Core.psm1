@@ -772,7 +772,7 @@ function Invoke-Core {
         }
 
         #Give API access to the device information
-        $API.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
+        $API.DeviceCombos = $Session.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
 
         #Update device information for the first time
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
@@ -1584,7 +1584,17 @@ function Invoke-Core {
         } else {
             $BestMiners_Combo = Get-BestMinerDeviceCombos $BestMiners -SortBy "Profit_Bias"        
         }
-        
+
+        #Prefer multi-miner over single-miners
+        if ($Session.Config.MiningMode -eq "combo" -and $MinersNeedingBenchmarkCount -eq 0 -and ($Session.DeviceCombos -match '-' | Measure-Object).Count) {
+            $BestMiners_Combo = $BestMiners_Combo | Group-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.BaseAlgorithm -join '')$($_.Currency)$($_.CoinSymbol)"} | Foreach-Object {
+                $Combo_Name    = $_.Name
+                $Combo_Devices = @($_.Group.DeviceName | Select-Object -Unique | Sort-Object)
+                $BestMiners_Multi = if ($_.Count -gt 1) {$BestMiners | Where-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.BaseAlgorithm -join '')$($_.Currency)$($_.CoinSymbol)" -eq $Combo_Name -and (Compare-Object $_.DeviceName $Combo_Devices | Measure-Object).Count -eq 0} | Sort-Object Profit_Bias -Descending | Select-Object -First 1}
+                if ($BestMiners_Multi -and (($_.Group.Profit_Bias | Measure-Object -Sum).Sum*$Session.Config.MinComboOverSingleRatio -lt $BestMiners_Multi.Profit_Bias)) {$BestMiners_Multi} else {$_.Group}
+            }
+        }
+
         $PowerOffset_Cost = [Double]0
         if (($Session.AllPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
@@ -1765,8 +1775,9 @@ function Invoke-Core {
     $Miners | Select-Object DeviceName, DeviceModel -Unique | Sort-Object DeviceModel | ForEach-Object {
         $Miner_DeviceName = $_.DeviceName
         $Miner_DeviceModel = $_.DeviceModel
+        $Miner_DeviceModels = $Miner_DeviceModel -split '-'
         $Miner_ProfitMin = if ($Miner_DeviceModel -match "CPU") {1E-9} else {1E-7}
-        $Miner_DeviceTitle = @($Session.Devices | Where-Object {$Miner_DeviceName -icontains $_.Name} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Session.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
+        $Miner_DeviceTitle = @($Session.Devices | Where-Object {$Miner_DeviceModels -icontains $_.Model} | Select-Object -ExpandProperty Model_Name -Unique | Sort-Object | Foreach-Object {"$($_) ($(@($Session.Devices | Where-Object Model_Name -eq $_ | Select-Object -ExpandProperty Name | Sort-Object) -join ','))"}) -join ', '
         Write-Host $Miner_DeviceTitle
         Write-Host $("=" * $Miner_DeviceTitle.Length)
 
