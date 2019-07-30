@@ -2,6 +2,10 @@
   font-size: .875rem;
 }
 
+pre {
+    color: inherit;
+}
+
 .detail-icon:before {
   content: "+";
 }
