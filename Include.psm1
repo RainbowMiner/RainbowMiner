@@ -3518,7 +3518,7 @@ class Miner {
                 }
             }
             if ($DeviceIds.Count -gt 0) {
-                $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"}
+                $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}}
                 if ($Profile) {
                     $Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; Profile = $Profile; x = $x}) -Force
                 }
@@ -4379,7 +4379,7 @@ function Set-OCProfilesConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}
-            if (-not $Preset.PSObject.Properties.Name) {
+            if ($true -or -not $Preset.PSObject.Properties.Name) {
                 $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
                 $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {

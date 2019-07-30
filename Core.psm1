@@ -527,7 +527,7 @@ function Invoke-Core {
             $AllDevices = Get-ConfigContent "Devices" -UpdateLastWriteTime
             if (Test-Config "Devices" -Health) {
                 $Session.Config | Add-Member Devices $AllDevices -Force
-                $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Select-Object -First 1
+                $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Foreach-Object {$_ -replace "-.+$"} | Select-Object -Unique -First 1
                 foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
                     $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                     $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
