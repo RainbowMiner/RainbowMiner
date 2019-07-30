@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "$0")"
+
 command="& {./RainbowMiner.ps1 -configfile ./Config/config.txt -setuponly; exit \$lastexitcode}"
 
 while true; do

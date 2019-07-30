@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "$0")"
+
 command="& {./Install.ps1; exit \$lastexitcode}"
 
 if ! [ -x "$(command -v pwsh)" ]; then
