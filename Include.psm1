@@ -5301,9 +5301,12 @@ function Invoke-ReportMinerStatus {
         $ReportUrl = $Session.Config.MinerStatusURL
         $ReportStatus = "Error"
         $ReportDone = $false
+
+        $Uptime = ((Get-Date).ToUniversalTime() - $Session.StartTime).TotalSeconds
+
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = $Uptime; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status

@@ -78,6 +78,7 @@
                 <th data-field="worker" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
                 <th data-field="status" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                 <th data-field="tlastseen" data-sortable="true">Last seen</th>
+                <th data-field="tuptime" data-sortable="true">Uptime</th>
                 <th data-field="tversion" data-sortable="true">Version</th>
                 <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
                 <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
@@ -241,6 +242,7 @@
           //console.log(data);
           //console.log(item);                   
           item.tlastseen = timeSince(new Date(item.lastseen * 1000));
+          item.tuptime = item.uptime && parseInt(item.uptime) > 0 ? formatUptime(item.uptime) : '-';
           var vb = item.version.split(" ");
           item.tversion = vb.length > 1 ? vb[1] : item.version
 

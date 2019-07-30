@@ -67,6 +67,8 @@
         }
         [hashtable]$Session.MinerInfo = @{}
 
+        $Session.StartTime         = (Get-Date).ToUniversalTime()
+
         $Session.Strikes           = 3
         $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
         $Session.OutofsyncWindow   = 60 #minutes, after that time, the pools price bias will be 0

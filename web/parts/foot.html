@@ -45,10 +45,19 @@ $(function () {
         })
     });
 
+    start_uptime = Date.now();
+    last_uptime  = 0;
+
     (function p() {
         $.ajax({
             url: '/currentprofit', success: function (result) {
-                $("#profit").html("<h6>Current profit: " + formatBTC(result.AllProfitBTC) + " BTC/Day</h6>");
+                $("#profit").html(formatBTC(result.AllProfitBTC));
+                
+                if (!last_uptime || parseInt(result.Uptime.Seconds) < last_uptime) {
+                    start_uptime = Date.now();
+                    last_uptime = parseInt(result.Uptime.Seconds);
+                }
+
                 var xchange = new Array();
                 xchange.push("1 BTC");
                 $.each(result.Rates, function (key, itm) {
@@ -73,6 +82,11 @@ $(function () {
             $('#updatemsg').hide()
         }
         setTimeout(q, 600000);
+    })();
+
+    (function r() {
+        $('#uptime').text(formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000)));
+        setTimeout(r, 1000);
     })();
 });
   
