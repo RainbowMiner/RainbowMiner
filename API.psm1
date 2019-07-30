@@ -627,14 +627,16 @@
                         } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
                             $Data = Get-Content $Filename -Raw -ErrorAction Ignore
 
-                            # Process server side includes for html files
-                            # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
-                            $IncludeRegex = [regex]'<!-- *#include *file="(.*)" *-->'
-                            $IncludeRegex.Matches($Data) | Foreach-Object {
-                                $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
-                                If (Test-Path $IncludeFile -PathType Leaf) {
-                                    $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
-                                    $Data = $Data -Replace $_.Value, $IncludeData
+                            if ($Data -and $File.Extension -match "htm") {
+                                # Process server side includes for html files
+                                # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
+                                $IncludeRegex = [regex]'<!-- *#include *file="(.*)" *-->'
+                                $IncludeRegex.Matches($Data) | Foreach-Object {
+                                    $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
+                                    If (Test-Path $IncludeFile -PathType Leaf) {
+                                        $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
+                                        $Data = $Data -Replace $_.Value, $IncludeData
+                                    }
                                 }
                             }
                         } else {
