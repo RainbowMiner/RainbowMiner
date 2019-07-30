@@ -75,7 +75,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = if ($Pool_SSL) {"ssl"} else {"stratum+tcp"}
-            Host          = $_.rpc + ".suprnova.cc"
+            Host          = "$($_.rpc).suprnova.cc"
             Port          = $Port
             User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
             Pass          = "x"
