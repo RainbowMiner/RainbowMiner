@@ -104,7 +104,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Path           = $Path
 					Arguments      = $Arguments
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API            = "XMRig"
+					API            = "XMRig3"
 					Port           = $Miner_Port
 					Uri            = $Uri
 					DevFee         = $DevFee

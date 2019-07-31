@@ -1,6 +1,6 @@
 ﻿using module ..\Include.psm1
 
-class Xmrig : Miner {
+class Xmrig3 : Miner {
 
     [String]GetArguments() {
         if ($this.Arguments -notlike "{*}") {return $this.Arguments}
