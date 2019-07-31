@@ -302,7 +302,23 @@ function Update-Rates {
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) to BTC has failed. "
+            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) has failed. "
+        }
+        try {
+            $MoreRates = @($Session.GlobalGetTicker | Where-Object {-not $Session.Rates.ContainsKey($_) -or -not $Session.Rates[$_]} | Select-Object | Sort-Object)
+            if ($MoreRates.Count) {
+                $SymbolStr = ($MoreRates -join ',').ToUpper()
+                $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
+                if (-not $RatesAPI.status) {
+                    Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
+                } elseif (($RatesAPI.data | Measure-Object).Count) {
+                    $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
+                }
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
     }
 
