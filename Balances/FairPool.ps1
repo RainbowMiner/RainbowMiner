@@ -43,7 +43,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         #$Divisor = $Pool_Request.config.coinUnits
         $Divisor = 1e12
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/stats?login=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/stats?login=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "\..+$")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if ($Request.method -ne "stats" -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {            
