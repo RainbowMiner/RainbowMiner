@@ -83,7 +83,6 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                             "worker-id"    = $null
                         }
                         "background"   = $false
-                        "cuda-bfactor" = 10
                         "colors"       = $true
                         "donate-level" = if ($IsLinux) {1} else {0}
                         "log-file"     = $null

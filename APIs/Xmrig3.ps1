@@ -5,12 +5,15 @@ class Xmrig3 : Miner {
     [String]GetArguments() {
         if ($this.Arguments -notlike "{*}") {return $this.Arguments}
 
+        $ThreadsConfig     = $null
+
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
+
         $ConfigFile        = "config_$($this.BaseAlgorithm -join '-')_$($this.DeviceModel)$(if ($this.DeviceName -like "GPU*") {"_$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')"})_$($this.Port)-$($Parameters.Threads).json"
         $ThreadsConfigFile = "threads_$($Parameters.HwSig).json"
-        $ThreadsConfig     = $null
-        $LogFile           = "$Miner_Path\log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
+        $LogFile           = "log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
+
         $Algo              = $Parameters.Algorithm
         $Algo0             = $Parameters.Algorithm -replace "/.+$"
         $Device            = if ($this.DeviceName -like "GPU*") {} else {"cpu"}
@@ -23,7 +26,7 @@ class Xmrig3 : Miner {
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -Force
 
                 $ArgumentList = ("$($Parameters.PoolParams) --algo=$Algo --config=$ThreadsConfigFile $($Parameters.Params)" -replace "\s+",' ').Trim()
-                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
+                $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath "$Miner_Path\$LogFile" -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
                 if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
                     $wait = 0
                     $Job | Add-Member HasOwnMinerWindow $true -Force
@@ -46,8 +49,10 @@ class Xmrig3 : Miner {
                 }
                 $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             }
+
             $Config = Get-Content "$Miner_Path\$ConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-            if (-not $Config.$Device -and -not $Config.$Device.$Algo -and -not $Config.$Device.$Algo0) {
+
+            if (-not $Config.$Device -and -not ($Config.$Device.$Algo | Measure-Object).Count -and -not ($Config.$Device.$Algo0 | Measure-Object).Count) {
                 if ($ThreadsConfig.$Algo -or $ThreadsConfig.$Algo0) {
                     if ($this.DeviceName -like "GPU*") {
                         #$Parameters.Config | Add-Member threads ([Array](@($ThreadsConfig | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
@@ -59,17 +64,20 @@ class Xmrig3 : Miner {
                             $Parameters.Config.$Device | Add-Member $n $v -Force
                         }
                         $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
-                        try {$Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}} catch {}
-                        if ($Parameters.Threads) {
-                            $Parameters.Config.$Device | Add-Member $Algo ([array](-1) * $Parameters.Threads) -Force
-                        } else {
-                            $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsConfig.$Algo)) -Force
-                        }
-                        if (($Aff | Measure-Object).Count) {
-                            $Threads = $Parameters.Config.$Device.$Algo.Count
-                            for($i=0;$i -lt [Math]::Max($Aff.Count,$Threads);$i++) {$Parameters.Config.$Device.$Algo[$i] = $Aff[$i]}
+
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsConfig.$Algo | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+
+                        $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
+                        if ($AffCount = ($Aff | Measure-Object).Count) {
+                            $AffThreads = @(Compare-Object $Aff $Parameters.Config.$Device.$Algo -IncludeEqual -ExcludeDifferent | Where-Object {$_.SideIndicator -eq "=="} | Foreach-Object {$_.InputObject} | Select-Object)
+                            $ThreadsCount = [Math]::Min($AffCount,$Parameters.Config.$Device.$Algo.Count)
+                            if ($AffThreads.Count -lt $ThreadsCount) {
+                                $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
+                            }
+                            $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }
                     }
+                    $Parameters.Config | Add-Member autosave $false -Force
                     $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ConfigFile" -Force
                 }
                 else {
