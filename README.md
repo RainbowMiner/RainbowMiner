@@ -55,6 +55,26 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
+### Ubuntu 18.x Pre-requesites
+This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls))
+
+Nvidia Drivers
+```
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt-get -y install dkms build-essential
+sudo apt-get update
+sudo apt-get -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
+
+```
+###### Optional Overclocking for Nvidia:
+
+```
+sudo nvidia-xconfig -a --cool-bits=31 --allow-empty-initial-configuration
+```
+
+
+
+
 ## INSTALLATION
 
 #### 1. Download RainbowMiner and extract to a folder of you choice: [![current release](https://img.shields.io/github/release/RainbowMiner/RainbowMiner.svg)](https://github.com/RainbowMiner/RainbowMiner/releases)
@@ -101,13 +121,7 @@ dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
 apt install -f
 ```
 
-Hint: install Nvidia drivers
-```
-sudo add-apt-repository ppa:graphics-drivers/ppa
-sudo apt-get -y install dkms build-essential
-sudo apt-get update
-sudo apt-get -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
-```
+
 
 #### 3. Start it (if not yet running)
 
