@@ -17,42 +17,31 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "eu"
 
 $Pools_Data = @(
-    #[PSCustomObject]@{coin = "Aeon";          symbol = "AEON";  algo = "CnLiteV7";    port = 10410; fee = 0.9; rpc = "aeon"}
     [PSCustomObject]@{coin = "Arqma";         symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma"}
     [PSCustomObject]@{coin = "Arqma+Iridium"; symbol = "ARQ";   algo = "CnTurtle";    port = 10630; fee = 0.9; rpc = "iridium"; symbol2 = "IRD"}
     [PSCustomObject]@{coin = "Arqma+Plenteum";symbol = "ARQ";   algo = "CnTurtle";    port = 10630; fee = 0.9; rpc = "arqple"; symbol2 = "PLE"}
     [PSCustomObject]@{coin = "Arqma+Turtle";  symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma"; symbol2 = "TRTL"}
+    [PSCustomObject]@{coin = "Arqma+CyprusCoin";symbol = "ARQ"; algo = "CnTurtle";    port = 10670; fee = 0.9; rpc = "cypruscoin"; symbol2 = "XCY"}
     [PSCustomObject]@{coin = "BitTube";       symbol = "TUBE";  algo = "CnSaber";     port = 10280; fee = 0.9; rpc = "tube"}
-    #[PSCustomObject]@{coin = "Bloc";          symbol = "BLOC";  algo = "CnHaven";     port = 10240; fee = 0.9; rpc = "bloc"}
-    #[PSCustomObject]@{coin = "Citadel";       symbol = "CTL";   algo = "CnV7";        port = 10420; fee = 0.9; rpc = "citadel"}
     [PSCustomObject]@{coin = "Conceal";       symbol = "CCX";   algo = "CnConceal";   port = 10361; fee = 0.9; rpc = "conceal"}
     [PSCustomObject]@{coin = "Graft";         symbol = "GRFT";  algo = "CnRwz";       port = 10100; fee = 0.9; rpc = "graft"}
     [PSCustomObject]@{coin = "Haven";         symbol = "XHV";   algo = "CnHaven";     port = 10140; fee = 0.9; rpc = "haven"}
     [PSCustomObject]@{coin = "Haven+Bloc";    symbol = "XHV";   algo = "CnHaven";     port = 10450; fee = 0.9; rpc = "havenbloc";  symbol2 = "BLOC"}
-    #[PSCustomObject]@{coin = "Lethean";       symbol = "LTHN";  algo = "CnR";         port = 10180; fee = 0.9; rpc = "lethean"}
     [PSCustomObject]@{coin = "Loki";          symbol = "LOKI";  algo = "RxLoki";      port = 10111; fee = 0.9; rpc = "loki"}
-    #[PSCustomObject]@{coin = "Loki+Plenteum"; symbol = "LOKI";  algo = "CnTurtle";    port = 10420; fee = 0.9; rpc = "plenteum";  symbol2 = "PLE"}
-    #[PSCustomObject]@{coin = "Loki+Turtle";   symbol = "LOKI";  algo = "CnTurtle";    port = 10520; fee = 0.9; rpc = "lokiturtle";  symbol2 = "TRTL"}
     [PSCustomObject]@{coin = "Masari";        symbol = "MSR";   algo = "CnHalf";      port = 10150; fee = 0.9; rpc = "masari"}
     [PSCustomObject]@{coin = "Monero";        symbol = "XMR";   algo = "CnR";         port = 10190; fee = 0.9; rpc = "monero"}
-    #[PSCustomObject]@{coin = "MoneroV";       symbol = "XMV";   algo = "CnV7";        port = 10200; fee = 0.9; rpc = "monerov"}
-    #[PSCustomObject]@{coin = "Obscure";       symbol = "XSC";   algo = "CnTurtle";    port = 10480; fee = 0.9; rpc = "obscure"}
     [PSCustomObject]@{coin = "Qrl";           symbol = "QRL";   algo = "CnV7";        port = 10370; fee = 0.9; rpc = "qrl"}
     [PSCustomObject]@{coin = "Ryo";           symbol = "RYO";   algo = "CnGpu";       port = 10270; fee = 0.9; rpc = "ryo"}
-    #[PSCustomObject]@{coin = "SafeX";         symbol = "SAFE";  algo = "CnV7";        port = 10430; fee = 0.9; rpc = "safex"}
-    #[PSCustomObject]@{coin = "Saronite";      symbol = "XRN";   algo = "CnHeavy";     port = 10230; fee = 0.9; rpc = "saronite"}
-    #[PSCustomObject]@{coin = "Stellite";      symbol = "XTL";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "stellite"}
+    [PSCustomObject]@{coin = "Scala";         symbol = "XLA";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "scala"}
+    [PSCustomObject]@{coin = "Scala";         symbol = "XTC";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "scala"}
     [PSCustomObject]@{coin = "Sumocoin";      symbol = "SUMO";  algo = "CnGpu";       port = 10610; fee = 0.9; rpc = "sumo"}
     [PSCustomObject]@{coin = "Swap";          symbol = "XWP";   algo = "Cuckaroo29s"; port = 10441; fee = 0.9; rpc = "swap"; divisor = 32}
-    [PSCustomObject]@{coin = "Torque";        symbol = "XTC";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "torque"}
     [PSCustomObject]@{coin = "Triton";        symbol = "XTRI";  algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "triton"}
-    [PSCustomObject]@{coin = "Triton+Iridium";symbol = "XTRI";  algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "triton"; symbol2 = "IRD"}
+    [PSCustomObject]@{coin = "Triton+NibbleClassic";symbol = "XTRI";algo = "CnTurtle";port = 10600; fee = 0.9; rpc = "triton"; symbol2 = "NBX"}
     [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "CnTurtle";    port = 10380; fee = 0.9; rpc = "turtlecoin"}
     [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx";       port = 10470; fee = 0.9; rpc = "uplexa"}
-    [PSCustomObject]@{coin = "Xcash";         symbol = "XCASH"; algo = "CnHeavyX";    port = 10440; fee = 0.9; rpc = "xcash"}
-    [PSCustomObject]@{coin = "Xtend";         symbol = "XTNC";  algo = "CnTurtle";    port = 10390; fee = 0.9; rpc = "xtendcash"}
-    [PSCustomObject]@{coin = "Xtend+Plenteum";symbol = "XTNC";  algo = "CnTurtle";    port = 10620; fee = 0.9; rpc = "xtncple"; symbol2 = "PLE"}
-    [PSCustomObject]@{coin = "Xtend+Turtle";  symbol = "XTNC";  algo = "CnTurtle";    port = 10390; fee = 0.9; rpc = "xtendcash"; symbol2 = "TRTL"}
+    [PSCustomObject]@{coin = "WowNero";       symbol = "XCASH"; algo = "CnHeavyX";    port = 10440; fee = 0.9; rpc = "xcash"}
+    [PSCustomObject]@{coin = "Xcash";         symbol = "WOW";   algo = "RxWow";       port = 10660; fee = 0.9; rpc = "wownero"}
 )
 
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
