@@ -178,9 +178,9 @@ function Start-Setup {
                 "W" {$GlobalSetupName = "Wallet";$GlobalSetupSteps.AddRange(@("wallet","nicehash","nicehash2","nicehashplatform","nicehashorganizationid","nicehashapiid","nicehashapikey","nicehashapisecret","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret")) > $null}
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","excludedevicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
-                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin")) > $null}
+                "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","poolnamenh1","poolnamenh2","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin")) > $null}
                 "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashplatform","nicehashorganizationid","nicehashapiid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","mincombooversingleratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashplatform","nicehashorganizationid","nicehashapiid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","poolnamenh1","poolnamenh2","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","mincombooversingleratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","donate")) > $null}
             }
             $GlobalSetupSteps.Add("save") > $null                            
 
@@ -205,6 +205,18 @@ function Start-Setup {
                 $NicehashAPIID = ""
                 $NicehashAPIKey = ""
                 $NicehashAPISecret = ""
+            }
+
+            if ($PoolsActual | Get-Member NicehashV2 -MemberType NoteProperty) {
+                $NicehashV2Wallet = $PoolsActual.NicehashV2.BTC
+                $NicehashV2OrganizationID = $PoolsActual.NicehashV2.OrganizationID
+                $NicehashV2APIKey = $PoolsActual.NicehashV2.API_Key
+                $NicehashV2APISecret = $PoolsActual.NicehashV2.API_Secret
+            } else {
+                $NicehashV2Wallet = ""
+                $NicehashV2OrganizationID = ""
+                $NicehashV2APIKey = ""
+                $NicehashV2APISecret = ""
             }
 
             if ($PoolsActual | Get-Member MiningPoolHub -MemberType NoteProperty) {
@@ -305,7 +317,6 @@ function Start-Setup {
 
                             if ($NicehashWallet -eq "`$Wallet"){$NicehashWallet=$Config.Wallet}
                             $NicehashWallet = Read-HostString -Prompt "Enter your NiceHash BTC mining wallet address" -Default $NicehashWallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-
                         }
                         "nicehash2" {
                             if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
@@ -870,6 +881,41 @@ function Start-Setup {
                             Write-Host " "
 
                             $Config.PoolName = Read-HostArray -Prompt "Enter the pools you want to mine" -Default $Config.PoolName -Mandatory -Characters "A-Z0-9" -Valid $Session.AvailPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                        }
+                        "poolnamenh1" {
+                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
+                            if ($PoolNames -icontains "NiceHashV2") {
+                                if ($IsInitialSetup) {
+                                    Write-Host " "
+                                    Write-Host "You have enabled NicehashV2. Register an account with them, to get a NiceHash mining wallet address (please read the Pools section of our readme!). " -ForegroundColor Cyan
+                                    Write-Host "If you do not want to use NicehashV2 as a pool, leave this empty (or enter `"clear`" to make it empty) and press return " -ForegroundColor Cyan
+                                    Write-Host " "
+                                }
+
+                                if ($NicehashV2Wallet -eq "`$Wallet"){$NicehashV2Wallet=""}
+                                $NicehashV2Wallet = Read-HostString -Prompt "Enter your NiceHashV2 BTC mining wallet address" -Default $NicehashV2Wallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "poolnamenh2" {
+                            $PoolNames = @(Get-ConfigArray $Config.PoolName)
+                            if ($PoolNames -icontains "NiceHashV2") {
+                                if ($NiceHashV2Wallet -eq "`$Wallet" -or $NiceHashV2Wallet -eq $Config.Wallet) {
+                                    if (Read-HostBool "You have entered your default wallet as NicehashV2 wallet. This is not possible. Do you want to disable NiceHashV2 mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                        $NiceHashV2Wallet = ''
+                                    } else {
+                                        $GlobalSetupStepStore = $false
+                                        throw "Goto poolnamenh1"
+                                    }
+                                }
+                                if (-not $NicehashV2Wallet) {
+                                    $PoolNames = $PoolNames | Where-Object {$_ -ne "NiceHashV2"}
+                                }
+                                $Config.PoolName = ($PoolNames | Select-Object -Unique | Sort-Object) -join ','
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
                         }
                         "autoaddcoins" {
                             if ($IsInitialSetup -and $CoinsWithWallets.Count) {
@@ -1459,6 +1505,21 @@ function Start-Setup {
                                 $CheckPools += "NiceHash"
                             }
 
+                            if (Get-Member -InputObject $PoolsActual -Name NiceHashV2) {
+                                $PoolsActual.NiceHashV2 | Add-Member BTC $(if($NiceHashV2Wallet -eq $Config.Wallet){""}else{$NiceHashV2Wallet}) -Force
+                                $PoolsActual.NiceHashV2 | Add-Member OrganizationID $NiceHashV2OrganizationID -Force
+                                $PoolsActual.NiceHashV2 | Add-Member API_Key $NiceHashV2APIKey -Force
+                                $PoolsActual.NiceHashV2 | Add-Member API_Secret $NiceHashV2APISecret -Force
+                            } else {
+                                $PoolsActual | Add-Member NiceHashV2 ([PSCustomObject]@{
+                                        BTC     = if($NiceHashV2Wallet -eq $Config.Wallet){}else{$NiceHashV2Wallet}
+                                        OrganizationID = $NiceHashV2OrganizationID
+                                        API_Key = $NiceHashV2APIKey
+                                        API_Secret = $NiceHashV2APISecret
+                                }) -Force
+                                $CheckPools += "NiceHashV2"
+                            }
+
                             if (Get-Member -InputObject $PoolsActual -Name MiningPoolHub) {
                                 $PoolsActual.MiningPoolHub | Add-Member User $MPHUser -Force
                                 $PoolsActual.MiningPoolHub | Add-Member API_ID $MPHAPIID -Force
@@ -1765,6 +1826,7 @@ function Start-Setup {
                                 API_Key = "`$API_Key"
                             }
                         ) -Force
+                        if ($Pool_Name -eq "NiceHashV2") {$PoolsActual.$Pool_Name.BTC = ""}
                         Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActual > $null
                     }
 
@@ -1816,17 +1878,15 @@ function Start-Setup {
                                         Write-Host " "
                                         $PoolSetupStepStore = $false
                                     }
-                                    "worker" {
-                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"clear"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
-                                    }
-                                    "user" {
-                                        $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = $PoolsSetup.$Pool_Name.Fields.User}
-                                    }
                                     "aecurrency" {
                                         $PoolConfig.AECurrency = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.AECurrency -Default $PoolConfig.AECurrency -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
-                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.AECurrency = $PoolsSetup.$Pool_Name.Fields.AECurrency}
+                                        if ($PoolConfig.AECurrency.Trim() -eq '') {$PoolConfig.AECurrency = $PoolsSetup.$Pool_Name.Fields.AECurrency}
+                                    }
+                                    "algorithm" {
+                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "allowzero" {                                                    
+                                        $PoolConfig.AllowZero = Read-HostBool -Prompt "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)" -Default $PoolConfig.AllowZero | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "apiid" {
                                         $PoolConfig.API_ID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_ID -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
@@ -1840,61 +1900,9 @@ function Start-Setup {
                                         $PoolConfig.API_Secret = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_Secret -Default ($PoolConfig.API_Secret -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.API_Secret.Trim() -eq '') {$PoolConfig.API_Secret = $PoolsSetup.$Pool_Name.Fields.API_Secret}
                                     }
-                                    "enablemining" {
-                                        $PoolConfig.EnableMining = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMining -Default $PoolConfig.EnableMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.EnableMining = if ($PoolConfig.EnableMining) {"1"} else {"0"}
-                                    }
-                                    "enableautocreate" {
-                                        $PoolConfig.EnableAutoCreate = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoCreate -Default $PoolConfig.EnableAutoCreate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.EnableAutoCreate = if ($PoolConfig.EnableAutoCreate) {"1"} else {"0"}
-                                    }
-                                    "enableautoprice" {
-                                        $PoolConfig.EnableAutoPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoPrice -Default $PoolConfig.EnableAutoPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.EnableAutoPrice = if ($PoolConfig.EnableAutoPrice) {"1"} else {"0"}
-                                    }
-                                    "enablepriceupdates" {
-                                        $PoolConfig.EnablePriceUpdates = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnablePriceUpdates -Default $PoolConfig.EnablePriceUpdates | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.EnablePriceUpdates = if ($PoolConfig.EnablePriceUpdates) {"1"} else {"0"}
-                                    }
-                                    "enableminimumprice" {
-                                        $PoolConfig.EnableMinimumPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMinimumPrice -Default $PoolConfig.EnableMinimumPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.EnableMinimumPrice = if ($PoolConfig.EnableMinimumPrice) {"1"} else {"0"}
-                                    }
-                                    "pricebtc" {
-                                        $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.PriceBTC = "$($PoolConfig.PriceBTC)"
-                                    }
-                                    "pricefactor" {
-                                        $PoolConfig.PriceFactor = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceFactor -Default $PoolConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        $PoolConfig.PriceFactor = "$($PoolConfig.PriceFactor)"
-                                    }
-                                    "pricecurrencies" {
-                                        $PoolConfig.PriceCurrencies = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceCurrencies -Default $PoolConfig.PriceCurrencies -Characters "A-Z" -Valid @("BCH","BTC","DASH","ETH","LTC") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        if ($PoolConfig.PriceCurrencies -inotcontains "BTC") {$PoolConfig.PriceCurrencies += "BTC"}
-                                        $PoolConfig.PriceCurrencies = $PoolConfig.PriceCurrencies -join ","
-                                    }
-                                    "title" {
-                                        $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "description" {
-                                        $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "algorithm" {
-                                        $PoolConfig.Algorithm = Read-HostArray -Prompt "Enter algorithms you want to mine ($(if ($PoolConfig.Algorithm) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.Algorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "excludealgorithm" {
-                                        $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
                                     "coinname" {
                                         if ($Pool_Avail_CoinName) {
                                             $PoolConfig.CoinName = Read-HostArray -Prompt "Enter coins by name, you want to mine ($(if ($PoolConfig.CoinName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.CoinName -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        } else {
-                                            $PoolSetupStepStore = $false
-                                        }
-                                    }
-                                    "excludecoin" {
-                                        if ($Pool_Avail_CoinName) {
-                                            $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude " -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         } else {
                                             $PoolSetupStepStore = $false
                                         }
@@ -1906,37 +1914,12 @@ function Start-Setup {
                                             $PoolSetupStepStore = $false
                                         }
                                     }
-                                    "excludecoinsymbol" {
-                                        if ($Pool_Avail_CoinSymbol) {
-                                            $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                        } else {
-                                            $PoolSetupStepStore = $false
-                                        }
-                                    }
                                     "coinsymbolpbm" {
                                         if ($Pool_Avail_CoinSymbol) {
                                             $PoolConfig.CoinSymbolPBM = Read-HostArray -Prompt "Enter coins by currency-symbol, to be included if Postblockmining, only " -Default $PoolConfig.CoinSymbolPBM -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         } else {
                                             $PoolSetupStepStore = $false
                                         }
-                                    }
-                                    "minername" {
-                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "excludeminername" {
-                                        $PoolConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $PoolConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "enableautocoin" {
-                                        $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "enablepostblockmining" {
-                                        $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "penalty" {                                                    
-                                        $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    }
-                                    "allowzero" {                                                    
-                                        $PoolConfig.AllowZero = Read-HostBool -Prompt "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)" -Default $PoolConfig.AllowZero | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "currency" {
                                         $PoolEditCurrencyDone = $false
@@ -1997,6 +1980,94 @@ function Start-Setup {
                                         Write-HostSetupDataWindowHints
                                         $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}                                        
                                     }
+                                    "description" {
+                                        $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "email" {
+                                        $PoolConfig.Email = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Email -Default $PoolConfig.Email -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "enableautocoin" {
+                                        $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "enableautocreate" {
+                                        $PoolConfig.EnableAutoCreate = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoCreate -Default $PoolConfig.EnableAutoCreate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableAutoCreate = if ($PoolConfig.EnableAutoCreate) {"1"} else {"0"}
+                                    }
+                                    "enableautoprice" {
+                                        $PoolConfig.EnableAutoPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoPrice -Default $PoolConfig.EnableAutoPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableAutoPrice = if ($PoolConfig.EnableAutoPrice) {"1"} else {"0"}
+                                    }
+                                    "enableminimumprice" {
+                                        $PoolConfig.EnableMinimumPrice = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMinimumPrice -Default $PoolConfig.EnableMinimumPrice | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableMinimumPrice = if ($PoolConfig.EnableMinimumPrice) {"1"} else {"0"}
+                                    }
+                                    "enablemining" {
+                                        $PoolConfig.EnableMining = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableMining -Default $PoolConfig.EnableMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableMining = if ($PoolConfig.EnableMining) {"1"} else {"0"}
+                                    }
+                                    "enablepostblockmining" {
+                                        $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "enablepriceupdates" {
+                                        $PoolConfig.EnablePriceUpdates = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnablePriceUpdates -Default $PoolConfig.EnablePriceUpdates | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnablePriceUpdates = if ($PoolConfig.EnablePriceUpdates) {"1"} else {"0"}
+                                    }
+                                    "excludealgorithm" {
+                                        $PoolConfig.ExcludeAlgorithm = Read-HostArray -Prompt "Enter algorithms you do want to exclude " -Default $PoolConfig.ExcludeAlgorithm -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "excludecoin" {
+                                        if ($Pool_Avail_CoinName) {
+                                            $PoolConfig.ExcludeCoin = Read-HostArray -Prompt "Enter coins by name, you do want to exclude " -Default $PoolConfig.ExcludeCoin -Characters "`$A-Z0-9. " -Valid $Pool_Avail_CoinName | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
+                                    }
+                                    "excludecoinsymbol" {
+                                        if ($Pool_Avail_CoinSymbol) {
+                                            $PoolConfig.ExcludeCoinSymbol = Read-HostArray -Prompt "Enter coins by currency-symbol, you do want to exclude " -Default $PoolConfig.ExcludeCoinSymbol -Characters "`$A-Z0-9" -Valid $Pool_Avail_CoinSymbol | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        } else {
+                                            $PoolSetupStepStore = $false
+                                        }
+                                    }
+                                    "excludeminername" {
+                                        $PoolConfig.ExcludeMinerName = Read-HostArray -Prompt "Enter the miners you do want to exclude" -Default $PoolConfig.ExcludeMinerName -Characters "A-Z0-9\.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "focuswallet" {
+                                        $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
+                                        $PoolConfig.FocusWallet = Read-HostArray -Prompt "Force mining for one or more of this pool's wallets" -Default $PoolConfig.FocusWallet -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "minername" {
+                                        $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "organizationid" {
+                                        $PoolConfig.OrganizationID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.OrganizationID -Default ($PoolConfig.OrganizationID -replace "^\`$.+") -Characters "A-Z0-9\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.OrganizationID.Trim() -eq '') {$PoolConfig.OrganizationID = $PoolsSetup.$Pool_Name.Fields.OrganizationID}
+                                    }
+                                    "partypassword" {
+                                        $PoolConfig.PartyPassword = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.PartyPassword -Default $PoolConfig.PartyPassword -Characters $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "password" {
+                                        $PoolConfig.Password = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Password -Default $PoolConfig.Password -Characters $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "penalty" {                                                    
+                                        $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "platform" {
+                                        $PoolConfig.Platform = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.Platform -Default $PoolConfig.Platform -Valid @("1","v1","old","2","v2","new") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "pricebtc" {
+                                        $PoolConfig.PriceBTC = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceBTC -Default $PoolConfig.PriceBTC -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.PriceBTC = "$($PoolConfig.PriceBTC)"
+                                    }
+                                    "pricecurrencies" {
+                                        $PoolConfig.PriceCurrencies = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceCurrencies -Default $PoolConfig.PriceCurrencies -Characters "A-Z" -Valid @("BCH","BTC","DASH","ETH","LTC") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($PoolConfig.PriceCurrencies -inotcontains "BTC") {$PoolConfig.PriceCurrencies += "BTC"}
+                                        $PoolConfig.PriceCurrencies = $PoolConfig.PriceCurrencies -join ","
+                                    }
+                                    "pricefactor" {
+                                        $PoolConfig.PriceFactor = Read-HostDouble -Prompt $PoolsSetup.$Pool_Name.SetupFields.PriceFactor -Default $PoolConfig.PriceFactor -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.PriceFactor = "$($PoolConfig.PriceFactor)"
+                                    }
                                     "stataverage" {
                                         Write-Host " "
                                         Write-Host "*** Define the pool's moving average price trendline" -ForegroundColor Green
@@ -2004,9 +2075,20 @@ function Start-Setup {
                                         Write-HostSetupStatAverageHints
                                         $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverage) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
-                                    "focuswallet" {
-                                        $Pool_Actual_Currency = @((Get-PoolPayoutCurrencies $PoolConfig).PSObject.Properties.Name | Sort-Object)
-                                        $PoolConfig.FocusWallet = Read-HostArray -Prompt "Force mining for one or more of this pool's wallets" -Default $PoolConfig.FocusWallet -Characters "A-Z0-9" -Valid $Pool_Avail_Currency | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    "title" {
+                                        $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "user" {
+                                        $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9\-\_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = $PoolsSetup.$Pool_Name.Fields.User}
+                                    }
+                                    "username" {
+                                        $PoolConfig.UserName = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.UserName -Default ($PoolConfig.UserName -replace "^\`$.+") -Characters "A-Z0-9\-\_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.UserName.Trim() -eq '') {$PoolConfig.UserName = $PoolsSetup.$Pool_Name.Fields.UserName}
+                                    }
+                                    "worker" {
+                                        $PoolConfig.Worker = Read-HostString -Prompt "Enter the worker name ($(if ($PoolConfig.Worker) {"clear"} else {"leave empty"}) to use config.txt default)" -Default ($PoolConfig.Worker -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        if ($PoolConfig.Worker.Trim() -eq '') {$PoolConfig.Worker = "`$WorkerName"}
                                     }
                                     "save" {
                                         Write-Host " "
