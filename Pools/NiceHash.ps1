@@ -17,6 +17,13 @@ $Pool_Request = [PSCustomObject]@{}
 
 $Platform_Version = if ($Platform -in @("2","v2","new")) {2} else {1}
 
+if (-not $InfoOnly) {
+    if (-not $Wallets.BTC) {return}
+    if ($Platform_Version -eq 2 -and $Wallets.BTC -eq $Session.Config.Wallet) {
+        Write-Log -Level Warn "Nicehash V2 needs an own BTC mining wallet!"
+    }
+}
+
 if ($Platform_Version -eq 2) {
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/public/simplemultialgo/info/" -tag $Name
