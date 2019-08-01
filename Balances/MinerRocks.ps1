@@ -7,8 +7,11 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"}
 
+    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005; fee = 0.9; rpc = "loki"}
+
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "Torque";      symbol = "XTL";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XTC";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
 
     [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551; fee = 0.9; rpc = "monero"}
     [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003; fee = 0.9; rpc = "sumokoin"}
@@ -18,8 +21,6 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";    port = 5555; fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
 
     [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
-
-    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005; fee = 0.9; rpc = "loki"}
 
     [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005; fee = 0.9; rpc = "turtle"}
 
@@ -39,7 +40,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name
         $Divisor = $Pool_Request.config.coinUnits
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "\..+$")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "\..+$" -replace "\+.+$")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {

@@ -22,8 +22,11 @@ $Pool_Region_Default = "eu"
 $Pools_Data = @(
     [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555; fee = 0.9; rpc = "boolberry"; scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
 
+    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005; fee = 0.9; rpc = "loki"}
+
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "Torque";      symbol = "XTC";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XTC";  algo = "CnHalf";     port = 5005; fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
 
     [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551; fee = 0.9; rpc = "monero"}
     [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003; fee = 0.9; rpc = "sumokoin"}
@@ -33,8 +36,6 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";    port = 5555; fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
 
     [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555; fee = 0.9; rpc = "aeon"}
-
-    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005; fee = 0.9; rpc = "loki"}
 
     [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005; fee = 0.9; rpc = "turtle"}
 
