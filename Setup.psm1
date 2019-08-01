@@ -213,7 +213,7 @@ function Start-Setup {
                 $NicehashV2APIKey = $PoolsActual.NicehashV2.API_Key
                 $NicehashV2APISecret = $PoolsActual.NicehashV2.API_Secret
             } else {
-                $NicehashV2Wallet = ""
+                $NicehashV2Wallet = "`$Wallet"
                 $NicehashV2OrganizationID = ""
                 $NicehashV2APIKey = ""
                 $NicehashV2APISecret = ""
@@ -320,7 +320,7 @@ function Start-Setup {
                         }
                         "nicehash2" {
                             if ($NiceHashWallet -eq "`$Wallet" -or $NiceHashWallet -eq $Config.Wallet) {
-                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. This is not possible. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                if (Read-HostBool "You have entered your default wallet as Nicehash wallet. Do you want to disable NiceHash mining for now? (Or enter `"<`" to return to the wallet query)" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                     $NiceHashWallet = ''
                                 }
                             } else {
@@ -892,7 +892,7 @@ function Start-Setup {
                                     Write-Host " "
                                 }
 
-                                if ($NicehashV2Wallet -eq "`$Wallet"){$NicehashV2Wallet=""}
+                                if ($NicehashV2Wallet -eq "`$Wallet"){$NicehashV2Wallet=$Config.Wallet}
                                 $NicehashV2Wallet = Read-HostString -Prompt "Enter your NiceHashV2 BTC mining wallet address" -Default $NicehashV2Wallet -Length 34 -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
@@ -902,11 +902,8 @@ function Start-Setup {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHashV2") {
                                 if ($NiceHashV2Wallet -eq "`$Wallet" -or $NiceHashV2Wallet -eq $Config.Wallet) {
-                                    if (Read-HostBool "You have entered your default wallet as NicehashV2 wallet. This is not possible. Do you want to disable NiceHashV2 mining for now? (Or enter `"<`" to return to the wallet query)" -Default $true | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
+                                    if (Read-HostBool "You have entered your default wallet as NicehashV2 wallet. Do you want to disable NiceHashV2 mining for now? (Or enter `"<`" to return to the wallet query)" -Default $false | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}) {
                                         $NiceHashV2Wallet = ''
-                                    } else {
-                                        $GlobalSetupStepStore = $false
-                                        throw "Goto poolnamenh1"
                                     }
                                 }
                                 if (-not $NicehashV2Wallet) {
@@ -1506,13 +1503,13 @@ function Start-Setup {
                             }
 
                             if (Get-Member -InputObject $PoolsActual -Name NiceHashV2) {
-                                $PoolsActual.NiceHashV2 | Add-Member BTC $(if($NiceHashV2Wallet -eq $Config.Wallet){""}else{$NiceHashV2Wallet}) -Force
+                                $PoolsActual.NiceHashV2 | Add-Member BTC $(if($NiceHashV2Wallet -eq $Config.Wallet){"`$Wallet"}else{$NiceHashV2Wallet}) -Force
                                 $PoolsActual.NiceHashV2 | Add-Member OrganizationID $NiceHashV2OrganizationID -Force
                                 $PoolsActual.NiceHashV2 | Add-Member API_Key $NiceHashV2APIKey -Force
                                 $PoolsActual.NiceHashV2 | Add-Member API_Secret $NiceHashV2APISecret -Force
                             } else {
                                 $PoolsActual | Add-Member NiceHashV2 ([PSCustomObject]@{
-                                        BTC     = if($NiceHashV2Wallet -eq $Config.Wallet){}else{$NiceHashV2Wallet}
+                                        BTC     = if($NiceHashV2Wallet -eq $Config.Wallet){"`$Wallet"}else{$NiceHashV2Wallet}
                                         OrganizationID = $NiceHashV2OrganizationID
                                         API_Key = $NiceHashV2APIKey
                                         API_Secret = $NiceHashV2APISecret

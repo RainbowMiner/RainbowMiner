@@ -13,8 +13,6 @@ if (!$PoolConfig.BTC) {
 $Platform_Version = if ($PoolConfig.Platform -in @("2","v2","new")) {2} else {1}
 
 if ($Platform_Version -eq 2) {
-    if ($PoolConfig.BTC -eq $Config.Wallet) {return}
-
     $Request = [PSCustomObject]@{}
 
     try {

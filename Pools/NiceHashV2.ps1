@@ -8,7 +8,7 @@ param(
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
-    [String]$StatAverage = "Minute_5"
+    [String]$StatAverage = "Minute_5",
     [String]$Platform = ""
 )
 
@@ -20,9 +20,6 @@ $Platform_Version = 2
 
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}
-    if ($Platform_Version -eq 2 -and $Wallets.BTC -eq $Session.Config.Wallet) {
-        Write-Log -Level Warn "Nicehash V2 needs an own BTC mining wallet!"
-    }
 }
 
 if ($Platform_Version -eq 2) {

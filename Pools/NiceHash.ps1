@@ -20,9 +20,6 @@ $Platform_Version = if ($Platform -in @("2","v2","new")) {2} else {1}
 
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}
-    if ($Platform_Version -eq 2 -and $Wallets.BTC -eq $Session.Config.Wallet) {
-        Write-Log -Level Warn "Nicehash V2 needs an own BTC mining wallet!"
-    }
 }
 
 if ($Platform_Version -eq 2) {
