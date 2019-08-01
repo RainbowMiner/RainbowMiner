@@ -9,6 +9,7 @@ param(
     [Bool]$InfoOnly = $false,
     [Bool]$AllowZero = $false,
     [String]$StatAverage = "Minute_5"
+    [String]$Platform = ""
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
