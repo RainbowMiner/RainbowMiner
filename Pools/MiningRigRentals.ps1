@@ -157,7 +157,17 @@ foreach ($Worker1 in $Workers) {
             $Pool_RigEnable = if ($_.status.status -eq "rented") {Set-MiningRigRentalStatus $Pool_RigId -Status $_.poolstatus}
             if ($_.status.status -eq "rented" -or $_.poolstatus -eq "online" -or $EnableMining) {
                 $Pool_Failover = $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2
+                $Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -notmatch "^$($Pool_Rig.Server.SubString(0,2))"} | Select-Object -First 2 | Foreach-Object {$Pool_Failover+=$_}
                 if (-not $Pool_Failover) {$Pool_Failover = @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^us"} | Select-Object -First 1) + @($Pool_AllHosts | Where-Object {$_ -ne $Pool_Rig.Server -and $_ -match "^eu"} | Select-Object -First 1)}
+
+                $Miner_Server = $Pool_Rig.server
+                $Miner_Port   = $Pool_Rig.port
+                
+                if ($Pool_Algorithm_Norm -eq "X25x" -and $Miner_Server -match "^eu-01") {
+                    $Miner_Server = $Pool_Failover | Select-Object -First 1
+                    $Miner_Port   = 3333
+                    $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
+                }
             
                 [PSCustomObject]@{
                     Algorithm     = "$Pool_Algorithm_Norm$(if ($Worker1 -ne $Worker) {"-$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"})"
@@ -168,8 +178,8 @@ foreach ($Worker1 in $Workers) {
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+tcp"
-                    Host          = $Pool_Rig.server
-                    Port          = $Pool_Rig.port
+                    Host          = $Miner_Server
+                    Port          = $Miner_Port
                     User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
                     Pass          = "x"
                     Region        = $Pool_Regions."$($_.region)"
@@ -182,7 +192,7 @@ foreach ($Worker1 in $Workers) {
                         [PSCustomObject]@{
                             Protocol = "stratum+tcp"
                             Host     = $_
-                            Port     = $Pool_Rig.port
+                            Port     = if ($Miner_Port -match "^33\d\d$") {$Miner_Port} else {3333}
                             User     = "$($User).$($Pool_RigId)"
                             Pass     = "x"
                         }
