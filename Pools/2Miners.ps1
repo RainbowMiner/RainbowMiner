@@ -45,13 +45,13 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "clo";   coin = "Callisto";        algo = "Ethash";       symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "moac";  coin = "MOAC";            algo = "Ethash";       symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "exp";   coin = "Expanse";         algo = "Ethash";       symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "music"; coin = "Musicoin";        algo = "Ethash";       symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "music"; coin = "Musicoin";        algo = "Ethash";       symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "pirl";  coin = "Pirl";            algo = "Ethash";       symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   coin = "Metaverse ETP";   algo = "Ethash";       symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
     #[PSCustomObject]@{rpc = "ella";  coin = "Ellaism";         algo = "Ethash";       symbol = "ELLA";  port = 3030; fee = 1.0; divisor = 1e18}
     #[PSCustomObject]@{rpc = "dbix";  coin = "Dubaicoin";       algo = "Ethash";       symbol = "DBIX";  port = 2020; fee = 1.0; divisor = 1e18}
     #[PSCustomObject]@{rpc = "yoc";   coin = "Yocoin";          algo = "Ethash";       symbol = "YOC";   port = 4040; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "aka";   coin = "Akroma";          algo = "Ethash";       symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "aka";   coin = "Akroma";          algo = "Ethash";       symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "zec";   coin = "Zcash";           algo = "Equihash";     symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zcl";   coin = "Zclassic";        algo = "Equihash";     symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "zen";   coin = "Zencash";         algo = "Equihash";     symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
