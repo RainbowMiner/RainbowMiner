@@ -67,7 +67,7 @@
 323	Phoenix30
 324	ZjazzNvidia
 325	FireIce247
-326	T-Rex085
+326	T-RexDedal
 327	Ethminer17
 328	Phoenix35
 329	Gminer
