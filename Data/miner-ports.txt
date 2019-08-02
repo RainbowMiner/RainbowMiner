@@ -123,6 +123,7 @@
 536	Nheqminer
 537	CpuminerRfv2
 538	UlordRig
+539	CpuPower
 
 
 4068    CcminerSpModTribus
