@@ -344,15 +344,15 @@ function Start-Setup {
                                     Write-Host " "
                                     Write-Host "Nicehash is currently in a transition to a new platform. You need to select, which platform to use." -ForegroundColor Cyan
                                     Write-Host "Read all information here: https://www.nicehash.com/news/new-nicehash-platform-now-live-updates" -ForegroundColor Cyan
-                                    Write-Host "- if you have registered on www.nicehash.com, you need to select the old (v1) platform." -ForegroundColor Cyan
-                                    Write-Host "- if you have registered on new.nicehash.com, you need to select the new (v2) platform." -ForegroundColor Cyan
+                                    Write-Host "- if you have registered on www.nicehash.com before July 31th 2019, you need to select the old (v1) platform." -ForegroundColor Cyan
+                                    Write-Host "- if you have registered on new.nicehash.com or after July 30th 2019, you need to select the new (v2) platform." -ForegroundColor Cyan
                                     Write-Host " "
                                     Write-Host "Hints:" -ForegroundColor Cyan
                                     Write-Host "- You may change this setting anytime later" -ForegroundColor Cyan
                                     Write-Host "- If you want to mine on BOTH platforms, select v1 now and setup the temporary pool NiceHashV2 later." -ForegroundColor Cyan
                                     Write-Host " "
                                 }
-                                $NicehashPlatform = Read-HostArray -Prompt "Select Nicehash platform (v1=old or v2=new)" -Default $NicehashPlatform -Valid @("1","v1","old","2","v2","new") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $NicehashPlatform = Read-HostArray -Prompt "Select Nicehash platform (v1=old or v2=new)" -Default $NicehashPlatform -Valid @("1","v1","old","2","v2","new") -Mandatory | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
