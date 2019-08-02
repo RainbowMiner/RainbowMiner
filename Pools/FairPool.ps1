@@ -37,6 +37,8 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Zano";            symbol = "ZANO"; algo = "ProgPowZ";    port = 7020; fee = 1.0; rpc = "zano";    user="%wallet%.%worker%"}
 )
 
+$Pool_Delay = 0
+
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath = $_.rpc.ToLower()
@@ -53,7 +55,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $ok = $true
     if (-not $InfoOnly) {
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/poolStats" -tag $Name -timeout 15 -cycletime 120
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/poolStats" -tag $Name -timeout 15 -cycletime 180 -delay $Pool_Delay
+            $Pool_Delay += 100
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
