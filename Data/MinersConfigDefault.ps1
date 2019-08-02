@@ -111,6 +111,11 @@
         "Nsgminer" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "--worksize 64 --intensity d"; OCprofile = ""; MSIAprofile = ""}
         )
+        "Phoenix" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
+            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = ""}
+        )
         "Sgminer" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "groestlcoin"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 128 --intensity d"; OCprofile = ""; MSIAprofile = ""}
             [PSCustomObject]@{MainAlgorithm = "lyra2rev2"; SecondaryAlgorithm = ""; Params = "--gpu-threads 2 --worksize 128 --intensity d"; OCprofile = "Profile4"; MSIAprofile = "4"}

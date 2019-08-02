@@ -12,7 +12,7 @@ if ($IsLinux) {
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5c-phoenix/PhoenixMiner_4.5c_Linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5c-phoenix/PhoenixMiner_4.5c_Windows.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.5c-phoenix/PhoenixMiner_4.5c_Windows.7z"
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
@@ -25,11 +25,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash2gb"  ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash2GB
     [PSCustomObject]@{MainAlgorithm = "ethash3gb"  ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash3GB
     [PSCustomObject]@{MainAlgorithm = "ethash"     ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #Ethash
-    #[PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow2GB
-    #[PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow3GB
-    #[PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow
+    [PSCustomObject]@{MainAlgorithm = "progpow2gb" ; MinMemGB = 2; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow2GB
+    [PSCustomObject]@{MainAlgorithm = "progpow3gb" ; MinMemGB = 3; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow3GB
+    [PSCustomObject]@{MainAlgorithm = "progpow"    ; MinMemGB = 4; Vendor = @("AMD","NVIDIA"); Params = @()} #ProgPow
 )
-$CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1 -rmode 0"
+$CommonParams = "-allpools 0 -cdm 1 -leaveoc -log 0 -rmode 0 -wdog 1"
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -67,7 +67,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -notmatch "^progpow" -or $Pools.$Algorithm_Norm.Name -ne "SuprNova")) {
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
