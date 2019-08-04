@@ -411,7 +411,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile | Foreach-Object {
+                    ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -437,7 +437,8 @@
                                     Name = $_.Name
                                     Algorithm = $Algo
                                     SecondaryAlgorithm = $SecondAlgo
-                                    Speed = $Speed                                    
+                                    Speed = $Speed
+                                    PowerDraw = $_.PowerDraw
                                     Devices     = $Miner_DeviceModel
                                     DeviceModel = $_.DeviceModel
                                     MSIAprofile = $_.MSIAprofile

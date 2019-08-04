@@ -65,6 +65,7 @@
                       <th data-field="Devices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
                       <th data-field="tSpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+                      <th data-field="tPowerDraw" data-sortable="true">Power</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                       <th data-field="tButton" data-align="center">Bench</th>
                   </tr>
@@ -152,6 +153,8 @@
             }
             if (!tOC.length) { tOC.push("-"); }
             item.tOC = tOC.join('<br />');
+
+            item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
         });
         return data;
     }
