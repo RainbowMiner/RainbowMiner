@@ -58,7 +58,7 @@ Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not r
 ### Ubuntu 18.x Pre-requesites
 This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls))
 
-Nvidia Drivers
+###### Nvidia Drivers
 ```
 sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt-get -y install dkms build-essential
@@ -66,12 +66,16 @@ sudo apt-get update
 sudo apt-get -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
 
 ```
+Reboot after the driver have been installed.
+
+**Important: check which version of the Nvidia driver you need (i.e. which is compatible with your graphics card)** You can check on the Nvidia website which products are supported by each driver (the latest one is usually the best if you have a recent graphics card). Not doing so can cause black screen on reboot. Only the main version is needed (don't bother about the number after the point, so if latest driver is 430.24, just write 430).
+
 ###### Optional Overclocking for Nvidia:
 
 ```
 sudo nvidia-xconfig -a --cool-bits=31 --allow-empty-initial-configuration
 ```
-
+Reboot after setting cool bits.
 
 
 
@@ -105,17 +109,17 @@ At the end of the install, you will be asked to start RainbowMiner.
 
 **If the installer fails to install PowerShell, this is the way to install it manually:**
 
-Find the matching version of [Powershell Core v6.2.0 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
+Find the matching version of [Powershell Core v6.2.2 for your system from here](https://github.com/PowerShell/PowerShell/releases) and download it to your machine.
 
 On Windows, just run the Installer
 
 On Linux: either use the GUI installer to install the package or do it manually, e.g. for Ubuntu:
 ```
 # if not already done, download the package, change the ubuntu distro version number!
-wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.0/powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+wget https://github.com/PowerShell/PowerShell/releases/download/v6.2.2/powershell_6.2.2-1.ubuntu.18.04_amd64.deb
 
 # install powershell package
-dpkg -i powershell_6.2.0-1.ubuntu.18.04_amd64.deb
+dpkg -i powershell_6.2.2-1.ubuntu.18.04_amd64.deb
 
 # install powershell dependecies
 apt install -f
