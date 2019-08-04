@@ -284,12 +284,14 @@
       var html = [];
       html.push("<strong>Running Miners</strong>");
       html.push("<table class='table table-responsive table-details"+(theme=="dark"? " table-dark":'')+"'>");
-      html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th></tr></thead>");
+      html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Coin</div></th><th><div class='th-inner'>Currency</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th></tr></thead>");
       jQuery.each(row.data, function (key, value) {
           html.push('<tr>');
           html.push('<td>' + value.Name + '</td>');
           html.push('<td>' + formatAlgorithm(value.Algorithm) + '</td>');
           html.push('<td>' + value.Pool + '</td>');
+          html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol !== "" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName !== "" ? value.CoinName : '-')) + '</td>');
+          html.push('<td>' + value.Currency + '</td>');
           html.push('<td>' + value.Type + '</td>');
           html.push('<td>' + formatBTC(value.Profit) + '</td>');
           html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
