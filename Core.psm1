@@ -67,7 +67,7 @@
         }
         [hashtable]$Session.MinerInfo = @{}
 
-        $Session.StartTime         = (Get-Date).ToUniversalTime()
+        $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
         $Session.Strikes           = 3
         $Session.SyncWindow        = 10 #minutes, after that time, the pools bias price will start to decay
@@ -2180,6 +2180,7 @@ function Invoke-Core {
                     else {$StartCommand = $StartCommand -replace "-command ","-windowstyle $($StartWindowState) -command "}
                     if ($StartCommand -notmatch "-quickstart") {$StartCommand = $StartCommand -replace "rainbowminer.ps1","rainbowminer.ps1 -quickstart"}
                     Write-Log "Restarting $($StartWindowState) $($StartCommand)"
+                    Set-LastStartTime
                     $NewKid = Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine=$StartCommand;CurrentDirectory=(Split-Path $script:MyInvocation.MyCommand.Path);ProcessStartupInformation=New-CimInstance -CimClass (Get-CimClass Win32_ProcessStartup) -Property @{ShowWindow=if ($StartWindowState -eq "normal"){5}else{3}} -Local}
                     if ($NewKid -and $NewKid.ReturnValue -eq 0) {
                         Write-Host "Restarting now, please wait!" -BackgroundColor Yellow -ForegroundColor Black                
@@ -2205,6 +2206,7 @@ function Invoke-Core {
                 $Session.Restart = $false
             }
         }
+        if ($Session.Stopp -and ($Session.AutoUpdate -or $Session.Restart)) {Set-LastStartTime}
     }
 
     $Session.RoundCounter++

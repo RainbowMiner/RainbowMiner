@@ -93,8 +93,8 @@ function Get-NvidiaArchitecture {
     [CmdLetBinding()]
     param($Model)
     Switch ($Model) {
-        {$_ -match "^RTX20\d{2}"} {"Turing"}
-        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX"} {"Pascal"}
+        {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing"}
+        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP"} {"Pascal"}
         default {"Other"}
     }
 }
@@ -5318,11 +5318,9 @@ function Invoke-ReportMinerStatus {
         $ReportStatus = "Error"
         $ReportDone = $false
 
-        $Uptime = ((Get-Date).ToUniversalTime() - $Session.StartTime).TotalSeconds
-
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = $Uptime; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = (Get-Uptime).TotalSeconds; sysuptime = (Get-Uptime -System).TotalSeconds;data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -5520,6 +5518,17 @@ param(
     [DateTime]$Timer = (Get-Date).ToUniversalTime()
 )
     $Timer = $Timer.ToUniversalTime();Set-ContentJson -Data ([PSCustomObject]@{lastdrun=[DateTime]$Timer}) -PathToFile ".\Data\lastdrun.json" > $null;$Timer
+}
+
+function Get-LastStartTime {
+    if (Test-Path ".\Data\starttime.json") {
+        try {[DateTime](Get-Content ".\Data\starttime.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).starttime} catch {}
+        Remove-Item ".\Data\starttime.json" -Force -ErrorAction Ignore
+    }
+}
+
+function Set-LastStartTime {
+    Set-ContentJson -Data ([PSCustomObject]@{starttime=[DateTime]$Session.StartTime}) -PathToFile ".\Data\starttime.json" > $null
 }
 
 function Start-Autoexec {
@@ -5939,4 +5948,27 @@ function Get-HourMinStr {
     elseif ($to) {"23:59:59"}
     else {"00:00:00"}
     if (-not $addseconds) {$Str.Substring(0,5)} else {$Str}
+}
+
+function Get-Uptime {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [switch]$System
+    )
+    if ($System) {
+        try {
+            if ($IsWindows) {
+                (Get-Date) - (Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty LastBootUpTime)
+            } elseif ($IsLinux) {
+                New-TimeSpan -Seconds ([double]((cat /proc/uptime) -split "\s+" | Select-Object -First 1))
+            }
+        } catch {
+            Write-Log -Level Warn "Could not get system uptime: $($_.Exception.Message)"
+            $System = $false
+        }
+    }
+    if (-not $System) {
+        (Get-Date).ToUniversalTime() - $Session.StartTime
+    }
 }
