@@ -39,7 +39,7 @@ $(function () {
 
     // set the values in the header
     var remoteversion = '0.0.0.0';
-    $('#updatemsg').hide();
+    $('#updatemsg-inner').hide();
 
     theme = getCookie("rbm-theme");
     if (theme != "") { $('#theme').val(theme); setTheme(theme); }
@@ -102,9 +102,9 @@ $(function () {
         $('#version').text('v' + version)
         if (version < remoteversion) {
             $('#updatelink').attr({ "title": 'Show info about release v' + remoteversion, "href": globalconfig.ManualURI }).text('v' + remoteversion)
-            $('#updatemsg').show()
+            $('#updatemsg-inner').show()
         } else {
-            $('#updatemsg').hide()
+            $('#updatemsg-inner').hide()
         }
         setTimeout(q, 600000);
     })();

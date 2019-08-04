@@ -32,11 +32,27 @@ pre {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
 
-@media (min-width: 768px) {
-  .main {
-    padding-right: 40px;
-    padding-left: 220px;
-  }
+.navbar div#updatemsg, .navbar div#rigrates {
+    display: none;
+}
+
+@media screen and (min-width: 768px) {
+    .main {
+        padding-right: 40px;
+        padding-left: 220px;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .navbar div#rigrates {
+        display: block;
+    }
+}
+
+@media screen and (min-width: 1152px) {
+    .navbar div#updatemsg {
+        display: block;
+    }
 }
 
 .sidebar-sticky {
@@ -136,7 +152,13 @@ pre {
     background-color: #343a40 !important;
     color: #f8f9fa !important;
     border: none;
-    font-weight: bold;
+}
+
+.navbar a#updatenow  {
+    line-height:0.8;
+    margin-top:2px;
+    margin-bottom:3px;
+    display:block;
 }
 
 .h-selector {
