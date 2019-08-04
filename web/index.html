@@ -22,6 +22,7 @@
             <th data-field="tCoin" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Coin</th>
             <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+            <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
             <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
@@ -226,7 +227,26 @@
           }
           item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
 
-          item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== ""? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== ""? item.CoinName : '-')
+          item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
+
+          // Format the Profile(s)
+          var tOC = new Array();
+          if (globalconfig.OCmode == "msia") {
+              if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
+          } else if (globalconfig.OCmode == "ocp") {
+              var devices = item.DeviceModel.toString().split(/\-/);
+              var cnt = devices.length
+              $.each(devices, function (ix, dev) {
+                  if (dev != "CPU" && item.OCprofile[dev]) {
+                      if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
+                      else {
+                          tOC.push(dev + "=" + item.OCprofile[dev]);
+                      }
+                  }
+              });
+          }
+          if (!tOC.length) { tOC.push("-"); }
+          item.tOC = tOC.join('<br />');
       });
       return data;
   }

@@ -22,12 +22,13 @@
         <tr>
             <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
+            <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
             <th data-field="tPowerDraw" data-sortable="true">Power</th>
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
-            <th data-field="tPrimaryHashRate" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Primary Speed</th>
-            <th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th>
-            <th data-field="tSecondaryHashRate" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th>
+            <th data-field="tPrimaryHashRate" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+            <!-- th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">2nd Algo</th -->
+            <!-- th data-field="tSecondaryHashRate" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th -->
             <th data-field="tDevFee" data-align="right" data-sortable="true">Fee</th>
         </tr>
     </thead>
@@ -64,6 +65,25 @@
             if (typeof item.DevFee[algorithms[1]] !== "undefined" && item.DevFee[algorithms[1]] !== null) { item.tDevFee += '/' + (parseFloat(item.DevFee[algorithms[1]])? parseFloat(item.DevFee[algorithms[1]]) + ' %':'-'); }
 
             item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
+
+            // Format the Profile(s)
+            var tOC = new Array();
+            if (globalconfig.OCmode == "msia") {
+                if (item.MSIAprofile) { tOC.push("MSIA" + item.MSIAprofile); }
+            } else if (globalconfig.OCmode == "ocp") {
+                var devices = item.DeviceModel.toString().split(/\-/);
+                var cnt = devices.length
+                $.each(devices, function (ix, dev) {
+                    if (dev != "CPU" && item.OCprofile[dev]) {
+                        if (cnt == 1) { tOC.push(item.OCprofile[dev]); }
+                        else {
+                            tOC.push(dev + "=" + item.OCprofile[dev]);
+                        }
+                    }
+                });
+            }
+            if (!tOC.length) { tOC.push("-"); }
+            item.tOC = tOC.join('<br />');
         });
         return data;
     }
