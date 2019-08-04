@@ -3,7 +3,7 @@
     <h1 id="title" data-navbaractive="navdashboard" class="h2">Dashboard</h1>
 </div>
 
-<h3>Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a></h3>
+<h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a></h3>
 <table id="miners" class="table mb-4"
        data-toggle="table"
        data-url="/runningminers"
@@ -33,7 +33,7 @@
 </table>
 
 <div id="devicestatus">
-    <h3 class="mt-4">Device Status</h3>    
+    <h3 class="mt-4 h-selector" id="h-devices">Device Status</h3>    
     <table id="devices" class="table"
            data-toggle="table"
            data-url="/devices"
@@ -61,7 +61,7 @@
 </div>
 
 <div id="remoteworkers">
-    <h3 class="mt-4">Remote Workers</h3>
+    <h3 class="mt-4 h-selector" id="h-remoteminers">Remote Workers</h3>
     <table id="remoteminers" class="table mb-4"
            data-toggle="table"
            data-url="/remoteminers"
@@ -88,7 +88,7 @@
     </table>
 </div>
 
-<h3 class="mt-4">Balances</h3>
+<h3 class="mt-4 h-selector" id="h-balanceboxes">Balances</h3>
 <div id="balanceboxes" class="card-deck"></div>
 
 <!-- End of page scripts -->
@@ -116,6 +116,21 @@
                     $("#pauseminers").html(result ? "Restart" : "Pause");
                 }
             })
+        });
+
+        $('.h-selector').each(function () {
+            var sto = window.localStorage.getItem($(this).attr("id"));
+            if (sto && sto == "hide") {
+                $("#" + ($(this).attr("id").replace(/h-/, ""))).hide();
+            }
+        });
+
+        $('.h-selector').click(function () {
+            var blkname = $(this).attr("id").replace(/h-/,"");
+            var visible = $("#" + blkname).is(":visible");
+            if (visible) {$("#"+blkname).hide();} else {$("#"+blkname).show();}
+
+            window.localStorage.setItem($(this).attr("id"), visible ? "hide" : "show");
         });
 
         (function updatePoolBalances() {

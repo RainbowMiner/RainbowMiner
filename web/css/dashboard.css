@@ -138,3 +138,12 @@ pre {
     border: none;
     font-weight: bold;
 }
+
+.h-selector {
+    cursor: pointer;
+}
+
+.h-selector:hover {
+    color: #212529;
+    background-color: rgba(0,0,0,.075);
+}

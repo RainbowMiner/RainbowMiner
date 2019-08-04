@@ -14,3 +14,8 @@
 .Paused, .Waiting {
     background-color: rgb(145, 148, 101);
 }
+
+.h-selector:hover {
+    color: #fff;
+    background-color: rgba(255,255,255,.075);
+}
