@@ -21,6 +21,18 @@
         $('#themecss').attr("href", '/css/theme-' + (theme!=""? theme:"light") + '.css');
     }
 
+    function updateProfitHead() {
+        var profit = $("#profit").attr("profit-btc");
+        var currency = $("#profit_currency option:selected").val();
+
+        if (currency == "BTC") {
+            $("#profit").html(formatBTC(profit));
+        } else {
+            $("#profit").html((parseFloat(profit)*parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
+        }
+        window.localStorage.setItem("currency", currency);
+    }
+
 $(function () {
     // Set the active sidebar item
     $('#' + $('#title').data('navbaractive')).addClass('active');
@@ -45,25 +57,38 @@ $(function () {
         })
     });
 
+    $("#profit_currency").change(updateProfitHead);
+
     start_uptime = Date.now();
     last_uptime  = 0;
 
     (function p() {
         $.ajax({
             url: '/currentprofit', success: function (result) {
-                $("#profit").html(formatBTC(result.AllProfitBTC));
                 
                 if (!last_uptime || parseInt(result.Uptime.Seconds) < last_uptime) {
                     start_uptime = Date.now();
                     last_uptime = parseInt(result.Uptime.Seconds);
                 }
 
+                var currency = ($("#profit_currency option").length)? $("#profit_currency option:selected").val() : window.localStorage.getItem("currency");
+                if (!currency) { currency = "BTC"; }
+
                 var xchange = new Array();
                 xchange.push("1 BTC");
                 $.each(result.Rates, function (key, itm) {
                     if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
+                    if (!$("#profit_currency option[value='" + key + "']").length) {
+                        $("#profit_currency").append('<option value="' + key + '">' + key + '/day</option>');
+                    }
+                    $("#profit_currency option[value='" + key + "']").attr("rate", itm).attr("selected", currency == key ? "selected" : null);
                 });
                 $("#exchangerates").html(xchange.join(" = "));
+
+                $("#profit").attr("profit-btc", result.AllProfitBTC);
+
+                updateProfitHead();
+
                 setTimeout(p, 10000);
             }
         })

@@ -131,3 +131,10 @@ pre {
 
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
+
+.navbar select {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border: none;
+    font-weight: bold;
+}
