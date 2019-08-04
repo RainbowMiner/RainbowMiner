@@ -161,6 +161,14 @@ pre {
     display:block;
 }
 
+.navbar #rigstat h6 {
+    min-width:180px;
+}
+
+.navbar #rigtime h6 {
+    min-width:82px;
+}
+
 .h-selector {
     cursor: pointer;
 }
