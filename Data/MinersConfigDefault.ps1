@@ -154,4 +154,12 @@
             [PSCustomObject]@{MainAlgorithm = "phi2"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "x17"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
         )
+        "TTminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "progpow"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpow2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpow3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpowz"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpowz2gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "progpowz3gb"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+        )
     }
