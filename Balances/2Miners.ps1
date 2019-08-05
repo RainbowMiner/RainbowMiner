@@ -43,7 +43,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     $Divisor = 1e8
 
     try {
-        $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$($Config.Pools.$Name.Wallets.$Pool_Currency)" -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
 
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "

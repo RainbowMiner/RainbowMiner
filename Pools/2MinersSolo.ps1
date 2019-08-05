@@ -140,8 +140,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     if ($ok) {
         $Pool_Hosts = @()
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
         $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains $Pool_Host} | Select-Object host,port | Foreach-Object {
-            $Pool_Hosts += $_.host            
+            $Pool_Hosts += $_.host
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
@@ -153,8 +154,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Protocol      = "stratum+tcp"
                 Host          = "$($_.host)"
                 Port          = $_.port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
+                Worker        = "{workername:$Worker}"
                 Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
                 SSL           = $false
                 Updated       = $Stat.Updated
