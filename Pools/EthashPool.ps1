@@ -62,7 +62,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
             Port          = $Pool_Request1.port
             User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
             Pass          = "x"
-            Wallet        = "$($Wallets.$Pool_Currency)"
+            Wallet        = $Wallets.$Pool_Currency
             Worker        = "{workername:$Worker}"
             Region        = $Pool_Region_Default
             SSL           = $false
