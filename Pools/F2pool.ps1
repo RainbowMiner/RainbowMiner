@@ -40,6 +40,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $(if ($Session.Rates.$Pool_Currency) {$_.estimate / $Divisor / $Session.Rates.$Pool_Currency} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
     }
 
+    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
     foreach($Region in $_.region) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
@@ -51,8 +52,9 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             MarginOfError = $Stat.Week_Fluctuation
             Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
             Host          = "$($_.host)$(if ($Region -ne "asia") {"-$($Region)"}).f2pool.com"
-            Port          = if ($Pool_Currency -eq "ETH" -and $Wallets.$Pool_Currency -match "^0x[0-9a-f]{40}") {8008} else {$_.port}
-            User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+            Port          = if ($Pool_Currency -eq "ETH" -and $Pool_Wallet -match "^0x[0-9a-f]{40}") {8008} else {$_.port}
+            User          = "$($Pool_Wallet).{workername:$Worker}"
+            Wallet        = $Pool_Wallet
             Worker        = "{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Region

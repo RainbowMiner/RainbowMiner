@@ -56,7 +56,8 @@ $Payout_Currencies | Where-Object {$Pools_Data.$($_.Name) -ne $null} | Foreach-O
     $Currency = $_
     $Pools_Data."$($Currency.Name)" | Foreach-Object {
         try {
-            $Request = Invoke-RestMethodAsync "http://api.f2pool.com/$($_ -replace "address",$Currency.Value -replace "user",$Config.Pools.$Name.UserName)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+            $Pool_Wallet = Get-WalletWithPaymentId $Currency.Value -pidchar '.'
+            $Request = Invoke-RestMethodAsync "http://api.f2pool.com/$($_ -replace "address",$Pool_Wallet -replace "user",$Config.Pools.$Name.UserName)" -delay $(if ($Count){1000} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
             $Count++
             if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
                 Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
