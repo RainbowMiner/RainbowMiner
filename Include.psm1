@@ -5998,6 +5998,7 @@ function Get-WalletWithPaymentId {
     if ($asobject) {
         [PSCustomObject]@{
             wallet = "$($wallet)$(if ($paymentid -and $pidchar) {"$($pidchar)$($paymentid)"})"
+            paymentid = $paymentid
             difficulty = $difficulty
         }
     } else {
