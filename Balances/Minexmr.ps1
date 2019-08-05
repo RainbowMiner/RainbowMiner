@@ -16,7 +16,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Request = [PSCustomObject]@{}
 
 try {
-    $Request = Invoke-RestMethodAsync "https://minexmr.com/api/pool/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+    $Request = Invoke-RestMethodAsync "https://minexmr.com/api/pool/stats_address?address=$(Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.')" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
     if (-not $Request.stats) {
         Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
     } else {

@@ -96,6 +96,7 @@ if (-not $InfoOnly) {
 
 if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
     $Pool_SSL = $false
+    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
     foreach ($Pool_Port in $Pool_Ports) {
         foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
@@ -110,7 +111,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 Host          = "$(if ($Pool_Region -eq "eu") {"pool"} else {$Pool_Region}).minexmr.com"
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}{diff:+`$difficulty}"
+                User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($Pool_Wallet.difficulty) {"+$($Pool_Wallet.difficulty)"} else {"{diff:+`$difficulty}"})"
                 Worker        = "{workername:$Worker}"
                 Pass          = "x"
                 Region        = Get-Region $Pool_Region
