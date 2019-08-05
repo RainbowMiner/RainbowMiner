@@ -24,12 +24,12 @@ $Pool_Request = [PSCustomObject]@{}
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "Monero";          algo = "CryptonightR";  symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $true; usepid = $true}
-    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $true; usepid = $false}
-    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $true; usepid = $false}
+    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{coin = "Monero";          algo = "CryptonightR";  symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
+    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
     [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true; usepid = $true}
     [PSCustomObject]@{coin = "Grin";            algo = "Cuckarood29";   symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
 )
