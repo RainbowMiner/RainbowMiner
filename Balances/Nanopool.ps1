@@ -19,7 +19,7 @@ $Count = 0
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_User = $Config.Pools.$Name.Wallets.$Pool_Currency
-    $Pool_Wallet = Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.'
+    $Pool_Wallet = Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.' -asobject
     if ($_.usepid -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet += ".0"}
     try {
         $Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/user/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200

@@ -39,7 +39,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Currency = $_.symbol
     $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
-    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
     if ($_.usepid -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet += ".0"}
 
     $ok = $true
