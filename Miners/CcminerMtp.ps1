@@ -8,12 +8,12 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer-linux-cuda"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.26-ccminermtp/ccminer-mtp-1.1.26-linux.7z"
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-ccminermtp/ccminermtp-v1.2.0-linux.7z"
     $Cuda = "9.2"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.26-ccminermtp/ccminer-mtp-1.1.26-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-ccminermtp/ccminermtp-v1.2.0-win.7z"
     $Cuda = "10.1"
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
