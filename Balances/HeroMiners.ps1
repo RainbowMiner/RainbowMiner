@@ -44,7 +44,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
         $Divisor = $Pool_Request.config.coinUnits
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:" -replace "\..+$" -replace "\+.+$")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:"))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
