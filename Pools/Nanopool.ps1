@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Currency = $_.symbol
     $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
-    if ($_.usepid -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet += ".0"}
+    if ($Pool_Currency -eq "PASC" -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet = "$($Pool_Wallet.wallet).0"}
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -89,7 +89,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
                     Port          = $Pool_Port
-                    User          = "$($Pool_Wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
+                    User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                     Pass          = "x"
                     Wallet        = $Pool_Wallet.wallet
                     Worker        = "{workername:$Worker}"
