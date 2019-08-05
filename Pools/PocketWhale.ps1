@@ -66,6 +66,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         $Pool_SSL = $false
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject
         foreach ($Pool_Port in $Pool_Ports) {
             if ($Pool_Port) {
                 [PSCustomObject]@{
@@ -80,7 +81,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Host          = $_.host
                     Port          = $Pool_Port.CPU
                     Ports         = $Pool_Port
-                    User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
+                    User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
                     Pass          = "{workername:$Worker}"
                     Region        = $Pool_Region_Default
                     SSL           = $Pool_SSL
