@@ -96,6 +96,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Host          = "$($Pool_RpcPath).pool.sexy"
             Port          = $_.port
             User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+            Wallet        = $Wallets.$Pool_Currency
             Worker        = "{workername:$Worker}"
             Pass          = "x"
             Region        = Get-Region "eu"
