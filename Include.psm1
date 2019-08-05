@@ -5972,3 +5972,35 @@ function Get-Uptime {
         (Get-Date).ToUniversalTime() - $Session.StartTime
     }
 }
+
+function Get-WalletWithPaymentId {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $False)]
+        [string]$wallet = "",
+        [Parameter(Mandatory = $False)]
+        [string]$paymentid = "",
+        [Parameter(Mandatory = $False)]
+        [string]$difficulty = "",
+        [Parameter(Mandatory = $False)]
+        [string]$pidchar = "+",
+        [Parameter(Mandatory = $False)]
+        [string]$diffchar = ".",
+        [Parameter(Mandatory = $False)]
+        [switch]$asobject,
+        [Parameter(Mandatory = $False)]
+        [switch]$withdiff
+    )
+    if ($wallet -notmatch "@" -and $wallet -match "[\+\.\/]") {
+        if ($wallet -match "[\+\.\/]([a-f0-9]{16,})") {$paymentid = $Matches[1];$wallet = $wallet -replace "[\+\.\/][a-f0-9]{16,}"}
+        if ($wallet -match "[\+\.\/](\d{1,15})$") {$difficulty = $Matches[1];$wallet = $wallet -replace "[\+\.\/]\d{1,15}$"}
+    }
+    if ($asobject) {
+        [PSCustomObject]@{
+            wallet = "$($wallet)$(if ($paymentid -and $pidchar) {"$($pidchar)$($paymentid)"})"
+            difficulty = $difficulty
+        }
+    } else {
+        "$($wallet)$(if ($paymentid -and $pidchar) {"$($pidchar)$($paymentid)"})$(if ($difficulty -and $withdiff) {"$($diffchar)$($difficulty)"})"
+    }
+}
