@@ -89,6 +89,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
     
     if ($ok -or $InfoOnly) {
         $Pool_SSL = $false
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets."$($_.coin)" -pidchar '#' -asobject
         foreach ($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -102,8 +103,10 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
                 Host          = "$($Pool_RpcPath -replace "\d").coinfoundry.org"
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
-                User          = "$($Wallets."$($_.coin)").{workername:$Worker}"
-                Pass          = "{diff:d=`$difficulty}"
+                User          = "$($Pool_Wallet.wallet).{workername:$Worker}"
+                Pass          = if ($Pool_Wallet.difficulty) {"d=$($Pool_Wallet.difficulty)"} else {"{diff:d=`$difficulty}"}
+                Wallet        = $Pool_Wallet
+                Worker        = "{workername:$Worker}"
                 Region        = $Pool_Region_Default
                 SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
