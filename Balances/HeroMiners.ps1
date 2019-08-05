@@ -12,6 +12,8 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Arqma+CyprusCoin";symbol = "ARQ"; algo = "CnTurtle";    port = 10670; fee = 0.9; rpc = "cypruscoin"; symbol2 = "XCY"}
     [PSCustomObject]@{coin = "BitTube";       symbol = "TUBE";  algo = "CnSaber";     port = 10280; fee = 0.9; rpc = "tube"}
     [PSCustomObject]@{coin = "Conceal";       symbol = "CCX";   algo = "CnConceal";   port = 10361; fee = 0.9; rpc = "conceal"}
+    [PSCustomObject]@{coin = "Equilibria";    symbol = "XEQ";   algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "equilibria"}
+    [PSCustomObject]@{coin = "Equilibria+NibbleClassic";symbol = "XEQ";algo = "CnLiteV7";port = 10600; fee = 0.9; rpc = "equilibria"; symbol2 = "NBX"}
     [PSCustomObject]@{coin = "Graft";         symbol = "GRFT";  algo = "CnRwz";       port = 10100; fee = 0.9; rpc = "graft"}
     [PSCustomObject]@{coin = "Haven";         symbol = "XHV";   algo = "CnHaven";     port = 10140; fee = 0.9; rpc = "haven"}
     [PSCustomObject]@{coin = "Haven+Bloc";    symbol = "XHV";   algo = "CnHaven";     port = 10450; fee = 0.9; rpc = "havenbloc";  symbol2 = "BLOC"}
@@ -24,8 +26,6 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Scala";         symbol = "XTC";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "scala"}
     [PSCustomObject]@{coin = "Sumocoin";      symbol = "SUMO";  algo = "CnGpu";       port = 10610; fee = 0.9; rpc = "sumo"}
     [PSCustomObject]@{coin = "Swap";          symbol = "XWP";   algo = "Cuckaroo29s"; port = 10441; fee = 0.9; rpc = "swap"; divisor = 32}
-    [PSCustomObject]@{coin = "Triton";        symbol = "XTRI";  algo = "CnLiteV7";    port = 10600; fee = 0.9; rpc = "triton"}
-    [PSCustomObject]@{coin = "Triton+NibbleClassic";symbol = "XTRI";algo = "CnTurtle";port = 10600; fee = 0.9; rpc = "triton"; symbol2 = "NBX"}
     [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "CnTurtle";    port = 10380; fee = 0.9; rpc = "turtlecoin"}
     [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx";       port = 10470; fee = 0.9; rpc = "uplexa"}
     [PSCustomObject]@{coin = "WowNero";       symbol = "WOW";   algo = "RxWow";       port = 10660; fee = 0.9; rpc = "wownero"}
@@ -44,7 +44,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
         $Divisor = $Pool_Request.config.coinUnits
 
-        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:"))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:")))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
         if (-not $Request.stats -or -not $Divisor) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
