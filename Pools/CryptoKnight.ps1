@@ -87,8 +87,9 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         $Pool_SSL = $false
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject
         foreach ($Pool_Port in $Pool_Ports) {
-            if ($Pool_Port) {
+            if ($Pool_Port -and -not $Pool_Wallet.paymentid) {
                 foreach($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
@@ -102,7 +103,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Host          = "$($Pool_HostPath).ingest$(if ($Pool_Region -ne $Pool_Region_Default) {"-$Pool_Region"}).cryptoknight.club"
                         Port          = $Pool_Port.CPU
                         Ports         = $Pool_Port
-                        User          = "$($Wallets.$Pool_Currency){diff:$(if ($_.diffdot) {$_.diffdot} else {"."})`$difficulty}"
+                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
                         Pass          = "{workername:$Worker}"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $Pool_SSL

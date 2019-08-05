@@ -22,29 +22,33 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     $Pool_Request = [PSCustomObject]@{}
     $Request = [PSCustomObject]@{}
 
-    try {
-        $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats" -tag $Name
-        $Divisor = $Pool_Request.config.coinUnits
+    $Pool_Wallet = Get-WalletWithPaymentId $Config.Pools.$Name.Wallets."$($_.symbol)" -asobject
 
-        $Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats_address?address=$($Config.Pools.$Name.Wallets.$Pool_Currency -replace "\..+$" -replace "\+.+$")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
-        if (-not $Request.stats -or -not $Divisor) {
-            Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
-        } else {
-            $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
-            [PSCustomObject]@{
-                Caption     = "$($Name) ($Pool_Currency)"
-                Currency    = $Pool_Currency
-                Balance     = $Request.stats.balance / $Divisor
-                Pending     = $Pending
-                Total       = $Request.stats.balance / $Divisor + $Pending
-                Paid        = $Request.stats.paid / $Divisor
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
-                LastUpdated = (Get-Date).ToUniversalTime()
+    if (-not $Pool_Wallet.paymentid) {
+        try {
+            $Pool_Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats" -tag $Name
+            $Divisor = $Pool_Request.config.coinUnits
+
+            $Request = Invoke-RestMethodAsync "https://cryptoknight.cc/rpc/$($Pool_RpcPath)/stats_address?address=$($Pool_Wallet.wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
+            if (-not $Request.stats -or -not $Divisor) {
+                Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
+            } else {
+                $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
+                [PSCustomObject]@{
+                    Caption     = "$($Name) ($Pool_Currency)"
+                    Currency    = $Pool_Currency
+                    Balance     = $Request.stats.balance / $Divisor
+                    Pending     = $Pending
+                    Total       = $Request.stats.balance / $Divisor + $Pending
+                    Paid        = $Request.stats.paid / $Divisor
+                    Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                    LastUpdated = (Get-Date).ToUniversalTime()
+                }
             }
         }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Verbose "Pool Balance API ($Name) for $($Pool_Currency) has failed. "
+        }
     }
 }
