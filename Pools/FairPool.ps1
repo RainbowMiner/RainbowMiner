@@ -73,6 +73,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if (($ok -and $Pool_Port -and ($AllowZero -or [int64]$Pool_Request.pool -gt 0)) -or $InfoOnly) {
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinName      = $_.coin
@@ -85,8 +86,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Host          = "mine.$($Pool_RpcPath).fairpool.xyz"
             Port          = $_.port
             Ports         = $Pool_Ports
-            User          = $Pool_User -replace '%wallet%',"$($Wallets.$Pool_Currency)" -replace '%worker%',"{workername:$Worker}"
-            Pass          = "x"
+            User          = $Pool_User -replace '%wallet%',$Pool_Wallet.wallet -replace '%worker%',"{workername:$Worker}"
+            Pass          = if ($Pool_Wallet.difficulty) {$Pool_Wallet.difficulty} else {"x"}
             Region        = $Pool_Region_Default
             SSL           = $False
             Updated       = $Stat.Updated
