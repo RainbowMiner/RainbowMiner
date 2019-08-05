@@ -65,6 +65,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '' -asobject
         foreach ($Pool_Region in $_.region) {
             $Pool_SSL = $false
             foreach ($Pool_Port in $Pool_Ports) {
@@ -81,8 +82,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         Host          = "$($Pool_HostPath).luckypool.io"
                         Port          = $Pool_Port.CPU
                         Ports         = $Pool_Port
-                        User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                        Pass          = "{workername:$Worker}"
+                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
+                        Pass          = "$(if ($Pool_Wallet.paymentid) {"$($Pool_Wallet.paymentid)+"}){workername:$Worker}"
                         Region        = Get-Region $Pool_Region
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
