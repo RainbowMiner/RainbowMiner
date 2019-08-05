@@ -103,6 +103,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
     if (($ok -and $Pool_Port -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
         $Pool_SSL = $false
+        $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
         foreach ($Pool_Port in $Pool_Ports) {
             if ($Pool_Port) {
                 foreach($Pool_Region in $Pool_Regions) {
@@ -118,8 +119,8 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Host          = "$(if ($Pool_Region -ne $Pool_Region_Default) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
                         Port          = $Pool_Port.CPU
                         Ports         = $Pool_Port
-                        User          = "$($Wallets.$Pool_Currency){diff:.`$difficulty}"
-                        Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$($Wallets.$Pool_Currency2)"})"
+                        User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
+                        Pass          = "w={workername:$Worker}$(if ($Pool_Currency2) {";mm=$(Get-WalletWithPaymentId $Wallets.$Pool_Currency2 -pidchar '.')"})"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
