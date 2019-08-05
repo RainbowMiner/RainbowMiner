@@ -30,7 +30,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Monero";          algo = "CryptonightR";  symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
     [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $false; usepid = $false}
     [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true; usepid = $true}
+    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true;  usepid = $true}
     [PSCustomObject]@{coin = "Grin";            algo = "Cuckarood29";   symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
 )
 
@@ -39,7 +39,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_Currency = $_.symbol
     $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
-    $Pool_Wallet = "$($Wallets.$Pool_Currency)$(if ($_.usepid -and $Wallets.$Pool_Currency -notmatch "^.+?\.[^\.]+$") {".0"})"
+    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+    if ($_.usepid -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet += ".0"}
 
     $ok = $true
     if (-not $InfoOnly) {
@@ -88,8 +89,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
                     Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
                     Port          = $Pool_Port
-                    User          = "$($Pool_Wallet)/{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
+                    User          = "$($Pool_Wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                     Pass          = "x"
+                    Wallet        = $Pool_Wallet.wallet
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                     Region        = $Pool_Region
                     SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
