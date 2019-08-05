@@ -36,7 +36,7 @@ catch {
 [hashtable]$Pool_RegionsTable = @{}
 @("eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | Foreach-Object {
+$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_Wallet -or $InfoOnly} | Foreach-Object {
     
     $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
     $reward        = 1.5
@@ -60,8 +60,9 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
             Protocol      = "stratum+tcp"
             Host          = "stratum.aionmine.org"
             Port          = 3333
-            User          = "$Pool_User.{workername:$Worker}"
+            User          = "$($Pool_Wallet).{workername:$Worker}"
             Pass          = "x"
+            Worker        = "{workername:$Worker}"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
