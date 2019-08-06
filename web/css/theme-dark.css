@@ -1,6 +1,10 @@
-﻿html,body,.form-control,.sidebar {
+﻿html,body,.form-control,.sidebar,button.btn.btn-default {
     background-color: #343a40!important;
     color: #f8f9fa!important;
+}
+
+button.btn.btn-default {
+    border: 1px solid rgba(0,0,0,0.125);
 }
 
 .Running, .Benchmarking {
@@ -32,10 +36,4 @@
 .modal .modal-footer {
     background-color: rgba(0,0,0,0.03);
     border-top: 1px solid rgba(0,0,0,0.125);
-}
-
-.modal button {
-    color: #f8f9fa!important;
-    background-color: #343a40!important;
-    border: 1px solid rgba(0,0,0,0.125);
 }
