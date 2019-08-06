@@ -19,3 +19,23 @@
     color: #fff;
     background-color: rgba(255,255,255,.075);
 }
+
+.modal .modal-content {
+    background-color: #343a40!important;
+}
+
+.modal .modal-header {
+    background-color: rgba(0,0,0,0.03);
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+
+.modal .modal-footer {
+    background-color: rgba(0,0,0,0.03);
+    border-top: 1px solid rgba(0,0,0,0.125);
+}
+
+.modal button {
+    color: #f8f9fa!important;
+    background-color: #343a40!important;
+    border: 1px solid rgba(0,0,0,0.125);
+}
