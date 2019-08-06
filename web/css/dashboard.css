@@ -27,7 +27,7 @@ pre {
     top: 0;
     bottom: 0;
     left: 0;
-    z-index: 1000; /* Behind the navbar */
+    z-index: 100; /* Behind the navbar */
     padding: 48px 0 0; /* Height of navbar */
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
@@ -106,10 +106,6 @@ pre {
 
 .navbar div#rigstat, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime {
     display: none;
-}
-
-.main {
-    z-index:200;
 }
 
 @media screen and (min-width: 440px) {
