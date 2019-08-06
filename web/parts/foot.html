@@ -46,6 +46,11 @@ $(function () {
 
     $('#theme').change(function () { setTheme($('#theme').val()); });
 
+    $("#sidebar-toggle").click(function (e) {
+        e.preventDefault();
+        $("nav#sidebar").toggleClass("d-none");
+    });
+
     $("#updatenow").click(function () {
         $.ajax({
             url: '/update', success: function (result) {

@@ -22,24 +22,108 @@ pre {
  */
 
 .sidebar {
-  width: 180px;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 100; /* Behind the navbar */
-  padding: 48px 0 0; /* Height of navbar */
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    width: 180px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000; /* Behind the navbar */
+    padding: 48px 0 0; /* Height of navbar */
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
 
-.navbar div#updatemsg, .navbar div#rigrates {
+.sidebar-show {
+    left:0;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-brand {
+    width: 180px;
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    padding-left: .75rem;
+    font-size: 1rem;
+    background-color: #e0e0e0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+    font-weight: bold;
+}
+
+.rainbow {
+    background: linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#version {
+    font-size: .6rem;
+    -webkit-text-fill-color: #fff;
+}
+
+.navbar .form-control {
+    padding: .75rem 1rem;
+    border-width: 0;
+    border-radius: 0;
+}
+
+.navbar div {
+    padding-right: 0.5em
+}
+
+
+.navbar select {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border: none;
+}
+
+.navbar a#updatenow {
+    line-height: 0.8;
+    margin-top: 2px;
+    margin-bottom: 3px;
+    display: block;
+}
+
+.navbar #rigstat h6 {
+    min-width: 180px;
+}
+
+.navbar #rigtime h6 {
+    min-width: 82px;
+}
+
+.h-selector {
+    cursor: pointer;
+}
+
+.h-selector:hover {
+    color: #212529;
+    background-color: rgba(0,0,0,.075);
+}
+
+
+.navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime {
     display: none;
+}
+
+.main {
+    z-index:200;
 }
 
 @media screen and (min-width: 768px) {
     .main {
         padding-right: 40px;
         padding-left: 220px;
+    }
+
+    .navbar div#rigtime {
+        display: block;
+    }
+
+    div#menubutton {
+        display:none;
     }
 }
 
@@ -107,39 +191,6 @@ pre {
   padding-top: 48px; /* Space for fixed navbar */
 }
 
-/*
- * Navbar
- */
-
-.navbar-brand {
-  width: 180px;
-  padding-top: .75rem;
-  padding-bottom: .75rem;
-  padding-left: .75rem;
-  font-size: 1rem;
-  background-color: #e0e0e0;
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
-  font-weight:bold;
-}
-
-.rainbow {
-    background: linear-gradient(to right, red, orange , yellow, green, cyan, blue, violet);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-#version {
-  font-size: .6rem;
-  -webkit-text-fill-color: #fff;
-}
-
-.navbar .form-control {
-  padding: .75rem 1rem;
-  border-width: 0;
-  border-radius: 0;
-}
-
-.navbar div {padding-right: 0.5em}
 
 /*
  * Utilities
@@ -148,32 +199,3 @@ pre {
 .border-top { border-top: 1px solid #e5e5e5; }
 .border-bottom { border-bottom: 1px solid #e5e5e5; }
 
-.navbar select {
-    background-color: #343a40 !important;
-    color: #f8f9fa !important;
-    border: none;
-}
-
-.navbar a#updatenow  {
-    line-height:0.8;
-    margin-top:2px;
-    margin-bottom:3px;
-    display:block;
-}
-
-.navbar #rigstat h6 {
-    min-width:180px;
-}
-
-.navbar #rigtime h6 {
-    min-width:82px;
-}
-
-.h-selector {
-    cursor: pointer;
-}
-
-.h-selector:hover {
-    color: #212529;
-    background-color: rgba(0,0,0,.075);
-}
