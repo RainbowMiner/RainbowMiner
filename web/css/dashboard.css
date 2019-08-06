@@ -104,12 +104,18 @@ pre {
 }
 
 
-.navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime {
+.navbar div#rigstat, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime {
     display: none;
 }
 
 .main {
     z-index:200;
+}
+
+@media screen and (min-width: 440px) {
+    .navbar div#rigstat {
+        display: block;
+    }
 }
 
 @media screen and (min-width: 768px) {
