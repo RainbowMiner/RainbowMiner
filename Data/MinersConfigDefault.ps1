@@ -5,6 +5,7 @@
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake14r"; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "blake2s"; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "tensority"; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "Cast" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "cryptonightfast"; SecondaryAlgorithm = ""; Params = "--intensity=8"; OCprofile = ""; MSIAprofile = ""}
@@ -107,6 +108,9 @@
             [PSCustomObject]@{MainAlgorithm = "equihash16x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+        )
+        "NBminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "ethash"; SecondaryAlgorithm = "tensority"; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
         "Nsgminer" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "neoscrypt"; SecondaryAlgorithm = ""; Params = "--worksize 64 --intensity d"; OCprofile = ""; MSIAprofile = ""}
