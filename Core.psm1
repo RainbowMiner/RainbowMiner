@@ -1638,8 +1638,8 @@ function Invoke-Core {
                 $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Miner_Pool -and $_.Algorithm -eq $Miner_Algorithm}
                 if ($WatchdogTimer) {
                     if (($WatchdogTimer.Kicked -lt $Session.Timer.AddSeconds( - $Session.WatchdogInterval)) -and -not $Session.RestartMiners) {
-                        $Miner.SetStatus([MinerStatus]::Failed)
                         Write-ActivityLog $Miner -Crashed 2
+                        $Miner.SetStatus([MinerStatus]::Failed)
                         Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
                     }
                     else {

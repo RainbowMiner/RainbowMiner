@@ -499,14 +499,13 @@ function Set-MinerStats {
 
             $Miner.EndOfRoundCleanup()            
 
+            Write-ActivityLog $Miner -Crashed $(if ($Miner_Failed) {2} else {0})
             if ($Miner_Failed) {
                 $Miner.SetStatus([MinerStatus]::Failed)
                 $Miner.Stopped = $true
-                Write-ActivityLog $Miner -Crashed 2
                 Write-Log -Level Warn "Miner $($Miner.Name) mining $($Miner.Algorithm -join '/') on pool $($Miner.Pool -join '/') temporarily disabled. "
                 $Miner_Failed_Total++
             } else {
-                Write-ActivityLog $Miner
                 if (-not $Miner.Donator) {Set-Total $Miner -Quiet}
             }            
         }
