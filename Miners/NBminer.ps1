@@ -110,14 +110,20 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $Pool_Port2 = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
                         $Stratum2 = $Pools.$SecondAlgorithm_Norm.Protocol
-                        if ($SecondAlgorithm_Norm -eq "Ethash") {$Stratum2 = $Stratum2 -replace "stratum","$(if ($Pools.$SecondAlgorithm_Norm.Name -match "Nicehash") {"ethnh"} else {"ethproxy"})"}
+                        if ($SecondAlgorithm_Norm -match "^(Ethash|ProgPow)") {
+                            Switch ($Pools.$SecondAlgorithm_Norm.EthMode) {
+                                "ethproxy" {$Stratum2 = $Stratum2 -replace "stratum","ethproxy"}
+                                "ethstratumnh" {$Stratum2 = $Stratum2 -replace "stratum","nicehash"}
+                            }
+                        }
 						[PSCustomObject]@{
 							Name = $Miner_Name
 							DeviceName = $Miner_Device.Name
 							DeviceModel = $Miner_Model
 							Path = $Path
-							Arguments = "--api 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog $($_.Params)"
+							Arguments = "--api 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) -do $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -du $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"}) --no-watchdog $($_.Params)"
 							HashRates = [PSCustomObject]@{
 								$MainAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($MainAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
 								$SecondAlgorithm_Norm = $($Session.Stats."$($MinerName)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
