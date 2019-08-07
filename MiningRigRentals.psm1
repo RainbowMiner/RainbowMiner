@@ -148,6 +148,7 @@ param(
             "x16rt"             {"Veil"}
             "x16rtgin"          {"X16rt"}
             "cuckoocycle"       {"Cuckarood29"}
+            "cuckoocycleo"      {"Cuckaroo29"}
             "cuckoocycle29swap" {"Cuckaroo29s"}
             "cuckoocycle31"     {"Cuckatoo31"}
             "hashimotos"        {"Ethash"}
