@@ -586,6 +586,10 @@ Function Write-ActivityLog {
 
     Begin { }
     Process {
+        $ActiveStart = $Miner.GetActiveStart()
+
+        if (-not $ActiveStart) {return}
+
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
 
         $filename = ".\Logs\Activity_$(Get-Date -Format "yyyy-MM-dd").txt"
@@ -594,7 +598,7 @@ Function Write-ActivityLog {
         if ($mutex.WaitOne(1000)) {
             $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
             "$([PSCustomObject]@{
-                ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveStart()
+                ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $ActiveStart
                 ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
                 Name           = $Miner.BaseName
                 Device         = @($Miner.DeviceModel)
