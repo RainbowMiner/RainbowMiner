@@ -938,15 +938,7 @@ function Invoke-Core {
                     Paid_Sat  = "$(if ($Rate -gt 0) {[int64]($_.Paid  / $Rate * 1e8)} else {0})"
                 } | Export-Csv "Stats\Balances\$($_.Name)_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
 
-                if ($Stat = Get-Stat "$($_.Name)_$($_.Currency)_Balance") {
-                    $BalancesData_Duration = ($BalancesData_DateTime.ToUniversalTime() - $Stat.Updated)
-                    $BalancesData_Value    = $_.Total - $Stat.Total + $_.Paid - $Stat.Paid
-                    if ($BalancesData_Value -lt 0) {$BalancesData_Value = $_.Total}
-                } else {
-                    $BalancesData_Duration = New-TimeSpan -Seconds 1
-                    $BalancesData_Value    = 0
-                }
-                Set-Stat -Name "$($_.Name)_$($_.Currency)_Balance" -Value $BalancesData_Value -Duration $BalancesData_Duration -Total $_.Total -Paid $_.Paid > $null
+                #Set-Balance $_ -Updated $BalancesData_DateTime.ToUniversalTime() > $null
             }
 
             $BalancesData | Where-Object Name -ne "*Total*" | Group-Object Currency | Sort-Object Name | Foreach-Object {

@@ -698,10 +698,6 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$UplimProtection = 0,
         [Parameter(Mandatory = $false)]
-        [Double]$Total = 0,
-        [Parameter(Mandatory = $false)]
-        [Double]$Paid = 0,
-        [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -714,7 +710,6 @@ function Set-Stat {
 
     if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";    $Mode = "Pools"}
     elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
-    elseif ($Name -match '_Balance$')  {$Path0 = "Stats\Balances"; $Mode = "Balances"}
     else                               {$Path0 = "Stats";          $Mode = "Profit"}
 
     if ($Sub) {
@@ -732,15 +727,9 @@ function Set-Stat {
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
-        if ($Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
+        if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
         $AddStat = Switch($Mode) {
-            "Balances" {
-                @{
-                    Total              = [Double]$Stat.Total
-                    Paid               = [Double]$Stat.Paid
-                }
-            }
             "Miners" {
                 @{
                     PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
@@ -824,12 +813,6 @@ function Set-Stat {
 
             $AddStat = $null
             Switch($Mode) {
-                "Balances" {
-                    $AddStat = @{
-                        Total              = $Total
-                        Paid               = $Paid
-                    }
-                }
                 "Miners" {
                     $AddStat = @{
                         PowerDraw_Live     = $PowerDraw
@@ -906,12 +889,6 @@ function Set-Stat {
         }
 
         Switch($Mode) {
-            "Balances" {
-                $Stat | Add-Member -NotePropertyMembers @{
-                    Total              = $Total
-                    Paid               = $Paid
-                }
-            }
             "Miners" {
                 $Stat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live     = $PowerDraw
@@ -957,12 +934,6 @@ function Set-Stat {
             Failed = [Int]$Stat.Failed
         }
         Switch($Mode) {
-            "Balances" {
-                $OutStat | Add-Member -NotePropertyMembers @{
-                    Total              = [Decimal]$Stat.Total
-                    Paid               = [Decimal]$Stat.Paid
-                }
-            }
             "Miners" {
                 $OutStat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
