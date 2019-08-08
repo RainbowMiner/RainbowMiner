@@ -22,18 +22,21 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     $Pool_Wallet = Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.' -asobject
     if ($Pool_Currency -eq "PASC") {$Pool_Wallet.wallet = "$($Pool_Wallet.wallet -replace "-\d+")$(if (-not $Pool_Wallet.paymentid) {".0"})"}
     try {
-        $Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/user/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
+        #$Request = Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/user/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
+        $Request = Invoke-RestMethodAsync "https://$($Pool_Currency.ToLower()).nanopool.org/api/v1/load_account/$($Pool_Wallet.wallet)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200
         $Count++
         if (-not $Request.status) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned $($Request.error). "
         } else {
+            $Balance = [Math]::Max([double]$Request.data.userParams.balance,0)
+            $Pending = [double]$Request.data.userParams.balance_uncomfirmed
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 Currency    = $Pool_Currency
-                Balance     = [Math]::Max([double]$Request.data.balance,0)
-                Pending     = [double]$Request.data.unconfirmed_balance
-                Total       = [Math]::Max([double]$Request.data.balance,0) + [double]$Request.data.unconfirmed_balance
-                Paid        = 0
+                Balance     = $Balance
+                Pending     = $Pending
+                Total       = $Balance + $Pending
+                Paid        = [Double]$Request.data.userParams.e_sum
                 Earned      = 0
                 Payouts     = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
                 LastUpdated = (Get-Date).ToUniversalTime()
