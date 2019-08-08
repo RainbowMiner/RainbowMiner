@@ -203,7 +203,7 @@
     $Session.NextReport = $Session.Timer
     $Session.DecayStart = $Session.Timer
     [hashtable]$Session.Updatetracker = @{
-        Balances = $Session.Timer
+        Balances = 0
     }
 }
 
@@ -921,6 +921,51 @@ function Invoke-Core {
         $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {$API.Balances = $BalancesData | ConvertTo-Json -Depth 10}
+
+        if ($RefreshBalances) {
+            $BalancesData_DateTime = Get-Date
+            $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {
+                $Rate = [double]$Session.Rates."$($_.Currency)"
+                if (-not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
+                [PSCustomObject]@{
+                    Date      = "$BalancesData_DateTime"
+                    Name      = $_.Name
+                    Currency  = $_.Currency
+                    Rate      = "$([Double]$Rate)"
+                    Total     = "$([Double]$_.Total)"
+                    Paid      = "$([Double]$_.Paid)"
+                    Total_Sat = "$(if ($Rate -gt 0) {[int64]($_.Total / $Rate * 1e8)} else {0})"
+                    Paid_Sat  = "$(if ($Rate -gt 0) {[int64]($_.Paid  / $Rate * 1e8)} else {0})"
+                } | Export-Csv "Stats\Balances\$($_.Name)_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
+
+                if ($Stat = Get-Stat "$($_.Name)_$($_.Currency)_Balance") {
+                    $BalancesData_Duration = ($BalancesData_DateTime.ToUniversalTime() - $Stat.Updated)
+                    $BalancesData_Value    = $_.Total - $Stat.Total + $_.Paid - $Stat.Paid
+                    if ($BalancesData_Value -lt 0) {$BalancesData_Value = $_.Total}
+                } else {
+                    $BalancesData_Duration = New-TimeSpan -Seconds 1
+                    $BalancesData_Value    = 0
+                }
+                Set-Stat -Name "$($_.Name)_$($_.Currency)_Balance" -Value $BalancesData_Value -Duration $BalancesData_Duration -Total $_.Total -Paid $_.Paid > $null
+            }
+
+            $BalancesData | Where-Object Name -ne "*Total*" | Group-Object Currency | Sort-Object Name | Foreach-Object {
+                $Rate  = [double]$Session.Rates."$($_.Name)"
+                $Total = ($_.Group | Where-Object Total | Select-Object -ExpandProperty Total | Measure-Object -Sum).Sum
+                $Paid  = ($_.Group | Where-Object Paid | Select-Object -ExpandProperty Paid | Measure-Object -Sum).Sum
+                if (-not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
+                [PSCustomObject]@{
+                    Date      = "$BalancesData_DateTime"
+                    Name      = "Total"
+                    Currency  = $_.Name
+                    Rate      = "$([Double]$Rate)"
+                    Total     = "$([Double]$Total)"
+                    Paid      = "$([Double]$Paid)"
+                    Total_Sat = "$(if ($Rate -gt 0) {[int64]($Total / $Rate * 1e8)} else {0})"
+                    Paid_Sat  = "$(if ($Rate -gt 0) {[int64]($Paid  / $Rate * 1e8)} else {0})"
+                } | Export-Csv "Stats\Balances\Total_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
+            }
+        }
     }
 
     #Stop async jobs for no longer needed pools (will restart automatically, if pool pops in again)

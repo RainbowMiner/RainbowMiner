@@ -54,7 +54,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
                 Balance     = $Request.stats.balance / $Divisor
                 Pending     = $Request.stats.pending / $Divisor
                 Total       = $Request.stats.balance / $Divisor
-                Payed       = $Request.stats.paid / $Divisor
+                Paid        = $Request.stats.paid / $Divisor
                 Payouts     = @($Request.payments | Foreach-Object {[PSCustomObject]@{time=$_.timestamp;amount=$_.amount / $Divisor;txid=$_.tx}})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

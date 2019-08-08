@@ -619,7 +619,7 @@ Function Write-ActivityLog {
     End {}
 }
 
-Function Set-Total {
+function Set-Total {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)]
@@ -698,6 +698,10 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$UplimProtection = 0,
         [Parameter(Mandatory = $false)]
+        [Double]$Total = 0,
+        [Parameter(Mandatory = $false)]
+        [Double]$Paid = 0,
+        [Parameter(Mandatory = $false)]
         [String]$Sub = "",
         [Parameter(Mandatory = $false)]
         [Switch]$Quiet = $false
@@ -708,9 +712,10 @@ function Set-Stat {
     $Mode     = ""
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
 
-    if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";  $Mode = "Pools"}
-    elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners"; $Mode = "Miners"}
-    else                               {$Path0 = "Stats";        $Mode = "Profit"}
+    if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";    $Mode = "Pools"}
+    elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
+    elseif ($Name -match '_Balance$')  {$Path0 = "Stats\Balances"; $Mode = "Balances"}
+    else                               {$Path0 = "Stats";          $Mode = "Profit"}
 
     if ($Sub) {
         #legacy
@@ -730,6 +735,12 @@ function Set-Stat {
         if ($Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
         $AddStat = Switch($Mode) {
+            "Balances" {
+                @{
+                    Total              = [Double]$Stat.Total
+                    Paid               = [Double]$Stat.Paid
+                }
+            }
             "Miners" {
                 @{
                     PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
@@ -813,6 +824,12 @@ function Set-Stat {
 
             $AddStat = $null
             Switch($Mode) {
+                "Balances" {
+                    $AddStat = @{
+                        Total              = $Total
+                        Paid               = $Paid
+                    }
+                }
                 "Miners" {
                     $AddStat = @{
                         PowerDraw_Live     = $PowerDraw
@@ -889,6 +906,12 @@ function Set-Stat {
         }
 
         Switch($Mode) {
+            "Balances" {
+                $Stat | Add-Member -NotePropertyMembers @{
+                    Total              = $Total
+                    Paid               = $Paid
+                }
+            }
             "Miners" {
                 $Stat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live     = $PowerDraw
@@ -934,6 +957,12 @@ function Set-Stat {
             Failed = [Int]$Stat.Failed
         }
         Switch($Mode) {
+            "Balances" {
+                $OutStat | Add-Member -NotePropertyMembers @{
+                    Total              = [Decimal]$Stat.Total
+                    Paid               = [Decimal]$Stat.Paid
+                }
+            }
             "Miners" {
                 $OutStat | Add-Member -NotePropertyMembers @{
                     PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
@@ -973,6 +1002,8 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Totals = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$Balances = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$All = $false
     )
 
@@ -981,6 +1012,7 @@ function Get-Stat {
         if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
         elseif ($Name -match '_Total$') {$Path = "Stats\Totals"}
+        elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
         else {$Path = "Stats"}
 
         if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
@@ -1000,11 +1032,13 @@ function Get-Stat {
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
         if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (($Totals -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
+        if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
         if ($Miners) {$Match += "Hashrate"}
         if ($Pools)  {$Match += "Profit|BLK|HSR|TTF"}
         if ($Totals) {$Match += "Total"}
+        if ($Balances) {$Match += "Balance"}
 
         $MatchStr = $Match -join "|"
 
