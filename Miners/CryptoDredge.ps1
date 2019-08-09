@@ -15,19 +15,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_linux_x64_cuda_10.1.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.0_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_linux_x64_cuda_10.0.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.2_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_linux_x64_cuda_9.2.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.1_linux.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_linux_x64_cuda_9.1.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -35,19 +35,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CryptoDredge\CryptoDredge.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_win_x64_cuda_10.1.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_10.0_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_win_x64_cuda_10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.2_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_win_x64_cuda_9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.2-cryptodredge/CryptoDredge_0.20.2_cuda_9.1_windows.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.21.0-cryptodredge/CryptoDredge_0.21.0_win_x64_cuda_9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -66,6 +66,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "bcd";         NH = $true;  MinMemGb = 1; Params = ""} #BCD
     [PSCustomObject]@{MainAlgorithm = "bitcore";     NH = $true;  MinMemGb = 1; Params = ""} #BitCore
     #[PSCustomObject]@{MainAlgorithm = "c11";         NH = $true;  MinMemGb = 1; Params = ""} #C11, disabled v0.19.0
+    [PSCustomObject]@{MainAlgorithm = "chukwa";      NH = $true;  MinMemGb = 2; Params = ""} #Chukwa, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "chukwa-wrkz"; NH = $true;  MinMemGb = 2; Params = ""} #Chukwa-Wrkz, new with v0.21.0
+    [PSCustomObject]@{MainAlgorithm = "cnconceal";    NH = $true;  MinMemGb = 2; Params = ""} #CryptonighConceal, new with v0.21.0
     #[PSCustomObject]@{MainAlgorithm = "cnfast";      NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "cnfast2";     NH = $true;  MinMemGb = 2; Params = ""} #CryptonightFast2 / Masari
     [PSCustomObject]@{MainAlgorithm = "cngpu";       NH = $true;  MinMemGb = 4; Params = ""} #CryptonightGPU
