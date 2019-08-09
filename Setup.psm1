@@ -718,7 +718,7 @@ function Start-Setup {
                         }
                         "serverconfigname" {
                             if ($Config.RunMode -eq "client" -and (Get-Yes $Config.EnableServerConfig)) {
-                                $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","ocprofiles","pools") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","ocprofiles","pools","scheduler") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -2438,7 +2438,7 @@ function Start-Setup {
                         )
                         [console]::ForegroundColor = $p
 
-                        $Coin_Symbol = Read-HostString -Prompt "Which coinsymbol do you want to edit/create/delete? (leave empty to end coin config)" -Characters "`$A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                        $Coin_Symbol = Read-HostString -Prompt "Which coinsymbol do you want to edit/create/delete? (leave empty to end coin config)" -Characters "`$A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         if ($Coin_Symbol -eq '') {throw}
 
                         $Coin_Symbol = $Coin_Symbol.ToUpper()
