@@ -59,7 +59,7 @@ do {
     $Config.ServerPassword = Read-HostString -Prompt "If you have auth enabled on your server's API, enter the password " -Default $Config.ServerPassword -Characters ""
     $Config.EnableServerConfig = Read-HostBool -Prompt "Enable automatic download of selected server config files? " -Default $Config.EnableServerConfig
     if (Get-Yes $Config.EnableServerConfig) {
-        $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","ocprofiles","pools")
+        $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","ocprofiles","pools","scheduler")
         $Config.EnableServerExcludeList = Read-HostBool -Prompt "Use the server's exclusion variable list?" -Default $Config.EnableServerExcludeList
         if (-not (Get-Yes $Config.EnableServerExcludeList)) {
             $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter all config parameters, that should not be overwritten (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9:_"
