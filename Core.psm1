@@ -936,7 +936,7 @@ function Invoke-Core {
                     Paid      = "$([Double]$_.Paid)"
                     Total_Sat = "$(if ($Rate -gt 0) {[int64]($_.Total / $Rate * 1e8)} else {0})"
                     Paid_Sat  = "$(if ($Rate -gt 0) {[int64]($_.Paid  / $Rate * 1e8)} else {0})"
-                } | Export-Csv "Stats\Balances\$($_.Name)_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
+                } | Export-Csv "Stats\Balances\$($_.Name)_$($_.Currency)_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
 
                 #Set-Balance $_ -Updated $BalancesData_DateTime.ToUniversalTime() > $null
             }
@@ -955,7 +955,7 @@ function Invoke-Core {
                     Paid      = "$([Double]$Paid)"
                     Total_Sat = "$(if ($Rate -gt 0) {[int64]($Total / $Rate * 1e8)} else {0})"
                     Paid_Sat  = "$(if ($Rate -gt 0) {[int64]($Paid  / $Rate * 1e8)} else {0})"
-                } | Export-Csv "Stats\Balances\Total_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
+                } | Export-Csv "Stats\Balances\Total_$($_.Name)_Tracking.csv" -NoTypeInformation -Append -ErrorAction Ignore
             }
         }
     }
