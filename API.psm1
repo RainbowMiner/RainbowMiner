@@ -365,32 +365,32 @@
                 "/earnings" {
                     $Data = ""
                     if (Test-Path "Stats\Balances\Earnings.csv") {
-                        $Data = ConvertTo-Json @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
+                        $Earnings = @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
+                            $Rate = $API.Rates."$($_.Currency)"
                             [PSCustomObject]@{
-                                Date = ([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")
-                                Date_UTC = ([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")
+                                Date = if ($Parameters.as_csv) {[DateTime]$_.Date} else {([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")}
+                                Date_UTC = if ($Parameters.as_csv) {[DateTime]$_.Date_UTC} else {([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")}
                                 PoolName = $_.PoolName
                                 Currency = $_.Currency
-                                Balance  = [Double]$_.Balance
-                                Paid     = [Double]$_.Paid
-                                Earnings = [Double]$_.Earnings
-                                Value    = [Double]$_.Value
-                                Balance_sat = [int64]$_.Balance_sat
-                                Paid_sat = [int64]$_.Paid_sat
-                                Earnings_sat = [int64]$_.Earnings_sat
-                                Value_sat = [int64]$_.Value_sat
+                                Balance  = [Decimal]$_.Balance
+                                Paid     = [Decimal]$_.Paid
+                                Earnings = [Decimal]$_.Earnings
+                                Value    = [Decimal]$_.Value
+                                Balance_BTC = [Decimal]$(if ($Rate) {$_.Balance / $Rate} else {0})
+                                Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
+                                Earnings_BTC = [Decimal]$(if ($Rate) {$_.Earnings / $Rate} else {0})
+                                Value_BTC = [Decimal]$(if ($Rate) {$_.Value / $Rate} else {0})
                             }
-                        } | Select-Object) -Depth 10
+                        } | Select-Object)
+                        if ($Parameters.as_csv) {
+                            $Data = $Earnings | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
+                            $Data = $Data -join "`r`n"
+                            $ContentType = "text/csv"
+                            $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
+                        } else {
+                            $Data = ConvertTo-Json $Earnings -Depth 10
+                        }
                     }
-                    Break
-                }
-                "/earningscsv" {
-                    $Data = ""
-                    if (Test-Path "Stats\Balances\Earnings_Localized.csv") {
-                        $Data = Get-Content "Stats\Balances\Earnings_Localized.csv" -Raw
-                    }
-                    $ContentType = "text/csv"
-                    $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
                     Break
                 }
                 "/poolstats" {
@@ -406,7 +406,57 @@
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object) -Depth 10
+                    $Balances = ($API.Balances | Select-Object | ConvertFrom-Json) | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
+                    if ($Parameters.consolidate) {
+                        $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
+                            $BalanceGroup = $_.Group | Where-Object {$API.Rates."$($_.Currency)"}
+                            [PSCustomObject]@{
+                                Name = $_.Name
+                                Total = [Decimal]($BalanceGroup | Foreach-Object {$_.Total / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Paid  = [Decimal]($BalanceGroup | Foreach-Object {$_.Paid / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1h  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1h / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1d  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1d / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1w  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1w / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_Avg = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_Avg / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                            }
+                        }
+                    }
+                                        
+                    if ($Parameters.as_csv) {
+                        if (-not $Parameters.consolidate) {
+                            $Balances = $Balances | Foreach-Object {
+                                $Rate = $API.Rates."$($_.Currency)"
+                                [PSCustomObject]@{
+                                    Name = $_.Name
+                                    Currency = $_.Currency
+                                    Started = [DateTime]$_.Started
+                                    Total = [Decimal]$_.Total
+                                    Paid  = [Decimal]$_.Paid
+                                    Earnings  = [Decimal]$_.Earnings
+                                    Earnings_1h  = [Decimal]$_.Earnings_1h
+                                    Earnings_1d  = [Decimal]$_.Earnings_1d
+                                    Earnings_1w  = [Decimal]$_.Earnings_1w
+                                    Earnings_Avg  = [Decimal]$_.Earnings_Avg
+                                    Total_BTC = [Decimal]$(if ($Rate) {$_.Total / $Rate} else {0})
+                                    Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
+                                    Earnings_BTC  = [Decimal]$(if ($Rate) {$_.Earnings / $Rate} else {0})
+                                    Earnings_1h_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1h / $Rate} else {0})
+                                    Earnings_1d_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1d / $Rate} else {0})
+                                    Earnings_1w_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1w / $Rate} else {0})
+                                    Earnings_Avg_BTC = [Decimal]$(if ($Rate) {$_.Earnings_Avg / $Rate} else {0})
+                                }
+                            }
+                        }
+                        $ContentType = "text/csv"
+                        $ContentFileName = "$(if ($Parameters.consolidate) {"consolidate"} else {"balances"})_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
+                        $Data = $Balances | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
+                        $Data = $Data -join "`r`n"
+                    } else {
+                        $Balances | Where-Object {$_.Started} | Foreach-Object {$_.Started = ([DateTime]$_.Started).ToString("yyyy-MM-dd HH:mm:ss")}
+                        $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
+                    }
+                    Remove-Variable "Balances" -Force
                     Break
                 }
                 "/payouts" {

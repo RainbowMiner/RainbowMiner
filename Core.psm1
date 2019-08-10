@@ -922,12 +922,14 @@ function Invoke-Core {
 
         if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
         else {
-            $BalancesData_DateTime = Get-Date
-            $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {
-                $Balance = $_
-                $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
-                $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "Earnings"} | Foreach-Object {
-                    $Balance | Add-Member $_ $Earnings.$_ -Force
+            if ($RefreshBalances) {
+                $BalancesData_DateTime = Get-Date
+                $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {
+                    $Balance = $_
+                    $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
+                    $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "Earnings" -or $_ -eq "Started"} | Foreach-Object {
+                        $Balance | Add-Member $_ $Earnings.$_ -Force
+                    }
                 }
             }
             $API.Balances = $BalancesData | ConvertTo-Json -Depth 10

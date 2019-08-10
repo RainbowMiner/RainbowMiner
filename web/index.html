@@ -135,7 +135,7 @@
 
         (function updatePoolBalances() {
             $.ajax({
-                url: '/balances', success: function (result) {
+                url: '/balances?add_total=1', success: function (result) {
                     //console.log(result);
                     $("#balanceboxes").empty();
                     var boxes = [], boxes_ix = {};

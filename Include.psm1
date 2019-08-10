@@ -686,8 +686,8 @@ function Set-Balance {
 
     $Stat = Get-Content $Path -ErrorAction Ignore -Raw
 
-    $Balance_Total = [Double]$Balance.Total
-    $Balance_Paid  = [Double]$Balance.Paid
+    $Balance_Total = [Decimal]$Balance.Total
+    $Balance_Paid  = [Decimal]$Balance.Paid
 
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
@@ -695,19 +695,19 @@ function Set-Balance {
         $Stat = [PSCustomObject]@{
                     PoolName = $Balance.Name
                     Currency = $Balance.Currency
-                    Balance  = [Double]$Stat.Balance
-                    Paid     = [Double]$Stat.Paid
-                    Earnings = [Double]$Stat.Earnings
-                    Earnings_1h   = [Double]$Stat.Earnings_1h
-                    Earnings_1d   = [Double]$Stat.Earnings_1d
-                    Earnings_1w   = [Double]$Stat.Earnings_1w
-                    Earnings_Avg  = [Double]$Stat.Earnings_Avg
-                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Double]$_.Value}} | Select-Object)
+                    Balance  = [Decimal]$Stat.Balance
+                    Paid     = [Decimal]$Stat.Paid
+                    Earnings = [Decimal]$Stat.Earnings
+                    Earnings_1h   = [Decimal]$Stat.Earnings_1h
+                    Earnings_1d   = [Decimal]$Stat.Earnings_1d
+                    Earnings_1w   = [Decimal]$Stat.Earnings_1w
+                    Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
+                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object)
                     Started  = [DateTime]$Stat.Started
                     Updated  = [DateTime]$Stat.Updated
         }
 
-        $Earnings = [Double]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+        $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
 
         if ($Earnings -gt 0) {
             $Stat.Balance   = $Balance_Total
@@ -717,7 +717,7 @@ function Set-Balance {
 
             $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
 
-            $Rate = [double]$Session.Rates."$($Balance.Currency)"
+            $Rate = [Decimal]$Session.Rates."$($Balance.Currency)"
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
             
             $CsvLine = [PSCustomObject]@{
@@ -742,14 +742,14 @@ function Set-Balance {
 
         $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
 
-        $Stat.Earnings_1h = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1d = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1w = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1h = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1d = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1w = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
 
         if ($Stat.Earnings_1w) {
             $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
             if ($Duration -gt 1) {
-                $Stat.Earnings_Avg = [Double](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
+                $Stat.Earnings_Avg = [Decimal](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
             } else {
                 $Stat.Earnings_Avg = $Stat.Earnings_1d
             }
