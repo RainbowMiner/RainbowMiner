@@ -735,7 +735,7 @@ function Set-Balance {
                 Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
                 Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
             }
-            $CsvLine | Export-Csv "$($Path0)\Earnings_Localized.csv" -NoTypeInformation -Append -ErrorAction Ignore
+            $CsvLine | Export-Csv "$($Path0)\Earnings_Localized.csv" -NoTypeInformation -UseCulture -Append -ErrorAction Ignore
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             $CsvLine | Export-Csv "$($Path0)\Earnings.csv" -NoTypeInformation -Append -ErrorAction Ignore
         }
@@ -777,6 +777,7 @@ function Set-Balance {
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
     $Stat | ConvertTo-Json | Set-Content $Path
+    $Stat
 }
 
 function Set-Stat {
