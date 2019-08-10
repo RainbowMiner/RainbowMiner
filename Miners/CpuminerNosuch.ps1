@@ -7,7 +7,7 @@ param(
 
 if (-not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.aes -and $f.sse2){'aes-sse2'}else{'sse2'}))"
+$Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.sse2 -and $f.aes){'aes-sse2'}else{'sse2'}))"
 $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-ubuntu18.7z"
 $ManualUri = "https://github.com/patrykwnosuch/cpuminer-3.8.8.1-nosuch/releases"
 $Port = "531{0:d2}"

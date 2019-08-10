@@ -8,10 +8,10 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}else{'sse2'}))"
+    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}else{'sse2'}))"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.12-rplant/cpuminer-rplant-4.0.12-linux.tar.gz"
 } else {
-    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'ryzen'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}elseif([Environment]::Is64BitOperatingSystem){'sse2'}else{'sse2-w32'})).exe"
+    $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}elseif([Environment]::Is64BitOperatingSystem){'sse2'}else{'sse2-w32'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.12-rplant/cpuminer-rplant-4.0.12-win.zip"
 }
 $ManualUri = "https://pool.rplant.xyz/miners"

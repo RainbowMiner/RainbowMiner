@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\CPU-CpuPower\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha){'avx2-sha'}elseif($f.avx2){'avx2'}elseif($f.avx){'avx'}elseif($f.aes -and $f.sse42){'aes-sse42'}else{'sse2'})).exe"
+$Path = ".\Bin\CPU-CpuPower\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
 $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-3.8.8.5.zip"
 $ManualUri = "https://github.com/cpu-pool/cpuminer-opt-cpupower/releases"
 $Port = "539{0:d2}"
