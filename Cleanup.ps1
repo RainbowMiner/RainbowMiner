@@ -460,6 +460,11 @@ try {
         $AddAlgorithm += @("RandomXL")
     }
 
+    if ($Version -le (Get-Version "4.3.8.4")) {
+        Get-ChildItem ".\Stats\Miners" -Filter "*-Gminer-*_Equihash25x5_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        if (Test-Path "Stats\Balances") {Get-ChildItem ".\Stats\Balances" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
