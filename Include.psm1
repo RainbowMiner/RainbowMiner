@@ -693,6 +693,8 @@ function Set-Balance {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
         $Stat = [PSCustomObject]@{
+                    PoolName = $Balance.Name
+                    Currency = $Balance.Currency
                     Balance  = [Double]$Stat.Balance
                     Paid     = [Double]$Stat.Paid
                     Earnings = [Double]$Stat.Earnings
@@ -758,6 +760,8 @@ function Set-Balance {
         if ($Error.Count){$Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
+                    PoolName = $Balance.Name
+                    Currency = $Balance.Currency
                     Balance  = $Balance_Total
                     Paid     = $Balance_Paid
                     Earnings = 0
