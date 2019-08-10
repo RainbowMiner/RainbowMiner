@@ -2362,56 +2362,55 @@ function Get-Device {
             $Global:GlobalCPUInfo = [PSCustomObject]@{}
 
             if ($IsWindows) {
-                try {$Global:GlobalCPUInfo | Add-Member Features $($feat = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$feat[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}};$feat)} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                if (-not $Global:GlobalCPUInfo.Features.physical_cpus) {
+                try {$chkcpu = @{};([xml](Invoke-Exe ".\Includes\CHKCPU32.exe" -ArgumentList "/x" -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines)).chkcpu32.ChildNodes | Foreach-Object {$chkcpu[$_.Name] = if ($_.'#text' -match "^(\d+)") {[int]$Matches[1]} else {$_.'#text'}}} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                if ($chkcpu.physical_cpus) {
+                    $Global:GlobalCPUInfo | Add-Member Name          $chkcpu.cpu_name
+                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $chkcpu.cpu_vendor
+                    $Global:GlobalCPUInfo | Add-Member Cores         $chkcpu.cores
+                    $Global:GlobalCPUInfo | Add-Member Threads       $chkcpu.threads
+                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $chkcpu.physical_cpus
+                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
+                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
+                    $Global:GlobalCPUInfo | Add-Member Features      @{}
+                    $chkcpu.GetEnumerator() | Where-Object {"$($_.Value)" -eq "1" -and $_.Name -notmatch '_' -and $_.Name -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_.Name)" = $true}
+                } else {
                     $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
-                    $Global:GlobalCPUInfo | Add-Member Features (@{
-                        physical_cpus = ($CIM_CPU | Measure-Object).Count
-                        cores         = ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
-                        threads       = ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
-                        l3            = $CIM_CPU[0].L3CacheSize
-                        cpu_speed     = $CIM_CPU[0].MaxClockSpeed
-                        cpu_name      = $CIM_CPU[0].Name
-                        cpu_vendor    = $CIM_CPU[0].Manufacturer
-                        tryall        = 1
-                    }) -Force
+                    $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
+                    $Global:GlobalCPUInfo | Add-Member Manufacturer  $CIM_CPU[0].Manufacturer
+                    $Global:GlobalCPUInfo | Add-Member Cores         ($CIM_CPU.NumberOfCores | Measure-Object -Sum).Sum
+                    $Global:GlobalCPUInfo | Add-Member Threads       ($CIM_CPU.NumberOfLogicalProcessors | Measure-Object -Sum).Sum
+                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($CIM_CPU | Measure-Object).Count
+                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   $CIM_CPU[0].L3CacheSize
+                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
+                    $Global:GlobalCPUInfo | Add-Member Features      @{}
+                    Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
                     if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
                 }
             } elseif ($IsLinux) {
                 $Data = Get-Content "/proc/cpuinfo"
                 if ($Data) {
-                    $Global:GlobalCPUInfo | Add-Member Features $($feat = @{}; (($Data | Where-Object {$_ -like "flags*"})[0] -split ":")[1].Trim() -split "\s+" | ForEach-Object {$feat.$_ = 1}; $feat)
-                    $Global:GlobalCPUInfo | Add-Member Features ([PSCustomObject]@{
-                        physical_cpus = [int]  ($Data | Where-Object {$_ -match 'physical id'} | Foreach-Object {[int]($_ -split ":")[1].Trim()} | Select-Object -Unique).Count
-                        cores         = [int] (($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1].Trim()
-                        threads       = [int] (($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1].Trim()
-                        l3            = [int]((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+")[0].Trim()
-                        cpu_speed     = [int] (($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim()
-                        cpu_name      =       (($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1].Trim()
-                        cpu_vendor    =       (($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1].Trim()
-                    }) -Force
+                    $Global:GlobalCPUInfo | Add-Member Name          (($Data | Where-Object {$_ -match 'model name'} | Select-Object -First 1) -split ":")[1].Trim()
+                    $Global:GlobalCPUInfo | Add-Member Manufacturer  (($Data | Where-Object {$_ -match 'vendor_id'}  | Select-Object -First 1) -split ":")[1].Trim()
+                    $Global:GlobalCPUInfo | Add-Member Cores         ([int](($Data | Where-Object {$_ -match 'cpu cores'}  | Select-Object -First 1) -split ":")[1].Trim())
+                    $Global:GlobalCPUInfo | Add-Member Threads       ([int] (($Data | Where-Object {$_ -match 'siblings'}   | Select-Object -First 1) -split ":")[1].Trim())
+                    $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  ($Data | Where-Object {$_ -match 'physical id'} | Foreach-Object {[int]($_ -split ":")[1].Trim()} | Select-Object -Unique).Count
+                    $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+")[0].Trim())
+                    $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
+                    $Global:GlobalCPUInfo | Add-Member Features      @{}
+                    (($Data | Where-Object {$_ -like "flags*"})[0] -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
                 }
             }
 
-            if ($Global:GlobalCPUInfo.Vendor -eq $null) {
-                $Global:GlobalCPUInfo | Add-Member Name          $Global:GlobalCPUInfo.Features.cpu_name
-                $Global:GlobalCPUInfo | Add-Member Vendor        $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Features.cpu_vendor){"INTEL"}else{$Global:GlobalCPUInfo.Features.cpu_vendor.ToUpper()}) -Force
-                $Global:GlobalCPUInfo | Add-Member Manufacturer  $Global:GlobalCPUInfo.Features.cpu_vendor
-                $Global:GlobalCPUInfo | Add-Member Cores         $Global:GlobalCPUInfo.Features.cores
-                $Global:GlobalCPUInfo | Add-Member Threads       $Global:GlobalCPUInfo.Features.threads
-                $Global:GlobalCPUInfo | Add-Member PhysicalCPUs  $Global:GlobalCPUInfo.Features.physical_cpus
-                $Global:GlobalCPUInfo | Add-Member L3CacheSize   $Global:GlobalCPUInfo.Features.l3
-                $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $Global:GlobalCPUInfo.Features.cpu_speed
+            $Global:GlobalCPUInfo.Vendor = if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()}
 
-                if (-not $IsWindows -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
-                    $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
-                    $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
-                    $Global:GlobalCPUInfo.PhysicalCPUs = 1
-                }
-
-                $Global:GlobalCPUInfo | Add-Member RealCores     ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
-                if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
+            if ($IsLinux -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
+                $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
+                $Global:GlobalCPUInfo.Threads *= $Global:GlobalCPUInfo.PhysicalCPUs
+                $Global:GlobalCPUInfo.PhysicalCPUs = 1
             }
+
+            $Global:GlobalCPUInfo | Add-Member RealCores ([int[]](0..($Global:GlobalCPUInfo.Threads - 1))) -Force
+            if ($Global:GlobalCPUInfo.Threads -gt $Global:GlobalCPUInfo.Cores) {$Global:GlobalCPUInfo.RealCores = $Global:GlobalCPUInfo.RealCores | Where-Object {-not ($_ % [int]($Global:GlobalCPUInfo.Threads/$Global:GlobalCPUInfo.Cores))}}
         }
     }
     catch {
@@ -2433,6 +2432,7 @@ function Get-Device {
                 Type_Mineable_Index = $CPUIndex
                 Model = "CPU"
                 Model_Name = $Global:GlobalCPUInfo.Name
+                Features = $Global:GlobalCPUInfo.Features.Keys
             }
 
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
@@ -2448,6 +2448,111 @@ function Get-Device {
 
     $Script:GlobalCachedDevices = $Devices
     $Devices
+}
+
+function Get-CPUFeatures { 
+
+    Add-Type -Path .\Includes\cs\CPUID.cs
+
+    $features = @{}
+    $info = [CpuID]::Invoke(0)
+    #convert 16 bytes to 4 ints for compatibility with existing code
+    $info = [int[]]@(
+        [BitConverter]::ToInt32($info, 0 * 4)
+        [BitConverter]::ToInt32($info, 1 * 4)
+        [BitConverter]::ToInt32($info, 2 * 4)
+        [BitConverter]::ToInt32($info, 3 * 4)
+    )
+
+    $nIds = $info[0]
+
+    $info = [CpuID]::Invoke(0x80000000)
+    $nExIds = [BitConverter]::ToUInt32($info, 0 * 4) #not sure as to why 'nExIds' is unsigned; may not be necessary
+    #convert 16 bytes to 4 ints for compatibility with existing code
+    $info = [int[]]@(
+        [BitConverter]::ToInt32($info, 0 * 4)
+        [BitConverter]::ToInt32($info, 1 * 4)
+        [BitConverter]::ToInt32($info, 2 * 4)
+        [BitConverter]::ToInt32($info, 3 * 4)
+    )
+
+    #Detect Features
+    if ($nIds -ge 0x00000001) { 
+
+        $info = [CpuID]::Invoke(0x00000001)
+        #convert 16 bytes to 4 ints for compatibility with existing code
+        $info = [int[]]@(
+            [BitConverter]::ToInt32($info, 0 * 4)
+            [BitConverter]::ToInt32($info, 1 * 4)
+            [BitConverter]::ToInt32($info, 2 * 4)
+            [BitConverter]::ToInt32($info, 3 * 4)
+        )
+
+        $features.mmx = ($info[3] -band ([int]1 -shl 23)) -ne 0
+        $features.sse = ($info[3] -band ([int]1 -shl 25)) -ne 0
+        $features.sse2 = ($info[3] -band ([int]1 -shl 26)) -ne 0
+        $features.sse3 = ($info[2] -band ([int]1 -shl 00)) -ne 0
+
+        $features.ssse3 = ($info[2] -band ([int]1 -shl 09)) -ne 0
+        $features.sse41 = ($info[2] -band ([int]1 -shl 19)) -ne 0
+        $features.sse42 = ($info[2] -band ([int]1 -shl 20)) -ne 0
+        $features.aes = ($info[2] -band ([int]1 -shl 25)) -ne 0
+
+        $features.avx = ($info[2] -band ([int]1 -shl 28)) -ne 0
+        $features.fma3 = ($info[2] -band ([int]1 -shl 12)) -ne 0
+
+        $features.rdrand = ($info[2] -band ([int]1 -shl 30)) -ne 0
+    }
+
+    if ($nIds -ge 0x00000007) { 
+
+        $info = [CpuID]::Invoke(0x00000007)
+        #convert 16 bytes to 4 ints for compatibility with existing code
+        $info = [int[]]@(
+            [BitConverter]::ToInt32($info, 0 * 4)
+            [BitConverter]::ToInt32($info, 1 * 4)
+            [BitConverter]::ToInt32($info, 2 * 4)
+            [BitConverter]::ToInt32($info, 3 * 4)
+        )
+
+        $features.avx2 = ($info[1] -band ([int]1 -shl 05)) -ne 0
+
+        $features.bmi1 = ($info[1] -band ([int]1 -shl 03)) -ne 0
+        $features.bmi2 = ($info[1] -band ([int]1 -shl 08)) -ne 0
+        $features.adx = ($info[1] -band ([int]1 -shl 19)) -ne 0
+        $features.mpx = ($info[1] -band ([int]1 -shl 14)) -ne 0
+        $features.sha = ($info[1] -band ([int]1 -shl 29)) -ne 0
+        $features.prefetchwt1 = ($info[2] -band ([int]1 -shl 00)) -ne 0
+
+        $features.avx512_f = ($info[1] -band ([int]1 -shl 16)) -ne 0
+        $features.avx512_cd = ($info[1] -band ([int]1 -shl 28)) -ne 0
+        $features.avx512_pf = ($info[1] -band ([int]1 -shl 26)) -ne 0
+        $features.avx512_er = ($info[1] -band ([int]1 -shl 27)) -ne 0
+        $features.avx512_vl = ($info[1] -band ([int]1 -shl 31)) -ne 0
+        $features.avx512_bw = ($info[1] -band ([int]1 -shl 30)) -ne 0
+        $features.avx512_dq = ($info[1] -band ([int]1 -shl 17)) -ne 0
+        $features.avx512_ifma = ($info[1] -band ([int]1 -shl 21)) -ne 0
+        $features.avx512_vbmi = ($info[2] -band ([int]1 -shl 01)) -ne 0
+    }
+
+    if ($nExIds -ge 0x80000001) { 
+
+        $info = [CpuID]::Invoke(0x80000001)
+        #convert 16 bytes to 4 ints for compatibility with existing code
+        $info = [int[]]@(
+            [BitConverter]::ToInt32($info, 0 * 4)
+            [BitConverter]::ToInt32($info, 1 * 4)
+            [BitConverter]::ToInt32($info, 2 * 4)
+            [BitConverter]::ToInt32($info, 3 * 4)
+        )
+
+        $features.x64 = ($info[3] -band ([int]1 -shl 29)) -ne 0
+        $features.abm = ($info[2] -band ([int]1 -shl 05)) -ne 0
+        $features.sse4a = ($info[2] -band ([int]1 -shl 06)) -ne 0
+        $features.fma4 = ($info[2] -band ([int]1 -shl 16)) -ne 0
+        $features.xop = ($info[2] -band ([int]1 -shl 11)) -ne 0
+    }
+    $features.GetEnumerator() | Where-Object Value | Select-Object -ExpandProperty Name
 }
 
 function Get-DevicePowerDraw {
