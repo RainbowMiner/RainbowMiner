@@ -34,14 +34,6 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
     return
 }
 
-try {
-    #$Pool_Request = Invoke-RestMethodAsync "https://icemining.ca/api/status" -tag $Name -cycletime 120
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool status API ($Name) has failed. "
-}
-
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
@@ -95,6 +87,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                WTM           = $true
             }
         }
     }
