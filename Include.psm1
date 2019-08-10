@@ -702,7 +702,7 @@ function Set-Balance {
                     Earnings_1d   = [Double]$Stat.Earnings_1d
                     Earnings_1w   = [Double]$Stat.Earnings_1w
                     Earnings_Avg  = [Double]$Stat.Earnings_Avg
-                    Last_Earnings = [Array]$Stat.Last_Earnings
+                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Double]$_.Value}} | Select-Object)
                     Started  = [DateTime]$Stat.Started
                     Updated  = [DateTime]$Stat.Updated
         }
@@ -747,7 +747,7 @@ function Set-Balance {
         $Stat.Earnings_1w = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
 
         if ($Stat.Earnings_1w) {
-            $Duration = ($Updated_UTC - $Stat.Last_Earnings[0].Date).TotalDays
+            $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
             if ($Duration -gt 1) {
                 $Stat.Earnings_Avg = [Double](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
             } else {
@@ -776,7 +776,7 @@ function Set-Balance {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | ConvertTo-Json | Set-Content $Path
+    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
     $Stat
 }
 
