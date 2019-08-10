@@ -686,6 +686,9 @@ function Set-Balance {
 
     $Stat = Get-Content $Path -ErrorAction Ignore -Raw
 
+    $Balance_Total = [Double]$Balance.Total
+    $Balance_Paid  = [Double]$Balance.Paid
+
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
@@ -702,11 +705,11 @@ function Set-Balance {
                     Updated  = [DateTime]$Stat.Updated
         }
 
-        $Earnings = $Balance.Total - $Stat.Balance + $Balance.Paid - $Stat.Paid
+        $Earnings = [Double]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
 
         if ($Earnings -gt 0) {
-            $Stat.Balance   = $Balance.Total
-            $Stat.Paid      = $Balance.Paid
+            $Stat.Balance   = $Balance_Total
+            $Stat.Paid      = $Balance_Paid
             $Stat.Earnings += $Earnings
             $Stat.Updated   = $Updated_UTC
 
@@ -737,14 +740,14 @@ function Set-Balance {
 
         $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
 
-        $Stat.Earnings_1h = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1d = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
-        $Stat.Earnings_1w = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1h = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1d = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1w = [Double]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
 
         if ($Stat.Earnings_1w) {
             $Duration = ($Updated_UTC - $Stat.Last_Earnings[0].Date).TotalDays
             if ($Duration -gt 1) {
-                $Stat.Earnings_Avg = ($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration
+                $Stat.Earnings_Avg = [Double](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
             } else {
                 $Stat.Earnings_Avg = $Stat.Earnings_1d
             }
@@ -755,8 +758,8 @@ function Set-Balance {
         if ($Error.Count){$Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
-                    Balance  = $Balance.Total
-                    Paid     = $Balance.Paid
+                    Balance  = $Balance_Total
+                    Paid     = $Balance_Paid
                     Earnings = 0
                     Earnings_1h   = 0
                     Earnings_1d   = 0
@@ -766,19 +769,6 @@ function Set-Balance {
                     Started  = $Updated_UTC
                     Updated  = $Updated_UTC
                 }
-    }
-
-    $Stat = [PSCustomObject]@{
-                Balance  = [Decimal]$Stat.Balance
-                Paid     = [Decimal]$Stat.Paid
-                Earnings = [Decimal]$Stat.Earnings
-                Earnings_1h   = [Decimal]$Stat.Earnings_1h
-                Earnings_1d   = [Decimal]$Stat.Earnings_1d
-                Earnings_1w   = [Decimal]$Stat.Earnings_1w
-                Earnings_Avg  = [Decimal]$Stat.Earnings_Day
-                Last_Earnings = [Array]$Stat.Last_Earnings
-                Started  = [DateTime]$Stat.Started
-                Updated  = [DateTime]$Stat.Updated
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
