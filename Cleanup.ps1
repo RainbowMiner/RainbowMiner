@@ -465,6 +465,12 @@ try {
         if (Test-Path "Stats\Balances") {Get-ChildItem ".\Stats\Balances" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}
     }
 
+    if ($Version -le (Get-Version "4.3.8.5")) {
+        if (Test-Path ".\Stats\Balances\Earnings_Localized.csv") {
+            (Get-Content ".\Stats\Balances\Earnings_Localized.csv" -Raw -ErrorAction Ignore) -replace "`",`"","`"$((Get-Culture).TextInfo.ListSeparator)`"" | Set-Content ".\Stats\Balances\Earnings_Localized.csv" -Force
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
