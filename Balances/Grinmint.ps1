@@ -15,8 +15,9 @@ $Request = [PSCustomObject]@{}
 try {
     if ($Request = Invoke-RestMethodAsync "https://api.grinmint.com/v1/user/$($PoolConfig.GRIN)/userStats" -cycletime ($Config.BalanceUpdateMinutes*60)) {
         if ($Request.status) {
-            $Unpaid   = $Request.unpaid_balance / 1e9
-            $Immature = $Request.immature_balance / 1e9
+			$Divisor  = [Decimal]1e9
+            $Unpaid   = [Decimal]$Request.unpaid_balance / $Divisor
+            $Immature = [Decimal]$Request.immature_balance / $Divisor
             [PSCustomObject]@{
                     Caption     = $Name
                     Info        = ""

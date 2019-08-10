@@ -27,9 +27,9 @@ if ($Platform_Version -eq 2) {
     [PSCustomObject]@{
         Caption     = "$($Name) (BTC)"
         Currency    = "BTC"
-        Balance     = [Double]$Request.externalBalance
-        Pending     = [Double]$Request.unpaidAmount
-        Total       = [Double]$Request.externalBalance + [Double]$Request.unpaidAmount
+        Balance     = [Decimal]$Request.externalBalance
+        Pending     = [Decimal]$Request.unpaidAmount
+        Total       = [Decimal]$Request.externalBalance + [Decimal]$Request.unpaidAmount
         Payouts     = @($UnpaidRequest.result.payments | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()
     }
@@ -38,9 +38,9 @@ if ($Platform_Version -eq 2) {
     $UnpaidRequest = [PSCustomObject]@{}
 
     try {
-        $Sum = 0
+        [Decimal]$Sum = 0
         $UnpaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)" -cycletime ($Config.BalanceUpdateMinutes*60)
-        $UnpaidRequest.result.stats.balance | Foreach {$Sum += $_}
+        $UnpaidRequest.result.stats.balance | Foreach {$Sum += [Decimal]$_}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -50,11 +50,11 @@ if ($Platform_Version -eq 2) {
 
     $PaidRequest = [PSCustomObject]@{}
 
-    $SumPaid = 0
+    $SumPaid = [Decimal]0
     if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
         try {
             $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($PoolConfig.API_ID)&key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
-            @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$SumPaid += $PaidRequest.result.$_}
+            @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$SumPaid += [Decimal]$PaidRequest.result.$_}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -65,7 +65,7 @@ if ($Platform_Version -eq 2) {
         Caption     = "$($Name) (BTC)"
         Currency    = "BTC"
         Balance     = $Sum
-        Pending     = 0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
+        Pending     = [Decimal]0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
         Total       = $Sum
         Payouts     = @($UnpaidRequest.result.payments | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()
@@ -75,7 +75,7 @@ if ($Platform_Version -eq 2) {
         Info        = "Paid"
         Currency    = "BTC"
         Balance     = $SumPaid
-        Pending     = 0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
+        Pending     = [Decimal]0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
         Total       = $SumPaid
         Payouts     = @()
         LastUpdated = (Get-Date).ToUniversalTime()

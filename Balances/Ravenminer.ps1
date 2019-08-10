@@ -31,10 +31,10 @@ if (-not $Success) {
         else {
             $Request = [PSCustomObject]@{
                 "currency" = "RVN"
-                "balance" = [Double]($Values | Select-Object -Index 1).Value
-                "unsold"  = [Double]($Values | Select-Object -Index 0).Value
-                "unpaid"  = [Double]($Values | Select-Object -Index 2).Value                
-                "total"  = [Double]($Values | Select-Object -Index 4).Value
+                "balance" = [Decimal]($Values | Select-Object -Index 1).Value
+                "unsold"  = [Decimal]($Values | Select-Object -Index 0).Value
+                "unpaid"  = [Decimal]($Values | Select-Object -Index 2).Value                
+                "total"  = [Decimal]($Values | Select-Object -Index 4).Value
             }
         }
     }
@@ -56,12 +56,12 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 [PSCustomObject]@{
         Caption     = "$($Name) (RVN)"
         Currency    = $Request.currency
-        Balance     = $Request.balance
-        Pending     = $Request.unsold
-        Total       = $Request.unpaid
-        Paid        = $Request.total - $Request.unpaid
-        Paid24h     = $Request.paid24h
-        Earned      = $Request.total
+        Balance     = [Decimal]$Request.balance
+        Pending     = [Decimal]$Request.unsold
+        Total       = [Decimal]$Request.unpaid
+        Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
+        Paid24h     = [Decimal]$Request.paid24h
+        Earned      = [Decimal]$Request.total
         Payouts     = @($Request.payouts | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()
 }

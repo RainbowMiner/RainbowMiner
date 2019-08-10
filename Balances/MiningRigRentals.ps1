@@ -17,11 +17,11 @@ $Request.PSObject.Properties.Name | Foreach-Object {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($_))"
         Currency    = $_
-        Balance     = [Double]$Request.$_.confirmed
-        Pending     = [Double]$Request.$_.unconfirmed
-        Total       = [Double]$Request.$_.confirmed + [Double]$Request.$_.unconfirmed
-        Paid        = 0
-        Earned      = 0
+        Balance     = [Decimal]$Request.$_.confirmed
+        Pending     = [Decimal]$Request.$_.unconfirmed
+        Total       = [Decimal]$Request.$_.confirmed + [Decimal]$Request.$_.unconfirmed
+        Paid        = [Decimal]0
+        Earned      = [Decimal]0
         Payouts     = @()
         LastUpdated = (Get-Date).ToUniversalTime()
      }

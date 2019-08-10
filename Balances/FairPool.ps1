@@ -35,7 +35,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     try {
         #$Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/poolStats" -tag $Name
         #$Divisor = $Pool_Request.config.coinUnits
-        $Divisor = 1e12
+        $Divisor = [Decimal]1e12
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).fairpool.xyz/api/stats?login=$(Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.')" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if ($Request.method -ne "stats" -or -not $Divisor) {
@@ -44,11 +44,11 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 Currency    = $Pool_Currency
-                Balance     = $Request.balance / $Divisor
-                Pending     = $Request.unconfirmed / $Divisor
-                Total       = ($Request.balance + $Request.unconfirmed) / $Divisor
-                Paid        = $Request.paid / $Divisor
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                Balance     = [Decimal]$Request.balance / $Divisor
+                Pending     = [Decimal]$Request.unconfirmed / $Divisor
+                Total       = ([Decimal]$Request.balance + [Decimal]$Request.unconfirmed) / $Divisor
+                Paid        = [Decimal]$Request.paid / $Divisor
+                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

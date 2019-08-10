@@ -25,10 +25,10 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Pool_Currency))"
                 Currency    = $Pool_Currency
-                Balance     = [double]$Request.miner.balances.confirmed
-                Pending     = [double]$Request.miner.balances.unconfirmed
-                Total       = [double]$Request.miner.balances.confirmed + [double]$Request.miner.balances.unconfirmed
-                Paid        = [double]$Request.miner.balances.paid
+                Balance     = [Decimal]$Request.miner.balances.confirmed
+                Pending     = [Decimal]$Request.miner.balances.unconfirmed
+                Total       = [Decimal]$Request.miner.balances.confirmed + [Decimal]$Request.miner.balances.unconfirmed
+                Paid        = [Decimal]$Request.miner.balances.paid
                 Earned      = 0
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()

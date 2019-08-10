@@ -39,10 +39,10 @@ $Request.getuserallbalances.data | Foreach-Object {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($Currency))"
         Currency    = $Currency
-        Balance     = $_.confirmed
-        Pending     = $_.unconfirmed + $_.ae_confirmed + $_.ae_unconfirmed + $_.exchange
-        Total       = $_.confirmed + $_.unconfirmed + $_.ae_confirmed + $_.ae_unconfirmed + $_.exchange
-        Paid        = 0
+        Balance     = [Decimal]$_.confirmed
+        Pending     = [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+        Total       = [Decimal]$_.confirmed + [Decimal]$_.unconfirmed + [Decimal]$_.ae_confirmed + [Decimal]$_.ae_unconfirmed + [Decimal]$_.exchange
+        Paid        = [Decimal]0
         Lastupdated = (Get-Date).ToUniversalTime()
     }
 }

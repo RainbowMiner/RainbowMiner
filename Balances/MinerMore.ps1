@@ -34,10 +34,10 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties.Name
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
                 Currency    = $Request.currency
-                Balance     = $Request.balance
-                Pending     = 0
-                Total       = $Request.balance
-                Paid        = $Request.total_paid
+                Balance     = [Decimal]$Request.balance
+                Pending     = [Decimal]0
+                Total       = [Decimal]$Request.balance
+                Paid        = [Decimal]$Request.total_paid
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

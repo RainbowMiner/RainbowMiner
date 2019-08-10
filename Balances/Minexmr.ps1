@@ -7,7 +7,7 @@ $Pool_CoinName  = "Monero"
 $Pool_Algorithm_Norm = Get-Algorithm "Monero"
 $Pool_Fee       = 1.0
 
-$coinUnits      = 1e12
+$coinUnits      = [Decimal]1e12
 
 if (-not $Config.Pools.$Name.Wallets.$Pool_Currency -and -not $InfoOnly) {return}
 
@@ -24,11 +24,11 @@ try {
         [PSCustomObject]@{
             Caption     = "$($Name) ($Pool_Currency)"
             Currency    = $Pool_Currency
-            Balance     = $Request.stats.balance / $coinUnits
-            Pending     = $Pending
-            Total       = $Request.stats.balance / $coinUnits + $Pending
-            Paid        = $Request.stats.paid / $coinUnits
-            Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
+            Balance     = [Decimal]$Request.stats.balance / $coinUnits
+            Pending     = [Decimal]$Pending
+            Total       = [Decimal]$Request.stats.balance / $coinUnits + [Decimal]$Pending
+            Paid        = [Decimal]$Request.stats.paid / $coinUnits
+            Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
             LastUpdated = (Get-Date).ToUniversalTime()
         }
     }

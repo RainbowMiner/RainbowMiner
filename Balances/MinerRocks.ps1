@@ -38,7 +38,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
 
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats" -tag $Name
-        $Divisor = $Pool_Request.config.coinUnits
+        $Divisor = [Decimal]$Pool_Request.config.coinUnits
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).miner.rocks/api/stats_address?address=$(Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.')" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60)
         if (-not $Request.stats -or -not $Divisor) {
@@ -47,11 +47,11 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 Currency    = $Pool_Currency
-                Balance     = $Request.stats.balance / $Divisor
-                Pending     = $Request.stats.pendingIncome / $Divisor
-                Total       = $Request.stats.balance / $Divisor + $Request.stats.pendingIncome / $Divisor
-                Paid        = $Request.stats.paid / $Divisor
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                Balance     = [Decimal]$Request.stats.balance / $Divisor
+                Pending     = [Decimal]$Request.stats.pendingIncome / $Divisor
+                Total       = [Decimal]$Request.stats.balance / $Divisor + [Decimal]$Request.stats.pendingIncome / $Divisor
+                Paid        = [Decimal]$Request.stats.paid / $Divisor
+                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

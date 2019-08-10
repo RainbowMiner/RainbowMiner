@@ -37,10 +37,10 @@ $Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.co
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
                 Currency    = $_.Name
-                Balance     = $Request.pendingBalance
-                Pending     = 0
-                Total       = $Request.pendingBalance
-                Paid        = $Request.totalPaid
+                Balance     = [Decimal]$Request.pendingBalance
+                Pending     = [Decimal]0
+                Total       = [Decimal]$Request.pendingBalance
+                Paid        = [Decimal]$Request.totalPaid
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

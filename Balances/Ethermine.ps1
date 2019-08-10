@@ -20,14 +20,15 @@ $API_Hosts.PSObject.Properties | Where-Object {$Config.Pools.$Name.Wallets."$($_
         if ($Request.status -ne "OK") {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "            
         } else {
+			$Divisor = [Decimal]1e18
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
                 Currency    = $_.Name
-                Balance     = [double]$Request.data.currentStatistics.unpaid/1e18
-                Pending     = [double]$Request.data.currentStatistics.unconfirmed/1e18
-                Total       = [double]$Request.data.currentStatistics.unpaid/1e18 + [double]$Request.data.currentStatistics.unconfirmed/1e18
-                Paid        = 0
-                Earned      = 0
+                Balance     = [Decimal]$Request.data.currentStatistics.unpaid/$Divisor
+                Pending     = [Decimal]$Request.data.currentStatistics.unconfirmed/$Divisor
+                Total       = [Decimal]$Request.data.currentStatistics.unpaid/$Divisor + [Decimal]$Request.data.currentStatistics.unconfirmed/$Divisor
+                Paid        = [Decimal]0
+                Earned      = [Decimal]0
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

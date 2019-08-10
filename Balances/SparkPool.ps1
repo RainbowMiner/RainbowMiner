@@ -29,11 +29,11 @@ $Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";
                 Caption     = "$($Name) ($($_.currency))"
                 Info        = "$(if ($_.currency -ne $Pool_Currency) {"$($_.currency)"})"
                 Currency    = $Pool_Currency
-                Balance     = $Request.data.balance
-                Pending     = 0
-                Total       = $Request.data.balance
-                Paid24h     = 0
-                Paid        = $Request.data.totalPaid
+                Balance     = [Decimal]$Request.data.balance
+                Pending     = [Decimal]0
+                Total       = [Decimal]$Request.data.balance
+                Paid24h     = [Decimal]0
+                Paid        = [Decimal]$Request.data.totalPaid
                 Payouts     = @()
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

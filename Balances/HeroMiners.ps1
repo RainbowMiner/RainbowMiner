@@ -42,7 +42,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
 
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
-        $Divisor = $Pool_Request.config.coinUnits
+        $Divisor = [Decimal]$Pool_Request.config.coinUnits
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:")))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
         if (-not $Request.stats -or -not $Divisor) {
@@ -52,11 +52,11 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 Currency    = $Pool_Currency
-                Balance     = $Request.stats.balance / $Divisor
-                Pending     = $Pending
-                Total       = $Request.stats.balance / $Divisor + $Pending
-                Paid        = $Request.stats.paid / $Divisor
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                Balance     = [Decimal]$Request.stats.balance / $Divisor
+                Pending     = [Decimal]$Pending
+                Total       = [Decimal]$Request.stats.balance / $Divisor + [Decimal]$Pending
+                Paid        = [Decimal]$Request.stats.paid / $Divisor
+                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }
