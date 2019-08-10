@@ -2389,7 +2389,7 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member L3CacheSize   ([int]((($Data | Where-Object {$_ -match 'cache size'} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+")[0].Trim())
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed ([int](($Data | Where-Object {$_ -match 'cpu MHz'}    | Select-Object -First 1) -split ":")[1].Trim())
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    (($Data | Where-Object {$_ -like "flags*"})[0] -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
+                    (($Data | Where-Object {$_ -like "flags*"} | Select-Object -First 1) -split ":")[1].Trim() -split "\s+" | ForEach-Object {$Global:GlobalCPUInfo.Features."$($_ -replace "[^a-z0-9]+")" = $true}
                 }
             }
 
