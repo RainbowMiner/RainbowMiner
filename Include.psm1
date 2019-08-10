@@ -2399,7 +2399,7 @@ function Get-Device {
                 }
             }
 
-            $Global:GlobalCPUInfo.Vendor = if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()}
+            $Global:GlobalCPUInfo | Add-Member Vendor $(if ($GPUVendorLists.INTEL -icontains $Global:GlobalCPUInfo.Manufacturer){"INTEL"}else{$Global:GlobalCPUInfo.Manufacturer.ToUpper()})
 
             if ($IsLinux -and $Global:GlobalCPUInfo.PhysicalCPUs -gt 1) {
                 $Global:GlobalCPUInfo.Cores   *= $Global:GlobalCPUInfo.PhysicalCPUs
