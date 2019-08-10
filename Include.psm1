@@ -630,8 +630,6 @@ function Set-Total {
         [Switch]$Quiet = $false
     )
 
-    $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
-
     $Path0 = "Stats\Totals"
     $Path = "$Path0\$($Miner.Pool[0])_Total.txt"
 
@@ -652,7 +650,7 @@ function Set-Total {
         $Stat.Updated   = $Updated
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Totals file ($Name) is corrupt and will be reset. "}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     Pool     = $Miner.Pool[0]
                     Duration = $Duration.TotalMinutes
@@ -662,6 +660,127 @@ function Set-Total {
                     Started  = $Updated
                     Updated  = $Updated
                 }
+    }
+
+    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+    $Stat | ConvertTo-Json | Set-Content $Path
+}
+
+function Set-Balance {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        $Balance,
+        [Parameter(Mandatory = $false)]
+        [DateTime]$Updated = (Get-Date),
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
+    )
+
+    $Updated_UTC = $Updated.ToUniversalTime()
+
+    $Name = "$($Balance.Name)_$($Balance.Currency)_Balance"
+
+    $Path0 = "Stats\Balances"
+    $Path = "$Path0\$($Name).txt"
+
+    $Stat = Get-Content $Path -ErrorAction Ignore -Raw
+
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+
+        $Stat = [PSCustomObject]@{
+                    Balance  = [Double]$Stat.Balance
+                    Paid     = [Double]$Stat.Paid
+                    Earnings = [Double]$Stat.Earnings
+                    Earnings_1h   = [Double]$Stat.Earnings_1h
+                    Earnings_1d   = [Double]$Stat.Earnings_1d
+                    Earnings_1w   = [Double]$Stat.Earnings_1w
+                    Earnings_Avg  = [Double]$Stat.Earnings_Avg
+                    Last_Earnings = [Array]$Stat.Last_Earnings
+                    Started  = [DateTime]$Stat.Started
+                    Updated  = [DateTime]$Stat.Updated
+        }
+
+        $Earnings = $Balance.Total - $Stat.Balance + $Balance.Paid - $Stat.Paid
+
+        if ($Earnings -gt 0) {
+            $Stat.Total     = $Balance.Total
+            $Stat.Paid      = $Balance.Paid
+            $Stat.Earnings += $Earnings
+            $Stat.Updated   = $Updated_UTC
+
+            $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
+
+            $Rate = [double]$Session.Rates."$($Balance.Currency)"
+            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+            
+            $CsvLine = [PSCustomObject]@{
+                Date      = $Updated
+                Date_UTC  = $Updated_UTC
+                PoolName  = $Balance.Name
+                Currency  = $Balance.Currency
+                Rate      = $Rate
+                Total     = $Stat.Total
+                Paid      = $Stat.Paid
+                Earnings  = $Stat.Earnings
+                Value     = $Earnings
+                Total_Sat = if ($Rate -gt 0) {[int64]($Stat.Total / $Rate * 1e8)} else {0}
+                Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
+                Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
+                Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
+            }
+            $CsvLine | Export-Csv "$($Path0)\Earnings_Localized.csv" -NoTypeInformation -Append -ErrorAction Ignore
+            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+            $CsvLine | Export-Csv "$($Path0)\Earnings.csv" -NoTypeInformation -Append -ErrorAction Ignore
+        }
+
+        $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
+
+        $Stat.Earnings_1h = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1d = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1w = ($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
+
+        if ($Stat.Earnings_1w) {
+            $Duration = ($Updated_UTC - $Stat.Last_Earnings[0].Date).TotalDays
+            if ($Duration -gt 1) {
+                $Stat.Earnings_Avg = ($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration
+            } else {
+                $Stat.Earnings_Avg = $Stat.Earnings_1d
+            }
+        } else {
+            $Stat.Earnings_Avg = 0
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
+        $Stat = [PSCustomObject]@{
+                    Balance  = $Balance.Total
+                    Paid     = $Balance.Paid
+                    Earnings = 0
+                    Earnings_1h   = 0
+                    Earnings_1d   = 0
+                    Earnings_1w   = 0
+                    Earnings_Avg  = 0
+                    Last_Earnings = @()
+                    Started  = $Updated_UTC
+                    Updated  = $Updated_UTC
+                    Duration = New-TimeSpan -Seconds 0
+                }
+    }
+
+    $Stat = [PSCustomObject]@{
+                Balance  = [Decimal]$Stat.Balance
+                Paid     = [Decimal]$Stat.Paid
+                Earnings = [Decimal]$Stat.Earnings
+                Earnings_1h   = [Decimal]$Stat.Earnings_1h
+                Earnings_1d   = [Decimal]$Stat.Earnings_1d
+                Earnings_1w   = [Decimal]$Stat.Earnings_1w
+                Earnings_Avg  = [Decimal]$Stat.Earnings_Day
+                Last_Earnings = [Array]$Stat.Last_Earnings
+                Started  = [DateTime]$Stat.Started
+                Updated  = [DateTime]$Stat.Updated
+                Duration = [String]$Stat.Duration
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
