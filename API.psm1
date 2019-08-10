@@ -362,6 +362,37 @@
                     $ContentFileName = "totals_$(Get-Date -Format "yyyy-MM-dd_HHmmss").txt"
                     Break
                 }
+                "/earnings" {
+                    $Data = ""
+                    if (Test-Path "Stats\Balances\Earnings.csv") {
+                        $Data = ConvertTo-Json @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
+                            [PSCustomObject]@{
+                                Date = ([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")
+                                Date_UTC = ([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")
+                                PoolName = $_.PoolName
+                                Currency = $_.Currency
+                                Balance  = [Double]$_.Balance
+                                Paid     = [Double]$_.Paid
+                                Earnings = [Double]$_.Earnings
+                                Value    = [Double]$_.Value
+                                Balance_sat = [int64]$_.Balance_sat
+                                Paid_sat = [int64]$_.Paid_sat
+                                Earnings_sat = [int64]$_.Earnings_sat
+                                Value_sat = [int64]$_.Value_sat
+                            }
+                        } | Select-Object) -Depth 10
+                    }
+                    Break
+                }
+                "/earningscsv" {
+                    $Data = ""
+                    if (Test-Path "Stats\Balances\Earnings_Localized.csv") {
+                        $Data = Get-Content "Stats\Balances\Earnings_Localized.csv" -Raw
+                    }
+                    $ContentType = "text/csv"
+                    $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
+                    Break
+                }
                 "/poolstats" {
                     $Data = ConvertTo-Json @(Get-Stat -Pools | Select-Object)
                     Break
@@ -375,7 +406,7 @@
                     Break
                 }
                 "/balances" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Select-Object) -Depth 10
                     Break
                 }
                 "/payouts" {

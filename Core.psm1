@@ -919,12 +919,18 @@ function Invoke-Core {
         if ($Session.RoundCounter -eq 0) {Write-Host "Loading balance modules .."}
 
         $BalancesData = Get-Balance -Config $(if ($Session.IsDonationRun) {$Session.UserConfig} else {$Session.Config}) -Refresh $RefreshBalances -Details $Session.Config.ShowPoolBalancesDetails
-        if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
-        else {$API.Balances = $BalancesData | ConvertTo-Json -Depth 10}
 
-        if ($RefreshBalances) {
+        if (-not $BalancesData) {$Session.Updatetracker.Balances = 0}
+        else {
             $BalancesData_DateTime = Get-Date
-            $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {Set-Balance $_ -Updated $BalancesData_DateTime}
+            $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {
+                $Balance = $_
+                $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
+                $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "Earnings"} | Foreach-Object {
+                    $Balance | Add-Member $_ $Earnings.$_ -Force
+                }
+            }
+            $API.Balances = $BalancesData | ConvertTo-Json -Depth 10
         }
     }
 
