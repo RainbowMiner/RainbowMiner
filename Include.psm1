@@ -705,7 +705,7 @@ function Set-Balance {
         $Earnings = $Balance.Total - $Stat.Balance + $Balance.Paid - $Stat.Paid
 
         if ($Earnings -gt 0) {
-            $Stat.Total     = $Balance.Total
+            $Stat.Balance   = $Balance.Total
             $Stat.Paid      = $Balance.Paid
             $Stat.Earnings += $Earnings
             $Stat.Updated   = $Updated_UTC
@@ -721,11 +721,11 @@ function Set-Balance {
                 PoolName  = $Balance.Name
                 Currency  = $Balance.Currency
                 Rate      = $Rate
-                Total     = $Stat.Total
+                Balance   = $Stat.Balance
                 Paid      = $Stat.Paid
                 Earnings  = $Stat.Earnings
                 Value     = $Earnings
-                Total_Sat = if ($Rate -gt 0) {[int64]($Stat.Total / $Rate * 1e8)} else {0}
+                Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
                 Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
                 Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
                 Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
@@ -765,7 +765,6 @@ function Set-Balance {
                     Last_Earnings = @()
                     Started  = $Updated_UTC
                     Updated  = $Updated_UTC
-                    Duration = New-TimeSpan -Seconds 0
                 }
     }
 
@@ -780,7 +779,6 @@ function Set-Balance {
                 Last_Earnings = [Array]$Stat.Last_Earnings
                 Started  = [DateTime]$Stat.Started
                 Updated  = [DateTime]$Stat.Updated
-                Duration = [String]$Stat.Duration
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
