@@ -1,0 +1,51 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navocprofiles" class="h2">Overclocking Profiles</h1>
+</div>
+<p>All overclocking profiles, defined in ocprofiles.config.txt</p>
+<table id="ocprofiles" class="table"
+  data-toggle="table"
+  data-url="/ocprofiles"
+  data-response-handler="formatOCProfiles"
+  data-filter-control="true"
+  data-filter-show-clear="true"
+  data-sort-order="asc"
+  data-sort-name="Name"
+  data-cache="false"
+  data-show-columns="true"
+  data-show-toggle="true"
+  data-show-refresh="true"
+  data-icons-prefix="fa"
+  data-icons="icons"
+  data-detail-view="true"
+  data-detail-formatter="detailFormatter"
+>
+  <thead>
+      <tr>
+          <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true" data-title-tooltip="The name, Rainbowminer uses to identify this profile">Profile</th>
+          <th data-field="Device" data-sortable="true" data-filter-control="select" data-filter-strict-search="true" data-title-tooltip="Device (name, pcie, id) that profile applies to">Device</th>
+          <th data-field="tPowerLimit" data-sortable="true" data-align="right" data-title-tooltip="Powerlimit %">Power</th>
+          <th data-field="tClockCore" data-sortable="true" data-align="right" data-title-tooltip="GPU core clock boost in MHz">Core</th>
+          <th data-field="tClockMem" data-sortable="true" data-align="right" data-title-tooltip="Memory clock boost in MHz">Memory</th>
+          <th data-field="tLockVoltagePoint" data-sortable="true" data-align="right" data-title-tooltip="Lock voltage point">LockVoltage</th>
+          <th data-field="tThermalLimit" data-sortable="true" data-align="right" data-title-tooltip="Thermal limit temperature in °C">Temp.</th>
+      </tr>
+  </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+  function formatOCProfiles(data) {
+  // This function can alter the returned data before building the table, formatting it in a way
+  // that is easier to display and manipulate in a table
+      $.each(data, function (index, item) {
+          item.tPowerLimit = typeof (item.PowerLimit) !== "undefined" && item.PowerLimit? item.PowerLimit + ' %' : '-'
+          item.tThermalLimit = typeof (item.ThermalLimit) !== "undefined" && item.ThermalLimit ? item.ThermalLimit + ' °C' : '-'
+          item.tClockCore = typeof (item.CoreClockBoost) !== "undefined" && item.CoreClockBoost ? item.CoreClockBoost : '*'
+          item.tClockMem = typeof (item.MemoryClockBoost) !== "undefined" && item.MemoryClockBoost ? item.MemoryClockBoost : '*'
+          item.tLockVoltagePoint = typeof (item.LockVoltagePoint) !== "undefined" && item.LockVoltagePoint ? item.LockVoltagePoint : '*'
+      });
+    return data;
+}
+</script>
+<!--#include file="/parts/foot.html" -->
