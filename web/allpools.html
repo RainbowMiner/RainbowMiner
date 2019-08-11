@@ -50,6 +50,7 @@
         $.each(data, function (index, item) {
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
             item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
+            if (typeof item.tCoin == "undefined" || item.tCoin == null) { item.tCoin = "" }
         });
         return data;
     }
