@@ -277,7 +277,7 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json $API.Config.OCProfiles
+                    $Data = ConvertTo-Json @($API.Config.OCProfiles.PSObject.Properties | Foreach-Object {$_.Value | Add-Member -NotePropertyMembers @{Name=($_.Name -replace "-.+$");Device=$(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})} -Force -PassThru} | Select-Object)
                     Break
                 }
                 "/downloadlist" {
