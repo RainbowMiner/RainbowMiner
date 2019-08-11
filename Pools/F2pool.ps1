@@ -32,6 +32,8 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
 
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_SSL = $Pool_Algorithm_Norm -match "Equihash"
+    $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
+    if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
 
     if (-not $InfoOnly) {
         $Divisor  = Switch($_.scale) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
@@ -44,7 +46,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
     foreach($Region in $_.region) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Request.data.name
+            CoinName      = $Pool_CoinName
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live

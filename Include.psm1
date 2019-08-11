@@ -256,7 +256,7 @@ function Set-UnprofitableAlgos {
 
 function Get-CoinSymbol {
     [CmdletBinding()]
-    param($CoinName = "Bitcoin",[Switch]$Silent)
+    param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
@@ -274,7 +274,13 @@ function Get-CoinSymbol {
         [hashtable]$Global:GlobalCoinNames = @{}
         $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
     }
-    if (-not $Silent) {$Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]}
+    if (-not $Silent) {
+        if ($Reverse) {
+            (Get-Culture).TextInfo.ToTitleCase("$($Global:GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+        } else {
+            $Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+        }
+    }
 }
 
 function Update-Rates {
