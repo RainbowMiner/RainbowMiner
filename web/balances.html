@@ -121,7 +121,7 @@
 <script type="text/javascript">
 
 function formatPrices(data) {
-    return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(10);
+    return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(8);
 }
 
 function formatPricesBTC(data) {
