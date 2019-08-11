@@ -957,15 +957,16 @@ function Invoke-Core {
     $Session.AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Session.AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Session.AllPools | Where-Object Name -EQ $_}) | Where-Object {
         $Pool = $_
         $Pool_Name = $Pool.Name
+        $Pool_Algo = @($Pool.Algorithm)
+        if ($Pool.CoinSymbol) {$Pool_Algo += "$($Pool.Algorithm)-$($Pool.CoinSymbol)"}
         -not (
                 (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Session.Config.Algorithm.Count -and -not (Compare-Object @($Session.Config.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object @($Session.Config.ExcludeAlgorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Global -and $Session.UnprofitableAlgos.Global.Count -and (Compare-Object @($Session.UnprofitableAlgos.Global | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Pools.$Pool_Name -and $Session.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object @($Session.UnprofitableAlgos.Pools.$Pool_Name | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Coins.$Pool_Name -and $Session.UnprofitableAlgos.Coins.$Pool_Name.Count -and $Pool.CoinSymbol -and @($Session.UnprofitableAlgos.Coins.$Pool_Name) -icontains $Pool.CoinSymbol) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Algorithms -and $Session.UnprofitableAlgos.Algorithms.Count -and (Compare-Object @($Session.UnprofitableAlgos.Algorithms | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Pools.$Pool_Name -and $Session.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object @($Session.UnprofitableAlgos.Pools.$Pool_Name | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
                 ($Session.Config.ExcludeCoin.Count -and $Pool.CoinName -and @($Session.Config.ExcludeCoin) -icontains $Pool.CoinName) -or
                 ($Session.Config.ExcludeCoinSymbol.Count -and $Pool.CoinSymbol -and @($Session.Config.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol) -or
                 ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Session.Config.Pools.$Pool_Name.Algorithm | Select-Object) @($Pool.AlgorithmList | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or

@@ -209,46 +209,17 @@ function Set-UnprofitableAlgos {
         $Session.UnprofitableAlgos = try{Get-Content ".\Data\unprofitable.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
     }
 
-    if (-not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
+    if (-not $Session.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
         $Key = Get-ContentDataMD5hash $Session.UnprofitableAlgos
         try {
-            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable.json" -cycletime 3600 -Jobkey "unprofitable"
+            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Unprofitable algo API failed. "
         }
-        if ($Request -and $Request.Count -gt 10) {
-            $Session.UnprofitableAlgos = [PSCustomObject]@{
-                "Global" = @($Request | Where-Object {$_ -notmatch ':' -and $_ -notmatch '>'} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
-                "Pools"  = [PSCustomObject]@{}
-                "Coins"  = [PSCustomObject]@{}
-            }
-            $AddPools = [PSCustomObject]@{}
-            $Request | Where-Object {$_ -match ':'} | Foreach-Object {
-                $a = $_ -split ':'
-                $pool = $a[0]
-                $algo = Get-Algorithm $a[1]
-                if ($AddPools.$pool -eq $null) {$AddPools | Add-Member $pool @() -Force}
-                if ($AddPools.$pool -inotcontains $algo) {$AddPools.$pool += $algo}
-            }
-            $AddPools.PSObject.Properties.Name | Sort-Object | Foreach-Object {
-                $pool = $_
-                $Session.UnprofitableAlgos.Pools | Add-Member $pool @($AddPools.$pool | Sort-Object) -Force
-            }
-            $AddCoins = [PSCustomObject]@{}
-            $Request | Where-Object {$_ -match '>'} | Foreach-Object {
-                $a = $_ -split '>'
-                $pool = $a[0]
-                $coin = $a[1].ToUpper()
-                if ($AddCoins.$pool -eq $null) {$AddCoins | Add-Member $pool @() -Force}
-                if ($AddCoins.$pool -inotcontains $coin) {$AddCoins.$pool += $coin}
-            }
-            $AddCoins.PSObject.Properties.Name | Sort-Object | Foreach-Object {
-                $pool = $_
-                $Session.UnprofitableAlgos.Coins | Add-Member $pool @($AddCoins.$pool | Sort-Object) -Force
-            }
-
+        if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
+            $Session.UnprofitableAlgos = $Request
             Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Session.UnprofitableAlgos -MD5hash $Key > $null
         }
     }
