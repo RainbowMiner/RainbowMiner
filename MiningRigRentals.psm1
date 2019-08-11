@@ -151,10 +151,25 @@ param(
             "cuckoocycleo"      {"Cuckaroo29"}
             "cuckoocycle29swap" {"Cuckaroo29s"}
             "cuckoocycle31"     {"Cuckatoo31"}
+            "equihash1505g"     {"Equihash25x5"}
             "hashimotos"        {"Ethash"}
             default             {$Name}
         }
     )
+}
+
+function Get-MiningRigRentalCoin {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$Name
+)
+    Switch ($Name) {
+            "cuckoocycle"       {"GRIN"}
+            "cuckoocycle29swap" {"SWAP"}
+            "equihash1505g"     {"GRIMM"}
+            default             {""}
+    }
 }
 
 function Get-MiningRigInfo {

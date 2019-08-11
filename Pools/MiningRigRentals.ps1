@@ -126,6 +126,7 @@ foreach ($Worker1 in $Workers) {
         $Pool_RigId = $_.id
         $Pool_Algorithm = $_.type
         $Pool_Algorithm_Norm = Get-MiningRigRentalAlgorithm $_.type
+        $Pool_CoinSymbol = Get-MiningRigRentalCoin $_.type
 
         if ($false) {
             $Pool_Price_Data = ($Pool_Request | Where-Object name -eq $Pool_Algorithm).stats.prices.last_10 #suggested_price
@@ -172,7 +173,7 @@ foreach ($Worker1 in $Workers) {
                 [PSCustomObject]@{
                     Algorithm     = "$Pool_Algorithm_Norm$(if ($Worker1 -ne $Worker) {"-$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"})"
                     CoinName      = if ($_.status.status -eq "rented") {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
-                    CoinSymbol    = ""
+                    CoinSymbol    = $Pool_CoinSymbol
                     Currency      = "BTC"
                     Price         = $Pool_Price
                     StablePrice   = $Stat.Week
