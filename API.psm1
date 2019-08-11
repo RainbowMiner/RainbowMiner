@@ -276,6 +276,10 @@
                     $Data = ConvertTo-Json $API.UserConfig
                     Break
                 }
+                "/ocprofiles" {
+                    $Data = ConvertTo-Json $API.Config.OCProfiles
+                    Break
+                }
                 "/downloadlist" {
                     $Data = ConvertTo-Json @(($API.DownloadList | Select-Object | ConvertFrom-Json) | Select-Object)
                     Break

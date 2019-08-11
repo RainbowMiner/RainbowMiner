@@ -212,7 +212,7 @@ function Set-UnprofitableAlgos {
     if (-not $Session.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
         $Key = Get-ContentDataMD5hash $Session.UnprofitableAlgos
         try {
-            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable"
+            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
