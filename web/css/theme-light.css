@@ -1,6 +1,10 @@
-﻿html,body,.form-control,.sidebar {
+﻿html,body,.form-control,.sidebar,table.table .detail-view,.page-list .btn {
     background: #f8f9fa!important;
     color: #343a40!important;
+}
+
+table.table {
+    background:#fff;
 }
 
 .Running, .Benchmarking {

@@ -24,7 +24,7 @@
       <tr>
           <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
-          <th data-field="CoinName" data-sortable="true" data-filter-control="select">Coin</th>
+          <th data-field="tCoin" data-sortable="true" data-filter-control="select">Coin</th>
           <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
           <th data-field="Hashrate" data-align="right" data-sortable="true" data-formatter="formatHashRate">Hashrate</th>
           <th data-field="BLK" data-align="right" data-sortable="true" data-formatter="formatBLK">TTF (min)</th>
@@ -50,6 +50,7 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
+            item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
         });
         return data;
     }

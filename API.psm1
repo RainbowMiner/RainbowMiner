@@ -388,7 +388,22 @@
                             $ContentType = "text/csv"
                             $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
                         } else {
-                            $Data = ConvertTo-Json $Earnings -Depth 10
+                            $Filter = if ($Parameters.filter) {$Parameters.filter | ConvertFrom-Json}
+                            $Sort   = if ($Parameters.sort) {$Parameters.sort} else {"Date"}
+                            $Order  = $Parameters.order -eq "desc"
+
+                            $TotalNotFiltered = $Earnings.Count
+                            $Earnings = @($Earnings | Where-Object {-not $Filter -or -not (Compare-Object $_ $Filter -Property $Filter.PSObject.Properties.Name | Measure-Object).Count} | Sort-Object -Property $Sort -Descending:$Order | Select-Object)
+                            $Total = $Earnings.Count
+                            if ($Parameters.limit) {
+                                $Earnings = @($Earnings | Select-Object -Skip ([int]$Parameters.offset) -First ([int]$Parameters.limit))
+                            } 
+
+                            $Data = [PSCustomObject]@{
+                                total = $Total
+                                totalNotFiltered = $TotalNotFiltered
+                                rows = $Earnings
+                            } | ConvertTo-Json -Depth 10
                         }
                     }
                     Break

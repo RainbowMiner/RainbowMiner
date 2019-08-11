@@ -1,6 +1,28 @@
-﻿html,body,.form-control,.sidebar,button.btn.btn-default {
+﻿html,body,.form-control,.sidebar,button.btn.btn-default,.page-list .btn {
     background-color: #343a40!important;
     color: #f8f9fa!important;
+}
+
+.page-link {
+    background-color: #343a40;
+    border-color: #454d55;
+    color: #fff;
+}
+
+.page-link.active {
+    background-color: #007bff;
+}
+
+.page-link:hover {
+    background-color: rgba(255,255,255,.075);
+    border-color: #454d55;
+    color: #fff;
+}
+
+.page-item.disabled .page-link {
+    background-color: #343a40;
+    border-color: #454d55;
+    color: #fff;
 }
 
 button.btn.btn-default {
