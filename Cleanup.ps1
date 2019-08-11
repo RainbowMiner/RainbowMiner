@@ -469,6 +469,7 @@ try {
         if (Test-Path ".\Stats\Balances\Earnings_Localized.csv") {
             (Get-Content ".\Stats\Balances\Earnings_Localized.csv" -Raw -ErrorAction Ignore) -replace "`",`"","`"$((Get-Culture).TextInfo.ListSeparator)`"" | Set-Content ".\Stats\Balances\Earnings_Localized.csv" -Force
         }
+        if (Test-Path ".\Data\mrrinfo.json") {Remove-Item ".\Data\mrrinfo.json" -Force -ErrorAction Ignore; $ChangesTotal++}
     }
 
     if ($OverridePoolPenalties) {
