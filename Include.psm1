@@ -220,8 +220,9 @@ function Set-UnprofitableAlgos {
         }
         if ($Request -and $Request.Count -gt 10) {
             $Session.UnprofitableAlgos = [PSCustomObject]@{
-                "Global" = @($Request | Where-Object {$_ -notmatch ':'} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
+                "Global" = @($Request | Where-Object {$_ -notmatch ':' -and $_ -notmatch '>'} | Foreach-Object {Get-Algorithm $_} | Select-Object -Unique | Sort-Object)
                 "Pools"  = [PSCustomObject]@{}
+                "Coins"  = [PSCustomObject]@{}
             }
             $AddPools = [PSCustomObject]@{}
             $Request | Where-Object {$_ -match ':'} | Foreach-Object {
@@ -235,6 +236,19 @@ function Set-UnprofitableAlgos {
                 $pool = $_
                 $Session.UnprofitableAlgos.Pools | Add-Member $pool @($AddPools.$pool | Sort-Object) -Force
             }
+            $AddCoins = [PSCustomObject]@{}
+            $Request | Where-Object {$_ -match '>'} | Foreach-Object {
+                $a = $_ -split '>'
+                $pool = $a[0]
+                $coin = $a[1].ToUpper()
+                if ($AddCoins.$pool -eq $null) {$AddCoins | Add-Member $pool @() -Force}
+                if ($AddCoins.$pool -inotcontains $coin) {$AddCoins.$pool += $coin}
+            }
+            $AddCoins.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+                $pool = $_
+                $Session.UnprofitableAlgos.Coins | Add-Member $pool @($AddCoins.$pool | Sort-Object) -Force
+            }
+
             Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Session.UnprofitableAlgos -MD5hash $Key > $null
         }
     }

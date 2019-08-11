@@ -12,9 +12,10 @@
             </h5>
         </div>
         <div class="card-body">
-            <table id="pools" class="table"
+            <table id="consolidate" class="table"
                    data-toggle="table"
                    data-url="/balances?consolidate=1"
+                   data-response-handler="formatConsolidateResponse"
                    data-filter-control="true"
                    data-filter-show-clear="true"
                    data-sort-order="asc"
@@ -23,6 +24,7 @@
                    data-show-columns="true"
                    data-show-toggle="true"
                    data-show-refresh="true"
+                   data-show-footer="false"
                    data-icons-prefix="fa"
                    data-icons="icons"
                    data-detail-view="true"
@@ -30,7 +32,7 @@
                 <thead>
                     <tr>
                         <th data-field="Name" data-sortable="true" data-filter-control="select">PoolName</th>
-                        <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Earnings</th>
+                        <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Earnings</th>
                         <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">1h Earnings</th>
                         <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">24h Earnings</th>
                         <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">7day Earnings</th>
@@ -53,9 +55,10 @@
             </h5>
         </div>
         <div class="card-body">
-            <table id="pools" class="table"
+            <table id="earnings" class="table"
                    data-toggle="table"
                    data-url="/balances"
+                   data-response-handler="formatEarningsResponse"
                    data-filter-control="true"
                    data-filter-show-clear="true"
                    data-sort-order="asc"
@@ -70,8 +73,8 @@
                    data-detail-formatter="detailFormatter">
                 <thead>
                     <tr>
-                        <th data-field="Name" data-sortable="true" data-filter-control="select">PoolName</th>
-                        <th data-field="Currency" data-sortable="true" data-filter-control="select">Currency</th>
+                        <th data-field="teName" data-sortable="true" data-filter-control="select">PoolName</th>
+                        <th data-field="teCurrency" data-sortable="true" data-filter-control="select">Currency</th>
                         <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPrices">Earnings</th>
                         <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPrices">1h Earnings</th>
                         <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPrices">24h Earnings</th>
@@ -96,9 +99,10 @@
             </h5>
         </div>
         <div class="card-body">
-            <table id="pools" class="table"
+            <table id="earningevents" class="table"
                    data-toggle="table"
                    data-url="/earnings"
+                   data-response-handler="formatEarningeventsResponse"
                    data-filter-control="true"
                    data-filter-show-clear="true"
                    data-sort-order="desc"
@@ -143,6 +147,32 @@
 
     function formatDateStr(data) {
         return typeof data == "undefined" ? "-" : '<nobr>' + data.split(/ /).join('</nobr> <nobr>') + '</nobr>';
+    }
+
+    function formatConsolidateResponse(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+        });
+        return data;
+    }
+
+    function formatEarningsResponse(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+            item.teName = item.Name;
+            item.teCurrency = item.Currency;
+        });
+        return data;
+    }
+
+    function formatEarningeventsResponse(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+        });
+        return data;
     }
 
 </script>
