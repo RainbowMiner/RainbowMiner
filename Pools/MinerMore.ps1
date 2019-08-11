@@ -53,6 +53,16 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
+
+    if ($Pool_Algorithm -eq "equihash") {
+        $Pool_Algorithm = Switch ($Pool_CoinSymbol) {
+            "SAFE" {"Equihash24x7"}
+            "VDL"  {"Equihash24x7"}
+            "XSG"  {"Equihash24x5"}
+            "YEC"  {"Equihash24x7"}
+            default {"Equihash24x7"}
+        }
+    }
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
@@ -97,6 +107,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
+                WTM           = $true
             }
         }
     }
