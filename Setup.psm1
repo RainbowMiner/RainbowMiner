@@ -2421,6 +2421,14 @@ function Start-Setup {
                 try {
                     do {
                         $CoinsActual = Get-Content $ConfigFiles["Coins"].Path | ConvertFrom-Json
+                        $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+
+                        $CoinsToPools = [PSCustomObject]@{}
+                        $CoinsActual.PSObject.Properties.Name | Foreach-Object {
+                            $Coin = $_
+                            $CoinsToPools | Add-Member $Coin @($PoolsActual.PSObject.Properties | Where-Object {$_.Value.$Coin -eq "`$$Coin"} | Select-Object -ExpandProperty Name) -Force
+                        }
+
                         Write-Host " "
                         $p = [console]::ForegroundColor
                         [console]::ForegroundColor = "Cyan"
@@ -2434,7 +2442,8 @@ function Start-Setup {
                             @{Label="PostBlockMining"; Expression={"$($_.Value.PostBlockMining)"}; Align="center"}
                             @{Label="MinProfit%"; Expression={"$($_.Value.MinProfitPercent)"}; Align="center"}
                             @{Label="EAP"; Expression={"$(if (Get-Yes $_.Value.EnableAutoPool) {"Y"} else {"N"})"}; Align="center"}
-                            @{Label="Wallet"; Expression={"$($_.Value.Wallet)"}}
+                            @{Label="Wallet"; Expression={if ($_.Value.Wallet.Length -gt 12) {"$($_.Value.Wallet.SubString(0,5))..$($_.Value.Wallet.SubString($_.Value.Wallet.Length-5,5))"} else {"$($_.Value.Wallet)"}}}
+                            @{Label="Pools"; Expression={"$($CoinsToPools."$($_.Name)" -join ',')"}}
                         )
                         [console]::ForegroundColor = $p
 
@@ -2466,6 +2475,10 @@ function Start-Setup {
                     } until ($Coin_Symbol -ne '')
 
                     if ($Coin_Symbol) {
+
+                        $CoinsPools = @(Get-PoolsInfo "Minable" $Coin_Symbol -AsObjects | Where-Object {-not $PoolsSetup."$($_.Pool)".Autoexchange -or $_.Pool -match "ZergPool"} | Select-Object -ExpandProperty Pool | Sort-Object)
+                        $CoinsPoolsInUse = @($CoinsPools | Where-Object {$CoinsToPools.$Coin_Symbol -icontains $_} | Select-Object)
+
                         $CoinSetupStepsDone = $false
                         $CoinSetupStep = 0
                         [System.Collections.ArrayList]$CoinSetupSteps = @()
@@ -2474,7 +2487,7 @@ function Start-Setup {
                         $CoinConfig = $CoinsActual.$Coin_Symbol.PSObject.Copy()
                         $CoinsDefault.PSObject.Properties.Name | Where {$CoinConfig.$_ -eq $null} | Foreach-Object {$CoinConfig | Add-Member $_ $CoinsDefault.$_ -Force}
 
-                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","minprofitpercent","wallet","enableautopool","comment")) > $null
+                        $CoinSetupSteps.AddRange(@("penalty","minhashrate","minworkers","maxtimetofind","postblockmining","minprofitpercent","wallet","enableautopool","comment","pools")) > $null
                         $CoinSetupSteps.Add("save") > $null
                                         
                         do {
@@ -2513,6 +2526,14 @@ function Start-Setup {
                                     "comment" {
                                         $CoinConfig.Comment = Read-HostString -Prompt "Optionally enter a comment (e.g. name of exchange)" -Default $CoinConfig.Comment -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
+                                    "pools" {
+                                        $CoinsPoolsNotInUse = @($CoinsPools | Where-Object {$CoinsPoolsInUse -inotcontains $_} | Select-Object)
+                                        $p = [console]::ForegroundColor
+                                        [console]::ForegroundColor = "Cyan"
+                                        [PSCustomObject]@{"Pools using $Coin_Symbol"=$($CoinsPoolsInUse -join ', ');"Pools not using $Coin_Symbol"=$($CoinsPoolsNotInUse -join ', ')} | Format-Table -Wrap
+                                        [console]::ForegroundColor = $p
+                                        $CoinsPoolsInUse = Read-HostArray -Prompt "Select pools for $Coin_Symbol" -Default $CoinsPoolsInUse -Valid $CoinsPools | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                    }
                                     "save" {
                                         Write-Host " "
                                         if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
@@ -2527,7 +2548,25 @@ function Start-Setup {
 
                                         Write-Host " "
                                         Write-Host "Changes written to coins configuration. " -ForegroundColor Cyan
-                                                    
+
+                                        $PoolsActualSave = [PSCustomObject]@{}
+                                        $PoolsActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {
+                                            $Pool = $_
+                                            $IsInUse = $CoinsPoolsInUse -icontains $Pool
+                                            if ($IsInUse -or $PoolsActual.$Pool.$Coin_Symbol -eq "`$$Coin_Symbol") {
+                                                $PoolsActualSave | Add-Member $Pool ([PSCustomObject]@{}) -Force
+                                                if ($IsInUse) {
+                                                    $PoolsActualSave.$Pool | Add-Member $Coin_Symbol "`$$Coin_Symbol" -Force
+                                                    $PoolsActualSave.$Pool | Add-Member "$($Coin_Symbol)-Params" "$($PoolsActual.$Pool."$($Coin_Symbol)-Params")" -Force
+                                                }
+                                                $PoolsActual.$Pool.PSObject.Properties | Where-Object {$_.Name -ne $Coin_Symbol -and $_.Name -ne "$($Coin_Symbol)-Params"} | Foreach-Object {$PoolsActualSave.$Pool | Add-Member $_.Name $_.Value -Force}
+                                            } else {
+                                                $PoolsActualSave | Add-Member $Pool ($PoolsActual.$Pool) -Force
+                                            }
+                                        }
+                                        Set-ContentJson -PathToFile $ConfigFiles["Pools"].Path -Data $PoolsActualSave > $null
+                                        Write-Host "Changes written to pools configuration. " -ForegroundColor Cyan
+
                                         $CoinSetupStepsDone = $true
                                     }
                                 }
