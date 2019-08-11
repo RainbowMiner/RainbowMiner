@@ -30,11 +30,11 @@
         <thead>
             <tr>
                 <th data-field="Name" data-sortable="true" data-filter-control="select" data-footer-formatter="formatTotalFooter">PoolName</th>
-                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Earnings</th>
-                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">1h Earnings</th>
-                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">24h Earnings</th>
-                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">7day Earnings</th>
-                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Avg. Earnings</th>
+                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Total</th>
+                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">1 Hour</th>
+                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">24 Hours</th>
+                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">7 Days</th>
+                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Avg.</th>
                 <th data-field="Total" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Balance</th>
                 <th data-field="Paid" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Paid</th>
             </tr>
@@ -67,11 +67,11 @@
             <tr>
                 <th data-field="teName" data-sortable="true" data-filter-control="select">PoolName</th>
                 <th data-field="teCurrency" data-sortable="true" data-filter-control="select">Currency</th>
-                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPrices">Earnings</th>
-                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPrices">1h Earnings</th>
-                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPrices">24h Earnings</th>
-                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPrices">7day Earnings</th>
-                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatPrices">Avg. Earnings</th>
+                <th data-field="Earnings" data-align="right" data-sortable="true" data-formatter="formatPrices">Total</th>
+                <th data-field="Earnings_1h" data-align="right" data-sortable="true" data-formatter="formatPrices">1 Hour</th>
+                <th data-field="Earnings_1d" data-align="right" data-sortable="true" data-formatter="formatPrices">24 Hours</th>
+                <th data-field="Earnings_1w" data-align="right" data-sortable="true" data-formatter="formatPrices">7 Days</th>
+                <th data-field="Earnings_Avg" data-align="right" data-sortable="true" data-formatter="formatPrices">Avg.</th>
                 <th data-field="Started" data-align="right" data-sortable="true" data-formatter="formatDateStr">Started</th>
                 <th data-field="Total" data-align="right" data-sortable="true" data-formatter="formatPrices">Balance</th>
                 <th data-field="Paid" data-align="right" data-sortable="true" data-formatter="formatPrices">Paid</th>
@@ -110,8 +110,8 @@
                 <th data-field="Date" data-align="right" data-sortable="true" data-formatter="formatDateStr">Date</th>
                 <th data-field="PoolName" data-sortable="true" data-filter-control="select">PoolName</th>
                 <th data-field="Currency" data-sortable="true" data-filter-control="select">Currency</th>
-                <th data-field="Value" data-align="right" data-sortable="true" data-formatter="formatPrices">Earning</th>
-                <th data-field="Value_BTC" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Earning in BTC</th>
+                <th data-field="Value" data-align="right" data-sortable="true" data-formatter="formatPrices">Earned</th>
+                <th data-field="Value_BTC" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Earned in BTC</th>
             </tr>
         </thead>
     </table>
@@ -128,9 +128,9 @@ function formatPricesBTC(data) {
     if (typeof data == "undefined" || !data) return "-";
     var value = parseFloat(data);
     var i = Math.floor(Math.log(value) / Math.log(1000));
-    var cm = "", rto = 10;
+    var cm = "", rto = 5;
     if (i < 0) { cm = "m"; value *= 1e3; rto = 5}
-    return value.toFixed(rto).toString() + ' ' + cm;
+    return value.toFixed(rto).toString() + (cm? ' ' + cm : '');
 }
 
 function formatDateStr(data) {
