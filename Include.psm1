@@ -2955,6 +2955,22 @@ function Update-DeviceInformation {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not read power data from CPU"
     }
+
+    $Script:GlobalCachedDevices | Foreach-Object {
+        $ClockMax       = [int]$_.DataMax.Clock
+        $ClockMemMax    = [int]$_.DataMax.ClockMem
+        $TemperatureMax = [int]$_.DataMax.Temperature
+        $FanSpeedMax    = [int]$_.DataMax.FanSpeed
+        $PowerDrawMax   = [decimal]$_.DataMax.PowerDraw
+
+        $_ | Add-Member DataMax ([PSCustomObject]@{
+            Clock       = [Math]::Max($ClockMax,$_.Data.Clock)
+            ClockMem    = [Math]::Max($ClockMax,$_.Data.ClockMem)
+            FanSpeed    = [Math]::Max($FanSpeedMax,$_.Data.FanSpeed)
+            Temperature = [Math]::Max($TemperatureMax,$_.Data.Temperature)
+            PowerDraw   = [Math]::Max($TemperatureMax,$_.Data.PowerDraw)
+        }) -Force
+    }
 }
 
 function Get-CoinName {
