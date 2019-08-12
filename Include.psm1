@@ -5575,6 +5575,7 @@ function Invoke-ReportMinerStatus {
 
     $Profit = 0.0
     $PowerDraw = 0.0
+    $TempAlert = $false
 
     $minerreport = ConvertTo-Json @(
         $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
@@ -5588,6 +5589,30 @@ function Invoke-ReportMinerStatus {
 
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
+
+            $Devices = @()
+            Get-Device $Miner.DeviceName | Foreach-Object {
+                if ($_.Type -eq "GPU") {
+                    if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert=$true}
+                    $Devices += [PSCustomObject]@{
+                        Id    = $_.Type_PlatformId_Index
+                        Name  = $_.Model
+                        Mem   = [int]($_.OpenCL.GlobalMemSize / 1GB)
+                        Temp  = $_.Data.Temperature
+                        Fan   = $_.Data.FanSpeed
+                        Watt  = $_.Data.PowerDraw
+                        Core  = $_.Data.Clock
+                        MemC  = $_.Data.ClockMem
+                        MaxTemp = $_.DataMax.Temperature
+                    }
+                } else {
+                    $Devices += [PSCustomObject]@{
+                        Id    = $_.Type_PlatformId_Index
+                        Name  = $_.Model_Name
+                        Watt  = $_.Data.PowerDraw
+                    }
+                }
+            }
 
             # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
             [PSCustomObject]@{
@@ -5607,9 +5632,10 @@ function Invoke-ReportMinerStatus {
                 Profit         = $Miner.Profit
                 Donator        = $Miner.Donator
                 Benchmarking   = $Miner.Speed -contains $null
+                Devices        = $Devices
             }
         }
-    )
+    ) -Depth 10 -Compress
     
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
@@ -5627,7 +5653,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = (Get-Uptime).TotalSeconds; sysuptime = (Get-Uptime -System).TotalSeconds;data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = (Get-Uptime).TotalSeconds; sysuptime = (Get-Uptime -System).TotalSeconds;maxtemp = $Session.Config.MinerStatusMaxTemp; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
