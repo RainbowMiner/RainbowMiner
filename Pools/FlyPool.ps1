@@ -50,39 +50,41 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $Pool_TSL = if ($Pool_Request.data.minedBlocks) {(Get-UnixTimestamp)-($Pool_Request.data.minedBlocks.time | Measure-Object -Maximum).Maximum}
 
-    foreach($Pool_Region in $_.regions) {
-        $Ssl = $false
-        foreach($Pool_Port in $Pool_Ports) {
-            foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $_.coin
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = 0
-                    StablePrice   = 0
-                    MarginOfError = 0
-                    Protocol      = "stratum+$(if ($Ssl) {"ssl"} else {"tcp"})"
-                    Host          = "$($Pool_Region)$($_.host)"
-                    Port          = $_.port
-                    User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                    Wallet        = $Wallets.$Pool_Currency
-                    Worker        = "{workername:$Worker}"
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $Ssl
-                    Updated       = (Get-Date).ToUniversalTime()
-                    PoolFee       = $_.fee
-                    DataWindow    = $DataWindow
-                    Workers       = $Pool_Request.data.poolStats.workers
-                    Hashrate      = $Stat.HashRate_Live
-                    TSL           = $Pool_TSL
-                    BLK           = $Stat.BlockRate_Average
-                    WTM           = $true
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+    if ($AllowZero -or $Pool_Request.data.poolStats.hashRate -gt 0 -or $InfoOnly) {
+        foreach($Pool_Region in $_.regions) {
+            $Pool_Ssl = $false
+            foreach($Pool_Port in $Pool_Ports) {
+                foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+                    [PSCustomObject]@{
+                        Algorithm     = $Pool_Algorithm_Norm
+                        CoinName      = $_.coin
+                        CoinSymbol    = $Pool_Currency
+                        Currency      = $Pool_Currency
+                        Price         = 0
+                        StablePrice   = 0
+                        MarginOfError = 0
+                        Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                        Host          = "$($Pool_Region)$($_.host)"
+                        Port          = $Pool_Port
+                        User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Pass          = "x"
+                        Region        = $Pool_RegionsTable.$Pool_Region
+                        SSL           = $Pool_Ssl
+                        Updated       = (Get-Date).ToUniversalTime()
+                        PoolFee       = $_.fee
+                        DataWindow    = $DataWindow
+                        Workers       = $Pool_Request.data.poolStats.workers
+                        Hashrate      = $Stat.HashRate_Live
+                        TSL           = $Pool_TSL
+                        BLK           = $Stat.BlockRate_Average
+                        WTM           = $true
+                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                    }
                 }
+                $Pool_Ssl = $true
             }
-            $Ssl = $true
         }
     }
 }
