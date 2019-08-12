@@ -2790,6 +2790,16 @@ function Update-DeviceInformation {
                                     #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                                     Method            = "ab"
                                 }) -Force
+
+                            $DataMax = [PSCustomObject]@{
+                                Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                            }
+
+                            $_ | Add-Member DataMax $DataMax -Force
                         }
                         $DeviceId++
                     }
@@ -2838,6 +2848,16 @@ function Update-DeviceInformation {
                                             PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
                                             Method            = "tdp"
                                         }) -Force
+
+                                    $DataMax = [PSCustomObject]@{
+                                        Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                        ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                        Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                        FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                        PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                    }
+
+                                    $_ | Add-Member DataMax $DataMax -Force
                                 }
                                 $DeviceId++
                             }
@@ -2877,6 +2897,17 @@ function Update-DeviceInformation {
                         if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
                         if ($Data.PowerDraw) {$Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
                         $_ | Add-Member Data $Data -Force
+
+                        $DataMax = [PSCustomObject]@{
+                            Clock       = [Math]::Max([int]$_.DataMax.Clock,$Data.Clock)
+                            ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$Data.ClockMem)
+                            Temperature = [Math]::Max([int]$_.DataMax.Temperature,$Data.Temperature)
+                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$Data.FanSpeed)
+                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$Data.PowerDraw)
+                        }
+
+                        $_ | Add-Member DataMax $DataMax -Force
+
                         $DeviceId++
                     }
                 }
@@ -2885,20 +2916,6 @@ function Update-DeviceInformation {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from NVIDIA"
         }
-
-        $ClockMax       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-        $ClockMemMax    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-        $TemperatureMax = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-        $FanSpeedMax    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-        $PowerDrawMax   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-
-        $_ | Add-Member DataMax ([PSCustomObject]@{
-            Clock       = $ClockMax
-            ClockMem    = $ClockMax
-            FanSpeed    = $FanSpeedMax
-            Temperature = $TemperatureMax
-            PowerDraw   = $TemperatureMax
-        }) -Force
     }
 
     try { #CPU
