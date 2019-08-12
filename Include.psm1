@@ -2885,6 +2885,20 @@ function Update-DeviceInformation {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not read power data from NVIDIA"
         }
+
+        $ClockMax       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+        $ClockMemMax    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+        $TemperatureMax = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+        $FanSpeedMax    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+        $PowerDrawMax   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+
+        $_ | Add-Member DataMax ([PSCustomObject]@{
+            Clock       = $ClockMax
+            ClockMem    = $ClockMax
+            FanSpeed    = $FanSpeedMax
+            Temperature = $TemperatureMax
+            PowerDraw   = $TemperatureMax
+        }) -Force
     }
 
     try { #CPU
@@ -2950,26 +2964,20 @@ function Update-DeviceInformation {
                     }) -Force
                 }
             }
+
+            $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $ClockMax       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                $PowerDrawMax   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+
+                $_ | Add-Member DataMax ([PSCustomObject]@{
+                    Clock       = $ClockMax
+                    PowerDraw   = $TemperatureMax
+                }) -Force
+            }
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Could not read power data from CPU"
-    }
-
-    $Script:GlobalCachedDevices | Foreach-Object {
-        $ClockMax       = [int]$_.DataMax.Clock
-        $ClockMemMax    = [int]$_.DataMax.ClockMem
-        $TemperatureMax = [int]$_.DataMax.Temperature
-        $FanSpeedMax    = [int]$_.DataMax.FanSpeed
-        $PowerDrawMax   = [decimal]$_.DataMax.PowerDraw
-
-        $_ | Add-Member DataMax ([PSCustomObject]@{
-            Clock       = [Math]::Max($ClockMax,$_.Data.Clock)
-            ClockMem    = [Math]::Max($ClockMax,$_.Data.ClockMem)
-            FanSpeed    = [Math]::Max($FanSpeedMax,$_.Data.FanSpeed)
-            Temperature = [Math]::Max($TemperatureMax,$_.Data.Temperature)
-            PowerDraw   = [Math]::Max($TemperatureMax,$_.Data.PowerDraw)
-        }) -Force
     }
 }
 
