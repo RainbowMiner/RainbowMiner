@@ -1010,13 +1010,15 @@ function Invoke-Core {
 
         $Pools_WTM = $Session.AllPools | Where-Object {$_.WTM}
         if (($Pools_WTM | Measure-Object).Count) {
-            $Pools_WTM_Coins = $Pools_WTM | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
+            $Pools_WTM_Coins = $Pools_WTM | Where-Object {$_.Algorithm -notmatch '-'} | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
 
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading WhatToMine " -NoNewline}
             $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Wallets = $Pools_WTM_Coins}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
                 $Pool_WTM = $_
-                $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
+                $Pool_WTM_Algo = @($Pool_WTM.Algorithm)
+                if ($Pool_WTM.Algorithm -match "^Equihash") {$Pool_WTM_Algo += "$($Pool_WTM.Algorithm)-$($Pool_WTM.Coinsymbol)"}
+                $Pools_WTM | Where-Object {$_.Algorithm -in $Pool_WTM_Algo -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
                    $_ | Add-Member Price ($Pool_WTM.Price * $_.PenaltyFactor) -Force
                    $_ | Add-Member StablePrice ($Pool_WTM.StablePrice * $_.PenaltyFactor) -Force
                    $_ | Add-Member MarginOfError $Pool_WTM.MarginOfError -Force

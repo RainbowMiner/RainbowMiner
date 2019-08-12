@@ -14,12 +14,12 @@ try {
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    Write-Log -Level Warn "Pool API1 ($Name) has failed. "
     return
 }
 
 if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Object).Count -lt 10) {
-    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+    Write-Log -Level Warn "Pool API1 ($Name) returned nothing. "
     return
 }
 
@@ -64,12 +64,12 @@ try {
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
+    Write-Log -Level Warn "Pool API2 ($Name) has failed. "
     return
 }
 
 if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Object).Count -lt 10) {
-    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+    Write-Log -Level Warn "Pool API2 ($Name) returned nothing. "
     return
 }
 
@@ -101,10 +101,10 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
             }
             $Pool_CoinRequest | Add-Member btc_revenue24 $Pool_CoinRequest.btc_revenue
 
-            if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit") {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+            if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
             } else {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
             }
 
             [PSCustomObject]@{
@@ -118,3 +118,68 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
         }
     }
 }
+
+if (-not ($Wallets | Measure-Object).Count) {return}
+
+$Pool_Request = @()
+try {
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/minerstat.json" -tag $Name -cycletime (12*3600)
+}
+catch {
+    if ($Error.Count){$Error.RemoveAt(0)}
+    Write-Log -Level Warn "Pool API3 ($Name) has failed. "
+    return
+}
+
+if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -lt 10) {
+    Write-Log -Level Warn "Pool API3 ($Name) returned nothing. "
+    return
+}
+
+$Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
+
+$Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | ForEach-Object {
+    $Pool_Currency   = $_.coin1
+    $Pool_Algorithm  = $_.algo
+    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+    if (($Wallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+
+        $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+
+        $Pool_CoinRequest = [PSCustomObject]@{}
+        try {
+            (Invoke-RestMethodAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins\s+" | Select-Object -Skip 1 | Where-Object {$_ -match "(reward|revenue)"} | Foreach-Object {
+                $cod = $Matches[1]
+                $dat = ([regex]'(?smi)>([\d\.\,]+)\s+([\w]+)<.+for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
+                if ($dat -and $dat.Groups -and $dat.Groups.Count -eq 5) {
+                    $Pool_CoinRequest | Add-Member $cod ([PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}) -Force
+                }
+            }
+        } catch {
+           if ($Error.Count){$Error.RemoveAt(0)} 
+        }
+
+        if ($Pool_CoinRequest.reward -and $Pool_CoinRequest.revenue -and ($Divisor = ConvertFrom-Hash "$($Pool_CoinRequest.reward.fact) $($Pool_CoinRequest.reward.unit)")) {
+            if (-not $Session.Rates."$($Pool_CoinRequest.revenue.currency)") {Update-Rates $Pool_CoinRequest.revenue.currency}
+            $revenue = if ($lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.reward.currency) {
+                            $Pool_CoinRequest.reward.value * $lastSatPrice / 1e8
+                        } elseif ($Session.Rates."$($Pool_CoinRequest.revenue.currency)") {
+                            $Pool_CoinRequest.revenue.value / $Session.Rates."$($Pool_CoinRequest.revenue.currency)"
+                        } else {0}
+            
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinSymbol    = $Pool_Currency
+                Price         = $Stat.Minute_10 #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Updated       = $Stat.Updated
+            }
+        }
+    }
+}
+
