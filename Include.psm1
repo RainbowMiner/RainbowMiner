@@ -1222,6 +1222,17 @@ function Get-ChildItemContent {
     }
 }
 
+function Get-PoolsData {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$PoolName
+    )
+    if (Test-Path ".\Data\Pools\$($PoolName).json") {
+        Get-Content ".\Data\Pools\$($PoolName).json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+    }
+}
+
 function Get-PoolsContent {
     [CmdletBinding()]
     param(

@@ -1,0 +1,283 @@
+[
+    {
+        "symbol":  "B2G",
+        "coin":  "Bitcoiin2Gen",
+        "algo":  "Ethash",
+        "rpc":  "b2g-solo.baikalmine.com",
+        "host":  "b2g-solo.baikalmine.com",
+        "port":  [
+                     3388
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "CLO",
+        "coin":  "Callisto Network",
+        "algo":  "Ethash",
+        "rpc":  "clo-solo.baikalmine.com",
+        "host":  "clo-solo.baikalmine.com",
+        "port":  [
+                     4433
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "DBIX",
+        "coin":  "DubaiCoin",
+        "algo":  "Ethash",
+        "rpc":  "dbix-solo.baikalmine.com",
+        "host":  "dbix-solo.baikalmine.com",
+        "port":  [
+                     3388
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ELLA",
+        "coin":  "Ellaism",
+        "algo":  "Ethash",
+        "rpc":  "ell-solo.baikalmine.com",
+        "host":  "ell.baikalmine.com",
+        "port":  [
+                     3032
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ETHO",
+        "coin":  "Ether-1",
+        "algo":  "Ethash",
+        "rpc":  "etho-solo.baikalmine.com",
+        "host":  "etho-solo.baikalmine.com",
+        "port":  [
+                     1011
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ETH",
+        "coin":  "Ethereum",
+        "algo":  "Ethash",
+        "rpc":  "eth-solo.baikalmine.com",
+        "host":  "eth-solo.baikalmine.com",
+        "port":  [
+                     1145
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ETC",
+        "coin":  "Ethereum Classic",
+        "algo":  "Ethash",
+        "rpc":  "etc-solo.baikalmine.com",
+        "host":  "etc-solo.baikalmine.com",
+        "port":  [
+                     1444
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ETP",
+        "coin":  "Metaverse",
+        "algo":  "Ethash",
+        "rpc":  "etp-solo.baikalmine.com",
+        "host":  "etp-solo.baikalmine.com",
+        "port":  [
+                     5152
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "MIX",
+        "coin":  "Mix",
+        "algo":  "Ethash",
+        "rpc":  "mix-solo.baikalmine.com",
+        "host":  "mix-solo.baikalmine.com",
+        "port":  [
+                     2540
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "MOAC",
+        "coin":  "Moac",
+        "algo":  "Ethash",
+        "rpc":  "moac-solo.baikalmine.com",
+        "host":  "moac-solo.baikalmine.com",
+        "port":  [
+                     4455
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "PIRL",
+        "coin":  "Pirl",
+        "algo":  "Ethash",
+        "rpc":  "pirl-solo.baikalmine.com",
+        "host":  "pirl-solo.baikalmine.com",
+        "port":  [
+                     3344
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "REOSC",
+        "coin":  "REOSC Ecosystem",
+        "algo":  "Ethash",
+        "rpc":  "reosc-solo.baikalmine.com",
+        "host":  "reosc-solo.baikalmine.com",
+        "port":  [
+                     1012
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "RYO",
+        "coin":  "RYO Currency",
+        "algo":  "CryptoNightGPU",
+        "rpc":  "ryo-solo.baikalmine.com",
+        "host":  "ryo-solo.baikalmine.com",
+        "port":  [
+                     5151
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "TEO",
+        "coin":  "TrustETH reOrigin",
+        "algo":  "TETHashV1",
+        "rpc":  "tao-solo.baikalmine.com",
+        "host":  "tao-solo.baikalmine.com",
+        "port":  [
+                     2625
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "TSF",
+        "coin":  "Teslafunds",
+        "algo":  "Ethash",
+        "rpc":  "tesla-solo.baikalmine.com",
+        "host":  "tesla-solo.baikalmine.com",
+        "port":  [
+                     2020
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "GENX",
+        "coin":  "Genesis Network",
+        "algo":  "Equihash 192.7",
+        "rpc":  "genx-solo.baikalmine.com",
+        "host":  "genx-solo.baikalmine.com",
+        "port":  [
+                     1020
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "XWP",
+        "coin":  "Swap",
+        "algo":  "cuckaroo29s",
+        "rpc":  "xwp-solo.baikalmine.com",
+        "host":  "xwp-solo.baikalmine.com",
+        "port":  [
+                     3111
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "YEC",
+        "coin":  "Ycash",
+        "algo":  "Equihash 192.7",
+        "rpc":  "yec-solo.baikalmine.com",
+        "host":  "yec-solo.baikalmine.com",
+        "port":  [
+                     1105,
+                     1106
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ZCL",
+        "coin":  "Zclassic",
+        "algo":  "Equihash",
+        "rpc":  "zcl-solo.baikalmine.com",
+        "host":  "zcl-solo.baikalmine.com",
+        "port":  [
+                     2020
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    },
+    {
+        "symbol":  "ZEN",
+        "coin":  "Horizen",
+        "algo":  "Equihash",
+        "rpc":  "zen-solo.baikalmine.com",
+        "host":  "zen-solo.baikalmine.com",
+        "port":  [
+                     1020
+                 ],
+        "fee":  1.0,
+        "regions":  [
+                        "eu"
+                    ]
+    }
+]

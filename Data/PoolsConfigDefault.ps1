@@ -14,6 +14,12 @@
         "Aionmine" = [PSCustomObject]@{
             Currencies=@("AION")
         }
+        "BaikalMine" = [PSCustomObject]@{
+            Currencies=@("REOSC")
+        }
+        "BaikalMineSolo" = [PSCustomObject]@{
+            Currencies=@("REOSC")
+        }
         "BlazePool" = [PSCustomObject]@{
             Fields=[PSCustomObject]@{ExcludeAlgorithm="keccak";Penalty=22}
             Currencies=@("BTC")
