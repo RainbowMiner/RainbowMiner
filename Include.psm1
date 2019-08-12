@@ -2806,60 +2806,97 @@ function Update-DeviceInformation {
                 } else {
 
                     if ($Vendor -eq 'AMD') {
-                        $DeviceId = 0
 
-                        $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+                        Invoke-Exe ".\Includes\odvii.exe" -ArgumentList "s" -WorkingDirectory $Pwd | Tee-Object -Variable AdlResult | Out-Null
 
-                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+                        if ($AdlResult -match "Gpu" -and $AdlResult -notmatch "Failed") {
+                            $AdlStats = $AdlResult | ConvertFrom-StringData
 
-                        if ($null -ne $AdlResult) {
-                            $AdlResult | ForEach-Object {
-                                [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
-                                $i=0
-                                foreach($v in @($_ -split ',')) {
-                                    if ($i -ge $AdlResultSplit.Count) {break}
-                                    if ($i -eq 0) {
-                                        $AdlResultSplit[0] = $v
-                                    } elseif ($i -lt 8) {
-                                        $v = $v -replace "[^\-\d\.]"
-                                        if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
-                                            $ibak = $AdlResultSplit[$i]
-                                            try {
-                                                if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
-                                            } catch {
-                                                if ($Error.Count){$Error.RemoveAt(0)}
-                                                $AdlResultSplit[$i] = $ibak
+                            $Data = @{}
+                            $AdlStats.GetEnumerator() | Where-Object {$_.Name -match "Gpu (\d+)"} | Foreach-Object {
+                                $DeviceId = [int]$Matches[1]
+                                if (-not $Data.ContainsKey($DeviceId)) {$Data[$DeviceId] = [PSCustomObject]@{}}
+                                $Data[$DeviceId] | Add-Member ($_.Name -replace "Gpu\s+\d+\s*") ($_.Value) -Force
+                            }
+
+                            $Devices | Where-Object {$Data.ContainsKey($_.Type_Vendor_Index)} | Foreach-Object {
+                                $DeviceId = $_.Type_Vendor_Index
+                                $_ | Add-Member Data ([PSCustomObject]@{
+                                        AdapterId         = ''
+                                        FanSpeed          = [int]($Data[$DeviceId].Fan)
+                                        Clock             = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                        ClockMem          = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                        Temperature       = [int]($Data[$DeviceId].Temp)
+                                        PowerDraw         = [int]($Data[$DeviceId].Watts)
+                                        Method            = "odvii"
+                                    }) -Force
+
+                                $DataMax = [PSCustomObject]@{
+                                    Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                    ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                    Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                    FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                    PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                }
+
+                                $_ | Add-Member DataMax $DataMax -Force
+                            }
+                        } else {
+                            $DeviceId = 0
+
+                            $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
+
+                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+
+                            if ($null -ne $AdlResult) {
+                                $AdlResult | ForEach-Object {
+                                    [System.Collections.ArrayList]$AdlResultSplit = @('noid',0,1,0,0,100,0,0,'')
+                                    $i=0
+                                    foreach($v in @($_ -split ',')) {
+                                        if ($i -ge $AdlResultSplit.Count) {break}
+                                        if ($i -eq 0) {
+                                            $AdlResultSplit[0] = $v
+                                        } elseif ($i -lt 8) {
+                                            $v = $v -replace "[^\-\d\.]"
+                                            if ($v -match "^-?(\d+|\.\d+|\d+\.\d+)$") {
+                                                $ibak = $AdlResultSplit[$i]
+                                                try {
+                                                    if ($i -eq 5 -or $i -eq 7){$AdlResultSplit[$i]=[double]$v}else{$AdlResultSplit[$i]=[int]$v}
+                                                } catch {
+                                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                                    $AdlResultSplit[$i] = $ibak
+                                                }
                                             }
                                         }
+                                        $i++
                                     }
-                                    $i++
-                                }
-                                if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
+                                    if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
 
-                                $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                                    $_ | Add-Member Data ([PSCustomObject]@{
-                                            AdapterId         = $AdlResultSplit[0]
-                                            FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
-                                            Clock             = [int]($AdlResultSplit[3] / 100)
-                                            ClockMem          = [int]($AdlResultSplit[4] / 100)
-                                            Utilization       = [int]$AdlResultSplit[5]
-                                            Temperature       = [int]$AdlResultSplit[6] / 1000
-                                            PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                            PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
-                                            Method            = "tdp"
-                                        }) -Force
+                                    $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                                        $_ | Add-Member Data ([PSCustomObject]@{
+                                                AdapterId         = $AdlResultSplit[0]
+                                                FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
+                                                Clock             = [int]($AdlResultSplit[3] / 100)
+                                                ClockMem          = [int]($AdlResultSplit[4] / 100)
+                                                Utilization       = [int]$AdlResultSplit[5]
+                                                Temperature       = [int]$AdlResultSplit[6] / 1000
+                                                PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
+                                                PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
+                                                Method            = "tdp"
+                                            }) -Force
 
-                                    $DataMax = [PSCustomObject]@{
-                                        Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                        ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                        Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                        FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                        PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        $DataMax = [PSCustomObject]@{
+                                            Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                            ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                            Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        }
+
+                                        $_ | Add-Member DataMax $DataMax -Force
                                     }
-
-                                    $_ | Add-Member DataMax $DataMax -Force
+                                    $DeviceId++
                                 }
-                                $DeviceId++
                             }
                         }
                     }
