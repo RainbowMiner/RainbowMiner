@@ -2984,11 +2984,11 @@ function Update-DeviceInformation {
 
             $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $ClockMax       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                $PowerDrawMax   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                $PowerDrawMax   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
 
                 $_ | Add-Member DataMax ([PSCustomObject]@{
                     Clock       = $ClockMax
-                    PowerDraw   = $TemperatureMax
+                    PowerDraw   = $PowerDrawMax
                 }) -Force
             }
         }
