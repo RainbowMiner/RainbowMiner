@@ -48,10 +48,11 @@
                 <th data-field="Name" data-sortable="true" data-title-tooltip="The name, Rainbowminer uses to identify this device">Name</th>
                 <th data-field="Vendor" data-sortable="true" data-title-tooltip="Vendor of the device">Vendor</th>
                 <th data-field="Model" data-sortable="true" data-title-tooltip="Modelname of the device">Model</th>
-                <th data-field="tUtilization" data-sortable="true" data-title-tooltip="Current load in %">Load</th>
-                <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
-                <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
+                <th data-field="tMemory" data-sortable="true" data-title-tooltip="Memory on the device in GB">Mem</th>
                 <th data-field="tTemperature" data-sortable="true" data-title-tooltip="Current temperature in °C">°C</th>
+                <th data-field="tTemperatureMax" data-sortable="true" data-title-tooltip="Maximum temperature in °C">max °C</th>
+                <th data-field="tFanSpeed" data-sortable="true" data-title-tooltip="Current fan speed in %">Fan</th>
+                <th data-field="tPowerDraw" data-sortable="true" data-title-tooltip="Current power draw in watt">Power</th>
                 <th data-field="tClock" data-sortable="true" data-title-tooltip="Current GPU clock in MHz">Clock</th>
                 <th data-field="tClockMem" data-sortable="true" data-title-tooltip="Current memory clock in MHz">Memclk</th>
                 <th data-field="tPowerLimitPercent" data-sortable="true" data-title-tooltip="Current power limit in %">PL</th>
@@ -349,6 +350,7 @@
           item.tClockMem = typeof (item.Data.ClockMem) !== "undefined" ? item.Data.ClockMem + ' MHz' : "N/A"
           item.tPowerLimitPercent = typeof (item.Data.PowerLimitPercent) !== "undefined" ? item.Data.PowerLimitPercent + ' %' : "N/A"
           item.tTemperature = typeof (item.Data.Temperature) !== "undefined" ? item.Data.Temperature + ' °C' : "N/A"
+          item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" ? item.DataMax.Temperature + ' °C' : "N/A"
           item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
 
       });

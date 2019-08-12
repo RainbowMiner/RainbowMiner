@@ -231,7 +231,7 @@ function Update-ActiveMiners {
         }
 
         Switch ($Miner.GetStatus()) {
-            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime())) {$Miner.SetOCprofile($Session.Config,500)};$MinersUpdated++}
+            "Running"       {if ($Session.Config.EnableOCprofiles -and ($Miner.DeviceName -notlike "CPU*") -and ($Miner.GetLastSetOCTime() -lt (Get-Date).AddMinutes(-10).ToUniversalTime() -or $API.ApplyOC)) {$Miner.SetOCprofile($Session.Config,500);$API.ApplyOC=$false};$MinersUpdated++}
             "RunningFailed" {$Miner.ResetMinerData();$MinersFailed++;if ($Miner.IsExclusiveMiner) {$ExclusiveMinersFailed++}}
         }        
     }
@@ -404,6 +404,7 @@ function Invoke-Core {
         $API.Pause = $false
         $API.Update = $false
         $API.RemoteAPI = $true
+        $API.ApplyOC = $false
         $API.APIport = $Session.Config.APIport
         $API.APIAuth = $Session.Config.APIAuth
         $API.APIport = $Session.Config.APIport

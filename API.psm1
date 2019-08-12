@@ -10,6 +10,7 @@
     $API.Stop        = $false
     $API.Pause       = $false
     $API.Update      = $false
+    $API.ApplyOC     = $false
     $API.APIport     = $Session.Config.APIport
     $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
@@ -610,6 +611,11 @@
                 "/pause" {
                     $API.Pause = -not $API.Pause
                     $Data = $API.Pause | ConvertTo-Json
+                    Break
+                }
+                "/applyoc" {
+                    $API.ApplyOC = $true
+                    $Data = "Please wait, OC will be applied asap"
                     Break
                 }
                 "/update" {

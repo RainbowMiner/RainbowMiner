@@ -3,6 +3,13 @@
   <h1 id="title" data-navbaractive="navocprofiles" class="h2">Overclocking Profiles</h1>
 </div>
 <p>All overclocking profiles, defined in ocprofiles.config.txt</p>
+
+<div class="d-flex align-items-center">
+    <div class="m-2">
+        <a href="#" id="applyoc" class="btn btn-primary"> Apply OC </a>
+    </div>
+</div>
+
 <table id="ocprofiles" class="table"
   data-toggle="table"
   data-url="/ocprofiles"
@@ -35,6 +42,14 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+
+    $("#applyoc").click(function () {
+        $('.modal-body').load('/applyoc', function () {
+            $('.modal-title').text('Overclocking Profiles will be applied');
+            $('#myModal').modal({ show: true });
+        });
+    });
+
   function formatOCProfiles(data) {
   // This function can alter the returned data before building the table, formatting it in a way
   // that is easier to display and manipulate in a table
