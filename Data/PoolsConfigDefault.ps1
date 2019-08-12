@@ -67,6 +67,9 @@
         "FairPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
+        "FlyPool" = [PSCustomObject]@{
+            Currencies=@("YEC")
+        }
         "GosCx" = [PSCustomObject]@{
             Currencies=@("GIN")
             Yiimp=$true
@@ -99,13 +102,13 @@
             Currencies=@("XWP")
         }
         "Icemining" = [PSCustomObject]@{
-            Currencies=@("BCD","RVN","SIN")
+            Currencies=@("RVN","SIN","YEC")
         }
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
         "MinerMore" = [PSCustomObject]@{
-            Currencies=@("RVN","SIN")
+            Currencies=@("RVN","SIN","YEC")
         }
         "MinerRocks" = [PSCustomObject]@{
             Currencies=@("XMR")
@@ -158,11 +161,6 @@
             Yiimp=$true
         }
         "NLPoolCoins" = [PSCustomObject]@{
-            Currencies=@("BTC")
-            Autoexchange=$true
-            Yiimp=$true
-        }
-        "PhiPhiPool" = [PSCustomObject]@{
             Currencies=@("BTC")
             Autoexchange=$true
             Yiimp=$true
