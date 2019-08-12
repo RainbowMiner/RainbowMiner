@@ -3906,6 +3906,8 @@ function Test-GPU {
 
 function Test-TimeSync {
 
+    if (-not $IsWindows) {return}
+
     try {
         if ((Get-Service -Name W32Time).Status -ne 'Running')
         {
@@ -5647,6 +5649,38 @@ param(
     } catch {}
 }
 
+function Get-NtpTime {
+[cmdletbinding()]
+param(
+    [Parameter(Mandatory = $False)]
+    [String]$NTPServer = "time.google.com",
+    [Parameter(Mandatory = $False)]
+    [Switch]$Quiet = $false
+)
+
+    $NTPData    = New-Object byte[] 48  # Array of 48 bytes set to zero
+    $NTPData[0] = 27                    # Request header: 00 = No Leap Warning; 011 = Version 3; 011 = Client Mode; 00011011 = 27
+
+    try {
+        $Socket = New-Object Net.Sockets.Socket ( 'InterNetwork', 'Dgram', 'Udp' )
+        $Socket.SendTimeOut    = 2000  # ms
+        $Socket.ReceiveTimeOut = 2000  # ms
+        $Socket.Connect( $NTPServer, 123 )
+        $Null = $Socket.Send(    $NTPData )
+        $Null = $Socket.Receive( $NTPData )
+        $Socket.Shutdown( 'Both' )
+        $Seconds = [BitConverter]::ToUInt32( $NTPData[43..40], 0 )
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level "$(if ($Quiet) {"Info"} else {"Warn"})" "Could not read time from $($NTPServer)"
+    }
+    finally {
+        if ($Socket) {$Socket.Close();$Socket.Dispose()}
+    }
+
+    if ($Seconds) {( [datetime]'1/1/1900' ).AddSeconds( $Seconds ).ToLocalTime()} else {Get-Date}
+}
+
 function Get-UnixTimestamp {
 [cmdletbinding()]
 param(
@@ -5655,7 +5689,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Milliseconds = $false
 )
-    [Math]::Floor(($DateTime - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})")
+    [Math]::Floor(($DateTime - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc'))."$(if ($Milliseconds) {"TotalMilliseconds"} else {"TotalSeconds"})" - $(if ($Milliseconds) {1000} else {1})*[int]$Session.TimeDiff)
 }
 
 function Get-UnixToUTC {

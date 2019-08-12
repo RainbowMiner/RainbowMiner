@@ -95,6 +95,8 @@
         $Session.Benchmarking = $false
         $Session.IsAdmin = Test-IsElevated
         $Session.MachineName = [System.Environment]::MachineName
+        $Session.TimeDiff = 0
+
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
@@ -204,6 +206,7 @@
     $Session.DecayStart = $Session.Timer
     [hashtable]$Session.Updatetracker = @{
         Balances = 0
+        TimeDiff = 0
     }
 }
 
@@ -334,6 +337,12 @@ function Invoke-Core {
             Update-WatchdogLevels -Reset
             $Session.WatchdogTimers = @()
         }
+    }
+
+    if (-not $Session.Updatetracker.TimeDiff -or $Session.Updatetracker.TimeDiff -lt (Get-Date).AddMinutes(-60)) {
+        $Session.Updatetracker.TimeDiff = Get-Date
+        $TimeDiff = ((Get-Date)-(Get-NtpTime)).TotalSeconds
+        $Session.TimeDiff = [Math]::Sign($TimeDiff)*[Math]::Floor([Math]::Abs($TimeDiff))
     }
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
@@ -1758,6 +1767,12 @@ function Invoke-Core {
     #Start output to host
     #
     Clear-Host
+
+    if ([Math]::Abs($Session.TimeDiff) -gt 10) {
+        Write-Host " "
+        Write-Log -Level Warn "This rig's system time is off by $($Session.TimeDiff) seconds. Please adjust and restart RainbowMiner!"
+        Write-Host " "
+    }
 
     $Session.Benchmarking = -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmarkCount -gt 0
     $LimitMiners = if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {100} else {3}
