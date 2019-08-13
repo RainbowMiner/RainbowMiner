@@ -600,7 +600,7 @@
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
-                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=$Earnings_Avg;Earnings_1d=$Earnings_1d;Rates=$Rates;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$Rates;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
                     Remove-Variable "Rates"
                     Remove-Variable "RemoteMiners"
                     Break
