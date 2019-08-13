@@ -22,13 +22,16 @@
     }
 
     function updateProfitHead() {
-        var profit = $("#profit").attr("profit-btc");
+        var profit = $("#profit").attr("btc");
+        var earnings = $("#earnings").attr("btc");
         var currency = $("#profit_currency option:selected").val();
 
-        if (currency == "BTC") {
-            $("#profit").html(formatBTC(profit));
+        if (currency == "BTC" || currency == "mBTC") {
+            $("#profit").html(currency == "mBTC"? formatmBTC(profit):formatBTC(profit));
+            $("#earnings").html(currency == "mBTC"? formatmBTC(earnings):formatBTC(earnings));
         } else {
-            $("#profit").html((parseFloat(profit)*parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
+            $("#profit").html((parseFloat(profit) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
+            $("#earnings").html((parseFloat(earnings) * parseFloat($("#profit_currency option:selected").attr("rate"))).toFixed(2));
         }
         window.localStorage.setItem("currency", currency);
     }
@@ -85,12 +88,16 @@ $(function () {
                     if (key != "BTC") xchange.push(parseFloat(formatBTC(itm)).toFixed(2) + " " + key);
                     if (!$("#profit_currency option[value='" + key + "']").length) {
                         $("#profit_currency").append('<option value="' + key + '">' + key + '/day</option>');
+                        if (key == "BTC") {
+                            $("#profit_currency").append('<option value="m' + key + '">m' + key + '/day</option>');
+                        }
                     }
                     $("#profit_currency option[value='" + key + "']").attr("rate", itm).attr("selected", currency == key ? "selected" : null);
                 });
                 $("#exchangerates").html(xchange.join(" = "));
 
-                $("#profit").attr("profit-btc", result.AllProfitBTC);
+                $("#profit").attr("btc", result.AllProfitBTC);
+                $("#earnings").attr("btc", result.Earnings_Avg);
 
                 updateProfitHead();
 

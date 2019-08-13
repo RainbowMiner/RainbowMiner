@@ -24,19 +24,21 @@
        data-show-columns="true"
        data-show-toggle="true"
        data-show-refresh="true"
+       data-show-footer="true"
        data-icons-prefix="fa"
        data-icons="icons"
+       data-footer-style="footerStyle"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
         <tr>
-            <th data-field="Pool" data-sortable="true" data-filter-control="select">Poolname</th>
-            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
-            <th data-field="Cost" data-align="right" data-sortable="true" data-formatter="formatBTC">Cost</th>
-            <th data-field="Power" data-align="right" data-sortable="true" data-formatter="formatPower">Power</th>
-            <th data-field="Duration" data-align="right" data-sortable="true" data-formatter="formatMinutes">Minutes</th>
-            <th data-field="Started" data-sortable="true" data-formatter="formatDate">Started</th>
-            <th data-field="Updated" data-sortable="true" data-formatter="formatDate">Updated</th>
+            <th data-field="Pool" data-sortable="true" data-filter-control="select" data-footer-formatter="formatTotalFooter">Poolname</th>
+            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Profit</th>
+            <th data-field="Cost" data-align="right" data-sortable="true" data-formatter="formatPricesBTC" data-footer-formatter="formatEarningsFooter">Cost</th>
+            <th data-field="Power" data-align="right" data-sortable="true" data-formatter="formatPower" data-footer-formatter="formatPowerFooter">Power</th>
+            <th data-field="Duration" data-align="right" data-sortable="true" data-formatter="formatMinutes" data-footer-formatter="formatMinutesFooter">Minutes</th>
+            <th data-field="Started" data-sortable="true" data-formatter="formatDate" data-footer-formatter="formatTotalFooter">Started</th>
+            <th data-field="Updated" data-sortable="true" data-formatter="formatDate" data-footer-formatter="formatTotalFooter">Updated</th>
         </tr>
     </thead>
 </table>
@@ -52,10 +54,6 @@
         });
     });
 
-    function formatPrices(data) {
-        return data.toFixed(10);
-    }
-
     function formatMinutes(data) {
         return data.toFixed(2);
     }
@@ -66,6 +64,41 @@
 
     function formatDate(data) {
         return new Date(data).toLocaleString();
+    }
+
+    function footerStyle() {
+        return {
+            classes: 'bg-primary text-white'
+        }
+    }
+
+    function formatTotalFooter(data) { return this.field == "Pool"? "TOTAL":"&nbsp;" }
+
+    function formatEarningsFooter(data) {
+        var field = this.field
+        return formatPricesBTC(data.map(function (row) {
+            return +row[field]
+        }).reduce(function (sum, i) {
+            return sum + i
+        }, 0))
+    }
+
+    function formatPowerFooter(data) {
+        var field = this.field
+        return formatPower(data.map(function (row) {
+            return +row[field]
+        }).reduce(function (sum, i) {
+            return sum + i
+        }, 0))
+    }
+
+    function formatMinutesFooter(data) {
+        var field = this.field
+        return formatMinutes(data.map(function (row) {
+            return +row[field]
+        }).reduce(function (sum, i) {
+            return sum + i
+        }, 0))
     }
 </script>
 <!--#include file="/parts/foot.html" -->

@@ -104,13 +104,19 @@ pre {
 }
 
 
-.navbar div#rigstat, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime {
+.navbar div#rigstat, .navbar div#updatemsg, .navbar div#rigrates, .navbar div#rigtime, .hide-on-mobile {
     display: none;
 }
 
 @media screen and (min-width: 440px) {
     .navbar div#rigstat {
         display: block;
+    }
+}
+
+@media screen and (min-width: 600px) {
+    .hide-on-mobile {
+        display:inline;
     }
 }
 

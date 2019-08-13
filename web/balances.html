@@ -124,15 +124,6 @@ function formatPrices(data) {
     return typeof data == "undefined" || data < 1e-10? "-" : data.toFixed(8);
 }
 
-function formatPricesBTC(data) {
-    if (typeof data == "undefined" || !data) return "-";
-    var value = parseFloat(data);
-    var i = Math.floor(Math.log(value) / Math.log(1000));
-    var cm = "", rto = 5;
-    if (i < 0) { cm = "m"; value *= 1e3; rto = 5}
-    return value.toFixed(rto).toString() + (cm? ' ' + cm : '');
-}
-
 function formatDateStr(data) {
     return typeof data == "undefined" ? "-" : '<nobr>' + data.split(/ /).join('</nobr> <nobr>') + '</nobr>';
 }
