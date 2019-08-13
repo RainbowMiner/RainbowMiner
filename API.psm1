@@ -584,9 +584,11 @@
                     Break
                 }
                 "/currentprofit" {
-                    $Profit = $API.CurrentProfit
+                    $Profit = [decimal]$API.CurrentProfit
+                    $Earnings_Avg = [decimal]$API.Earnings_Avg
+                    $Earnings_1d  = [decimal]$API.Earnings_1d
                     $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json
-                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += $_.profit}
+                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg += [decimal]$_.earnings_avg;$Earnings_1d += [decimal]$_.earnings_1d}
                     $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
@@ -598,7 +600,7 @@
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
-                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=$API.CurrentProfit;Rates=$Rates;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=$Earnings_Avg;Earnings_1d=$Earnings_1d;Rates=$Rates;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
                     Remove-Variable "Rates"
                     Remove-Variable "RemoteMiners"
                     Break
