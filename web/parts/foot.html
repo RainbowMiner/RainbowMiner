@@ -93,6 +93,9 @@ $(function () {
                         }
                     }
                     $("#profit_currency option[value='" + key + "']").attr("rate", itm).attr("selected", currency == key ? "selected" : null);
+                    if (key == "BTC") {
+                        $("#profit_currency option[value='m" + key + "']").attr("rate", itm*1000).attr("selected", currency == ("m"+key) ? "selected" : null);
+                    }                    
                 });
                 $("#exchangerates").html(xchange.join(" = "));
 
