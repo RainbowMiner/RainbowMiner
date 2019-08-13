@@ -473,6 +473,26 @@
                         $Data = $Balances | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
                         $Data = $Data -join "`r`n"
                     } else {
+                        if ($Parameters.add_btc) {
+                            $Balances | Foreach-Object {
+                                $Rate = $API.Rates."$($_.Currency)"
+                                $_ | Add-Member -NotePropertyMembers @{
+                                    Total_BTC = [Decimal]$(if ($Rate) {$_.Total / $Rate} else {0})
+                                    Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
+                                    Earnings_BTC  = [Decimal]$(if ($Rate) {$_.Earnings / $Rate} else {0})
+                                    Earnings_1h_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1h / $Rate} else {0})
+                                    Earnings_1d_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1d / $Rate} else {0})
+                                    Earnings_1w_BTC  = [Decimal]$(if ($Rate) {$_.Earnings_1w / $Rate} else {0})
+                                    Earnings_Avg_BTC = [Decimal]$(if ($Rate) {$_.Earnings_Avg / $Rate} else {0})
+                                } -Force
+                            }
+                        }
+                        if ($Parameters.add_total) {
+                            $Balances | Where-Object {$_.Name -ne "*Total*"} | Foreach-Object {
+                                if ($_.Last_Earnings -ne $null) {$_.PSObject.Properties.Remove("Last_Earnings")}
+                                if ($_.Payouts -ne $null) {$_.PSObject.Properties.Remove("Payouts")}
+                            }
+                        }
                         $Balances | Where-Object {$_.Started} | Foreach-Object {$_.Started = ([DateTime]$_.Started).ToString("yyyy-MM-dd HH:mm:ss")}
                         $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
                     }

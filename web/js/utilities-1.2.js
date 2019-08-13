@@ -83,7 +83,7 @@ function formatPricesBTC(data) {
     var i = Math.floor(Math.log(value) / Math.log(1000));
     var cm = "", rto = 5;
     if (i < 0) { cm = "m"; value *= 1e3; rto = 5 }
-    return value.toFixed(rto).toString() + (cm ? ' ' + cm : '');
+    return value.toFixed(rto).toString() + (cm ? '&nbsp;' + cm : '');
 }
 
 function formatDate(data) {

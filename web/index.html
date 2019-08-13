@@ -23,7 +23,7 @@
             <th data-field="Currency" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Currency</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
-            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+            <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
             <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
@@ -82,7 +82,7 @@
                 <th data-field="tlastseen" data-sortable="true">Last seen</th>
                 <th data-field="tuptime" data-sortable="true">Uptime</th>
                 <th data-field="tversion" data-sortable="true">Version</th>
-                <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+                <th data-field="profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
                 <th data-field="tpowerdraw" data-align="right" data-sortable="true">Power</th>
             </tr>
         </thead>
@@ -103,6 +103,12 @@
                 {{#each balances}}
                 <span class="currencyname font-weight-bold">{{@key}}:</span> <span>{{this}}</span><br />
                 {{/each}}
+            </p>
+        </div>
+        <div class="card-footer text-center">
+            <p class="card-text">
+                <span class="currencyname font-weight-bold">Avg.Earned:</span> <span>{{earnings}}</span><br />
+                <span class="currencyname font-weight-bold">Total BTC:</span> <span>{{btc}}</span>
             </p>
         </div>
     </div>
@@ -136,10 +142,10 @@
 
         (function updatePoolBalances() {
             $.ajax({
-                url: '/balances?add_total=1', success: function (result) {
+                url: '/balances?add_total=1&add_btc=1', success: function (result) {
                     //console.log(result);
                     $("#balanceboxes").empty();
-                    var boxes = [], boxes_ix = {};
+                    var boxes = [], boxes_ix = {}, total_earnings = 0, total_btc = 0;
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Value in "));
@@ -151,14 +157,25 @@
                             if (item.Name == "*Total*") {
                                 boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true, dark: theme=="dark" });
                             } else {
-                                boxes.push({ name: item.Name, balances: {}, digits: {}, dark: theme=="dark" });
+                                boxes.push({ name: item.Name, balances: {}, digits: {}, earnings: 0, btc: 0, dark: theme == "dark" });
                             }
                         }
+
+                        if (item.Name != "*Total*") {
+                            var avg_earnings = parseFloat(item.Earnings_Avg_BTC);
+                            total_earnings += avg_earnings;
+                            boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
+                            var btc = parseFloat(item.Total_BTC);
+                            total_btc += btc;
+                            boxes[boxes_ix[item.Name]]["btc"] += btc;
+                        }
+
                         $.each(currencies, function (cindex, currency) {
                             var name = currency.replace("Value in ", "");
                             item[currency] = item[currency].replace(tDecimalSeparator, "").replace(nDecimalSeparator, ".")
                             var csplit = item[currency].split(".");
                             var digits = boxes[boxes_ix[item.Name]]["digits"][name] = item[currency] === "-" ? -1 : (csplit.length < 2 ? 0 : csplit[1].length);
+
                             if (digits != -1) { item[currency] = parseFloat(item[currency]) }
                             if (boxes[boxes_ix[item.Name]]["balances"][name] === undefined) { boxes[boxes_ix[item.Name]]["balances"][name] = item[currency]; maincur.push(name); }
                             else if (digits != -1) {
@@ -182,7 +199,9 @@
                         });
                     });
                     $.each(boxes, function (index, item) {
-                        $.each(item["balances"], function (bindex, bitem) {if (item["digits"][bindex] != -1) item["balances"][bindex] = bitem.toFixed(item["digits"][bindex]).replace(".", ",");});
+                        $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
+                        item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
+                        item.btc      = formatPricesBTC(item.total ? total_btc : item.btc).replace('&nbsp;', ' ');
                         $("#balanceboxes").append(template(item));
                     });
                     window.setTimeout(updatePoolBalances, 60000);
@@ -309,7 +328,7 @@
           html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol !== "" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName !== "" ? value.CoinName : '-')) + '</td>');
           html.push('<td>' + value.Currency + '</td>');
           html.push('<td>' + value.Type + '</td>');
-          html.push('<td>' + formatBTC(value.Profit) + '</td>');
+          html.push('<td>' + formatPricesBTC(value.Profit) + '</td>');
           html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
           html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
           html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
