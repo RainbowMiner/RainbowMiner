@@ -5575,7 +5575,7 @@ function Invoke-ReportMinerStatus {
 
     $Profit = 0.0
     $PowerDraw = 0.0
-    $TempAlert = $false
+    $TempAlert = 0
 
     $minerreport = ConvertTo-Json @(
         $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
@@ -5593,7 +5593,7 @@ function Invoke-ReportMinerStatus {
             $Devices = @()
             Get-Device $Miner.DeviceName | Foreach-Object {
                 if ($_.Type -eq "GPU") {
-                    if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert=$true}
+                    if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
                     $Devices += [PSCustomObject]@{
                         Id    = $_.Type_PlatformId_Index
                         Name  = $_.Model
@@ -5653,7 +5653,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = $Profit; powerdraw = $PowerDraw; earnings_avg = [double]$Session.Earnings_Avg; earnings_1d = [double]$Session.Earnings_1d; rates = ConvertTo-Json $Rates; interval = $Session.Config.BenchmarkInterval; uptime = (Get-Uptime).TotalSeconds; sysuptime = (Get-Uptime -System).TotalSeconds;maxtemp = $Session.Config.MinerStatusMaxTemp; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; rates = ConvertTo-Json $Rates -Compress; interval = $Session.Config.BenchmarkInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
