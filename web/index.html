@@ -107,8 +107,7 @@
         </div>
         <div class="card-footer text-center">
             <p class="card-text">
-                <span class="currencyname font-weight-bold">Avg.Earned:</span> <span>{{earnings}}</span><br />
-                <span class="currencyname font-weight-bold">Total BTC:</span> <span>{{btc}}</span>
+                <span class="currencyname font-weight-bold">Avg.Earned:</span> <span>{{earnings}}</span>
             </p>
         </div>
     </div>
@@ -145,7 +144,7 @@
                 url: '/balances?add_total=1&add_btc=1', success: function (result) {
                     //console.log(result);
                     $("#balanceboxes").empty();
-                    var boxes = [], boxes_ix = {}, total_earnings = 0, total_btc = 0;
+                    var boxes = [], boxes_ix = {}, total_earnings = 0;
                     $.each(result, function (index, item) {
                         var properties = Object.keys(item);
                         var currencies = properties.filter((properties) => properties.startsWith("Value in "));
@@ -157,7 +156,7 @@
                             if (item.Name == "*Total*") {
                                 boxes.push({ name: "Total Balance From All Pools", balances: {}, digits: {}, total: true, dark: theme=="dark" });
                             } else {
-                                boxes.push({ name: item.Name, balances: {}, digits: {}, earnings: 0, btc: 0, dark: theme == "dark" });
+                                boxes.push({ name: item.Name, balances: {}, digits: {}, earnings: 0, dark: theme == "dark" });
                             }
                         }
 
@@ -165,9 +164,6 @@
                             var avg_earnings = parseFloat(item.Earnings_Avg_BTC);
                             total_earnings += avg_earnings;
                             boxes[boxes_ix[item.Name]]["earnings"] += avg_earnings;
-                            var btc = parseFloat(item.Total_BTC);
-                            total_btc += btc;
-                            boxes[boxes_ix[item.Name]]["btc"] += btc;
                         }
 
                         $.each(currencies, function (cindex, currency) {
@@ -201,7 +197,6 @@
                     $.each(boxes, function (index, item) {
                         $.each(item["balances"], function (bindex, bitem) { if (item["digits"][bindex] != -1) item["balances"][bindex] = bindex == "BTC" ? formatPricesBTC(bitem).replace('&nbsp;', ' ') : bitem.toFixed(item["digits"][bindex]); });
                         item.earnings = formatPricesBTC(item.total ? total_earnings : item.earnings).replace('&nbsp;', ' ');
-                        item.btc      = formatPricesBTC(item.total ? total_btc : item.btc).replace('&nbsp;', ' ');
                         $("#balanceboxes").append(template(item));
                     });
                     window.setTimeout(updatePoolBalances, 60000);
