@@ -1,7 +1,10 @@
 {
-    "Equihash25x4": "Equihash (125,4)",
+    "Equihash25x4": "EquihashR (125,4,0)",
+    "Equihash25x4x0": "EquihashR (125,4,0)",
     "Equihash24x5": "Equihash (144,5)",
-    "Equihash25x5": "Equihash (150,5)",
+    "Equihash25x5": "EquihashR (150,5,0)",
+    "Equihash25x5x0": "EquihashR (150,5,0)",
+    "Equihash25x5x3": "EquihashR (150,5,3)",
     "Equihash24x7": "Equihash (192,7)",
     "Equihash21x9": "Equihash (210,9)",
     "Equihash16x5": "Equihash (96,5)"

@@ -14,6 +14,7 @@
     EnableOCVoltage = $false
     EnableAutoUpdate = $true
     EnableAutoAlgorithmAdd = $true
+    EnableAlgorithmMapping = $true
     EnableAutoBenchmark = $true
     EnableMinerStatus = $true
     DisableUnprofitableAlgolist = $false
