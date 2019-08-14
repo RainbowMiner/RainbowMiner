@@ -127,7 +127,7 @@ param(
     [Parameter(Mandatory = $false)]
     [String]$EthPillEnable = "disable", # set to RevA or RevB to enable the OhGodAnETHlargementPill for Ethash
     [Parameter(Mandatory = $false)]
-    [String]$EthPillEnalbeMTP = "disable", # set to RevA or RevB to enable the OhGodAnETHlargementPill for MTP
+    [String]$EthPillEnableMTP = "disable", # set to RevA or RevB to enable the OhGodAnETHlargementPill for MTP
     [Parameter(Mandatory = $false)]
     [Switch]$EnableOCProfiles = $false, # if set to $true, the build in overclocking profiles will be used
     [Parameter(Mandatory = $false)]
@@ -217,7 +217,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.3.9.1"
+$Session.Version         = "4.3.9.2"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 
