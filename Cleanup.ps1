@@ -488,8 +488,8 @@ try {
 
     if ($Version -le (Get-Version "4.3.9.2")) {
         $AddAlgorithm += @("EquihashR150x5x3","RandomX")
-        Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x4x0_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x4x0","EquihashR25x4") -Force -ErrorAction Ignore}
-        Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x5x0_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x5x0","EquihashR25x5") -Force -ErrorAction Ignore}
+        Get-ChildItem ".\Stats\Miners" -Filter "*_EquihashR25x4x0_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x4x0","EquihashR25x4") -Force -ErrorAction Ignore}
+        Get-ChildItem ".\Stats\Miners" -Filter "*_EquihashR25x5x0_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x5x0","EquihashR25x5") -Force -ErrorAction Ignore}
         Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x4_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x4","EquihashR25x4") -Force -ErrorAction Ignore}
         Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x5_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x5","EquihashR25x5") -Force -ErrorAction Ignore}
         $Changes = 0
