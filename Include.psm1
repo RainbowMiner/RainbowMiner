@@ -3295,6 +3295,7 @@ class Miner {
     $MiningAffinity
     $ManualUri
     [String]$EthPillEnable = "disable"
+    [String]$EthPillEnableMTP = "disable"
     $DataInterval
     [String[]]$EnvVars = @()
     [Hashtable]$Priorities = @{"CPU"=-2;"GPU"=-1;"CPUAffinity"=0}
@@ -3348,10 +3349,13 @@ class Miner {
         if (-not $this.Process) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
             $ArgumentList = $this.GetArguments()
-            if ($this.EthPillEnable -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash","MTP") -IncludeEqual -ExcludeDifferent | Measure-Object).Count -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
+            
+            $Prescription = if ($this.EthPillEnable    -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnable}
+                        elseif ($this.EthPillEnableMTP -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("MTP")    -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnableMTP}
+
+            if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
                 $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
-                $Prescription = ""
-                switch ($this.EthPillEnable) {
+                $Prescription = switch ($Prescription) {
                     "RevA" {$Prescription = "revA"}
                     "RevB" {$Prescription = "revB"}
                 }

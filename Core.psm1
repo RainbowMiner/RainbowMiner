@@ -1479,6 +1479,7 @@ function Invoke-Core {
             $ActiveMiner.Penalty            = $Miner.Penalty
             $ActiveMiner.ManualUri          = $Miner.ManualUri
             $ActiveMiner.EthPillEnable      = $Session.Config.EthPillEnable
+            $ActiveMiner.EthPillEnableMTP   = $Session.Config.EthPillEnableMTP
             $ActiveMiner.DataInterval       = $Session.Config.BenchmarkInterval
             $ActiveMiner.Enabled            = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner.IsFocusWalletMiner
@@ -1537,6 +1538,7 @@ function Invoke-Core {
                 Penalty              = $Miner.Penalty
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Session.Config.EthPillEnable
+                EthPillEnableMTP     = $Session.Config.EthPillEnableMTP
                 DataInterval         = $Session.Config.BenchmarkInterval
                 Donator              = $Session.IsDonationRun
                 MaxBenchmarkRounds   = $Session.Strikes
