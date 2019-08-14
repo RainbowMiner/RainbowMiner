@@ -22,14 +22,15 @@ $DevFee = 1.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";  MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-AD29"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
-    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   MinMemGB = 4; MinMemGBWin10 = 8; Params = "--coin GRIN-AT31"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo31
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 2; MinMemGBWin10 = 2; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 1; MinMemGBWin10 = 2; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 210,9
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; MinMemGBWin10 = 3; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin ZEL";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 150,4
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin BEAM";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Equihash 150,5
+    [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-AD29"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
+    [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGB = 4; MinMemGBWin10 = 8; Params = "--coin GRIN-AT31"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckatoo31
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 2; MinMemGBWin10 = 2; Params = "--coin MNX";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 1; MinMemGBWin10 = 2; Params = "--coin AION";      Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 210,9
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2; MinMemGBWin10 = 3; Params = "--coin AUTO144_5"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin AUTO192_7"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin ZEL";       Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $false} #Equihash 125,4,0
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin BEAM-I";    Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Equihash 150,5,0
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGBWin10 = 4; Params = "--coin BEAM-II";   Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Equihash 150,5,3
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -62,7 +63,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "NiceHash") -and (-not $Pools.$Algorithm_Norm.CoinSymbol -or $Pools.$Algorithm_Norm.CoinSymbol -eq "BEAM" -or $Algorithm_Norm -ne "Equihash25x5")) {
+				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "NiceHash") -and ($Algorithm_Norm -ne "Equihash25x5x0" -or $Pools.$Algorithm_Norm.CoinSymbol -eq "BEAM" -or $Pools.$Algorithm_Norm.Host -match "beam")) {
 					$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
@@ -73,7 +74,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						DeviceName  = $Miner_Device.Name
 						DeviceModel = $Miner_Model
 						Path        = $Path
-						Arguments   = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --tls $(if ($Pools.$Algorithm_Norm.SSL) {1} else {0}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $($_.Params)$(if ($Algorithm_Norm -eq "Equihash25x5" -and $Pools.$Algorithm_Norm.CoinSymbol -ne "BEAM") {"-I"})"
+						Arguments   = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --tls $(if ($Pools.$Algorithm_Norm.SSL) {1} else {0}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3 $($_.Params)"
 						HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
 						API         = "Lol"
 						Port        = $Miner_Port
