@@ -32,7 +32,7 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "beam";    coin = "Beam";            algo = "Equihash25x5"; symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("asia","eu","us")}
+    [PSCustomObject]@{id = "beam";    coin = "Beam";            algo = "BeamHash";     symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("asia","eu","us")}
     [PSCustomObject]@{id = "";        coin = "Ethereum";        algo = "Ethash";       symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn")}
     [PSCustomObject]@{id = "etc";     coin = "EthereumClassic"; algo = "Ethash";       symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
     [PSCustomObject]@{id = "grin";    coin = "Grin";            algo = "Cuckarood29";  symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("asia","eu","us")}
