@@ -40,12 +40,12 @@ if ($IsLinux) {
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1; Params = "--par=96,5"}  #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2; Params = "--par=144,5"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 2; Params = "--par=192,7"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGB = 2; Params = "--par=125,4"} #Equihash 125,4 (ZelCash)
-    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; Params = "--par=150,5"} #Equihash 150,5 (BEAM,GRIMM)
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 4; Params = "--par=210,9"} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5"; MinMemGB = 1;                  Params = "--par=96,5"}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5"; MinMemGB = 2;                  Params = "--par=144,5"} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7"; MinMemGB = 2;                  Params = "--par=192,7"} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x4"; MinMemGB = 2;                  Params = "--par=125,4"} #Equihash 125,4 (ZelCash)
+    [PSCustomObject]@{MainAlgorithm = "Equihash25x5"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"} #Equihash 150,5 (BEAM,GRIMM)
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9"; MinMemGB = 4;                  Params = "--par=210,9"} #Equihash 210,9 (AION)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -80,7 +80,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Commands | ForEach-Object {
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
-        $MinMemGB = $_.MinMemGB        
+        $MinMemGB = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}        
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
         $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
