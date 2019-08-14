@@ -11,6 +11,7 @@
     $API.Pause       = $false
     $API.Update      = $false
     $API.ApplyOC     = $false
+    $API.LockMiners  = $false
     $API.APIport     = $Session.Config.APIport
     $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
@@ -608,7 +609,7 @@
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
                     $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json
-                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg += [decimal]$_.earnings_avg;$Earnings_1d += [decimal]$_.earnings_1d}
+                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
                     $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
@@ -635,6 +636,11 @@
                     $Data = $API.Pause | ConvertTo-Json
                     Break
                 }
+                "/lockminers" {
+                    $API.LockMiners = -not $API.LockMiners
+                    $Data = $API.LockMiners | ConvertTo-Json
+                    Break
+                }
                 "/applyoc" {
                     $API.ApplyOC = $true
                     $Data = "Please wait, OC will be applied asap"
@@ -646,7 +652,7 @@
                     Break
                 }
                 "/status" {
-                    $Data = [PSCustomObject]@{Pause=$API.Pause} | ConvertTo-Json
+                    $Data = [PSCustomObject]@{Pause=$API.Pause;LockMiners=$Session.LockMiners;IsExclusiveRun=$Session.IsExclusiveRun;IsDonationRun=$Session.IsDonationRun} | ConvertTo-Json
                     Break
                 }
                 "/clients" {

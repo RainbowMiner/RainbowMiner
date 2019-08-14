@@ -3,7 +3,7 @@
     <h1 id="title" data-navbaractive="navdashboard" class="h2">Dashboard</h1>
 </div>
 
-<h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a></h3>
+<h3 id="h-miners" class="h-selector">Running Miners on <span class="workername"></span> <a href="#" id="pauseminers" class="btn btn-primary">Pause / Restart</a> <a href="#" id="lockminers" class="btn btn-primary">Lock / Unlock</a></h3>
 <table id="miners" class="table mb-4"
        data-toggle="table"
        data-url="/runningminers"
@@ -116,10 +116,20 @@
 <script type="text/javascript">
     $(function () {
         var template = Handlebars.compile($("#poolbalance_template").html());
-        $("#pauseminers").click(function () {
+        $("#pauseminers").click(function (event) {
+            event.stopPropagation()
             $.ajax({
                 url: '/pause', success: function (result) {
                     $("#pauseminers").html(result ? "Restart" : "Pause");
+                }
+            })
+        });
+
+        $("#lockminers").click(function (event) {
+            event.stopPropagation()
+            $.ajax({
+                url: '/lockminers', success: function (result) {
+                    $("#lockminers").html(result ? "Unlock" : "Lock");
                 }
             })
         });
@@ -134,7 +144,7 @@
         $('.h-selector').click(function () {
             var blkname = $(this).attr("id").replace(/h-/,"");
             var visible = $("#" + blkname).is(":visible");
-            if (visible) {$("#"+blkname).hide();} else {$("#"+blkname).show();}
+            if (visible) { $("#" + blkname).hide(); } else { $("#" + blkname).show(); }
 
             window.localStorage.setItem($(this).attr("id"), visible ? "hide" : "show");
         });
@@ -206,7 +216,13 @@
         (function updateStatus() {
             $.ajax({
                 url: '/status', success: function (result) {
-                    $("#pauseminers").html(result.Pause? "Restart" : "Pause");
+                    $("#pauseminers").html(result.Pause ? "Restart" : "Pause");
+                    $("#lockminers").html(result.LockMiners.Locked ? "Unlock" : "Lock");
+                    if (result.IsExclusiveRun || result.IsDonationRun) {
+                        $("#lockminers").hide()
+                    } else {
+                        $("#lockminers").show()
+                    }
                     window.setTimeout(updateStatus, 10000);
                 }
             });
@@ -234,6 +250,7 @@
           //console.log(item);
           item.tDevices = item.DeviceModel.toString();
           item.Name = item.Name.split(/\-/)[0];
+          if (item.IsLocked) {item.Name += " (locked!)"}
 
           // Format the algorithms and hashrates
 

@@ -3303,6 +3303,7 @@ class Miner {
     [Bool]$Donator = $false
     [Bool]$IsFocusWalletMiner = $false
     [Bool]$IsExclusiveMiner = $false
+    [Bool]$IsLocked = $false
     [Bool]$IsRunningFirstRounds = $false
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
