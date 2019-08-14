@@ -490,6 +490,16 @@ try {
         $AddAlgorithm += @("EquihashR150x5x3","RandomX")
         Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x4_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x4","EquihashR25x4x0") -Force -ErrorAction Ignore}
         Get-ChildItem ".\Stats\Miners" -Filter "*_Equihash25x5_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Rename-Item $_.FullName ($_.Name -replace "Equihash25x5","EquihashR25x5x0") -Force -ErrorAction Ignore}
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.EnableAlgorithmMapping -eq "`$EnableAlgorithmMapping" -or $ConfigActual.EnableAlgorithmMapping -eq $null) {
+            $ConfigActual | Add-Member EnableAlgorithmMapping "1" -Force
+            $Changes++;
+        }
+        if ($Changes) {       
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
     }
 
     if ($OverridePoolPenalties) {
