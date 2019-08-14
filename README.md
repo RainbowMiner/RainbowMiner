@@ -393,22 +393,24 @@ RainbowMiner uses a build-in hash table to convert different algorithmnames to u
 
 ## Special notes for Equihash
 
-The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9).
+The different Equihash algorithms are distinguished using the following Parameters: (n, k). For example, the classic Equihash first used by Zcash used n = 200 and k = 9, so it became Equihash (200, 9). For BEAM and ZEL a new variant EquihashR has been introduced. These add an extra paramter (r).
 
-The n and k values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
+The n, k and r values create enormous differences in the minimum memory requirement, and create enormous differences in how the actual mining software is coded in order to do the mining.
 
 RainbowMiner uses the following nameing convention:
 - Equihash16x5 = Equihash (96, 5)
 - Equihash20x9 = Equihash (200, 9)
 - Equihash21x9 = Equihash (210, 9)
 - Equihash24x5 = Equihash (144,5), e.g. BTG
-- Equihash25x4 = Equihash (125,4), e.g. ZelHash
-- Equihash25x5 = Equihash (150,5), e.g. BEAM
 - Equihash24x7 = Equihash (192,7), e.g. ZEROcoin
+- EquihashR25x4 = Equihash (125,4), e.g. ZelHash
+- EquihashR25x5 = Equihash (150,5), e.g. GRIMM
+- EquihashR25x5x3 = Equihash (150,5,3), e.g. BEAM
 
 The new numbers (16x5, 20x9, ..) describe the number of bits matched in each round for the algorithm, and provide a relative measure of the “hardness” of the algorithm (the numbers can be calculated, using n and k: n/(k+1) )
+For EquihashR the parameter (r) will be added to the algorithm name. For r=0, nothing will be added. 
 
-RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. beam will be represented by Equihash25x5
+RainbowMiner's build-in hash table makes it possible for you, to use many different algorithmnames. E.g. equihash-144_5, equihash1445, equihash-btg, equihash144btg will all be represented by Equihash24x5. BeamHash will be represented by EquihashR25x5x3
 
 
 ## OVERCLOCKING OVERVIEW
