@@ -151,7 +151,7 @@ param(
             "cuckoocycleo"      {"Cuckaroo29"}
             "cuckoocycle29swap" {"Cuckaroo29s"}
             "cuckoocycle31"     {"Cuckatoo31"}
-            "equihash1505g"     {"Equihash25x5"}
+            "equihash1505"      {"EquihashR25x5"}
             "hashimotos"        {"Ethash"}
             default             {$Name}
         }
