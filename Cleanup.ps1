@@ -472,6 +472,20 @@ try {
         if (Test-Path ".\Data\mrrinfo.json") {Remove-Item ".\Data\mrrinfo.json" -Force -ErrorAction Ignore; $ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "4.3.9.1")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($ConfigActual.EthPillEnalbeMTP -ne $null) {
+            $ConfigActual | Add-Member EthPillEnableMTP $($ConfigActual.EthPillEnalbeMTP -replace "Enalbe","Enable") -Force
+            $ConfigActual.PSObject.Properties.Remove("EthPillEnalbeMTP")
+            $Changes++;
+        }
+        if ($Changes) {       
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
