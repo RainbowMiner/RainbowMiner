@@ -1979,7 +1979,7 @@ function Invoke-Core {
 
     $API.CurrentProfit = $CurrentProfitTotal
 
-    if ($Session.Config.UsePowerPrice) {$StatusLine.Add("Powerprice = $([Math]::Round($PowerPrice,3))") > $null}
+    if ($Session.Config.UsePowerPrice) {$StatusLine.Add("Powerprice = $($Session.Config.PowerPriceCurrency) $([Math]::Round($PowerPrice,3))") > $null}
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
