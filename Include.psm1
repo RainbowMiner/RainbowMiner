@@ -819,9 +819,15 @@ function Update-Totals {
             $Stat.Power_1d   = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Power -Sum).Sum
             $Stat.Power_1w   = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Power -Sum).Sum
 
-            $Stat.Profit_Avg = ($Stat.Profit_1w / $Duration.TotalDays)
-            $Stat.Cost_Avg   = ($Stat.Cost_1w / $Duration.TotalDays)
-            $Stat.Power_Avg  = ($Stat.Power_1w / $Duration.TotalDays)
+            if ($Duration.TotalDays -le 1) {
+                $Stat.Profit_Avg = $Stat.Profit_1d
+                $Stat.Cost_Avg   = $Stat.Cost_1d
+                $Stat.Power_Avg  = $Stat.Power_1d
+            } else {
+                $Stat.Profit_Avg = ($Stat.Profit_1w / $Duration.TotalDays)
+                $Stat.Cost_Avg   = ($Stat.Cost_1w / $Duration.TotalDays)
+                $Stat.Power_Avg  = ($Stat.Power_1w / $Duration.TotalDays)
+            }
 
             $Totals_Sum.Profit_Avg += $Stat.Profit_Avg
             $Totals_Sum.Cost_Avg   += $Stat.Cost_Avg
