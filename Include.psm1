@@ -645,7 +645,7 @@ function Set-Total {
             Profit    = [Math]::Round($TotalProfit*1e8,4)
             Cost      = [Math]::Round($TotalCost*1e8,4)
             Power     = [Math]::Round($TotalPower,3)
-            Duration  = [Math]::Round($Duration.TotalMinutes,2)
+            Duration  = [Math]::Round($Duration.TotalMinutes,3)
             Donation  = "$(if ($Miner.Donator) {"1"} else {"0"})"
         }
         $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
