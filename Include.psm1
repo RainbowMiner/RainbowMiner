@@ -621,14 +621,40 @@ function Set-Total {
         [Switch]$Quiet = $false
     )
 
-    $Path0 = "Stats\Totals"
-    $Path = "$Path0\$($Miner.Pool[0])_Total.txt"
+    $Path0        = "Stats\Totals"
+    $Path_Name    = "$($Miner.Pool[0])_Total.txt"
+    $PathCsv_Name = "Totals_$("{0:yyyy-MM-dd}" -f (Get-Date)).csv"
 
-    $Duration = $Miner.GetRunningTime($true)
+    $Path    = "$Path0\$Path_Name"
+    $PathCsv = "$Path0\$PathCsv_Name"
 
-    $TotalProfit = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
-    $TotalCost   = $Miner.Profit_Cost * $Duration.TotalDays
-    $TotalPower  = $Miner.PowerDraw * $Duration.TotalDays
+    try {
+        $Duration = $Miner.GetRunningTime($true)
+
+        $TotalProfit = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
+        $TotalCost   = $Miner.Profit_Cost * $Duration.TotalDays
+        $TotalPower  = $Miner.PowerDraw * $Duration.TotalDays
+            
+        $CsvLine = [PSCustomObject]@{
+            Date      = $Updated
+            Date_UTC  = $Updated.ToUniversalTime()
+            PoolName  = $Miner.Pool | Select-Object -First 1
+            Algorithm = $Miner.BaseAlgorithm | Select-Object -First 1
+            Currency  = $Miner.Currency
+            Rate      = [Math]::Round($Session.Rates.USD,2)
+            Profit    = [Math]::Round($TotalProfit*1e8,4)
+            Cost      = [Math]::Round($TotalCost*1e8,4)
+            Power     = [Math]::Round($TotalPower,3)
+            Duration  = [Math]::Round($Duration.TotalMinutes,2)
+            Donation  = "$(if ($Miner.Donator) {"1"} else {"0"})"
+        }
+        $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+        if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+        $CsvLine | Export-Csv $PathCsv -NoTypeInformation -Append -ErrorAction Ignore
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
+    }
 
     $Stat = Get-Content $Path -ErrorAction Ignore -Raw
 
@@ -641,7 +667,7 @@ function Set-Total {
         $Stat.Updated   = $Updated
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
-        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Name) is corrupt and will be reset. "}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Name_Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     Pool     = $Miner.Pool[0]
                     Duration = $Duration.TotalMinutes
