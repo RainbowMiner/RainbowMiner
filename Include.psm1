@@ -754,6 +754,13 @@ function Update-Totals {
     $Duration_Calc = $Totals | Measure-Object -Property Date -Minimum -Maximum
     $Duration = ($Duration_Calc.Maximum - $Duration_Calc.Minimum)
 
+    $Totals_Sum = [PSCustomObject]@{
+        Duration   = [Math]::Round($Duration.TotalMinutes,2)
+        Profit_Avg = 0
+        Cost_Avg   = 0
+        Power_Avg  = 0
+    }
+
     $Totals | Where-Object {-not $_.Donator} | Group-Object -Property PoolName | Foreach-Object {
         $Path_Name = "$($_.Name)_Total.txt"
         try {
@@ -802,12 +809,12 @@ function Update-Totals {
         }
 
         try {
-            $Stat.Profit_1h  = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Profit -Sum).Sum / 1e8
-            $Stat.Profit_1d  = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Profit -Sum).Sum / 1e8
-            $Stat.Profit_1w  = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Profit -Sum).Sum / 1e8
-            $Stat.Cost_1h    = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Cost -Sum).Sum / 1e8
-            $Stat.Cost_1d    = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Cost -Sum).Sum / 1e8
-            $Stat.Cost_1w    = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Cost -Sum).Sum / 1e8
+            $Stat.Profit_1h  = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Profit -Sum).Sum
+            $Stat.Profit_1d  = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Profit -Sum).Sum
+            $Stat.Profit_1w  = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Profit -Sum).Sum
+            $Stat.Cost_1h    = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Cost -Sum).Sum
+            $Stat.Cost_1d    = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Cost -Sum).Sum
+            $Stat.Cost_1w    = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Cost -Sum).Sum
             $Stat.Power_1h   = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Power -Sum).Sum
             $Stat.Power_1d   = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Power -Sum).Sum
             $Stat.Power_1w   = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Power -Sum).Sum
@@ -816,11 +823,20 @@ function Update-Totals {
             $Stat.Cost_Avg   = ($Stat.Cost_1w / $Duration.TotalDays)
             $Stat.Power_Avg  = ($Stat.Power_1w / $Duration.TotalDays)
 
+            $Totals_Sum.Profit_Avg += $Stat.Profit_Avg
+            $Totals_Sum.Cost_Avg   += $Stat.Cost_Avg
+            $Totals_Sum.Power_Avg  += $Stat.Power_Avg
+
             $Stat | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$Path_Name" -Force
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) could not be updated. "}
+            Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) could not be updated. "
         }
+    }
+    if (-not $Quiet) {
+        $Totals_Sum.Profit_Avg /= 1e8
+        $Totals_Sum.Cost_Avg /= 1e8
+        $Totals_Sum
     }
 }
 
@@ -5823,9 +5839,28 @@ function Invoke-ReportMinerStatus {
         $ReportStatus = "Error"
         $ReportDone = $false
 
+        $Pool_Totals = if ($Session.ReportTotals) {
+            $Session.ReportTotals = $false
+            $Pool_Stats = Get-Stat -Totals
+            $Earn_Stats = Get-Stat -Balances
+
+            if ($Pool_Stats) {
+                $Pool_Stats.GetEnumerator() | Foreach-Object {
+                    $PoolName = $_.Value.Pool                    
+                    [PSCustomObject]@{
+                        Name = $PoolName
+                        Profit = "$([Math]::Round($_.Value.Profit_Avg,5))"
+                        Cost   = "$([Math]::Round($_.Value.Cost_Avg,5))"
+                        Power  = "$([Math]::Round($_.Value.Power_Avg,2))"
+                        Earnings = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Session.Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Session.Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
+                    }
+                }                
+            }
+        }
+
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; rates = ConvertTo-Json $Rates -Compress; interval = $Session.Config.BenchmarkInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; rates = ConvertTo-Json $Rates -Compress; interval = $Session.Config.BenchmarkInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
