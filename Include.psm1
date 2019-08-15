@@ -5839,12 +5839,7 @@ function Invoke-ReportMinerStatus {
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
 
-    # Send the request
     try {
-        $ReportUrl = $Session.Config.MinerStatusURL
-        $ReportStatus = "Error"
-        $ReportDone = $false
-
         $Pool_Totals = if ($Session.ReportTotals) {
             $Session.ReportTotals = $false
             $Pool_Stats = Get-Stat -Totals
@@ -5863,6 +5858,16 @@ function Invoke-ReportMinerStatus {
                 }
             }
         }
+    } catch {
+        Write-Log -Level Info "Miner prepare totals for report failed. "
+    }
+
+
+    # Send the request
+    try {
+        $ReportUrl = $Session.Config.MinerStatusURL
+        $ReportStatus = "Error"
+        $ReportDone = $false
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
