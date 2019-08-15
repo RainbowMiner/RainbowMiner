@@ -337,7 +337,7 @@
           html.push('<td>' + value.Name + '</td>');
           html.push('<td>' + formatAlgorithm(value.Algorithm) + '</td>');
           html.push('<td>' + value.Pool + '</td>');
-          html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol !== "" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName !== "" ? value.CoinName : '-')) + '</td>');
+          html.push('<td>' + (typeof value.CoinSymbol !== "undefined" && value.CoinSymbol != "" && value.Pool != "MiningRigRentals" ? value.CoinSymbol : (typeof value.CoinName !== "undefined" && value.CoinName != "" ? value.CoinName : '-')) + '</td>');
           html.push('<td>' + value.Currency + '</td>');
           html.push('<td>' + value.Type + '</td>');
           html.push('<td>' + formatPricesBTC(value.Profit) + '</td>');
