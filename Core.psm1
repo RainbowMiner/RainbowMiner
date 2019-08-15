@@ -880,7 +880,7 @@ function Invoke-Core {
     [Double]$PowerPriceBTC = 0
     if ($PowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
         if ($Session.Rates."$($Session.Config.PowerPriceCurrency)") {
-            $PowerPriceBTC = [Double]$Session.Config.PowerPrice/[Double]$Session.Rates."$($Session.Config.PowerPriceCurrency)"
+            $PowerPriceBTC = [Double]$PowerPrice/[Double]$Session.Rates."$($Session.Config.PowerPriceCurrency)"
         } else {
             Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
@@ -1978,6 +1978,8 @@ function Invoke-Core {
     if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Session.Rates.$_)"})  -join ' = ')") > $null}
 
     $API.CurrentProfit = $CurrentProfitTotal
+
+    if ($Session.Config.UsePowerPrice) {$StatusLine.Add("Powerprice = $([Math]::Round($PowerPrice,3))") > $null}
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
