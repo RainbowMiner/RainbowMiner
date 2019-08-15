@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.6-lolminer/lolMiner_v086_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.7-lolminer/lolMiner_v087_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.6-lolminer/lolMiner_v086_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.7-lolminer/lolMiner_v087_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
