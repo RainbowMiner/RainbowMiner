@@ -40,13 +40,13 @@ if ($IsLinux) {
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1;                  Params = "--par=96,5"}  #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;                  Params = "--par=144,5"} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2;                  Params = "--par=192,7"} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 2;                  Params = "--par=125,4"} #Equihash 125,4,0 (ZelCash)
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"} #Equihash 150,5,0 (GRIMM)
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=beam2"} #Equihash 150,5,3 (BEAM)
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 4;                  Params = "--par=210,9"} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1;                  Params = "--par=96,5";  AutoPers = $true}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;                  Params = "--par=144,5"; AutoPers = $true} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2;                  Params = "--par=192,7"; AutoPers = $true} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 2;                  Params = "--par=125,4"; AutoPers = $true} #Equihash 125,4,0 (ZelCash)
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"; AutoPers = $true} #Equihash 150,5,0 (GRIMM)
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=beam2"; AutoPers = $false} #Equihash 150,5,3 (BEAM)
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 4;                  Params = "--par=210,9"; AutoPers = $true} #Equihash 210,9 (AION)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -98,7 +98,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DeviceName = $Miner_Device.Name
 					DeviceModel = $Miner_Model
 					Path = $Path
-					Arguments = "--telemetry $($Miner_Port) -cd $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --pers $($PersCoin) --gpu-line --nonvml --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params)"
+					Arguments = "--telemetry $($Miner_Port) -cd $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"}) --gpu-line --nonvml --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params)"
 					HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
 					API = "MiniZ"
 					Port = $Miner_Port
