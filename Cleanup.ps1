@@ -15,6 +15,7 @@ $CacheCleanup = $false
 $OverridePoolPenalties = $false
 $ChangesTotal = 0
 $AddAlgorithm = @()
+$RemoveMinerStats = @()
 try {
     if ($Version -le (Get-Version "3.8.3.7")) {
         $Changes = 0
@@ -343,7 +344,7 @@ try {
 
     if ($Version -le (Get-Version "3.9.3.7")) {
         Get-ChildItem "Stats\Pools\NLpool_Cuckoo_Profit.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
-        Get-ChildItem "Stats\Miners" -Filter "*Zjazz*Cuckoo_HashRate.txt" -ErrorAction Ignore | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        $RemoveMinerStats += @("*Zjazz*Cuckoo_HashRate.txt")
     }
 
     if ($Version -le (Get-Version "3.9.3.9")) {
@@ -461,7 +462,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.3.8.4")) {
-        Get-ChildItem ".\Stats\Miners" -Filter "*-Gminer-*_Equihash25x5_HashRate.txt" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
+        $RemoveMinerStats += @("*-Gminer-*_Equihash25x5_HashRate.txt")
         if (Test-Path "Stats\Balances") {Get-ChildItem ".\Stats\Balances" -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}}
     }
 
@@ -502,6 +503,11 @@ try {
             $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
             $ChangesTotal += $Changes
         }
+    }
+
+    if ($Version -le (Get-Version "4.3.9.5")) {
+        $RemoveMinerStats += @("*-MiniZ-*_EquihashR25x5x3_HashRate.txt","*-CcminerMTP-*_MTP_HashRate.txt")
+        $AddAlgorithm += @("RandomX","ScryptSIPC")
     }
 
     if ($OverridePoolPenalties) {
@@ -559,6 +565,12 @@ try {
                     $ChangesTotal+=$Changes
                 }
             }
+        }
+    }
+
+    if ($RemoveMinerStats.Count -gt 0) {
+        $RemoveMinerStats | Foreach-Object {
+            Get-ChildItem ".\Stats\Miners" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
         }
     }
 

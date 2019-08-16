@@ -31,7 +31,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";   SecondaryAlgorithm = ""; Params = "-a cuckatoo --cuckoo-intensity $CuckooIntensity";      NH = $true;  MinMemGb = 8;  MinMemGbW10 = 10; DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #Cuckatoo31
     [PSCustomObject]@{MainAlgorithm = "Ethash";       SecondaryAlgorithm = ""; Params = "-a ethash";        NH = $true; MinMemGb = 4;  DevFee = 0.65; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
     [PSCustomObject]@{MainAlgorithm = "ProgPow";      SecondaryAlgorithm = ""; Params = "-a progpow_sero";  NH = $true; MinMemGb = 4;  DevFee = 0.65; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #ProgPowSero
-    [PSCustomObject]@{MainAlgorithm = "SipC";         SecondaryAlgorithm = ""; Params = "-a sipc";          NH = $true; MinMemGb = 1;  DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "ScryptSIPC";   SecondaryAlgorithm = ""; Params = "-a sipc";          NH = $true; MinMemGb = 1;  DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "Tensority";    SecondaryAlgorithm = "Ethash"; Params = "-a tensority_ethash"; NH = $true; MinMemGb = 4; DevFee = 3.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #Ethash + BTM
     [PSCustomObject]@{MainAlgorithm = "Tensority";    SecondaryAlgorithm = ""; Params = "-a tensority";     NH = $true; MinMemGb = 1;  DevFee = 2.0;  Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $false} #BTM
 )
