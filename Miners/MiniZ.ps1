@@ -40,13 +40,13 @@ if ($IsLinux) {
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1;                  Params = "--par=96,5";  AutoPers = $true}  #Equihash 96,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;                  Params = "--par=144,5"; AutoPers = $true} #Equihash 144,5
-    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2;                  Params = "--par=192,7"; AutoPers = $true} #Equihash 192,7
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 2;                  Params = "--par=125,4"; AutoPers = $true} #Equihash 125,4,0 (ZelCash)
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"; AutoPers = $true} #Equihash 150,5,0 (GRIMM)
-    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=beam2"; AutoPers = $false} #Equihash 150,5,3 (BEAM)
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 4;                  Params = "--par=210,9"; AutoPers = $true} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1;                  Params = "--par=96,5";  ExtendInterval = 2; AutoPers = $true}  #Equihash 96,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;                  Params = "--par=144,5"; ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
+    [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2;                  Params = "--par=192,7"; ExtendInterval = 2; AutoPers = $true} #Equihash 192,7
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 2;                  Params = "--par=125,4"; ExtendInterval = 3; AutoPers = $true} #Equihash 125,4,0 (ZelCash)
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"; ExtendInterval = 2; AutoPers = $true} #Equihash 150,5,0 (GRIMM)
+    [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=beam2"; ExtendInterval = 3; AutoPers = $false} #Equihash 150,5,3 (BEAM)
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 4;                  Params = "--par=210,9"; ExtendInterval = 2; AutoPers = $true} #Equihash 210,9 (AION)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -104,7 +104,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					Port = $Miner_Port
 					DevFee = $DevFee
 					Uri = $Uri
-					ExtendInterval = 2
+					ExtendInterval = $_.ExtendInterval
 					ManualUri = $ManualUri
 				}
 			}

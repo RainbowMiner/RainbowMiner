@@ -3981,11 +3981,12 @@ class Miner {
     }
 
     SetOCprofile($Config,[int]$Sleep=500) {
+
         $this.LastSetOCTime = (Get-Date).ToUniversalTime()
 
         $this.OCprofileBackup = @()
 
-        if (-not $this.HasOCprofile()) {return}
+        if (-not $this.HasOCprofile() -or $this.Arguments -match "--oc\d") {return}
 
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
