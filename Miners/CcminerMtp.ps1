@@ -23,7 +23,7 @@ $DevFee = 0.0
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 6; Params = ""} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
