@@ -57,9 +57,13 @@
       <div class="row">
         <nav class="d-none d-md-block sidebar nav-collapse" id="sidebar">
             <div class="sidebar-sticky">
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <strong>Worker: <span class="workername"></span></strong>
-                </h6>
+                <div class="flex-column px-3 text-muted mt-4">
+                    Worker: <span class="workername"></span>
+                </div>
+                <div class="flex-column px-3 text-muted mb-2 powerprice">
+                    E-Price: <span></span>
+                </div>
+
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a id="navdashboard" class="nav-link" href="/">
@@ -68,6 +72,7 @@
                         </a>
                     </li>
                 </ul>
+
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span>Devices</span>
                 </h6>

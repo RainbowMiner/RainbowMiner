@@ -128,6 +128,13 @@ $(function () {
         $('#uptime').text(formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000)));
         setTimeout(r, 1000);
     })();
+
+    (function s() {
+        if (!globalconfig || !globalconfig.Version) { setTimeout(q, 1000); return }
+        $('.powerprice span').text(globalconfig.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
+        if (globalconfig.UsePowerPrice) {$('.powerprice').show()} else {$('.powerprice').hide()}
+        setTimeout(s, 150000);
+    })();
 });
   
 </script>

@@ -57,6 +57,10 @@ pre {
     -webkit-text-fill-color: transparent;
 }
 
+.powerprice {
+    display:none;
+}
+
 #version {
     font-size: .6rem;
     -webkit-text-fill-color: #fff;

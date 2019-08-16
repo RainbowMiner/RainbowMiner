@@ -453,6 +453,9 @@ function Invoke-Core {
                                 EnableAlgorithmMapping = $Session.Config.EnableAlgorithmMapping
                                 AlgorithmMap           = $Session.Config.AlgorithmMap
                                 OCmode                 = $Session.OCmode
+                                UsePowerPrice          = $Session.Config.UsePowerPrice
+                                PowerPrice             = $PowerPrice
+                                PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                             }
     }
@@ -648,7 +651,9 @@ function Invoke-Core {
     $DayOfWeek = (Get-Date).DayOfWeek
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
-    
+
+    if ($API.Info -ne $null -and $API.Info.PowerPrice -ne $null) {$API.Info.PowerPrice = $PowerPrice}
+
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
     $DonateDelayHours = 24
@@ -1979,7 +1984,7 @@ function Invoke-Core {
 
     $API.CurrentProfit = $CurrentProfitTotal
 
-    if ($Session.Config.UsePowerPrice) {$StatusLine.Add("Powerprice = $($Session.Config.PowerPriceCurrency) $([Math]::Round($PowerPrice,3))") > $null}
+    if ($Session.Config.UsePowerPrice) {$StatusLine.Add("E-Price = $($Session.Config.PowerPriceCurrency) $([Math]::Round($PowerPrice,3))") > $null}
 
     Write-Host " Profit = $($StatusLine -join ' | ') " -BackgroundColor White -ForegroundColor Black
     Write-Host " "
