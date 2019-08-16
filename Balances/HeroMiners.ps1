@@ -41,7 +41,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
     $Request = [PSCustomObject]@{}
 
     try {
-        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -cycletime 120
+        $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
         $Divisor = [Decimal]$Pool_Request.config.coinUnits
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:")))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
