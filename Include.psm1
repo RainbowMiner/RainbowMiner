@@ -5856,7 +5856,7 @@ function Invoke-ReportMinerStatus {
                         Power  = "$([Math]::Round($_.Value.Power_Avg,2))"
                         Earnings = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Session.Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Session.Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
                     }
-                } | Where-Object {$_.Profit -gt 0 -or $_.Earnings -gt 0}
+                } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
         }
     } catch {
