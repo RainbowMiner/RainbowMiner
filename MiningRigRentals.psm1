@@ -167,6 +167,7 @@ param(
     Switch ($Name) {
             "cuckoocycle"       {"GRIN"}
             "cuckoocycle29swap" {"SWAP"}
+            "equihash1505"      {"BEAM"}
             "equihash1505g"     {"GRIMM"}
             default             {""}
     }
@@ -243,6 +244,14 @@ param(
         }
     } else {$MRRStatus[$RigId] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
     if (-not $Stop) {$MRRStatus[$RigId].enable}
+}
+
+function Get-MiningRigRentalRigs {
+    Write-Host "Not implemented"
+}
+
+function Update-MiningRigRentalRigs {
+    Write-Host "Not implemented"
 }
 
 function Invoke-MiningRigRentalCreateRigs {
