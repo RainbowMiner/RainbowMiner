@@ -5697,7 +5697,26 @@ function Invoke-ReportMinerStatus {
             $Earn_Stats = Get-Stat -Balances
 
             if ($Pool_Stats) {
+                $Pool_Stats_Consolidated = @{}
                 $Pool_Stats.GetEnumerator() | Foreach-Object {
+                    $StatName = $_.Name -replace "(Coins|Party|Solo)_","_"
+                    if ($Pool_Stats_Consolidated.ContainsKey($StatName)) {
+                        $Pool_Stats_Consolidated[$StatName].Profit_Avg += $_.Value.Profit_Avg
+                        $Pool_Stats_Consolidated[$StatName].ProfitApi_Avg += $_.Value.ProfitApi_Avg
+                        $Pool_Stats_Consolidated[$StatName].Cost_Avg += $_.Value.Cost_Avg
+                        $Pool_Stats_Consolidated[$StatName].Power_Avg += $_.Value.Power_Avg
+                    } else {
+                        $Pool_Stats_Consolidated[$StatName] = [PSCustomObject]@{
+                            Pool = $_.Value.Pool -replace "(Coins|Party|Solo)$"
+                            Profit_Avg = $_.Value.Profit_Avg
+                            ProfitApi_Avg = $_.Value.ProfitApi_Avg
+                            Cost_Avg = $_.Value.Cost_Avg
+                            Power_Avg = $_.Value.Power_Avg
+                        }
+                    }
+                }
+
+                $Pool_Stats_Consolidated.GetEnumerator() | Foreach-Object {
                     $PoolName = $_.Value.Pool                    
                     [PSCustomObject]@{
                         Name      = $PoolName
