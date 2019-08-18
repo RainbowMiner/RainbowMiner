@@ -3986,7 +3986,7 @@ class Miner {
 
         $this.OCprofileBackup = @()
 
-        if (-not $this.HasOCprofile() -or $this.Arguments -match "--oc\d") {return}
+        if (-not $this.HasOCprofile()) {return}
 
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
