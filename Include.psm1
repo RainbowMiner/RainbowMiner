@@ -633,22 +633,27 @@ function Set-Total {
     try {
         $Duration = $Miner.GetRunningTime($true)
 
-        $TotalProfit = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
-        $TotalCost   = $Miner.Profit_Cost * $Duration.TotalDays
-        $TotalPower  = $Miner.PowerDraw * $Duration.TotalDays
+        $TotalProfit    = ($Miner.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {$Miner.Profit_Cost} else {0}))*$Duration.TotalDays 
+        $TotalCost      = $Miner.Profit_Cost * $Duration.TotalDays
+        $TotalPower     = $Miner.PowerDraw * $Duration.TotalDays
+        $Penalty        = [double]($Miner.PoolPenalty | Select-Object -First 1)
+        $PenaltyFactor  = 1-$Penalty/100
+        $TotalProfitApi = if ($PenaltyFactor -gt 0) {$TotalProfit/$PenaltyFactor} else {0}
             
         $CsvLine = [PSCustomObject]@{
-            Date      = $Updated
-            Date_UTC  = $Updated_UTC
-            PoolName  = $Miner.Pool | Select-Object -First 1
-            Algorithm = $Miner.BaseAlgorithm | Select-Object -First 1
-            Currency  = $Miner.Currency
-            Rate      = [Math]::Round($Session.Rates.USD,2)
-            Profit    = [Math]::Round($TotalProfit*1e8,4)
-            Cost      = [Math]::Round($TotalCost*1e8,4)
-            Power     = [Math]::Round($TotalPower,3)
-            Duration  = [Math]::Round($Duration.TotalMinutes,3)
-            Donation  = "$(if ($Miner.Donator) {"1"} else {"0"})"
+            Date        = $Updated
+            Date_UTC    = $Updated_UTC
+            PoolName    = $Miner.Pool | Select-Object -First 1
+            Algorithm   = $Miner.BaseAlgorithm | Select-Object -First 1
+            Currency    = $Miner.Currency
+            Rate        = [Math]::Round($Session.Rates.USD,2)
+            Profit      = [Math]::Round($TotalProfit*1e8,4)
+            ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
+            Cost        = [Math]::Round($TotalCost*1e8,4)
+            Power       = [Math]::Round($TotalPower,3)
+            Penalty     = $Penalty
+            Duration    = [Math]::Round($Duration.TotalMinutes,3)
+            Donation    = "$(if ($Miner.Donator) {"1"} else {"0"})"
         }
         $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
         if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
@@ -662,51 +667,25 @@ function Set-Total {
 
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
-        $Stat.Duration += $Duration.TotalMinutes
-        $Stat.Cost     += $TotalCost
-        $Stat.Profit   += $TotalProfit
-        $Stat.Power    += $TotalPower
-        $Stat.Updated   = $Updated_UTC
-
-        if ($Stat.Cost_1h -eq $null) {
-            $Stat | Add-Member -NotePropertyMembers @{
-                    Cost_1h    = $TotalCost
-                    Cost_1d    = $TotalCost
-                    Cost_1w    = $TotalCost
-                    Cost_Avg   = $TotalCost
-                    Profit_1h  = $TotalProfit
-                    Profit_1d  = $TotalProfit
-                    Profit_1w  = $TotalProfit
-                    Profit_Avg = $TotalProfit
-                    Power_1h   = $TotalPower
-                    Power_1d   = $TotalPower
-                    Power_1w   = $TotalPower
-                    Power_Avg  = $TotalPower
-            } -Force
-        }
+        if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
+        $Stat.Duration  += $Duration.TotalMinutes
+        $Stat.Cost      += $TotalCost
+        $Stat.Profit    += $TotalProfit
+        $Stat.ProfitApi += $TotalProfitApi
+        $Stat.Power     += $TotalPower
+        $Stat.Updated    = $Updated_UTC
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
-                    Pool       = $Miner.Pool[0]
-                    Duration   = $Duration.TotalMinutes
-                    Cost       = $TotalCost
-                    Cost_1h    = $TotalCost
-                    Cost_1d    = $TotalCost
-                    Cost_1w    = $TotalCost
-                    Cost_Avg   = $TotalCost
-                    Profit     = $TotalProfit
-                    Profit_1h  = $TotalProfit
-                    Profit_1d  = $TotalProfit
-                    Profit_1w  = $TotalProfit
-                    Profit_Avg = $TotalProfit
-                    Power      = $TotalPower
-                    Power_1h   = $TotalPower
-                    Power_1d   = $TotalPower
-                    Power_1w   = $TotalPower
-                    Power_Avg  = $TotalPower
-                    Started    = $Updated_UTC
-                    Updated    = $Updated_UTC
+                    Pool          = $Miner.Pool[0]
+                    Duration      = $Duration.TotalMinutes
+                    Cost          = $TotalCost
+                    Profit        = $TotalProfit
+                    ProfitApi     = $TotalProfitApi
+                    Power         = $TotalPower
+                    Started       = $Updated_UTC
+                    Updated       = $Updated_UTC
                 }
     }
 
@@ -714,135 +693,107 @@ function Set-Total {
     $Stat | ConvertTo-Json | Set-Content $Path
 }
 
-function Update-Totals {
-    [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory = $false)]
-        [DateTime]$Updated = (Get-Date).ToUniversalTime(),
-        [Parameter(Mandatory = $false)]
-        [Switch]$Quiet = $false
-    )
+function Start-UpdateTotalsJob {
 
-    $Path0        = "Stats\Totals"
+    if ($Job = (Get-Job | Where-Object Name -eq "UpdateTotalsJob")) {
+        if ($Job.State -eq "Running") {$Job;return}
+        $Job | Remove-Job -Force -ErrorAction Ignore
+    }
 
-    $Totals = @()
-    $LastValid      = (Get-Date).AddDays(-30)
-    $LastValid_File = "Totals_$("{0:yyyy-MM-dd}" -f $LastValid)"
-    $Last1w         = (Get-Date).AddDays(-8)
-    $Last1w_File    = "Totals_$("{0:yyyy-MM-dd}" -f $Last1w)"
-    Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Sort-Object BaseName | Foreach-Object {
-        if ($_.BaseName -lt $LastValid_File) {Remove-Item $_.FullName -Force -ErrorAction Ignore}
-        elseif ($_.BaseName -ge $Last1w_File) {
-            $Totals += @(Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.BaseName -gt $Last1w_File -or $_.Date -ge $Last1w} | Foreach-Object {
-                            [PSCustomObject]@{
-                                Date = [DateTime]$_.Date
-                                Date_UTC = [DateTime]$_.Date_UTC
-                                PoolName = $_.PoolName
-                                Profit = [Decimal]$_.Profit
-                                Cost   = [Decimal]$_.Cost
-                                Power  = [Decimal]$_.Power
-                                Donation = ($_.Donation -eq "1")
-                            }
-                        } | Select-Object)
+    Start-Job -ArgumentList "$pwd" -ScriptBlock {
+        param($WorkingDirectory)
+
+        If ($WorkingDirectory) {Set-Location $WorkingDirectory}
+
+        (Get-Process -Id $PID).PriorityClass = "BelowNormal"
+
+        $Updated        = (Get-Date).ToUniversalTime()
+        $Path0          = "Stats\Totals"
+
+        $Totals         = @()
+        $LastValid      = (Get-Date).AddDays(-30)
+        $LastValid_File = "Totals_$("{0:yyyy-MM-dd}" -f $LastValid)"
+        $Last1w         = (Get-Date).AddDays(-8)
+        $Last1w_File    = "Totals_$("{0:yyyy-MM-dd}" -f $Last1w)"
+        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Sort-Object BaseName | Foreach-Object {
+            if ($_.BaseName -lt $LastValid_File) {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+            elseif ($_.BaseName -ge $Last1w_File) {
+                $Totals += @(Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.BaseName -gt $Last1w_File -or $_.Date -ge $Last1w} | Foreach-Object {
+                                [PSCustomObject]@{
+                                    Date      = [DateTime]$_.Date
+                                    Date_UTC  = [DateTime]$_.Date_UTC
+                                    PoolName  = $_.PoolName
+                                    Profit    = [Decimal]$_.Profit
+                                    ProfitApi = [Decimal]$_.ProfitApi
+                                    Cost      = [Decimal]$_.Cost
+                                    Power     = [Decimal]$_.Power
+                                    Donation  = ($_.Donation -eq "1")
+                                    Penalty   = [Decimal]$_.Penalty
+                                }
+                            } | Select-Object)
+            }
         }
-    }
 
-    $Last1h = (Get-Date).AddHours(-1)
-    $Last1d = (Get-Date).AddDays(-1)
-    $Last1w = (Get-Date).AddDays(-7)
+        $Last1d = (Get-Date).AddDays(-1)
+        $Last1w = (Get-Date).AddDays(-7)
 
-    $Duration_Calc = $Totals | Measure-Object -Property Date -Minimum -Maximum
-    $Duration = ($Duration_Calc.Maximum - $Duration_Calc.Minimum)
+        $Duration_Calc = $Totals | Measure-Object -Property Date -Minimum -Maximum
+        $Duration = ($Duration_Calc.Maximum - $Duration_Calc.Minimum)
 
-    $Totals_Sum = [PSCustomObject]@{
-        Duration   = [Math]::Round($Duration.TotalMinutes,2)
-        Profit_Avg = 0
-        Cost_Avg   = 0
-        Power_Avg  = 0
-    }
-
-    $Totals | Where-Object {-not $_.Donator} | Group-Object -Property PoolName | Foreach-Object {
-        $Path_Name = "$($_.Name)_Total.txt"
-        try {
-            $Stat = Get-Content "$Path0\$Path_Name" -Raw | ConvertFrom-Json -ErrorAction Ignore
-
-            if ($Stat.Cost_1h -eq $null) {
-                $Stat | Add-Member -NotePropertyMembers @{
-                        Cost_1h    = 0
-                        Cost_1d    = 0
-                        Cost_1w    = 0
-                        Cost_Avg   = 0
-                        Profit_1h  = 0
-                        Profit_1d  = 0
-                        Profit_1w  = 0
-                        Profit_Avg = 0
-                        Power_1h   = 0
-                        Power_1d   = 0
-                        Power_1w   = 0
-                        Power_Avg  = 0
-                } -Force
+        $Totals | Where-Object {-not $_.Donator} | Group-Object -Property PoolName | Foreach-Object {
+            $Path_Name = "$($_.Name)_TotalAvg.txt"
+            try {
+                $Stat = Get-Content "$Path0\$Path_Name" -Raw | ConvertFrom-Json -ErrorAction Ignore
+                $Stat.Updated = $Updated
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Stat = [PSCustomObject]@{
+                            Pool          = $_.Name
+                            Cost_1d       = 0
+                            Cost_1w       = 0
+                            Cost_Avg      = 0
+                            Profit_1d     = 0
+                            Profit_1w     = 0
+                            Profit_Avg    = 0
+                            ProfitApi_1d  = 0
+                            ProfitApi_1w  = 0
+                            ProfitApi_Avg = 0
+                            Power_1d      = 0
+                            Power_1w      = 0
+                            Power_Avg     = 0
+                            Started       = $Updated
+                            Updated       = $Updated
+                        }
             }
 
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            $Stat = [PSCustomObject]@{
-                        Pool       = $_.Name
-                        Duration   = New-TimeSpan -Seconds 1
-                        Cost       = 0
-                        Cost_1h    = 0
-                        Cost_1d    = 0
-                        Cost_1w    = 0
-                        Cost_Avg   = 0
-                        Profit     = 0
-                        Profit_1h  = 0
-                        Profit_1d  = 0
-                        Profit_1w  = 0
-                        Profit_Avg = 0
-                        Power      = 0
-                        Power_1h   = 0
-                        Power_1d   = 0
-                        Power_1w   = 0
-                        Power_Avg  = 0
-                        Started    = (Get-Date).ToUniversalTime()
-                        Updated    = (Get-Date).ToUniversalTime()
-                    }
-        }
+            try {
+                $Stat.Profit_1d     = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Profit -Sum).Sum
+                $Stat.Profit_1w     = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Profit -Sum).Sum
+                $Stat.ProfitApi_1d  = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property ProfitApi -Sum).Sum
+                $Stat.ProfitApi_1w  = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property ProfitApi -Sum).Sum
+                $Stat.Cost_1d       = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Cost -Sum).Sum
+                $Stat.Cost_1w       = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Cost -Sum).Sum
+                $Stat.Power_1d      = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Power -Sum).Sum
+                $Stat.Power_1w      = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Power -Sum).Sum
 
-        try {
-            $Stat.Profit_1h  = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Profit -Sum).Sum
-            $Stat.Profit_1d  = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Profit -Sum).Sum
-            $Stat.Profit_1w  = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Profit -Sum).Sum
-            $Stat.Cost_1h    = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Cost -Sum).Sum
-            $Stat.Cost_1d    = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Cost -Sum).Sum
-            $Stat.Cost_1w    = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Cost -Sum).Sum
-            $Stat.Power_1h   = ($_.Group | Where-Object {$_.Date -ge $Last1h} | Measure-Object -Property Power -Sum).Sum
-            $Stat.Power_1d   = ($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Power -Sum).Sum
-            $Stat.Power_1w   = ($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Power -Sum).Sum
+                if ($Duration.TotalDays -le 1) {
+                    $Stat.Profit_Avg    = $Stat.Profit_1d
+                    $Stat.ProfitApi_Avg = $Stat.ProfitApi_1d
+                    $Stat.Cost_Avg      = $Stat.Cost_1d
+                    $Stat.Power_Avg     = $Stat.Power_1d
+                } else {
+                    $Stat.Profit_Avg    = ($Stat.Profit_1w / $Duration.TotalDays)
+                    $Stat.ProfitApi_Avg = ($Stat.ProfitApi_1w / $Duration.TotalDays)
+                    $Stat.Cost_Avg      = ($Stat.Cost_1w / $Duration.TotalDays)
+                    $Stat.Power_Avg     = ($Stat.Power_1w / $Duration.TotalDays)
+                }
 
-            if ($Duration.TotalDays -le 1) {
-                $Stat.Profit_Avg = $Stat.Profit_1d
-                $Stat.Cost_Avg   = $Stat.Cost_1d
-                $Stat.Power_Avg  = $Stat.Power_1d
-            } else {
-                $Stat.Profit_Avg = ($Stat.Profit_1w / $Duration.TotalDays)
-                $Stat.Cost_Avg   = ($Stat.Cost_1w / $Duration.TotalDays)
-                $Stat.Power_Avg  = ($Stat.Power_1w / $Duration.TotalDays)
+                if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+                $Stat | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$Path_Name" -Force
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
             }
-
-            $Totals_Sum.Profit_Avg += $Stat.Profit_Avg
-            $Totals_Sum.Cost_Avg   += $Stat.Cost_Avg
-            $Totals_Sum.Power_Avg  += $Stat.Power_Avg
-
-            $Stat | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$Path_Name" -Force
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) could not be updated. "
         }
-    }
-    if (-not $Quiet) {
-        $Totals_Sum.Profit_Avg /= 1e8
-        $Totals_Sum.Cost_Avg /= 1e8
-        $Totals_Sum
     }
 }
 
@@ -1265,6 +1216,8 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Totals = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$TotalAvgs = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$Balances = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$All = $false
@@ -1274,7 +1227,7 @@ function Get-Stat {
         # Return single requested stat
         if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
-        elseif ($Name -match '_Total$') {$Path = "Stats\Totals"}
+        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
         else {$Path = "Stats"}
 
@@ -1294,14 +1247,15 @@ function Get-Stat {
 
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
         if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
-        if (($Totals -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
+        if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
-        if ($Miners) {$Match += "Hashrate"}
-        if ($Pools)  {$Match += "Profit|BLK|HSR|TTF"}
-        if ($Totals) {$Match += "Total"}
-        if ($Balances) {$Match += "Balance"}
+        if ($Miners)    {$Match += "Hashrate"}
+        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF"}
+        if ($Totals)    {$Match += "Total"}
+        if ($TotalAvgs) {$Match += "TotalAvg"}
+        if ($Balances)  {$Match += "Balance"}
 
         $MatchStr = $Match -join "|"
 
@@ -1453,7 +1407,8 @@ function Get-PoolsContent {
             if ($PoolName -eq "WhatToMine") {
                 $Pool
             } else {
-                $Pool_Factor = 1-([Double]$Config.Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty)/100
+                $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
+                $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
                 if ($Pool.Price -eq $null) {$Pool | Add-Member Price 0 -Force}
                 if ($Pool.StablePrice -eq $null) {$Pool | Add-Member StablePrice 0 -Force}
@@ -1462,7 +1417,7 @@ function Get-PoolsContent {
                 $Pool | Add-Member -NotePropertyMembers @{
                     AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
                     Name          = $Pool_Name
-                    Penalty       = $Config.Penalty
+                    Penalty       = $Penalty
                     PenaltyFactor = $Pool_Factor
                     Wallet        = $Config.Wallets."$($Pool.Currency)"
                     Worker        = $Config.Worker
@@ -1761,8 +1716,8 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
-        param($ControllerProcessID, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
+        param($ControllerProcessID, $CreateProcessPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1772,115 +1727,7 @@ function Start-SubProcessInConsole {
         if ($ControllerProcess -eq $null) {return}
 
         if ($StartWithoutTakingFocus) {
-            Add-Type -TypeDefinition @"
-// http://www.daveamenta.com/2013-08/powershell-start-process-without-taking-focus/
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-             
-[StructLayout(LayoutKind.Sequential)]
-public struct PROCESS_INFORMATION {
-    public IntPtr hProcess;
-    public IntPtr hThread;
-    public uint dwProcessId;
-    public uint dwThreadId;
-}
-             
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-public struct STARTUPINFO {
-    public uint cb;
-    public string lpReserved;
-    public string lpDesktop;
-    public string lpTitle;
-    public uint dwX;
-    public uint dwY;
-    public uint dwXSize;
-    public uint dwYSize;
-    public uint dwXCountChars;
-    public uint dwYCountChars;
-    public uint dwFillAttribute;
-    public STARTF dwFlags;
-    public ShowWindow wShowWindow;
-    public short cbReserved2;
-    public IntPtr lpReserved2;
-    public IntPtr hStdInput;
-    public IntPtr hStdOutput;
-    public IntPtr hStdError;
-}
-             
-[StructLayout(LayoutKind.Sequential)]
-public struct SECURITY_ATTRIBUTES {
-    public int length;
-    public IntPtr lpSecurityDescriptor;
-    public bool bInheritHandle;
-}
-             
-[Flags]
-public enum CreationFlags : int {
-    NONE = 0,
-    DEBUG_PROCESS = 0x00000001,
-    DEBUG_ONLY_THIS_PROCESS = 0x00000002,
-    CREATE_SUSPENDED = 0x00000004,
-    DETACHED_PROCESS = 0x00000008,
-    CREATE_NEW_CONSOLE = 0x00000010,
-    CREATE_NEW_PROCESS_GROUP = 0x00000200,
-    CREATE_UNICODE_ENVIRONMENT = 0x00000400,
-    CREATE_SEPARATE_WOW_VDM = 0x00000800,
-    CREATE_SHARED_WOW_VDM = 0x00001000,
-    CREATE_PROTECTED_PROCESS = 0x00040000,
-    EXTENDED_STARTUPINFO_PRESENT = 0x00080000,
-    CREATE_BREAKAWAY_FROM_JOB = 0x01000000,
-    CREATE_PRESERVE_CODE_AUTHZ_LEVEL = 0x02000000,
-    CREATE_DEFAULT_ERROR_MODE = 0x04000000,
-    CREATE_NO_WINDOW = 0x08000000,
-}
-             
-[Flags]
-public enum STARTF : uint {
-    STARTF_USESHOWWINDOW = 0x00000001,
-    STARTF_USESIZE = 0x00000002,
-    STARTF_USEPOSITION = 0x00000004,
-    STARTF_USECOUNTCHARS = 0x00000008,
-    STARTF_USEFILLATTRIBUTE = 0x00000010,
-    STARTF_RUNFULLSCREEN = 0x00000020,  // ignored for non-x86 platforms
-    STARTF_FORCEONFEEDBACK = 0x00000040,
-    STARTF_FORCEOFFFEEDBACK = 0x00000080,
-    STARTF_USESTDHANDLES = 0x00000100,
-}
-             
-public enum ShowWindow : short {
-    SW_HIDE = 0,
-    SW_SHOWNORMAL = 1,
-    SW_NORMAL = 1,
-    SW_SHOWMINIMIZED = 2,
-    SW_SHOWMAXIMIZED = 3,
-    SW_MAXIMIZE = 3,
-    SW_SHOWNOACTIVATE = 4,
-    SW_SHOW = 5,
-    SW_MINIMIZE = 6,
-    SW_SHOWMINNOACTIVE = 7,
-    SW_SHOWNA = 8,
-    SW_RESTORE = 9,
-    SW_SHOWDEFAULT = 10,
-    SW_FORCEMINIMIZE = 11,
-    SW_MAX = 11
-}
-             
-public static class Kernel32 {
-    [DllImport("kernel32.dll", SetLastError=true)]
-    public static extern bool CreateProcess(
-        string lpApplicationName, 
-        string lpCommandLine, 
-        ref SECURITY_ATTRIBUTES lpProcessAttributes, 
-        ref SECURITY_ATTRIBUTES lpThreadAttributes,
-        bool bInheritHandles, 
-        CreationFlags dwCreationFlags, 
-        IntPtr lpEnvironment,
-        string lpCurrentDirectory, 
-        ref STARTUPINFO lpStartupInfo, 
-        out PROCESS_INFORMATION lpProcessInformation);
-}
-"@            
+            Add-Type -Path $CreateProcessPath
             $lpApplicationName = $FilePath;
             $lpCommandLine = '"' + $FilePath + '"' #Windows paths cannot contain ", so there is no need to escape
             if ($ArgumentList -ne "") {$lpCommandLine += " " + $ArgumentList}
@@ -1891,7 +1738,7 @@ public static class Kernel32 {
             $bInheritHandles = $false
             $dwCreationFlags = [CreationFlags]::CREATE_NEW_CONSOLE
             $lpEnvironment = [IntPtr]::Zero
-            if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $pwd}
+            if ($WorkingDirectory -ne "") {$lpCurrentDirectory = $WorkingDirectory} else {$lpCurrentDirectory = $using:pwd}
             $lpStartupInfo = New-Object STARTUPINFO
             $lpStartupInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($lpStartupInfo)
             $lpStartupInfo.wShowWindow = [ShowWindow]::SW_SHOWMINNOACTIVE
@@ -3473,6 +3320,7 @@ class Miner {
     $FaultTolerance = 0.1
     $ExtendInterval = 0
     $Penalty = 0
+    $PoolPenalty
     $PostBlockMining = 0
     $Rounds = 0
     $MinSamples = 1
@@ -5759,6 +5607,12 @@ function Get-MinerStatusKey {
 }
 
 function Invoke-ReportMinerStatus {
+
+    if ($Session.ReportTotals -and ($Job = (Get-Job | Where-Object {$_.Name -eq "UpdateTotalsJob" -and $_.State -notin @("Completed","Running")}))) {
+        Remove-Job $Job -Force
+        $Session.ReportTotals = $false
+    }
+
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
@@ -5834,35 +5688,35 @@ function Invoke-ReportMinerStatus {
     
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
-     
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
-    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
-
-    try {
-        $Pool_Totals = if ($Session.ReportTotals) {
-            $Session.ReportTotals = $false
-            $Pool_Stats = Get-Stat -Totals
+    $Pool_Totals = if ($Session.ReportTotals -and (-not (Get-Job | Where-Object Name -eq "UpdateTotalsJob" | Measure-Object).Count -or (Get-Job | Where-Object Name -eq "UpdateTotalsJob").State -eq "Completed")) {
+        try {
+            $Pool_Stats = Get-Stat -TotalAvgs
             $Earn_Stats = Get-Stat -Balances
 
             if ($Pool_Stats) {
                 $Pool_Stats.GetEnumerator() | Foreach-Object {
                     $PoolName = $_.Value.Pool                    
                     [PSCustomObject]@{
-                        Name = $PoolName
-                        Profit = "$([Math]::Round($_.Value.Profit_Avg,5))"
-                        Cost   = "$([Math]::Round($_.Value.Cost_Avg,5))"
-                        Power  = "$([Math]::Round($_.Value.Power_Avg,2))"
-                        Earnings = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Session.Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Session.Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
+                        Name      = $PoolName
+                        Profit    = "$([Math]::Round($_.Value.Profit_Avg,5))"
+                        ProfitApi = "$([Math]::Round($_.Value.ProfitApi_Avg,5))"
+                        Cost      = "$([Math]::Round($_.Value.Cost_Avg,5))"
+                        Power     = "$([Math]::Round($_.Value.Power_Avg,2))"
+                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Session.Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Session.Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
                     }
                 } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
+            $Session.ReportTotals = $false
+        } catch {
+            Write-Log -Level Info "Miner Status get pool stats has failed. "
         }
-    } catch {
-        Write-Log -Level Info "Miner prepare totals for report failed. "
     }
 
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
+    if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
 
     # Send the request
     try {

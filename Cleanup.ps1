@@ -510,6 +510,61 @@ try {
         $AddAlgorithm += @("RandomX","ScryptSIPC")
     }
 
+    if ($Version -le (Get-Version "4.3.9.6")) {
+        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Foreach-Object {
+            @(Import-Csv $_.FullName -ErrorAction Ignore | Foreach-Object {
+                            [PSCustomObject]@{
+                                Date      = $_.Date
+                                Date_UTC  = $_.Date_UTC
+                                PoolName  = $_.PoolName
+                                Algorithm = $_.Algorithm
+                                Currency  = $_.Currency
+                                Rate      = $_.Rate
+                                Profit    = $_.Profit
+                                ProfitApi = if ($_.ProfitApi -eq $null) {$_.Profit} else {$_.ProfitApi}
+                                Cost      = $_.Cost
+                                Power     = $_.Power
+                                Penalty   = if ($_.Penalty -eq $null) {"0"} else {$_.Penalty}
+                                Duration  = $_.Duration
+                                Donation  = $_.Donation
+                            }
+                        } | Select-Object) | Export-Csv $_.FullName -NoTypeInformation -ErrorAction Ignore
+        }
+
+        Get-ChildItem "Stats\Totals" -Filter "*_Total.txt" | Foreach-Object {
+            $Stat = Get-Content $_.FullName -ErrorAction Ignore -Raw | ConvertFrom-Json -ErrorAction Ignore
+
+            Set-ContentJson "$($_.FullName -replace "_Total.txt","_TotalAvg.txt")" $([PSCustomObject]@{
+                Pool          = $Stat.Pool
+                Cost_1d       = [double]$Stat.Cost_1d
+                Cost_1w       = [double]$Stat.Cost_1w
+                Cost_Avg      = [double]$Stat.Cost_Avg
+                Profit_1d     = [double]$Stat.Profit_1d
+                Profit_1w     = [double]$Stat.Profit_1w
+                Profit_Avg    = [double]$Stat.Profit_Avg
+                ProfitApi_1d  = [double]$Stat.Profit_1d
+                ProfitApi_1w  = [double]$Stat.Profit_1w
+                ProfitApi_Avg = [double]$Stat.Profit_Avg
+                Power_1d      = [double]$Stat.Power_1d
+                Power_1w      = [double]$Stat.Power_1w
+                Power_Avg     = [double]$Stat.Power_Avg
+                Started       = $Stat.Started
+                Updated       = $Stat.Updated
+            }) > $null
+
+            Set-ContentJson $_.FullName $([PSCustomObject]@{
+                Pool          = $Stat.Pool
+                Duration      = [double]$Stat.Duration
+                Cost          = [double]$Stat.Cost
+                Profit        = [double]$Stat.Profit
+                ProfitApi     = [double]$Stat.Profit
+                Power         = [double]$Stat.Power
+                Started       = $Stat.Started
+                Updated       = $Stat.Updated
+            }) > $null
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick

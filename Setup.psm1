@@ -3112,8 +3112,6 @@ function Start-Setup {
                     } until ($MRRSetupDone)
                 }
             } until ($MRRSetupType -eq "X")
-
-            Remove-Module "MiningRigRentals"
         }
     } until (-not $RunSetup)
 }

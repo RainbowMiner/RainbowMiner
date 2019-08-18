@@ -167,13 +167,14 @@
         if (-not (Test-Path ".\Config\minerconfigfiles.txt") -and (Test-Path ".\Data\minerconfigfiles.default.txt")) {Copy-Item ".\Data\minerconfigfiles.default.txt" ".\Config\minerconfigfiles.txt" -Force -ErrorAction Ignore}
 
         #cleanup legacy data
-        if (Test-Path ".\Cleanup.ps1") {
-            if ($RunCleanup) {
+        if ((Test-Path ".\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
+            $LastVersion = (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version
+            if ($RunCleanup -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
                 Write-Host "Cleanup legacy data .."
                 [hashtable]$Cleanup_Parameters = @{
                     AllDevices = $Session.AllDevices
                     MyCommandParameters = $Session.DefaultValues.Keys
-                    Version = if (Test-Path ".\Data\version.json") {(Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version}else{$Session.Version}
+                    Version = $LastVersion
                 }
                 $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
                 Get-Item ".\Cleanup.ps1" | Foreach-Object {
@@ -182,9 +183,8 @@
                         & $_.FullName @Cleanup_Parameters
                     }
                     if ($Cleanup_Result) {Write-Host $Cleanup_Result}
-                }            
+                }
             }
-            Remove-Item ".\Cleanup.ps1" -Force
         }
 
         #Remove stuck update
@@ -951,7 +951,7 @@ function Invoke-Core {
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
-            if ($RefreshBalances) {Update-Totals -Quiet;$Session.ReportTotals = $true}
+            if ($RefreshBalances) {$Session.ReportTotals = $true;Start-UpdateTotalsJob > $null}
         }
     }
 
@@ -1491,6 +1491,7 @@ function Invoke-Core {
             $ActiveMiner.OCprofile          = $Miner.OCprofile
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
             $ActiveMiner.Penalty            = $Miner.Penalty
+            $ActiveMiner.PoolPenalty        = $Miner.Pools.PSObject.Properties.Value.Penalty
             $ActiveMiner.ManualUri          = $Miner.ManualUri
             $ActiveMiner.EthPillEnable      = $Session.Config.EthPillEnable
             $ActiveMiner.EthPillEnableMTP   = $Session.Config.EthPillEnableMTP
@@ -1551,6 +1552,7 @@ function Invoke-Core {
                 DevFee               = $Miner.DevFee
                 FaultTolerance       = $Miner.FaultTolerance
                 Penalty              = $Miner.Penalty
+                PoolPenalty          = $Miner.Pools.PSObject.Properties.Value.Penalty
                 ManualUri            = $Miner.ManualUri
                 EthPillEnable        = $Session.Config.EthPillEnable
                 EthPillEnableMTP     = $Session.Config.EthPillEnableMTP
