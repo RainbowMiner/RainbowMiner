@@ -217,7 +217,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.3.9.6"
+$Session.Version         = "4.3.9.7"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 
@@ -240,6 +240,7 @@ if ($IsWindows) {
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
     }
 }
+
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
 Import-Module .\Core.psm1
