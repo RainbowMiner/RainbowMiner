@@ -87,6 +87,7 @@
 343	FireIceNvidia (linux)
 344	Phoenix42
 345	GrinGoldMiner
+346	TTminer3
 
 400	Sgminer
 401	SgminerBitcore
