@@ -529,6 +529,7 @@ try {
                                 Donation  = $_.Donation
                             }
                         } | Select-Object) | Export-Csv $_.FullName -NoTypeInformation -ErrorAction Ignore
+            $ChangesTotal++
         }
 
         Get-ChildItem "Stats\Totals" -Filter "*_Total.txt" | Foreach-Object {
@@ -562,6 +563,8 @@ try {
                 Started       = $Stat.Started
                 Updated       = $Stat.Updated
             }) > $null
+
+            $ChangesTotal += 2
         }
     }
 
