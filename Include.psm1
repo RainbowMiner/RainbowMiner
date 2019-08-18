@@ -639,25 +639,27 @@ function Set-Total {
         $Penalty        = [double]($Miner.PoolPenalty | Select-Object -First 1)
         $PenaltyFactor  = 1-$Penalty/100
         $TotalProfitApi = if ($PenaltyFactor -gt 0) {$TotalProfit/$PenaltyFactor} else {0}
-            
-        $CsvLine = [PSCustomObject]@{
-            Date        = $Updated
-            Date_UTC    = $Updated_UTC
-            PoolName    = $Miner.Pool | Select-Object -First 1
-            Algorithm   = $Miner.BaseAlgorithm | Select-Object -First 1
-            Currency    = $Miner.Currency
-            Rate        = [Math]::Round($Session.Rates.USD,2)
-            Profit      = [Math]::Round($TotalProfit*1e8,4)
-            ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
-            Cost        = [Math]::Round($TotalCost*1e8,4)
-            Power       = [Math]::Round($TotalPower,3)
-            Penalty     = $Penalty
-            Duration    = [Math]::Round($Duration.TotalMinutes,3)
-            Donation    = "$(if ($Miner.Donator) {"1"} else {"0"})"
+
+        if ($TotalProfit -gt 0) {
+            $CsvLine = [PSCustomObject]@{
+                Date        = $Updated
+                Date_UTC    = $Updated_UTC
+                PoolName    = $Miner.Pool | Select-Object -First 1
+                Algorithm   = $Miner.BaseAlgorithm | Select-Object -First 1
+                Currency    = $Miner.Currency
+                Rate        = [Math]::Round($Session.Rates.USD,2)
+                Profit      = [Math]::Round($TotalProfit*1e8,4)
+                ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
+                Cost        = [Math]::Round($TotalCost*1e8,4)
+                Power       = [Math]::Round($TotalPower,3)
+                Penalty     = $Penalty
+                Duration    = [Math]::Round($Duration.TotalMinutes,3)
+                Donation    = "$(if ($Miner.Donator) {"1"} else {"0"})"
+            }
+            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+            $CsvLine | Export-Csv $PathCsv -NoTypeInformation -Append -ErrorAction Ignore
         }
-        $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
-        if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-        $CsvLine | Export-Csv $PathCsv -NoTypeInformation -Append -ErrorAction Ignore
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
@@ -730,7 +732,7 @@ function Start-UpdateTotalsJob {
                                     Donation  = ($_.Donation -eq "1")
                                     Penalty   = [Decimal]$_.Penalty
                                 }
-                            } | Select-Object)
+                            } | Where-Object {$_.Profit -gt 0 -and -not $_.Donation} | Select-Object)
             }
         }
 
@@ -740,7 +742,7 @@ function Start-UpdateTotalsJob {
         $Duration_Calc = $Totals | Measure-Object -Property Date -Minimum -Maximum
         $Duration = ($Duration_Calc.Maximum - $Duration_Calc.Minimum)
 
-        $Totals | Where-Object {-not $_.Donator} | Group-Object -Property PoolName | Foreach-Object {
+        $Totals | Group-Object -Property PoolName | Foreach-Object {
             $Path_Name = "$($_.Name)_TotalAvg.txt"
             try {
                 $Stat = Get-Content "$Path0\$Path_Name" -Raw | ConvertFrom-Json -ErrorAction Ignore
