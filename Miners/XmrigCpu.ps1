@@ -9,11 +9,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.0-xmrig/xmrig-3.0.0-xenial-x64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xmrig/xmrig-3.1.0-xenial-x64.tar.gz"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.0-xmrig/xmrig-3.0.0-msvc-win64-rbm.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xmrig/xmrig-3.1.0-msvc-win64-rbm.7z"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
@@ -23,6 +23,8 @@ $Port = "521{0:d2}"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/1";          Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/2";          Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     Params = ""; ExtendInterval = 2}
