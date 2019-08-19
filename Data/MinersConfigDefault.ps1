@@ -104,6 +104,10 @@
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x7"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
         )
+        "Gminer" = [PSCustomObject[]]@(
+            [PSCustomObject]@{MainAlgorithm = "equihashr25x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+            [PSCustomObject]@{MainAlgorithm = "equihashr25x5x3"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
+        )
         "lolMiner" = [PSCustomObject[]]@(
             [PSCustomObject]@{MainAlgorithm = "equihash16x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile4"; MSIAprofile = "4"}
             [PSCustomObject]@{MainAlgorithm = "equihash24x5"; SecondaryAlgorithm = ""; Params = ""; OCprofile = "Profile5"; MSIAprofile = "5"}
