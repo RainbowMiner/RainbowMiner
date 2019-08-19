@@ -80,7 +80,10 @@ class Xmrig3 : Miner {
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
                         }
                         if ($cix.Count) {
-                            $Parameters.Config.$Device.$Algo = @($Parameters.Config.$Device.$Algo | Foreach-Object {@($(if ($cix[$_]) {$cix[$_]} else {1}),$_)} | Select-Object)
+                            for ($i=0; $i -lt $Parameters.Config.$Device.$Algo.Count; $i++) {
+                                $thr = $Parameters.Config.$Device.$Algo[$i]
+                                $Parameters.Config.$Device.$Algo[$i] = @($(if ($cix[$thr]) {$cix[$thr]} else {1}),$thr)
+                            }
                         }
                     }
                     $Parameters.Config | Add-Member autosave $false -Force
