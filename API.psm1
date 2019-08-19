@@ -709,6 +709,11 @@
                                 $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
                                 $pbody_in.PSObject.Properties | Foreach-Object {if ($pbody -eq $null) {$pbody = @{}};$pbody[$_.Name] = $_.Value}
                             }
+                            $pheaders = $null
+                            if ($Parameters.headers -match "^{.+}$") {
+                                $pheaders_in = $Parameters.headers | ConvertFrom-Json -ErrorAction Ignore
+                                $pheaders_in.PSObject.Properties | Foreach-Object {if ($pheaders -eq $null) {$pheaders = @{}};$pheaders[$_.Name] = $_.Value}
+                            }
                             if ($Parameters.jobkey -eq "rates") {
                                 try {
                                     $RatesUri = [System.Uri]$Parameters.url
@@ -723,7 +728,7 @@
                                     Remove-Variable "NewSyms"
                                 } catch {}
                             }
-                            $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -jobkey $Parameters.jobkey
+                            $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                             if ($Result) {$Status = $true}
                         } catch {}
                         $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress

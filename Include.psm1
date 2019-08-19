@@ -5348,6 +5348,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [hashtable]$body,
     [Parameter(Mandatory = $False)]
+        [hashtable]$headers,
+    [Parameter(Mandatory = $False)]
         [string]$user = "",
     [Parameter(Mandatory = $False)]
         [string]$password = "",
@@ -5365,6 +5367,7 @@ Param(
                 method    = $JobData.method
                 timeout   = $JobData.timeout
                 body      = $JobData.body | ConvertTo-Json -Depth 10 -Compress
+                headers   = $JobData.headers | ConvertTo-Json -Depth 10 -Compress
                 cycletime = $JobData.cycletime
                 retry     = $JobData.retry
                 retrywait = $Jobdata.retrywait
@@ -5383,6 +5386,7 @@ Param(
         $method   = $JobData.method
         $timeout  = $JobData.timeout
         $body     = $JobData.body
+        $headers  = $JobData.headers
         $user     = $JobData.user
         $password = $JobData.password
     }
@@ -5393,7 +5397,8 @@ Param(
     $RequestMethod = if ($body) {"Post"} else {"Get"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 
-    $headers = @{"Cache-Control" = "no-cache"}
+    if (-not $headers) {$headers = @{}}
+    if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
         Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
@@ -5429,9 +5434,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$Jobkey = $null,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body
+        [hashtable]$body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body
+    Invoke-GetUrlAsync $url -method "REST" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
 }
 
 function Invoke-WebRequestAsync {
@@ -5458,9 +5465,11 @@ Param(
     [Parameter(Mandatory = $False)]
         [switch]$noquickstart,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body
+        [hashtable]$body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers
 )
-    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body
+    Invoke-GetUrlAsync $url -method "WEB" -cycletime $cycletime -retry $retry -retrywait $retrywait -tag $tag -delay $delay -timeout $timeout -nocache $nocache -noquickstart $noquickstart -Jobkey $Jobkey -body $body -headers $headers
 }
 
 function Invoke-GetUrlAsync {
@@ -5493,13 +5502,15 @@ Param(
     [Parameter(Mandatory = $False)]
         [bool]$noquickstart = $false,
     [Parameter(Mandatory = $False)]
-        [hashtable]$body
+        [hashtable]$body,
+    [Parameter(Mandatory = $False)]
+        [hashtable]$headers
 )
     if (-not $url -and -not $Jobkey) {return}
 
-    $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
+    $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
 
-    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})";$StaticJobKey = $false} else {$StaticJobKey = $true}
+    if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})$(if ($headers) {$headers | ConvertTo-Json -Compress})";$StaticJobKey = $false} else {$StaticJobKey = $true}
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
@@ -5507,7 +5518,7 @@ Param(
         return
     }
     
-    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or ($AsyncLoader.Jobs.$Jobkey.Body | ConvertTo-Json -Compress) -ne ($body | ConvertTo-Json -Compress))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body}
+    if ($StaticJobKey -and $url -and $AsyncLoader.Jobs.$Jobkey -and ($AsyncLoader.Jobs.$Jobkey.Url -ne $url -or ($AsyncLoader.Jobs.$Jobkey.Body | ConvertTo-Json -Compress) -ne ($body | ConvertTo-Json -Compress)-or ($AsyncLoader.Jobs.$Jobkey.Headers | ConvertTo-Json -Compress) -ne ($headers | ConvertTo-Json -Compress))) {$force = $true;$AsyncLoader.Jobs.$Jobkey.Url = $url;$AsyncLoader.Jobs.$Jobkey.Body = $body;$AsyncLoader.Jobs.$Jobkey.Headers = $headers}
 
     if (-not (Test-Path ".\Cache")) {New-Item "Cache" -ItemType "directory" -ErrorAction Ignore > $null}
 
