@@ -878,6 +878,7 @@ function Set-Balance {
             $CsvLine | Export-Csv "$($Path0)\Earnings_Localized.csv" -NoTypeInformation -UseCulture -Append -ErrorAction Ignore
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             $CsvLine | Export-Csv "$($Path0)\Earnings.csv" -NoTypeInformation -Append -ErrorAction Ignore
+            Remove-Variable "CsvLine" -Force
         }
 
         $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)

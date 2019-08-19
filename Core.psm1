@@ -943,7 +943,7 @@ function Invoke-Core {
             $BalancesData | Where-Object Name -ne "*Total*" | Foreach-Object {
                 $Balance = $_
                 $Earnings = Set-Balance $Balance -Updated $BalancesData_DateTime
-                $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "Earnings" -or $_ -eq "Started"} | Foreach-Object {
+                $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
                     $Balance | Add-Member $_ $Earnings.$_ -Force
                 }
             }
