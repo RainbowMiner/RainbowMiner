@@ -705,6 +705,11 @@ function Start-UpdateTotalsJob {
     Start-Job -ArgumentList "$pwd" -ScriptBlock {
         param($WorkingDirectory)
 
+        $ProgressPreference = "SilentlyContinue"
+        $ErrorActionPreference = "SilentlyContinue"
+        $WarningPreference = "SilentlyContinue"
+        $InformationPreference = "SilentlyContinue"
+
         If ($WorkingDirectory) {Set-Location $WorkingDirectory}
 
         (Get-Process -Id $PID).PriorityClass = "BelowNormal"
@@ -796,6 +801,8 @@ function Start-UpdateTotalsJob {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
         }
+
+        Remove-Variable "Totals" -Force
     }
 }
 
@@ -5742,6 +5749,9 @@ function Invoke-ReportMinerStatus {
                 } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
             $Session.ReportTotals = $false
+
+            if ($Pool_Stats) {Remove-Variable "Pool_Stats" -Force}
+            if ($Earn_Stats) {Remove-Variable "Earn_Stats" -Force}
         } catch {
             Write-Log -Level Info "Miner Status get pool stats has failed. "
         }

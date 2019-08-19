@@ -28,6 +28,12 @@
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) | Out-Null
 
     $API.Server = [PowerShell]::Create().AddScript({
+
+        $ProgressPreference = "SilentlyContinue"
+        $ErrorActionPreference = "SilentlyContinue"
+        $WarningPreference = "SilentlyContinue"
+        $InformationPreference = "SilentlyContinue"
+
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 

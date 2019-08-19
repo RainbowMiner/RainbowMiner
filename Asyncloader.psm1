@@ -29,13 +29,13 @@ Param(
     $AsyncLoader.Loader = [PowerShell]::Create().AddScript({        
         Import-Module ".\Include.psm1"
 
-        # Set the starting directory
-        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
-
         $ProgressPreference = "SilentlyContinue"
         $ErrorActionPreference = "SilentlyContinue"
         $WarningPreference = "SilentlyContinue"
         $InformationPreference = "SilentlyContinue"
+
+        # Set the starting directory
+        if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
         [System.Collections.ArrayList]$Errors = @()
 
