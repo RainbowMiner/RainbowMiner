@@ -65,7 +65,10 @@ class Xmrig3 : Miner {
                         }
                         $Algo = if ($ThreadsConfig.$Algo) {$Algo} else {$Algo0}
 
-                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsConfig.$Algo | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
+                        $cix = @{}
+                        $ThreadsAffinity = $ThreadsConfig.$Algo | Foreach-Object {if ($_ -is [array] -and $_.Count -eq 2) {$cix[$_[1]] = $_[0];$_[1]} else {$_}}
+
+                        $Parameters.Config.$Device | Add-Member $Algo ([Array]($ThreadsAffinity | Sort-Object {$_ -band 1},{$_} | Select-Object -First $(if ($Parameters.Threads -and $Parameters.Threads -lt $ThreadsConfig.$Algo.Count) {$Parameters.Threads} else {$ThreadsConfig.$Algo.Count}) | Sort-Object)) -Force
 
                         $Aff = if ($Parameters.Affinity) {ConvertFrom-CPUAffinity $Parameters.Affinity}
                         if ($AffCount = ($Aff | Measure-Object).Count) {
@@ -75,6 +78,9 @@ class Xmrig3 : Miner {
                                 $Aff | Where-Object {$_ -notin $AffThreads} | Sort-Object {$_ -band 1},{$_} | Select-Object -First ($ThreadsCount-$AffThreads.Count) | Foreach-Object {$AffThreads += $_}
                             }
                             $Parameters.Config.$Device.$Algo = @($AffThreads | Sort-Object);
+                        }
+                        if ($cix.Count) {
+                            $Parameters.Config.$Device.$Algo = @($Parameters.Config.$Device.$Algo | Foreach-Object {@($(if ($cix[$_]) {$cix[$_]} else {1}),$_)} | Select-Object)
                         }
                     }
                     $Parameters.Config | Add-Member autosave $false -Force
