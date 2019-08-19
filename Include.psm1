@@ -5124,7 +5124,9 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $False)]
         [Switch]$CheckDataWindow = $false,
         [Parameter(Mandatory = $False)]
-        [Switch]$IncludeErrorRatio = $false
+        [Switch]$IncludeErrorRatio = $false,
+        [Parameter(Mandatory = $False)]
+        [Double]$ActualDivisor = 1000
     )    
     [Double]$Value = 0
     [System.Collections.ArrayList]$allfields = @("estimate_current","estimate_last24h","actual_last24h")
@@ -5137,7 +5139,7 @@ function Get-YiiMPValue {
             if ($values[$field] -eq [double]0) {$containszero=$true}
         }
     }
-    if (-not $hasdetails -and $values.ContainsKey("actual_last24h")) {$values["actual_last24h"]/=1000}
+    if (-not $hasdetails -and $values.ContainsKey("actual_last24h") -and $ActualDivisor) {$values["actual_last24h"]/=$ActualDivisor}
     if ($CheckDataWindow) {$DataWindow = Get-YiiMPDataWindow $DataWindow}
 
     if ($values.count -eq 3 -and -not $containszero) {
