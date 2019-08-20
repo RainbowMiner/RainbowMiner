@@ -698,11 +698,11 @@ function Set-Total {
 function Start-UpdateTotalsJob {
 
     if ($Job = (Get-Job | Where-Object Name -eq "UpdateTotalsJob")) {
-        if ($Job.State -eq "Running") {$Job;return}
+        if ($Job.State -eq "Running") {return}
         $Job | Remove-Job -Force -ErrorAction Ignore
     }
 
-    $Job = Start-Job -Name "UpdateTotalsJob" -ArgumentList "$pwd" -ScriptBlock {
+    Start-Job -Name "UpdateTotalsJob" -ArgumentList "$pwd" -ScriptBlock {
         param($WorkingDirectory)
 
         $ProgressPreference = "SilentlyContinue"
@@ -796,7 +796,7 @@ function Start-UpdateTotalsJob {
         }
 
         Remove-Variable "Totals" -Force -ErrorAction Ignore
-    }
+    } > $null
 }
 
 function Set-Balance {
@@ -5705,8 +5705,10 @@ function Invoke-ReportMinerStatus {
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
 
-    $Pool_Totals = if ($Session.ReportTotals -and (-not (Get-Job | Where-Object Name -eq "UpdateTotalsJob" | Measure-Object).Count -or (Get-Job | Where-Object Name -eq "UpdateTotalsJob").State -eq "Completed")) {
+    $Pool_Totals = if ($Session.ReportTotals -and (-not (Get-Job | Where-Object Name -eq "UpdateTotalsJob") -or (Get-Job | Where-Object Name -eq "UpdateTotalsJob").State -eq "Completed")) {
         try {
+            $Session.ReportTotals = $false
+
             $Pool_Stats = Get-Stat -TotalAvgs
             $Earn_Stats = Get-Stat -Balances
 
@@ -5742,7 +5744,6 @@ function Invoke-ReportMinerStatus {
                     }
                 } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
-            $Session.ReportTotals = $false
 
             if ($Pool_Stats) {Remove-Variable "Pool_Stats" -Force}
             if ($Earn_Stats) {Remove-Variable "Earn_Stats" -Force}
