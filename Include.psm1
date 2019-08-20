@@ -702,7 +702,7 @@ function Start-UpdateTotalsJob {
         $Job | Remove-Job -Force -ErrorAction Ignore
     }
 
-    Start-Job -ArgumentList "$pwd" -ScriptBlock {
+    $Job = Start-Job -Name "UpdateTotalsJob" -ArgumentList "$pwd" -ScriptBlock {
         param($WorkingDirectory)
 
         $ProgressPreference = "SilentlyContinue"
