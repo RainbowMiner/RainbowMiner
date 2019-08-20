@@ -5624,9 +5624,17 @@ function Get-MinerStatusKey {
 
 function Invoke-ReportMinerStatus {
 
-    if ($Session.ReportTotals -and ($Job = (Get-Job | Where-Object {$_.Name -eq "UpdateTotalsJob" -and $_.State -notin @("Completed","Running")}))) {
-        Remove-Job $Job -Force
-        $Session.ReportTotals = $false
+    $ReportTotals = $Session.ReportTotals
+
+    if ($Session.ReportTotals) {
+        if ($Job = Get-Job | Where-Object {$_.Name -eq "UpdateTotalsJob"}) {
+            if ($Job.State -eq "Completed") {$Job = $null}
+            elseif ($Job.State -eq "Running") {$ReportTotals = $false}
+            else {
+                Remove-Job $Job -Force -ErrorAction Ignore
+                $ReportTotals = $Session.ReportTotals = $false
+            }
+        }
     }
 
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
@@ -5705,7 +5713,7 @@ function Invoke-ReportMinerStatus {
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
 
-    $Pool_Totals = if ($Session.ReportTotals -and (-not (Get-Job | Where-Object Name -eq "UpdateTotalsJob") -or (Get-Job | Where-Object Name -eq "UpdateTotalsJob").State -eq "Completed")) {
+    $Pool_Totals = if ($ReportTotals) {
         try {
             $Session.ReportTotals = $false
 
