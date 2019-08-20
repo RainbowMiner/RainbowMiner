@@ -30,7 +30,6 @@
     $API.Server = [PowerShell]::Create().AddScript({
 
         $ProgressPreference = "SilentlyContinue"
-        $ErrorActionPreference = "SilentlyContinue"
         $WarningPreference = "SilentlyContinue"
         $InformationPreference = "SilentlyContinue"
 
@@ -72,7 +71,7 @@
             $Out
         }
 
-        $API.Clients = @()
+        $Clients = @()
 
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
@@ -174,6 +173,7 @@
 				            $Parameters | Add-Member $PostName $PostValue -Force
 			            }
 		            }
+                    Remove-Variable "PostCommand" -ErrorAction Ignore
                 }
           	}
 
@@ -303,7 +303,7 @@
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
                             $CurrentPool = $_
                             $PurgeStrings += @($CurrentPool.Wallets.PSObject.Properties.Value | Select-Object)
-                            @("Wallet","User","API_ID","API_Key","API_Secret","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 2} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
+                            @("Wallet","API_Key","API_Secret","Password","PartyPassword","Email") | Where-Object {$CurrentPool.$_ -and $CurrentPool.$_.Length -gt 5} | Foreach-Object {$PurgeStrings += $CurrentPool.$_}
                         }
                     }
                     $PurgeStrings = $PurgeStrings | Select-Object -Unique | Foreach-Object {[regex]::Escape($_)}
@@ -312,8 +312,7 @@
                     @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
                         $LastWriteTime = $_.LastWriteTime
                         $NewFile = "$DebugPath\$($_.Name)"
-                        Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile
-                        (Get-Item $NewFile).LastWriteTime = $LastWriteTime
+                        Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
@@ -345,6 +344,7 @@
                     $ContentFileName = "debug_$($DebugDate).zip"
 
                     Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
+                    Remove-Variable "PurgeStrings" -ErrorAction Ignore
                     Break
                 }
                 "/alldevices" {
@@ -417,6 +417,7 @@
                                 rows = $Earnings
                             } | ConvertTo-Json -Depth 10
                         }
+                        Remove-Variable "Earnings" -ErrorAction Ignore
                     }
                     Break
                 }
@@ -503,7 +504,7 @@
                         $Balances | Where-Object {$_.Started} | Foreach-Object {$_.Started = ([DateTime]$_.Started).ToString("yyyy-MM-dd HH:mm:ss")}
                         $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
                     }
-                    Remove-Variable "Balances" -Force
+                    Remove-Variable "Balances" -Force -ErrorAction Ignore
                     Break
                 }
                 "/payouts" {
@@ -582,6 +583,9 @@
                     $Out.Clear()
                     $JsonUri_Dates.Clear()
                     $Miners_List.Clear()
+                    Remove-Variable "Out" -ErrorAction Ignore
+                    Remove-Variable "JsonUri_Dates" -ErrorAction Ignore
+                    Remove-Variable "Miners_List" -ErrorAction Ignore
                     Break
                 }
                 "/activity" {
@@ -600,6 +604,8 @@
                         $One | Add-Member TotalProfit ($AvgProfit * $Active / 1440)
                         $One | Add-Member Active $Active -PassThru
                     } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json
+                    Remove-Variable "BigJson" -ErrorAction Ignore
+                    Remove-Variable "GroupedData" -ErrorAction Ignore
                     Break
                 }
                 "/computerstats" {
@@ -628,8 +634,11 @@
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
                     $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$Rates;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
-                    Remove-Variable "Rates"
-                    Remove-Variable "RemoteMiners"
+                    Remove-Variable "Rates" -ErrorAction Ignore
+                    Remove-Variable "RemoteMiners" -ErrorAction Ignore
+                    Remove-Variable "Timer" -ErrorAction Ignore
+                    Remove-Variable "Uptime" -ErrorAction Ignore
+                    Remove-Variable "SysUptime" -ErrorAction Ignore
                     Break
                 }
                 "/stop" {
@@ -662,20 +671,21 @@
                     Break
                 }
                 "/clients" {
-                    $Data = ConvertTo-Json @($API.Clients | Select-Object)
+                    $Data = ConvertTo-Json @($Clients | Select-Object)
                     Break
                 }
                 "/getconfig" {
                     $Status = $false
                     if ($API.IsServer -and -not (Compare-Version $Session.Version $Parameters.version -revs 2)) {
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client | Add-Member machineip $Parameters.myip -Force
                                 $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
                             }
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
-                        }                        $Result = [PSCustomObject]@{}
+                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                        }
+                        $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
                             if ($PathToFile = Get-ConfigPath $GetConfigA[0] $Parameters.workername) {
@@ -696,29 +706,33 @@
                               else {"No data found"}
                     }
                     $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
+                    Remove-Variable "Result" -ErrorAction Ignore
                     Break
                 }
                 "/getjob" {
                     if ($API.IsServer) {
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client | Add-Member machineip $Parameters.myip -Force
                                 $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
                             }
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
+                        $Result = $null
                         try {
                             $pbody = $null
                             if ($Parameters.body -match "^{.+}$") {
                                 $pbody_in = $Parameters.body | ConvertFrom-Json -ErrorAction Ignore
                                 $pbody_in.PSObject.Properties | Foreach-Object {if ($pbody -eq $null) {$pbody = @{}};$pbody[$_.Name] = $_.Value}
+                                Remove-Variable "pbody_in" -ErrorAction Ignore
                             }
                             $pheaders = $null
                             if ($Parameters.headers -match "^{.+}$") {
                                 $pheaders_in = $Parameters.headers | ConvertFrom-Json -ErrorAction Ignore
                                 $pheaders_in.PSObject.Properties | Foreach-Object {if ($pheaders -eq $null) {$pheaders = @{}};$pheaders[$_.Name] = $_.Value}
+                                Remove-Variable "pheaders_in" -ErrorAction Ignore
                             }
                             if ($Parameters.jobkey -eq "rates") {
                                 try {
@@ -729,15 +743,18 @@
                                         $Session.GlobalGetTicker = $Session.GlobalGetTicker + @($NewSyms) | Select-Object -Unique | Sort-Object
                                     }
                                     $Parameters.url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$(($Session.GlobalGetTicker -join ',').ToUpper())&tsyms=BTC&extraParams=https://rbminer.net"
-                                    Remove-Variable "RatesUri"
-                                    Remove-Variable "RatesQry"
-                                    Remove-Variable "NewSyms"
+                                    Remove-Variable "RatesUri" -ErrorAction Ignore
+                                    Remove-Variable "RatesQry" -ErrorAction Ignore
+                                    Remove-Variable "NewSyms" -ErrorAction Ignore
                                 } catch {}
                             }
                             $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                             if ($Result) {$Status = $true}
                         } catch {}
                         $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
+                        if ($pbody -ne $null) {Remove-Variable "pbody" -ErrorAction Ignore}
+                        if ($pheaders -ne $null) {Remove-Variable "pheaders" -ErrorAction Ignore}
+                        if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
                     }
                     break
                 }
@@ -745,13 +762,14 @@
                     if ($API.IsServer) {
                         $Status = $false
                         if ($Parameters.workername -and $Parameters.machinename) {
-                            $Client = $API.Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
                                 $Client | Add-Member machineip $Parameters.myip -Force
                                 $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
                             }
-                            else {$API.Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
+                        $Result = $null
                         try {
                             if (-not $Parameters.key) {
                                 $Parameters | Add-Member key $Session.Config.Pools.MiningRigRentals.API_Key -Force
@@ -768,6 +786,7 @@
                             }
                         } catch {}
                         $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
+                        if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
                     }
                     break
                 }
@@ -841,9 +860,7 @@
             $Response.Close()
             if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
-            Remove-Variable "Data" -Force
-            Remove-Variable "ResponseBuffer" -Force
-            Remove-Variable "Response" -Force
+            Foreach ($var in @("Context","Data","ContentEncoding","InputStream","Parameters","Request","Response","ResponseBuffer","task")) {Remove-Variable $var -Force -ErrorAction Ignore}
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()
