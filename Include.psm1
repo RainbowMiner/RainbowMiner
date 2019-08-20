@@ -5628,9 +5628,8 @@ function Invoke-ReportMinerStatus {
 
     if ($Session.ReportTotals) {
         if ($Job = Get-Job | Where-Object {$_.Name -eq "UpdateTotalsJob"}) {
-            if ($Job.State -eq "Completed") {$Job = $null}
-            elseif ($Job.State -eq "Running") {$ReportTotals = $false}
-            else {
+            if ($Job.State -eq "Running") {$ReportTotals = $false}
+            elseif ($Job.State -ne "Completed") {
                 Remove-Job $Job -Force -ErrorAction Ignore
                 $ReportTotals = $Session.ReportTotals = $false
             }
