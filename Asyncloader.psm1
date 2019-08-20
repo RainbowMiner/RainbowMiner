@@ -30,7 +30,6 @@ Param(
         Import-Module ".\Include.psm1"
 
         $ProgressPreference = "SilentlyContinue"
-        $ErrorActionPreference = "SilentlyContinue"
         $WarningPreference = "SilentlyContinue"
         $InformationPreference = "SilentlyContinue"
 
