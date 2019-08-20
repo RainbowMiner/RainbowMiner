@@ -74,6 +74,7 @@ $Pool_PoolFee = 2.0
 $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00 -and ($Platform_Version -lt 2 -or [Double]$_.speed -gt 0)) -or $InfoOnly} | ForEach-Object {
     $Pool_Port = $_.port
     $Pool_Algorithm = if ($_.name) {$_.name} else {$_.algorithm.ToLower()}
+    if ($Pool_Algorithm -eq "beam") {$Pool_Algorithm = "EquihashR25x5"}
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Coin = ""

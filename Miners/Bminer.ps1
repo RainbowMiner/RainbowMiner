@@ -24,7 +24,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -a
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "aeternity";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; NoCPUMining = $true} #" -nofee" #Aeternity
-    [PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; MinMemGbW10 = 7; Params = ""; DevFee = 2.0; Vendor = @("AMD"); ExtendInterval = 2} #" -nofee" #GRIMM
+    #[PSCustomObject]@{MainAlgorithm = "beam";         SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; MinMemGbW10 = 7; Params = ""; DevFee = 2.0; Vendor = @("AMD"); ExtendInterval = 2} #" -nofee" #GRIMM
     [PSCustomObject]@{MainAlgorithm = "beamhash2";    SecondaryAlgorithm = ""; NH = $false; MinMemGb = 6; MinMemGbW10 = 7; Params = ""; DevFee = 2.0; Vendor = @("AMD"); ExtendInterval = 2} #" -nofee" #BEAM
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29";   SecondaryAlgorithm = ""; NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckaroo29/BitGRIN
     [PSCustomObject]@{MainAlgorithm = "cuckaroo29d";  SecondaryAlgorithm = ""; NH = $true;  MinMemGb = 4; MinMemGbW10 = 6; Params = "--fast"; DevFee = 2.0; Vendor = @("NVIDIA"); ExtendInterval = 2; Penalty = 0; NoCPUMining = $true} #" -nofee" #Cuckarood29/GRIN
@@ -68,7 +68,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
             $MainAlgorithm = $_.MainAlgorithm
-            $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
+            $MainAlgorithm_Norm = if ($MainAlgorithm -eq "beam") {Get-Algorithm $MainAlgorithm
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm,"$($MainAlgorithm_Norm)-$($Miner_Model)")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$MainAlgorithm_Norm.Name -notmatch "Nicehash") -and ($MainAlgorithm_Norm -ne "Ethash" -or $Pools.$MainAlgorithm_Norm.Name -ne "MiningRigRentals")) {
