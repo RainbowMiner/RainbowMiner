@@ -94,6 +94,8 @@
         $Session.IsExclusiveRun = $false
         $Session.Stopp = $false
         $Session.Benchmarking = $false
+        $Session.ReportTotals = $false
+        $Session.ReportMinerData = $false
         $Session.IsAdmin = Test-IsElevated
         $Session.MachineName = [System.Environment]::MachineName
         $Session.TimeDiff = 0
@@ -208,7 +210,7 @@
     [hashtable]$Session.Updatetracker = @{
         Balances = 0
         TimeDiff = 0
-        MinerSave = 0
+        MinerSave = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
     }
 }
 
@@ -1429,9 +1431,10 @@ function Invoke-Core {
     $Miners_BeforeWD_Count = ($Miners | Measure-Object).Count
 
     #Store miners to file
-    if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddMinutes(-60))) {
+    if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6))) {
         $Session.Updatetracker.MinerSave = Get-Date
         Set-ContentJson ".\Data\minerdata.json" @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, DeviceName, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCprofile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU") {$_.OCprofile.PSObject.Properties.Value | Select-Object -First 1} else {""}}} -Unique) -Compress > $null
+        $Session.ReportMinerData = $true
     }
 
     #Apply watchdog to miners
