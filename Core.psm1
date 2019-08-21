@@ -1433,7 +1433,7 @@ function Invoke-Core {
     #Store miners to file
     if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6))) {
         $Session.Updatetracker.MinerSave = Get-Date
-        Set-ContentJson ".\Data\minerdata.json" @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, DeviceName, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCprofile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU") {$_.OCprofile.PSObject.Properties.Value | Select-Object -First 1} else {""}}} -Unique) -Compress > $null
+        Set-ContentJson ".\Data\minerdata.json" @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, DeviceName, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCprofile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU") {$_.OCprofile} else {""}}} -Unique) -Compress > $null
         $Session.ReportMinerData = $true
     }
 
