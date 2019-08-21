@@ -246,8 +246,36 @@ param(
     if (-not $Stop) {$MRRStatus[$RigId].enable}
 }
 
+function Get-MiningRigRentalAlgos {
+    $Name = "MiningRigRentals"
+
+    try {
+        $Pool_Request = Invoke-RestMethodAsync "https://www.miningrigrentals.com/api/v2/info/algos" -tag $Name -cycletime 120
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Warn "Pool API ($Name) has failed. "
+        return
+    }
+
+    if (-not $Pool_Request.success) {
+        Write-Log -Level Warn "Pool API ($Name) returned nothing. "
+        return
+    }
+    $Pool_Request.data
+}
+
 function Get-MiningRigRentalRigs {
-    Write-Host "Not implemented"
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$key,
+    [Parameter(Mandatory = $True)]
+    [String]$secret,
+    [Parameter(Mandatory = $True)]
+    [String[]]$workers
+)
+    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret | Where-Object description -match "\[($($workers -join '|'))\]"
 }
 
 function Update-MiningRigRentalRigs {

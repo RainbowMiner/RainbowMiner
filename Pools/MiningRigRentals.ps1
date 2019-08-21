@@ -40,28 +40,13 @@ if (-not $API_Key -or -not $API_Secret) {return}
 
 $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
 
-$AllRigs_Request = Invoke-MiningRigRentalRequest "/rig/mine" $API_Key $API_Secret | Where-Object description -match "\[($($Workers -join '|'))\]"
+$AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 
 if (-not $AllRigs_Request) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 
-$Pool_ApiBase = "https://www.miningrigrentals.com/api/v2"
-
-try {
-    $Pool_Request = Invoke-RestMethodAsync "$Pool_ApiBase/info/algos" -tag $Name -cycletime 120
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
-}
-
-if (-not $Pool_Request.success) {
-    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
-    return
-}
-$Pool_Request = $Pool_Request.data
+if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
 
 $Pool_Request_Tag = Get-MD5Hash "$($Pool_Request.name | Sort-Object)"
 if ($Session.MRRTag -ne $Pool_Request_Tag) {
