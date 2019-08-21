@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "129{0:d2}"
 $DevFee = 0.0
+$Version = "8.21-v10"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -85,6 +86,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ManualUri      = $ManualUri
 					MiningPriority = 2
 					MaxRejectedShareRatio = if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {0.5}
+                    Version        = $Version
 				}
 			}
 		}

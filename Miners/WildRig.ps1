@@ -17,6 +17,7 @@ if ($IsLinux) {
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
+$Version = "0.19.1"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -119,6 +120,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ManualUri      = $ManualUri
                     ExtendInterval = $_.ExtendInterval
 					EnvVars        = @("GPU_MAX_WORKGROUP_SIZE=256")
+                    Version        = $Version
 				}
 			}
 		}

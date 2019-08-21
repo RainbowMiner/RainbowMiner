@@ -13,6 +13,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
+$Version = "2.2.6"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -100,6 +101,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
                     StopCommand    = "Sleep 5"
+                    Version        = $Version
 				}
 			}
 		}

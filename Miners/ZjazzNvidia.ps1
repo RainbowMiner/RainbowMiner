@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-Zjazz\zjazz_cuda.exe"
 $ManualUri = "https://github.com/zjazz/zjazz_cuda_miner/releases"
 $Port = "324{0:d2}"
 $DevFee = 2.0
+$Version = "1.2"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -82,6 +83,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     ExtendInterval = $_.ExtendInterval
                     DevFee = $DevFee
                     ManualUri = $ManualUri
+                    Version   = $Version
                 }
             }
         }

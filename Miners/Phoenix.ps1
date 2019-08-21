@@ -18,6 +18,7 @@ $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
+$Version = "4.5c"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -104,6 +105,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						ManualUri = $ManualUri
                         StartCommand = "Get-ChildItem `"$(Join-Path ($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) | Split-Path) "*pools.txt")`" | Remove-Item -Force"
                         ExtendInterval = 2
+                        Version     = $Version
 					}
 				}
 			}

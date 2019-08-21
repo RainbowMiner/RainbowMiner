@@ -13,6 +13,7 @@ $ManualUri = "https://github.com/Minerx117/ccminer-bmw512/releases"
 $Port = "133{0:d2}"
 $DevFee = 0.0
 $Cuda = "9.1"
+$Version = "2.2.5"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -68,6 +69,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

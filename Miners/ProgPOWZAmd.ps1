@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.1.2-
 $Port = "413{0:d2}"
 $ManualURI = "https://github.com/hyle-team/zano/releases"
 $DevFee = 0.0
+$Version = "1.1.2"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -64,6 +65,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					ExtendInterval = $_.ExtendInterval
+                    Version     = $Version
 				}
 			}
 		}

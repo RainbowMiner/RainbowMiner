@@ -13,6 +13,7 @@ $DevFee = 1.0
 $Port = "343{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $Cuda = "9.0"
+$Version = "2.10.7"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -138,6 +139,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 						Uri       = $Uri
 						DevFee    = $DevFee
 						ManualUri = $ManualUri
+                        Version   = $Version
 					}
 				}
 			}

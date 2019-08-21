@@ -13,6 +13,7 @@ $ManualUri = "https://github.com/nemosminer/Dynamic-GPU-Miner-Nvidia/releases"
 $Port = "128{0:d2}"
 $DevFee = 0.0
 $Cuda = "10.0"
+$Version = "1.0.2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -68,6 +69,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

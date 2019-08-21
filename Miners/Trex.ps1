@@ -10,6 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
 $Port = "316{0:d2}"
 $DevFee = 1.0
+$Version = "0.13.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
@@ -138,6 +139,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					DevFee = if ($_.DevFee) {$_.DevFee} else {$DevFee}
 					ManualUri = $ManualUri
+                    Version = $Version
 				}
 			}
 		}

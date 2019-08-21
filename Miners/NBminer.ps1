@@ -18,6 +18,7 @@ $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
+$Version = "24.4"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -110,6 +111,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri = $ManualUri
 							NoCPUMining = $_.NoCPUMining
+                            Version     = $Version
                             EnvVars = if ($IsLinux -and $MainAlgorithm_Norm -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
@@ -143,6 +145,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri = $ManualUri
 							NoCPUMining = $_.NoCPUMining
+                            Version     = $Version
                             EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}

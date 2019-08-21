@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "106{0:d2}"
 $DevFee = 0.0
+$Version = "8.21-r18v3"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -121,6 +122,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
 					MiningPriority = 2
+                    Version        = $Version
 				}
 			}
 		}

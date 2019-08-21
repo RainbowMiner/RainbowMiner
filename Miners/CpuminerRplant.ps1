@@ -17,6 +17,7 @@ if ($IsLinux) {
 $ManualUri = "https://pool.rplant.xyz/miners"
 $Port = "532{0:d2}"
 $DevFee = 0.0
+$Version = "4.0.12"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -95,6 +96,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ExtendInterval = $_.ExtendInterval
 					DevFee = $DevFee
 					ManualUri = $ManualUri
+                    Version = $Version
 				}
 			}
 		}

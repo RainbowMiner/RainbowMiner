@@ -25,6 +25,7 @@ $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
 $DevFee = 0.0
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
+$Version = "2.10.7"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -160,6 +161,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 						Uri       = $Uri
 						DevFee    = $DevFee
 						ManualUri = $ManualUri
+                        Version   = $Version
 					}
 				}
 			}

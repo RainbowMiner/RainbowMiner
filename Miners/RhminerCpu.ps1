@@ -17,6 +17,7 @@ if ($IsLinux) {
 $ManualUri = "https://github.com/polyminer1/rhminer/releases"
 $Port = "131{0:d2}"
 $DevFee = 1.0
+$Version = "1.5.3"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -70,6 +71,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ExtendInterval = $_.ExtendInterval
 					DevFee = $DevFee
 					ManualUri = $ManualUri
+                    Version     = $Version
 				}
 			}
 		}

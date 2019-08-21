@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.33q-
 $Port = "320{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=3281187.0"
 $DevFee = 1.5
+$Version = "0.33q"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -115,6 +116,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Uri       = $Uri
 					DevFee    = $DevFee
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

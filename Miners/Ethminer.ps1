@@ -10,6 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://github.com/ethereum-mining/ethminer/releases"
 $Port = "301{0:d2}"
 $DevFee = 0.0
+$Version = "0.17.1"
 
 if ($IsLinux) {
     $Path = ".\Bin\Ethash-Ethminer\ethminer"
@@ -116,7 +117,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						ManualUri = $ManualUri
 						ExtendInterval = $_.ExtendInterval
                         FaultTolerance = $_.FaultTolerance
-                        EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
+                        EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
+                        Version     = $Version
 					}
 				}
 			}

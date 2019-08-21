@@ -17,6 +17,7 @@ if ($IsLinux) {
 $Port = "409{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"
 $DevFee = 0.0
+$Version = "0.16"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -70,6 +71,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ManualUri   = $ManualUri
 					EnvVars     = @("GPU_FORCE_64BIT_PTR=0")
 					ExtendInterval = $_.ExtendInterval
+                    Version     = $Version
 				}
 			}
 		}

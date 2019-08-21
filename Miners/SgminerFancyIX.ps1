@@ -17,6 +17,7 @@ if ($IsLinux) {
 $Port = "409{0:d2}"
 $ManualUri = "https://github.com/fancyIX/sgminer-phi2-branch/releases"
 $DevFee = 0.0
+$Version = "5.6.1.3-beta6"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -80,6 +81,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
 					EnvVars        = @("GPU_FORCE_64BIT_PTR=0")
+                    Version        = $Version
 				}
 			}
 		}

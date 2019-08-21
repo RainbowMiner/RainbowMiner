@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"
 $DevFee = 0.0
+$Version = "2.14.4"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -126,6 +127,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					Uri         = $Uri
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
+                    Version     = $Version
 				}
 			}
 		}

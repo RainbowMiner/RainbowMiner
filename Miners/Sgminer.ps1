@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.6.1-
 $ManualUri = "https://github.com/nicehash/sgminer/releases"
 $Port = "400{0:d2}"
 $DevFee = 1.0
+$Version = "5.6.1"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -85,6 +86,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					EnvVars     = @("GPU_FORCE_64BIT_PTR=0")
+                    Version     = $Version
 				}
 			}
 		}

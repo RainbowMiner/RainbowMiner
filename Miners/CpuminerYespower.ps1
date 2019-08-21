@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.
 $ManualUri = "https://github.com/bubasik/cpuminer-opt-yespower/releases"
 $Port = "530{0:d2}"
 $DevFee = 0.0
+$Version = "3.8.8.4"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -65,6 +66,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ExtendInterval = $_.ExtendInterval
 					DevFee = $DevFee
 					ManualUri = $ManualUri
+                    Version = $Version
 				}
 			}
 		}

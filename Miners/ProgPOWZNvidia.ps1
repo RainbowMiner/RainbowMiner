@@ -10,6 +10,7 @@ if (-not $IsWindows) {return}
 $Port = "340{0:d2}"
 $ManualURI = "https://github.com/hyle-team/zano/releases"
 $DevFee = 0.0
+$Version = "1.1.2"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -80,6 +81,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					ExtendInterval = $_.ExtendInterval
+                    Version     = $Version
 				}
 			}
 		}

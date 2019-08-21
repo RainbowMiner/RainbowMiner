@@ -18,6 +18,7 @@ if ($IsLinux) {
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "521{0:d2}"
+$Version = "3.1.0"
 
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
@@ -112,6 +113,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
                     ExtendInterval = $_.ExtendInterval
+                    Version        = $Version
 				}
 			}
 		}

@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7
 $DevFee = 1.0
 $Port = "341{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
+$Version = "2.10.7"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -135,6 +136,7 @@ foreach ($Miner_Vendor in @("AMD")) {
 						Uri       = $Uri
 						DevFee    = $DevFee
 						ManualUri = $ManualUri
+                        Version   = $Version
 					}
 				}
 			}

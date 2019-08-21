@@ -10,9 +10,11 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.71-cast/cast_xmr-vega-ubuntu_171.tar.gz"
+    $Version = "1.7.1"
 } else {
     $Path = ".\Bin\CryptoNight-Cast\cast_xmr-vega.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.8.0-cast/cast_xmr-vega-win64_180.zip"
+    $Version = "1.8.0"
 }
 $Port = "306{0:d2}"
 $DevFee = 1.0
@@ -79,6 +81,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					URI       = $Uri
 					DevFee    = $DevFee
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

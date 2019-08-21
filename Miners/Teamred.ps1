@@ -17,6 +17,7 @@ if ($IsLinux) {
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
+$Version = "0.5.7"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -97,6 +98,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Uri       = $Uri
 					DevFee    = $_.DevFee
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

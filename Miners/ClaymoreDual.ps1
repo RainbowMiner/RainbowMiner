@@ -30,6 +30,7 @@ if ($IsLinux) {
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "205{0:d2}"
+$Version = "14.7"
 
 $DevFee = 1.0
 $DevFeeDual = 1.0
@@ -201,7 +202,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DevFee      = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
 							ManualUri   = $ManualUri
                             StopCommand = "Start-Sleep 3"
-							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
+							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
+                            Version     = $Version
 						}
 					}
 				}

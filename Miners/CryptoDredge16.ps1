@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-CryptoDredge16\CryptoDredge.exe"
 $ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
 $Port = "338{0:d2}"
 $DevFee = 1.0
+$Version = "0.16.0"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -90,6 +91,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					DevFee = if ($_.DevFee -ne $null) {$_.DevFee} else {$DevFee}
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

@@ -11,6 +11,7 @@ $Path = ".\Bin\NVIDIA-TPruvot\ccminer-x64.exe"
 $ManualUri = "https://github.com/tpruvot/ccminer/releases"
 $Port = "114{0:d2}"
 $DevFee = 0.0
+$Version = "2.3.1"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -154,6 +155,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 						FaultTolerance = $_.FaultTolerance
 						ExtendInterval = $_.ExtendInterval
 						ManualUri = $ManualUri
+                        Version = $Version
 					}
 				}
 			}

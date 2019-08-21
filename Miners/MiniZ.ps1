@@ -10,6 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
+$Version = "1.5p"
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ"
@@ -106,6 +107,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					Uri = $Uri
 					ExtendInterval = $_.ExtendInterval
 					ManualUri = $ManualUri
+                    Version     = $Version
 				}
 			}
 		}

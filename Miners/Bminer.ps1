@@ -15,6 +15,7 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-BMiner\bminer.exe"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.8.3-bminer/bminer-lite-v15.8.3-fc8dae9-amd64.zip"
 }
+$Version = "15.8.3"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -115,6 +116,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
+                            Version        = $Version
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -139,6 +141,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ExtendInterval = $_.ExtendInterval
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
+                            Version        = $Version
 						}
 					}
 				}

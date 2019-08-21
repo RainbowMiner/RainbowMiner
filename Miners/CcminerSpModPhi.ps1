@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0-cc
 $Port = "111{0:d2}"
 $DevFee = 0.0
 $Cuda = "7.5"
+$Version = "1.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -67,6 +68,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | Where-Obj
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri = $ManualUri
+                    Version   = $Version
 				}
 			}
 		}

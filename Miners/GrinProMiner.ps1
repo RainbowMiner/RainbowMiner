@@ -20,6 +20,7 @@ $ManualURI = "https://grinpro.io"
 $Port = "335{0:d2}"
 $DevFee = 2.0
 $Cuda = "10.0"
+$Version = "2.2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -94,6 +95,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						StopCommand = if ($IsWindows) {"Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"} else {$null}
 						NoCPUMining = $_.NoCPUMining
 						DotNetRuntime = if ($IsWindows) {"2.0"} else {$null}
+                        Version     = $Version
 					}
 				}
 			}

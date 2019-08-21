@@ -10,6 +10,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $Port = "331{0:d2}"
 $ManualURI = "https://github.com/BitcoinInterestOfficial/BitcoinInterest/releases"
 $DevFee = 0.0
+$Version = "0.16"
 
 if ($IsLinux) {
     $UriCuda = @(
@@ -105,6 +106,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					ExtendInterval = $_.ExtendInterval
+                    Version     = $Version
 				}
 			}
 		}

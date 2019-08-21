@@ -208,6 +208,7 @@
     [hashtable]$Session.Updatetracker = @{
         Balances = 0
         TimeDiff = 0
+        MinerSave = 0
     }
 }
 
@@ -1427,6 +1428,12 @@ function Invoke-Core {
 
     $Miners_BeforeWD_Count = ($Miners | Measure-Object).Count
 
+    #Store miners to file
+    if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddMinutes(-60))) {
+        $Session.Updatetracker.MinerSave = Get-Date
+        Set-ContentJson ".\Data\minerdata.json" @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, DeviceName, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCprofile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU") {$_.OCprofile.PSObject.Properties.Value | Select-Object -First 1} else {""}}} -Unique) -Compress > $null
+    }
+
     #Apply watchdog to miners
     $Miners = $Miners | Where-Object {
         $Miner = $_
@@ -1476,6 +1483,7 @@ function Invoke-Core {
         }
 
         if ($ActiveMiner) {
+            $ActiveMiner.Version            = $Miner.Version
             $ActiveMiner.Profit             = $Miner.Profit
             $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
@@ -1518,6 +1526,7 @@ function Invoke-Core {
             Write-Log "New miner object for $($Miner.BaseName)"
             $Session.ActiveMiners += New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
+                Version              = $Miner.Version
                 BaseName             = $Miner.BaseName
                 Path                 = $Miner.Path
                 Arguments            = $Miner.Arguments
@@ -1799,6 +1808,8 @@ function Invoke-Core {
 
     $Session.Benchmarking = -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmarkCount -gt 0
     $LimitMiners = if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {100} else {3}
+
+    if ($Session.Benchmarking) {$Session.Updatetracker.MinerSave = 0}
 
     #Display mining information
     $Running = $false

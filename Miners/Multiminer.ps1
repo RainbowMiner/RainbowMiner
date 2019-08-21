@@ -13,6 +13,7 @@ $ManualUri = "https://github.com/bogdanadnan/multiminer/releases"
 $Port = "339{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.0"
+$Version = "1.1.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -74,6 +75,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

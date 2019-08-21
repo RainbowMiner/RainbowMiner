@@ -3285,6 +3285,7 @@ enum MinerStatus {
 
 class Miner {
     $Name
+    $Version
     $Path
     $Arguments
     $API

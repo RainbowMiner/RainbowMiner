@@ -18,6 +18,7 @@ $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "8.0"
 $DevFee = 3.0
+$Version = "1.5.3"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -110,6 +111,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    DevFee         = $_.DevFee
 					    ManualUri      = $ManualUri
                         MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}
+                        Version        = $Version
 				    }
 			    }
 		    }

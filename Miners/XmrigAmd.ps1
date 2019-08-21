@@ -18,6 +18,7 @@ if ($IsLinux) {
 }
 $ManualUri = "https://github.com/xmrig/xmrig-amd/releases"
 $Port = "304{0:d2}"
+$Version = "2.14.4"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -120,6 +121,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					    Uri         = $Uri
 					    DevFee      = $DevFee
 					    ManualUri   = $ManualUri
+                        Version     = $Version
 				    }
 			    }
 		    }

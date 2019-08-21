@@ -18,6 +18,7 @@ $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
+$Version = "1.59"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -91,6 +92,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    ExtendInterval = $_.ExtendInterval
 					    ManualUri = $ManualUri
 					    NoCPUMining = $_.NoCPUMining
+                        Version     = $Version
 				    }
 			    }
 		    }

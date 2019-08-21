@@ -19,6 +19,7 @@ if ($IsLinux) {
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
+$Version = "1.2.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -87,6 +88,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
                     MiningPriority = 2
+                    Version        = $Version
 				}
 			}
 		}

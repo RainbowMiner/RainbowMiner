@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-
 $ManualUri = "https://github.com/duality-solutions/Dynamic-GPU-Miner-AMD/releases"
 $Port = "410{0:d2}"
 $DevFee = 0.0
+$Version = "1.0.0"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -65,6 +66,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee      = $DevFee
 					ManualUri   = $ManualUri
 					EnvVars     = @("GPU_FORCE_64BIT_PTR=0")
+                    Version     = $Version
 				}
 			}
 		}

@@ -11,6 +11,7 @@ $ManualUri = "https://github.com/MicroBitcoinOrg/CudaMiner/releases"
 $Port = "130{0:d2}"
 $Cuda = "10.0"
 $DevFee = 0.0
+$Version = "1.0.2"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerRfv2\ccminer"
@@ -79,6 +80,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					ExtendInterval = $_.ExtendInterval
 					ManualUri      = $ManualUri
 					MiningPriority = 2
+                    Version        = $Version
 				}
 			}
 		}

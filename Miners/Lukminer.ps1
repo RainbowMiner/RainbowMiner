@@ -12,6 +12,7 @@ $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.15.1
 $ManualUri = "https://github.com/bellflower2015/cpuminer-opt/releases"
 $Port = "537{0:d2}"
 $DevFee = 1.0
+$Version = "0.15.12"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
@@ -72,6 +73,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ExtendInterval = $_.ExtendInterval
 					DevFee = $DevFee
 					ManualUri = $ManualUri
+                    Version     = $Version
 				}
 			}
 		}
