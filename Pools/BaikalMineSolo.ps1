@@ -100,3 +100,5 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         }
     }
 }
+
+Remove-Variable "Pools_Data"
