@@ -89,9 +89,10 @@
         $Session.MSIAcurrentprofile = -1
         $Session.RunSetup = $SetupOnly
         $Session.SetupOnly = $SetupOnly
-        $Session.IsInitialSetup = $false
+        $Session.IsBenchmarkingRun = $false
         $Session.IsDonationRun = $false
         $Session.IsExclusiveRun = $false
+        $Session.IsInitialSetup = $false
         $Session.Stopp = $false
         $Session.Benchmarking = $false
         $Session.ReportTotals = $false
@@ -1594,7 +1595,7 @@ function Invoke-Core {
     $Session.ActiveMiners | Where-Object {$Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching -or ($_.GetStatus() -eq [MinerStatus]::Running)} | Foreach-Object {
         $_.Profit_Bias = $_.Profit_Unbias
         if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -or ($_.GetStatus() -eq [MinerStatus]::Running)) {
-            if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals) {$_.IsRunningFirstRounds=$true}
+            if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun) {$_.IsRunningFirstRounds=$true}
         }
     }
 
@@ -1810,6 +1811,8 @@ function Invoke-Core {
     }
 
     $Session.Benchmarking = -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun -and $MinersNeedingBenchmarkCount -gt 0
+    if ($Session.Benchmarking) {$Session.IsBenchmarkingRun = $true}
+
     $LimitMiners = if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {100} else {3}
 
     if ($Session.Benchmarking) {$Session.Updatetracker.MinerSave = 0}
@@ -2066,7 +2069,7 @@ function Invoke-Core {
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
 
     #Dynamically adapt current interval
-    $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
+    $NextIntervalPreset = if ($Running) {$Session.Config."$(if ($Session.Benchmarking -or $Session.IsBenchmarkingRun) {"Benchmark"})Interval"} else {[Math]::Min($Session.Config.Interval,$Session.Config.BenchmarkInterval)}
     if ($Session.IsDonationRun -and $NextIntervalPreset -gt $DonateMinutes*60) {$NextIntervalPreset = $DonateMinutes*60}
     $NextInterval = [Math]::Max($NextIntervalPreset,$Session.CurrentInterval + [int]($Session.Timer - $RoundEnd.AddSeconds(-20)).TotalSeconds)
 
@@ -2104,7 +2107,7 @@ function Invoke-Core {
                 $RoundEnd = $Session.Timer.AddSeconds(0)
                 $LoopWarn = "$(if (-not $MinersUpdateStatus.MinersUpdated) {"All"} else {"Exclusive"}) miners crashed. Immediately restarting loop. "
             } elseif ($MinersUpdateStatus.MinersFailed -and -not $SomeMinersFailed) {
-                if (-not $Session.Benchmarking) {
+                if (-not $Session.Benchmarking -and -not $Session.IsBenchmarkingRun) {
                     $NextRoundEnd = $Session.Timer.AddSeconds([Math]::Max(0,$Session.Config.BenchmarkInterval - [int]($Session.Timer-$Session.RoundStart).TotalSeconds))
                     if ($NextRoundEnd -lt $RoundEnd) {$RoundEnd = $NextRoundEnd}
                 }
@@ -2298,6 +2301,8 @@ function Invoke-Core {
         }
         if ($Session.Stopp -and ($Session.AutoUpdate -or $Session.Restart)) {Set-LastStartTime}
     }
+
+    if ($Session.IsBenchmarkingRun -and -not $Session.Benchmarking) {$Session.IsBenchmarkingRun = $false}
 
     $Session.RoundCounter++
 }
