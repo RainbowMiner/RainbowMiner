@@ -22,12 +22,11 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Monero";        symbol = "XMR";   algo = "CnR";         port = 10190; fee = 0.9; rpc = "monero"}
     [PSCustomObject]@{coin = "Qrl";           symbol = "QRL";   algo = "CnV7";        port = 10370; fee = 0.9; rpc = "qrl"}
     [PSCustomObject]@{coin = "Ryo";           symbol = "RYO";   algo = "CnGpu";       port = 10270; fee = 0.9; rpc = "ryo"}
-    [PSCustomObject]@{coin = "Scala";         symbol = "XLA";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "scala"}
-    [PSCustomObject]@{coin = "Scala";         symbol = "XTC";   algo = "CnHalf";      port = 10130; fee = 0.9; rpc = "scala"}
+    [PSCustomObject]@{coin = "Scala";         symbol = "XLA";   algo = "DefyX";       port = 10130; fee = 0.9; rpc = "scala"}
     [PSCustomObject]@{coin = "Sumocoin";      symbol = "SUMO";  algo = "CnGpu";       port = 10610; fee = 0.9; rpc = "sumo"}
     [PSCustomObject]@{coin = "Swap";          symbol = "XWP";   algo = "Cuckaroo29s"; port = 10441; fee = 0.9; rpc = "swap"; divisor = 32}
     [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "CnTurtle";    port = 10380; fee = 0.9; rpc = "turtlecoin"}
-    [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx";       port = 10470; fee = 0.9; rpc = "uplexa"}
+    [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx2";      port = 10470; fee = 0.9; rpc = "uplexa"}
     [PSCustomObject]@{coin = "WowNero";       symbol = "WOW";   algo = "RxWow";       port = 10660; fee = 0.9; rpc = "wownero"}
     [PSCustomObject]@{coin = "Xcash";         symbol = "XCASH"; algo = "CnHeavyX";    port = 10440; fee = 0.9; rpc = "xcash"}
 )

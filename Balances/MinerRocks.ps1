@@ -16,7 +16,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
     [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551;  fee = 0.9; rpc = "monero"}
     [PSCustomObject]@{coin = "Ryo";         symbol = "RYO";  algo = "CnGpu";      port = 5555;  fee = 1.2; rpc = "ryo"}
-    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "CnHalf";     port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "DefyX";      port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
     [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003;  fee = 0.9; rpc = "sumokoin"}
     [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "CnTurtle";   port = 5005;  fee = 0.9; rpc = "turtle"}
     [PSCustomObject]@{coin = "uPlexa";      symbol = "UPX";  algo = "CnUpx2";     port = 30022; fee = 0.9; rpc = "uplexa"}

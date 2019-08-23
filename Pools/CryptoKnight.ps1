@@ -27,7 +27,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";      port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
     [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";         port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
     [PSCustomObject]@{coin = "Swap";        symbol = "XWP";  algo = "Cuckaroo29s"; port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
-    [PSCustomObject]@{coin = "Scala";       symbol = "XTC";  algo = "DefyX";       port = 16221; fee = 0.0; rpc = "torque"}
+    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "DefyX";       port = 16221; fee = 0.0; rpc = "torque"}
 )
 
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
