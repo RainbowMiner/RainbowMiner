@@ -88,6 +88,7 @@
 344	Phoenix42
 345	GrinGoldMiner
 346	TTminer3
+347	Gminer155
 
 400	Sgminer
 401	SgminerBitcore
@@ -125,6 +126,6 @@
 537	CpuminerRfv2
 538	UlordRig
 539	CpuPower
-
+540	XmrigUpx
 
 4068    CcminerSpModTribus
