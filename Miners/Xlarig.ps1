@@ -8,43 +8,23 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xmrig/xmrig-3.1.0-xenial-x64.tar.gz"
-    $DevFee = 1.0
+    $Path = ".\Bin\CPU-Xlarig\xlarig"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xlarig/XLArig-v3.1.0-linux64.zip"
+    $DevFee = 0.0
 } else {
-    $Path = ".\Bin\CPU-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xmrig/xmrig-3.1.0-msvc-win64-rbm.7z"
+    $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xlarig/XLArig-v3.1.0-win64.zip"
     $DevFee = 0.0
 }
-$ManualUri = "https://github.com/xmrig/xmrig/releases"
-$Port = "521{0:d2}"
+$ManualUri = "https://github.com/scala-network/XLArig/releases"
+$Port = "541{0:d2}"
 $Version = "3.1.0"
 
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   Params = ""; ExtendInterval = 2}
-    #[PSCustomObject]@{MainAlgorithm = "cn/1";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/2";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/double";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/half";       Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/fast2";      Params = ""; ExtendInterval = 2; Algorithm = "cn/fast"}
-    [PSCustomObject]@{MainAlgorithm = "cn/r";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/rto";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/rwz";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/xao";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/zls";        Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/0";    Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/tube"; Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn-heavy/xhv";  Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn-lite/1";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn-pico";       Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "rx/loki";       Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "rx/test";       Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "rx/wow";        Params = ""; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "defyx"; Params = ""; ExtendInterval = 2}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -88,7 +68,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                         }
                         "background"   = $false
                         "colors"       = $true
-                        "donate-level" = if ($IsLinux) {1} else {0}
+                        "donate-level" = 0
                         "log-file"     = $null
                         "print-time"   = 5
                         "retries"      = 5
