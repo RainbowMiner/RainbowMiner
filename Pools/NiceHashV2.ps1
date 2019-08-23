@@ -94,7 +94,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00 -and ($Platform_Versio
     $Pool_Algorithm_All = @($Pool_Algorithm_Norm) #,"$($Pool_Algorithm_Norm)-NHMP")
 
     foreach($Pool_Region in $Pool_Regions) {
-        if ($Wallets.BTC -or $InfoOnly) {
+        if ($Pool_Algorithm -ne "beam" -and ($Wallets.BTC -or $InfoOnly)) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                 if ($Pool_Algorithm_Norm -match "-NHMP") {
                     $This_Port = 3200
