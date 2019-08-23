@@ -18,9 +18,9 @@ if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU pres
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerYespower faster
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #YescryptR8
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #YescryptR8, CpuminerRplant faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16, CpuminerRplant faster
-    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; Params = ""; ExtendInterval = 2} #YescryptR24
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; Params = ""; ExtendInterval = 2} #YescryptR24, CpuminerRplant faster
     #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #YescryptR32, CpuminerRplant same but also linux
     #[PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""; ExtendInterval = 2} #yespowerR16 (old yenten)
     [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #YespowerR8
