@@ -6376,7 +6376,9 @@ function Get-PoolDataFromRequest {
         [Parameter(Mandatory = $False)]
         [Switch]$addDay,
         [Parameter(Mandatory = $False)]
-        [Switch]$priceFromSession
+        [Switch]$priceFromSession,
+        [Parameter(Mandatory = $False)]
+        [Switch]$forceCoinUnits
     )
 
     $rewards = [PSCustomObject]@{
@@ -6392,7 +6394,7 @@ function Get-PoolDataFromRequest {
     $diffLive     = $Request.$NetworkField.difficulty
     $reward       = if ($Request.$NetworkField.reward) {$Request.$NetworkField.reward} else {$Request.$LastblockField.reward}
     $profitLive   = if ($diffLive) {86400/$diffLive*$reward/$Divisor} else {0}
-    if ($Request.config.coinUnits) {$coinUnits = $Request.config.coinUnits}
+    if ($Request.config.coinUnits -and -not $forceCoinUnits) {$coinUnits = $Request.config.coinUnits}
     $amountLive   = $profitLive / $coinUnits
 
     if (-not $Currency) {$Currency = $Request.config.symbol}
