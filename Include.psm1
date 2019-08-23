@@ -5644,73 +5644,6 @@ function Get-MinerStatusKey {
     }
 }
 
-function Get-MinerReportObject {
-[cmdletbinding()]
-Param(   
-    [Parameter(Mandatory = $True,ValueFromPipeline = $True)]
-    $Miner,
-    [Parameter(Mandatory = $False)]
-    [switch]$AddDevices
-)
-    $Miner.Speed_Live = [Double[]]@()           
-    $Miner.Algorithm | ForEach-Object {
-        $Miner_Speed = $Miner.GetHashRate($_,$false)
-        $Miner.Speed_Live += [Double]$Miner_Speed
-    }
-    $Miner_PowerDraw = $Miner.GetPowerDraw()
-
-    $Profit += [Double]$Miner.Profit
-    $PowerDraw += [Double]$Miner_PowerDraw
-
-    $Devices = @()
-    if ($AddDevices) {
-        Get-Device $Miner.DeviceName | Foreach-Object {
-            if ($_.Type -eq "GPU") {
-                if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
-                $Devices += [PSCustomObject]@{
-                    Id    = $_.Type_PlatformId_Index
-                    Name  = $_.Model
-                    Mem   = [int]($_.OpenCL.GlobalMemSize / 1GB)
-                    Temp  = $_.Data.Temperature
-                    Fan   = $_.Data.FanSpeed
-                    Watt  = $_.Data.PowerDraw
-                    Core  = $_.Data.Clock
-                    MemC  = $_.Data.ClockMem
-                    MaxTemp = $_.DataMax.Temperature
-                }
-            } else {
-                $Devices += [PSCustomObject]@{
-                    Id    = $_.Type_PlatformId_Index
-                    Name  = $_.Model_Name
-                    Watt  = $_.Data.PowerDraw
-                }
-            }
-        }
-    }
-
-    # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
-    [PSCustomObject]@{
-        Name           = $Miner.BaseName
-        Version        = $Miner.Version
-        Path           = Resolve-Path -Relative $Miner.Path
-        Type           = @($Miner.DeviceModel)
-        Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
-        Algorithm      = @($Miner.BaseAlgorithm)
-        Currency       = $Miner.Currency
-        CoinName       = @($Miner.CoinName | Where-Object {$Miner} | Select-Object)
-        CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner} | Select-Object)
-        Pool           = @($Miner.Pool)
-        CurrentSpeed   = @($Miner.Speed_Live)
-        EstimatedSpeed = @($Miner.Speed)
-        PowerDraw      = $Miner_PowerDraw
-        'BTC/day'      = $Miner.Profit
-        Profit         = $Miner.Profit
-        Donator        = $Miner.Donator
-        Benchmarking   = $Miner.Speed -contains $null
-        Devices        = $Devices
-    }
-}
-
 function Invoke-ReportMinerStatus {
 
     $ReportTotals = $Session.ReportTotals
@@ -5739,7 +5672,64 @@ function Invoke-ReportMinerStatus {
     $TempAlert = 0
 
     $minerreport = ConvertTo-Json @(
-        $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {Get-MinerReportObject $_ -AddDevices}
+        $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
+            $Miner = $_
+            $Miner.Speed_Live = [Double[]]@()           
+            $Miner.Algorithm | ForEach-Object {
+                $Miner_Speed = $Miner.GetHashRate($_,$false)
+                $Miner.Speed_Live += [Double]$Miner_Speed
+            }
+            $Miner_PowerDraw = $Miner.GetPowerDraw()
+
+            $Profit += [Double]$Miner.Profit
+            $PowerDraw += [Double]$Miner_PowerDraw
+
+            $Devices = @()
+            Get-Device $Miner.DeviceName | Foreach-Object {
+                if ($_.Type -eq "GPU") {
+                    if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
+                    $Devices += [PSCustomObject]@{
+                        Id    = $_.Type_PlatformId_Index
+                        Name  = $_.Model
+                        Mem   = [int]($_.OpenCL.GlobalMemSize / 1GB)
+                        Temp  = $_.Data.Temperature
+                        Fan   = $_.Data.FanSpeed
+                        Watt  = $_.Data.PowerDraw
+                        Core  = $_.Data.Clock
+                        MemC  = $_.Data.ClockMem
+                        MaxTemp = $_.DataMax.Temperature
+                    }
+                } else {
+                    $Devices += [PSCustomObject]@{
+                        Id    = $_.Type_PlatformId_Index
+                        Name  = $_.Model_Name
+                        Watt  = $_.Data.PowerDraw
+                    }
+                }
+            }
+
+            # Create a custom object to convert to json. Type, Pool, CurrentSpeed and EstimatedSpeed are all forced to be arrays, since they sometimes have multiple values.
+            [PSCustomObject]@{
+                Name           = $Miner.BaseName
+                Version        = $Miner.Version
+                Path           = Resolve-Path -Relative $Miner.Path
+                Type           = @($Miner.DeviceModel)
+                Active         = "{0:dd} Days {0:hh} Hours {0:mm} Minutes" -f $Miner.GetActiveTime()
+                Algorithm      = @($Miner.BaseAlgorithm)
+                Currency       = $Miner.Currency
+                CoinName       = @($Miner.CoinName | Where-Object {$Miner} | Select-Object)
+                CoinSymbol     = @($Miner.CoinSymbol | Where-Object {$Miner} | Select-Object)
+                Pool           = @($Miner.Pool)
+                CurrentSpeed   = @($Miner.Speed_Live)
+                EstimatedSpeed = @($Miner.Speed)
+                PowerDraw      = $Miner_PowerDraw
+                'BTC/day'      = $Miner.Profit
+                Profit         = $Miner.Profit
+                Donator        = $Miner.Donator
+                Benchmarking   = $Miner.Speed -contains $null
+                Devices        = $Devices
+            }
+        }
     ) -Depth 10 -Compress
     
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
