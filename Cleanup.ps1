@@ -572,6 +572,10 @@ try {
         $AddAlgorithm += @("Argon2Chukwa","Argon2Wkrz")
     }
 
+    if ($Version -le (Get-Version "4.4.0.1")) {
+        $AddAlgorithm += @("CryptoNightLiteUpx2","DefyX")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
