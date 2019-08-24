@@ -97,6 +97,7 @@
         $Session.Benchmarking = $false
         $Session.ReportTotals = $false
         $Session.ReportMinerData = $false
+        $Session.ReportPoolsData = $false
         $Session.IsAdmin = Test-IsElevated
         $Session.MachineName = [System.Environment]::MachineName
         $Session.TimeDiff = 0
@@ -212,6 +213,7 @@
         Balances = 0
         TimeDiff = 0
         MinerSave = if (Test-Path ".\Data\minerdata.json") {Get-ChildItem ".\Data\minerdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
+        PoolsSave = if (Test-Path ".\Data\poolsdata.json") {Get-ChildItem ".\Data\poolsdata.json" | Select-Object -ExpandProperty LastWriteTime} else {0}
     }
 }
 
@@ -926,6 +928,13 @@ function Invoke-Core {
         }
     }
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
+
+    #Store pools to file
+    if (-not $Session.IsDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
+        $Session.Updatetracker.PoolsSave = Get-Date
+        Set-ContentJson ".\Data\poolsdata.json" @($NewPools | Select-Object Name,Algorithm,CoinSymbol,Price,StablePrice,PenaltyFactor -Unique) -Compress > $null
+        $Session.ReportPoolsData = $true
+    }
 
     #Update the pool balances every "BalanceUpdateMinutes" minutes
     if ($Session.Config.ShowPoolBalances) {
