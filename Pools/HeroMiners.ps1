@@ -46,6 +46,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     $Pool_Algorithm = $_.algo
     $Pool_Currency  = $_.symbol
     $Pool_Currency2 = $_.symbol2
+    $Pool_Units2    = $_.units2
     $Pool_Fee       = $_.fee
     $Pool_Port      = $_.port
     $Pool_RpcPath   = $_.rpc
@@ -80,11 +81,11 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
         $Pool_StatFn = "$($Name)_$($Pool_Currency)$(if ($Pool_Currency2) {$Pool_Currency2})_Profit"
         $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
-        $Pool_Reward = if ($dayData) {"Day"} else {"Live"}
+        $Pool_Reward = "Live" #if ($dayData) {"Day"} else {"Live"}
         $Pool_Data   = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -addBlockData
 
         if ($Pool_Currency2) {
-            $Pool_Data2 = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency2 -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -NetworkField "childnetwork" -LastblockField "lastchildblock" -coinUnits $_.units2 -priceFromSession -forceCoinUnits
+            $Pool_Data2 = Get-PoolDataFromRequest $Pool_Request -Currency $Pool_Currency2 -Divisor $Pool_Divisor -Timestamp $timestamp -addDay:$dayData -NetworkField "childnetwork" -LastblockField "lastchildblock" -coinUnits $Pool_Units2 -priceFromSession -forceCoinUnits
             $Pool_Data.$Pool_Reward.reward += $Pool_Data2.$Pool_Reward.reward
         }
 
