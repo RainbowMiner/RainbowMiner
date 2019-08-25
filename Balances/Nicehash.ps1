@@ -34,7 +34,7 @@ if ($Platform_Version -eq 2) {
     }
 
     if ($Request_Balance) {
-        $Request_Balance | Foreach-Object {
+        $Request_Balance | Where-Object {$_.currency -eq "BTC"} | Foreach-Object {
             $Pending = if ($_.currency -eq "BTC") {[Decimal]$Request.unpaidAmount} else {0}
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.currency))"
