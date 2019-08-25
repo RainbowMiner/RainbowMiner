@@ -170,29 +170,34 @@
         #create special config files
         if (-not (Test-Path ".\Config\minerconfigfiles.txt") -and (Test-Path ".\Data\minerconfigfiles.default.txt")) {Copy-Item ".\Data\minerconfigfiles.default.txt" ".\Config\minerconfigfiles.txt" -Force -ErrorAction Ignore}
 
-        #cleanup legacy data
-        if ((Test-Path ".\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
-            $LastVersion = (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version
-            if ($RunCleanup -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
-                Write-Host "Cleanup legacy data .."
-                [hashtable]$Cleanup_Parameters = @{
-                    AllDevices = $Session.AllDevices
-                    MyCommandParameters = $Session.DefaultValues.Keys
-                    Version = $LastVersion
-                }
-                $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
-                Get-Item ".\Cleanup.ps1" | Foreach-Object {
-                    $Cleanup_Result = & {
-                        foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
-                        & $_.FullName @Cleanup_Parameters
+        try {
+            #cleanup legacy data
+            if ((Test-Path ".\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
+                $LastVersion = (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version
+                if ($RunCleanup -and $LastVersion -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
+                    Write-Host "Cleanup legacy data .."
+                    [hashtable]$Cleanup_Parameters = @{
+                        AllDevices = $Session.AllDevices
+                        MyCommandParameters = $Session.DefaultValues.Keys
+                        Version = $LastVersion
                     }
-                    if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+                    $Session.ConfigFiles.Keys | Foreach-Object {$Cleanup_Parameters["$(if ($_ -ne "Config") {$_})ConfigFile"] = $Session.ConfigFiles[$_].Path}
+                    Get-Item ".\Cleanup.ps1" | Foreach-Object {
+                        $Cleanup_Result = & {
+                            foreach ($k in $Cleanup_Parameters.Keys) {Set-Variable $k $Cleanup_Parameters.$k}
+                            & $_.FullName @Cleanup_Parameters
+                        }
+                        if ($Cleanup_Result) {Write-Host $Cleanup_Result}
+                    }
                 }
             }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Cleanup failed: $($_.Exception.Message)"
         }
 
         #Remove stuck update
-        if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force}
+        if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
 
         #Read miner info
         if (Test-Path ".\Data\minerinfo.json") {try {(Get-Content ".\Data\minerinfo.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
@@ -255,6 +260,11 @@ function Update-ActiveMiners {
 }
 
 function Invoke-Core {
+
+    #Validate version file
+    if (-not (Test-Path ".\Data\version.json") -or -not (Get-Content ".\Data\version.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).Version) {
+        Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
+    }
 
     #Load the config    
     $ConfigBackup = if ($Session.Config -is [object]){$Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json}else{$null}
