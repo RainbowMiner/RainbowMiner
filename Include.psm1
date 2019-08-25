@@ -840,7 +840,12 @@ function Set-Balance {
                     Updated  = [DateTime]$Stat.Updated
         }
 
-        $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+        if ($Balance.Paid -ne $null) {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+        } else {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
+            if ($Earnings -lt 0) {$Earnings = $Balance_Total}
+        }
 
         if ($Earnings -gt 0) {
             $Stat.Balance   = $Balance_Total
