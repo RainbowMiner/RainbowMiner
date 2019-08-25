@@ -12,11 +12,11 @@ if (!$PoolConfig.RVN) {
 
 $Request = [PSCustomObject]@{}
 
-$Ravenminer_Host = "ravenminer.com"
+$Ravenminer_Host = "www.ravenminer.com"
 
 $Success = $true
 try {
-    if (-not ($Request = Invoke-RestMethodAsync "https://$($Ravenminer_Host)/api/walletEx?address=$($PoolConfig.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60))){$Success = $false}
+    if (-not ($Request = Invoke-RestMethodAsync "https://$($Ravenminer_Host)/api/wallet?address=$($PoolConfig.RVN)" -cycletime ($Config.BalanceUpdateMinutes*60))){$Success = $false}
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -59,7 +59,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
         Balance     = [Decimal]$Request.balance
         Pending     = [Decimal]$Request.unsold
         Total       = [Decimal]$Request.unpaid
-        Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
+        #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
         Paid24h     = [Decimal]$Request.paid24h
         Earned      = [Decimal]$Request.total
         Payouts     = @($Request.payouts | Select-Object)

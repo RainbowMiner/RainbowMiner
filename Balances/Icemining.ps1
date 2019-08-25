@@ -27,7 +27,7 @@ catch {
 $Count = 0
 $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Foreach-Object {if ($_.Value.symbol -ne $null) {$_.Value.symbol} else {$_.Name}} | Select-Object -Unique) -icontains $_.Name} | Foreach-Object {
     try {
-        $Request = Invoke-RestMethodAsync "https://icemining.ca/api/walletEx?address=$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-RestMethodAsync "https://icemining.ca/api/wallet/$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
         if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
@@ -37,10 +37,9 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Fo
                 Currency    = $Request.currency
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
-                Total       = [Decimal]$Request.unpaid
-                Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
-                Paid24h     = [Decimal]$Request.paid24h
-                Earned      = [Decimal]$Request.total
+                Total       = [Decimal]$Request.total_unpaid
+                Paid        = [Decimal]$Request.total_paid
+                Earned      = [Decimal]$Request.total_earned
                 Payouts     = @($Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }

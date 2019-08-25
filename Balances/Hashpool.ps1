@@ -45,7 +45,7 @@ $Payout_Currencies | Where-Object {@($PoolCoins_Request.PSObject.Properties | Fo
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
                 Total       = [Decimal]$Request.unpaid
-                Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
+                #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
                 Paid24h     = [Decimal]$Request.paid24h
                 Earned      = [Decimal]$Request.total
                 Payouts     = @($Request.payouts | Select-Object)
