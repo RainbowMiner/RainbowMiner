@@ -363,13 +363,15 @@
               item.tDriverVersion = "N/A"
           }
 
+          if (typeof item.Data === "undefined") { item.Data = new Array(); }
+          if (typeof item.DataMax === "undefined") { item.DataMax = new Array(); }
+
           if (item.OpenCL) {
               item.tClockSpeed = item.OpenCL.MaxClockFrequency
               item.tCores = item.OpenCL.MaxComputeUnits
           } else if (item.CIM) {
               item.tClockSpeed = item.CIM.MaxClockSpeed
               item.tCores = item.CIM.NumberOfLogicalProcessors
-              item.tPowerDraw = item.Data.PowerDraw
           } else {
               item.tClockSpeed = "N/A"
               item.tCores = "N/A"
