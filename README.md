@@ -61,9 +61,9 @@ This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMin
 ###### Nvidia Drivers
 ```
 sudo add-apt-repository ppa:graphics-drivers/ppa
-sudo apt-get -y install dkms build-essential
-sudo apt-get update
-sudo apt-get -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
+sudo apt -y install dkms build-essential
+sudo apt update
+sudo apt -y install nvidia-headless-430 nvidia-driver-430 nvidia-compute-utils-430 nvidia-cuda-toolkit
 
 ```
 Reboot after the driver have been installed.
@@ -77,6 +77,20 @@ sudo nvidia-xconfig -a --cool-bits=31 --allow-empty-initial-configuration
 ```
 Reboot after setting cool bits.
 
+###### AMD Drivers
+
+Download and extract the latest driver for your cards from [here](https://www.amd.com/en/support/graphics/radeon-500-series/radeon-rx-500-series/radeon-rx-580)
+
+
+After the archive is downloaded, extract the contents to a temporary location from which you can install it. 
+
+Run the following to install it "headless" (this is nessecary for Ubuntu Desktop installations and possibly some other configurations. [Read more here](https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#installing-the-pro-variant))
+
+```
+./amdgpu-pro-install -y --opencl=pal,legacy --headless
+
+```
+Reboot and you should be good to go! 
 
 
 ## INSTALLATION
