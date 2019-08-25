@@ -14,27 +14,17 @@ $Platform_Version = 2
 
 if ($Platform_Version -eq 2) {
     $Request = [PSCustomObject]@{}
-    $Request_Balance = [PSCustomObject]@{}
 
     try {
-        $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs/" -cycletime ($Config.BalanceUpdateMinutes*60)
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
-        return
-    }
-
-    try {
-        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -Cache ($Config.BalanceUpdateMinutes*60)
+        $Request = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -Cache ($Config.BalanceUpdateMinutes*60)
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
     }
 
-    if ($Request_Balance) {
-        $Request_Balance | Where-Object {$_.currency -eq "BTC"} | Foreach-Object {
+    if ($Request) {
+        $Request | Where-Object {$_.currency -eq "BTC"} | Foreach-Object {
             $Pending = if ($_.currency -eq "BTC") {[Decimal]$Request.unpaidAmount} else {0}
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.currency))"
@@ -47,6 +37,15 @@ if ($Platform_Version -eq 2) {
             }        
         }
     } else {
+        try {
+            $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs/" -cycletime ($Config.BalanceUpdateMinutes*60)
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
+            return
+        }
+
         [PSCustomObject]@{
             Caption     = "$($Name) (BTC)"
             Currency    = "BTC"
