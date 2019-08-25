@@ -790,6 +790,40 @@
                     }
                     break
                 }
+                "/getnh" {
+                    if ($API.IsServer) {
+                        $Status = $false
+                        if ($Parameters.workername -and $Parameters.machinename) {
+                            $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
+                            if ($Client) {
+                                $Client | Add-Member machineip $Parameters.myip -Force
+                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                            }
+                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                        }
+                        $Result = $null
+                        try {
+                            if (-not $Parameters.key) {
+                                $PoolName = if ($Session.Config.Pools.NiceHash.Platform -in @("2","v2","new") -and $Session.Config.Pools.NiceHash.API_Key  -and $Session.Config.Pools.NiceHash.API_Secret -and $Session.Config.Pools.NiceHash.OrganizationID) {"NiceHash"}
+                                            elseif ($Session.Config.Pools.NiceHashV2.API_Key -and $Session.Config.Pools.NiceHashV2.API_Secret -and $Session.Config.Pools.NiceHashV2.OrganizationID) {"NiceHashV2"}
+                                if ($PoolName) {
+                                    $Parameters | Add-Member key    $Session.Config.Pools.$PoolName.API_Key -Force
+                                    $Parameters | Add-Member secret $Session.Config.Pools.$PoolName.API_Secret -Force
+                                    $Parameters | Add-Member orgid  $Session.Config.Pools.$PoolName.OrganizationID -Force
+                                }
+                            }
+                            if ($Parameters.key -and $Parameters.secret -and $Parameters.orgid) {
+                                $Params = [hashtable]@{}
+                                ($Parameters.params | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Where-Object MemberType -eq "NoteProperty" | Foreach-Object {$Params[$_.Name] = $_.Value}
+                                $Result = Invoke-NHRequest $Parameters.endpoint $Parameters.key $Parameters.secret $Parameters.orgid -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
+                                $Status = $true
+                            }
+                        } catch {}
+                        $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
+                        if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
+                    }
+                    break
+                }
                 default {
                     # Set index page
                     if ($Path -eq "/") {

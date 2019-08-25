@@ -6486,6 +6486,99 @@ function Get-Uptime {
     }
 }
 
+function Invoke-NHRequest {
+[cmdletbinding()]   
+param(    
+    [Parameter(Mandatory = $True)]
+    [String]$endpoint,
+    [Parameter(Mandatory = $False)]
+    [String]$key,
+    [Parameter(Mandatory = $False)]
+    [String]$secret,
+    [Parameter(Mandatory = $False)]
+    [String]$organizationid,
+    [Parameter(Mandatory = $False)]
+    $params = @{},
+    [Parameter(Mandatory = $False)]
+    [String]$method = "GET",
+    [Parameter(Mandatory = $False)]
+    [String]$base = "https://api2.nicehash.com",
+    [Parameter(Mandatory = $False)]
+    [int]$Timeout = 15,
+    [Parameter(Mandatory = $False)]
+    [int]$Cache = 0,
+    [Parameter(Mandatory = $False)]
+    [switch]$ForceLocal
+)
+    $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
+    if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]::Synchronized(@{})}
+    if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+
+       $Remote = $false
+
+       if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
+            $serverbody = @{
+                endpoint  = $endpoint
+                key       = $key
+                secret    = $secret
+                orgid     = $organizationid
+                params    = $params | ConvertTo-Json -Depth 10 -Compress
+                method    = $method
+                base      = $base
+                timeout   = $timeout
+                machinename = $Session.MachineName
+                workername  = $Session.Config.Workername
+                myip      = $Session.MyIP
+            }
+            try {
+                $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getnh" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
+                if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
+            } catch {            
+                Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
+            }
+            Remove-Variable "Result" -ErrorAction Ignore -Force
+        }
+
+        if (-not $Remote -and $key -and $secret -and $organizationid) {
+            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+            $uuid = [string]([guid]::NewGuid())
+            $timestamp = Get-UnixTimestamp -Milliseconds
+            #$timestamp_nh = Invoke-RestMethod "$($base)/main/api/v2/time" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop | Select-Object -ExpandProperty serverTime
+            #if ([Math]::Abs($timestamp_nh - $timestamp) -gt 3000) {$timestamp = $timestamp_nh}
+            $paramstr = "$(($params.GetEnumerator() | Foreach-Object {"$($_.Name)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"}) -join '&')"
+            $str = "$key`0$timestamp`0$uuid`0`0$organizationid`0`0$($method.ToUpper())`0$endpoint`0$(if ($method -eq "GET") {$paramstr} else {"`0$($params | ConvertTo-Json -Depth 10 -Compress)"})"
+            $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
+            $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
+            $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))
+
+            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+
+            $headers = [hashtable]@{
+                'X-Time'            = $timestamp
+                'X-Nonce'           = $uuid
+                'X-Organization-Id' = $organizationid
+                'X-Auth'            = "$($key):$(($sign -replace '\-').ToLower())"
+                'Cache-Control'     = 'no-cache'
+            }
+            try {
+                $body = Switch($method) {
+                    "GET" {if ($params.Count) {$params} else {$null}}
+                    default {$params | ConvertTo-Json -Depth 10}
+                }
+
+                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+            } catch {
+                Write-Log -Level Info "Nicehash API call: $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $Global:NHCache[$keystr] -or $Request) {
+            $Global:NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        }
+    }
+    $Global:NHCache[$keystr].request
+}
+
 function Get-WalletWithPaymentId {
     [CmdletBinding()]
     param (
