@@ -127,5 +127,7 @@
 538	UlordRig
 539	CpuPower
 540	XmrigUpx
+541	Xlarig
+
 
 4068    CcminerSpModTribus
