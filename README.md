@@ -84,10 +84,10 @@ Download and extract the latest driver for your cards from [here](https://www.am
 
 After the archive is downloaded, extract the contents to a temporary location from which you can install it. 
 
-Run the following to install it "headless" (this is nessecary for Ubuntu Desktop installations and possibly some other configurations. [Read more here](https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#installing-the-pro-variant))
+Run the following to install it "headless" (this is nessecary for Ubuntu Desktop installations and possibly some other configurations. [Read more here](https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#installing-the-pro-variant)) and with ROCm support.
 
 ```
-./amdgpu-pro-install -y --opencl=pal,legacy --headless
+./amdgpu-pro-install -y --opencl=pal,legacy,rocm --headless
 
 ```
 Reboot and you should be good to go! 
