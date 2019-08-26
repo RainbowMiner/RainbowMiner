@@ -11,15 +11,16 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer_linux_cuda"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-ccminermtp/ccminermtp-v1.2.0-linux.7z"
     $Cuda = "9.2"
+    $Version = "1.2.0"
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.0-ccminermtp/ccminermtp-v1.2.0-win.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.1-ccminermtp/ccminermtp-v1.2.1-win.7z"
     $Cuda = "10.1"
+    $Version = "1.2.1"
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
 $DevFee = 0.0
-$Version = "1.2.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
