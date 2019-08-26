@@ -2337,6 +2337,7 @@ function Get-Device {
                 $Vendor_Name = [String]$Device_OpenCL.Vendor
                 $InstanceId  = ''
                 $SubId = ''
+                $PCIBusId = $null
 
                 if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                     $Vendor_Name = "NVIDIA"
@@ -2350,6 +2351,7 @@ function Get-Device {
                     } elseif ($Device_Name -eq "gfx906") {
                         $Device_Name = "Radeon VII"
                     }
+                    if ($PCIBusId) {$Device_OpenCL.PCIBusId = $PCIBusId}
                 } elseif ($GPUVendorLists.INTEL -icontains $Vendor_Name) {
                     $Vendor_Name = "INTEL"
                 }
@@ -2777,8 +2779,34 @@ function Get-DeviceName {
                 }
             }
 
+            if ($IsLinux -and $Vendor -eq 'AMD') {
+                try {
+                    $DeviceId = 0
+                    Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
+                        Switch -Regex ($_) {
+                            "------" {
+                                $PCIdata = [PSCustomObject]@{
+                                    Index      = $DeviceId
+                                    DeviceName = ""
+                                    SubId      = "noid"
+                                    PCIBusId   = $null
+                                }
+                                break
+                            }
+                            "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
+                            "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
+                            "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
+                            "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
+                            "Memory Model" {$PCIdata;$DeviceId++;break}
+                        }
+                    }
+                } catch {
+                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
+                }
+            }
+
             if ($Vendor -eq "NVIDIA") {
-                Invoke-NvidiaSmi "index","gpu_name","pci.device_id" | ForEach-Object {
+                Invoke-NvidiaSmi "index","gpu_name","pci.device_id","pci.bus_id" | ForEach-Object {
                     $DeviceName = $_.gpu_name.Trim()
                     $SubId = if ($AdlResultSplit.Count -gt 1 -and $AdlResultSplit[1] -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                     if ($Vendor_Cards -and $Vendor_Cards.$DeviceName.$SubId) {$DeviceName = $Vendor_Cards.$DeviceName.$SubId}
@@ -2786,6 +2814,7 @@ function Get-DeviceName {
                         Index      = $_.index
                         DeviceName = $DeviceName
                         SubId      = if ($_.pci_device_id -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
+                        PCIBusId   = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
                     }
                 }
             }
