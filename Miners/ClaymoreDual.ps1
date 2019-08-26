@@ -11,7 +11,7 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-ClaymoreDual\ethdcrminer64"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_linux.tar.gz"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.0-claymoredual/claymoredual_v15.0_linux.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -19,18 +19,18 @@ if ($IsLinux) {
     $Path = ".\Bin\Ethash-ClaymoreDual\EthDcrMiner64.exe"
     $UriCuda = @(
         [PSCustomObject]@{            
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_win_cuda10.7z"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.0-claymoredual/claymoredual_v15.0_win_cuda10.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v14.7-claymoredual/claymoredual_v14.7_win_cuda8.7z"
+            Uri  = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.0-claymoredual/claymoredual_v15.0_win_cuda8.7z"
             Cuda = "8.0"
         }
     )
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=1433925.0"
 $Port = "205{0:d2}"
-$Version = "14.7"
+$Version = "15.0"
 
 $DevFee = 1.0
 $DevFeeDual = 1.0
