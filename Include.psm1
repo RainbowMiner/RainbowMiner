@@ -2345,7 +2345,7 @@ function Get-Device {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {
                         $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
-                            if (Test-IsElevated) {Set-ContenJson ".\Data\amd-names.json" -Data $(Get-DeviceName "amd" -UseAfterburner $false) > $null}
+                            if (Test-IsElevated) {Set-ContentJson ".\Data\amd-names.json" -Data $(Get-DeviceName "amd" -UseAfterburner $false) > $null}
                             $GPUDeviceNames[$Vendor_Name] = if (Test-Path ".\Data\amd-names.json") {Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
                         } else {Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
                     }
