@@ -1,0 +1,743 @@
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sat Jul 15 18:23:03 2017 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>lspci</title>
+
+</head>
+<body>
+
+<h1 align="center">lspci</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+<a href="#MACHINE READABLE OUTPUT">MACHINE READABLE OUTPUT</a><br>
+<a href="#FILES">FILES</a><br>
+<a href="#BUGS">BUGS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">lspci &minus;
+list all PCI devices</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>lspci</b>
+[<b>options</b>]</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>lspci</b> is
+a utility for displaying information about PCI buses in the
+system and devices connected to them.</p>
+
+<p style="margin-left:11%; margin-top: 1em">By default, it
+shows a brief list of devices. Use the options described
+below to request either a more verbose output or output
+intended for parsing by other programs.</p>
+
+<p style="margin-left:11%; margin-top: 1em">If you are
+going to report bugs in PCI device drivers or in
+<i>lspci</i> itself, please include output of &quot;lspci
+-vvx&quot; or even better &quot;lspci -vvxxx&quot; (however,
+see below for possible caveats).</p>
+
+<p style="margin-left:11%; margin-top: 1em">Some parts of
+the output, especially in the highly verbose modes, are
+probably intelligible only to experienced PCI hackers. For
+exact definitions of the fields, please consult either the
+PCI specifications or the <b>header.h</b> and
+<b>/usr/include/linux/pci.h</b> include files.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Access to some
+parts of the PCI configuration space is restricted to root
+on many operating systems, so the features of <i>lspci</i>
+available to normal users are limited. However, <i>lspci</i>
+tries its best to display as much as available and mark all
+other information with <i>&lt;access denied&gt;</i>
+text.</p>
+
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Basic
+display modes</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-m</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Dump PCI device data in a backward-compatible machine
+readable form. See below for details.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-mm</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Dump PCI device data in a machine readable form for easy
+parsing by scripts. See below for details.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-t</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Show a tree-like diagram containing all buses, bridges,
+devices and connections between them.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Display
+options</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p style="margin-top: 1em"><b>-v</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em">Be verbose and display detailed
+information about all devices.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-vv</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Be very verbose and display more details. This level
+includes everything deemed useful.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-vvv</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Be even more verbose and display everything we are able
+to parse, even if it doesn&rsquo;t look interesting at all
+(e.g., undefined memory regions).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-k</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Show kernel drivers handling each device and also kernel
+modules capable of handling it. Turned on by default when
+<b>-v</b> is given in the normal mode of output. (Currently
+works only on Linux with kernel 2.6 or newer.)</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-x</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Show hexadecimal dump of the standard part of the
+configuration space (the first 64 bytes or 128 bytes for
+CardBus bridges).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-xxx</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Show hexadecimal dump of the whole PCI configuration
+space. It is available only to root as several PCI devices
+<b>crash</b> when you try to read some parts of the config
+space (this behavior probably doesn&rsquo;t violate the PCI
+standard, but it&rsquo;s at least very stupid). However,
+such devices are rare, so you needn&rsquo;t worry much.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-xxxx</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Show hexadecimal dump of the extended (4096-byte) PCI
+configuration space available on PCI-X 2.0 and PCI Express
+buses.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-b</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Bus-centric view. Show all IRQ numbers and addresses as
+seen by the cards on the PCI bus instead of as seen by the
+kernel.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p><b>-D</b></p></td>
+<td width="4%"></td>
+<td width="78%">
+
+
+<p>Always show PCI domain numbers. By default, lspci
+suppresses them on machines which have only domain 0.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Options to
+control resolving ID&rsquo;s to names</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p style="margin-top: 1em"><b>-n</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p style="margin-top: 1em">Show PCI vendor and device codes
+as numbers instead of looking them up in the PCI ID
+list.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-nn</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Show PCI vendor and device codes as both numbers and
+names.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-q</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Use DNS to query the central PCI ID database if a device
+is not found in the local <b>pci.ids</b> file. If the DNS
+query succeeds, the result is cached in
+<b>~/.pciids-cache</b> and it is recognized in subsequent
+runs even if <b>-q</b> is not given any more. Please use
+this switch inside automated scripts only with caution to
+avoid overloading the database servers.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-qq</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Same as <b>-q</b>, but the local cache is reset.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-Q</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Query the central database even for entries which are
+recognized locally. Use this if you suspect that the
+displayed entry is wrong.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Options for
+selection of devices <br>
+-s
+[[[[&lt;domain&gt;]:]&lt;bus&gt;]:][&lt;device&gt;][.[&lt;func&gt;]]</b></p>
+
+<p style="margin-left:22%;">Show only devices in the
+specified domain (in case your machine has several host
+bridges, they can either share a common bus number space or
+each of them can address a PCI domain of its own; domains
+are numbered from 0 to ffff), bus (0 to ff), device (0 to
+1f) and function (0 to 7). Each component of the device
+address can be omitted or set to &quot;*&quot;, both meaning
+&quot;any value&quot;. All numbers are hexadecimal. E.g.,
+&quot;0:&quot; means all devices on bus 0, &quot;0&quot;
+means all functions of device 0 on any bus, &quot;0.3&quot;
+selects third function of device 0 on all buses and
+&quot;.4&quot; shows only the fourth function of each
+device.</p>
+
+<p style="margin-left:11%;"><b>-d
+[&lt;vendor&gt;]:[&lt;device&gt;][:&lt;class&gt;]</b></p>
+
+<p style="margin-left:22%;">Show only devices with
+specified vendor, device and class ID. The ID&rsquo;s are
+given in hexadecimal and may be omitted or given as
+&quot;*&quot;, both meaning &quot;any value&quot;.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Other
+options <br>
+-i &lt;file&gt;</b></p>
+
+<p style="margin-left:22%;">Use <b>&lt;file&gt;</b> as the
+PCI ID list instead of /usr/local/share/pci.ids.</p>
+
+<p style="margin-left:11%;"><b>-p &lt;file&gt;</b></p>
+
+<p style="margin-left:22%;">Use <b>&lt;file&gt;</b> as the
+map of PCI ID&rsquo;s handled by kernel modules. By default,
+lspci uses
+/lib/modules/<i>kernel_version</i>/modules.pcimap. Applies
+only to Linux systems with recent enough module tools.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-M</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Invoke bus mapping mode which performs a thorough scan
+of all PCI devices, including those behind misconfigured
+bridges, etc. This option gives meaningful results only with
+a direct hardware access mode, which usually requires root
+privileges. Please note that the bus mapper only scans PCI
+domain 0.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>--version</b></p>
+
+<p style="margin-left:22%;">Shows <i>lspci</i> version.
+This option should be used stand-alone.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>PCI access
+options</b> <br>
+The PCI utilities use the PCI library to talk to PCI devices
+(see <b>pcilib</b>(7) for details). You can use the
+following options to influence its behavior: <b><br>
+-A &lt;method&gt;</b></p>
+
+<p style="margin-left:22%;">The library supports a variety
+of methods to access the PCI hardware. By default, it uses
+the first access method available, but you can use this
+option to override this decision. See <b>-A help</b> for a
+list of available methods and their descriptions.</p>
+
+<p style="margin-left:11%;"><b>-O
+&lt;param&gt;=&lt;value&gt;</b></p>
+
+<p style="margin-left:22%;">The behavior of the library is
+controlled by several named parameters. This option allows
+to set the value of any of the parameters. Use <b>-O
+help</b> for a list of known parameters and their default
+values.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-H1</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Use direct hardware access via Intel configuration
+mechanism 1. (This is a shorthand for <b>-A
+intel-conf1</b>.)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-H2</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Use direct hardware access via Intel configuration
+mechanism 2. (This is a shorthand for <b>-A
+intel-conf2</b>.)</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-F &lt;file&gt;</b></p>
+
+<p style="margin-left:22%;">Instead of accessing real
+hardware, read the list of devices and values of their
+configuration registers from the given file produced by an
+earlier run of lspci -x. This is very useful for analysis of
+user-supplied bug reports, because you can display the
+hardware configuration in any way you want without
+disturbing the user with requests for more dumps.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-G</b></p></td>
+<td width="8%"></td>
+<td width="55%">
+
+
+<p>Increase debug level of the library.</p></td>
+<td width="23%">
+</td></tr>
+</table>
+
+<h2>MACHINE READABLE OUTPUT
+<a name="MACHINE READABLE OUTPUT"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">If you intend
+to process the output of lspci automatically, please use one
+of the machine-readable output formats (<b>-m</b>,
+<b>-vm</b>, <b>-vmm</b>) described in this section. All
+other formats are likely to change between versions of
+lspci.</p>
+
+<p style="margin-left:11%; margin-top: 1em">All numbers are
+always printed in hexadecimal. If you want to process
+numeric ID&rsquo;s instead of names, please add the
+<b>-n</b> switch.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Simple
+format (-m)</b> <br>
+In the simple format, each device is described on a single
+line, which is formatted as parameters suitable for passing
+to a shell script, i.e., values separated by whitespaces,
+quoted and escaped if necessary. Some of the arguments are
+positional: slot, class, vendor name, device name, subsystem
+vendor name and subsystem name (the last two are empty if
+the device has no subsystem); the remaining arguments are
+option-like:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="7%">
+
+
+<p style="margin-top: 1em"><b>-r</b><i>rev</i></p></td>
+<td width="4%"></td>
+<td width="24%">
+
+
+<p style="margin-top: 1em">Revision number.</p></td>
+<td width="54%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>-p</b><i>progif</i></p>
+
+<p style="margin-left:22%;">Programming interface.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The relative
+order of positional arguments and options is undefined. New
+options can be added in future versions, but they will
+always have a single argument not separated from the option
+by any spaces, so they can be easily ignored if not
+recognized.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Verbose
+format (-vmm)</b> <br>
+The verbose output is a sequence of records separated by
+blank lines. Each record describes a single device by a
+sequence of lines, each line containing a single
+&lsquo;<i>tag</i>: <i>value</i>&rsquo; pair. The <i>tag</i>
+and the <i>value</i> are separated by a single tab
+character. Neither the records nor the lines within a record
+are in any particular order. Tags are case-sensitive.</p>
+
+<p style="margin-left:11%; margin-top: 1em">The following
+tags are defined:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Slot</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>The name of the slot where the device resides
+([<i>domain</i>:]<i>bus</i>:<i>device</i>.<i>function</i>).
+This tag is always the first in a record.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Class</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Name of the class.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Vendor</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Name of the vendor.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Device</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Name of the device.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>SVendor</b></p>
+
+<p style="margin-left:22%;">Name of the subsystem vendor
+(optional).</p>
+
+<p style="margin-left:11%;"><b>SDevice</b></p>
+
+<p style="margin-left:22%;">Name of the subsystem
+(optional).</p>
+
+<p style="margin-left:11%;"><b>PhySlot</b></p>
+
+<p style="margin-left:22%;">The physical slot where the
+device resides (optional, Linux only).</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Rev</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Revision number (optional).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>ProgIf</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Programming interface (optional).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Driver</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Kernel driver currently handling the device (optional,
+Linux only).</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>Module</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Kernel module reporting that it is capable of handling
+the device (optional, Linux only).</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>NUMANode</b></p>
+
+<p style="margin-left:22%;">NUMA node this device is
+connected to (optional, Linux only).</p>
+
+<p style="margin-left:11%; margin-top: 1em">New tags can be
+added in future versions, so you should silently ignore any
+tags you don&rsquo;t recognize.</p>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>Backward-compatible
+verbose format (-vm)</b> <br>
+In this mode, lspci tries to be perfectly compatible with
+its old versions. It&rsquo;s almost the same as the regular
+verbose format, but the <b>Device</b> tag is used for both
+the slot and the device name, so it occurs twice in a single
+record. Please avoid using this format in any new code.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>/usr/local/share/pci.ids</b></p>
+
+<p style="margin-left:22%;">A list of all known PCI
+ID&rsquo;s (vendors, devices, classes and subclasses).
+Maintained at http://pciids.sourceforge.net/, use the
+<b>update-pciids</b> utility to download the most recent
+version.</p>
+
+
+<p style="margin-left:11%;"><b>/usr/local/share/pci.ids.gz</b></p>
+
+<p style="margin-left:22%;">If lspci is compiled with
+support for compression, this file is tried before
+pci.ids.</p>
+
+<p style="margin-left:11%;"><b>~/.pciids-cache</b></p>
+
+<p style="margin-left:22%;">All ID&rsquo;s found in the DNS
+query mode are cached in this file.</p>
+
+<h2>BUGS
+<a name="BUGS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Sometimes,
+lspci is not able to decode the configuration registers
+completely. This usually happens when not enough
+documentation was available to the authors. In such cases,
+it at least prints the <b>&lt;?&gt;</b> mark to signal that
+there is potentially something more to say. If you know the
+details, patches will be of course welcome.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Access to the
+extended configuration space is currently supported only by
+the <b>linux_sysfs</b> back-end.</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>setpci</b>(8),
+<b>update-pciids</b>(8), <b>pcilib</b>(7)</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The PCI
+Utilities are maintained by Martin Mares
+&lt;mj@ucw.cz&gt;.</p>
+<hr>
+</body>
+</html>

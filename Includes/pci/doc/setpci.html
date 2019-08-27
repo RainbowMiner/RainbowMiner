@@ -1,0 +1,431 @@
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sat Jul 15 18:23:03 2017 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>setpci</title>
+
+</head>
+<body>
+
+<h1 align="center">setpci</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#SYNOPSIS">SYNOPSIS</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#OPTIONS">OPTIONS</a><br>
+<a href="#DEVICE SELECTION">DEVICE SELECTION</a><br>
+<a href="#OPERATIONS">OPERATIONS</a><br>
+<a href="#EXAMPLES">EXAMPLES</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">setpci &minus;
+configure PCI devices</p>
+
+<h2>SYNOPSIS
+<a name="SYNOPSIS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>setpci</b>
+[<b>options</b>] <b>devices operations</b>...</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>setpci</b>
+is a utility for querying and configuring PCI devices.</p>
+
+<p style="margin-left:11%; margin-top: 1em">All numbers are
+entered in hexadecimal notation.</p>
+
+<p style="margin-left:11%; margin-top: 1em">Root privileges
+are necessary for almost all operations, excluding reads of
+the standard header of the configuration space on some
+operating systems. Please see <b>lspci(8)</b> for details on
+access rights.</p>
+
+<h2>OPTIONS
+<a name="OPTIONS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>General
+options</b></p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-v</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Tells <i>setpci</i> to be verbose and display detailed
+information about configuration space accesses.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-f</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Tells <i>setpci</i> not to complain when there&rsquo;s
+nothing to do (when no devices are selected). This option is
+intended for use in widely-distributed configuration scripts
+where it&rsquo;s uncertain whether the device in question is
+present in the machine or not.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-D</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>&lsquo;Demo mode&rsquo; -- don&rsquo;t write anything to
+the configuration registers. It&rsquo;s useful to try
+<b>setpci -vD</b> to verify that your complex sequence of
+<b>setpci</b> operations does what you think it should
+do.</p> </td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>--version</b></p>
+
+<p style="margin-left:22%;">Show <i>setpci</i> version.
+This option should be used stand-alone.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>--help</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Show detailed help on available options. This option
+should be used stand-alone.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>--dumpregs</b></p>
+
+<p style="margin-left:22%;">Show a list of all known PCI
+registers and capabilities. This option should be used
+stand-alone.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>PCI access
+options</b> <br>
+The PCI utilities use the PCI library to talk to PCI devices
+(see <b>pcilib</b>(7) for details). You can use the
+following options to influence its behavior: <b><br>
+-A &lt;method&gt;</b></p>
+
+<p style="margin-left:22%;">The library supports a variety
+of methods to access the PCI hardware. By default, it uses
+the first access method available, but you can use this
+option to override this decision. See <b>-A help</b> for a
+list of available methods and their descriptions.</p>
+
+<p style="margin-left:11%;"><b>-O
+&lt;param&gt;=&lt;value&gt;</b></p>
+
+<p style="margin-left:22%;">The behavior of the library is
+controlled by several named parameters. This option allows
+to set the value of any of the parameters. Use <b>-O
+help</b> for a list of known parameters and their default
+values.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-H1</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Use direct hardware access via Intel configuration
+mechanism 1. (This is a shorthand for <b>-A
+intel-conf1</b>.)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-H2</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Use direct hardware access via Intel configuration
+mechanism 2. (This is a shorthand for <b>-A
+intel-conf2</b>.)</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p><b>-G</b></p></td>
+<td width="7%"></td>
+<td width="78%">
+
+
+<p>Increase debug level of the library.</p></td></tr>
+</table>
+
+<h2>DEVICE SELECTION
+<a name="DEVICE SELECTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">Before each
+sequence of operations you need to select which devices you
+wish that operation to affect. <b><br>
+-s
+[[[[&lt;domain&gt;]:]&lt;bus&gt;]:][&lt;slot&gt;][.[&lt;func&gt;]]</b></p>
+
+<p style="margin-left:22%;">Consider only devices in the
+specified domain (in case your machine has several host
+bridges, they can either share a common bus number space or
+each of them can address a PCI domain of its own; domains
+are numbered from 0 to ffff), bus (0 to ff), slot (0 to 1f)
+and function (0 to 7). Each component of the device address
+can be omitted or set to &quot;*&quot;, both meaning
+&quot;any value&quot;. All numbers are hexadecimal. E.g.,
+&quot;0:&quot; means all devices on bus 0, &quot;0&quot;
+means all functions of device 0 on any bus, &quot;0.3&quot;
+selects third function of device 0 on all buses and
+&quot;.4&quot; matches only the fourth function of each
+device.</p>
+
+<p style="margin-left:11%;"><b>-d
+[&lt;vendor&gt;]:[&lt;device&gt;]</b></p>
+
+<p style="margin-left:22%;">Select devices with specified
+vendor and device ID. Both ID&rsquo;s are given in
+hexadecimal and may be omitted or given as &quot;*&quot;,
+both meaning &quot;any value&quot;.</p>
+
+<p style="margin-left:11%; margin-top: 1em">When <b>-s</b>
+and <b>-d</b> are combined, only devices that match both
+criteria are selected. When multiple options of the same
+kind are specified, the rightmost one overrides the
+others.</p>
+
+<h2>OPERATIONS
+<a name="OPERATIONS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">There are two
+kinds of operations: reads and writes. To read a register,
+just specify its name. Writes have the form
+<i>name</i>=<i>value</i>,<i>value</i>... where each
+<i>value</i> is either a hexadecimal number or an expression
+of type <i>data</i>:<i>mask</i> where both <i>data</i> and
+<i>mask</i> are hexadecimal numbers. In the latter case,
+only the bits corresponding to binary ones in the
+<i>mask</i> are changed (technically, this is a
+read-modify-write operation).</p>
+
+<p style="margin-left:11%; margin-top: 1em">There are
+several ways how to identity a register:</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>Tell its address in hexadecimal.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>Spell its name. Setpci knows the names of all registers
+in the standard configuration headers. Use &lsquo;<b>setpci
+--dumpregs</b>&rsquo; to get the complete list. See PCI bus
+specifications for the precise meaning of these registers or
+consult <b>header.h</b> or <b>/usr/include/pci/pci.h</b> for
+a brief sketch.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>If the register is a part of a PCI capability, you can
+specify the name of the capability to get the address of its
+first register. See the names starting with
+&lsquo;CAP_&rsquo; or &lsquo;ECAP_&rsquo; in the
+<b>--dumpregs</b> output.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>If the name of the capability is not known to
+<b>setpci</b>, you can refer to it by its number in the form
+CAP<b>id</b> or ECAP<b>id</b>, where <b>id</b> is the
+numeric identifier of the capability in hexadecimal.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>Each of the previous formats can be followed by
+<b>+offset</b> to add an offset (a hex number) to the
+address. This feature can be useful for addressing of
+registers living within a capability, or to modify parts of
+standard registers.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="1%">
+
+
+<p>&bull;</p></td>
+<td width="10%"></td>
+<td width="78%">
+
+
+<p>Finally, you should append a width specifier <b>.B</b>,
+<b>.W</b>, or <b>.L</b> to choose how many bytes (1, 2, or
+4) should be transferred. The width can be omitted if you
+are referring to a register by its name and the width of the
+register is well known.</p></td></tr>
+</table>
+
+<p style="margin-left:11%; margin-top: 1em">All names of
+registers and width specifiers are case-insensitive.</p>
+
+<h2>EXAMPLES
+<a name="EXAMPLES"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">COMMAND</p>
+
+<p style="margin-left:22%;">asks for the word-sized command
+register.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="4%">
+
+
+<p>4.w</p></td>
+<td width="7%"></td>
+<td width="64%">
+
+
+<p>is a numeric address of the same register.</p></td>
+<td width="14%">
+</td></tr>
+</table>
+
+<p style="margin-left:11%;">COMMAND.l</p>
+
+<p style="margin-left:22%;">asks for a 32-bit word starting
+at the location of the command register, i.e., the command
+and status registers together.</p>
+
+<p style="margin-left:11%;">VENDOR_ID+1.b</p>
+
+<p style="margin-left:22%;">specifies the upper byte of the
+vendor ID register (remember, PCI is little-endian).</p>
+
+<p style="margin-left:11%;">CAP_PM+2.w</p>
+
+<p style="margin-left:22%;">corresponds to the second word
+of the power management capability.</p>
+
+<p style="margin-left:11%;">ECAP108.l</p>
+
+<p style="margin-left:22%;">asks for the first 32-bit word
+of the extended capability with ID 0x108.</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>lspci</b>(8),
+<b>pcilib</b>(7)</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The PCI
+Utilities are maintained by Martin Mares
+&lt;mj@ucw.cz&gt;.</p>
+<hr>
+</body>
+</html>

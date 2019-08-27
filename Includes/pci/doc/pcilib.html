@@ -1,0 +1,225 @@
+<!-- Creator     : groff version 1.22.2 -->
+<!-- CreationDate: Sat Jul 15 18:23:02 2017 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta name="generator" content="groff -Thtml, see www.gnu.org">
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta name="Content-Style" content="text/css">
+<style type="text/css">
+       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
+       h1      { text-align: center }
+</style>
+<title>pcilib</title>
+
+</head>
+<body>
+
+<h1 align="center">pcilib</h1>
+
+<a href="#NAME">NAME</a><br>
+<a href="#DESCRIPTION">DESCRIPTION</a><br>
+<a href="#ACCESS METHODS">ACCESS METHODS</a><br>
+<a href="#PARAMETERS">PARAMETERS</a><br>
+<a href="#SEE ALSO">SEE ALSO</a><br>
+<a href="#AUTHOR">AUTHOR</a><br>
+
+<hr>
+
+
+<h2>NAME
+<a name="NAME"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">pcilib &minus;
+a library for accessing PCI devices</p>
+
+<h2>DESCRIPTION
+<a name="DESCRIPTION"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The PCI library
+(also known as <i>pcilib</i> and <i>libpci</i>) is a
+portable library for accessing PCI devices and their
+configuration space.</p>
+
+<h2>ACCESS METHODS
+<a name="ACCESS METHODS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The library
+supports a variety of methods to access the configuration
+space on different operating systems. By default, the first
+matching method in this list is used, but you can specify
+override the decision (see the <b>-A</b> switch of
+<i>lspci</i>). <b><br>
+linux-sysfs</b></p>
+
+<p style="margin-left:22%;">The <b>/sys</b> filesystem on
+Linux 2.6 and newer. The standard header of the config space
+is available to all users, the rest only to root. Supports
+extended configuration space, PCI domains, VPD (from Linux
+2.6.26), physical slots (also since Linux 2.6.26) and
+information on attached kernel drivers.</p>
+
+<p style="margin-left:11%;"><b>linux-proc</b></p>
+
+<p style="margin-left:22%;">The <b>/proc/bus/pci</b>
+interface supported by Linux 2.1 and newer. The standard
+header of the config space is available to all users, the
+rest only to root.</p>
+
+<p style="margin-left:11%;"><b>intel-conf1</b></p>
+
+<p style="margin-left:22%;">Direct hardware access via
+Intel configuration mechanism 1. Available on i386 and
+compatibles on Linux, Solaris/x86, GNU Hurd, Windows, BeOS
+and Haiku. Requires root privileges.</p>
+
+<p style="margin-left:11%;"><b>intel-conf2</b></p>
+
+<p style="margin-left:22%;">Direct hardware access via
+Intel configuration mechanism 2. Available on i386 and
+compatibles on Linux, Solaris/x86, GNU Hurd, Windows, BeOS
+and Haiku. Requires root privileges. Warning: This method is
+able to address only the first 16 devices on any bus and it
+seems to be very unreliable in many cases.</p>
+
+<p style="margin-left:11%;"><b>fbsd-device</b></p>
+
+<p style="margin-left:22%;">The <b>/dev/pci</b> device on
+FreeBSD. Requires root privileges.</p>
+
+<p style="margin-left:11%;"><b>aix-device</b></p>
+
+<p style="margin-left:22%;">Access method used on AIX.
+Requires root privileges.</p>
+
+<p style="margin-left:11%;"><b>nbsd-libpci</b></p>
+
+<p style="margin-left:22%;">The <b>/dev/pci0</b> device on
+NetBSD accessed using the local libpci library.</p>
+
+<p style="margin-left:11%;"><b>obsd-device</b></p>
+
+<p style="margin-left:22%;">The <b>/dev/pci</b> device on
+OpenBSD. Requires root privileges.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>dump</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Read the contents of configuration registers from a file
+specified in the <b>dump.name</b> parameter. The format
+corresponds to the output of <i>lspci</i> <b>-x</b>.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="9%">
+
+
+<p><b>darwin</b></p></td>
+<td width="2%"></td>
+<td width="78%">
+
+
+<p>Access method used on Mac OS X / Darwin. Must be run as
+root and the system must have been booted with
+debug=0x144.</p> </td></tr>
+</table>
+
+<h2>PARAMETERS
+<a name="PARAMETERS"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The library is
+controlled by several parameters. They should have sensible
+default values, but in case you want to do something unusual
+(or even something weird), you can override them (see the
+<b>-O</b> switch of <i>lspci</i>).</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Parameters
+of specific access methods <br>
+dump.name</b></p>
+
+<p style="margin-left:22%;">Name of the bus dump file to
+read from.</p>
+
+<p style="margin-left:11%;"><b>fbsd.path</b></p>
+
+<p style="margin-left:22%;">Path to the FreeBSD PCI
+device.</p>
+
+<p style="margin-left:11%;"><b>nbsd.path</b></p>
+
+<p style="margin-left:22%;">Path to the NetBSD PCI
+device.</p>
+
+<p style="margin-left:11%;"><b>obsd.path</b></p>
+
+<p style="margin-left:22%;">Path to the OpenBSD PCI
+device.</p>
+
+<p style="margin-left:11%;"><b>proc.path</b></p>
+
+<p style="margin-left:22%;">Path to the procfs bus
+tree.</p>
+
+<p style="margin-left:11%;"><b>sysfs.path</b></p>
+
+<p style="margin-left:22%;">Path to the sysfs device
+tree.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Parameters
+for resolving of ID&rsquo;s via DNS <br>
+net.domain</b></p>
+
+<p style="margin-left:22%;">DNS domain containing the ID
+database.</p>
+
+<p style="margin-left:11%;"><b>net.cache_name</b></p>
+
+<p style="margin-left:22%;">Name of the file used for
+caching of resolved ID&rsquo;s.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><b>Parameters
+for resolving of ID&rsquo;s via UDEV&rsquo;s HWDB <br>
+hwdb.disable</b></p>
+
+<p style="margin-left:22%;">Disable use of HWDB if set to a
+non-zero value.</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:11%; margin-top: 1em"><b>lspci</b>(8),
+<b>setpci</b>(8), <b>update-pciids</b>(8)</p>
+
+<h2>AUTHOR
+<a name="AUTHOR"></a>
+</h2>
+
+
+<p style="margin-left:11%; margin-top: 1em">The PCI
+Utilities are maintained by Martin Mares
+&lt;mj@ucw.cz&gt;.</p>
+<hr>
+</body>
+</html>
