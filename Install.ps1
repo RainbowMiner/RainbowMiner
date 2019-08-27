@@ -48,12 +48,22 @@ $GNVIDIA = ($lspci -match "NVIDIA" -notmatch "nForce" | Measure-Object).Count
 $GAMD    = ($lspci -match "Advanced Micro Devices" -notmatch "RS880" -notmatch "Stoney" | Measure-Object).Count
 
 if ($GNVIDIA) {
-    Set-ContentJson ".\Data\nvidia-names.json" -Data $(Get-DeviceName "nvidia" -UseAfterburner $false) > $null
+    try {
+        $data = @(Get-DeviceName "nvidia" -UseAfterburner $false | Select-Object)
+        if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\nvidia-names.json" -Data $data  > $null}
+    } catch {
+        Write-Host "WARNING: NVIDIA configuration could not be read." -ForegroundColor Yellow
+    }
     if ($GNVIDIA -eq 1) {Write-Host " Nvidia GPU found."}
     else {Write-Host " $($GNVIDIA) Nvidia GPUs found."}
 }
 if ($GAMD) {
-    Set-ContentJson ".\Data\amd-names.json" -Data $(Get-DeviceName "amd" -UseAfterburner $false) > $null
+    try {
+        $data = @(Get-DeviceName "amd" -UseAfterburner $($IsWindows -and $GAMD -lt 7) | Select-Object)
+        if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
+    } catch {
+        Write-Host "WARNING: AMD configuration could not be read.$(if ($IsLinux) {" Please install rocm-smi!"})" -ForegroundColor Yellow
+    }
     if ($GAMD -eq 1) {Write-Host " AMD GPU found."}
     else {Write-Host " $($GAMD) AMD GPUs found."}
 }

@@ -2345,9 +2345,17 @@ function Get-Device {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {
                         $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
-                            if (Test-IsElevated) {Set-ContentJson ".\Data\amd-names.json" -Data $(Get-DeviceName "amd" -UseAfterburner $false) > $null}
+                            if (Test-IsElevated) {
+                                try {
+                                    $data = @(Get-DeviceName "amd" -UseAfterburner $false | Select-Object)
+                                    if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
+                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                            }
                             if (Test-Path ".\Data\amd-names.json") {Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
-                        } else {Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
+                        }
+                        if (-not $GPUDeviceNames[$Vendor_Name]) {
+                            $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
+                        }
                     }
                     $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId}
                     if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
@@ -3000,7 +3008,12 @@ function Update-DeviceInformation {
                         }
                     }
                     elseif ($IsLinux) {
-                        if ($Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore) {
+                        try {
+                            $Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                        }
+                        if ($Rocm) {
                             $DeviceId = 0
 
                             $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
