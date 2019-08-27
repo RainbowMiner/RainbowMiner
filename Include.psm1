@@ -1745,8 +1745,8 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
-        param($ControllerProcessID, $CreateProcessPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), (Resolve-Path ".\IncludesLinux\lib"), $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
+        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
 
@@ -1793,7 +1793,8 @@ function Start-SubProcessInConsole {
                 & chmod +x $FilePath > $null
 
                 # Set lib path to local
-                $env:LD_LIBRARY_PATH = $env:LD_LIBRARY_PATH + ":./"
+                #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
+                $env:LD_LIBRARY_PATH = "./:$($LDExportPath)"
             }
 
             $Process = Start-Process @ProcessParams
