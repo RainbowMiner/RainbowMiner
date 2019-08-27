@@ -2994,8 +2994,8 @@ function Update-DeviceInformation {
 
                                         $_ | Add-Member DataMax $DataMax -Force
                                     }
-                                    $DeviceId++
                                 }
+                                $DeviceId++
                             }
                         }
                     }
