@@ -26,6 +26,100 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
     Write-Host "Install p7zip .."
     Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
+
+    $MyDir = $Pwd
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libcurl.so.3")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcurl.so.3.0.0 $($MyDir)/IncludesLinux/lib/libcurl.so.3" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc-builtins.so.10.1")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1.105 $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc-builtins.so")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1 $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.1")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.1.105 $($MyDir)/IncludesLinux/lib/libcudart.so.10.1" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.0")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.0.130 $($MyDir)/IncludesLinux/lib/libcudart.so.10.0" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+    
+    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.9.2")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.9.2.148 $($MyDir)/IncludesLinux/lib/libcudart.so.9.2" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)     
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libmicrohttpd.so.10")) {
+        $proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libmicrohttpd.so.10.34.0 $($MyDir)/IncludesLinux/lib/libmicrohttpd.so.10" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.1")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.1.105 $($MyDir)/IncludesLinux/lib/libcudart.so.10.1" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)     
+    }
+    
+    if (-not (Test-Path ".\IncludesLinux\lib\libhwloc.so.5")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libhwloc.so.5.5.0 $($MyDir)/IncludesLinux/lib/libhwloc.so.5" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libstdc++.so.6")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libstdc++.so.6.0.25 $($MyDir)/IncludesLinux/lib/libstdc++.so.6" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)     
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.9.2")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.9.2.148 $($MyDir)/IncludesLinux/lib/libnvrtc.so.9.2" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.10.0")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.0.130 $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.0" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
+    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.10.1")) {
+        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.1.105 $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.1" -PassThru
+        $Proc | Wait-Process
+        Set-Location "/"
+        Set-Location $($MyDir)
+    }
+
     Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
 }
 
