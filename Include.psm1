@@ -2754,6 +2754,7 @@ function Get-DeviceName {
                     DeviceName = $DeviceName
                     InstanceId = $_.GpuId
                     SubId = $SubId
+                    PCIBusId = if ($_.GpuId -match "&BUS_(\d+)") {"$("{0:x2}" -f [int]$Matches[1]):00"}
                 }
                 $DeviceId++
             }
@@ -2780,28 +2781,34 @@ function Get-DeviceName {
             }
 
             if ($IsLinux -and $Vendor -eq 'AMD') {
-                try {
-                    $DeviceId = 0
-                    Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
-                        Switch -Regex ($_) {
-                            "------" {
-                                $PCIdata = [PSCustomObject]@{
-                                    Index      = $DeviceId
-                                    DeviceName = ""
-                                    SubId      = "noid"
-                                    PCIBusId   = $null
-                                }
-                                break
-                            }
-                            "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
-                            "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
-                            "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
-                            "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
-                            "Memory Model" {$PCIdata;$DeviceId++;break}
-                        }
+                if (-not (Test-IsElevated)) {
+                    if (Test-Path ".\Data\amd-names.json") {
+                        Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
                     }
-                } catch {
-                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
+                } else {
+                    try {
+                        $DeviceId = 0
+                        Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
+                            Switch -Regex ($_) {
+                                "------" {
+                                    $PCIdata = [PSCustomObject]@{
+                                        Index      = $DeviceId
+                                        DeviceName = ""
+                                        SubId      = "noid"
+                                        PCIBusId   = $null
+                                    }
+                                    break
+                                }
+                                "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
+                                "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
+                                "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
+                                "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
+                                "Memory Model" {$PCIdata;$DeviceId++;break}
+                            }
+                        }
+                    } catch {
+                        Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
+                    }
                 }
             }
 
