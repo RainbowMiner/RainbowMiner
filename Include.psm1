@@ -2848,9 +2848,9 @@ function Update-DeviceInformation {
         $Devices = $_.Group
         $Vendor = $_.Name
 
-        if ($IsWindows) {
-            try { #AMD
-                if ($UseAfterburner -and $Script:abMonitor -and $Script:abControl -and $Vendor -eq "AMD") {
+        try { #AMD
+            if ($Vendor -eq 'AMD') {
+                if ($IsWindows -and $UseAfterburner -and $Script:abMonitor -and $Script:abControl) {
                     if ($abReload) {
                         if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
                         if ($Script:abControl) {$Script:abControl.ReloadAll()}
@@ -2899,8 +2899,7 @@ function Update-DeviceInformation {
                     }
                 } else {
 
-                    if ($Vendor -eq 'AMD') {
-
+                    if ($IsWindows) {
                         Invoke-Exe ".\Includes\odvii.exe" -ArgumentList "s" -WorkingDirectory $Pwd | Tee-Object -Variable AdlResult | Out-Null
 
                         if ($AdlResult -match "Gpu" -and $AdlResult -notmatch "Failed") {
@@ -2994,11 +2993,37 @@ function Update-DeviceInformation {
                             }
                         }
                     }
+                    elseif ($IsLinux) {
+                        if ($Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore) {
+                            $DeviceId = 0
+
+                            $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
+                                $Data = $_.Value
+                                $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
+                                    $_ | Add-Member Data ([PSCustomObject]@{
+                                            Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
+                                            PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
+                                            FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
+                                            Method            = "rocm"
+                                    }) -Force
+
+                                    $DataMax = [PSCustomObject]@{
+                                        Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
+                                        FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                        PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                    }
+
+                                    $_ | Add-Member DataMax $DataMax -Force
+                                }
+                                $DeviceId++
+                            }
+                        }
+                    }
                 }
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "Could not read power data from AMD"
             }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not read power data from AMD"
         }
 
         try { #NVIDIA        
