@@ -2343,8 +2343,13 @@ function Get-Device {
                     $Vendor_Name = "NVIDIA"
                 } elseif ($GPUVendorLists.AMD -icontains $Vendor_Name) {
                     $Vendor_Name = "AMD"
-                    if (-not $GPUDeviceNames[$Vendor_Name]) {$GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
-                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId}
+                    if (-not $GPUDeviceNames[$Vendor_Name]) {
+                        $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
+                            if (Test-IsElevated) {Set-ContenJson ".\Data\amd-names.json" -Data $(Get-DeviceName "amd" -UseAfterburner $false) > $null}
+                            $GPUDeviceNames[$Vendor_Name] = if (Test-Path ".\Data\amd-names.json") {Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                        } else {Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)}
+                    }
+                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId}
                     if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
                         if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
                         elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
@@ -2781,34 +2786,28 @@ function Get-DeviceName {
             }
 
             if ($IsLinux -and $Vendor -eq 'AMD') {
-                if (-not (Test-IsElevated)) {
-                    if (Test-Path ".\Data\amd-names.json") {
-                        Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
-                    }
-                } else {
-                    try {
-                        $DeviceId = 0
-                        Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
-                            Switch -Regex ($_) {
-                                "------" {
-                                    $PCIdata = [PSCustomObject]@{
-                                        Index      = $DeviceId
-                                        DeviceName = ""
-                                        SubId      = "noid"
-                                        PCIBusId   = $null
-                                    }
-                                    break
+                try {
+                    $DeviceId = 0
+                    Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
+                        Switch -Regex ($_) {
+                            "------" {
+                                $PCIdata = [PSCustomObject]@{
+                                    Index      = $DeviceId
+                                    DeviceName = ""
+                                    SubId      = "noid"
+                                    PCIBusId   = $null
                                 }
-                                "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
-                                "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
-                                "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
-                                "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
-                                "Memory Model" {$PCIdata;$DeviceId++;break}
+                                break
                             }
+                            "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
+                            "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
+                            "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
+                            "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
+                            "Memory Model" {$PCIdata;$DeviceId++;break}
                         }
-                    } catch {
-                        Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
                     }
+                } catch {
+                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
                 }
             }
 
