@@ -56,9 +56,22 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 ### Ubuntu 18.x Pre-requesites
-This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls))
+(This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls)))
 
-###### Nvidia Drivers
+Debian-based distros will be more-or-less the same as these instructions.
+
+Other distros will have settings in different places (hugepages) and the software install commands will be differen (dnf, yum, pacman, nix, pkg, etc.) It is assumed you are clever enough to sort out the differences on your own if you choose a different distribution. BUT! As noted above, feel free to edit this page and make a pull request.
+
+###### Huge Pages
+By default, linux sets memory-chunk size fairly small. This is to save RAM useage for low-requirement sofware (ie: most programs running in system-space, rather than user-space.) Scrypt^N (Verium) and the CryptoNight family (Monero, etc.) algorithms *need* a large memory-chunk allocation, and many benefit from it even if they don't need it. In linux, this is call 'hugepages'. For Ubuntu-based distributions, you can set this manually on each boot with `sudo sysctl -w vm.nr_hugepages=XXX` where XXX is a how many megabytes to assign per page-chunk.  This can be made persistent across reboots by editing the value in `/proc/sys/vm/nr_hugepages` and you need to be root do it (ie: `sudo emacs -wm /proc/sys/vm/nr_hugepages` (substitue 'emacs -wm' with your editor of choice - nano, vi, joe, etc.)
+
+On my system (@ParalegicRacehorse), xmr-stak will not run with hugepages<1024. Setting it to 2048 did gain me anything more than 1024, but experience in the verium/vericoin community have shown hugepages as large as 4096 can be beneficial. YMMV. Tuning is left to the rig operator, but I recommend keeping it as low as you can get away with so your other programs can run lean.
+
+#### Video Cards
+
+##### Nvidia
+Nvidia has kindly supplied a ppa for their official drivers.
+
 ```
 sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt -y install dkms build-essential
@@ -77,10 +90,8 @@ sudo nvidia-xconfig -a --cool-bits=31 --allow-empty-initial-configuration
 ```
 Reboot after setting cool bits.
 
-###### AMD Drivers
-
-Download and extract the latest driver for your cards from [here](https://www.amd.com/en/support/graphics/radeon-500-series/radeon-rx-500-series/radeon-rx-580)
-
+##### AMD Drivers
+Download and extract the latest driver for your cards from the [AMD support site](https://www.amd.com/en/support)
 
 After the archive is downloaded, extract the contents to a temporary location from which you can install it. 
 
@@ -92,6 +103,7 @@ Run the following to install it "headless" (this is nessecary for Ubuntu Desktop
 ```
 Reboot and you should be good to go! 
 
+**Important:** Some algorithms, on some miner-software, will not hash with a kernel version greater than 4.2. You may have to downgrade your OS to Ubuntu 16.04 since more recent editions will not run kernel numbers lower than 4.8. This has everything to do with a mismatch between OpenCL versions provided by recent drivers and those supported by the mining software. Yes, that means you will be running older drivers. If you want the newer drivers, with newer versions of OpenCL to work, feel free to provide assistance to the affected mining softwares by fixing their code and sending pull-requests.
 
 ## INSTALLATION
 
