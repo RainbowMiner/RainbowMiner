@@ -149,7 +149,7 @@ foreach ($Worker1 in $Workers) {
                 $Miner_Server = $Pool_Rig.server
                 $Miner_Port   = $Pool_Rig.port
                 
-                if ($Pool_Algorithm_Norm -eq "X25x" -and $Miner_Server -match "^eu-01") {
+                if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
                     $Miner_Server = $Pool_Failover | Select-Object -First 1
                     $Miner_Port   = 3333
                     $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
