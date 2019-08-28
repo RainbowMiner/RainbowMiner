@@ -1381,8 +1381,8 @@ function Invoke-Core {
         $Miner | Add-Member VersionCheck $AllMiners_VersionCheck[$Miner.BaseName]
 
         if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Session.Stats.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate") -and $Session.Stats["$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {            
-            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace '-','*')*_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
-            if ($Miner.BaseAlgorithm[1]) {Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace '-','*')-*_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore}
+            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
+            if ($Miner.BaseAlgorithm[1]) {Get-ChildItem ".\Stats\Miners\*-$($Miner.Name)_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore}
         }
 
         if ($Miner.Arguments -is [string]) {$Miner.Arguments = ($Miner.Arguments -replace "\s+"," ").trim()}
