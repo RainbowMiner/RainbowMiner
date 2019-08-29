@@ -20,7 +20,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Arqma";         symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma"}
     [PSCustomObject]@{coin = "Arqma+Iridium"; symbol = "ARQ";   algo = "CnTurtle";    port = 10630; fee = 0.9; rpc = "iridium";    symbol2 = "IRD";  units2=1e8}
     [PSCustomObject]@{coin = "Arqma+Plenteum";symbol = "ARQ";   algo = "CnTurtle";    port = 10630; fee = 0.9; rpc = "arqple";     symbol2 = "PLE";  units2=1e8}
-    [PSCustomObject]@{coin = "Arqma+Turtle";  symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma";      symbol2 = "TRTL"; units2=1e2}
+    #[PSCustomObject]@{coin = "Arqma+Turtle";  symbol = "ARQ";   algo = "CnTurtle";    port = 10320; fee = 0.9; rpc = "arqma";      symbol2 = "TRTL"; units2=1e2}
     [PSCustomObject]@{coin = "Arqma+CyprusCoin";symbol = "ARQ"; algo = "CnTurtle";    port = 10670; fee = 0.9; rpc = "cypruscoin"; symbol2 = "XCY";  units2=1e6}
     [PSCustomObject]@{coin = "BitTube";       symbol = "TUBE";  algo = "CnSaber";     port = 10280; fee = 0.9; rpc = "tube"}
     [PSCustomObject]@{coin = "Conceal";       symbol = "CCX";   algo = "CnConceal";   port = 10361; fee = 0.9; rpc = "conceal"}
@@ -36,7 +36,7 @@ $Pools_Data = @(
     [PSCustomObject]@{coin = "Scala";         symbol = "XLA";   algo = "DefyX";       port = 10130; fee = 0.9; rpc = "scala"}
     [PSCustomObject]@{coin = "Sumocoin";      symbol = "SUMO";  algo = "CnGpu";       port = 10610; fee = 0.9; rpc = "sumo"}
     [PSCustomObject]@{coin = "Swap";          symbol = "XWP";   algo = "Cuckaroo29s"; port = 10441; fee = 0.9; rpc = "swap"; divisor = 32}
-    [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "CnTurtle";    port = 10380; fee = 0.9; rpc = "turtlecoin"}
+    [PSCustomObject]@{coin = "Turtle";        symbol = "TRTL";  algo = "Chukwa";      port = 10380; fee = 0.9; rpc = "turtlecoin"}
     [PSCustomObject]@{coin = "uPlexa";        symbol = "UPX";   algo = "CnUpx2";      port = 10470; fee = 0.9; rpc = "uplexa"}
     [PSCustomObject]@{coin = "WowNero";       symbol = "WOW";   algo = "RxWow";       port = 10660; fee = 0.9; rpc = "wownero"}
     [PSCustomObject]@{coin = "Xcash";         symbol = "XCASH"; algo = "CnHeavyX";    port = 10440; fee = 0.9; rpc = "xcash"}
