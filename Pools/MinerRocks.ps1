@@ -42,7 +42,6 @@ $Pools_Requests = [hashtable]@{}
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
     $Pool_Coin          = Get-Coin $_.symbol
     $Pool_Coin2         = if ($_.symbol2) {Get-Coin $_.symbol2}
-    $Pool_Algorithm     = $_.algo
     $Pool_Currency      = $_.symbol
     $Pool_Currency2     = $_.symbol2
     $Pool_Fee           = $_.fee
@@ -55,7 +54,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
 
     $Pool_Regions       = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Request2 = [PSCustomObject]@{}
