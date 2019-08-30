@@ -104,6 +104,9 @@
             Autoexchange=$true
             Yiimp=$true
         }
+        "HashVault" = [PSCustomObject]@{
+            Currencies=@("XMR")
+        }
         "HeroMiners" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
