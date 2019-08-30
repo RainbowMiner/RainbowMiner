@@ -7,8 +7,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; coin = "EthereumClassic"; algo = "Ethash"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     rpc = "api.ethermine.org";     coin = "Ethereum";        algo = "Ethash"; symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
 )
 
 $Count = 0

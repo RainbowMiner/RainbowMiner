@@ -15,11 +15,12 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 $Pool_Currency = "AION"
+$Pool_Coin     = Get-Coin $Pool_Currency
 $Pool_Fee = 0.5
 
 if (-not $Wallets.$Pool_Currency -and -not $InfoOnly) {return}
 
-$Pool_Algorithm_Norm = Get-Algorithm "Equihash21x9"
+$Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
 $Pool_Request = [PSCustomObject]@{}
 
@@ -51,7 +52,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet =
     foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Currency
+            CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live

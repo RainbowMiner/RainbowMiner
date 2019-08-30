@@ -20,18 +20,18 @@ $Pool_Region_Default = "eu"
 @("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";    port = 5541;  fee = 0.0; rpc = "aeon"}
-    [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";     port = 5631;  fee = 0.0; rpc = "ipbc"; host = "tube"}
-    [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";       port = 9111;  fee = 0.0; rpc = "graft"}
-    [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";     port = 5831;  fee = 0.0; rpc = "haven"}
-    [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";      port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
-    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";         port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
-    [PSCustomObject]@{coin = "Swap";        symbol = "XWP";  algo = "Cuckaroo29s"; port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
-    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "DefyX";       port = 16221; fee = 0.0; rpc = "torque"}
+    [PSCustomObject]@{symbol = "AEON"; port = 5541;  fee = 0.0; rpc = "aeon"}
+    [PSCustomObject]@{symbol = "TUBE"; port = 5631;  fee = 0.0; rpc = "ipbc"; host = "tube"}
+    [PSCustomObject]@{symbol = "GRFT"; port = 9111;  fee = 0.0; rpc = "graft"}
+    [PSCustomObject]@{symbol = "XHV";  port = 5831;  fee = 0.0; rpc = "haven"}
+    [PSCustomObject]@{symbol = "MSR";  port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
+    [PSCustomObject]@{symbol = "XMR";  port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
+    [PSCustomObject]@{symbol = "XWP";  port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
+    [PSCustomObject]@{symbol = "XLA";  port = 16221; fee = 0.0; rpc = "torque"}
 )
 
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm = $_.algo
+    $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Currency  = $_.symbol
     $Pool_Currency2 = $_.symbol2
     $Pool_Fee       = $_.fee
@@ -44,7 +44,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     $Pool_Regions   = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
     $Pool_Hashrate  = if ($_.hashrate) {$_.hashrate} else {"hashrate"}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
 
     $Pool_Request  = [PSCustomObject]@{}
     $Pool_Request2 = [PSCustomObject]@{}
@@ -93,7 +93,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                 foreach($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $_.coin
+                        CoinName      = $Pool_Coin.name
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live

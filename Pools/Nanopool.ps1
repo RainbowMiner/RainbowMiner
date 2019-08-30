@@ -24,19 +24,19 @@ $Pool_Request = [PSCustomObject]@{}
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "EthereumClassic"; algo = "Ethash";        symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "Ethereum";        algo = "Ethash";        symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "Zcash";           algo = "Equihash";      symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "Monero";          algo = "CryptonightR";  symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
-    [PSCustomObject]@{coin = "Electroneum";     algo = "Cryptonight";   symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "RavenCoin";       algo = "X16r";          symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
-    [PSCustomObject]@{coin = "PascalCoin";      algo = "Randomhash";    symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true;  usepid = $true}
-    [PSCustomObject]@{coin = "Grin";            algo = "Cuckarood29";   symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
+    [PSCustomObject]@{symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ETH";  port = 9999;           fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "ZEC";  port = @(6666,6633);   fee = 1; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "XMR";  port = @(14444,14433); fee = 1; divisor = 1;   useemail = $false; usepid = $true}
+    [PSCustomObject]@{symbol = "ETN";  port = @(13333,13433); fee = 2; divisor = 1;   useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "RVN";  port = 12222;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
+    [PSCustomObject]@{symbol = "PASC"; port = 15556;          fee = 2; divisor = 1;   useemail = $true;  usepid = $true}
+    [PSCustomObject]@{symbol = "GRIN"; port = 12111;          fee = 2; divisor = 1;   useemail = $false; walletsymbol = "GRIN29"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Coin      = Get-Coin $_.walletsymbol
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
     $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
@@ -80,7 +80,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             foreach($Pool_Port in @($_.port | Select-Object)) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $_.coin
+                    CoinName      = $Pool_Coin.Name
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live

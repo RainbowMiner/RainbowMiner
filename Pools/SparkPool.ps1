@@ -32,21 +32,20 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "beam";    coin = "Beam";            algo = "BeamHash";     symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("asia","eu","us")}
-    [PSCustomObject]@{id = "";        coin = "Ethereum";        algo = "Ethash";       symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn")}
-    [PSCustomObject]@{id = "etc";     coin = "EthereumClassic"; algo = "Ethash";       symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
-    [PSCustomObject]@{id = "grin";    coin = "Grin";            algo = "Cuckarood29";  symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("asia","eu","us")}
-    [PSCustomObject]@{id = "grin";    coin = "Grin";            algo = "Cuckatoo31";   symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("asia","eu","us")}
-    #[PSCustomObject]@{id = "xmr";     coin = "Monero";          algo = "Monero";       symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
+    [PSCustomObject]@{id = "beam";    symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("asia","eu","us")}
+    [PSCustomObject]@{id = "";        symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn")}
+    [PSCustomObject]@{id = "etc";     symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
+    [PSCustomObject]@{id = "grin";    symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("asia","eu","us")}
+    [PSCustomObject]@{id = "grin";    symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("asia","eu","us")}
+    #[PSCustomObject]@{id = "xmr";     symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.algo
     $Pool_Symbol = $_.symbol
     $Pool_Currency = $_.symbol -replace "_.+$"
-    $Pool_Coin = $_.coin
     $Pool_Fee = $_.fee
     $Pool_ID = $_.id
     $Pool_Regions = $_.region
@@ -61,7 +60,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
         foreach ($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
+                CoinName      = $Pool_Coin.Name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live

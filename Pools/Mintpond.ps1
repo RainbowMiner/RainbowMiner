@@ -17,14 +17,14 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Regions = @("eu","us","asia")
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "JEMCash"; algo = "MTP"; symbol = "JEM"; url = "jemcash"; port = 3090; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{coin = "Zcoin";   algo = "MTP"; symbol = "XZC"; url = "zcoin";   port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "JEM"; url = "jemcash"; port = 3090; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "XZC"; url = "zcoin";   port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
     $Pool_Url = "https://api.mintpond.com/v1/$($_.url)"
 
@@ -71,7 +71,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         foreach($Pool_Region in $Pool_Regions) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $_.coin
+                CoinName      = $Pool_Coin.Name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live

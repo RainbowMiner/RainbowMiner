@@ -15,27 +15,27 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Akroma";          symbol = "AKA";   algo = "Ethash";   port = 20022; fee = 0.5;  rpc = "aka"}
-    [PSCustomObject]@{coin = "Callisto";        symbol = "CLO";   algo = "Ethash";   port = 20052; fee = 0.5;  rpc = "clo"}
-    [PSCustomObject]@{coin = "DubaiCoin";       symbol = "DBIX";  algo = "Ethash";   port = 10032; fee = 0.25; rpc = "dbix"}
-    [PSCustomObject]@{coin = "Ellaism";         symbol = "ELLA";  algo = "Ethash";   port = 10082; fee = 0.25; rpc = "ella"}
-    [PSCustomObject]@{coin = "EthereumClassic"; symbol = "ETC";   algo = "Ethash";   port = 10042; fee = 0.5;  rpc = "etc"}
-    [PSCustomObject]@{coin = "EtherCC";         symbol = "ETCC";  algo = "Ethash";   port = 20062; fee = 0.5;  rpc = "etcc"}
-    [PSCustomObject]@{coin = "Ether1";          symbol = "ETHO";  algo = "Ethash";   port = 20032; fee = 0.5;  rpc = "etho"}
-    [PSCustomObject]@{coin = "Goldiam";         symbol = "GOL";   algo = "Ethash";   port = 20012; fee = 0.25; rpc = "gol"}
-    [PSCustomObject]@{coin = "MOAC";            symbol = "MOAC";  algo = "Ethash";   port = 10092; fee = 0.25; rpc = "moac"}
-    [PSCustomObject]@{coin = "Musicoin";        symbol = "MUSIC"; algo = "Ethash";   port = 10012; fee = 0.25; rpc = "music"}
-    [PSCustomObject]@{coin = "Pirl";            symbol = "PIRL";  algo = "Ethash";   port = 10052; fee = 0.25; rpc = "pirl"}
-    [PSCustomObject]@{coin = "Roller";          symbol = "ROL";   algo = "Ethash";   port = 10022; fee = 0.5;  rpc = "rol"}
-    [PSCustomObject]@{coin = "Ubiq";            symbol = "UBQ";   algo = "Ubiqhash"; port = 20042; fee = 0.25; rpc = "ubq"}
-    [PSCustomObject]@{coin = "Victorim";        symbol = "VIC";   algo = "Ethash";   port = 10062; fee = 0.25; rpc = "vic"}
+    [PSCustomObject]@{symbol = "AKA";   port = 20022; fee = 0.5;  rpc = "aka"}
+    [PSCustomObject]@{symbol = "CLO";   port = 20052; fee = 0.5;  rpc = "clo"}
+    [PSCustomObject]@{symbol = "DBIX";  port = 10032; fee = 0.25; rpc = "dbix"}
+    [PSCustomObject]@{symbol = "ELLA";  port = 10082; fee = 0.25; rpc = "ella"}
+    [PSCustomObject]@{symbol = "ETC";   port = 10042; fee = 0.5;  rpc = "etc"}
+    [PSCustomObject]@{symbol = "ETCC";  port = 20062; fee = 0.5;  rpc = "etcc"}
+    [PSCustomObject]@{symbol = "ETHO";  port = 20032; fee = 0.5;  rpc = "etho"}
+    [PSCustomObject]@{symbol = "GOL";   port = 20012; fee = 0.25; rpc = "gol"}
+    [PSCustomObject]@{symbol = "MOAC";  port = 10092; fee = 0.25; rpc = "moac"}
+    [PSCustomObject]@{symbol = "MUSIC"; port = 10012; fee = 0.25; rpc = "music"}
+    [PSCustomObject]@{symbol = "PIRL";  port = 10052; fee = 0.25; rpc = "pirl"}
+    [PSCustomObject]@{symbol = "ROL";   port = 10022; fee = 0.5;  rpc = "rol"}
+    [PSCustomObject]@{symbol = "UBQ";   port = 20042; fee = 0.25; rpc = "ubq"}
+    [PSCustomObject]@{symbol = "VIC";   port = 10062; fee = 0.25; rpc = "vic"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Currency  = $_.symbol
     $Pool_RpcPath   = $_.rpc.ToLower()
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $Pool_Port      = $_.port
     $Pool_Fee       = $_.fee
@@ -86,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     if ($ok -and ($AllowZero -or $Pool_Request.hashrate -gt 0) -or $InfoOnly) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $_.coin
+            CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
             Price         = $Stat.$StatAverage #instead of .Live

@@ -7,8 +7,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; coin = "Zcash"; algo = "Equihash";     symbol = "ZEC"; port = 3443; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
-    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; coin = "Ycash"; algo = "Equihash24x7"; symbol = "YEC"; port = 3333; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; symbol = "ZEC"; port = 3443; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; symbol = "YEC"; port = 3333; fee = 1; divisor = 1;       ssl = $true;  protocol = "stratum+ssl"}
 )
 
 $Count = 0

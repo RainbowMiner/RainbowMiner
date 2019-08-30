@@ -18,17 +18,17 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; coin = "EthereumClassic"; algo = "Ethash"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
-    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     rpc = "api.ethermine.org";     coin = "Ethereum";        algo = "Ethash"; symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("eu","us");        host = "1-etc.ethermine.org"; rpc = "api-etc.ethermine.org"; symbol = "ETC"; port = 4444; fee = 1; divisor = 1000000}
+    [PSCustomObject]@{regions = @("asia","eu","us"); host = "1.ethermine.org";     rpc = "api.ethermine.org";     symbol = "ETH"; port = 4444; fee = 1; divisor = 1000000}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if (-not $Pool_Currencies -and -not $InfoOnly) {return}
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin  = Get-Coin $_.symbol
     $Pool_Ports = $_.port
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
 
     $Pool_Request = [PSCustomObject]@{}
@@ -56,7 +56,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $_.coin
+                        CoinName      = $Pool_Coin.Name
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = 0

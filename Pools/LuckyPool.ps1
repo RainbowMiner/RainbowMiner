@@ -15,13 +15,13 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Boolberry"; symbol = "BBR";  algo = "wildkeccak";  port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
-    [PSCustomObject]@{coin = "Swap";      symbol = "XWP";  algo = "Cuckaroo29s"; port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
-    [PSCustomObject]@{coin = "Zano";      symbol = "ZANO"; algo = "ProgPowZ";    port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
+    [PSCustomObject]@{symbol = "BBR";  port = 5577; fee = 0.5; rpc = "boolberry"; scratchpad = "http://#region#-bbr.luckypool.io/scratchpad.bin"; region = @("asia","eu")}
+    [PSCustomObject]@{symbol = "XWP";  port = 4888; fee = 0.9; rpc = "swap2"; divisor = 32; region = @("eu")}
+    [PSCustomObject]@{symbol = "ZANO"; port = 8877; fee = 0.9; rpc = "zano"; region = @("eu")}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm     = $_.algo
+    $Pool_Coin          = Get-Coin $_.symbol
     $Pool_Currency      = $_.symbol
     $Pool_Currency2     = $_.symbol2
     $Pool_Fee           = $_.fee
@@ -32,7 +32,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $Pool_Request = [PSCustomObject]@{}
     $Pool_Ports   = @([PSCustomObject]@{})
@@ -72,7 +72,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 if ($Pool_Port) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $_.coin
+                        CoinName      = $Pool_Coin.Name
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live

@@ -40,42 +40,41 @@ catch {
 #}
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "eth";   coin = "Ethereum";        algo = "Ethash";       symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etc";   coin = "EthereumClassic"; algo = "Ethash";       symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "clo";   coin = "Callisto";        algo = "Ethash";       symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "moac";  coin = "MOAC";            algo = "Ethash";       symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "exp";   coin = "Expanse";         algo = "Ethash";       symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "music"; coin = "Musicoin";        algo = "Ethash";       symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "pirl";  coin = "Pirl";            algo = "Ethash";       symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etp";   coin = "Metaverse ETP";   algo = "Ethash";       symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "ella";  coin = "Ellaism";         algo = "Ethash";       symbol = "ELLA";  port = 3030; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "dbix";  coin = "Dubaicoin";       algo = "Ethash";       symbol = "DBIX";  port = 2020; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "yoc";   coin = "Yocoin";          algo = "Ethash";       symbol = "YOC";   port = 4040; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "aka";   coin = "Akroma";          algo = "Ethash";       symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "zec";   coin = "Zcash";           algo = "Equihash";     symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zcl";   coin = "Zclassic";        algo = "Equihash";     symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zen";   coin = "Zencash";         algo = "Equihash";     symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "hush";  coin = "Hush";            algo = "Equihash";     symbol = "HUSH";  port = 7070; fee = 1.0; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "btcp";  coin = "BitcoinPrivate";  algo = "Equihash";     symbol = "BTCP";  port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btg";   coin = "BitcoinGold";     algo = "Equihash24x5"; symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btcz";  coin = "BitcoinZ";        algo = "Equihash24x5"; symbol = "BTCZ";  port = 2020; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zel";   coin = "ZelCash";         algo = "Equihash25x4"; symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "xmr";   coin = "Monero";          algo = "Monero";       symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
-    [PSCustomObject]@{rpc = "xzc";   coin = "Zсoin";           algo = "MTP";          symbol = "XZC";   port = 8080; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckarood29";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "ae";    coin = "AEternity";       algo = "Aeternity";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "rvn";   coin = "RavenCoin";       algo = "X16R";         symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "ella";  symbol = "ELLA";  port = 3030; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "dbix";  symbol = "DBIX";  port = 2020; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "yoc";   symbol = "YOC";   port = 4040; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "hush";  symbol = "HUSH";  port = 7070; fee = 1.0; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "btcp";  symbol = "BTCP";  port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "btcz";  symbol = "BTCZ";  port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
+    [PSCustomObject]@{rpc = "xzc";   symbol = "XZC";   port = 8080; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
 
-    #[PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckatoo31";   symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
-    #[PSCustomObject]@{rpc = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
+    #[PSCustomObject]@{rpc = "progpow-eth"; symbol = "ETH"; port = 2020; fee = 1.0; divisor = 1e18}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin = Get-Coin $_.symbol
     $Pool_Port = $_.port
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
-    $Pool_Coin = $_.coin
     $Pool_Host = "$($_.rpc).2miners.com"
     $Pool_Fee = $_.fee
     $Pool_Divisor = $_.divisor
@@ -142,7 +141,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_Hosts += $_.host
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
+                CoinName      = $Pool_Coin.Name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
                 Price         = $Stat.$StatAverage #instead of .Live

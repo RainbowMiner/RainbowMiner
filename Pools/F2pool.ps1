@@ -21,7 +21,7 @@ $Pool_Region_Default = "asia"
 
 $Pool_Request = [PSCustomObject]@{}
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool.json"  -tag $Name -cycletime 300
+    $Pool_Request = Invoke-RestMethodAsync "http://rbminer.net/api/data/f2pool.json" -tag $Name -cycletime 300
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}

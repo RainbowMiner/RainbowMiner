@@ -20,26 +20,28 @@ $Pool_Region_Default = "eu"
 @("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";   port = 5555;  fee = 0.9; rpc = "aeon"}
-    [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";    port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Boolberry";   symbol = "BBR";  algo = "wildkeccak"; port = 5555;  fee = 0.9; rpc = "boolberry"; scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
-    [PSCustomObject]@{coin = "Conceal";     symbol = "CCX";  algo = "CnConceal";  port = 10126; fee = 0.9; rpc = "conceal"}
-    [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";      port = 5005;  fee = 0.9; rpc = "graft"}
-    [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";    port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{coin = "Italo";       symbol = "XTA";  algo = "CnR";        port = 30042; fee = 0.9; rpc = "italo"}
-    [PSCustomObject]@{coin = "Loki";        symbol = "LOKI"; algo = "RxLoki";     port = 5005;  fee = 0.9; rpc = "loki"}
-    [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";     port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";        port = 5551;  fee = 0.9; rpc = "monero"}
-    [PSCustomObject]@{coin = "Ryo";         symbol = "RYO";  algo = "CnGpu";      port = 5555;  fee = 1.2; rpc = "ryo"}
-    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "DefyX";      port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
-    [PSCustomObject]@{coin = "Sumokoin";    symbol = "SUMO"; algo = "CnR";        port = 4003;  fee = 0.9; rpc = "sumokoin"}
-    [PSCustomObject]@{coin = "Turtle";      symbol = "TRTL"; algo = "Chukwa";     port = 5005;  fee = 0.9; rpc = "turtle"}
-    [PSCustomObject]@{coin = "uPlexa";      symbol = "UPX";  algo = "CnUpx2";     port = 30022; fee = 0.9; rpc = "uplexa"}
+    [PSCustomObject]@{symbol = "AEON"; port = 5555;  fee = 0.9; rpc = "aeon"}
+    [PSCustomObject]@{symbol = "BBR";  port = 5555;  fee = 0.9; rpc = "boolberry"; scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
+    [PSCustomObject]@{symbol = "CCX";  port = 10126; fee = 0.9; rpc = "conceal"}
+    [PSCustomObject]@{symbol = "GRFT"; port = 5005;  fee = 0.9; rpc = "graft"}
+    [PSCustomObject]@{symbol = "LOKI"; port = 5005;  fee = 0.9; rpc = "loki"}
+    [PSCustomObject]@{symbol = "MSR";  port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
+    [PSCustomObject]@{symbol = "RYO";  port = 5555;  fee = 1.2; rpc = "ryo"}
+    [PSCustomObject]@{symbol = "SUMO"; port = 4003;  fee = 0.9; rpc = "sumokoin"}
+    [PSCustomObject]@{symbol = "TRTL"; port = 5005;  fee = 0.9; rpc = "turtle"}
+    [PSCustomObject]@{symbol = "TUBE"; port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{symbol = "UPX";  port = 30022; fee = 0.9; rpc = "uplexa"}
+    [PSCustomObject]@{symbol = "XHV";  port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{symbol = "XLA";  port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
+    [PSCustomObject]@{symbol = "XMR";  port = 5551;  fee = 0.9; rpc = "monero"}
+    [PSCustomObject]@{symbol = "XTA";  port = 30042; fee = 0.9; rpc = "italo"}
 )
 
 $Pools_Requests = [hashtable]@{}
 
 $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Wallets."$($_.symbol2)")) -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin          = Get-Coin $_.symbol
+    $Pool_Coin2         = if ($_.symbol2) {Get-Coin $_.symbol2}
     $Pool_Algorithm     = $_.algo
     $Pool_Currency      = $_.symbol
     $Pool_Currency2     = $_.symbol2
@@ -102,7 +104,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                 foreach($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $_.coin
+                        CoinName      = "$($Pool_Coin.Name)$(if ($Pool_Coin2) {"+$($Pool_Coin2.Name)"})"
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live

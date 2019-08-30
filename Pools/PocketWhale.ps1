@@ -17,11 +17,11 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = Get-Region "us"
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Swap"; symbol = "XWP"; algo = "Cuckaroo29s"; port = 33022; fee = 0.5; rpc = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"; divisor = 32}
+    [PSCustomObject]@{symbol = "XWP"; port = 33022; fee = 0.5; rpc = "swap.pocketwhale.info:8099"; host = "swap.pocketwhale.info"; divisor = 32}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Algorithm = $_.algo
+    $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Currency  = $_.symbol
     $Pool_Currency2 = $_.symbol2
     $Pool_Fee       = $_.fee
@@ -31,7 +31,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     $Pool_Divisor   = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath  = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $Pool_Request = [PSCustomObject]@{}
     $Pool_Ports   = @([PSCustomObject]@{})
@@ -71,7 +71,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             if ($Pool_Port) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $_.coin
+                    CoinName      = $Pool_Coin.Name
                     CoinSymbol    = $Pool_Currency
                     Currency      = $Pool_Currency
                     Price         = $Stat.$StatAverage #instead of .Live

@@ -5,14 +5,14 @@
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Aeon";        symbol = "AEON"; algo = "CnLiteV7";    port = 5541;  fee = 0.0; rpc = "aeon"}
-    [PSCustomObject]@{coin = "BitTube";     symbol = "TUBE"; algo = "CnSaber";     port = 5631;  fee = 0.0; rpc = "ipbc"; host = "tube"}
-    [PSCustomObject]@{coin = "Graft";       symbol = "GRFT"; algo = "CnRwz";       port = 9111;  fee = 0.0; rpc = "graft"}
-    [PSCustomObject]@{coin = "Haven";       symbol = "XHV";  algo = "CnHaven";     port = 5831;  fee = 0.0; rpc = "haven"}
-    [PSCustomObject]@{coin = "Masari";      symbol = "MSR";  algo = "CnHalf";      port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
-    [PSCustomObject]@{coin = "Monero";      symbol = "XMR";  algo = "CnR";         port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
-    [PSCustomObject]@{coin = "Swap";        symbol = "XWP";  algo = "Cuckaroo29s"; port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
-    [PSCustomObject]@{coin = "Scala";       symbol = "XLA";  algo = "DefyX";       port = 16221;  fee = 0.0; rpc = "torque"}
+    [PSCustomObject]@{symbol = "AEON"; port = 5541;  fee = 0.0; rpc = "aeon"}
+    [PSCustomObject]@{symbol = "TUBE"; port = 5631;  fee = 0.0; rpc = "ipbc"; host = "tube"}
+    [PSCustomObject]@{symbol = "GRFT"; port = 9111;  fee = 0.0; rpc = "graft"}
+    [PSCustomObject]@{symbol = "XHV";  port = 5831;  fee = 0.0; rpc = "haven"}
+    [PSCustomObject]@{symbol = "MSR";  port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
+    [PSCustomObject]@{symbol = "XMR";  port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
+    [PSCustomObject]@{symbol = "XWP";  port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
+    [PSCustomObject]@{symbol = "XLA";  port = 16221; fee = 0.0; rpc = "torque"}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {

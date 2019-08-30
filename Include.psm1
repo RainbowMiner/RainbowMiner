@@ -3019,8 +3019,10 @@ function Update-DeviceInformation {
 
                             $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
                                 $Data = $_.Value
+                                $Card = [int]($_.Name -replace "[^\d]")
                                 $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
                                     $_ | Add-Member Data ([PSCustomObject]@{
+                                            CardId            = $Card
                                             Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
                                             PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
                                             FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
@@ -3209,6 +3211,25 @@ function Get-Algorithm {
     }
 }
 
+function Get-Coin {
+    [CmdletBinding()]
+    param(
+        [Parameter(
+            Position = 0,
+            ParameterSetName = '',   
+            ValueFromPipeline = $True,
+            Mandatory = $false)]
+        [String]$CoinSymbol = ""
+    )
+    if ($CoinSymbol -eq '*') {$CoinSymbol}
+    elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
+    else {
+        if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {Get-CoinsDB -Silent}
+        $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
+        if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
+    }
+}
+
 function Get-MappedAlgorithm {
     [CmdletBinding()]
     param(
@@ -3287,6 +3308,25 @@ function Get-Algorithms {
     if (-not $Silent) {
         if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
         else {$Global:GlobalAlgorithms.Keys | Sort-Object}
+    }
+}
+
+function Get-CoinsDB {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Values = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
+        [hashtable]$Global:GlobalCoinsDB = @{}
+        (Get-Content "Data\coinsdb.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
+        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
+    }
+    if (-not $Silent) {
+        if ($Values) {$Global:GlobalCoinsDB.Values | Select-Object -Unique | Sort-Object}
+        else {$Global:GlobalCoinsDB.Keys | Sort-Object}
     }
 }
 

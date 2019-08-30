@@ -17,34 +17,35 @@ $Pool_Region = Get-Region "US"
 $Pool_Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{coin = "Beam"            ; symbol = "BEAM"  ; algo = "Equihash150" ; rpc = "beam"     ; port = @(7776,7777)}
-    [PSCustomObject]@{coin = "BitcoinGold"     ; symbol = "BTG"   ; algo = "Equihash144" ; rpc = "btg"      ; port = @(8866,8817)}
-    [PSCustomObject]@{coin = "BitcoinInterest" ; symbol = "BCI"   ; algo = "ProgPOW"     ; rpc = "bci"      ; port = 9166}
-    [PSCustomObject]@{coin = "BitcoinZ"        ; symbol = "BTCZ"  ; algo = "Equihash144" ; rpc = "btcz"     ; port = 6586}
-    [PSCustomObject]@{coin = "BitCore"         ; symbol = "BTX"   ; algo = "Bitcore"     ; rpc = "btx"      ; port = 3629}
-    [PSCustomObject]@{coin = "BitSend"         ; symbol = "BSD"   ; algo = "Xevan"       ; rpc = "bsd"      ; port = 8686}
-    #[PSCustomObject]@{coin = "Credits"         ; symbol = "CRDS"  ; algo = "Argon2d250"  ; rpc = "crds"     ; port = 2771}
-    [PSCustomObject]@{coin = "Dynamic"         ; symbol = "DYN"   ; algo = "Argon2d500"  ; rpc = "dyn"      ; port = 5960}
-    [PSCustomObject]@{coin = "Garlicoin"       ; symbol = "GRLC"  ; algo = "Allium"      ; rpc = "grlc"     ; port = 8600}
-    [PSCustomObject]@{coin = "GenX"            ; symbol = "GENX"  ; algo = "Equihash192" ; rpc = "genx"     ; port = 9983}
-    [PSCustomObject]@{coin = "HODLcoin"        ; symbol = "HODL"  ; algo = "HOdl"        ; rpc = "hodl"     ; port = 4693}
-    [PSCustomObject]@{coin = "Pigeon"          ; symbol = "PGN"   ; algo = "X16s"        ; rpc = "pign"     ; port = 4096}
-    [PSCustomObject]@{coin = "Polytimos"       ; symbol = "POLY"  ; algo = "Polytimos"   ; rpc = "poly"     ; port = 7935}
-    [PSCustomObject]@{coin = "Raven"           ; symbol = "RVN"   ; algo = "X16r"        ; rpc = "rvn"      ; port = 6666}
-    [PSCustomObject]@{coin = "ROIcoin"         ; symbol = "ROI"   ; algo = "HOdl"        ; rpc = "roi"      ; port = 4699}
-    [PSCustomObject]@{coin = "SafeCash"        ; symbol = "SCASH" ; algo = "Equihash144" ; rpc = "scash"    ; port = 8983}
-    [PSCustomObject]@{coin = "UBIQ"            ; symbol = "UBQ"   ; algo = "Ethash"      ; rpc = "ubiq"     ; port = 3030}
-    [pscustomobject]@{coin = "Veil"            ; symbol = "VEIL"  ; algo = "X16rt"       ; rpc = "veil"     ; port = 7220}
-    [pscustomobject]@{coin = "Verge"           ; symbol = "XVG"   ; algo = "X17"         ; rpc = "xvg-x17"  ; port = 7477}
-    [PSCustomObject]@{coin = "Vertcoin"        ; symbol = "VTC"   ; algo = "Lyra2v3"     ; rpc = "vtc"      ; port = 5778}
-    [PSCustomObject]@{coin = "XDNA"            ; symbol = "XDNA"  ; algo = "Hex"         ; rpc = "xdna"     ; port = 4919}
-    [PSCustomObject]@{coin = "Zero"            ; symbol = "ZER"   ; algo = "Equihash192" ; rpc = "zero"     ; port = 6568}
+    [PSCustomObject]@{symbol = "BEAM"  ; rpc = "beam"     ; port = @(7776,7777)}
+    [PSCustomObject]@{symbol = "BTG"   ; rpc = "btg"      ; port = @(8866,8817)}
+    [PSCustomObject]@{symbol = "BCI"   ; rpc = "bci"      ; port = 9166}
+    [PSCustomObject]@{symbol = "BTCZ"  ; rpc = "btcz"     ; port = 6586}
+    [PSCustomObject]@{symbol = "BTX"   ; rpc = "btx"      ; port = 3629}
+    [PSCustomObject]@{symbol = "BSD"   ; rpc = "bsd"      ; port = 8686}
+    #[PSCustomObject]@{symbol = "CRDS"  ; rpc = "crds"     ; port = 2771}
+    [PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
+    [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
+    [PSCustomObject]@{symbol = "GENX"  ; rpc = "genx"     ; port = 9983}
+    [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
+    [PSCustomObject]@{symbol = "PGN"   ; rpc = "pign"     ; port = 4096}
+    [PSCustomObject]@{symbol = "POLY"  ; rpc = "poly"     ; port = 7935}
+    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 6666}
+    [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
+    [PSCustomObject]@{symbol = "SCASH" ; rpc = "scash"    ; port = 8983}
+    [PSCustomObject]@{symbol = "UBQ"   ; rpc = "ubiq"     ; port = 3030}
+    [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
+    [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
+    [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
+    [PSCustomObject]@{symbol = "XDNA"  ; rpc = "xdna"     ; port = 4919}
+    [PSCustomObject]@{symbol = "ZER"   ; rpc = "zero"     ; port = 6568}
 )
 
-$Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "-.+")" -or $InfoOnly} | ForEach-Object {
+    $Pool_Coin = Get-Coin $_.symbol
+    $Pool_Currency = $_.symbol -replace "-.+"
     $Pool_Port = $_.port
-    $Pool_Algorithm = $_.algo
-    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
+    $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
     $Pool_Hashrate = $Pool_Workers = $null
 
@@ -68,16 +69,16 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     foreach ($Port in @($Pool_Port | Select-Object)) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $_.coin
-            CoinSymbol    = $_.symbol
-            Currency      = $_.symbol
+            CoinName      = $Pool_Coin.Name
+            CoinSymbol    = $Pool_Currency 
+            Currency      = $Pool_Currency
             Price         = 0
             StablePrice   = 0
             MarginOfError = 0
             Protocol      = if ($Pool_SSL) {"ssl"} else {"stratum+tcp"}
             Host          = "$($_.rpc).suprnova.cc"
             Port          = $Port
-            User          = "$($Wallets."$($_.symbol)").{workername:$Worker}"
+            User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_Region
             SSL           = $Pool_SSL
