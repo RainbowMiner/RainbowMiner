@@ -35,10 +35,10 @@ $Pools_Data = @(
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
-    $Pool_Coin      = Get-Coin $_.walletsymbol
+    $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
+    $Pool_Coin      = Get-Coin $Pool_Symbol
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
     $Pool_Currency = $_.symbol
-    $Pool_Symbol = if ($_.walletsymbol) {$_.walletsymbol} else {$_.symbol}
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
     if ($Pool_Currency -eq "PASC" -and -not $Pool_Wallet.paymentid) {$Pool_Wallet.wallet = "$($Pool_Wallet.wallet).0"}
 
