@@ -6434,10 +6434,15 @@ function Get-PoolPortsFromRequest {
         [Parameter(Mandatory = $False)]
         [String]$mRIG = "",
         [Parameter(Mandatory = $False)]
-        [String]$mAvoid = ""
+        [String]$mAvoid = "",
+        [Parameter(Mandatory = $False)]
+        [String]$descField = "desc",
+        [Parameter(Mandatory = $False)]
+        [String]$portField = "port"
     )
 
-    $Portlist = $Request.config.ports | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.desc -notmatch $mAvoid)}
+    $Portlist = if ($Request.config.ports) {$Request.config.ports | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.$descField -notmatch $mAvoid)}}
+                                      else {$Request | Where-Object {$_.Disabled -ne $true -and $_.Virtual -ne $true -and (-not $mAvoid -or $_.$descField -notmatch $mAvoid)}}
 
     for($ssl=0; $ssl -lt 2; $ssl++) {
         $Ports = $Portlist | Where-Object {[int]$ssl -eq [int]$_.ssl}
@@ -6445,12 +6450,12 @@ function Get-PoolPortsFromRequest {
             $result = [PSCustomObject]@{}
             foreach($PortType in @("CPU","GPU","RIG")) {
                 $Port = Switch ($PortType) {
-                    "CPU" {$Ports | Where-Object {$mCPU -and $_.desc -match $mCPU} | Select-Object -First 1}
-                    "GPU" {$Ports | Where-Object {$mGPU -and $_.desc -match $mGPU} | Select-Object -First 1}
-                    "RIG" {$Ports | Where-Object {$mRIG -and $_.desc -match $mRIG} | Select-Object -First 1}
+                    "CPU" {$Ports | Where-Object {$mCPU -and $_.$descField -match $mCPU} | Select-Object -First 1}
+                    "GPU" {$Ports | Where-Object {$mGPU -and $_.$descField -match $mGPU} | Select-Object -First 1}
+                    "RIG" {$Ports | Where-Object {$mRIG -and $_.$descField -match $mRIG} | Select-Object -First 1}
                 }
                 if (-not $Port) {$Port = $Ports | Select-Object -First 1}
-                $result | Add-Member $PortType $Port.port -Force
+                $result | Add-Member $PortType $Port.$portField -Force
             }
             $result
         } else {$false}
