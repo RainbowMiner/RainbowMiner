@@ -67,7 +67,7 @@
                 $Miner
             )
             $Out = [PSCustomObject]@{}
-            $Miner.PSObject.Properties.Name | Where-Object {$_ -ne 'Process'} | Foreach-Object {$Out | Add-Member $_ $Miner.$_ -Force}
+            $Miner.PSObject.Properties | Foreach-Object {$Out | Add-Member $_.Name $_.Value}
             $Out
         }
 
@@ -225,15 +225,15 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
                     Break
                 }
                 "/remoteminers" {
