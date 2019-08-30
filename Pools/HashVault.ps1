@@ -115,7 +115,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Host          = $Pool_HostPath
                     Port          = $Pool_Port.CPU
                     Ports         = $Pool_Port
-                    User          = "$($Pool_Wallet.wallet)$(if ($Pool_Request.config.fixedDiffEnabled) {if ($Pool_Wallet.difficulty) {"$($Pool_Request.config.fixedDiffSeparator)$($Pool_Wallet.difficulty)"} else {"{diff:$($Pool_Request.config.fixedDiffSeparator)`$difficulty}"}})"
+                    User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {"{diff:+`$difficulty}"})"
                     Pass          = "{workername:$Worker}"
                     Region        = $Pool_Region_Default
                     SSL           = $Pool_SSL
