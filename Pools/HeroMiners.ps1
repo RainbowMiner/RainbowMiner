@@ -64,7 +64,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     if (-not $InfoOnly) {
         try {
             $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
-            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "high" -mRIG "(cloud|very high|nicehash)"
+            $Pool_Ports   = Get-PoolPortsFromRequest $Pool_Request -mCPU "" -mGPU "(multi|high)" -mRIG "(cloud|very high|nicehash)"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
