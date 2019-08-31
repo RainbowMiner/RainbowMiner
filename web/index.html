@@ -28,6 +28,7 @@
             <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algo</th>
             <th data-field="tPrimaryHashRateLive" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
             <th data-field="tPrimaryHashRate" data-sortable="true" data-formatter="formatHashRateValue" data-filter-stric-search="true">Benched</th>
+            <th data-field="tDonator" data-sortable="true">Mines</th>
         </tr>
     </thead>
 </table>
@@ -274,6 +275,8 @@
           }
           item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
 
+          item.tDonator = item.Donator ? "for dev" : "for you";
+
           item.tCoin = typeof item.CoinSymbol !== "undefined" && item.CoinSymbol !== "" ? item.CoinSymbol : (typeof item.CoinName !== "undefined" && item.CoinName !== "" ? item.CoinName : '-')
 
           // Format the Profile(s)
@@ -331,7 +334,7 @@
       var html = [];
       html.push("<strong>Running Miners</strong>");
       html.push("<table class='table table-responsive table-details"+(theme=="dark"? " table-dark":'')+"'>");
-      html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Coin</div></th><th><div class='th-inner'>Currency</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th></tr></thead>");
+      html.push("<thead><tr><th><div class='th-inner'>Name</div></th><th><div class='th-inner'>Algorithm</div></th><th><div class='th-inner'>Pool</div></th><th><div class='th-inner'>Coin</div></th><th><div class='th-inner'>Currency</div></th><th><div class='th-inner'>Device</div></th><th><div class='th-inner'>Profit</div></th><th><div class='th-inner'>Speed</div></th><th><div class='th-inner'>Benched</div></th><th><div class='th-inner'>Power</div></th><th><div class='th-inner'>Mines</div></th></tr></thead>");
       jQuery.each(row.data, function (key, value) {
           html.push('<tr>');
           html.push('<td>' + value.Name + '</td>');
@@ -344,6 +347,7 @@
           html.push('<td>' + formatHashRate(value.CurrentSpeed) + '</td>');
           html.push('<td>' + formatHashRate(value.EstimatedSpeed) + '</td>');
           html.push('<td>' + Math.round(parseFloat(value.PowerDraw)) + ' W</td>');
+          html.push('<td>' + (value.Donator? "for dev":"for you") + '</td>');
           html.push('</tr>');
       });
       html.push("</table>");

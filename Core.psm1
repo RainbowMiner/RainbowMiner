@@ -471,7 +471,6 @@ function Invoke-Core {
                                 AlgorithmMap           = $Session.Config.AlgorithmMap
                                 OCmode                 = $Session.OCmode
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
-                                PowerPrice             = $Session.CurrentPowerPrice
                                 PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
                             }
@@ -670,8 +669,6 @@ function Invoke-Core {
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
 
     $Session.CurrentPowerPrice = $PowerPrice
-
-    if ($API.Info -ne $null) {$API.Info | Add-Member PowerPrice $Session.CurrentPowerPrice -Force}
 
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}

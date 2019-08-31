@@ -102,6 +102,11 @@ $(function () {
                 $("#profit").attr("btc", result.AllProfitBTC);
                 $("#earnings").attr("btc", result.AllEarnings_Avg);
 
+                if (globalconfig && globalconfig.Version) {
+                    $('.powerprice span').text(result.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
+                    if (globalconfig.UsePowerPrice) { $('.powerprice').show() } else { $('.powerprice').hide() }
+                }
+
                 updateProfitHead();
 
                 setTimeout(p, 10000);
@@ -127,13 +132,6 @@ $(function () {
     (function r() {
         $('#uptime').text(formatUptime(last_uptime + Math.round((Date.now() - start_uptime) / 1000)));
         setTimeout(r, 1000);
-    })();
-
-    (function s() {
-        if (!globalconfig || !globalconfig.Version) { setTimeout(q, 1000); return }
-        $('.powerprice span').text(globalconfig.PowerPrice + (globalconfig.PowerPriceCurrency ? ' ' + globalconfig.PowerPriceCurrency : ''));
-        if (globalconfig.UsePowerPrice) {$('.powerprice').show()} else {$('.powerprice').hide()}
-        setTimeout(s, 150000);
     })();
 });
   
