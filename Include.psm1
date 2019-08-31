@@ -276,7 +276,7 @@ function Update-Rates {
     $Session.Rates["BTC"] = $NewRates["BTC"] = [Double]1
 
     Compare-Object $Symbols @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Decimal]$NewRates[$_.InputObject]}
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
         elseif ($Session.GlobalGetTicker -inotcontains $_.InputObject) {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
     }
     Remove-Variable "NewRates" -Force
@@ -289,7 +289,7 @@ function Update-Rates {
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
             } else {
-                $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {$UpdatedRates += $_.Name;[double](1/$_.Value.BTC)} else {0}}
+                $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {$UpdatedRates += $_.Name;[Double](1/$_.Value.BTC)} else {0}}
             }
         }
         catch {
