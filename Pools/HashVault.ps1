@@ -77,17 +77,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $timestamp  = Get-UnixTimestamp
         $timestamp24h = ($timestamp-86400)*1000
 
-        $coinUnits    = $Pool_Request.config.sigDivisor
-        $diffLive     = $Pool_Request.network_statistics.difficulty
-        $reward       = $Pool_Request.network_statistics.value
+        $coinUnits    = [decimal]$Pool_Request.config.sigDivisor
+        $diffLive     = [decimal]$Pool_Request.network_statistics.difficulty
+        $reward       = [decimal]$Pool_Request.network_statistics.value
         $profitLive   = if ($diffLive) {86400/$diffLive*$reward/$coinUnits} else {0}
-        $lastSatPrice = $Pool_Request.market.price_btc
-
-        if ($lastSatPrice) {
-            if (-not $Session.Rates.$Pool_Currency) {$Session.Rates.$Pool_Currency = 1/$Pool_Request.market.price_btc}
-        } elseif ($Session.Rates.$Pool_Currency) {
-            $lastSatPrice = 1/$Session.Rates.$Currency*1e8
-        }
+        $lastBTCPrice = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency} else {[decimal]$Pool_Request.market.price_btc}
 
         $blocks_measure = $Pool_Blocks | Where-Object {$_.ts -ge $timestamp24h} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
         $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)
@@ -95,7 +89,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_StatFn = "$($Name)_$($Pool_Currency)_Profit"
         $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
 
-        $Stat = Set-Stat -Name $Pool_StatFn -Value ($profitLive*$lastSatPrice) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $(if ($dayData) {$Pool_Request.pool_statistics.avg24} else {$Pool_Request.pool_statistics.hashRate}) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name $Pool_StatFn -Value ($profitLive*$lastBTCPrice) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $(if ($dayData) {$Pool_Request.pool_statistics.avg24} else {$Pool_Request.pool_statistics.hashRate}) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
     }
     
     if (($ok -and ($AllowZero -or $Pool_Request.pool_statistics.hashRate -gt 0)) -or $InfoOnly) {
