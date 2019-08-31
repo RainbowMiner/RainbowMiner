@@ -11,13 +11,13 @@ $Path = ".\Bin\NVIDIA-Xmrig\xmrig-nvidia.exe"
 $ManualUri = "https://github.com/xmrig/xmrig-nvidia/releases"
 $Port = "303{0:d2}"
 $DevFee = 0.0
-$Version = "2.14.4"
+$Version = "2.14.5"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.4-xmrig/xmrig-nvidia-2.14.4-msvc-win64-cuda101-rbm.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.14.5-xmrig/xmrig-nvidia-2.14.5-msvc-win64-rbm.7z"
         Cuda = "10.1"
     }
 )
