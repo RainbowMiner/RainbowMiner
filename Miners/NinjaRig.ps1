@@ -68,7 +68,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($IsLinux -or $Miner_Vendor -eq "CPU" -or ($Miner_Device | Measure-Object).Count -eq 1) -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
 					    Name = $Miner_Name
