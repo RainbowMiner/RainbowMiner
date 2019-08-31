@@ -89,6 +89,7 @@
 345	GrinGoldMiner
 346	TTminer3
 347	Gminer155
+348	NinjaRig
 
 400	Sgminer
 401	SgminerBitcore
