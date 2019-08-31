@@ -40,21 +40,28 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
 
     try {
         $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats" -tag $Name -timeout 15 -cycletime 120
-        $Divisor = [Decimal]$Pool_Request.config.coinUnits
+        $coinUnits = [Decimal]$Pool_Request.config.coinUnits
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).herominers.com/api/stats_address?address=$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency -replace "^solo:")))" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
-        if (-not $Request.stats -or -not $Divisor) {
+        if ($Request -is [string] -and $Request -match "{.+}") {
+            try {
+                $Request = $Request -replace '"workers":{".+}}','"workers":{ }' -replace '"charts":{".+]]}','"charts":{ }' | ConvertFrom-Json -ErrorAction Ignore
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+        if (-not $Request.stats -or -not $coinUnits) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
-            $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $Divisor
+            $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $coinUnits
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
                 Currency    = $Pool_Currency
-                Balance     = [Decimal]$Request.stats.balance / $Divisor
+                Balance     = [Decimal]$Request.stats.balance / $coinUnits
                 Pending     = [Decimal]$Pending
-                Total       = [Decimal]$Request.stats.balance / $Divisor + [Decimal]$Pending
-                Paid        = [Decimal]$Request.stats.paid / $Divisor
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $Divisor;txid=$Matches[1]};$i+=2})
+                Total       = [Decimal]$Request.stats.balance / $coinUnits + [Decimal]$Pending
+                Paid        = [Decimal]$Request.stats.paid / $coinUnits
+                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }
