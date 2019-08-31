@@ -14,7 +14,7 @@ if ($IsLinux) {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ninjarig/ninjarig-v1.0.0-win64.7z"
 }
-$ManualUri = "https://github.com/bogdanadnan/ninjarig/releases"
+$ManualUri = "https://github.com/turtlecoin/ninjarig/releases"
 $Port = "348{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.1"
@@ -23,7 +23,7 @@ $Version = "1.0.0"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "chukwa"; MinMemGb = 1; NH = $true} #Argon2/Chukwa
+    [PSCustomObject]@{MainAlgorithm = "chukwa"; MinMemGb = 1; NH = $true; ExtendInterval = 2} #Argon2/Chukwa
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -61,9 +61,11 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
             $DeviceIDsAll = ($Miner_Device | % {'[{0:d}]' -f ($_.Type_Vendor_Index+1)} ) -join ','
             
-            $DeviceParams = if ($Miner_Vendor -eq "CPU") {"$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})"}
-                            elseif ($Miner_Vendor -eq "AMD") {"-t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
-                            else {"-t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
+            $DeviceParams = Switch ($Miner_Vendor) {
+                "CPU"    {"$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})$($f=$Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.aes){" --cpu-optimization AVX2"})"}
+                "AMD"    {"-t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
+                "NVIDIA" {"-t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
+            }
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Miner_Vendor -eq "CPU" -or ($Miner_Device | Measure-Object).Count -eq 1) -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
