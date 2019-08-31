@@ -38,7 +38,8 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         $coinUnits    = [decimal]$Pool_Request.config.sigDivisor
 
         $Request = Invoke-RestMethodAsync "https://$($Pool_RpcPath).hashvault.pro/api/miner/$(Get-UrlEncode (Get-WalletWithPaymentId ($Config.Pools.$Name.Wallets.$Pool_Currency) -pidchar '.'))/stats" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
-        if (-not $Request.stats -or -not $Divisor) {
+
+        if (-not $Request.stats -or -not $coinUnits) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
             [PSCustomObject]@{
