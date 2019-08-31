@@ -284,7 +284,7 @@ function Update-Rates {
     if ($Session.GlobalGetTicker.Count -gt 0) {
         $UpdatedRates = @()
         try {
-            $SymbolStr = (@($Session.GlobalGetTicker | Sort-Object) -join ',').ToUpper()
+            $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
             if ($RatesAPI.Response -eq "Error") {
                 Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
