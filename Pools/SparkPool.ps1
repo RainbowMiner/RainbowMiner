@@ -53,8 +53,9 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
 
     $Pool_Request.data | Where-Object currency -eq $Pool_Symbol | Foreach-Object {
         if (-not $InfoOnly) {
-            if (-not $Session.Rates.$Pool_Currency -and $_.usd -and $Session.Rates.USD) {$Session.Rates.$Pool_Currency = $Session.Rates.USD / $_.usd}
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Session.Rates.$Pool_Currency) {$_.income / $_.incomeHashrate / $Session.Rates.$Pool_Currency} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
+            $Pool_Rates = $Session.Rates.$Pool_Currency
+            if (-not $Pool_Rates -and $_.usd -and $Session.Rates.USD) {$Pool_Rates = $Session.Rates.USD / $_.usd}
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Symbol)_Profit" -Value $(if ($Pool_Rates) {$_.income / $_.incomeHashrate / $Pool_Rates} else {0}) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $false -HashRate $_.hashrate -BlockRate $_.blocks -Quiet
         }
 
         foreach ($Pool_Region in $Pool_Regions) {

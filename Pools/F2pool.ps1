@@ -38,8 +38,9 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
     if (-not $InfoOnly) {
         $Divisor  = Switch($_.scale) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
         $Hashrate = Switch($_.hashrateunit) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
-        if (-not $Session.Rates.$Pool_Currency -and $_.price -and $Session.Rates.USD) {$Session.Rates.$Pool_Currency = $Session.Rates.USD / $_.price}                          
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $(if ($Session.Rates.$Pool_Currency) {$_.estimate / $Divisor / $Session.Rates.$Pool_Currency} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
+        $Pool_Rate = $Session.Rates.$Pool_Currency
+        if (-not $Pool_Rate -and $_.price -and $Session.Rates.USD) {$Pool_Rate = $Session.Rates.USD / $_.price}                          
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $(if ($Pool_Rate) {$_.estimate / $Divisor / $Pool_Rate} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
     }
 
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
