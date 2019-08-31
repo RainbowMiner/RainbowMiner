@@ -69,6 +69,41 @@
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
+    'Profile1-GTX10606GB' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-GTX10606GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "300"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-GTX10606GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "150"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-GTX10606GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-GTX10606GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "250"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
     'Profile1-GTX1070' = [PSCustomObject]@{
         PowerLimit = 0
         ThermalLimit = 0
