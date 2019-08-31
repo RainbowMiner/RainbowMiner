@@ -9,7 +9,7 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ninjarig/ninjarig_v1.0.0_linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ninjarig/ninjarig-v1.0.0-linux.7z"
 } else {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ninjarig/ninjarig-v1.0.0-win64.7z"
