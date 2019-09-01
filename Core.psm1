@@ -117,6 +117,9 @@
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
+        elseif ($IsLinux -and -not (Test-OCDaemon)) {
+            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and start ./startocdaemon.sh at the commandline to enable overclocking."
+        }
 
         #Cleanup the log and cache
         if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
