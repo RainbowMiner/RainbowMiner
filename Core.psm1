@@ -21,8 +21,7 @@
         if ($IsLinux) {
             if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                 $Dir = $Pwd
-                $Libs.PSObject.Properties | Foreach-Object {
-                if (-not (Test-Path ".\IncludesLinux\lib\$($_.Name)")) {
+                $Libs.PSObject.Properties | Where-Object {-not (Test-Path ".\IncludesLinux\lib\$($_.Name)")} | Foreach-Object {
                     Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
                 }
             }
