@@ -19,10 +19,18 @@ sudo mkdir -p /opt/rainbowminer/ocdcmd
 sudo chmod 777 /opt/rainbowminer/ocdcmd
 fi
 
-sudo cp -f ./IncludesLinux/ocd/OCDaemon.ps1 /opt/rainbowminer
-sudo cp -f ./IncludesLinux/ocd/startocdaemon /opt/rainbowminer
-sudo chmod +x /opt/rainbowminer/startocdaemon
-sudo ln -nfs /opt/rainbowminer/startocdaemon /usr/bin/startocdaemon
+sudo chmod +x ./IncludesLinux/bin/*
+sudo cp -Rf ./IncludesLinux/* /opt/rainbowminer
+sudo chmod +x /opt/rainbowminer/ocd/startocdaemon
+sudo ln -nfs /opt/rainbowminer/ocd/startocdaemon /usr/bin/startocdaemon
+
+if ! [ -x "$(command -v amdmeminfo)" ]; then
+sudo ln -nfs /opt/rainbowminer/bin/amdmeminfo /usr/bin/amdmeminfo
+fi
+
+if ! [ -x "$(command -v wolfamdctrl)" ]; then
+sudo ln -nfs /opt/rainbowminer/bin/wolfamdctrl /usr/bin/wolfamdctrl
+fi
 
 sudo pwsh -ExecutionPolicy bypass -Command ${command}
 exitcode=$?

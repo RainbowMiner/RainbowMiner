@@ -30,20 +30,11 @@ if ($IsLinux) {
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-        $Libs.PSObject.Properties | Where-Object {Test-Path ".\IncludesLinux\lib\$($_.Value)"} | Foreach-Object {
-            Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
+        $Libs.PSObject.Properties | Where-Object {Test-Path "/opt/rainbowminer/lib/$($_.Value)"} | Foreach-Object {
+            Invoke-Exe -FilePath "ln" -ArgumentList "-nfs /opt/rainbowminer/lib/$($_.Value) /opt/rainbowminer/lib/$($_.Name)" > $null
         }
     }
     Remove-Variable "Libs"
-
-    Write-Host "Copy commands .."
-    @("amdmeminfo","wolfamdctrl") | Where-Object {Test-Path ".\IncludesLinux\bin\$_"} | Foreach-Object {
-        Copy-Item ".\IncludesLinux\bin\$_" -Destination "/usr/bin" -force | Out-Null
-        Set-Location "/usr/bin"
-        & chmod +x $_
-        Set-Location "/"
-        Set-Location $Dir
-    }
 
     Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
 }

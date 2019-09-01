@@ -16,13 +16,14 @@
         if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}
         if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
 
-        Initialize-OCDaemon
-
         if ($IsLinux) {
+            Initialize-OCDaemon
+
             if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                $Dir = $Pwd
-                $Libs.PSObject.Properties | Where-Object {-not (Test-Path ".\IncludesLinux\lib\$($_.Name)")} | Foreach-Object {
-                    Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
+                $Dir = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {"$Pwd/IncludesLinux/lib"}
+
+                $Libs.PSObject.Properties | Where-Object {-not (Test-Path "$($Dir)/$($_.Name)")} | Foreach-Object {
+                    Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/$($_.Value) $($Dir)/$($_.Name)" > $null
                 }
             }
             Remove-Variable "Libs"
@@ -117,9 +118,6 @@
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
-        elseif ($IsLinux -and -not (Test-OCDaemon)) {
-            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and start ./startocdaemon.sh at the commandline to enable overclocking."
-        }
 
         #Cleanup the log and cache
         if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
@@ -785,10 +783,10 @@ function Invoke-Core {
         $Session.Config | Add-Member CUDAVersion $(if (($Session.DevicesByTypes.NVIDIA | Select-Object -First 1).OpenCL.PlatformVersion -match "CUDA\s+([\d\.]+)") {$Matches[1]}else{$false}) -Force
         $Session.Config | Add-Member DotNETRuntimeVersion $(try {[String]$(if ($cmd = (Get-Command dotnet -ErrorAction Ignore)) {(dir $cmd.Path.Replace('dotnet.exe', 'shared/Microsoft.NETCore.App')).Name | Where-Object {$_ -match "^([\d\.]+)$"} | Foreach-Object {Get-Version $_} | Sort-Object | Select-Object -Last 1})} catch {if ($Error.Count){$Error.RemoveAt(0)}}) -Force
 
-        if ($Session.DevicesByTypes.NVIDIA -and $IsLinux) {
+        if ($IsLinux -and $Session.DevicesByTypes.NVIDIA -and $Session.Config.EnableOCProfiles) {
             Invoke-NvidiaSmi -Arguments "-pm 1" -Runas > $null
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
-            Start-Sleep 1
+            if (Test-OCDaemon) {Set-OCDaemon "sleep 1"} else {Start-Sleep 1}
             Invoke-NvidiaSettings -SetPowerMizer
             Invoke-OCDaemon
         }
@@ -1775,7 +1773,7 @@ function Invoke-Core {
                 }
             } elseif ($Session.Config.EnableOCprofiles) {
                 $_.SetOCprofile($Session.Config,500)
-                Invoke-OCDaemon
+                if ($IsLinux) {Invoke-OCDaemon}
             }
         }
 

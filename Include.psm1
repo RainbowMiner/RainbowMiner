@@ -1745,7 +1745,8 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), (Resolve-Path ".\IncludesLinux\lib"), $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
+    $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
         param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
@@ -6280,7 +6281,12 @@ param(
 }
 
 function Invoke-OCDaemon {
-    if (-not (Test-OCDaemon)) {return}
+    if (-not (Test-OCDaemon)) {
+        if (-not $Session.IsAdmin) {
+            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and start `"startocdaemon`" at the commandline to enable overclocking."
+        }
+        return
+    }
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
     if ($Global:GlobalOCD.Count) {
         $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
