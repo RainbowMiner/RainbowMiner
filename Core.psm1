@@ -19,14 +19,16 @@
         if ($IsLinux) {
             Initialize-OCDaemon
 
-            if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                $Dir = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {"$Pwd/IncludesLinux/lib"}
+            if (-not (Test-Path "/opt/rainbowminer/lib")) {
+                if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                    $Dir = "$Pwd/IncludesLinux/lib"
 
-                $Libs.PSObject.Properties | Where-Object {-not (Test-Path "$($Dir)/$($_.Name)")} | Foreach-Object {
-                    Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/$($_.Value) $($Dir)/$($_.Name)" > $null
+                    $Libs.PSObject.Properties | Where-Object {-not (Test-Path "$($Dir)/$($_.Name)")} | Foreach-Object {
+                        Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/$($_.Value) $($Dir)/$($_.Name)" > $null
+                    }
                 }
+                Remove-Variable "Libs"
             }
-            Remove-Variable "Libs"
         }
 
         $Session.ConfigName = [IO.Path]::GetFileNameWithoutExtension($ConfigFile)
