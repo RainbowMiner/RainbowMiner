@@ -21,7 +21,7 @@ $Pool_Region_Default = "eu"
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AEON"; port = 5541;  fee = 0.0; rpc = "aeon"}
-    [PSCustomObject]@{symbol = "TUBE"; port = 5631;  fee = 0.0; rpc = "ipbc"; host = "tube"}
+    [PSCustomObject]@{symbol = "TUBE"; port = 5631;  fee = 0.0; rpc = "tube4"; host = "tube"}
     [PSCustomObject]@{symbol = "GRFT"; port = 9111;  fee = 0.0; rpc = "graft"}
     [PSCustomObject]@{symbol = "XHV";  port = 5831;  fee = 0.0; rpc = "haven"}
     [PSCustomObject]@{symbol = "MSR";  port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
