@@ -69,7 +69,7 @@ if (Test-Path "/opt/rainbowminer/ocdcmd") {
 }
 
 While (-not (Test-Path "/opt/rainbowminer/ocdcmd/stop")) {
-    Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "*.sh" -File -ErrorAction Ignore | Where-Object {-not (Test-Path "/opt/rainbowminer/ocdcmd/$($tmpfn).lock")} | Foreach-Object {
+    Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "*.sh" -File -ErrorAction Ignore | Where-Object {-not (Test-Path "/opt/rainbowminer/ocdcmd/$($_.BaseName).lock")} | Foreach-Object {
         $tmpfn = $_.BaseName
         try {
             Get-UnixTimestamp | Out-File "/opt/rainbowminer/ocdcmd/$($tmpfn).run" -Force
