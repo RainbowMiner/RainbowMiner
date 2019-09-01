@@ -6255,14 +6255,18 @@ function Get-NvidiaSmi {
 }
 
 function Initialize-OCDaemon {
-    try {
-        if (-not (Test-Path ".\Data\ocdcmd")) {New-Item ".\Data\ocdcmd" -ItemType "directory" -Force > $null}
-        Get-ChildItem ".\Data\ocdcmd" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
-    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    if ($IsLinux) {
+        try {
+            $pre = Get-MD5Hash $Pwd
+            $Session.OCDaemonPrefix = "$($pre.Substring(0,4))$($pre.Substring(28,4))"
+            $Session.OCDaemonCount  = 0
+            Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($Session.OCDaemonPrefix)*" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    }
 }
 
 function Test-OCDaemon {
-    $IsLinux -and (ps a | grep OCDaemon)
+    $IsLinux -and (Test-Path "/opt/rainbowminer") -and (Test-Path "/opt/rainbowminer/ocdcmd") -and (ps a | grep OCDaemon)
 }
 
 function Set-OCDaemon {
@@ -6278,25 +6282,25 @@ param(
 function Invoke-OCDaemon {
     if (-not (Test-OCDaemon)) {return}
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    if (-not (Test-Path ".\Data\ocdcmd")) {New-Item ".\Data\ocdcmd" -ItemType directory -Force > $null}
     if ($Global:GlobalOCD.Count) {
-        $tmpfn = [System.IO.Path]::GetRandomFileName()
-        $tmpfn | Out-File ".\Data\ocdcmd\.pid" -ErrorAction Ignore -Force
+        $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
+        $Session.OCDaemonCount | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -ErrorAction Ignore -Force
         $Global:GlobalOCD.Insert(0,"`#`!/usr/bin/env bash")
-        $Global:GlobalOCD | Out-File ".\Data\ocdcmd\$tmpfn.sh" -ErrorAction Ignore -Force
+        $Global:GlobalOCD | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.sh" -ErrorAction Ignore -Force
         $Global:GlobalOCD.Clear()
-        if (Test-Path ".\Data\ocdcmd\.pid") {Remove-Item ".\Data\ocdcmd\.pid" -Force -ErrorAction Ignore}
+        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.lock") {Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -Force -ErrorAction Ignore}
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
         $StopWatch.Start()
         $stoptime = 5000
-        While ((Test-Path ".\Data\ocdcmd\$tmpfn.sh") -and $StopWatch.ElapsedMilliseconds -lt $stoptime) {
+        While ((Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") -and $StopWatch.ElapsedMilliseconds -lt $stoptime) {
             Start-Sleep -Seconds 1
-            if ($stoptime -lt 30000 -and (Test-Path ".\Data\ocdcmd\$tmpfn.sh.pid")) {$stoptime = 30000}
+            if ($stoptime -lt 30000 -and (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.run")) {$stoptime = 30000}
         }
         Remove-Variable "StopWatch"
-        if (Test-Path ".\Data\ocdcmd\$tmpfn.sh") {
-            Write-Log -Level Warn "OCDaemon failed. Please run ./startocdaemon.sh at the command line"
+        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
+            Write-Log -Level Warn "OCDaemon failed. Please run `"startocdaemon`" at the command line"
         }
+        $Session.OCDaemonCount++
     }
 }
 

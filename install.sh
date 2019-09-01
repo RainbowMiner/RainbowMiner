@@ -13,6 +13,17 @@ sudo ln -s /opt/microsoft/powershell/6/pwsh /usr/bin/pwsh
 sudo rm -rf /tmp/powershell.tar.gz
 fi
 
+if ! [ -x "$(command -v startocdaemon)" ]; then
+sudo mkdir -p /opt/rainbowminer
+sudo mkdir -p /opt/rainbowminer/ocdcmd
+sudo chmod 777 /opt/rainbowminer/ocdcmd
+fi
+
+sudo cp -f ./IncludesLinux/ocd/OCDaemon.ps1 /opt/rainbowminer
+sudo cp -f ./IncludesLinux/ocd/startocdaemon /opt/rainbowminer
+sudo chmod +x /opt/rainbowminer/startocdaemon
+sudo ln -nfs /opt/rainbowminer/startocdaemon /usr/bin/startocdaemon
+
 sudo pwsh -ExecutionPolicy bypass -Command ${command}
 exitcode=$?
 sudo chmod 777 -R $HOME/.local/share/powershell

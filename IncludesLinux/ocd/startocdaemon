@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+sudo bash -c "pwsh -ExecutionPolicy bypass -Command '& /opt/rainbowminer/OCDaemon.ps1' &"
