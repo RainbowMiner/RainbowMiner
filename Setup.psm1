@@ -527,7 +527,7 @@ function Start-Setup {
                         }
                         "minerstatuskey" {
                             if (Get-Yes $Config.EnableMinerStatus) {
-                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey -Characters "nwA-F0-9\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MinerStatusKey = Read-HostString -Prompt "Enter your miner monitoring status key (or enter `"new`" to create one)" -Default $Config.MinerStatusKey -Characters "nwA-F0-9-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 $Config.MinerStatusKey = $Config.MinerStatusKey.Trim()
                                 if ($Config.MinerStatusKey -eq "new" -or $Config.MinerStatusKey -eq "") {
                                     $Config.MinerStatusKey = Get-MinerStatusKey
@@ -655,7 +655,7 @@ function Start-Setup {
                                     Write-Host "Now let us continue with your server's credentials" -ForegroundColor Cyan
                                     Write-Host " "
                                 }
-                                $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9\-_\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.ServerName = Read-HostString -Prompt "Enter the server's $(if ($IsWindows) {"name or "})IP-address ($(if ($Config.ServerName) {"clear"} else {"leave empty"}) for standalone operation)" -Default $Config.ServerName -Characters "A-Z0-9-_\." | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1176,7 +1176,7 @@ function Start-Setup {
 
                             Write-HostSetupDataWindowHints
 
-                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used ($(if ($Config.PoolDataWindow) {"clear"} else {"leave empty"}) for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.PoolDataWindow = Read-HostString -Prompt "Enter which default datawindow is to be used ($(if ($Config.PoolDataWindow) {"clear"} else {"leave empty"}) for automatic)" -Default $Config.PoolDataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "poolstataverage" {
                             Write-Host " "
@@ -1990,7 +1990,7 @@ function Start-Setup {
                                         Write-Host "*** Define the pool's datawindow ***" -ForegroundColor Green
 
                                         Write-HostSetupDataWindowHints
-                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}                                        
+                                        $PoolConfig.DataWindow = Read-HostString -Prompt "Enter which datawindow is to be used for this pool ($(if ($PoolConfig.DataWindow) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.DataWindow -Characters "A-Z0-9_-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}                                        
                                     }
                                     "description" {
                                         $PoolConfig.Description = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Description -Default $PoolConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2052,7 +2052,7 @@ function Start-Setup {
                                         $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "organizationid" {
-                                        $PoolConfig.OrganizationID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.OrganizationID -Default ($PoolConfig.OrganizationID -replace "^\`$.+") -Characters "A-Z0-9\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        $PoolConfig.OrganizationID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.OrganizationID -Default ($PoolConfig.OrganizationID -replace "^\`$.+") -Characters "A-Z0-9-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.OrganizationID.Trim() -eq '') {$PoolConfig.OrganizationID = $PoolsSetup.$Pool_Name.Fields.OrganizationID}
                                     }
                                     "partypassword" {
@@ -2091,11 +2091,11 @@ function Start-Setup {
                                         $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     }
                                     "user" {
-                                        $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9\-\_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        $PoolConfig.User = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.User -Default ($PoolConfig.User -replace "^\`$.+") -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.User.Trim() -eq '') {$PoolConfig.User = $PoolsSetup.$Pool_Name.Fields.User}
                                     }
                                     "username" {
-                                        $PoolConfig.UserName = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.UserName -Default ($PoolConfig.UserName -replace "^\`$.+") -Characters "A-Z0-9\-\_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
+                                        $PoolConfig.UserName = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.UserName -Default ($PoolConfig.UserName -replace "^\`$.+") -Characters "A-Z0-9-\._~:/\?#\[\]@!\$&'\(\)\*\+,;=" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
                                         if ($PoolConfig.UserName.Trim() -eq '') {$PoolConfig.UserName = $PoolsSetup.$Pool_Name.Fields.UserName}
                                     }
                                     "worker" {
@@ -2889,8 +2889,8 @@ function Start-Setup {
                                     $Schedule.To = Get-HourMinStr $Schedule.To -To
                                 }
                                 "powerprice" {
-                                    $Schedule.PowerPrice = Read-HostString -Prompt "Enter this schedule's powerprice (leave empty for global default)" -Default $Schedule.PowerPrice -Characters "0-9,\.\-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    $Schedule.PowerPrice = $Schedule.PowerPrice -replace ",","." -replace "[^0-9\.\-]+"
+                                    $Schedule.PowerPrice = Read-HostString -Prompt "Enter this schedule's powerprice (leave empty for global default)" -Default $Schedule.PowerPrice -Characters "0-9,\.-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    $Schedule.PowerPrice = $Schedule.PowerPrice -replace ",","." -replace "[^0-9\.-]+"
                                 }
                                 "pause" {
                                     $Schedule.Pause = Read-HostBool -Prompt "Pause miners during this schedule?" -Default $Schedule.Pause | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2976,11 +2976,176 @@ function Start-Setup {
             Write-HostSetupHints
 
             do {
-                Write-Host " "
-                $MRRSetupType = Read-HostString -Prompt "[R]igs, [C]reate missing, [U]pdate prices, E[x]it MRR config" -Default "X"  -Mandatory -Characters "RCUX"
+                $PoolsActual = Get-Content $ConfigFiles["Pools"].Path | ConvertFrom-Json
+                $Pool_Config = $PoolsActual.MiningRigRentals
+
+                $Run_MRRConfig = $true
+                if (-not $Pool_Config -or -not $Pool_Config.API_Key -or -not $Pool_Config.API_Secret) {
+                    Write-Host "MiningRigRental pool is not configured yet." -ForegroundColor Red
+                    Write-Host " "
+                    Write-Host "Please go to pool configuration and make sure, that you enter your API-Key and API-Secret." -ForegroundColor Yellow
+                    $Run_MRRConfig = $false
+                } elseif (-not ($MinerData = Get-Content ".\Data\minerdata.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore)) {
+                    Write-Host "No benchmarked miners found." -ForegroundColor Red
+                    Write-Host " "
+                    Write-Host "Please let all benchmarks run first." -ForegroundColor Yellow
+                    $Run_MRRConfig = $false
+                }
+
+                if (-not $Run_MRRConfig) {
+                    Write-Host " "
+                    Read-HostKey "Press any key to exit MRR config " > $null
+                    break
+                }
+                
+                $Pool_Workers = @($DevicesActual.PSObject.Properties.Value | Where-Object {$_.Worker} | Select-Object -ExpandProperty Worker) + $(if ($Pool_Config.Worker -eq "`$WorkerName") {$ConfigActual.WorkerName} else {$Pool_Config.Worker}) | Select-Object -Unique
+
+                $Pool_Request = Get-MiningRigRentalAlgos
+                $Pool_Rigs = Get-MiningRigRentalRigs -key $Pool_Config.API_Key -secret $Pool_Config.API_Secret -workers $Pool_Workers
+
+                $Rig_Profitability = Get-Stat "ProfitNonMRR"
+
                 Write-Host " "
 
-                if ($MRRSetupType -eq "C") {
+                $p = [console]::ForegroundColor
+                [console]::ForegroundColor = "Cyan"
+                Write-Host "Rig's profitabiliy: $(ConvertTo-BTC $Rig_Profitability.Day)"
+                Write-Host " "
+                Write-Host "Created rigs:"
+                $Pool_Rigs | Sort-Object {Get-MiningRigRentalAlgorithm $_.type} | Format-Table @(
+                        @{Label="ID"; Expression={$_.id}}
+                        @{Label="Algorithm";Expression={Get-MiningRigRentalAlgorithm $_.type}}
+                        @{Label="Hashrate"; Expression={"$([Math]::Round([decimal]$_.hashrate.advertised.hash,4)) $($_.hashrate.advertised.type.ToUpper())"};align="right"}
+                        @{Label="Price BTC"; Expression={if ($_.price.BTC.enabled) {"$($_.price.BTC.price)/$($_.price.type.ToUpper())"} else {"-"}}}
+                        @{Label="min. BTC"; Expression={if ($_.price.BTC.enabled -and $_.price.BTC.minimum) {"$($_.price.BTC.minimum)/$($_.price.type.ToUpper())"} else {"-"}}}
+                        @{Label="Hours"; Expression={"$($_.minhours)-$($_.maxhours)"}}
+                        @{Label="Worker"; Expression={(([regex]'(?m)\[(.+)\]').Matches($_.description) | % Groups | ? name -eq 1 | Select-Object -ExpandProperty Value -Unique | Sort-Object) -join ','}}
+                        @{Label="?"; Expression={$_.status.status.Substring(0,1).ToUpper()}}
+                        @{Label="Rental"; Expression={if ($_.status.status -eq "rented") {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds} else {"-"}};align="right"}
+                        @{Label="Name"; Expression={$_.name}}
+                    )
+                Write-Host "? A=available, D=disabled, R=rented"
+                Write-Host " "
+
+                [console]::ForegroundColor = $p
+
+                $MRRSetupType = Read-HostString -Prompt "ID to edit, [C]reate, [U]pdate prices, E[x]it MRR config" -Default "X"  -Mandatory -Characters "0123456789CUX"
+                Write-Host " "
+
+                if ($MRRSetupType -match "(\d+)") {
+                    $Rig_ID = [int]$Matches[1]
+                    $MRRSetupDone = $false
+                    do {
+                        try {
+                            $MRRActual = $Pool_Rigs | Where-Object id -eq $Rig_ID | Foreach-Object {
+                                [PSCustomObject]@{
+                                    name = $_.name
+                                    description = $_.description
+                                    region = $_.region
+                                    ndevices = $_.ndevices
+                                    extensions = get-yes $_.extensions
+
+                                }
+                            }
+                            if (-not $MRRActual) {throw "Rig-ID $Rig_ID not found!"}
+
+                            $MRRSetupStepsDone = $false
+                            $MRRSetupStep = 0
+                            [System.Collections.ArrayList]$MRRSetupSteps = @()
+                            [System.Collections.ArrayList]$MRRSetupStepBack = @()
+
+                            $MRRSetupSteps.AddRange(@("name","workers","description","region","hashrate","pricebtc","minpricebtc","autopricebtc","currencies")) > $null
+                            $MRRSetupSteps.Add("save") > $null
+
+                            do {
+                                $MRRSetupStepStore = $true
+                                try {
+                                    Switch ($MRRSetupSteps[$MRRSetupStep]) {
+                                        "autopricebtc" {                                        
+                                            if (Get-Yes $PoolsActual.$Pool_Name.EnableAutoCreate) {
+                                                $MRRConfig.EnableAutoCreate = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoCreate -Default $MRRConfig.EnableAutoCreate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                            } else {
+                                                $MRRSetupStepStore = $false
+                                            }
+                                        }
+                                        "pricebtc" {
+                                            $MRRConfig.PriceBTC = Read-HostDouble -Prompt "$($PoolsSetup.$Pool_Name.SetupFields.PriceBTC) (enter 0 to use pool's default)" -Default $MRRConfig.PriceBTC -Min 0 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        }
+                                        "name" {
+                                            $MRRConfig.name = Read-HostString -Prompt "" -Default $MRRConfig.name -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        }
+                                        "description" {
+                                            $MRRConfig.description = Read-HostString -Prompt "" -Default $MRRConfig.Description -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        }
+
+                                        "save" {
+                                            Write-Host " "
+                                            if (-not (Read-HostBool -Prompt "Done! Do you want to save the changed values?" -Default $True | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_})) {throw "cancel"}
+
+                                            $MRRConfig | Add-Member EnableAutoCreate $(if (Get-Yes $MRRConfig.EnableAutoCreate) {"1"} else {"0"}) -Force
+                                            $MRRConfig | Add-Member EnableAutoPrice $(if (Get-Yes $MRRConfig.EnableAutoPrice) {"1"} else {"0"}) -Force
+                                            $MRRConfig | Add-Member EnablePriceUpdates $(if (Get-Yes $MRRConfig.EnablePriceUpdates) {"1"} else {"0"}) -Force
+                                            $MRRConfig | Add-Member EnableMinimumPrice $(if (Get-Yes $MRRConfig.EnableMinimumPrice) {"1"} else {"0"}) -Force
+                                            $MRRConfig | Add-Member PriceBTC "$($MRRConfig.PriceBTC)" -Force
+                                            $MRRConfig | Add-Member PriceFactor "$($MRRConfig.PriceFactor)" -Force
+
+                                            $MRRActual | Add-Member $MRR_Name $MRRConfig -Force
+                                            $MRRActualSave = [PSCustomObject]@{}
+                                            $MRRActual.PSObject.Properties.Name | Sort-Object | Foreach-Object {$MRRActualSave | Add-Member $_ ($MRRActual.$_) -Force}
+                                                        
+                                            Set-ContentJson -PathToFile $ConfigFiles["MRR"].Path -Data $MRRActualSave > $null
+
+                                            Write-Host " "
+                                            Write-Host "Changes written to $($Pool_Name) configuration. " -ForegroundColor Cyan
+                                                    
+                                            $MRRSetupStepsDone = $true
+                                        }
+                                    }
+                                    if ($MRRSetupStepStore) {$MRRSetupStepBack.Add($MRRSetupStep) > $null}
+                                    $MRRSetupStep++
+                                }
+                                catch {
+                                    if ($Error.Count){$Error.RemoveAt(0)}
+                                    if (@("back","<") -icontains $_.Exception.Message) {
+                                        if ($MRRSetupStepBack.Count) {$MRRSetupStep = $MRRSetupStepBack[$MRRSetupStepBack.Count-1];$MRRSetupStepBack.RemoveAt($MRRSetupStepBack.Count-1)}
+                                    }
+                                    elseif (@("exit","cancel") -icontains $_.Exception.Message) {
+                                        Write-Host " "
+                                        Write-Host "Cancelled without changing the configuration" -ForegroundColor Red
+                                        Write-Host " "
+                                        $MRRSetupStepsDone = $true                                               
+                                    }
+                                    else {
+                                        if ($MRRSetupStepStore) {$MRRSetupStepBack.Add($MRRSetupStep) > $null}
+                                        $NextSetupStep = Switch -Regex ($_.Exception.Message) {
+                                                            "^Goto\s+(.+)$" {$Matches[1]}
+                                                            "^done$"  {"save"}
+                                                            default {$_}
+                                                        }
+                                        $MRRSetupStep = $MRRSetupSteps.IndexOf($NextSetupStep)
+                                        if ($MRRSetupStep -lt 0) {
+                                            Write-Log -Level Error "Unknown goto command `"$($NextSetupStep)`". You should never reach here. Please open an issue on github.com"
+                                            $MRRSetupStep = $MRRSetupStepBack[$MRRSetupStepBack.Count-1];$MRRSetupStepBack.RemoveAt($MRRSetupStepBack.Count-1)
+                                        }
+                                    }
+                                }
+                            } until ($MRRSetupStepsDone)
+                            
+
+                            Write-Host " "
+                            if (-not (Read-HostBool "Edit another algorithm?")){throw}
+                        
+                        } catch {
+                            if ($_.Exception.Message) {
+                                Write-Host $_.Exception.Message -ForegroundColor Yellow
+                            }
+                            if ($Error.Count){$Error.RemoveAt(0)};
+                            $MRRSetupDone = $true
+                        }
+                    } until ($MRRSetupDone)
+
+
+                } elseif ($MRRSetupType -eq "C") {
                     Invoke-MiningRigRentalCreateRigs
                 } elseif ($MRRSetupType -eq "U") {
                     Invoke-MiningRigRentalUpdatePrices
