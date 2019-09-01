@@ -1518,7 +1518,7 @@ function ConvertFrom-Hash {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Hash
     )
-    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {$Num=0}
+    try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     [int64]$(switch (($Hash -replace "[^kMGHTP]")[0]) {
         "k" {$Num*1e3}
         "M" {$Num*1e6}
@@ -1534,7 +1534,7 @@ function ConvertFrom-Time {
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [string]$Time
     )
-    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {$Num=0}
+    try {$Num = [double]($Time -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     [int64]$(switch (($Time -replace "[^mhdw]")[0]) {
         "m" {$Num*60}
         "h" {$Num*3600}
@@ -2077,7 +2077,7 @@ function Invoke-Exe {
         $psi = $null
         $process.Dispose()
         $process = $null
-    } catch {Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
 }
 
 function Invoke-TcpRequest {
@@ -2749,7 +2749,7 @@ function Get-DeviceName {
         [Bool]$UseAfterburner = $true
     )
     try {
-        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-Content ".\Data\$($Vendor.ToLower())-cards.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}catch{}}
+        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-Content ".\Data\$($Vendor.ToLower())-cards.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}catch{if ($Error.Count){$Error.RemoveAt(0)}}}
 
         if ($IsWindows -and $UseAfterburner -and $Script:abMonitor) {
             if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
@@ -2816,6 +2816,7 @@ function Get-DeviceName {
                         }
                     }
                 } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
                 }
             }
@@ -5128,7 +5129,7 @@ function Get-ServerConfig {
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
         $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
-        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {}}
+        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
@@ -5706,6 +5707,7 @@ Param(
             }
             catch {
                 $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
+                if ($Error.Count){$Error.RemoveAt(0)}
                 #Write-Log -Level Info "GetUrl Failed $RequestError"
             }
             finally {
@@ -5746,7 +5748,7 @@ Param(
         }
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}
-            catch {Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
+            catch {if ($Error.Count){$Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
 }
@@ -5759,6 +5761,7 @@ function Get-MinerStatusKey {
         $Response
     }
     catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Miner Status $($Session.Config.MinerStatusURL) has failed. "
     }
 }
@@ -5897,13 +5900,14 @@ function Invoke-ReportMinerStatus {
             if ($Pool_Stats) {Remove-Variable "Pool_Stats" -Force}
             if ($Earn_Stats) {Remove-Variable "Earn_Stats" -Force}
         } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Miner Status get pool stats has failed. "
         }
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$ReportAPI=$null}}
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
 
     # Send the request
@@ -5948,6 +5952,7 @@ function Invoke-ReportMinerStatus {
         }
     }
     catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Info "Miner Status $($ReportUrl) has failed. "
     }
     if ($Pool_Totals -ne $null) {Remove-Variable "Pool_Totals"}
@@ -5971,6 +5976,7 @@ namespace User32
 }
 "@
     } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
         Write-Log -Level Warn "Error initializing User32.dll functions"
     }
 }
@@ -5995,7 +6001,7 @@ param(
         if ($state -band 0x20000000)    {"minimized"}
         elseif ($state -band 0x1000000) {"maximized"}
         else                            {"normal"}
-    } catch {"maximized"}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};"maximized"}
 }
 
 function Set-WindowStyle {
@@ -6028,7 +6034,7 @@ param(
             $hwnd = [User32.WindowManagement]::FindWindowEx($zero,$zero,$zero,$Title)
         }
         [User32.WindowManagement]::ShowWindowAsync($hwnd, $WindowStates[$Style])>$null        
-    } catch {}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 }
 
 function Get-NtpTime {
@@ -6097,7 +6103,7 @@ param(
         $sw.Write($s)
         $sw.Close();
         [System.Convert]::ToBase64String($ms.ToArray())
-    } catch {$s}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};$s}
 }
 
 function Get-Unzip {
@@ -6115,7 +6121,7 @@ param(
         $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress))
         $sr.ReadToEnd()
         $sr.Close()
-    } catch {$s}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};$s}
 }
 
 function Get-UrlEncode {
@@ -6140,7 +6146,7 @@ param(
 }
 
 function Get-LastDrun {
-    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-Content ".\Data\lastdrun.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {}}
+    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-Content ".\Data\lastdrun.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 }
 
 function Set-LastDrun {
@@ -6154,7 +6160,7 @@ param(
 
 function Get-LastStartTime {
     if (Test-Path ".\Data\starttime.json") {
-        try {[DateTime](Get-Content ".\Data\starttime.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).starttime} catch {}
+        try {[DateTime](Get-Content ".\Data\starttime.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).starttime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         Remove-Item ".\Data\starttime.json" -Force -ErrorAction Ignore
     }
 }
@@ -6185,6 +6191,7 @@ param(
                         $Script:AutoexecCommands.Add($Job) >$null
                     }
                 } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     Write-Log -Level Warn "Command could not be started in autoexec.txt: $($Matches[1]) $($Matches[2])"
                 }
             } else {
@@ -6233,7 +6240,7 @@ param(
             Invoke-TcpRequest -Server $Server -Port $Port -Request $Request -Timeout $Timeout -Quiet -WriteOnly > $null
             $true
         }
-    } catch {}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 }
 
 function Get-NvidiaSmi {
@@ -6310,7 +6317,7 @@ param(
                 }
             }
         }
-    } catch {}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
 }
 
 function Reset-Vega {
@@ -6332,6 +6339,7 @@ param(
             Start-Sleep 1
             Write-Log -Level Info "Disabled/Enabled device(s) $DeviceId"
         } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Failed to disable/enable device(s) $($DeviceId): $($_.Exception.Message)"
         }
     }
@@ -6349,7 +6357,7 @@ function Test-Internet {
         } else {
             $true
         }
-    } catch {$true}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)};$true}
 }
 
 function Wait-UntilTrue
@@ -6602,6 +6610,7 @@ function Get-Uptime {
                 New-TimeSpan -Seconds ([double]((cat /proc/uptime) -split "\s+" | Select-Object -First 1))
             }
         } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not get system uptime: $($_.Exception.Message)"
             $System = $false
         }
@@ -6658,7 +6667,8 @@ param(
             try {
                 $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getnh" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
                 if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
-            } catch {            
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
             }
             Remove-Variable "Result" -ErrorAction Ignore -Force
@@ -6693,6 +6703,7 @@ param(
 
                 $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
             } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "Nicehash API call: $($_.Exception.Message)"
             }
         }

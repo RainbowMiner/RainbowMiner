@@ -95,7 +95,8 @@ param(
                 $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getmrr" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
                 if ($Result.Status) {$Request = $Result.Content;$Remote = $true}
                 #Write-Log -Level Info "MRR server $($method): endpoint=$($endpoint) params=$($serverbody.params)"
-            } catch {            
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
             }
             Remove-Variable "Result" -ErrorAction Ignore -Force
@@ -121,6 +122,7 @@ param(
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
                 $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
             } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
             }
         }
@@ -191,6 +193,7 @@ param(
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 $MrrInfo = @()
             }
             $MrrInfo | Foreach-Object {$MrrInfoCache[$_.rigid] = $_}

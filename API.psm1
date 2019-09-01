@@ -752,11 +752,11 @@
                                     Remove-Variable "RatesUri" -ErrorAction Ignore
                                     Remove-Variable "RatesQry" -ErrorAction Ignore
                                     Remove-Variable "NewSyms" -ErrorAction Ignore
-                                } catch {}
+                                } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                             }
                             $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                             if ($Result) {$Status = $true}
-                        } catch {}
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
                         if ($pbody -ne $null) {Remove-Variable "pbody" -ErrorAction Ignore}
                         if ($pheaders -ne $null) {Remove-Variable "pheaders" -ErrorAction Ignore}
@@ -790,7 +790,7 @@
                                 $Result = Invoke-MiningRigRentalRequest $Parameters.endpoint $Parameters.key $Parameters.secret -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
                                 $Status = $true
                             }
-                        } catch {}
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
                         if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
                     }
@@ -824,7 +824,7 @@
                                 $Result = Invoke-NHRequest $Parameters.endpoint $Parameters.key $Parameters.secret $Parameters.orgid -method $Parameters.method -params $Params -Timeout $Parameters.Timeout -Cache 30 -nonce $Parameters.nonce -Raw
                                 $Status = $true
                             }
-                        } catch {}
+                        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                         $Data = [PSCustomObject]@{Status=$Status;Content=$Result} | ConvertTo-Json -Depth 10 -Compress
                         if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
                     }
@@ -912,7 +912,7 @@
 }
 
 Function Stop-APIServer {
-    try {Invoke-GetUrl "http://localhost:$($API.APIport)/$($API.RandTag)" -user $API.APIUser -password $API.APIpassword -method Web -timeout 5 > $null} catch {$API.Stop = $true}
+    try {Invoke-GetUrl "http://localhost:$($API.APIport)/$($API.RandTag)" -user $API.APIUser -password $API.APIpassword -method Web -timeout 5 > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};$API.Stop = $true}
     if ($Global:API.Server) {$Global:API.Server.dispose()}
     $Global:API.Server = $null
     $Global:API.Handle = $null

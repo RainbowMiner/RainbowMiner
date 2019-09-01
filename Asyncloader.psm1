@@ -57,6 +57,7 @@ Param(
                             if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
                         }
                         catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
                             $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
                         }
                         finally {
