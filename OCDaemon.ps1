@@ -18,8 +18,10 @@ if ($IsWindows) {
     }
 }
 
+if (Test-Path ".\Data\ocdcmd\.pid") {Remove-Item ".\Data\ocdcmd\.pid" -ErrorAction Ignore -Force}
+
 While (-not (Test-Path ".\stopocdaemon.txt")) {
-    if (Test-Path ".\Data\ocdcmd") {
+    if (Test-Path ".\Data\ocdcmd" -and -not (Test-Path ".\Data\ocdcmd\.pid")) {
         Get-ChildItem ".\Data\ocdcmd" -Filter "*.sh" -ErrorAction Ignore | Foreach-Object {
             try {
                 & chmod +x "$($_.FullName)" > $null
