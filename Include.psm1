@@ -4101,7 +4101,11 @@ function Invoke-NvidiaSettings {
             if ($Devices) {$NvCmd += $Devices}
         }
         if ($NvCmd) {
-            Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
+            if (Test-OCDaemon) {
+                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')"
+            } else {
+                Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
+            }
         }
     }
 }
@@ -6250,6 +6254,52 @@ function Get-NvidiaSmi {
     if (Get-Command $Command -ErrorAction Ignore) {$Command}
 }
 
+function Init-OCDaemon {
+    try {
+        if (-not (Test-Path ".\Data\ocdcmd")) {New-Item ".\Data\ocdcmd" -ItemType "directory" -Force > $null}
+        Get-ChildItem ".\Data\ocdcmd" -File | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+    } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+}
+
+function Test-OCDaemon {
+    $IsLinux -and (ps a | grep OCDaemon)
+}
+
+function Set-OCDaemon {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $True)]
+    [String]$Cmd
+)
+    if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
+    $Global:GlobalOCD.Add($Cmd) > $null
+}
+
+function Invoke-OCDaemon {
+    if (-not (Test-OCDaemon)) {return}
+    if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
+    if (-not (Test-Path ".\Data\ocdcmd")) {New-Item ".\Data\ocdcmd" -ItemType directory -Force > $null}
+    if ($Global:GlobalOCD.Count) {
+        $tmpfn = [System.IO.Path]::GetRandomFileName()
+        $tmpfn | Out-File ".\Data\ocdcmd\.pid" -ErrorAction Ignore -Force
+        $Global:GlobalOCD.Insert(0,"`#`!/usr/bin/env bash")
+        $Global:GlobalOCD | Out-File ".\Data\ocdcmd\$tmpfn.sh" -ErrorAction Ignore -Force
+        $Global:GlobalOCD.Clear()
+        Get-ChildItem ".\Data\ocdcmd" -Filter ".pid" -ErrorAction Ignore | Remove-Item -Force -ErrorAction Ignore
+        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $StopWatch.Start()
+        $stoptime = 5000
+        While ((Test-Path ".\Data\ocdcmd\$tmpfn.sh") -and $StopWatch.ElapsedMilliseconds -lt $stoptime) {
+            Start-Sleep -Seconds 1
+            if ($stoptime -lt 30000 -and (Test-Path ".\Data\ocdcmd\$tmpfn.sh.pid")) {$stoptime = 30000}
+        }
+        Remove-Variable "StopWatch"
+        if (Test-Path ".\Data\ocdcmd\$tmpfn.sh") {
+            Write-Log -Level Warn "OCDaemon failed. Please run ./startocdaemon.sh at the command line"
+        }
+    }
+}
+
 function Invoke-NvidiaSmi {
 [cmdletbinding()]   
 param(
@@ -6288,7 +6338,11 @@ param(
             $obj
         }
     } else {
-        Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+        if ($IsLinux -and $Runas -and (Test-OCDaemon)) {
+            Set-OCDaemon "$NVSMI $($Arguments -join ' ')"
+        } else {
+            Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+        }
     }
 }
 

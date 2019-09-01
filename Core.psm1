@@ -13,8 +13,21 @@
         $ConfigPath = [IO.Path]::GetDirectoryName($ConfigFile)
         if (-not $ConfigPath) {$ConfigPath = ".\Config"; $ConfigFile = "$($ConfigPath)\$($ConfigFile)"}
         if (-not (Test-Path $ConfigPath)) {$RunCleanup = $false;New-Item $ConfigPath -ItemType "directory" -Force > $null}
-        if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}    
+        if (-not (Test-Path "$ConfigPath\Backup")) {New-Item "$ConfigPath\Backup" -ItemType "directory" -Force > $null}
         if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
+
+        Init-OCDaemon
+
+        if ($IsLinux) {
+            if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                $Dir = $Pwd
+                $Libs.PSObject.Properties | Foreach-Object {
+                if (-not (Test-Path ".\IncludesLinux\lib\$($_.Name)")) {
+                    Invoke-Exe -FilePath "ln" -ArgumentList "-s $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
+                }
+            }
+            Remove-Variable "Libs"
+        }
 
         $Session.ConfigName = [IO.Path]::GetFileNameWithoutExtension($ConfigFile)
 
@@ -775,6 +788,7 @@ function Invoke-Core {
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
             Start-Sleep 1
             Invoke-NvidiaSettings -SetPowerMizer
+            Invoke-OCDaemon
         }
 
         #Create combos
@@ -1759,6 +1773,7 @@ function Invoke-Core {
                 }
             } elseif ($Session.Config.EnableOCprofiles) {
                 $_.SetOCprofile($Session.Config,500)
+                Invoke-OCDaemon
             }
         }
 

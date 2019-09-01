@@ -2,7 +2,7 @@
 
 Set-OsFlags
 
-if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+if ($MyInvocation.MyCommand.Path) {$Dir = (Split-Path $script:MyInvocation.MyCommand.Path);Set-Location $Dir}
 
 if (-not (Test-IsElevated)) {
     Write-Host "Exiting without installation"
@@ -12,6 +12,7 @@ if (-not (Test-IsElevated)) {
 }
 
 if ($IsLinux) {
+    if (-not $Dir) {$Dir = $Pwd}
     Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
     Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
     Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
@@ -27,97 +28,22 @@ if ($IsLinux) {
     Write-Host "Install p7zip .."
     Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
 
-    $MyDir = $Pwd
+    Write-Host "Linking libraries .."
+    if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+        $Libs.PSObject.Properties | Foreach-Object {
+        if (Test-Path ".\IncludesLinux\lib\$($_.Value)") {
+            Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
+        }
+    }
+    Remove-Variable "Libs"
 
-    if (-not (Test-Path ".\IncludesLinux\lib\libcurl.so.3")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcurl.so.3.0.0 $($MyDir)/IncludesLinux/lib/libcurl.so.3" -PassThru
-        $Proc | Wait-Process
+    Write-Host "Copy commands .."
+    @("amdmeminfo","wolfamdctrl") | Where-Object {Test-Path ".\IncludesLinux\bin\$_"} | Foreach-Object {
+        Copy-Item ".\IncludesLinux\bin\$_" -Destination "/usr/bin" -force | Out-Null
+        Set-Location "/usr/bin"
+        & chmod +x $_
         Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc-builtins.so.10.1")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1.105 $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc-builtins.so")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so.10.1 $($MyDir)/IncludesLinux/lib/libnvrtc-builtins.so" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.1")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.1.105 $($MyDir)/IncludesLinux/lib/libcudart.so.10.1" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.0")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.0.130 $($MyDir)/IncludesLinux/lib/libcudart.so.10.0" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-    
-    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.9.2")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.9.2.148 $($MyDir)/IncludesLinux/lib/libcudart.so.9.2" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)     
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libmicrohttpd.so.10")) {
-        $proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libmicrohttpd.so.10.34.0 $($MyDir)/IncludesLinux/lib/libmicrohttpd.so.10" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libcudart.so.10.1")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libcudart.so.10.1.105 $($MyDir)/IncludesLinux/lib/libcudart.so.10.1" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)     
-    }
-    
-    if (-not (Test-Path ".\IncludesLinux\lib\libhwloc.so.5")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libhwloc.so.5.5.0 $($MyDir)/IncludesLinux/lib/libhwloc.so.5" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libstdc++.so.6")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libstdc++.so.6.0.25 $($MyDir)/IncludesLinux/lib/libstdc++.so.6" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)     
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.9.2")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.9.2.148 $($MyDir)/IncludesLinux/lib/libnvrtc.so.9.2" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.10.0")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.0.130 $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.0" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
-    }
-
-    if (-not (Test-Path ".\IncludesLinux\lib\libnvrtc.so.10.1")) {
-        $Proc = Start-Process ln -ArgumentList "-s $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.1.105 $($MyDir)/IncludesLinux/lib/libnvrtc.so.10.1" -PassThru
-        $Proc | Wait-Process
-        Set-Location "/"
-        Set-Location $($MyDir)
+        Set-Location $Dir
     }
 
     Invoke-Expression "lspci" | Select-String "VGA", "3D" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-null
@@ -199,8 +125,8 @@ if ($IsWindows -and $GNVIDIA) {
 
 Write-Host " "
 
-if (Read-HostBool "Start RainbowMiner ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"})) now?") {
-    Exit 10
-} else {
+#if (Read-HostBool "Start RainbowMiner ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"})) now?") {
+#    Exit 10
+#} else {
     Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
-}
+#}
