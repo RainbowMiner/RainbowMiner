@@ -2,6 +2,4 @@
 
 cd "$(dirname "$0")"
 
-command="& ./StartOCDaemon.ps1"
-
-sudo pwsh -ExecutionPolicy bypass -Command ${command}
+sudo bash -c "pwsh -ExecutionPolicy bypass -Command '& ./OCDaemon.ps1' &"
