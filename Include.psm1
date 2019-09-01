@@ -6254,7 +6254,7 @@ function Get-NvidiaSmi {
     if (Get-Command $Command -ErrorAction Ignore) {$Command}
 }
 
-function Init-OCDaemon {
+function Initialize-OCDaemon {
     try {
         if (-not (Test-Path ".\Data\ocdcmd")) {New-Item ".\Data\ocdcmd" -ItemType "directory" -Force > $null}
         Get-ChildItem ".\Data\ocdcmd" -File | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
