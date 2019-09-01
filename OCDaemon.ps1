@@ -21,7 +21,7 @@ if ($IsWindows) {
 Get-ChildItem ".\stopocdaemon.txt" -ErrorAction Ignore | Remove-Item -Force
 
 if (Test-Path ".\Data\ocdcmd") {
-    Get-ChildItem ".\Data\ocdcmd" -File | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+    Get-ChildItem ".\Data\ocdcmd" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
 }
 
 While (-not (Test-Path ".\stopocdaemon.txt")) {

@@ -6285,7 +6285,7 @@ function Invoke-OCDaemon {
         $Global:GlobalOCD.Insert(0,"`#`!/usr/bin/env bash")
         $Global:GlobalOCD | Out-File ".\Data\ocdcmd\$tmpfn.sh" -ErrorAction Ignore -Force
         $Global:GlobalOCD.Clear()
-        Get-ChildItem ".\Data\ocdcmd" -Filter ".pid" -ErrorAction Ignore | Remove-Item -Force -ErrorAction Ignore
+        if (Test-Path ".\Data\ocdcmd\.pid") {Remove-Item ".\Data\ocdcmd\.pid" -Force -ErrorAction Ignore}
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
         $StopWatch.Start()
         $stoptime = 5000
