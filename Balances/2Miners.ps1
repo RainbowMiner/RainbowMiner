@@ -40,7 +40,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     $Pool_Currency = $_.symbol
 
     $Request = [PSCustomObject]@{}
-    $Divisor = [Decimal]1e8
+    $Divisor = if ($_.divisor) {$_.divisor} else {[Decimal]1e8}
 
     try {
         $Request = Invoke-RestMethodAsync "https://$($_.rpc).2miners.com/api/accounts/$(Get-WalletWithPaymentId $Config.Pools.$Name.Wallets.$Pool_Currency -pidchar '.')" -cycletime ($Config.BalanceUpdateMinutes*60)
