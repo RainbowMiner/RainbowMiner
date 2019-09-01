@@ -66,20 +66,24 @@ if (-not (Test-Path "/opt/rainbowminer/ocdcmd")) {
 
 if (Test-Path "/opt/rainbowminer/ocdcmd") {
     Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "*.run" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+    Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "*.out" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
 }
 
 While (-not (Test-Path "/opt/rainbowminer/ocdcmd/stop")) {
     Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "*.sh" -File -ErrorAction Ignore | Where-Object {-not (Test-Path "/opt/rainbowminer/ocdcmd/$($_.BaseName).lock")} | Foreach-Object {
         $tmpfn = $_.BaseName
+        $res = ""
         try {
             Get-UnixTimestamp | Out-File "/opt/rainbowminer/ocdcmd/$($tmpfn).run" -Force
             Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($tmpfn).run" -File -ErrorAction Ignore | Foreach-Object {& chmod 666 "$($_.FullName)" > $null}
             & chmod 777 "$($_.FullName)" > $null
-            Invoke-Exe -FilePath $_.FullName -WorkingDirectory "/opt/rainbowminer/ocdcmd" -Runas > $null
+            $res = Invoke-Exe -FilePath $_.FullName -WorkingDirectory "/opt/rainbowminer/ocdcmd" -Runas
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
         } finally {                
             Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($tmpfn)*" -File -Force -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
+            $res | Out-File "/opt/rainbowminer/ocdcmd/$($tmpfn).out" -Force -ErrorAction Ignore
+            Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($tmpfn).out" -File -ErrorAction Ignore | Foreach-Object {& chmod 666 "$($_.FullName)" > $null}
         }
     }
     Start-Sleep -Seconds 1

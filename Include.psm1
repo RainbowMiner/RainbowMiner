@@ -2055,29 +2055,37 @@ function Invoke-Exe {
     try {
         if ($WorkingDirectory -eq '' -and $AutoWorkingDirectory) {$WorkingDirectory = Get-Item $FilePath | Select-Object -ExpandProperty FullName | Split-path}
 
-        if ($IsLinux) {
-            $psi = New-object System.Diagnostics.ProcessStartInfo $FilePath
+        if ($IsWindows -or -not $Runas -or (Test-IsElevated)) {
+            if ($IsLinux) {
+                $psi = New-object System.Diagnostics.ProcessStartInfo $FilePath
+            } else {
+                $psi = New-object System.Diagnostics.ProcessStartInfo
+                $psi.FileName = Resolve-Path $FilePath
+            }
+            $psi.CreateNoWindow = $true
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.Arguments = $ArgumentList
+            $psi.WorkingDirectory = $WorkingDirectory
+            if ($Runas) {$psi.Verb = "runas"}
+            $process = New-Object System.Diagnostics.Process
+            $process.StartInfo = $psi
+            [void]$process.Start()
+            $out = $process.StandardOutput.ReadToEnd()
+            $process.WaitForExit($WaitForExit*1000)>$null
         } else {
-            $psi = New-object System.Diagnostics.ProcessStartInfo
-            $psi.FileName = Resolve-Path $FilePath
+            if ($FilePath -match "IncludesLinux") {$FilePath = Get-Item $FilePath | Select-Object -ExpandProperty FullName}
+            $out = Invoke-OCDaemon "$FilePath $ArgumentList"
         }
-        $psi.CreateNoWindow = $true
-        $psi.UseShellExecute = $false
-        $psi.RedirectStandardOutput = $true
-        $psi.RedirectStandardError = $true
-        $psi.Arguments = $ArgumentList
-        $psi.WorkingDirectory = $WorkingDirectory
-        if ($Runas) {$psi.Verb = "runas"}
-        $process = New-Object System.Diagnostics.Process
-        $process.StartInfo = $psi
-        [void]$process.Start()
-        $out = $process.StandardOutput.ReadToEnd()
-        $process.WaitForExit($WaitForExit*1000)>$null
+
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
 
-        $psi = $null
-        $process.Dispose()
-        $process = $null
+        if ($psi) {
+            $psi = $null
+            $process.Dispose()
+            $process = $null
+        }
     } catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
 }
 
@@ -2300,6 +2308,7 @@ function Get-Device {
                         MaxComputeUnits = $_.MaxComputeUnits
                         PlatformVersion = $_.Platform.Version
                         PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
+                        CardId          = -1
                     }
                     $Device_Index++
                 }
@@ -2319,6 +2328,7 @@ function Get-Device {
                     GlobalMemSize   = 1MB * [int64]$_.memory_total
                     PlatformVersion = "CUDA $Cuda"
                     PCIBusId        = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
+                    CardId          = -1
                 }
             }
             if ($OpenCL_Devices) {[PSCustomObject]@{PlatformId=$PlatformId;Devices=$OpenCL_Devices}}
@@ -2340,6 +2350,7 @@ function Get-Device {
                 $InstanceId  = ''
                 $SubId = ''
                 $PCIBusId = $null
+                $CardId = -1
 
                 if ($GPUVendorLists.NVIDIA -icontains $Vendor_Name) {
                     $Vendor_Name = "NVIDIA"
@@ -2347,7 +2358,7 @@ function Get-Device {
                     $Vendor_Name = "AMD"
                     if (-not $GPUDeviceNames[$Vendor_Name]) {
                         $GPUDeviceNames[$Vendor_Name] = if ($IsLinux) {
-                            if (Test-IsElevated) {
+                            if ((Test-OCDaemon) -or (Test-IsElevated)) {
                                 try {
                                     $data = @(Get-DeviceName "amd" -UseAfterburner $false | Select-Object)
                                     if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
@@ -2359,7 +2370,7 @@ function Get-Device {
                             $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
                         }
                     }
-                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId}
+                    $GPUDeviceNames[$Vendor_Name] | Where-Object Index -eq ([Int]$Type_Vendor_Index."$($Device_OpenCL.Type)"."$($Device_OpenCL.Vendor)") | Foreach-Object {$Device_Name = $_.DeviceName; $InstanceId = $_.InstanceId; $SubId = $_.SubId; $PCIBusId = $_.PCIBusId; $CardId = $_.CardId}
                     if ($SubId -eq "687F" -or $Device_Name -eq "Radeon RX Vega" -or $Device_Name -eq "gfx900") {
                         if ($Device_OpenCL.MaxComputeUnits -eq 56) {$Device_Name = "Radeon Vega 56"}
                         elseif ($Device_OpenCL.MaxComputeUnits -eq 64) {$Device_Name = "Radeon Vega 64"}
@@ -2387,6 +2398,7 @@ function Get-Device {
                     Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
                     Model_Name = [String]$Device_Name
                     InstanceId = [String]$InstanceId
+                    CardId = $CardId
                 }
 
                 if ($Device.Type -ne "Cpu" -and 
@@ -2789,6 +2801,7 @@ function Get-DeviceName {
                             DeviceName = $DeviceName
                             InstanceId = $AdlResultSplit[9]
                             SubId = $SubId
+                            CardId = -1
                         }
                         $DeviceId++
                     }
@@ -2797,8 +2810,21 @@ function Get-DeviceName {
 
             if ($IsLinux -and $Vendor -eq 'AMD') {
                 try {
+                    $RocmInfo = [PSCustomObject]@{}
+                    if (Get-Command "rocm-smi" -ErrorAction Ignore) {
+                        $RocmFields = $false
+                        Invoke-Exe "rocm-smi" -ArgumentList "--showhw" -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notmatch "==="} | Foreach-Object {
+                            if (-not $RocmFields) {$RocmFields = $_ -split "\s\s+" | Foreach-Object {$_.Trim()};$GpuIx = $RocmFields.IndexOf("GPU");$BusIx = $RocmFields.IndexOf("BUS")} else {
+                                $RocmVals = $_ -split "\s\s+" | Foreach-Object {$_.Trim()}
+                                if ($RocmVals -and $RocmVals.Count -eq $RocmFields.Count -and $RocmVals[$BusIx] -match "([A-F0-9]+:[A-F0-9]+)\.") {
+                                    $RocmInfo | Add-Member $($Matches[1] -replace "\.+$") $RocmVals[$GpuIx] -Force
+                                }
+                            }
+                        }
+                    }
                     $DeviceId = 0
-                    Invoke-Expression ".\IncludesLinux\bin\amdmeminfo -o -q" | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
+                    $Cmd = if (Get-Command "amdmeminfo" -ErrorAction Ignore) {"amdmeminfo"} else {".\IncludesLinux\bin\amdmeminfo"}
+                    Invoke-Exe $Cmd -ArgumentList "-o -q" -ExpandLines -Runas | Select-String "------", "Found Card:", "PCI:", "OpenCL ID", "Memory Model" | Foreach-Object {
                         Switch -Regex ($_) {
                             "------" {
                                 $PCIdata = [PSCustomObject]@{
@@ -2806,19 +2832,20 @@ function Get-DeviceName {
                                     DeviceName = ""
                                     SubId      = "noid"
                                     PCIBusId   = $null
+                                    CardId     = -1
                                 }
                                 break
                             }
                             "Found Card:\s*[A-F0-9]{4}:([A-F0-9]{4}).+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[2] -Vendor $Vendor; $PCIdata.SubId = $Matches[1];break}
                             "Found Card:.+\((.+)\)" {$PCIdata.DeviceName = Get-NormalizedDeviceName $Matches[1] -Vendor $Vendor; break}
                             "OpenCL ID:\s*(\d+)" {$PCIdata.Index = [int]$Matches[1]; break}
-                            "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";break}
+                            "PCI:\s*([A-F0-9\:]+)" {$PCIdata.PCIBusId = $Matches[1] -replace "\.+$";if ($RocmInfo."$($PCIdata.PCIBusId)") {$PCIdata.CardId = [int]$RocmInfo."$($PCIdata.PCIBusId)"};break}
                             "Memory Model" {$PCIdata;$DeviceId++;break}
                         }
                     }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo?"
+                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo or run startocdaemon?"
                 }
             }
 
@@ -2832,6 +2859,7 @@ function Get-DeviceName {
                         DeviceName = $DeviceName
                         SubId      = if ($_.pci_device_id -match "0x([A-F0-9]{4})") {$Matches[1]} else {"noid"}
                         PCIBusId   = if ($_.pci_bus_id -match ":([0-9A-F]{2}:[0-9A-F]{2})") {$Matches[1]} else {$null}
+                        CardId     = -1
                     }
                 }
             }
@@ -3011,35 +3039,36 @@ function Update-DeviceInformation {
                         }
                     }
                     elseif ($IsLinux) {
-                        try {
-                            $Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
-                        } catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                        }
-                        if ($Rocm) {
-                            $DeviceId = 0
+                        if (Get-Command "rocm-smi" -ErrorAction Ignore) {
+                            try {
+                                $Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
+                            } catch {
+                                if ($Error.Count){$Error.RemoveAt(0)}
+                            }
+                            if ($Rocm) {
+                                $DeviceId = 0
 
-                            $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
-                                $Data = $_.Value
-                                $Card = [int]($_.Name -replace "[^\d]")
-                                $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                                    $_ | Add-Member Data ([PSCustomObject]@{
-                                            CardId            = $Card
-                                            Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
-                                            PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
-                                            FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
-                                            Method            = "rocm"
-                                    }) -Force
+                                $Rocm.Psobject.Properties | Sort-Object -Property {[int]($_.Name -replace "[^\d]")} | Foreach-Object {
+                                    $Data = $_.Value
+                                    $Card = [int]($_.Name -replace "[^\d]")
+                                    $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
+                                        $_ | Add-Member Data ([PSCustomObject]@{
+                                                Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
+                                                PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
+                                                FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
+                                                Method            = "rocm"
+                                        }) -Force
 
-                                    $DataMax = [PSCustomObject]@{
-                                        Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
-                                        FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                        PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        $DataMax = [PSCustomObject]@{
+                                            Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
+                                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
+                                        }
+
+                                        $_ | Add-Member DataMax $DataMax -Force
                                     }
-
-                                    $_ | Add-Member DataMax $DataMax -Force
+                                    $DeviceId++
                                 }
-                                $DeviceId++
                             }
                         }
                     }
@@ -6281,6 +6310,12 @@ param(
 }
 
 function Invoke-OCDaemon {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    $Cmd
+)
+
     if (-not (Test-OCDaemon)) {
         if (-not $Session.IsAdmin) {
             Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and start `"startocdaemon`" at the commandline to enable overclocking."
@@ -6288,12 +6323,19 @@ function Invoke-OCDaemon {
         return
     }
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    if ($Global:GlobalOCD.Count) {
+
+    if ($Cmd) {
+        [System.Collections.ArrayList]$OCDcmd = @()
+        $Cmd | Foreach-Object {$OCDcmd.Add($_) > $null}
+    } else {
+        $OCDcmd = $Global:GlobalOCD
+    }
+    if ($OCDcmd.Count) {
         $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
         $Session.OCDaemonCount | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -ErrorAction Ignore -Force
-        $Global:GlobalOCD.Insert(0,"`#`!/usr/bin/env bash")
-        $Global:GlobalOCD | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.sh" -ErrorAction Ignore -Force
-        $Global:GlobalOCD.Clear()
+        $OCDcmd.Insert(0,"`#`!/usr/bin/env bash")
+        $OCDcmd | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.sh" -ErrorAction Ignore -Force
+        $OCDcmd.Clear()
         if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.lock") {Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -Force -ErrorAction Ignore}
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
         $StopWatch.Start()
@@ -6307,7 +6349,12 @@ function Invoke-OCDaemon {
             Write-Log -Level Warn "OCDaemon failed. Please run `"startocdaemon`" at the command line"
         }
         $Session.OCDaemonCount++
+        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.out") {
+            Get-Content "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Raw
+            Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Force -ErrorAction Ignore
+        }
     }
+    if ($Cmd) {Remove-Variable "OCDcmd"}
 }
 
 function Invoke-NvidiaSmi {
