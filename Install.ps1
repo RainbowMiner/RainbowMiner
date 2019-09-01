@@ -81,6 +81,11 @@ if (-not $GNVIDIA -and -not $GAMD) {
     Write-Host " No GPUs found."
 }
 
+if ($IsLinux) {
+    Get-ChildItem ".\Data" -Filter "*-names.json" -File -ErrorAction Ignore | Foreach-Object {& chmod +rw "$($_.FullName)" > $null}
+    Get-ChildItem ".\Data" -Filter "gpu-count.json" -File -ErrorAction Ignore | Foreach-Object {& chmod +rw "$($_.FullName)" > $null}
+}
+
 if ($IsWindows -and $GNVIDIA) {
     $Install_NVSMI = $false
     if (-not (Test-Path "C:\Program Files\NVIDIA Corporation\NVSMI\nvml.dll")) {
