@@ -790,7 +790,7 @@ function Invoke-Core {
             Invoke-NvidiaSmi -Arguments "--gom=COMPUTE" -Runas > $null
             if (Test-OCDaemon) {Set-OCDaemon "sleep 1"} else {Start-Sleep 1}
             Invoke-NvidiaSettings -SetPowerMizer
-            Invoke-OCDaemon
+            Invoke-OCDaemon -Quiet
         }
 
         #Create combos
@@ -1775,7 +1775,7 @@ function Invoke-Core {
                 }
             } elseif ($Session.Config.EnableOCprofiles) {
                 $_.SetOCprofile($Session.Config,500)
-                if ($IsLinux) {Invoke-OCDaemon}
+                if ($IsLinux) {Invoke-OCDaemon -Quiet}
             }
         }
 

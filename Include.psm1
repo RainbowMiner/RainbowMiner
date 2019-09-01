@@ -6313,7 +6313,9 @@ function Invoke-OCDaemon {
 [cmdletbinding()]   
 param(
     [Parameter(Mandatory = $False)]
-    $Cmd
+    $Cmd,
+    [Parameter(Mandatory = $False)]
+    [Switch]$Quiet
 )
 
     if (-not (Test-OCDaemon)) {
@@ -6350,7 +6352,7 @@ param(
         }
         $Session.OCDaemonCount++
         if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.out") {
-            Get-Content "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Raw
+            if (-not $Quiet) {Get-Content "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Raw}
             Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Force -ErrorAction Ignore
         }
     }
