@@ -4100,7 +4100,7 @@ function Invoke-NvidiaSettings {
             if ($Devices) {$NvCmd += $Devices}
         }
         if ($NvCmd) {
-            Invoke-Expression "nvidia-settings $($NvCmd -join ' ')" > $null
+            Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
         }
     }
 }
@@ -6306,7 +6306,7 @@ param(
                 if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [Math]::max($PLim, $lim)}
                 if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [Math]::min($PLim, $lim)}
                 if ($PLim -ne $PCur) {
-                    Invoke-NvidiaSmi -Arguments "-i $($_.index)","-pl $($Plim.ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))" > $null
+                    Invoke-NvidiaSmi -Arguments "-i $($_.index)","-pl $($Plim.ToString("0.00", [System.Globalization.CultureInfo]::InvariantCulture))" -Runas > $null
                 }
             }
         }
