@@ -30,8 +30,7 @@ if ($IsLinux) {
 
     Write-Host "Linking libraries .."
     if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-        $Libs.PSObject.Properties | Foreach-Object {
-        if (Test-Path ".\IncludesLinux\lib\$($_.Value)") {
+        $Libs.PSObject.Properties | Where-Object {Test-Path ".\IncludesLinux\lib\$($_.Value)"} | Foreach-Object {
             Invoke-Exe -FilePath "ln" -ArgumentList "-nfs $($Dir)/IncludesLinux/lib/$($_.Value) $($Dir)/IncludesLinux/lib/$($_.Name)" > $null
         }
     }
