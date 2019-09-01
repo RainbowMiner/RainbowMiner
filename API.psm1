@@ -10,6 +10,7 @@
     $API.Stop        = $false
     $API.Pause       = $false
     $API.Update      = $false
+    $API.UpdateBalance = $false
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
     $API.APIport     = $Session.Config.APIport
@@ -664,6 +665,11 @@
                 "/update" {
                     $API.Update = $true
                     $Data = $API.Update | ConvertTo-Json
+                    Break
+                }
+                "/updatebalance" {
+                    $API.UpdateBalance = $true
+                    $Data = $API.UpdateBalance | ConvertTo-Json
                     Break
                 }
                 "/status" {

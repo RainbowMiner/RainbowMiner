@@ -421,6 +421,7 @@ function Invoke-Core {
         $API.Stop = $false
         $API.Pause = $false
         $API.Update = $false
+        $API.UpdateBalance = $false
         $API.LockMiners = $false
         $API.RemoteAPI = $true
         $API.ApplyOC = $false
@@ -2108,7 +2109,14 @@ function Invoke-Core {
     if ($IsWindows) {$Host.UI.RawUI.FlushInputBuffer()}
 
     $cursorPosition = $host.UI.RawUI.CursorPosition
-    Write-Host ("Waiting $($WaitSeconds)s until next run: $(if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {"[U]pdate RainbowMiner, "})E[x]it, [R]estart, [S]kip switching prevention, [W]D reset, $(if (-not $Session.IsDonationRun){"[C]onfiguration, "})[V]erbose{verboseoff}, [P]ause{pauseoff}$(if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {", {lockminers}"})" -replace "{verboseoff}",$(if ($Session.Config.UIstyle -eq "full"){" off"}) -replace "{pauseoff}",$(if ($Session.PauseMiners){" off"}) -replace "{lockminers}",$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"}))
+    [System.Collections.ArrayList]$cmdMenu = @("E[x]it","[R]estart","[B]alance update","[S]kip SP","[W]D reset")
+    if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version) {$cmdMenu.Insert(0,"[U]pdate RainbowMiner") > $null}
+    if (-not $Session.IsDonationRun){$cmdMenu.Add("[C]onfiguration") > $null}
+    $cmdMenu.Add("[V]erbose$(if ($Session.Config.UIstyle -eq "full"){" off"})") > $null
+    $cmdMenu.Add("[P]ause$(if ($Session.PauseMiners){" off"})") > $null
+    if (-not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {$cmdMenu.Add("$(if ($LockMiners){"Un[l]ock"} else {"[L]ock"})") > $null}
+    Write-Host "Waiting $($WaitSeconds)s until next run: $($cmdMenu -join ", ")"
+    Remove-Variable "cmdMenu"
         
     $SamplesPicked = 0
     $WaitRound = 0
@@ -2160,6 +2168,7 @@ function Invoke-Core {
         elseif ($API.Pause -ne $Session.PauseMiners) {$keyPressedValue = "P"}
         elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {$keyPressedValue = "L"}
         elseif ($API.Update) {$keyPressedValue = "U"}
+        elseif ($API.UpdateBalance) {$keyPressedValue = "B"}
         elseif ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
 
         if ($keyPressedValue) {
@@ -2238,6 +2247,13 @@ function Invoke-Core {
                     $Session.WatchdogTimers = @()
                     Update-WatchdogLevels -Reset
                     Write-Log "Watchdog reset."
+                    $keyPressed = $true
+                }
+                "B" {
+                    $API.UpdateBalance = $false
+                    Write-Host -NoNewline "[B] pressed - updating Balance."
+                    $Session.Updatetracker.Balances = 0
+                    Write-Log "User request to update balance."
                     $keyPressed = $true
                 }
                 "Y" {

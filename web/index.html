@@ -90,7 +90,7 @@
     </table>
 </div>
 
-<h3 class="mt-4 h-selector" id="h-balanceboxes">Balances</h3>
+<h3 class="mt-4 h-selector" id="h-balanceboxes">Balances <a href="#" id="updatebalance" class="btn btn-primary">Update</a></h3>
 <div id="balanceboxes" class="card-deck"></div>
 
 <!-- End of page scripts -->
@@ -131,6 +131,17 @@
             $.ajax({
                 url: '/lockminers', success: function (result) {
                     $("#lockminers").html(result ? "Unlock" : "Lock");
+                }
+            })
+        });
+
+        $("#updatebalance").click(function (event) {
+            event.stopPropagation()
+            $.ajax({
+                url: '/updatebalance', success: function (result) {
+                    $('.modal-body').text('The balances will be updated as soon as possible');
+                    $('.modal-title').text('Update Balance');
+                    $('#myModal').modal({ show: true });
                 }
             })
         });
