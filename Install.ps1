@@ -82,8 +82,8 @@ if (-not $GNVIDIA -and -not $GAMD) {
 }
 
 if ($IsLinux) {
-    Get-ChildItem ".\Data" -Filter "*-names.json" -File -ErrorAction Ignore | Foreach-Object {& chmod +rw "$($_.FullName)" > $null}
-    Get-ChildItem ".\Data" -Filter "gpu-count.json" -File -ErrorAction Ignore | Foreach-Object {& chmod +rw "$($_.FullName)" > $null}
+    Get-ChildItem ".\Data" -Filter "*-names.json" -File -ErrorAction Ignore | Foreach-Object {& chmod a+rw "$($_.FullName)" > $null}
+    Get-ChildItem ".\Data" -Filter "gpu-count.json" -File -ErrorAction Ignore | Foreach-Object {& chmod a+rw "$($_.FullName)" > $null}
 }
 
 if ($IsWindows -and $GNVIDIA) {
