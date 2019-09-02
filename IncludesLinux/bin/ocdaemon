@@ -19,8 +19,7 @@
 VER="1.0.0"
 
 OCDDATA=/opt/rainbowminer/ocdcmd
-OCDBIN=ocdaemon
-OCDDIR=/usr/bin/ocdaemon
+OCDBIN=/usr/bin/ocdaemon
 OCDPID=/var/run/ocdaemon.pid
 
 do_wrpid() {
@@ -75,7 +74,7 @@ do_stop() {
   fi
 
   if [ `id -u` == 0 ]; then
-    for i in `ps aux | grep "$OCDDIR/$OCDBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
+    for i in `ps aux | grep "$OCDBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
   fi
 
   do_rmpid
@@ -148,9 +147,9 @@ do_start() {
 
   if [ `id -u` != 0 ]; then
     echo -n " sudo "
-    sudo bash -c "$OCDDIR/$OCDBIN run &"
+    sudo bash -c "$OCDBIN run &"
   else
-    "$OCDDIR/$OCDBIN" run &
+    "$OCDBIN" run &
   fi
 
   COUNT=0
