@@ -12,13 +12,13 @@ if ($IsLinux) {
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ninjarig/ninjarig-v1.0.1-linux.7z"
 } else {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.0-ninjarig/ninjarig-v1.0.0-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ninjarig/ninjarig-v1.0.1-win64.7z"
 }
 $ManualUri = "https://github.com/turtlecoin/ninjarig/releases"
 $Port = "348{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.1"
-$Version = "1.0.0"
+$Version = "1.0.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -70,7 +70,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $Miner_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($IsLinux -or $Miner_Vendor -ne "NVIDIA" -or ($Miner_Device | Measure-Object).Count -eq 1) -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.$Miner_Type) {$Pools.$Algorithm_Norm.Ports.$Miner_Type} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
 					    Name = $Miner_Name
