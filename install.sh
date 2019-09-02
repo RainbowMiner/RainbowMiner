@@ -21,10 +21,8 @@ fi
 
 sudo chmod +x ./IncludesLinux/bin/*
 sudo cp -Rf ./IncludesLinux/* /opt/rainbowminer
-sudo chmod +x /opt/rainbowminer/ocd/startocdaemon
-sudo chmod +x /opt/rainbowminer/ocd/ocdaemon
-sudo ln -nfs /opt/rainbowminer/ocd/startocdaemon /usr/bin/startocdaemon
-sudo ln -nfs /opt/rainbowminer/ocd/ocdaemon /usr/bin/ocdaemon
+sudo chmod +x /opt/rainbowminer/bin/ocdaemon
+sudo ln -nfs /opt/rainbowminer/bin/ocdaemon /usr/bin/ocdaemon
 
 if ! [ -x "$(command -v amdmeminfo)" ]; then
 sudo ln -nfs /opt/rainbowminer/bin/amdmeminfo /usr/bin/amdmeminfo

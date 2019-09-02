@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+#
+# Author: RainbowMiner <rbm2018@gmail.com>
+#
+### BEGIN INIT INFO
+# Provides:          ocdaemon
+# Required-Start:    
+# Required-Stop:     
+# X-Start-Before:    
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Auto execution of oc scripts
+# Description:       Rainbowminer daemon to provide root overclocking
+### END INIT INFO
+
+#set -e
+. /lib/lsb/init-functions
+
+VER="1.0.0"
+
+RBMDATA=/opt/rainbowminer/ocdcmd
+RBMBIN=ocdaemon
+RBMDIR=/usr/bin/ocdaemon
+
+do_status() {
+  if [ -f "$RBMDATA/daemon.running" ] && [ `find "$RBMDATA/daemon.running" -newermt "-60 seconds" 2>/dev/null` ]; then
+    echo "running"
+  else
+    echo "stopped"
+  fi
+}
+
+do_cleanup() {
+  # Cleanup
+  for entry in "$RBMDATA"/*.run "$RBMDATA"/*.out "$RBMDATA/stop" "$RBMDATA/daemon.running"
+  do
+    if [ -f "$entry" ]; then
+      rm "$entry"
+    fi
+  done
+}
+
+do_stop() {
+  echo -n "Stopping RainbowMiner ocdaemon .. "
+  if [ "$(do_status)" == "running" ]; then
+    date +%s > "$RBMDATA/stop"
+    COUNT=0
+    while [ $COUNT -le 10 ]; do
+      if [ "$(do_status)" != "running" ]; then
+        do_cleanup
+        exit
+      fi
+      (( COUNT++ ))
+      sleep 0.5
+    done
+  fi
+
+  if [ `id -u` == 0 ]; then
+    for i in `ps aux | grep "$RBMDIR/$RBMBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
+  fi
+
+  do_cleanup
+ 
+  echo "not running"
+}
+
+do_run() {
+  if [ `id -u` != 0 ]; then
+    echo "ERROR: Daemon needs to be run as root/sudo"
+    exit
+  fi
+  if [ "$(do_status)" == "running" ]; then
+    echo "ERROR: Another daemon seems to be running!"
+    exit
+  fi
+
+  # Check for data directory
+  if [ ! -d "$RBMDATA" ]; then
+    mkdir "$RBMDATA"
+    chmod 777 "$RBMDATA"
+  fi
+
+  do_cleanup
+
+  # Run the loop 
+  while [ ! -f "$RBMDATA/stop" ]; do 
+    for entry in "$RBMDATA"/*.sh 
+    do
+      date +%s > "$RBMDATA/daemon.running"
+      if [ -f "$entry" ]; then
+        lockfn=`echo ${entry} | sed s/\.sh/.lock/g`
+        outfn=`echo ${entry} | sed s/\.sh/.out/g`
+        runfn=`echo ${entry} | sed s/\.sh/.run/g`
+        now=`date +%s`
+        if [ -f "$entry" ] && [ ! -f "$lockfn" ];then
+          echo $now > $runfn
+          chmod 666 "$runfn"
+          chmod 777 "$entry"
+          $entry > $outfn
+          if [ -f "$outfn" ]; then
+            chmod 666 "$outfn"
+          fi
+          if [ -f "$entry" ]; then
+            rm "$entry"
+          fi
+          if [ -f "$runfn" ]; then
+            rm "$runfn"
+          fi
+          if [ -f "$lockfn" ]; then
+            rm "$lockfn"
+          fi
+        fi
+      fi
+    done
+    sleep 1
+  done
+
+  do_cleanup
+
+  echo "stopped"
+}
+
+do_start() {
+
+  echo -n "Starting RainbowMiner ocdaemon v$VER .. "
+
+  if [ "$(do_status)" == "running" ]; then
+    echo "ERROR: Another daemon seems to be running!"
+    exit
+  fi
+
+  if [ `id -u` != 0 ]; then
+    echo -n " sudo "
+    sudo bash -c "$RBMDIR/$RBMBIN run &"
+  else
+    "$RBMDIR/$RBMBIN" run &
+  fi
+
+  COUNT=0
+  while [ $COUNT -le 10 ]; do
+    if [ "$(do_status)" == "running" ]; then
+      echo "done"
+      exit
+    fi
+    (( COUNT++ ))
+    sleep 0.5
+  done
+
+  echo "failed"
+}
+
+case "${1}" in
+    start)
+		do_start
+        ;;
+    stop)
+		do_stop
+        ;;
+    status)
+		do_status
+        ;;
+    run)
+                do_run
+        ;;
+    restart|reload|force-reload)
+		do_stop
+		do_start
+        ;;
+    *)
+        echo "Usage: ${0} {start|stop|status|restart|reload|force-reload|run}" >&2
+		exit 1
+        ;;
+esac

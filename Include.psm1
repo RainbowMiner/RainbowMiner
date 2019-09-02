@@ -2845,7 +2845,7 @@ function Get-DeviceName {
                     }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo or run startocdaemon?"
+                    Write-Log -Level Warn "Call to amdmeminfo failed. Did you start as sudo or `"ocdaemon start`"?"
                 }
             }
 
@@ -6336,7 +6336,7 @@ param(
 
     if (-not (Test-OCDaemon)) {
         if (-not $Session.IsAdmin) {
-            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and start `"startocdaemon`" at the commandline to enable overclocking."
+            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"ocdaemon start`" at the commandline to enable overclocking."
         }
         return
     }
@@ -6364,7 +6364,7 @@ param(
         }
         Remove-Variable "StopWatch"
         if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
-            Write-Log -Level Warn "OCDaemon failed. Please run `"startocdaemon`" at the command line"
+            Write-Log -Level Warn "OCDaemon failed. Please run `"ocdaemon start`" at the command line"
         }
         $Session.OCDaemonCount++
         if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.out") {
