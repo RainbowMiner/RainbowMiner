@@ -6312,7 +6312,7 @@ function Initialize-OCDaemon {
 }
 
 function Test-OCDaemon {
-    $IsLinux -and (Test-Path "/var/run/ocdaemon.pid") -and (Get-Content "/var/run/ocdaemon.pid" -Raw -ErrorAction Ignore | Foreach-Object {Get-Process $_ -ErrorAction Ignore} | Measure-Object).Count
+    $IsLinux -and (Test-Path "/var/run/ocdaemon.pid") -and (Get-Content "/var/run/ocdaemon.pid" -Raw -ErrorAction Ignore | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore} | Measure-Object).Count
 }
 
 function Set-OCDaemon {
