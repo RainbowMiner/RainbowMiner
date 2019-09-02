@@ -6312,7 +6312,7 @@ function Initialize-OCDaemon {
 }
 
 function Test-OCDaemon {
-    $IsLinux -and (Test-Path "/opt/rainbowminer/ocdcmd/daemon.running") -and (ps a | grep ocdaemon)
+    $IsLinux -and (Test-Path "/var/run/ocdaemon.pid") -and (Get-Content "/var/run/ocdaemon.pid" -Raw -ErrorAction Ignore | Foreach-Object {Get-Process $_ -ErrorAction Ignore} | Measure-Object).Count
 }
 
 function Set-OCDaemon {
