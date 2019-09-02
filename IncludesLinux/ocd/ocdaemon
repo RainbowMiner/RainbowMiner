@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+VER="1.0.0"
+
+RBMDATA=/opt/rainbowminer/ocdcmd
+
+echo "Starting RainbowMiner ocdaemon v$VER"
+
+if [ `id -u` != 0 ]; then
+  echo "ERROR: Daemon needs to be run as root/sudo"
+  exit
+fi
+if [ -f "$RBMDATA/daemon.running" ] && [ `find "$RBMDATA/daemon.running" -newermt "-60 seconds"` ]; then
+  echo "ERROR: Another daemon seems to be running!"
+  exit
+fi
+
+# Check for data directory
+if [ ! -d "$RBMDATA" ]; then
+  mkdir "$RBMDATA"
+  chmod 777 "$RBMDATA"
+fi
+
+# Cleanup
+for entry in "$RBMDATA"/*.run "$RBMDATA"/*.out
+do
+  if [ -f "$entry" ]; then
+    rm "$entry"
+  fi
+done
+
+# Run the loop 
+while [ ! -f "$RBMDATA/stop" ]; do 
+  for entry in "$RBMDATA"/*.sh 
+  do
+    if [ -f "$entry" ]; then
+      lockfn=`echo ${entry} | sed s/\.sh/.lock/g`
+      outfn=`echo ${entry} | sed s/\.sh/.out/g`
+      runfn=`echo ${entry} | sed s/\.sh/.run/g`
+      now=`date +%s`
+      if [ -f "$entry" ] && [ ! -f "$lockfn" ];then
+        echo $now > $runfn
+        chmod 666 "$runfn"
+        chmod 777 "$entry"
+        $entry > $outfn
+        if [ -f "$outfn" ]; then
+          chmod 666 "$outfn"
+        fi
+        if [ -f "$entry" ]; then
+          rm "$entry"
+        fi
+        if [ -f "$runfn" ]; then
+          rm "$runfn"
+        fi
+        if [ -f "$lockfn" ]; then
+          rm "$lockfn"
+        fi
+      fi
+    fi
+  done
+  sleep 1
+done
+
+# Finally cleanup
+if [ -f "$RBMDATA/stop" ]; then
+  rm "$RBMDATA/stop"
+fi
+
+echo "RainbowMiner ocdaemon stopped."
+

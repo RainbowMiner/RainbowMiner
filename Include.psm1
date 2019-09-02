@@ -4013,18 +4013,20 @@ class Miner {
 
         [System.Collections.ArrayList]$applied = @()
         [System.Collections.ArrayList]$NvCmd = @()
+        [System.Collections.ArrayList]$AmdCmd = @()
 
         $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
-        if ($Vendor -ne "NVIDIA") {
-            if (-not $Global:IsWindows) {return}
-            try {
-                $Script:abMonitor.ReloadAll()
-                $Script:abControl.ReloadAll()
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
-                return
+        if ($Global:IsWindows) {
+            if ($Vendor -ne "NVIDIA") {
+                try {
+                    $Script:abMonitor.ReloadAll()
+                    $Script:abControl.ReloadAll()
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
+                    return
+                }
             }
         }
 
@@ -4047,19 +4049,22 @@ class Miner {
             }
 
             $DeviceIds = @()
+            $CardIds = @()
             $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
+                $CardId = $_.CardId
                 $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
                 if ($Id) {
-                    $Profiles | Add-Member "$($DeviceModel)[$($Id)]" ([PSCustomObject]@{Index = @($VendorIndex); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
+                    $Profiles | Add-Member "$($DeviceModel)[$($Id)]" ([PSCustomObject]@{Index = @($VendorIndex); CardId = @($CardId); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
                 } else {
                     $DeviceIds += $VendorIndex
+                    $CardIds += $CardId
                 }
             }
             if ($DeviceIds.Count -gt 0) {
                 $Profile = if ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)-$($DeviceModel)"} elseif ($Config.OCprofiles."$($this.OCprofile.$DeviceModel)" -ne $null) {$Config.OCprofiles."$($this.OCprofile.$DeviceModel)"} else {[PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}}
                 if ($Profile) {
-                    $Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; Profile = $Profile; x = $x}) -Force
+                    $Profiles | Add-Member $DeviceModel ([PSCustomObject]@{Index = $DeviceIds; CardId = $CardIds; Profile = $Profile; x = $x}) -Force
                 }
             }
         }
@@ -4075,6 +4080,7 @@ class Miner {
             $applied_any = $false
 
             if ($Vendor -eq "NVIDIA") {
+
                 foreach($DeviceId in $Profiles.$DeviceModel.Index) {
                     if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
                     if (-not $Global:IsLinux) {
@@ -4086,6 +4092,13 @@ class Miner {
                     if ($Profile.CoreClockBoost -match '^\-*[0-9]+$') {$val=[Convert]::ToInt32($Profile.CoreClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUGraphicsClockOffset[$($Profiles.$DeviceModel.x)]=$($val)'"} else {"-setBaseClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
                     if ($Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$val = [Convert]::ToInt32($Profile.MemoryClockBoost);$NvCmd.Add("$(if ($Global:IsLinux) {"-a '[gpu:$($DeviceId)]/GPUMemoryTransferRateOffset[$($Profiles.$DeviceModel.x)]=$($val)'"} else {"-setMemoryClockOffset:$($DeviceId),0,$($val)"})") >$null;$applied_any=$true}
                 }
+
+            } elseif ($Vendor -eq "AMD" -and $Global:IsLinux) {
+
+                foreach($CardId in $Profiles.$DeviceModel.CardId) {
+                    #if ($Profile.PowerLimit -gt 0) {$val=[math]::max([math]::min($Profile.PowerLimit,200),20);if ($Global:IsLinux) {Set-NvidiaPowerLimit $DeviceId $val} else {$NvCmd.Add("-setPowerTarget:$($DeviceId),$($val)") >$null};$applied_any=$true}
+                }
+            
             } elseif ($Pattern.$Vendor -ne $null) {
                 $DeviceId = 0
                 $Script:abMonitor.GpuEntries | Where-Object Device -like $Pattern.$Vendor | Select-Object -ExpandProperty Index | Foreach-Object {
@@ -4110,6 +4123,9 @@ class Miner {
             if ($Vendor -eq "NVIDIA") {
                 if ($Global:IsLinux) {Invoke-NvidiaSettings $NvCmd}
                 else {& ".\Includes\NvidiaInspector\nvidiaInspector.exe" $NvCmd}
+            } elseif ($Vendor -eq "AMD" -and $AmdCmd.Count) {
+                if ($Global:IsLinux) {}
+                else {}
             } else {$Script:abControl.CommitChanges()}
             $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
             if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
@@ -6296,7 +6312,7 @@ function Initialize-OCDaemon {
 }
 
 function Test-OCDaemon {
-    $IsLinux -and (Test-Path "/opt/rainbowminer") -and (Test-Path "/opt/rainbowminer/ocdcmd") -and (ps a | grep OCDaemon)
+    $IsLinux -and (Test-Path "/opt/rainbowminer/ocdcmd/daemon.running") -and (ps a | grep ocdaemon)
 }
 
 function Set-OCDaemon {
