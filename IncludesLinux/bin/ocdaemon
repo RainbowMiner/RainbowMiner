@@ -18,13 +18,33 @@
 
 VER="1.0.0"
 
-RBMDATA=/opt/rainbowminer/ocdcmd
-RBMBIN=ocdaemon
-RBMDIR=/usr/bin/ocdaemon
+OCDDATA=/opt/rainbowminer/ocdcmd
+OCDBIN=ocdaemon
+OCDDIR=/usr/bin/ocdaemon
+OCDPID=/var/run/ocdaemon.pid
+
+do_wrpid() {
+  if [ ! -f "$OCDPID" ]; then
+    echo -n $$ > "$OCDPID"
+    chmod 666 "$OCDPID"
+  fi
+}
+
+do_rmpid() {
+  if [ -f "$OCDPID" ]; then
+    rm "$OCDPID"
+  fi
+}
 
 do_status() {
-  if [ -f "$RBMDATA/daemon.running" ] && [ `find "$RBMDATA/daemon.running" -newermt "-60 seconds" 2>/dev/null` ]; then
-    echo "running"
+  if [ -f "$OCDPID" ]; then
+    local pid="$(<$OCDPID)"
+    if [ "$(ps -p $pid -o command=)" ]; then
+      echo "running"
+    else
+      do_rmpid
+      echo "crashed"
+    fi
   else
     echo "stopped"
   fi
@@ -32,7 +52,7 @@ do_status() {
 
 do_cleanup() {
   # Cleanup
-  for entry in "$RBMDATA"/*.run "$RBMDATA"/*.out "$RBMDATA/stop" "$RBMDATA/daemon.running"
+  for entry in "$OCDDATA"/*.run "$OCDDATA"/*.out "$OCDDATA/stop"
   do
     if [ -f "$entry" ]; then
       rm "$entry"
@@ -43,11 +63,10 @@ do_cleanup() {
 do_stop() {
   echo -n "Stopping RainbowMiner ocdaemon .. "
   if [ "$(do_status)" == "running" ]; then
-    date +%s > "$RBMDATA/stop"
+    date +%s > "$OCDDATA/stop"
     COUNT=0
     while [ $COUNT -le 10 ]; do
       if [ "$(do_status)" != "running" ]; then
-        do_cleanup
         exit
       fi
       (( COUNT++ ))
@@ -56,11 +75,11 @@ do_stop() {
   fi
 
   if [ `id -u` == 0 ]; then
-    for i in `ps aux | grep "$RBMDIR/$RBMBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
+    for i in `ps aux | grep "$OCDDIR/$OCDBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
   fi
 
-  do_cleanup
- 
+  do_rmpid
+
   echo "not running"
 }
 
@@ -75,18 +94,18 @@ do_run() {
   fi
 
   # Check for data directory
-  if [ ! -d "$RBMDATA" ]; then
-    mkdir "$RBMDATA"
-    chmod 777 "$RBMDATA"
+  if [ ! -d "$OCDDATA" ]; then
+    mkdir "$OCDDATA"
+    chmod 777 "$OCDDATA"
   fi
 
   do_cleanup
 
   # Run the loop 
-  while [ ! -f "$RBMDATA/stop" ]; do 
-    for entry in "$RBMDATA"/*.sh 
+  while [ ! -f "$OCDDATA/stop" ]; do 
+    for entry in "$OCDDATA"/*.sh 
     do
-      date +%s > "$RBMDATA/daemon.running"
+      do_wrpid
       if [ -f "$entry" ]; then
         lockfn=`echo ${entry} | sed s/\.sh/.lock/g`
         outfn=`echo ${entry} | sed s/\.sh/.out/g`
@@ -114,9 +133,7 @@ do_run() {
     done
     sleep 1
   done
-
-  do_cleanup
-
+  do_rmpid
   echo "stopped"
 }
 
@@ -131,9 +148,9 @@ do_start() {
 
   if [ `id -u` != 0 ]; then
     echo -n " sudo "
-    sudo bash -c "$RBMDIR/$RBMBIN run &"
+    sudo bash -c "$OCDDIR/$OCDBIN run &"
   else
-    "$RBMDIR/$RBMBIN" run &
+    "$OCDDIR/$OCDBIN" run &
   fi
 
   COUNT=0
