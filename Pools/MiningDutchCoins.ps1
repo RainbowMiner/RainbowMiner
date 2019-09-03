@@ -41,7 +41,7 @@ if (($PoolCoins_Request.PSObject.Properties.Name | Measure-Object).Count -le 1) 
 
 $Pool_Fee = 2
 
-$PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $_.Value.status -eq "online" -and (([double]$_.Value.poolhashrate -or $AllowZero) -and ($Wallets."$($_.Value.symbol)" -ne $null) -or $InfoOnly)} | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $_.Value.status -eq "online" -and $_.Value.algorithm -and (([double]$_.Value.poolhashrate -or $AllowZero) -and ($Wallets."$($_.Value.symbol)" -ne $null) -or $InfoOnly)} | ForEach-Object {
 
     $Pool_Algorithm = $_.Value.algorithm
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
