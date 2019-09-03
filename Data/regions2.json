@@ -1,12 +1,12 @@
 {
 	"Asia": ["SoutheastAsia", "Japan"],
-	"Europe": ["US", "NorthAmerica", "USWest", "USEast", "SoutheastAsia"],
+	"Canada": ["US", "USEast", "USWest"],
+	"Europe": ["US", "Canada", "USWest", "USEast", "SoutheastAsia"],
 	"Japan": ["Asia", "SoutheastAsia"],
-	"NorthAmerica": ["US", "USEast", "USWest"],
 	"Russia": ["Asia", "SoutheastAsia"],
-	"SouthAmerica": ["US", "USEast", "USWest", "NorthAmerica"],
+	"SouthAmerica": ["US", "USEast", "USWest", "Canada"],
 	"SoutheastAsia": ["Asia", "Japan"],
-    "US": ["NorthAmerica", "USWest","USEast"],
-	"USEast": ["US", "NorthAmerica", "USWest"],
-	"USWest": ["US", "NorthAmerica", "USEast"]
+    "US": ["Canada", "USWest","USEast"],
+	"USEast": ["US", "Canada", "USWest"],
+	"USWest": ["US", "Canada", "USEast"]
 }
