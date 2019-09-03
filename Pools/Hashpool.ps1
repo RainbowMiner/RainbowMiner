@@ -44,8 +44,7 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("eu") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Xlat = [PSCustomObject]@{
     "DGBM" = "DGB"
@@ -93,7 +92,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

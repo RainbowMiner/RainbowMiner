@@ -43,8 +43,8 @@ catch {
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("na","eu","sea","jp")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("na","eu","sea","jp") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Currencies = @("BTC") + @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 if ($PoolCoins_Request) {
     $PoolCoins_Algorithms = @($Pool_Request.PSObject.Properties.Value | Where-Object coins -eq 1 | Select-Object -ExpandProperty name -Unique)
@@ -79,7 +79,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -ErrorRatio 0.000 -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         foreach($Pool_Currency in $Pool_Currencies) {
             $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {

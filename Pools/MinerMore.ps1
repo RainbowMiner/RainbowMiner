@@ -98,7 +98,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Port          = $Pool_Port
                 User          = "$($Pool_User).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
-                Region        = $Pool_RegionsTable[$Pool_Region]
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee

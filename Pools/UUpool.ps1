@@ -16,11 +16,10 @@ param(
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pool_Request = [PSCustomObject]@{}
-$Pool_Regions = @{
-    "CN" = Get-Region "asia"
-    "EU" = Get-Region "eu"
-    "US" = Get-Region "us"
-}
+
+[hashtable]$Pool_RegionsTable = @{}
+
+@("CN","EU","US") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = [PSCustomObject]@{}
 try {
@@ -91,7 +90,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         Port          = "$($Matches[2].Trim())"
                         User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                         Pass          = "x"
-                        Region        = Switch -Regex ($Pool_Host) {"\(EU\)" {$Pool_Regions.EU};"\(US\)" {$Pool_Regions.US};default {$Pool_Regions.CN}}
+                        Region        = Switch -Regex ($Pool_Host) {"\(EU\)" {$Pool_RegionsTable.EU};"\(US\)" {$Pool_RegionsTable.US};default {$Pool_RegionsTable.CN}}
                         SSL           = $false
                         Updated       = $Stat.Updated
                         PoolFee       = $_.rates -replace "[^\d\.]+"

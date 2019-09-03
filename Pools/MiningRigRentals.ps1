@@ -54,12 +54,9 @@ if ($Session.MRRTag -ne $Pool_Request_Tag) {
     $Session.MRRTag = $Pool_Request_Tag
 }
 
-[hashtable]$Pool_Regions = @{
-    "eu"   = Get-Region "eu"
-    "us"   = Get-Region "us"
-    "asia" = Get-Region "asia"
-    "ru"   = Get-Region "ru"
-}
+[hashtable]$Pool_RegionsTable = @{}
+
+@("eu","us","asia","ru") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_AllHosts = @("us-east01.miningrigrentals.com","us-west01.miningrigrentals.com","us-central01.miningrigrentals.com",
                    "eu-01.miningrigrentals.com","eu-de01.miningrigrentals.com","eu-de02.miningrigrentals.com",
@@ -168,7 +165,7 @@ foreach ($Worker1 in $Workers) {
                     Port          = $Miner_Port
                     User          = "$($User)$(if (@("ProgPowZ") -icontains $Pool_Algorithm_Norm) {"*"} else {"."})$($Pool_RigId)"
                     Pass          = "x"
-                    Region        = $Pool_Regions."$($_.region)"
+                    Region        = $Pool_RegionsTable."$($_.region)"
                     SSL           = $false
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee

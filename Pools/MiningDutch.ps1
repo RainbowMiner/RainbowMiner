@@ -38,8 +38,7 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("americas","asia","eu")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("americas","asia","eu") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Fee = 2
 
@@ -69,7 +68,7 @@ $Pool_Request.PSObject.Properties | Where-Object {[int]$_.Value.workers_shared -
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.Value.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         if ($User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

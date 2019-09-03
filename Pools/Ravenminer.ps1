@@ -39,8 +39,7 @@ $Pool_Host = "ravenminer.com"
 
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us","eu","asia")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Algorithm = $Pool_Request.$_.name
@@ -63,7 +62,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
     if ($Pool_User -or $InfoOnly) {
-        foreach($Pool_Region in $Pool_Regions) {
+        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin

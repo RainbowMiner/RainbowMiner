@@ -66,8 +66,7 @@ if ($Platform_Version -eq 2) {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("eu", "usa", "hk", "jp", "in", "br") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
 
@@ -93,7 +92,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00 -and ($Platform_Versio
 
     $Pool_Algorithm_All = @($Pool_Algorithm_Norm) #,"$($Pool_Algorithm_Norm)-NHMP")
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         if ($Pool_Algorithm -ne "beam" -and ($Wallets.BTC -or $InfoOnly)) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                 if ($Pool_Algorithm_Norm -match "-NHMP") {
@@ -103,7 +102,7 @@ $Pool_Request | Where-Object {([Double]$_.paying -gt 0.00 -and ($Platform_Versio
                     $This_Port = $Pool_Port
                     $This_Host = "$Pool_Algorithm.$Pool_Region$Pool_Host"
                 }
-                $Pool_Failover = @($Pool_Regions | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_$Pool_Host"}})
+                $Pool_Failover = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {if ($Pool_Algorithm_Norm -match "-NHMP") {"nhmp.$_.$Pool_Host"} else {"$Pool_Algorithm.$_$Pool_Host"}})
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin

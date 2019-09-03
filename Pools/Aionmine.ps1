@@ -17,6 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Currency = "AION"
 $Pool_Coin     = Get-Coin $Pool_Currency
 $Pool_Fee = 0.5
+$Pool_Default_Region = Get-Region "eu"
 
 if (-not $Wallets.$Pool_Currency -and -not $InfoOnly) {return}
 
@@ -34,9 +35,6 @@ catch {
     return
 }
 
-[hashtable]$Pool_RegionsTable = @{}
-@("eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
-
 $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_Wallet -or $InfoOnly} | Foreach-Object {
     
     $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
@@ -49,31 +47,29 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet =
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
     }
 
-    foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin.Name
-            CoinSymbol    = $Pool_Currency
-            Currency      = $Pool_Currency
-            Price         = $Stat.$StatAverage #instead of .Live
-            StablePrice   = $Stat.Week
-            MarginOfError = $Stat.Week_Fluctuation
-            Protocol      = "stratum+tcp"
-            Host          = "stratum.aionmine.org"
-            Port          = 3333
-            User          = "$($Pool_Wallet).{workername:$Worker}"
-            Pass          = "x"
-            Worker        = "{workername:$Worker}"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $_.poolFeePercent
-            DataWindow    = $DataWindow
-            Workers       = $_.poolStats.connectedMiners
-            Hashrate      = $Stat.HashRate_Live
-            BLK           = $Stat.BlockRate_Average
-            #TSL           = $Pool_TSL
-            ErrorRatio    = $Stat.ErrorRatio_Average
-        }
+    [PSCustomObject]@{
+        Algorithm     = $Pool_Algorithm_Norm
+        CoinName      = $Pool_Coin.Name
+        CoinSymbol    = $Pool_Currency
+        Currency      = $Pool_Currency
+        Price         = $Stat.$StatAverage #instead of .Live
+        StablePrice   = $Stat.Week
+        MarginOfError = $Stat.Week_Fluctuation
+        Protocol      = "stratum+tcp"
+        Host          = "stratum.aionmine.org"
+        Port          = 3333
+        User          = "$($Pool_Wallet).{workername:$Worker}"
+        Pass          = "x"
+        Worker        = "{workername:$Worker}"
+        Region        = $Pool_Default_Region
+        SSL           = $false
+        Updated       = $Stat.Updated
+        PoolFee       = $_.poolFeePercent
+        DataWindow    = $DataWindow
+        Workers       = $_.poolStats.connectedMiners
+        Hashrate      = $Stat.HashRate_Live
+        BLK           = $Stat.BlockRate_Average
+        #TSL           = $Pool_TSL
+        ErrorRatio    = $Stat.ErrorRatio_Average
     }
 }

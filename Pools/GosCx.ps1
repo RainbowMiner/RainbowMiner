@@ -44,13 +44,9 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("ru","eu","us","asia")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("ru","eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = $Pool_CoinSymbol -replace '-.+$';$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate_shared -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
-
-    $Pool_Host = "gos.cx"
-
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
@@ -76,7 +72,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -87,7 +83,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region).$($Pool_Host)"
+                Host          = "$($Pool_Region).gos.cx"
                 Port          = $Pool_Port
                 User          = "$($Pool_User).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}$Pool_Params"

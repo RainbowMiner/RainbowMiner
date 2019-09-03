@@ -49,8 +49,8 @@ catch {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Currencies = @("BTC", "DASH", "LTC") + @($Wallets.PSObject.Properties.Name | Sort-Object | Select-Object) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
@@ -132,7 +132,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
         $Pool_Params = if ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"}
-        foreach($Pool_Region in $Pool_Regions) {
+        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
                 #Option 2/3
                 [PSCustomObject]@{

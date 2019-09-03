@@ -21,7 +21,9 @@ if (-not $Wallets.$Pool_Currency -and -not $InfoOnly) {return}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("eu","ca","sg")
+[hashtable]$Pool_RegionsTable = @{}
+
+@("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_Request = [PSCustomObject]@{}
 $Pool_Ports   = @([PSCustomObject]@{})
@@ -96,7 +98,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
     $Pool_SSL = $false
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
     foreach ($Pool_Port in $Pool_Ports) {
-        foreach($Pool_Region in $Pool_Regions) {
+        foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_CoinName
@@ -112,7 +114,7 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($Pool_Wallet.difficulty) {"+$($Pool_Wallet.difficulty)"} else {"{diff:+`$difficulty}"})"
                 Worker        = "{workername:$Worker}"
                 Pass          = "x"
-                Region        = Get-Region $Pool_Region
+                Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $Pool_SSL
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_Fee

@@ -44,8 +44,8 @@ catch {
 [hashtable]$Pool_Coins = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("us")
-$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Currencies = @("BTC","LTC") + @($Wallets.PSObject.Properties.Name | Select-Object) + @($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Foreach-Object {if ($PoolCoins_Request.$_.symbol -eq $null){$_} else {$PoolCoins_Request.$_.symbol}}) | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}
 
 $Pool_Host = "mine.nlpool.nl"
@@ -93,7 +93,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor * $Pool_Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate ($PoolCoins_Request.$Pool_CoinSymbol.hashrate/$Pool_Divisor) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
     }
 
-    foreach($Pool_Region in $Pool_Regions) {
+    foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         foreach($Pool_Currency in $Pool_Currencies) {
             $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {

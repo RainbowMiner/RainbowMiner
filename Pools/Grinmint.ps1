@@ -35,17 +35,14 @@ catch {
 }
 
 [hashtable]$Pool_RegionsTable = @{}
-@("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
+@("eu-west","us-east") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $true}
-    [PSCustomObject]@{algo = "Cuckatoo31"; port = 3416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckatoo31"; port = 4416; region = "eu"; host = "eu-west-stratum.grinmint.com"; ssl = $true}
-    [PSCustomObject]@{algo = "Cuckatoo31"; port = 3416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $false}
-    [PSCustomObject]@{algo = "Cuckatoo31"; port = 4416; region = "us"; host = "us-east-stratum.grinmint.com"; ssl = $true}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 3416; ssl = $false}
+    [PSCustomObject]@{algo = "Cuckarood29"; port = 4416; ssl = $true}
+    [PSCustomObject]@{algo = "Cuckatoo31";  port = 3416; ssl = $false}
+    [PSCustomObject]@{algo = "Cuckatoo31";  port = 4416; ssl = $true}
 )
 
 $reward = 60
@@ -65,28 +62,30 @@ if (-not $InfoOnly) {
 
 $Pools_Data | ForEach-Object {
     $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
-    [PSCustomObject]@{
-        Algorithm     = Get-Algorithm $_.algo
-        CoinName      = $Pool_Currency
-        CoinSymbol    = $Pool_Currency
-        Currency      = $Pool_Currency
-        Price         = $Stat.$StatAverage #instead of .Live
-        StablePrice   = $Stat.Week
-        MarginOfError = $Stat.Week_Fluctuation
-        Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
-        Host          = $_.host
-        Port          = $_.port
-        User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"
-        Pass          = $Password
-        Region        = $Pool_RegionsTable."$($_.region)"
-        SSL           = $_.ssl
-        Updated       = $Stat.Updated
-        PoolFee       = $Pool_Fee
-        DataWindow    = $DataWindow
-        Workers       = $Pool_Request.pool_stats.workers
-        Hashrate      = $Stat.HashRate_Live
-        BLK           = $Stat.BlockRate_Average
-        TSL           = $Pool_TSL
-        ErrorRatio    = $Stat.ErrorRatio_Average
+    Foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
+        [PSCustomObject]@{
+            Algorithm     = Get-Algorithm $_.algo
+            CoinName      = $Pool_Currency
+            CoinSymbol    = $Pool_Currency
+            Currency      = $Pool_Currency
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.Week
+            MarginOfError = $Stat.Week_Fluctuation
+            Protocol      = "stratum+$(if ($_.ssl) {"ssl"} else {"tcp"})"
+            Host          = "$($Pool_Region)-stratum.grinmint.com"
+            Port          = $_.port
+            User          = "$($Wallets.$Pool_Currency)/{workername:$Worker}"
+            Pass          = $Password
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $_.ssl
+            Updated       = $Stat.Updated
+            PoolFee       = $Pool_Fee
+            DataWindow    = $DataWindow
+            Workers       = $Pool_Request.pool_stats.workers
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+            ErrorRatio    = $Stat.ErrorRatio_Average
+        }
     }
 }
