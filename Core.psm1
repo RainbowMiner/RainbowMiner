@@ -402,7 +402,7 @@ function Invoke-Core {
         $Session.Config.Region = $Session.Config.Region | ForEach-Object {Get-Region $_} | Select-Object -First 1
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
-            $Session.Config.DefaultPoolRegion = @($WiderRegion) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -ne $WiderRegion} | Select-Object)
+            $Session.Config.DefaultPoolRegion = @($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object)
         }
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
