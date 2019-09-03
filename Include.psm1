@@ -3323,6 +3323,16 @@ function Get-Region {
     if ($Global:GlobalRegions.ContainsKey($Region)) {$Global:GlobalRegions[$Region]} else {foreach($r in @($Global:GlobalRegions.Keys)) {if ($Region -match "^$($r)") {$Global:GlobalRegions[$r];return}};$Region}
 }
 
+function Get-Region2 {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Region = ""
+    )
+    if (-not (Test-Path Variable:Global:GlobalRegions2)) {Get-Regions2 -Silent}
+    if ($Global:GlobalRegions2.ContainsKey($Region)) {$Global:GlobalRegions2[$Region]}
+}
+
 function Get-Algorithms {
     [CmdletBinding()]
     param(
@@ -3434,6 +3444,20 @@ function Get-Regions {
     }
     if (-not $Silent) {$Global:GlobalRegions.Keys}
 }
+
+function Get-Regions2 {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [Switch]$Silent = $false
+    )
+    if (-not (Test-Path Variable:Global:GlobalRegions2)) {
+        [hashtable]$Global:GlobalRegions2 = @{}
+        (Get-Content "Data\regions2.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+    }
+    if (-not $Silent) {$Global:GlobalRegions2.Keys}
+}
+
 
 function Get-WorldCurrencies {
     [CmdletBinding()]

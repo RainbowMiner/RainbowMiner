@@ -401,8 +401,7 @@ function Invoke-Core {
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.Region = $Session.Config.Region | ForEach-Object {Get-Region $_} | Select-Object -First 1
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
-        if ($Session.Config.Region -match '-') {
-            $WiderRegion = $Session.Config.Region -replace "^.+-"
+        if ($WiderRegion = Get-Region2 $Session.Config.Region) {
             $Session.Config.DefaultPoolRegion = @($WiderRegion) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -ne $WiderRegion} | Select-Object)
         }
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
