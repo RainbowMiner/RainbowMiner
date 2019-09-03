@@ -1,18 +1,22 @@
 {
     "americas": "US",
+    "ase":  "Southeast-Asia",
     "asia":  "Asia",
-    "br":  "Asia",
+    "asiase": "Southeast-Asia",
+    "br":  "US",
     "ca":  "US",
     "cn":  "Asia",
+    "de":  "Europe",
     "eu":  "Europe",
     "europe":  "Europe",
     "hk":  "Asia",
-    "in":  "Asia",
+    "in":  "Southeast-Asia",
     "jp":  "Asia",
     "na":  "US",
     "us":  "US",
     "usa":  "US",
     "ru":  "Russia",
-    "sea":  "Asia",
-    "sg":  "Asia"
+    "sea":  "Southeast-Asia",
+    "seasia":  "Southeast-Asia",
+    "sg":  "Southeast-Asia"
 }
