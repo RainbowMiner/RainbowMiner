@@ -3436,13 +3436,17 @@ function Get-Regions {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
-        [Switch]$Silent = $false
+        [Switch]$Silent = $false,
+        [Switch]$AsHash = $false
     )
     if (-not (Test-Path Variable:Global:GlobalRegions)) {
         [hashtable]$Global:GlobalRegions = @{}
         (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Global:GlobalRegions.Keys}
+    if (-not $Silent) {
+        if ($AsHash) {$Global:GlobalRegions}
+        else {$Global:GlobalRegions.Keys}
+    }
 }
 
 function Get-Regions2 {

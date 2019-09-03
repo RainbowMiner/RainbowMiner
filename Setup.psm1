@@ -500,13 +500,15 @@ function Start-Setup {
                         }
 
                         "region" {
-                            if ($IsInitialSetup) {
-                                Write-Host " "
-                                Write-Host "Choose the region, you live in, from this list (remember: you can always simply accept the default by pressing return): " -ForegroundColor Cyan
-                                @(Get-Regions) | Foreach-Object {Write-Host " $($_)" -ForegroundColor Cyan}
-                                Write-Host " "
-                            }
-                            $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid @(Get-Regions) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Regions = Get-Regions -AsHash
+                            Write-Host " "
+                            Write-Host "Choose the region, that is nearest to your rigs (remember: you can always simply accept the default by pressing return): " -ForegroundColor Cyan
+                            $p = [console]::ForegroundColor
+                            [console]::ForegroundColor = "Cyan"
+                            $Regions.Keys | Foreach-Object {[PSCustomObject]@{Name=$Regions.$_;Value=$_}} | Group-Object -Property Name | Sort-Object Name | Format-Table @{Name="Region";Expression={$_.Name}},@{Name="Valid shortcuts/entries";Expression={"$(($_.Group.Value | Sort-Object) -join ", ")"}}
+                            [console]::ForegroundColor = $p
+                            Write-Host " "
+                            $Config.Region = Read-HostString -Prompt "Enter your region" -Default $Config.Region -Mandatory -Characters "A-Z" -Valid ($Regions.Keys + $Regions.Values | Foreach-Object {$_.ToLower()} | Select-Object -Unique | Sort-Object) | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enableminerstatus" {
                             if ($IsInitialSetup) {
