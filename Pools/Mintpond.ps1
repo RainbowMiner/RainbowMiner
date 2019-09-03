@@ -14,7 +14,10 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Regions = @("eu","us","asia")
+$Pool_Regions = @("eu","us")
+
+[hashtable]$Pool_RegionsTable = @{}
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "JEM"; url = "jemcash"; port = 3090; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
@@ -82,7 +85,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                 Port          = $_.port
                 User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
-                Region        = Get-Region $Pool_Region
+                Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $_.ssl
                 Updated       = $Stat.Updated
                 PoolFee       = $_.fee

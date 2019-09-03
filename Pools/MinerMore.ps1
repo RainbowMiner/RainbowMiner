@@ -33,6 +33,9 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 [hashtable]$Pool_Algorithms = @{}
 
+[hashtable]$Pool_RegionsTable = @{}
+@("us","eu","hk") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Coins = [PSCustomObject]@{
     CPU  = [PSCustomObject]@{port = 4551; fee = 0.0; rpc="cpuchain"; regions=@("us")}
     HTH  = [PSCustomObject]@{port = 4515; fee = 1.0; rpc="hth";      regions=@("us")}
@@ -95,7 +98,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Port          = $Pool_Port
                 User          = "$($Pool_User).{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
-                Region        = Get-Region $Pool_Region
+                Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee

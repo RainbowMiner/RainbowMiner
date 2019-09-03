@@ -16,6 +16,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Region_Default = @("eu")
 
+[hashtable]$Pool_RegionsTable = @{}
+@("de","ca","eu","sg","hk") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ARQ";   port = 10641; fee = 0.9; rpc = "arqma"; region = @("eu","ca","sg","hk")}
     [PSCustomObject]@{symbol = "ARQ";   port = 10641; fee = 0.9; rpc = "iridium";    symbol2 = "IRD";  units2=1e8; region = @("eu","ca","sg","hk")}
@@ -95,11 +98,11 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     }
     
     if (($ok -and ($AllowZero -or $Pool_Data.Live.hashrate -gt 0)) -or $InfoOnly) {
+        $Pool_SSL = $false
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject
-        foreach ($Pool_Region in $Pool_Regions) {
-            $Pool_SSL = $false
-            foreach ($Pool_Port in $Pool_Ports) {
-                if ($Pool_Port) {
+        foreach ($Pool_Port in $Pool_Ports) {
+            if ($Pool_Port) {
+                foreach ($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
                         CoinName      = "$($Pool_Coin.Name)$(if ($Pool_Coin2) {"+$($Pool_Coin2.Name)"})"
@@ -114,7 +117,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Ports         = $Pool_Port
                         User          = "$($Pool_Wallet.wallet)$(if ($Pool_Request.config.fixedDiffEnabled) {if ($Pool_Wallet.difficulty) {"$($Pool_Request.config.fixedDiffSeparator)$($Pool_Wallet.difficulty)"} else {"{diff:$($Pool_Request.config.fixedDiffSeparator)`$difficulty}"}})"
                         Pass          = "$(if ($Pool_Currency2) {"$(Get-WalletWithPaymentId $Wallets.$Pool_Currency2)@"}){workername:$Worker}"
-                        Region        = Get-Region $Pool_Region 
+                        Region        = $Pool_RegionsTable[$Pool_Region]
                         SSL           = $Pool_SSL
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_Fee
@@ -124,8 +127,8 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         BLK           = $Stat.BlockRate_Average
                     }
                 }
-                $Pool_SSL = $true
             }
+            $Pool_SSL = $true
         }
     }
 }

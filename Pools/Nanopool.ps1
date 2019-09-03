@@ -17,11 +17,10 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-[hashtable]$Pool_Regions = @{
-    (Get-Region "eu")   = "-eu1.nanopool.org"
-    (Get-Region "us")   = "-us-east1.nanopool.org"
-    (Get-Region "asia") = "-asia1.nanopool.org"
-}
+$Pool_Regions = @("asia","eu","jp","us-east","us-west") #au
+
+[hashtable]$Pool_RegionsTable = @{}
+$Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "ETC";  port = 19999;          fee = 1; divisor = 1e6; useemail = $false; usepid = $false}
@@ -75,7 +74,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
     }
 
     if ($ok) {
-        foreach($Pool_Region in $Pool_Regions.Keys) {
+        foreach($Pool_Region in $Pool_Regions) {
             $Pool_SSL = $false
             foreach($Pool_Port in @($_.port | Select-Object)) {
                 [PSCustomObject]@{
@@ -87,14 +86,14 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
                     Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                    Host          = "$($_.symbol.ToLower())$($Pool_Regions.$Pool_Region)"
+                    Host          = "$($_.symbol.ToLower())-$($Pool_Region)1.nanopool.org"
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                     Pass          = "x"
                     Wallet        = $Pool_Wallet.wallet
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
-                    Region        = $Pool_Region
+                    Region        = $Pool_RegionsTable[$Pool_Region]
                     SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
                     PoolFee       = $_.fee

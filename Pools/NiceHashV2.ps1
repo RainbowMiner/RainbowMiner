@@ -66,7 +66,7 @@ if ($Platform_Version -eq 2) {
 [hashtable]$Pool_Algorithms = @{}
 [hashtable]$Pool_RegionsTable = @{}
 
-$Pool_Regions = @("eu", "usa", "hk") #, "jp", "in", "br")
+$Pool_Regions = @("eu", "usa", "hk", "jp", "in", "br")
 $Pool_Regions | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pool_PoolFee = 2.0
