@@ -60,7 +60,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Wallets."$($_ -replace "
             Protocol      = "stratum+tcp"
             Host          = $Pool_Request1.host
             Port          = $Pool_Request1.port
-            User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
+            User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"."} else {"."}){workername:$Worker}"
             Pass          = "x"
             Wallet        = $Wallets.$Pool_Currency
             Worker        = "{workername:$Worker}"
