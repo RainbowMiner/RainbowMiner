@@ -825,6 +825,10 @@ function Invoke-Core {
             $SubsetType = [String]$_
             $Session.DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
             $Session.DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($Session.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
+            $Session.DevicesByTypes.FullComboModels.$SubsetType | Select-Object | Foreach-Object {
+                # always force enable full combos
+                $Session.Config.Combos.$SubsetType | Add-Member $_ $true -Force
+            }
             Get-DeviceSubSets @($Session.DevicesByTypes.$SubsetType) | Where-Object {$Session.Config.Combos.$SubsetType."$($_.Model -join '-')"} | Foreach-Object {                       
                 $SubsetModel= $_
                 $Session.DevicesByTypes.Combos.$SubsetType += @($Session.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
