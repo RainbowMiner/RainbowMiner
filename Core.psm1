@@ -628,7 +628,11 @@ function Invoke-Core {
             if (Test-Config "Combos" -Health) {
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{})  -Force
                 $AllCombos.PSObject.Properties.Name | Select-Object | Foreach-Object {
-                    $Session.Config.Combos | Add-Member $_ (Get-Yes $AllCombos.$_) -Force
+                    $SubsetType = $_
+                    $Session.Config.Combos | Add-Member $_ ([PSCustomObject]@{}) -Force
+                    $AllCombos.$SubsetType.PSObject.Properties.Name | Select-Object | Foreach-Object {
+                         $Session.Config.Combos.$SubsetType | Add-Member $_ (Get-Yes $AllCombos.$SubsetType.$_) -Force
+                    }
                     $CheckCombos = $true
                 }
             }
