@@ -404,7 +404,7 @@ function Invoke-Core {
         }
         $Session.Config.Algorithm = @($Session.Config.Algorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
         $Session.Config.ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | ForEach-Object {Get-Algorithm $_} | Where-Object {$_} | Select-Object -Unique)
-        $Session.Config.Region = $Session.Config.Region | ForEach-Object {Get-Region $_} | Select-Object -First 1
+        $Session.Config.Region = Get-Region $Session.Config.Region
         $Session.Config.DefaultPoolRegion = @($Session.Config.DefaultPoolRegion | ForEach-Object {Get-Region $_} | Where-Object {$_} | Select-Object -Unique)
         if ($WiderRegion = Get-Region2 $Session.Config.Region) {
             $Session.Config.DefaultPoolRegion = @($WiderRegion | Select-Object) + @($Session.Config.DefaultPoolRegion | Where-Object {$_ -notin $WiderRegion} | Select-Object)
