@@ -1,6 +1,6 @@
 ﻿Set-Location (Split-Path $MyInvocation.MyCommand.Path)
 
-Add-Type -Path .\OpenCL\*.cs
+Add-Type -Path .\DotNet\OpenCL\*.cs
 
 function Get-Version {
     [CmdletBinding()]
@@ -46,8 +46,15 @@ function Confirm-Version {
             }
             $RemoteVersion = ($Request.tag_name -replace '^v')
             if ($RemoteVersion) {
-                $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion).zip" | Select-Object -ExpandProperty browser_download_url
-                $Version = Get-Version($RemoteVersion)
+                if ($IsWindows) {
+                    $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion)_win.zip" | Select-Object -ExpandProperty browser_download_url
+                } elseif ($IsLinux) {
+                    $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion)_linux.zip" | Select-Object -ExpandProperty browser_download_url
+                }
+                if (-not $Uri) {
+                    $Uri = $Request.assets | Where-Object Name -EQ "$($Name)V$($RemoteVersion).zip" | Select-Object -ExpandProperty browser_download_url
+                }
+                $Version  = Get-Version($RemoteVersion)
             }
             $NextCheck = $NextCheck.AddHours(1)
         }
@@ -1746,7 +1753,7 @@ function Start-SubProcessInConsole {
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
     $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\Includes\cs\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
         param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
@@ -2542,7 +2549,7 @@ function Get-Device {
 
 function Get-CPUFeatures { 
 
-    Add-Type -Path .\Includes\cs\CPUID.cs
+    Add-Type -Path .\DotNet\Tools\CPUID.cs
 
     $features = @{}
     $info = [CpuID]::Invoke(0)
