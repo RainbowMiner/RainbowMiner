@@ -54,6 +54,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
+    [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
     [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
     [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""} #x16rt
     [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
@@ -106,7 +107,6 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
     #[PSCustomObject]@{MainAlgorithm = "x13sm3"; Params = ""} #x13sm3
     #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
-    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""} #x16r
     #[PSCustomObject]@{MainAlgorithm = "x16s"; Params = ""} #X16s
     #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #X17

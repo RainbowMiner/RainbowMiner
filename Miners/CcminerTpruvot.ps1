@@ -71,7 +71,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
     #[PSCustomObject]@{MainAlgorithm = "wildkeccak"; Params = ""} #wildkeccak
     #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = ""} #X11evo
-    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
+    [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
     #[PSCustomObject]@{MainAlgorithm = "x16r"; Params = ""} #X16r
     #[PSCustomObject]@{MainAlgorithm = "X16s"; Params = ""} #X16s
     #[PSCustomObject]@{MainAlgorithm = "x17"; Params = ""} #x17
