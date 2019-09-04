@@ -3151,6 +3151,7 @@ function Update-DeviceInformation {
                         }
                         if (-not $CpuData.Clock)       {$CpuData.Clock = $_.MaxClockSpeed}                
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = $_.LoadPercentage}
+                        if (-not $CpuData.Utilization) {$CpuData.Utilization = 100}
                         if (-not $CpuData.PowerDraw) {
                             $CpuName = $_.Name.Trim()
                             if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
@@ -4873,7 +4874,6 @@ function Set-CombosConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
 
-            $Preset = [PSCustomObject]@{}
             $Sorted = [PSCustomObject]@{}
             Foreach($SubsetType in @("AMD","NVIDIA")) {
                 if ($Preset.$SubsetType -eq $null) {$Preset | Add-Member $SubsetType ([PSCustomObject]@{}) -Force}
