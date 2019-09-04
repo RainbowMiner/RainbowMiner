@@ -825,7 +825,7 @@ function Invoke-Core {
             $SubsetType = [String]$_
             $Session.DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
             $Session.DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($Session.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
-            $Session.DevicesByTypes.FullComboModels.$SubsetType | Select-Object | Foreach-Object {
+            $Session.DevicesByTypes.FullComboModels.$SubsetType | Where-Object {$_ -match '-' -and $Session.Config.Combos.$SubsetType.$_ -ne $null} | Foreach-Object {
                 # always force enable full combos
                 $Session.Config.Combos.$SubsetType | Add-Member $_ $true -Force
             }
