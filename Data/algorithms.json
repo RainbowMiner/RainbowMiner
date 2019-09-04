@@ -15,6 +15,7 @@
     "argon2d250":  "Argon2d250",
     "argon2d4096":  "Argon2d4096",
     "argon2d500":  "Argon2d500",
+    "argon2dchukwa": "Argon2Chukwa",
     "argon2dcrds":  "Argon2d250",
     "argon2dyn":  "Argon2d500",
     "argon2dd250":  "Argon2d250",
