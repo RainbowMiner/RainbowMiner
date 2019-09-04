@@ -78,6 +78,7 @@
             Coins      = @{Path='';LastWriteTime=0;Healthy=$false}
             GpuGroups  = @{Path='';LastWriteTime=0;Healthy=$false}
             Scheduler  = @{Path='';LastWriteTime=0;Healthy=$false}
+            Combos     = @{Path='';LastWriteTime=0;Healthy=$false}
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
         [hashtable]$Session.MinerInfo = @{}
@@ -285,6 +286,9 @@ function Invoke-Core {
     #Load the config    
     $ConfigBackup = if ($Session.Config -is [object]){$Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json}else{$null}
     $CheckConfig = $true
+    $CheckPools = $false
+    $CheckGpuGroups = $false
+    $CheckCombos = $false
     
     [string[]]$Session.AvailPools = Get-ChildItem ".\Pools\*.ps1" -File | Select-Object -ExpandProperty BaseName | Where-Object {$_ -notmatch "WhatToMine"} | Sort-Object
     [string[]]$Session.AvailMiners = Get-ChildItem ".\Miners\*.ps1" -File | Select-Object -ExpandProperty BaseName | Sort-Object
@@ -313,6 +317,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
+                $Session.Config | Add-Member Combos ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Scheduler @() -Force
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
@@ -609,14 +614,29 @@ function Invoke-Core {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
                 $AllGpuGroups.PSObject.Properties.Name | Select-Object | Foreach-Object {
                     $Session.Config.GpuGroups | Add-Member $_ $AllGpuGroups.$_ -Force
+                    $CheckGpuGroups = $true
                 }
             }
             if ($AllGpuGroups) {Remove-Variable "AllGpuGroups" -Force}
         }
     }
 
+    #Check for combos config
+    if (Set-ConfigDefault "Combos") {
+        if ($CheckGpuGroups -or -not $Session.Config.Combos -or (Test-Config "Combos" -LastWriteTime) -or ($ConfigBackup.Combos -and (Compare-Object $Session.Config.Combos $ConfigBackup.Combos | Measure-Object).Count)) {
+            $AllCombos = Get-ConfigContent "Combos" -UpdateLastWriteTime
+            if (Test-Config "Combos" -Health) {
+                $Session.Config | Add-Member Combos ([PSCustomObject]@{})  -Force
+                $AllCombos.PSObject.Properties.Name | Select-Object | Foreach-Object {
+                    $Session.Config.Combos | Add-Member $_ (Get-Yes $AllCombos.$_) -Force
+                    $CheckCombos = $true
+                }
+            }
+            if ($AllCombos) {Remove-Variable "AllCombos" -Force}
+        }
+    }
+
     #Check for pool config
-    $CheckPools = $false
     if (Set-ConfigDefault "Pools") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or $CheckCoins -or -not $Session.Config.Pools -or (Test-Config "Pools" -LastWriteTime))) {
             $PoolParams = @{
@@ -769,7 +789,7 @@ function Invoke-Core {
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
 
     #load device(s) information and device combos
-    if ($CheckConfig -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
+    if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
         Write-Log "Device configuration changed. Refreshing now. "
 
         #Load information about the devices
@@ -801,7 +821,7 @@ function Invoke-Core {
             $SubsetType = [String]$_
             $Session.DevicesByTypes.Combos | Add-Member $SubsetType @() -Force
             $Session.DevicesByTypes.FullComboModels | Add-Member $SubsetType $(@($Session.DevicesByTypes.$SubsetType | Select-Object -ExpandProperty Model -Unique | Sort-Object) -join '-') -Force
-            Get-DeviceSubSets @($Session.DevicesByTypes.$SubsetType) | Foreach-Object {                       
+            Get-DeviceSubSets @($Session.DevicesByTypes.$SubsetType) | Where-Object {$Session.Config.Combos."$($_.Model -join '-')"} | Foreach-Object {                       
                 $SubsetModel= $_
                 $Session.DevicesByTypes.Combos.$SubsetType += @($Session.DevicesByTypes.$SubsetType | Where-Object {$SubsetModel.Model -icontains $_.Model} | Foreach-Object {$SubsetNew = $_.PSObject.Copy();$SubsetNew.Model = $($SubsetModel.Model -join '-');$SubsetNew.Model_Name = $($SubsetModel.Model_Name -join '+');$SubsetNew})
             }
