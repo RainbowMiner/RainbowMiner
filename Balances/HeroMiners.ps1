@@ -33,7 +33,7 @@ $Pools_Data = @(
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $Config.Pools.$Name.Wallets."$($_.symbol2)")} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_Currency2 = $_.symbol2
-    $Pool_RpcPath  = $_.rpc.ToLower()
+    $Pool_RpcPath  = $_.rpc
 
     $Pool_Request = [PSCustomObject]@{}
     $Request = [PSCustomObject]@{}
