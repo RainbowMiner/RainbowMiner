@@ -18,7 +18,7 @@ $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.1"
-$Version = "24.4"
+$Version = "25.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
