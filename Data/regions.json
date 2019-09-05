@@ -7,15 +7,17 @@
     "cn":  "Asia",
     "de":  "Europe",
     "eu":  "Europe",
-    "hk":  "Asia",
+    "hk":  "HongKong",
     "in":  "SoutheastAsia",
     "jp":  "Japan",
+    "kr":  "Korea",
     "na":  "US",
     "us":  "US",
     "ru":  "Russia",
     "sa":  "SouthAmerica",
     "sea":  "SoutheastAsia",
     "sg":  "SoutheastAsia",
+    "tw":  "Taiwan",
     "useast": "USEast",
     "uswest": "USWest"
 }
