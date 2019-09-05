@@ -17,7 +17,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Region_Default = "asia"
 
 [hashtable]$Pool_RegionsTable = @{}
-@("eu","us","asia","cn") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("eu","us","asia","cn","tw","kr","jp") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
+$Pool_RegionsTable["asia"] = Get-Region "sea"
 
 $Pool_Request = [PSCustomObject]@{}
 
@@ -32,11 +34,11 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "beam";    symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("asia","eu","us")}
-    [PSCustomObject]@{id = "";        symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn")}
-    [PSCustomObject]@{id = "etc";     symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
-    [PSCustomObject]@{id = "grin";    symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("asia","eu","us")}
-    [PSCustomObject]@{id = "grin";    symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("asia","eu","us")}
+    [PSCustomObject]@{id = "beam";    symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "";        symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","tw","kr","jp")}
+    #[PSCustomObject]@{id = "etc";     symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
+    [PSCustomObject]@{id = "grin";    symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "grin";    symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
     #[PSCustomObject]@{id = "xmr";     symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
 )
 
@@ -68,7 +70,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                Host          = "$(if ($Pool_ID) {"$($Pool_ID)-"})$($Pool_Region).sparkpool.com"
+                Host          = "$(if ($Pool_ID) {$Pool_ID})$(if ($Pool_ID -and $Pool_Region -ne "cn") {"-"})$(if ($Pool_Region -ne "cn" -or -not $Pool_ID) {$Pool_Region}).sparkpool.com"
                 Port          = $Pool_Port
                 User          = "$($Wallets.$Pool_Currency)$(if ($Pool_Currency -match "GRIN") {"/"} else {"."}){workername:$Worker}"
                 Pass          = "x"
