@@ -7,7 +7,7 @@ param(
     [String]$Wallet,
     [Parameter(Mandatory = $false)]
     [Alias("Worker")]
-    [String]$WorkerName = "rainbowminer", 
+    [String]$WorkerName = "$([System.Environment]::MachineName)",
     [Parameter(Mandatory = $false)]
     [Int]$Interval = 60, #seconds before reading hash rate from miners
     [Parameter(Mandatory = $false)]
@@ -217,7 +217,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.4.1.4"
+$Session.Version         = "4.4.1.5"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 
