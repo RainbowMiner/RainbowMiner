@@ -151,12 +151,12 @@ function Start-Setup {
                                 if ($val -is [bool])  {$val = if ($val) {"1"} else {"0"}}
                                 if (-not $ConfigActual.$ConfigSetup_Name -or $ConfigActual.$ConfigSetup_Name -eq "`$$ConfigSetup_Name") {$ConfigActual | Add-Member $ConfigSetup_Name $val -Force}
                             }
-                            Set-ContentJson -PathToFile "$($ConfigFiles["Config"].Path).test" -Data $ConfigActual > $null
+                            Set-ContentJson -PathToFile $ConfigFiles["Config"].Path -Data $ConfigActual > $null
                             if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
                                 $SetupType = "X"
                             }
                         } else {
-                            Set-ContentJson -PathToFile "$($ConfigFiles[$_.Name].Path).test" -Data $_.Value > $null
+                            Set-ContentJson -PathToFile $ConfigFiles[$_.Name].Path -Data $_.Value > $null
                             Set-Variable -Name "$($_.Name)Actual" -Value $_.Value
                         }
                     }

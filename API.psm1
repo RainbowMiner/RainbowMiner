@@ -348,7 +348,7 @@
                     Remove-Variable "PurgeStrings" -ErrorAction Ignore
                     Break
                 }
-                "/getsetup" {
+                "/setup.json" {
                     $Data = ConvertTo-Json ([PSCustomObject]@{Exclude=$API.Config.ExcludeServerConfigVars;Config=(Get-ConfigContent "config");Pools=(Get-ConfigContent "pools");Coins=(Get-ConfigContent "coins");OCProfiles=(Get-ConfigContent "ocprofiles");Scheduler=(Get-ConfigContent "scheduler")}) -Depth 10
                     $ContentType = $MIMETypes[".json"]
                     $ContentFileName = "setup.json"
