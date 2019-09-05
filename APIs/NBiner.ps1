@@ -30,11 +30,9 @@ class NBminer : Miner {
         $HashRate_Value = $Difficulty_Value = 0.0
         $Accepted_Shares = $Rejected_Shares = 0
 
-        $Data.stratum | Select-Object -Index 0 | Foreach-Object {
-            $Accepted_Shares  = [Int64]$_.accepted_shares
-            $Rejected_Shares  = [Int64]$_.rejected_shares
-            $Difficulty_Value = [Double](ConvertFrom-Hash($_.difficulty))
-        }
+        $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares
+        $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares
+        $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty))
 
         $HashRate_Value = [Double]$Data.miner.total_hashrate_raw
 
@@ -49,12 +47,10 @@ class NBminer : Miner {
                 $HashRate_Value = $Difficulty_Value = 0.0
                 $Accepted_Shares = $Rejected_Shares = 0
 
-                $HashRate_Value = [Double]$Data.miner.total_hashrate_raw2
-                $Data.stratum | Select-Object -Index 1 | Foreach-Object {
-                    $Accepted_Shares  = [Int64]$_.accepted_shares
-                    $Rejected_Shares  = [Int64]$_.rejected_shares
-                    $Difficulty_Value = [Double](ConvertFrom-Hash($_.difficulty))
-                }
+                $HashRate_Value = [Double]$Data.miner.total_hashrate2_raw
+                $Accepted_Shares  = [Int64]$Data.stratum.accepted_shares2
+                $Rejected_Shares  = [Int64]$Data.stratum.rejected_shares2
+                $Difficulty_Value = [Double](ConvertFrom-Hash($Data.stratum.difficulty2))
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
                     $HashRate   | Add-Member @{$HashRate_Name = $HashRate_Value}
