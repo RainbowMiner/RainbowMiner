@@ -151,9 +151,17 @@ function Start-Setup {
                                 if ($val -is [bool])  {$val = if ($val) {"1"} else {"0"}}
                                 if (-not $ConfigActual.$ConfigSetup_Name -or $ConfigActual.$ConfigSetup_Name -eq "`$$ConfigSetup_Name") {$ConfigActual | Add-Member $ConfigSetup_Name $val -Force}
                             }
-                            Set-ContentJson -PathToFile $ConfigFiles["Config"].Path -Data $ConfigActual > $null
-                            if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
-                                $SetupType = "X"
+                            if (-not $ConfigActual.WorkerName -or $ConfigActual.WorkerName -eq "`$WorkerName") {
+                                do {
+                                    $WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default ([System.Environment]::MachineName) -Mandatory -Characters "A-Z0-9"
+                                } until ($WorkerName)
+                            }
+                            if ($WorkerName -ne "exit") {
+                                $ConfigActual | Add-Member "WorkerName" $WorkerName -Force
+                                Set-ContentJson -PathToFile $ConfigFiles["Config"].Path -Data $ConfigActual > $null
+                                if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
+                                    $SetupType = "X"
+                                }
                             }
                         } else {
                             Set-ContentJson -PathToFile $ConfigFiles[$_.Name].Path -Data $_.Value > $null
