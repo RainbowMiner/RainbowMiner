@@ -1242,7 +1242,7 @@ function Invoke-Core {
                     Where-Object {$_.BaseName -eq $Miner.BaseName -and $_.DeviceModel -notmatch '-' -and $($Miner.Name -replace "-GPU.+$","") -eq $($_.Name -replace "-GPU.+$","") -and @($Miner.DeviceModel -split '-') -icontains $_.DeviceModel -and (Compare-Object @($ComboAlgos) @($_.HashRates.PSObject.Properties.Name) | Measure-Object).Count -eq 0} |
                     Select-Object -ExpandProperty HashRates |
                     Measure-Object -Sum @($ComboAlgos) |
-                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.01} 
+                    Foreach-Object {$Miner.HashRates."$($_.Property)" = $_.Sum * 1.02} 
                     #we exagerate a bit to prefer combos over single miners for startup. If the combo runs less good, later, it will fall back by itself
 
                 $Miner.PowerDraw = ($AllMiners | 

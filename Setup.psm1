@@ -123,7 +123,46 @@ function Start-Setup {
 
         if ($IsInitialSetup) {
             $SetupType = "A" 
+
             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+
+            if ((Test-Path ".\setup.json") -and ($SetupJson = Get-Content ".\setup.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore)) {
+                Write-Host "The following data has been found in .\setup.json:" -ForegroundColor Yellow
+                Write-Host " "
+                $p = [console]::ForegroundColor
+                [console]::ForegroundColor = "Cyan"
+                $SetupJsonFields = @($SetupJson.PSObject.Properties.Name | Where-Object {$ConfigFiles[$_].Path} | Sort-Object)
+                $SetupJsonFields | Foreach-Object {$_}
+                [console]::ForegroundColor = $p
+                Write-Host " "
+
+                $DoSetupJson = Read-HostArray "Choose, which parts to import (enter `"All`" for complete, or leave empty to start normal setup) " -Valid (@("All")+$SetupJsonFields) -Characters "A-Z"
+                if (($DoSetupJson | Measure-Object).Count) {
+                    $SetupJson.PSObject.Properties | Where-Object {$ConfigFiles[$_.Name].Path} | Where-Object {$DoSetupJson -icontains $_.Name -or $DoSetupJson -icontains "All"} | Foreach-Object {
+                        if ($_.Name -eq "Config") {
+                            if (-not $ConfigActual -or $ConfigActual -is [string]) {$ConfigActual = [PSCustomObject]@{}}
+                            $_.Value.PSObject.Properties | Where-Object {$SetupJson.Exclude -inotcontains $_.Name} | Foreach-Object {
+                                $ConfigActual | Add-Member $_.Name $_.Value -Force
+                            }
+                            $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
+                                $ConfigSetup_Name = $_.Name
+                                $val = $_.Value
+                                if ($val -is [array]) {$val = $val -join ','}
+                                if ($val -is [bool])  {$val = if ($val) {"1"} else {"0"}}
+                                if (-not $ConfigActual.$ConfigSetup_Name -or $ConfigActual.$ConfigSetup_Name -eq "`$$ConfigSetup_Name") {$ConfigActual | Add-Member $ConfigSetup_Name $val -Force}
+                            }
+                            Set-ContentJson -PathToFile "$($ConfigFiles["Config"].Path).test" -Data $ConfigActual > $null
+                            if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
+                                $SetupType = "X"
+                            }
+                        } else {
+                            Set-ContentJson -PathToFile "$($ConfigFiles[$_.Name].Path).test" -Data $_.Value > $null
+                            Set-Variable -Name "$($_.Name)Actual" -Value $_.Value
+                        }
+                    }
+                }
+            }
+
             $ConfigSetup.PSObject.Properties | Where-Object Membertype -eq NoteProperty | Select-Object Name,Value | Foreach-Object {
                 $ConfigSetup_Name = $_.Name
                 $val = $_.Value
@@ -133,7 +172,6 @@ function Start-Setup {
             if (($Session.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
                 $Config | Add-Member DisableMSIAmonitor $true -Force
             }
-
         } else {
             Write-Host "Please choose, what to configure:" -ForegroundColor Yellow
             Write-Host " "
