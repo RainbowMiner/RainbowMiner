@@ -549,7 +549,7 @@ With the help of [C]onfiguration->[D]evices it is very easy to choose a default 
 
 The assignment is done, using either [C]onfiguration->[M]iners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
 
-## AUTOSTART / CREATE A SETUP FOR NEW RIGS
+## COPY CURRENT CONFIGURATION TO NEW RIGS
 
 RainbowMiner comes with an easy setup configuration.
 
