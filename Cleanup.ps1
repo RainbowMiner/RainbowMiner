@@ -634,6 +634,8 @@ try {
         }
     }
 
+    $MinersContent = Get-MinersContent -InfoOnly
+
     if ($RemoveMinerStats.Count -gt 0) {
         $RemoveMinerStats | Foreach-Object {
             Get-ChildItem ".\Stats\Miners" -Filter $_ -File | Foreach-Object {$ChangesTotal++;Remove-Item $_.FullName -Force -ErrorAction Ignore}
@@ -641,17 +643,23 @@ try {
     }
 
     if ($MinersConfigCleanup) {
+        $MinersContentBaseNames = @($MinersContent | Where-Object {$_.BaseName} | Select-Object -ExpandProperty BaseName)
+        $AllDevicesModels = @(Get-DeviceSubsets $AllDevices | Select-Object -ExpandProperty Model -Unique)
         $MinersSave = [PSCustomObject]@{}
         $MinersActual = Get-Content "$MinersConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $MinersActual.PSObject.Properties | Where-Object {$_.MemberType -eq "NoteProperty"} | Foreach-Object {
-            $MinerSaveArray = [PSCustomObject[]]@()
-            @($_.Value) | Foreach-Object {
-                if ($(foreach($q in $_.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($_.$q -isnot [string] -or $_.$q.Trim() -ne "")) {$true;break}})) {
-                    $MinerSaveArray += $_
+            $BaseName = $_.Name -replace "-.+$"
+            $Models = $_.Name -replace "^.+-" -split '-'
+            if ($MinersContentBaseNames -icontains $BaseName -and ($BaseName -eq $Models -or -not (Compare-Object $AllDevicesModels $Models | Where-Object SideIndicator -eq "=>" | Measure-Object).Count)) {
+                $MinerSaveArray = [PSCustomObject[]]@()
+                @($_.Value) | Foreach-Object {
+                    if ($(foreach($q in $_.PSObject.Properties.Name) {if ($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and ($_.$q -isnot [string] -or $_.$q.Trim() -ne "")) {$true;break}})) {
+                        $MinerSaveArray += $_
+                    }
                 }
-            }
-            if ($MinerSaveArray.Count) {
-                $MinersSave | Add-Member $_.Name $MinerSaveArray
+                if ($MinerSaveArray.Count) {
+                    $MinersSave | Add-Member $_.Name $MinerSaveArray
+                }
             }
         }
         $MinersActualSave = [PSCustomObject]@{}
@@ -666,7 +674,7 @@ try {
 
     if ($DownloadsCleanup) {
         if (Test-Path "Downloads"){
-            $AllMinersArchives = Get-MinersContent -InfoOnly | Where-Object {$_.Uri} | Foreach-Object {Split-Path $_.Uri -Leaf} | Sort-Object
+            $AllMinersArchives = $MinersContent | Where-Object {$_.Uri} | Foreach-Object {Split-Path $_.Uri -Leaf} | Sort-Object
             Get-ChildItem -Path "Downloads" -Filter "*" -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5) -and $AllMinersArchives -notcontains $_.Name} | Foreach-Object {
                 Remove-Item $_.FullName -Force -ErrorAction Ignore
                 $ChangesTotal++
