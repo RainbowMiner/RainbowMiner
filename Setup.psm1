@@ -121,12 +121,15 @@ function Start-Setup {
 
         $IsInitialSetup = -not $Config.Wallet -or -not $Config.WorkerName
 
+        $DefaultWorkerName = $Session.MachineName -replace "[^A-Z0-9]+"
+
         if ($IsInitialSetup) {
             $SetupType = "A" 
 
             $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
 
             if ((Test-Path ".\setup.json") -and ($SetupJson = Get-Content ".\setup.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore)) {
+
                 Write-Host "The following data has been found in .\setup.json:" -ForegroundColor Yellow
                 Write-Host " "
                 $p = [console]::ForegroundColor
@@ -136,9 +139,29 @@ function Start-Setup {
                 [console]::ForegroundColor = $p
                 Write-Host " "
 
-                $DoSetupJson = Read-HostArray "Choose, which parts to import (enter `"All`" for complete, or leave empty to start normal setup) " -Valid (@("All")+$SetupJsonFields) -Characters "A-Z"
-                if (($DoSetupJson | Measure-Object).Count) {
-                    $SetupJson.PSObject.Properties | Where-Object {$ConfigFiles[$_.Name].Path} | Where-Object {$DoSetupJson -icontains $_.Name -or $DoSetupJson -icontains "All"} | Foreach-Object {
+                $DoSetupConfigs = @()
+
+                if (Get-Yes $SetupJson.Autostart.Enable) {
+                    if (-not $ConfigActual -or $ConfigActual -is [string]) {$ConfigActual = [PSCustomObject]@{}}
+                    $DoSetupConfigs = if ($SetupJson.Autostart.ConfigName) {@(Get-ConfigArray $SetupJson.Autostart.ConfigName -Characters "A-Z")} else {@("All")}
+                    $DoSetupDevices = if ($SetupJson.Autostart.DeviceName) {@(Get-ConfigArray $SetupJson.Autostart.DeviceName)} else {@()}
+                    $ConfigActual | Add-Member WorkerName "$(if ($SetupJson.Autostart.WorkerName) {$SetupJson.Autostart.WorkerName} else {$DefaultWorkerName})" -Force
+                    $ConfigActual | Add-Member DeviceName "$($DoSetupDevices -join ",")" -Force
+                    Write-Host
+                    Write-Host "Autostarting with the following values" -BackgroundColor Yellow -ForegroundColor Black
+                    Write-Host " "
+                    Write-Host "WorkerName = $($ConfigActual.WorkerName)" -ForegroundColor Yellow
+                    Write-Host "DeviceName = $($ConfigActual.DeviceName)" -ForegroundColor Yellow
+                    Write-Host "ConfigName = $($DoSetupConfigs -join ",")" -ForegroundColor Yellow
+                    Write-Host " "
+                }
+
+                if (-not ($DoSetupConfigs | Measure-Object).Count) {
+                    $DoSetupConfigs = Read-HostArray "Choose, which parts to import (enter `"All`" for complete, or leave empty to start normal setup) " -Valid (@("All")+$SetupJsonFields) -Characters "A-Z"
+                }
+
+                if (($DoSetupConfigs | Measure-Object).Count) {
+                    $SetupJson.PSObject.Properties | Where-Object {$ConfigFiles[$_.Name].Path} | Where-Object {$DoSetupConfigs -icontains $_.Name -or $DoSetupConfigs -icontains "All"} | Foreach-Object {
                         if ($_.Name -eq "Config") {
                             if (-not $ConfigActual -or $ConfigActual -is [string]) {$ConfigActual = [PSCustomObject]@{}}
                             $_.Value.PSObject.Properties | Where-Object {$SetupJson.Exclude -inotcontains $_.Name} | Foreach-Object {
@@ -151,13 +174,14 @@ function Start-Setup {
                                 if ($val -is [bool])  {$val = if ($val) {"1"} else {"0"}}
                                 if (-not $ConfigActual.$ConfigSetup_Name -or $ConfigActual.$ConfigSetup_Name -eq "`$$ConfigSetup_Name") {$ConfigActual | Add-Member $ConfigSetup_Name $val -Force}
                             }
-                            if (-not $ConfigActual.WorkerName -or $ConfigActual.WorkerName -eq "`$WorkerName") {
+                            $WorkerName = $ConfigActual.WorkerName
+                            if (-not $WorkerName -or $WorkerName -eq "`$WorkerName") {
                                 do {
-                                    $WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default ([System.Environment]::MachineName) -Mandatory -Characters "A-Z0-9"
+                                    $WorkerName = Read-HostString -Prompt "Enter your worker's name" -Default $DefaultWorkerName -Mandatory -Characters "A-Z0-9"
                                 } until ($WorkerName)
                             }
                             if ($WorkerName -ne "exit") {
-                                $ConfigActual | Add-Member "WorkerName" $WorkerName -Force
+                                $ConfigActual | Add-Member WorkerName $WorkerName -Force
                                 Set-ContentJson -PathToFile $ConfigFiles["Config"].Path -Data $ConfigActual > $null
                                 if ($ConfigActual.Wallet -and $ConfigActual.WorkerName -and $ConfigActual.Wallet -ne "`$Wallet" -and $ConfigActual.WorkerName -ne "`$WorkerName") {
                                     $SetupType = "X"

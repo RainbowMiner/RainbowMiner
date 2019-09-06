@@ -5190,9 +5190,15 @@ function Get-ConfigArray {
         [Parameter(Mandatory = $True)]
         $Config,
         [Parameter(Mandatory = $False)]
-        $Split = ",;"
+        $Split = ",;",
+        [Parameter(Mandatory = $False)]
+        $Characters = ""
     )
-    if ($Config -isnot [array]) {if ($Config -ne ''){[regex]::split($Config.Trim(),"\s*[$($Split)]+\s*")}else{@()}} else {$Config}
+    if ($Config -isnot [array]) {
+        $Config = "$Config".Trim()
+        if ($Characters -ne "") {$Config = $Config -replace "[^$Characters$Split]+"}
+        @($Config -split "\s*[$Split]+\s*" | Where-Object {$_} | Select-Object)
+    } else {$Config}
 }
 
 function Get-ConfigPath {
