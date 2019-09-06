@@ -10,15 +10,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ninjarig/ninjarig-v1.0.1-linux.7z"
+    $Version = "1.0.1"
 } else {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ninjarig/ninjarig-v1.0.1-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ninjarig/ninjarig-v1.0.2-win64.7z"
+    $Version = "1.0.2"
 }
 $ManualUri = "https://github.com/turtlecoin/ninjarig/releases"
 $Port = "348{0:d2}"
 $DevFee = 1.0
 $Cuda = "10.1"
-$Version = "1.0.1"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
