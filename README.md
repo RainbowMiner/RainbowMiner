@@ -1368,7 +1368,7 @@ If you want to include [MiningRigRentals](https://www.miningrigrentals.com?ref=2
 ### How can I quickly copy my current configuration to a new rig?
 
 RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
-More info can be found here.
+More info can be [found here](https://github.com/RainbowMiner/RainbowMiner#copy-current-configuration-to-new-rigs).
 
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
