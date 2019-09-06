@@ -559,7 +559,7 @@ Open http://localhost:4000 on your current rig and click "Get setup.json" (or di
 
 ### 2. install RainbowMiner
 
-Extract a current RainbowMiner zip onto your new mining rig and copy the setup.json into the RainbowMiner folder. Run install.bat/install.sh to get missing system libraries, then run Start.bar/start.sh.
+Extract a current RainbowMiner zip onto your new mining rig and copy the setup.json into the RainbowMiner folder. Run install.bat/install.sh to get missing system libraries, then run Start.bat/start.sh.
 
 Now RainbowMiner will ask, if it should import the data from the setup.json. That's it!
 
