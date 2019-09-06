@@ -146,11 +146,21 @@ foreach ($Worker1 in $Workers) {
                 $Miner_Server = $Pool_Rig.server
                 $Miner_Port   = $Pool_Rig.port
                 
+                #BEGIN temporary fixes
+
+                #
+                # hardcoded fixes due to MRR stratum or API failures
+                #
+
                 if (($Pool_Algorithm_Norm -eq "X25x" -or $Pool_Algorithm_Norm -eq "MTP") -and $Miner_Server -match "^eu-01") {
                     $Miner_Server = $Pool_Failover | Select-Object -First 1
                     $Miner_Port   = 3333
                     $Pool_Failover = $Pool_Failover | Select-Object -Skip 1
                 }
+
+                if ($Pool_Algorithm_Norm -eq "Cuckaroo29") {$Miner_Port = 3322}
+
+                #END temporary fixes
             
                 [PSCustomObject]@{
                     Algorithm     = "$Pool_Algorithm_Norm$(if ($Worker1 -ne $Worker) {"-$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"})"
