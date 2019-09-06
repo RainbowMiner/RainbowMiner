@@ -39,6 +39,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 - **Very low CPU usage to increase CPU mining profit**
 - **Pause mining without exiting the RainbowMiner**
 - **Full automatic update**
+- **Easy replication and setup configuration**
 - **Live monitoring web-interface at [localhost:4000](http://localhost:4000)**
 - **Central monitoring of all your rigs at [https://rbminer.net](https://rbminer.net)**
 - **Offline notifications via email and/or https://pushover.net**
@@ -547,6 +548,40 @@ With the help of [C]onfiguration->[D]evices it is very easy to choose a default 
 ### 3. assign profiles to miner-device-algorithms
 
 The assignment is done, using either [C]onfiguration->[M]iners or directly edited into the miners.config.txt file. Find your miner, the device it will use, plus the algorithm and put the profile's name into the field "**OCprofile**" 
+
+## AUTOSTART / CREATE A SETUP FOR NEW RIGS
+
+RainbowMiner comes with an easy setup configuration.
+
+### 1. get a setup.json 
+
+Open http://localhost:4000 on your current rig and click "Get setup.json" (or directly enter http://localhost:4000/setup.json into your internet browser) and you will get a setup.json file, containing your current rig's configuration files.
+
+### 2. install RainbowMiner
+
+Extract a current RainbowMiner zip onto your new mining rig and copy the setup.json into the RainbowMiner folder. Run install.bat/install.sh to get missing system libraries, then run Start.bar/start.sh.
+
+Now RainbowMiner will ask, if it should import the data from the setup.json. That's it!
+
+### Hint: the setup.json contains an autostart section.
+
+Change this to control the setup behavior.
+
+```
+  "Autostart": {
+    "Enable": "0",
+    "ConfigName": "All",
+    "DeviceName": "GPU",
+    "WorkerName": ""
+  },
+```
+
+**Settings of the `"Autostart"` section explained:**
+
+- `"Enable"` setting this to "1" will force RainbowMiner to skip the import questionaire during start. It will import all data and begin mining at once.
+- `"ConfigName"` define which of the config file's should be imported. A well approved combination would be `"Config,Coins,Pools"`. `"All"` will import all possible modules.
+- `"DeviceName"` define which devices RainbowMiner should use. Possible values are CPU, GPU, NVIDIA, AMD (and even GPU#00, GPU#01, ..). Leave empty to start without devices.
+- `"WorkerName"` define the workername of the new rig. If left empty, the rig's machinename will be used as workername, automatically.
 
 
 ## ADVANCED CONFIGURATION
@@ -1329,6 +1364,11 @@ Tab "Actions":
 All rigs will be automatically set to status "online", at [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) and rest idle within RainbowMiner. If someone starts a rental, RainbowMiner will detect this and run the respective miner exclusively, until the rental ends. All other rigs on [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) will be deactivated, for that time.
 
 If you want to include [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) into RainbowMiner's profitability checks and switching operation, so that it behaves just like a normal pool, set "EnableMining" to "1". Only do this, if [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069) is your only pool, because the mining prices (these are the prices setup at [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069)), will not reflect the real market prices.
+
+### How can I quickly copy my current configuration to a new rig?
+
+RainbowMiner comes with easy setup configuration. Download a setup.json at http://localhost:4000/setup.json from your current rig, copy it into the new rig's RainbowMiner folder *before first start* (you may easily reset RainbowMiner by simply deleting the complete `".\Config"` folder). Now answer two inputs and off you go.
+More info can be found here.
 
 
 ### How can I make sure, my hand tuned config files in the Bin folders, will not be deleted during miner updates?
