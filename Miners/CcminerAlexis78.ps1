@@ -35,7 +35,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
     #[PSCustomObject]@{MainAlgorithm = "x11evo"; Params = "-N 1"} #X11evo
     [PSCustomObject]@{MainAlgorithm = "x15"; Params = "-N 1"} #x15
-    [PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 v1.2 faster
+    #[PSCustomObject]@{MainAlgorithm = "x17"; Params = "-N 1"} #X17 (CcminerSupr #13 faster)
 
     # ASIC - never profitable 20/04/2018
     #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
