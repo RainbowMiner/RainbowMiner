@@ -21,10 +21,12 @@ if ($IsLinux) {
     Start-Process ".\IncludesLinux\bash\libc.sh" -Wait
     Write-Host "Install libuv .."
     Start-Process ".\IncludesLinux\bash\libuv.sh" -Wait
-    Write-Host "Install libcurl3 .."
-    Start-Process ".\IncludesLinux\bash\libcurl3.sh" -Wait
+    Write-Host "Install libcurl4 .."
+    Start-Process ".\IncludesLinux\bash\libcurl4.sh" -Wait
     Write-Host "Install libopencl .."
     Start-Process ".\IncludesLinux\bash\libocl.sh" -Wait
+    Write-Host "Install libjansson-dev .."
+    Start-Process ".\IncludesLinux\bash\libjansson.sh" -Wait
     Write-Host "Install p7zip .."
     Start-Process ".\IncludesLinux\bash\p7zip.sh" -Wait
 
