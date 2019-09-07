@@ -32,6 +32,10 @@ if ! [ -x "$(command -v wolfamdctrl)" ]; then
 sudo ln -nfs /opt/rainbowminer/bin/wolfamdctrl /usr/bin/wolfamdctrl
 fi
 
+if ! [ -x "$(command -v rbmtail)" ]; then
+sudo ln -nfs /opt/rainbowminer/bin/rbmtail /usr/bin/rbmtail
+fi
+
 sudo pwsh -ExecutionPolicy bypass -Command ${command}
 exitcode=$?
 sudo chmod 777 -R $HOME/.local/share/powershell
