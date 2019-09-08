@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\CPU-OptBF\cpuminer$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'-avx2-sha'}elseif($f.avx2 -and $f.aes){'-avx2'}elseif($f.avx -and $f.aes){'-aes-avx'}elseif($f.sse42 -and $f.aes){'-aes-sse42'}elseif($f.sse2){'-sse2'}))"
+    $Path = ".\Bin\CPU-OptBF\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'aes-avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'}))"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.12-cpumineropt/cpuminer-opt-v3.8.12-bf-linux.7z"
 } else {
     $Path = ".\Bin\CPU-OptBF\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
