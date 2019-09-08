@@ -34,21 +34,23 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 [hashtable]$Pool_Algorithms = @{}
 
 [hashtable]$Pool_RegionsTable = @{}
-@("us","eu","hk") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+@("us","eu","hk","east.us","west.us","ca") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $(if ($_ -match '^(.+)\.(.+)$') {"$($Matches[2])$($Matches[1])"} else {$_})}
 
 $Pool_Coins = [PSCustomObject]@{
-    CPU  = [PSCustomObject]@{port = 4551; fee = 0.0; rpc="cpuchain"; regions=@("us")}
     HTH  = [PSCustomObject]@{port = 4515; fee = 1.0; rpc="hth";      regions=@("us")}
     MYNT = [PSCustomObject]@{port = 4548; fee = 1.0; rpc="mynt";     regions=@("us")}
     PGN  = [PSCustomObject]@{port = 4517; fee = 1.0; rpc="pgn";      regions=@("us")}
-    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk")}
     RITO = [PSCustomObject]@{port = 4545; fee = 1.0; rpc="rito";     regions=@("us","eu")}
+    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk","east.us","west.us","ca")}
+    RVNt = [PSCustomObject]@{port = 4505; fee = 1.0; rpc="rvnt";     regions=@("us")}
     SAFE = [PSCustomObject]@{port = 4503; fee = 1.0; rpc="safe";     regions=@("us")}
+    STONE= [PSCustomObject]@{port = 4518; fee = 1.0; rpc="pool";     regions=@("us")}
     VDL  = [PSCustomObject]@{port = 4547; fee = 1.0; rpc="vdl";      regions=@("us")}
+    XMG  = [PSCustomObject]@{port = 4537; fee = 1.0; rpc="xmg";      regions=@("us")}
+    XRD  = [PSCustomObject]@{port = 4552; fee = 1.0; rpc="xrd";      regions=@("us")}
     XSG  = [PSCustomObject]@{port = 4508; fee = 1.0; rpc="xsg";      regions=@("us")}
     YEC  = [PSCustomObject]@{port = 4550; fee = 1.0; rpc="yec";      regions=@("us")}
     YTN  = [PSCustomObject]@{port = 4543; fee = 1.0; rpc="ytn";      regions=@("us")}
-    XMG  = [PSCustomObject]@{port = 4537; fee = 1.0; rpc="xmg";      regions=@("us")}
 }
 
 $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
