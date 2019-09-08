@@ -577,6 +577,7 @@ try {
     }
 
     if ($Version -le (Get-Version "4.4.1.7")) {
+        $AddAlgorithm += @("X16rv2")
         $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         if ($AlgorithmsActual.X16rv2 -ne $null -and $AlgorithmsActual.X16rv2.OCProfile -eq "") {
             $AlgorithmsActual.X16rv2 | Add-Member MSIAprofile 4 -Force
