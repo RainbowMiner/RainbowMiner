@@ -576,6 +576,15 @@ try {
         $AddAlgorithm += @("CryptoNightLiteUpx2","DefyX")
     }
 
+    if ($Version -le (Get-Version "4.4.1.7")) {
+        $AlgorithmsActual = Get-Content "$AlgorithmsConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        if ($AlgorithmsActual.X16rv2 -ne $null -and $AlgorithmsActual.X16rv2.OCProfile -eq "") {
+            $AlgorithmsActual.X16rv2 | Add-Member MSIAprofile 4 -Force
+            $AlgorithmsActual.X16rv2 | Add-Member OCProfile "Profile4" -Force
+            Set-ContentJson -PathToFile $AlgorithmsConfigFile -Data $AlgorithmsActual > $null
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
