@@ -212,6 +212,21 @@
             Write-Log -Level Warn "Cleanup failed: $($_.Exception.Message)"
         }
 
+        try {
+            #if linux and running as root re-install libraries and binaries
+            if ($IsLinux -and (Test-Path ".\IncludesLinux\linux.updated") -and (Test-Path ".\install.sh")) {
+                if (Test-IsElevated) {
+                    Write-Host "Re-installing libraries and binaries .."
+                    bash -c "./install.sh"
+                } else {
+                    Write-Log -Level Warn "RainbowMiner has updated some linux libraries/binaries. Please run ./install.sh as soon as possible!"
+                }
+            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Re-install failed: $($_.Exception.Message)"
+        }
+
         #Remove stuck update
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
 

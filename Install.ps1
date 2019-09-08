@@ -122,8 +122,8 @@ if ($IsWindows -and $GNVIDIA) {
 
 Write-Host " "
 
-#if (Read-HostBool "Start RainbowMiner ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"})) now?") {
-#    Exit 10
-#} else {
-    Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
-#}
+Write-Host "Done! You are now ready to run Rainbowminer ($(if ($IsWindows) {"run Start.bat"} else {"run start.sh"}))" -ForegroundColor Green
+
+if (Test-Path ".\IncludesLinux\linux.updated") {
+    Get-ChildItem ".\IncludesLinux\linux.updated" -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+}
