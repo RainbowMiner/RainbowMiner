@@ -9,12 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.1-ninjarig/ninjarig-v1.0.1-linux-fix.7z"
-    $Version = "1.0.1"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.3-ninjarig/ninjarig-v1.0.3-linux.7z"
+    $Version = "1.0.3"
 } else {
     $Path = ".\Bin\ANY-NinjaRig\ninjarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.2-ninjarig/ninjarig-v1.0.2-win64.7z"
-    $Version = "1.0.2"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.0.3-ninjarig/ninjarig-v1.0.3-win64.7z"
+    $Version = "1.0.3"
 }
 $ManualUri = "https://github.com/turtlecoin/ninjarig/releases"
 $Port = "348{0:d2}"
