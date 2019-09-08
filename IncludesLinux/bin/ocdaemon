@@ -4,8 +4,8 @@
 #
 ### BEGIN INIT INFO
 # Provides:          ocdaemon
-# Required-Start:    
-# Required-Stop:     
+# Required-Start:    $local_fs $remote_fs $syslog
+# Required-Stop:     $local_fs $remote_fs $syslog
 # X-Start-Before:    
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
@@ -13,14 +13,15 @@
 # Description:       Rainbowminer daemon to provide root overclocking
 ### END INIT INFO
 
-#set -e
-. /lib/lsb/init-functions
-
-VER="1.0.0"
+VER="1.0.1"
 
 OCDDATA=/opt/rainbowminer/ocdcmd
 OCDBIN=/usr/bin/ocdaemon
 OCDPID=/var/run/ocdaemon.pid
+OCDLOGFILE=/var/log/ocdaemon.log
+OCDERRORLOGFILE=/var/log/ocdaemon_error.log
+
+test -x "$OCDBIN" || exit 1
 
 do_wrpid() {
   if [ ! -f "$OCDPID" ]; then
@@ -35,9 +36,24 @@ do_rmpid() {
   fi
 }
 
+do_log_start() {
+  local now=$(date +"%Y-%m-%d %T")
+  echo -n "[$now] $1"
+}
+
+do_log_end() {
+  echo "$1"
+}
+
+do_log() {
+  do_log_start "$1"
+  do_log_end
+}
+
 do_status() {
-  if [ -f "$OCDPID" ]; then
+  if [ -s "$OCDPID" ]; then
     local pid="$(<$OCDPID)"
+
     if [ "$(ps -p $pid -o command=)" ]; then
       echo "running"
     else
@@ -66,31 +82,40 @@ do_stop() {
     COUNT=0
     while [ $COUNT -le 10 ]; do
       if [ "$(do_status)" != "running" ]; then
+        echo "stopped"
         exit
       fi
       (( COUNT++ ))
       sleep 0.5
     done
+
+    local pid="$(<$OCDPID)"
+    if [ "$(ps -p $pid -o command=)" ]; then
+      kill -9 $pid
+    fi
+    do_rmpid
+    echo "killed"
+    exit
   fi
 
   if [ `id -u` == 0 ]; then
-    for i in `ps aux | grep "$OCDBIN run" | awk '{print $2}' | uniq`; do kill -9 $i; done
+    for i in `ps aux | grep "$OCDBIN run" | grep "run1" | awk '{print $2}' | uniq`; do kill -9 $i; done
   fi
-
-  do_rmpid
 
   echo "not running"
 }
 
 do_run() {
   if [ `id -u` != 0 ]; then
-    echo "ERROR: Daemon needs to be run as root/sudo"
+    do_log "ERROR: Daemon needs to be run as root/sudo" >&2
     exit
   fi
   if [ "$(do_status)" == "running" ]; then
-    echo "ERROR: Another daemon seems to be running!"
+    do_log "ERROR: Another daemon seems to be running!" >&2
     exit
   fi
+
+  do_log "ocdaemon started"
 
   # Check for data directory
   if [ ! -d "$OCDDATA" ]; then
@@ -100,9 +125,9 @@ do_run() {
 
   do_cleanup
 
-  # Run the loop 
-  while [ ! -f "$OCDDATA/stop" ]; do 
-    for entry in "$OCDDATA"/*.sh 
+  # Run the loop
+  while [ ! -f "$OCDDATA/stop" ]; do
+    for entry in "$OCDDATA"/*.sh
     do
       do_wrpid
       if [ -f "$entry" ]; then
@@ -132,8 +157,8 @@ do_run() {
     done
     sleep 1
   done
+  do_log "ocdaemon stopped"
   do_rmpid
-  echo "stopped"
 }
 
 do_start() {
@@ -147,9 +172,9 @@ do_start() {
 
   if [ `id -u` != 0 ]; then
     echo -n " sudo "
-    sudo bash -c "$OCDBIN run &"
+    sudo bash -c "$OCDBIN run1"
   else
-    "$OCDBIN" run &
+    "$OCDBIN" run1
   fi
 
   COUNT=0
@@ -167,23 +192,38 @@ do_start() {
 
 case "${1}" in
     start)
-		do_start
+                do_start
         ;;
     stop)
-		do_stop
+                do_stop
         ;;
     status)
-		do_status
+                do_status
+        ;;
+    run1)
+                tty=$(tty)
+                setsid "$OCDBIN" run2 "$tty" "$@" &
+        ;;
+    run2)
+                shift; tty="$1"; shift
+                umask 0
+                "$OCDBIN" run "$tty" "$@" </dev/null >/dev/null 2>/dev/null &
         ;;
     run)
+                exec >"$OCDLOGFILE"
+                exec 2>"$OCDERRORLOGFILE"
+                exec 0</dev/null
+                shift; tty="$1"; shift
                 do_run
         ;;
     restart|reload|force-reload)
-		do_stop
-		do_start
+                do_stop
+                do_start
         ;;
     *)
-        echo "Usage: ${0} {start|stop|status|restart|reload|force-reload|run}" >&2
-		exit 1
+        echo "Usage: ${0} {start|stop|status|restart|reload|force-reload}" >&2
+                exit 1
         ;;
 esac
+
+exit 0
