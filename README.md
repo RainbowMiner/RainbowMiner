@@ -156,14 +156,35 @@ apt install -f
 
 #### 3. Start it (if not yet running)
 
-On Windows:
+##### On Windows:
+
 - open RainbowMiner folder with Explorer
 - right-click "Start.bat" and choose "Run as administrator"
 
-On Linux:
+##### On Linux:
+
 ```
 ./start.sh
 ```
+
+Alternative 1: start as Linux `screen`:
+
+```
+./start-screen.sh
+```
+
+- press `Ctrl+A`, then `d` to detach from screen (imagine you want to disconnect your ssh session)
+- enter `screen -r` to reconnect to screen
+
+Alternative 2: Start hidden, in background:
+
+```
+./start-nohup.sh
+```
+
+- to stop, run `./stopp.sh`
+
+
 
 #### 4. Enter basic information
 
@@ -228,15 +249,18 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 |Windows|Linux|Description|
 |---|---|---|
 |`Start.bat`|`./start.sh`|start RainbowMiner|
+|-|`./start-screen.sh`|start as Linux `screen`, `Ctrl+A` then `d` to detach, `screen -r` to reconnect|
+|-|`./start-nohup.sh`|start as background job, run `./stopp.sh` to stop rainbowminer|
 |`Setup.bat`|`./setup.sh`|start RainbowMiner configuration|
-|`Install.bat`|`sudo ./install.sh`|install pre-requisites|
+|`Install.bat`|`./install.sh`|install pre-requisites|
 |`InitServer.bat`|`sudo ./initserver.sh`|make this rig a server|
 |`InitClient.bat`|`sudo ./initclient.sh`|make this rig a client|
 |`InitStandalone.bat`|`sudo ./initstandalone.sh`|make this rig a standalone machine|
 |`GPUtest.bat`|`sudo ./gputest.sh`|create gputestresults.txt with tech details|
 |`Updater.bat`|`./updater.sh`|manually update to newest release of RainbowMiner. Make sure, you stop RainbowMiner before running this helper|
 |`ListDevices.bat`|-|list all available devices|
-|`MinerLog.bat`|-|opens window to show the output of the miners|
+|`MinerLog.bat`|`./minerlog.sh`|follow the output of the miners|
+|-|`./rbmlog.sh`|follow the RainbowMiner log (useful if RainbowMiner is running as background job)|
 |`RemoveLogs.bat`|-|delete all log files to save some disk space|
 |`RemovePresets.bat`|-|block presets from being written to miners.config.txt (see section MINERS)|
 |`ResetBenchmark.bat`|-|reset all benchmarks|
@@ -245,7 +269,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 |`ResetBenchmarkNVIDIA.bat`|-|reset all NVIDIA benchmarks|
 |`ResetProfit.bat`|-|reset RainbowMiner's profit calculation|
 |`TouchBenchmark.bat`|-|avoid benchmark of new miners, will set the timestamp of all miner stat files to now|
-|`Stopp.bat`|-|halt RainbowMiner at once|
+|`Stopp.bat`|`./stopp.sh`|halt RainbowMiner at once|
   	
 
 ## WEB-INTERFACE
