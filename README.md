@@ -167,7 +167,7 @@ apt install -f
 ./start.sh
 ```
 
-Alternative 1: start as Linux `screen`:
+Alternative: start as Linux `screen`:
 
 ```
 ./start-screen.sh
@@ -175,15 +175,6 @@ Alternative 1: start as Linux `screen`:
 
 - press `Ctrl+A`, then `d` to detach from screen (imagine you want to disconnect your ssh session)
 - enter `screen -r` to reconnect to screen
-
-Alternative 2: Start hidden, in background:
-
-```
-./start-nohup.sh
-```
-
-- to stop, run `./stopp.sh`
-
 
 
 #### 4. Enter basic information
@@ -250,7 +241,7 @@ You can press the follwing keys, while RainbowMiner is waiting for the next run.
 |---|---|---|
 |`Start.bat`|`./start.sh`|start RainbowMiner|
 |-|`./start-screen.sh`|start as Linux `screen`, `Ctrl+A` then `d` to detach, `screen -r` to reconnect|
-|-|`./start-nohup.sh`|start as background job, run `./stopp.sh` to stop rainbowminer|
+|-|`./start-nohup.sh`|start as background job, run `./stopp.sh` to stop rainbowminer, run `./rbmlog.sh` to follow the Rainbowminer logfile, run `./minerlog.sh` to follow the miner log files|
 |`Setup.bat`|`./setup.sh`|start RainbowMiner configuration|
 |`Install.bat`|`./install.sh`|install pre-requisites|
 |`InitServer.bat`|`sudo ./initserver.sh`|make this rig a server|
