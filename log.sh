@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 
-echo "adios" > stopp.txt
+rbmtail ./Logs rbm miner
