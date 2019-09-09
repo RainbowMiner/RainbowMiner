@@ -702,108 +702,88 @@ function Set-Total {
     $Stat | ConvertTo-Json | Set-Content $Path
 }
 
-function Start-UpdateTotalsJob {
+function Set-TotalsAvg {
 
-    if ($Job = (Get-Job | Where-Object Name -eq "UpdateTotalsJob")) {
-        if ($Job.State -eq "Running") {return}
-        $Job | Remove-Job -Force -ErrorAction Ignore
+    $Updated        = (Get-Date).ToUniversalTime()
+    $Path0          = "Stats\Totals"
+
+    $LastValid      = (Get-Date).AddDays(-30)
+    $LastValid_File = "Totals_$("{0:yyyy-MM-dd}" -f $LastValid)"
+    $Last1w_File    = "Totals_$("{0:yyyy-MM-dd}" -f $((Get-Date).AddDays(-8)))"
+
+    $Last1d = (Get-Date).AddDays(-1)
+    $Last1w = (Get-Date).AddDays(-7)
+
+    Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
+
+    $Totals = [PSCustomObject]@{}
+    Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {
+        $PoolName = $_.BaseName -replace "_TotalAvg"
+        $Started = (Get-Content $_.FullName -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).Started
+        $Totals | Add-Member $PoolName ([PSCustomObject]@{
+                            Pool          = $PoolName
+                            Cost_1d       = 0
+                            Cost_1w       = 0
+                            Cost_Avg      = 0
+                            Profit_1d     = 0
+                            Profit_1w     = 0
+                            Profit_Avg    = 0
+                            ProfitApi_1d  = 0
+                            ProfitApi_1w  = 0
+                            ProfitApi_Avg = 0
+                            Power_1d      = 0
+                            Power_1w      = 0
+                            Power_Avg     = 0
+                            Started       = if ($Started) {$Started} else {$Updated}
+                            Updated       = $Updated
+                        })
     }
 
-    Start-Job -Name "UpdateTotalsJob" -ArgumentList "$pwd" -ScriptBlock {
-        param($WorkingDirectory)
-
-        $ProgressPreference = "SilentlyContinue"
-        $WarningPreference = "SilentlyContinue"
-        $InformationPreference = "SilentlyContinue"
-
-        If ($WorkingDirectory) {Set-Location $WorkingDirectory}
-
-        (Get-Process -Id $PID).PriorityClass = "BelowNormal"
-
-        $Updated        = (Get-Date).ToUniversalTime()
-        $Path0          = "Stats\Totals"
-
-        $LastValid      = (Get-Date).AddDays(-30)
-        $LastValid_File = "Totals_$("{0:yyyy-MM-dd}" -f $LastValid)"
-        $Last1w         = (Get-Date).AddDays(-8)
-        $Last1w_File    = "Totals_$("{0:yyyy-MM-dd}" -f $Last1w)"
-
-        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -lt $LastValid_File} | Foreach-Object {Remove-Item $_.FullName -Force -ErrorAction Ignore}
-
-        try {
-            $Totals = @(Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -ge $Last1w_File} | Sort-Object BaseName | Foreach-Object {
-                Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.Date -ge $Last1w} | Foreach-Object {
-                                [PSCustomObject]@{
-                                    Date      = [DateTime]$_.Date
-                                    Date_UTC  = [DateTime]$_.Date_UTC
-                                    PoolName  = $_.PoolName
-                                    Profit    = [Decimal]$_.Profit
-                                    ProfitApi = [Decimal]$_.ProfitApi
-                                    Cost      = [Decimal]$_.Cost
-                                    Power     = [Decimal]$_.Power
-                                    Donation  = ($_.Donation -eq "1")
-                                    Penalty   = [Decimal]$_.Penalty
-                                }
-                }
-            } | Where-Object {$_.Profit -gt 0 -and -not $_.Donation} | Select-Object)
-        } catch {
-            if ($Error.Count) {
-                $Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").updatetotals.txt" -Append -Encoding utf8
-                $Error.RemoveAt(0)
-            }
-        }
-
-        $Last1d = (Get-Date).AddDays(-1)
-        $Last1w = (Get-Date).AddDays(-7)
-
-        $Duration = ($Totals | Select-Object -Last 1).Date - ($Totals | Select-Object -First 1).Date
-
-        if ($Duration) {
-            $Totals | Group-Object -Property PoolName | Foreach-Object {
-                $Path_Name = "$($_.Name)_TotalAvg.txt"
-
-                try {
-                    $Started = (Get-Content "$Path0\$Path_Name" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).Started
-                    $Stat = [PSCustomObject]@{
-                                Pool          = $_.Name
-                                Cost_1d       = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Cost -Sum).Sum
-                                Cost_1w       = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Cost -Sum).Sum
-                                Cost_Avg      = [decimal]0
-                                Profit_1d     = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Profit -Sum).Sum
-                                Profit_1w     = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Profit -Sum).Sum
-                                Profit_Avg    = [decimal]0
-                                ProfitApi_1d  = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property ProfitApi -Sum).Sum
-                                ProfitApi_1w  = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property ProfitApi -Sum).Sum
-                                ProfitApi_Avg = [decimal]0
-                                Power_1d      = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1d} | Measure-Object -Property Power -Sum).Sum
-                                Power_1w      = [decimal]($_.Group | Where-Object {$_.Date -ge $Last1w} | Measure-Object -Property Power -Sum).Sum
-                                Power_Avg     = [decimal]0
-                                Started       = if ($Started) {$Started} else {$Updated}
-                                Updated       = $Updated
-                            }
-
-                    if ($Duration.TotalDays -le 1) {
-                        $Stat.Profit_Avg    = $Stat.Profit_1d
-                        $Stat.ProfitApi_Avg = $Stat.ProfitApi_1d
-                        $Stat.Cost_Avg      = $Stat.Cost_1d
-                        $Stat.Power_Avg     = $Stat.Power_1d
-                    } else {
-                        $Stat.Profit_Avg    = ($Stat.Profit_1w / $Duration.TotalDays)
-                        $Stat.ProfitApi_Avg = ($Stat.ProfitApi_1w / $Duration.TotalDays)
-                        $Stat.Cost_Avg      = ($Stat.Cost_1w / $Duration.TotalDays)
-                        $Stat.Power_Avg     = ($Stat.Power_1w / $Duration.TotalDays)
-                    }
-
-                    if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-                    $Stat | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$Path_Name" -Force
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
+    try {
+        $FirstDate = $CurrentDate = ""
+        Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Where-Object {$_.BaseName -ge $Last1w_File} | Sort-Object BaseName | Foreach-Object {
+            Import-Csv $_.FullName -ErrorAction Ignore | Where-Object {$_.Date -ge $Last1w -and [decimal]$_.Profit -gt 0 -and $_.Donation -ne "1" -and $Totals."$($_.PoolName)" -ne $null} | Foreach-Object {
+                if (-not $FirstDate) {$FirstDate = $_.Date}
+                $CurrentDate = $_.Date
+                $Totals."$($_.PoolName)".ProfitApi_1w += [decimal]$_.ProfitApi
+                $Totals."$($_.PoolName)".Profit_1w    += [decimal]$_.Profit
+                $Totals."$($_.PoolName)".Power_1w     += [decimal]$_.Power
+                $Totals."$($_.PoolName)".Cost_1w      += [decimal]$_.Cost
+                if ($_.Date -ge $Last1d) {
+                    $Totals."$($_.PoolName)".ProfitApi_1d += [decimal]$_.Profit
+                    $Totals."$($_.PoolName)".Profit_1d    += [decimal]$_.Profit
+                    $Totals."$($_.PoolName)".Power_1d     += [decimal]$_.Power
+                    $Totals."$($_.PoolName)".Cost_1d      += [decimal]$_.Cost
                 }
             }
         }
+    } catch {
+        if ($Error.Count) {$Error.RemoveAt(0)}
+    }
 
-        Remove-Variable "Totals" -Force -ErrorAction Ignore
-    } > $null
+    if ($CurrentDate -gt $FirstDate) {
+        $Duration = [DateTime]$CurrentDate - [DateTime]$FirstDate
+        $Totals.PSObject.Properties | Foreach-Object {
+            try {
+                if ($Duration.TotalDays -le 1) {
+                    $_.Value.Profit_Avg    = $_.Value.Profit_1d
+                    $_.Value.ProfitApi_Avg = $_.Value.ProfitApi_1d
+                    $_.Value.Cost_Avg      = $_.Value.Cost_1d
+                    $_.Value.Power_Avg     = $_.Value.Power_1d
+                } else {
+                    $_.Value.Profit_Avg    = ($_.Value.Profit_1w / $Duration.TotalDays)
+                    $_.Value.ProfitApi_Avg = ($_.Value.ProfitApi_1w / $Duration.TotalDays)
+                    $_.Value.Cost_Avg      = ($_.Value.Cost_1w / $Duration.TotalDays)
+                    $_.Value.Power_Avg     = ($_.Value.Power_1w / $Duration.TotalDays)
+                }
+
+                if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+                $_.Value | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$($_.Name)_TotalAvg.txt" -Force
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+        }
+    }
 }
 
 function Set-Balance {
@@ -5949,18 +5929,6 @@ function Get-MinerStatusKey {
 
 function Invoke-ReportMinerStatus {
 
-    $ReportTotals = $Session.ReportTotals
-
-    if ($Session.ReportTotals) {
-        if ($Job = Get-Job | Where-Object {$_.Name -eq "UpdateTotalsJob"}) {
-            if ($Job.State -eq "Running") {$ReportTotals = $false}
-            elseif ($Job.State -ne "Completed") {
-                Remove-Job $Job -Force -ErrorAction Ignore
-                $ReportTotals = $Session.ReportTotals = $false
-            }
-        }
-    }
-
     if (-not $Session.Config.MinerStatusURL -or -not $Session.Config.MinerStatusKey) {return}
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
@@ -6038,7 +6006,8 @@ function Invoke-ReportMinerStatus {
     $Profit = [Math]::Round($Profit, 8) | ConvertTo-Json
     $PowerDraw = [Math]::Round($PowerDraw, 2) | ConvertTo-Json
 
-    $Pool_Totals = if ($ReportTotals) {
+    $Pool_Totals = if ($Session.ReportTotals) {
+        Set-TotalsAvg
         try {
             $Session.ReportTotals = $false
 

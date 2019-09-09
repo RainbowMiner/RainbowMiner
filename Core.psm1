@@ -1038,7 +1038,7 @@ function Invoke-Core {
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
-            if ($RefreshBalances) {$Session.ReportTotals = $true;Start-UpdateTotalsJob}
+            if ($RefreshBalances) {$Session.ReportTotals = $true}
         }
     }
 
