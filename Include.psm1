@@ -2069,9 +2069,9 @@ function Invoke-Exe {
         if ($ExpandLines) {foreach ($line in @($out -split '\n')){if (-not $ExcludeEmptyLines -or $line.Trim() -ne ''){$line -replace '\r'}}} else {$out}
 
         if ($psi) {
-            $psi = $null
             $process.Dispose()
-            $process = $null
+            Remove-Variable "psi" -ErrorAction Ignore -Force
+            Remove-Variable "process" -ErrorAction Ignore -Force
         }
     } catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Could not execute $FilePath $ArgumentList"}
 }
@@ -3029,7 +3029,7 @@ function Update-DeviceInformation {
                     elseif ($IsLinux) {
                         if (Get-Command "rocm-smi" -ErrorAction Ignore) {
                             try {
-                                $Rocm = Invoke-Expression "rocm-smi -f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
+                                $Rocm = Invoke-Exe -FilePath "rocm-smi" -ArgumentList "-f -t -P --json" | ConvertFrom-Json -ErrorAction Ignore
                             } catch {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                             }
@@ -3057,6 +3057,7 @@ function Update-DeviceInformation {
                                     }
                                     $DeviceId++
                                 }
+                                Remove-Variable "Rocm" -ErrorAction Ignore -For
                             }
                         }
                     }
