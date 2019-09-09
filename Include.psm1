@@ -101,7 +101,7 @@ function Get-NvidiaArchitecture {
     param($Model)
     Switch ($Model) {
         {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing"}
-        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP"} {"Pascal"}
+        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal"}
         default {"Other"}
     }
 }
@@ -4888,7 +4888,12 @@ function Set-CombosConfigDefault {
                             $Mem = [int]($_.OpenCL.GlobalMemSize / 1GB)
                             Switch ($SubsetType) {
                                 "AMD"    {"$($Model.SubString(0,2))$($Mem)GB"}
-                                "NVIDIA" {"$(Switch -Regex ($Model) {"105" {"GTX5"};"106" {"GTX6"};"(104|107|108)" {"GTX7"};"RTX" {"RTX"};default {$Model}})$(if ($Mem -lt 6) {"$($Mem)GB"})"}
+                                "NVIDIA" {"$(
+                                    Switch (Get-NvidiaArchitecture $Model) {
+                                        "Pascal" {Switch -Regex ($Model) {"105" {"GTX5"};"106" {"GTX6"};"(104|107|108)" {"GTX7"};default {$Model}}}
+                                        "Turing" {"RTX"}
+                                        default  {$Model}
+                                    })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
                             }
                         } | Foreach-Object {$FullCombosByCategory[$_.Name] = @($_.Group.Model | Select-Object -Unique | Sort-Object | Select-Object)}
                     }
