@@ -586,6 +586,11 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.4.1.8")) {
+        Get-ChildItem "Stats\Pools" -Filter "*_TRTL_*" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+        Get-ChildItem "Stats\Pools" -Filter "*_VOLLAR_*" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick

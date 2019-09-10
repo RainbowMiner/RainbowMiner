@@ -291,33 +291,38 @@ function Update-Rates {
     if ($Session.GlobalGetTicker.Count -gt 0) {
         $UpdatedRates = @()
         try {
-            $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
-            if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
-            } else {
-                $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {$UpdatedRates += $_.Name;[Double](1/$_.Value.BTC)} else {0}}
-            }
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) has failed. "
-        }
-        try {
             $SymbolStr = "$((Compare-Object $UpdatedRates $Session.GlobalGetTicker | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Sort-Object) -join ',')".ToUpper()
             if ($SymbolStr) {
                 $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
                 if (-not $RatesAPI.status) {
                     Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
                 } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
-                    $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
+                    $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {$UpdatedRates += $_.Name;[double](1e8/$_.Value)} else {0}}                    
                 }
+                if ($RatesAPI) {Remove-Variable "RatesAPI"}
             }
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
+        try {
+            $SymbolStr = "$((Compare-Object $UpdatedRates $Session.GlobalGetTicker | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Sort-Object) -join ',')".ToUpper()
+            if ($SymbolStr) {
+                $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
+                if ($RatesAPI.Response -eq "Error") {
+                    Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
+                } else {
+                    $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {$UpdatedRates += $_.Name;[Double](1/$_.Value.BTC)} else {0}}
+                }
+                if ($RatesAPI) {Remove-Variable "RatesAPI"}
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) has failed. "
+        }
+        Remove-Variable "UpdatedRates"
     }
 
     Get-WorldCurrencies -Silent
