@@ -13,16 +13,19 @@ sudo ln -s /opt/microsoft/powershell/6/pwsh /usr/bin/pwsh
 sudo rm -rf /tmp/powershell.tar.gz
 fi
 
-if ! [ -x "$(command -v startocdaemon)" ]; then
+if ! [ -d "/opt/rainbowminer" ]; then
 sudo mkdir -p /opt/rainbowminer
-sudo mkdir -p /opt/rainbowminer/ocdcmd
-sudo chmod 777 /opt/rainbowminer/ocdcmd
+  if ! [ -d "/opt/rainbowminer/ocdcmd" ]; then
+    sudo mkdir -p /opt/rainbowminer/ocdcmd
+    sudo chmod 777 /opt/rainbowminer/ocdcmd
+  fi
 fi
 
 sudo chmod +x ./IncludesLinux/bin/*
 sudo cp -Rf ./IncludesLinux/* /opt/rainbowminer
 sudo chmod +x /opt/rainbowminer/bin/ocdaemon
 sudo ln -nfs /opt/rainbowminer/bin/ocdaemon /usr/bin/ocdaemon
+sudo /opt/rainbowminer/bin/ocdaemon reinstall
 
 if ! [ -x "$(command -v amdmeminfo)" ]; then
 sudo ln -nfs /opt/rainbowminer/bin/amdmeminfo /usr/bin/amdmeminfo

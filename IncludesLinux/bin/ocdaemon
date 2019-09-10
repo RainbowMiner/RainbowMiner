@@ -54,7 +54,7 @@ do_status() {
   if [ -s "$OCDPID" ]; then
     local pid="$(<$OCDPID)"
 
-    if [ "$(ps -p $pid -o command=)" ]; then
+    if [ -h "/proc/$pid/exe" ]; then
       echo "running"
     else
       do_rmpid
@@ -161,6 +161,36 @@ do_run() {
   do_rmpid
 }
 
+do_install() {
+  if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
+    echo "ocdaemon is already installed. Please use reinstall or uninstall/install."
+    exit 1
+  else
+    if [ -d "/etc/systemd/system" ]; then
+      echo "Installing ocdaemon v$VER to systemd"
+      sudo cp "/opt/rainbowminer/conf/ocdaemon.service" "/etc/systemd/system/ocdaemon.service"
+      sudo systemctl enable ocdaemon
+      sudo systemctl start ocdaemon
+      echo "Done! ocdaemon is up and running."
+    else
+      echo "No systemd found on your system. Please install by hand"
+      exit 1
+    fi
+  fi
+}
+
+do_uninstall() {
+  if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
+    echo "Uninstalling ocdaemon from systemd"
+    sudo systemctl stop ocdaemon
+    sudo systemctl disable ocdaemon
+    rm -f "/etc/systemd/system/ocdaemon.service"
+    echo "Done! Success uninstalling ocdaemon"
+  else
+    echo "ocdaemon is currently not installed"
+  fi
+}
+
 do_start() {
 
   echo -n "Starting RainbowMiner ocdaemon v$VER .. "
@@ -220,8 +250,18 @@ case "${1}" in
                 do_stop
                 do_start
         ;;
+    install)
+                do_install
+        ;;
+    uninstall)
+                do_uninstall
+        ;;
+    reinstall)
+                do_uninstall
+                do_install
+        ;;
     *)
-        echo "Usage: ${0} {start|stop|status|restart|reload|force-reload}" >&2
+        echo "Usage: ${0} {start|stop|status|restart|reload|force-reload|install|uninstall|reinstall}" >&2
                 exit 1
         ;;
 esac

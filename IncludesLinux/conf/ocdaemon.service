@@ -1,0 +1,23 @@
+[Unit]
+Description=Rainbowminer daemon to provide root overclocking
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+User=root
+Type=forking
+TimeoutSec=0
+#PIDFile=/var/run/ocdaemon.pid
+ExecStart=/opt/rainbowminer/bin/ocdaemon start  2>&1> /dev/null
+ExecStop=/opt/rainbowminer/bin/ocdaemon stop  2>&1> /dev/null
+ExecReload=/opt/rainbowminer/bin/ocdaemon reload  2>&1> /dev/null
+KillMode=process
+
+Restart=on-failure
+RestartSec=42
+
+StandardOutput=null
+StandardError=/opt/rainbowminer/ocdcmd/ocdaemon.error.log
+
+[Install]
+WantedBy=multi-user.target
