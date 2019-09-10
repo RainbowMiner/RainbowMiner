@@ -16,11 +16,15 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pool_Request = [PSCustomObject]@{}
 
-$Platform_Version = if ($Platform -in @("2","v2","new")) {2} else {1}
-
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}
+    if ($Platform -notin @("2","v2","new")) {
+        Write-Log -Level Warn "Nicehash has disabled it's old platform. Please update your Nicehash wallet and set `"Platform`" to `"v2`", in your pools.config.txt"
+        return
+    }
 }
+
+$Platform_Version = 2
 
 if ($Platform_Version -eq 2) {
     try {
