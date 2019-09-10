@@ -586,7 +586,7 @@ try {
         }
     }
 
-    if ($Version -le (Get-Version "4.4.1.9")) {
+    if ($Version -le (Get-Version "4.4.1.8")) {
         Get-ChildItem "Stats\Pools" -Filter "*_TRTL_*" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
         Get-ChildItem "Stats\Pools" -Filter "*_VOLLAR_*" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
     }
