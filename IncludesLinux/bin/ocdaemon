@@ -161,7 +161,8 @@ do_run() {
   do_rmpid
 }
 
-do_install() {
+do_install() {  
+  sudo echo "" > "$OCDERRORLOGFILE"
   if [ -e "/etc/systemd/system/ocdaemon.service" ]; then
     echo "ocdaemon is already installed. Please use reinstall or uninstall/install."
     exit 1
@@ -184,7 +185,7 @@ do_uninstall() {
     echo "Uninstalling ocdaemon from systemd"
     sudo systemctl stop ocdaemon
     sudo systemctl disable ocdaemon
-    rm -f "/etc/systemd/system/ocdaemon.service"
+    sudo rm -f "/etc/systemd/system/ocdaemon.service"
     echo "Done! Success uninstalling ocdaemon"
   else
     echo "ocdaemon is currently not installed"
