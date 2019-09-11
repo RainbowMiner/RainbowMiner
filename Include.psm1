@@ -1739,7 +1739,7 @@ function Start-SubProcessInScreen {
     $Timer.Restart()
     $MinerProcess = $null
     do {
-        Start-Sleep -Millseconds 500
+        Start-Sleep -Milliseconds 500
         Write-Log -Level Info "Get process ID for $($ScreenName)"
         if (Test-Path $PIDPath) {
             $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
