@@ -1739,10 +1739,10 @@ function Start-SubProcessInScreen {
     $Timer.Restart()
     $MinerProcess = $null
     do {
-        Start-Sleep -Seconds 1
+        Start-Sleep -Millseconds 500
         Write-Log -Level Info "Get process ID for $($ScreenName)"
         if (Test-Path $PIDPath) {
-            $ProcessId = Get-Content $PIDPath | Select-Object -First 1
+            $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
             if ($ProcessId) {$MinerProcess = Get-Process -Id $ProcessId -ErrorAction Ignore}
         }
     } until ($MinerProcess -ne $null -or ($Timer.Elapsed.TotalSeconds) -ge 10)
@@ -1752,8 +1752,6 @@ function Start-SubProcessInScreen {
 
     if ($MinerProcess -ne $null) {
         $ProcessIds += $ProcessId
-        $MinerProcess.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
-        if ($CPUAffinity) {$MinerProcess.ProcessorAffinity = $CPUAffinity}
     }
     
     [PSCustomObject]@{
