@@ -1743,12 +1743,10 @@ function Start-SubProcessInConsole {
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
     $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
-    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows {
-        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus)
+    $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
+        param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $CurrentPwd)
 
         $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {Set-Item -force -path "env:$($matches[1])" -value $matches[2]}
-
-        $CurrentPwd = $pwd
 
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}
@@ -1905,12 +1903,10 @@ function Start-SubProcessInScreen {
     & chmod +x $PIDBash > $null
     & chmod +x $PIDTest > $null
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName {
-        param($ControllerProcessID, $FilePath, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName)
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
+        param($ControllerProcessID, $FilePath, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd)
 
-        Import-Module ".\OCDaemon.psm1"
-
-        $CurrentPwd = $pwd
+        Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
 
         $ControllerProcess = Get-Process -Id $ControllerProcessID
         if ($ControllerProcess -eq $null) {return}

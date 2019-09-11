@@ -45,7 +45,7 @@ param(
     if ($Cmd) {
         Set-BashFile -FilePath "/opt/rainbowminer/ocdcmd/$Name.sh" -Cmd $Cmd
     } else {
-        Copy-File $FilePath "/opt/rainbowminer/ocdcmd/$Name.sh" -ErrorAction Ignore
+        Copy-Item $FilePath "/opt/rainbowminer/ocdcmd/$Name.sh" -ErrorAction Ignore
         if ($Move) {Remove-Item $FilePath -Force -ErrorAction Ignore}
     }
     if (Test-Path "/opt/rainbowminer/ocdcmd/$Name.lock") {Remove-Item "/opt/rainbowminer/ocdcmd/$Name.lock" -Force -ErrorAction Ignore}
