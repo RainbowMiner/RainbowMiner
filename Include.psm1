@@ -1715,7 +1715,7 @@ function Start-SubProcessInScreen {
     $Cmd = @()
     $Cmd += "screen -ls `"$ScreenName`" | ("
     $Cmd += "  IFS=`$(printf '\t');"
-    $Cmd += "  sed `"s/^$IFS//`" |"
+    $Cmd += "  sed `"s/^`$IFS//`" |"
     $Cmd += "  while read -r name stuff; do"
     $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
     $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
