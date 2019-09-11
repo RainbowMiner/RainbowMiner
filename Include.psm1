@@ -1953,7 +1953,7 @@ function Start-SubProcessInScreen {
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {
-                $ArgumentList = "--stop --name `"$(Split-Path $FilePath -Leaf)`" --pidfile `"$PIDPath`" --retry 5"
+                $ArgumentList = "--stop --name '$(Split-Path $FilePath -Leaf)' --pidfile '$PIDPath' --retry 2"
                 if (Test-OCDaemon) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                 } else {
@@ -2063,7 +2063,7 @@ function Stop-SubProcess {
                         try {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                $ArgumentList = "--stop --name `"$(Split-Path $MI.miner_exec -Leaf)`" --pidfile `"$($MI.pid_path)`" --retry 5"
+                                $ArgumentList = "--stop --name '$(Split-Path $MI.miner_exec -Leaf)' --pidfile '$($MI.pid_path)' --retry 2"
                                 if (Test-OCDaemon) {
                                     Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                                 } else {
@@ -2098,7 +2098,7 @@ function Stop-SubProcess {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
                 if (-not $Process.HasExited) {
                     Write-Log -Level Info "Attempting to kill $($Title) PID $($_)$(if ($Name) {": $($Name)"})"
-                    $Process.Kill()
+                    Stop-Process -InputObject $Process -ErrorAction Ignore -Force
                 }
             }
         }
