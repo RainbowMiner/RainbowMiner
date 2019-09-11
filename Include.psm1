@@ -1732,7 +1732,7 @@ function Start-SubProcessInScreen {
     if (-not (Test-IsElevated) -and (Test-OCDaemon)) {
         Invoke-OCDaemon $Cmd -Quiet
     } else {
-        Invoke-Exe $PIDBash -WaitForExit > $null
+        Invoke-Exe $PIDBash > $null
     }
 
     $Timer = New-Object -TypeName System.Diagnostics.Stopwatch
@@ -2012,30 +2012,35 @@ function Stop-SubProcess {
         [String]$Name = ""
     )
     if ($Job.ScreenName) {
-        $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_pid.txt"
-        $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
-        $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName).sh"
-        if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-            $Exec = Split-Path $MI.miner_exec -Leaf
-            $ArgumentList = "--stop --name $Exec --pidfile `"$($MI.pid_path)`" --retry 5"
-            Invoke-Exe "start-stop-daemon" -ArgumentList $ArgumentList -WaitForExit -RunAs:$(-not (Test-IsElevated) -and (Test-OCDaemon)) > $null
+        try {
+            $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_pid.txt"
+            $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
+            $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName).sh"
+            if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                $Exec = Split-Path $MI.miner_exec -Leaf
+                $ArgumentList = "--stop --name $Exec --pidfile `"$($MI.pid_path)`" --retry 5"
+                Invoke-Exe "start-stop-daemon" -ArgumentList $ArgumentList -RunAs:$(-not (Test-IsElevated) -and (Test-OCDaemon)) > $null
 
-            $Timer = New-Object -TypeName System.Diagnostics.Stopwatch
-            $Timer.Restart()
-            $Stopped = $false
-            while (-not $Stopped -and $Timer.Elapsed.TotalSeconds -lt 10) {
-                if (-not $Job.ProcessId -or -not $Job.Process -or $Job.Process.HasExited) {$Stopped = $true}
-                else {
-                    Start-Sleep -Milliseconds 500
+                $Timer = New-Object -TypeName System.Diagnostics.Stopwatch
+                $Timer.Restart()
+                $Stopped = $false
+                while (-not $Stopped -and $Timer.Elapsed.TotalSeconds -lt 10) {
+                    if (-not $Job.ProcessId -or -not $Job.Process -or $Job.Process.HasExited) {$Stopped = $true}
+                    else {
+                        Start-Sleep -Milliseconds 500
+                    }
+                }
+                $Timer.Stop()
+                Write-Log -Level Info "$($Title) screen process $(if (-not $Stopped) {"NOT "})stopped$(if ($Name) {": $($Name)"})"
+                if ($Stopped) {
+                    $MI | Add-Member end_date "$(Get-Date)" -Force
+                    Set-ContentJson -Data $MI -PathToFile $PIDInfo > $null
+                    if (Test-Path $PIDPath) {Remove-Item -Path $PIDPath -ErrorAction Ignore -Force}
                 }
             }
-            $Timer.Stop()
-            Write-Log -Level Info "$($Title) screen process $(if (-not $Stopped) {"NOT "})stopped$(if ($Name) {": $($Name)"})"
-            if ($Stopped) {
-                $MI | Add-Member end_date "$(Get-Date)" -Force
-                Set-ContentJson -Data $MI -PathToFile $PIDInfo > $null
-                if (Test-Path $PIDPath) {Remove-Item -Path $PIDPath -ErrorAction Ignore -Force}
-            }
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
         }
     } elseif ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
