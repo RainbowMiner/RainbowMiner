@@ -1656,11 +1656,11 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = ""
+        [String]$ScreenName = ""
     )
 
-    if ($IsLinux -and $ProcessName -and (Get-Command "screen" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ProcessName $ProcessName
+    if ($IsLinux -and $ScreenName -and (Get-Command "screen" -ErrorAction Ignore)) {
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
@@ -1689,16 +1689,16 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ProcessName = ""
+        [String]$ScreenName = ""
     )
     
-    $ProcessName = ($ProcessName -replace "[^A-Z0-9_-]").ToLower()
+    $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
 
     if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
     $StartDate = Get-Date
-    $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ProcessName)_pid.txt"
-    $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ProcessName)_info.txt"
-    $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ProcessName).sh"
+    $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_pid.txt"
+    $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_info.txt"
+    $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName).sh"
 
     if (Test-Path $PIDPath) { Remove-Item $PIDPath -Force }
     if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
@@ -1713,7 +1713,7 @@ function Start-SubProcessInScreen {
     & chmod +x $FilePath > $null
 
     $Cmd = @()
-    $Cmd += "screen -ls `"$ProcessName`" | ("
+    $Cmd += "screen -ls `"$ScreenName`" | ("
     $Cmd += "  IFS=`$(printf '\t');"
     $Cmd += "  sed `"s/^$IFS//`" |"
     $Cmd += "  while read -r name stuff; do"
@@ -1721,10 +1721,10 @@ function Start-SubProcessInScreen {
     $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
     $Cmd += "  done"
     $Cmd += ")"
-    $Cmd += "screen -S $($ProcessName) -d -m", "sleep .1"
-    $Cmd += "screen -S $($ProcessName) -X stuff $`"cd /`"\n", "sleep .1"
-    $Cmd += "screen -S $($ProcessName) -X stuff $`"cd '$WorkingDirectory'`"\n", "sleep .1"
-    $Cmd += "screen -S $($ProcessName) -X stuff $`"start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList`"\n", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -d -m", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd /`"\n", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd '$WorkingDirectory'`"\n", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList`"\n", "sleep .1"
 
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
     & chmod +x $PIDBash > $null
@@ -1740,24 +1740,26 @@ function Start-SubProcessInScreen {
     $MinerProcess = $null
     do {
         Start-Sleep -Seconds 1
-        Write-Log -Level Info "Get process ID for $($ProcessName)"
+        Write-Log -Level Info "Get process ID for $($ScreenName)"
         if (Test-Path $PIDPath) {
             $ProcessId = Get-Content $PIDPath | Select-Object -First 1
-            if ($ProcessId) {$MinerProcess = Get-Process -ID $MinerPid -ErrorAction Ignore}
+            if ($ProcessId) {$MinerProcess = Get-Process -Id $ProcessId -ErrorAction Ignore}
         }
     } until ($MinerProcess -ne $null -or ($Timer.Elapsed.TotalSeconds) -ge 10)
     $Timer.Stop()
 
     [int[]]$ProcessIds = @()
 
-    if ($MinerProcess -ne $null) {$ProcessIds += $ProcessId}
+    if ($MinerProcess -ne $null) {
+        $ProcessIds += $ProcessId
+        $MinerProcess.PriorityClass = @{-2 = "Idle"; -1 = "BelowNormal"; 0 = "Normal"; 1 = "AboveNormal"; 2 = "High"; 3 = "RealTime"}[$Priority]
+        if ($CPUAffinity) {$MinerProcess.ProcessorAffinity = $CPUAffinity}
+    }
     
-    Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
-
     [PSCustomObject]@{
-        IsScreen  = $true
-        Process   = if ($ProcessId) {$ProcessName} else {$null}
-        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+        ScreenName = $ScreenName
+        Process    = $MinerProcess
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1804,9 +1806,9 @@ function Start-SubProcessInBackground {
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
 
     [PSCustomObject]@{
-        IsScreen  = $false
-        Process   = $Job
-        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+        ScreenName  = ""
+        Process     = $Job
+        ProcessId   = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1922,9 +1924,9 @@ function Start-SubProcessInConsole {
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
     
     [PSCustomObject]@{
-        IsScreen  = $false
-        Process   = $Job
-        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+        ScreenName  = ""
+        Process     = $Job
+        ProcessId   = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -2011,10 +2013,10 @@ function Stop-SubProcess {
         [Parameter(Mandatory = $false)]
         [String]$Name = ""
     )
-    if ($Job.IsScreen) {
-        $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.Process)_pid.txt"
-        $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.Process)_info.txt"
-        $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.Process).sh"
+    if ($Job.ScreenName) {
+        $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_pid.txt"
+        $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
+        $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName).sh"
         if ($MI = Get-Content $PIDPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
             $Exec = Split-Path $MI.miner_exec -Leaf
             $ArgumentList = "--stop --name $Exec --pidfile `"$($MI.pid_path)`" --retry 5"
@@ -2057,7 +2059,7 @@ function Stop-SubProcess {
         }
         $Job.ProcessId = [int[]]@()
     }
-    if (-not $Job.IsScreen -and ($Job.Process | Get-Job -ErrorAction Ignore)) {
+    if (-not $Job.ScreenName -and ($Job.Process | Get-Job -ErrorAction Ignore)) {
         $Job.Process | Remove-Job -Force
     }
 }
@@ -3640,7 +3642,7 @@ class Miner {
     $Benchmarked
     $LogFile    
     [Bool]$ShowMinerWindow = $false
-    [Bool]$IsScreen = $false
+    $ScreenName = ""
     $MSIAprofile
     $OCprofile
     $DevFee
@@ -3735,18 +3737,18 @@ class Miner {
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
                     #$this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
-                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ProcessName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')"
+                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')"
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ProcessName "$($this.DeviceName -join '_')"
-            $this.Process   = $Job.Process
-            $this.ProcessId = $Job.ProcessId
-            $this.IsScreen  = $Job.IsScreen
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')"
+            $this.Process     = $Job.Process
+            $this.ProcessId   = $Job.ProcessId
+            $this.ScreenName  = $Job.ScreenName
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
-            if (($this.IsScreen -and $this.ProcessId) -or ($this.Process | Get-Job -ErrorAction Ignore)) {
+            if (($this.ScreenName -and $this.ProcessId -and $this.Process) -or (-not $this.ScreenName -and ($this.Process | Get-Job -ErrorAction Ignore))) {
                 $this.Status = [MinerStatus]::Running
             }
         }
@@ -3760,7 +3762,7 @@ class Miner {
         if ($this.Process) {
             Stop-SubProcess -Job $this -Title "Miner $($this.Name)"
 
-            if ($this.IsScreen -or -not ($this.Process | Get-Job -ErrorAction Ignore)) {
+            if ($this.ScreenName -or -not ($this.Process | Get-Job -ErrorAction Ignore)) {
                 $this.Active = $this.GetActiveTime();
                 $this.Process = $null
                 $this.Status = [MinerStatus]::Idle
@@ -3795,20 +3797,20 @@ class Miner {
     }
 
     EndOfRoundCleanup() {
-        if ($this.API -notmatch "Wrapper" -and -not $this.IsScreen -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
+        if ($this.API -notmatch "Wrapper" -and -not $this.ScreenName -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
     }
 
     [DateTime]GetActiveStart() {
         $Begin = $null
-        if ($this.IsScreen) {
+        if ($this.ScreenName) {
             if ($MI = Get-PIDInfo $this) {
                 $Begin = [datetime]$MI.begin_date
             }
         }
         if (-not $Begin) {
-            $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime}
+            $MiningProcess = if ($this.ScreenName) {$this.Process} elseif ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime}
             $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
         }
 
@@ -3822,7 +3824,7 @@ class Miner {
 
     [DateTime]GetActiveLast() {
         $Begin = $End = $MiningProcess = $null
-        if ($this.IsScreen) {
+        if ($this.ScreenName) {
             if ($MI = Get-PIDInfo $this) {
                 $Begin = [datetime]$MI.begin_date
                 if ($MI.end_date) {$End   = [datetime]$MI.end_date}
@@ -3830,7 +3832,7 @@ class Miner {
         }
 
         if (-not $Begin) {
-            $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+            $MiningProcess = if ($this.ScreenName) {$this.Process} elseif ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
             $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
             $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         }
@@ -3852,14 +3854,14 @@ class Miner {
 
     [TimeSpan]GetActiveTime() {
         $Begin = $End = $null
-        if ($this.IsScreen) {
+        if ($this.ScreenName) {
             if ($MI = Get-PIDInfo $this) {
                 $Begin = [datetime]$MI.begin_date
                 if ($MI.end_date) {$End = [datetime]$MI.end_date}
             }
         }
         if (-not $Begin) {
-            $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+            $MiningProcess = if ($this.ScreenName) {$this.Process} elseif ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
             $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
             $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         }
@@ -3885,7 +3887,7 @@ class Miner {
 
     [TimeSpan]GetRunningTime([Bool]$MeasureInterval = $false) {
         $Begin = $End = $null
-        if ($this.IsScreen) {
+        if ($this.ScreenName) {
             if ($MI = Get-PIDInfo $this) {
                 $Begin = [datetime]$MI.begin_date
                 if ($MI.end_date) {$End = [datetime]$MI.end_date}
@@ -3893,7 +3895,7 @@ class Miner {
         }
 
         if (-not $Begin) {
-            $MiningProcess = if ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
+            $MiningProcess = if ($this.ScreenName) {$this.Process} elseif ($this.HasOwnMinerWindow -and $this.ProcessId) {Get-Process -Id $this.GetProcessId() -ErrorAction Ignore | Select-Object StartTime,ExitTime}
             $Begin = if ($MiningProcess) {$MiningProcess.StartTime} else {$this.Process.PSBeginTime}
             $End   = if ($MiningProcess) {$MiningProcess.ExitTime} else {$this.Process.PSEndTime}
         }
@@ -3913,7 +3915,7 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+        $MiningProcess = if ($this.ScreenName) {$this.Process} else {$this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}}
 
         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $(if ($Global:IsLinux) {1} else {$this.MultiProcess+1}))) {
             return [MinerStatus]::Running
