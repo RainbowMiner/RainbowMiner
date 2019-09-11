@@ -3674,7 +3674,7 @@ class Miner {
     [Bool]$NeedsBenchmark = $false
     [Int]$MultiProcess = 0
     [DateTime]$ActiveLast = [DateTime]::MinValue
-    hidden [System.Management.Automation.Job]$Process = $null
+    hidden $Process = $null
     [Int[]]$ProcessId = @()
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
