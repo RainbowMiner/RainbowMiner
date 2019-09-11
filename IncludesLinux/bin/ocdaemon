@@ -20,6 +20,7 @@ OCDBIN=/usr/bin/ocdaemon
 OCDPID=/var/run/ocdaemon.pid
 OCDLOGFILE=/var/log/ocdaemon.log
 OCDERRORLOGFILE=/var/log/ocdaemon_error.log
+OCDVERSIONFILE=/opt/rainbowminer/ocdcmd/version.log
 
 test -x "$OCDBIN" || exit 1
 
@@ -173,6 +174,7 @@ do_install() {
       sudo systemctl enable ocdaemon
       sudo systemctl start ocdaemon
       echo "Done! ocdaemon is up and running."
+      sudo echo -n "$VER" > "$OCDVERSIONFILE"
     else
       echo "No systemd found on your system. Please install by hand"
       exit 1
@@ -187,6 +189,7 @@ do_uninstall() {
     sudo systemctl disable ocdaemon
     sudo rm -f "/etc/systemd/system/ocdaemon.service"
     echo "Done! Success uninstalling ocdaemon"
+    sudo rm -f "$OCDVERSIONFILE"
   else
     echo "ocdaemon is currently not installed"
   fi
@@ -258,8 +261,13 @@ case "${1}" in
                 do_uninstall
         ;;
     reinstall)
-                do_uninstall
-                do_install
+                if ! [ -s "$OCDVERSIONFILE" ] || [ "$VER" \< "$(<$OCDVERSIONFILE)" ]; then
+                  do_uninstall
+                  do_install
+                else
+                  echo "ocdaemon is already uptodate!"
+                  exit 1
+                fi
         ;;
     *)
         echo "Usage: ${0} {start|stop|status|restart|reload|force-reload|install|uninstall|reinstall}" >&2
