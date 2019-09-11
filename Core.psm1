@@ -19,6 +19,8 @@
         if ($IsLinux) {
             Initialize-OCDaemon
 
+            if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
+
             if (-not (Test-Path "/opt/rainbowminer/lib")) {
                 if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                     $Dir = "$Pwd/IncludesLinux/lib"
