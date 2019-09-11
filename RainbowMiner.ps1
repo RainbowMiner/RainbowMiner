@@ -217,7 +217,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.4.1.9"
+$Session.Version         = "4.4.2.0"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 
@@ -244,6 +244,9 @@ if ($IsWindows) {
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
 Import-Module .\Core.psm1
+if ($IsLinux) {
+    Import-Module .\OCDaemon.psm1
+}
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 

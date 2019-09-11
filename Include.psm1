@@ -1654,10 +1654,14 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [String[]]$EnvVars = @(),
         [Parameter(Mandatory = $false)]
-        [Int]$MultiProcess = 0
+        [Int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [String]$ScreenName = ""
     )
 
-    if (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
+    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName
+    } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
         Start-SubProcessInBackground -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
@@ -1707,8 +1711,9 @@ function Start-SubProcessInBackground {
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
 
     [PSCustomObject]@{
-        Process   = $Job
-        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+        ScreenName = ""
+        Process    = $Job
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1824,8 +1829,160 @@ function Start-SubProcessInConsole {
     Set-SubProcessPriority $ProcessIds -Priority $Priority -CPUAffinity $CPUAffinity
     
     [PSCustomObject]@{
-        Process   = $Job
-        ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+        ScreenName = ""
+        Process    = $Job
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
+    }
+}
+
+function Start-SubProcessInScreen {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath, 
+        [Parameter(Mandatory = $false)]
+        [String]$ArgumentList = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$LogPath = "", 
+        [Parameter(Mandatory = $false)]
+        [String]$WorkingDirectory = "", 
+        [ValidateRange(-2, 3)]
+        [Parameter(Mandatory = $false)]
+        [Int]$Priority = 0,
+        [Parameter(Mandatory = $false)]
+        [Int]$CPUAffinity = 0,
+        [Parameter(Mandatory = $false)]
+        [String[]]$EnvVars = @(),
+        [Parameter(Mandatory = $false)]
+        [int]$MultiProcess = 0,
+        [Parameter(Mandatory = $false)]
+        [String]$ScreenName = ""
+    )
+
+    $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
+
+    if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
+
+    $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_pid.txt"
+    $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_info.txt"
+    $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName).sh"
+    $PIDTest = Join-Path $WorkingDirectory "start_$($ScreenName).sh"
+
+    if (Test-Path $PIDPath) { Remove-Item $PIDPath -Force }
+    if (Test-Path $PIDInfo) { Remove-Item $PIDInfo -Force }
+    if (Test-Path $PIDBash) { Remove-Item $PIDBash -Force }
+
+    if ($LogPath) {
+        $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
+    }
+
+    Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
+
+    $Stuff = @()
+    $Stuff += "cd /"
+    $Stuff += "cd '$WorkingDirectory'"
+    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff += "export $($matches[1])=$($matches[2])"}
+    $Stuff += "export LD_LIBRARY_PATH=./:$($LDExportPath)"
+    $Stuff += "start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList"
+
+    $Cmd = @()
+    $Cmd += "screen -ls `"$ScreenName`" | ("
+    $Cmd += "  IFS=`$(printf '\t');"
+    $Cmd += "  sed `"s/^`$IFS//`" |"
+    $Cmd += "  while read -r name stuff; do"
+    $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
+    $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
+    $Cmd += "  done"
+    $Cmd += ")"
+    $Cmd += "screen -S $($ScreenName) -d -m", "sleep .1"
+
+    $Stuff | Foreach-Object {$Cmd += "screen -S $($ScreenName) -X stuff $`"$_\n`"", "sleep .1"}
+
+    Set-BashFile -FilePath $PIDbash -Cmd $Cmd
+    Set-BashFile -FilePath $PIDtest -Cmd $Stuff
+
+    & chmod +x $FilePath > $null
+    & chmod +x $PIDBash > $null
+    & chmod +x $PIDTest > $null
+
+    $Job = Start-Job -ArgumentList $PID, $FilePath, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName {
+        param($ControllerProcessID, $FilePath, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName)
+
+        Import-Module ".\OCDaemon.psm1"
+
+        $CurrentPwd = $pwd
+
+        $ControllerProcess = Get-Process -Id $ControllerProcessID
+        if ($ControllerProcess -eq $null) {return}
+
+        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+
+        $Process = $null
+        $started = $false
+
+        if (Test-OCDaemon) {
+            $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.0.$ScreenName" -FilePath $PIDBash -Move -Quiet
+        } else {
+            $ProcessParams = @{
+                FilePath         = $PIDBash
+                ArgumentList     = ""
+                WorkingDirectory = $WorkingDirectory
+                PassThru         = $true
+            }
+            if ($null -ne (Start-Process @ProcessParams)) {$started=$true}
+        }
+        if ($started) {
+            $StopWatch.Restart()            
+            do {
+                Start-Sleep -Milliseconds 500
+                if (Test-Path $PIDPath) {
+                    $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
+                    if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
+                }
+            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+            $StopWatch.Stop()
+        }
+
+        Remove-Variable "StopWatch"
+
+        if (-not $Process) {
+            [PSCustomObject]@{ProcessId = $null}
+            return
+        }
+
+        [PSCustomObject]@{ProcessId = $Process.Id; ProcessHandle = $Process.Handle}
+
+        $ControllerProcess.Handle >$null
+        $Process.Handle >$null
+
+        do {
+            if ($ControllerProcess.WaitForExit(1000)) {
+                $ArgumentList = "--stop --name `"$(Split-Path $FilePath -Leaf)`" --pidfile `"$PIDPath`" --retry 5"
+                if (Test-OCDaemon) {
+                    Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
+                } else {
+                    $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+                    $Proc | Wait-Process
+                    Remove-Variable "Proc" -ErrorAction Ignore
+                }
+            }
+            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
+            $Error.Clear()
+        }
+        while ($Process.HasExited -eq $false)
+    }
+
+    do {Start-Sleep 1; $JobOutput = Receive-Job $Job}
+    while ($JobOutput -eq $null)
+
+    [int[]]$ProcessIds = @()
+    
+    if ($JobOutput.ProcessId) {$ProcessIds += $JobOutput.ProcessId}
+    
+    [PSCustomObject]@{
+        ScreenName = $ScreenName
+        Process    = $Job
+        ProcessId  = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
 
@@ -1905,7 +2062,30 @@ function Stop-SubProcess {
     if ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
             if ($Process = Get-Process -Id $_ -ErrorAction Ignore) {
-                if ($IsLinux) {Stop-Process -id $Process.Id -Force -ErrorAction Ignore}
+                if ($IsLinux) {
+                    if ($Job.ScreenName) {
+                        try {
+                            $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
+                            if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                                $ArgumentList = "--stop --name `"$(Split-Path $FilePath -Leaf)`" --pidfile `"$($MI.pid_path)`" --retry 5"
+                                if (Test-OCDaemon) {
+                                    Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
+                                } else {
+                                    $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
+                                    $Proc | Wait-Process
+                                    Remove-Variable "Proc" -ErrorAction Ignore
+                                }
+                                if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
+                                if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
+                            }
+                        } catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-Log -Level Warn "Problem killing screen process $($Job.ScreenName): $($_.Exception.Message)"
+                        }
+                    } else {
+                        Stop-Process -id $Process.Id -Force -ErrorAction Ignore
+                    }
+                }
                 else {$Process.CloseMainWindow() > $null}
                 # Wait up to 10 seconds for the miner to close gracefully
                 if($Process.WaitForExit(10000)) { 
@@ -3546,6 +3726,7 @@ class Miner {
     [DateTime]$ActiveLast = [DateTime]::MinValue
     hidden [System.Management.Automation.Job]$Process = $null
     [Int[]]$ProcessId = @()
+    [String]$ScreenName = ""
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
@@ -3605,14 +3786,15 @@ class Miner {
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
                     #$this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
-                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false
+                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')"
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess
-            $this.Process   = $Job.Process
-            $this.ProcessId = $Job.ProcessId
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')"
+            $this.Process    = $Job.Process
+            $this.ProcessId  = $Job.ProcessId
+            $this.ScreenName = $Job.ScreenName
             $this.HasOwnMinerWindow = $this.ShowMinerWindow
 
             if ($this.Process | Get-Job -ErrorAction Ignore) {
@@ -6409,81 +6591,6 @@ function Get-NvidiaSmi {
                 elseif ($Session.Config.NVSMIpath -and (Test-Path ($NVSMI = Join-Path $Session.Config.NVSMIpath "nvidia-smi.exe"))) {$NVSMI}
                 else {".\Includes\nvidia-smi.exe"}
     if (Get-Command $Command -ErrorAction Ignore) {$Command}
-}
-
-function Initialize-OCDaemon {
-    if ($IsLinux) {
-        try {
-            $pre = Get-MD5Hash $Pwd
-            $Session.OCDaemonPrefix = "$($pre.Substring(0,4))$($pre.Substring(28,4))"
-            $Session.OCDaemonCount  = 0
-            Get-ChildItem "/opt/rainbowminer/ocdcmd" -Filter "$($Session.OCDaemonPrefix)*" -File -Force | Foreach-Object {Remove-Item $_.FullName -ErrorAction Ignore -Force}
-        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-    }
-}
-
-function Test-OCDaemon {
-    $IsLinux -and (Test-Path "/var/run/ocdaemon.pid") -and (Get-Content "/var/run/ocdaemon.pid" -Raw -ErrorAction Ignore | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore} | Measure-Object).Count
-}
-
-function Set-OCDaemon {
-[cmdletbinding()]   
-param(
-    [Parameter(Mandatory = $True)]
-    [String]$Cmd
-)
-    if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-    $Global:GlobalOCD.Add($Cmd) > $null
-}
-
-function Invoke-OCDaemon {
-[cmdletbinding()]   
-param(
-    [Parameter(Mandatory = $False)]
-    $Cmd,
-    [Parameter(Mandatory = $False)]
-    [Switch]$Quiet
-)
-
-    if (-not (Test-OCDaemon)) {
-        if (-not $Session.IsAdmin) {
-            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"ocdaemon start`" at the commandline to enable overclocking."
-        }
-        return
-    }
-    if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
-
-    if ($Cmd) {
-        [System.Collections.ArrayList]$OCDcmd = @()
-        $Cmd | Foreach-Object {$OCDcmd.Add($_) > $null}
-    } else {
-        $OCDcmd = $Global:GlobalOCD
-    }
-    if ($OCDcmd.Count) {
-        $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
-        $Session.OCDaemonCount | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -ErrorAction Ignore -Force
-        $OCDcmd.Insert(0,"`#`!/usr/bin/env bash")
-        $OCDcmd | Out-File "/opt/rainbowminer/ocdcmd/$tmpfn.sh" -ErrorAction Ignore -Force
-        $OCDcmd.Clear()
-        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.lock") {Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.lock" -Force -ErrorAction Ignore}
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
-        $StopWatch.Start()
-        $stoptime = 5000
-        While ((Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") -and $StopWatch.ElapsedMilliseconds -lt $stoptime) {
-            Start-Sleep -Seconds 1
-            if ($stoptime -lt 30000 -and (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.run")) {$stoptime = 30000}
-        }
-        Remove-Variable "StopWatch"
-        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
-            Write-Log -Level Warn "OCDaemon failed. Please run `"ocdaemon start`" at the command line"
-        }
-        $Session.OCDaemonCount++
-        if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.out") {
-            if (-not $Quiet) {Get-Content "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Raw}
-            Remove-Item "/opt/rainbowminer/ocdcmd/$tmpfn.out" -Force -ErrorAction Ignore
-        }
-    }
-    if ($Cmd) {Remove-Variable "OCDcmd"}
 }
 
 function Invoke-NvidiaSmi {
