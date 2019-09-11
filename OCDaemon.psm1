@@ -37,7 +37,7 @@ param(
     [Parameter(Mandatory = $False)]
     [Switch]$Quiet = $false
 )
-    if (-not (Test-Path $FilePath) -and -not $Cmd) {return}
+    if (-not $Cmd -and (-not $FilePath -or -not (Test-Path $FilePath))) {return}
 
     if (-not $Name) {$Name = (Get-ChildItem $FilePath -ErrorAction Ignore).BaseName}
 
