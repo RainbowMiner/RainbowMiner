@@ -1722,9 +1722,9 @@ function Start-SubProcessInScreen {
     $Cmd += "  done"
     $Cmd += ")"
     $Cmd += "screen -S $($ScreenName) -d -m", "sleep .1"
-    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd /`"\n", "sleep .1"
-    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd '$WorkingDirectory'`"\n", "sleep .1"
-    $Cmd += "screen -S $($ScreenName) -X stuff $`"start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList`"\n", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd /\n`"", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"cd '$WorkingDirectory'\n`"", "sleep .1"
+    $Cmd += "screen -S $($ScreenName) -X stuff $`"start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList\n`"", "sleep .1"
 
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
     & chmod +x $PIDBash > $null
