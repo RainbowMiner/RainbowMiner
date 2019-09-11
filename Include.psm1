@@ -1756,7 +1756,7 @@ function Start-SubProcessInScreen {
 
     [PSCustomObject]@{
         IsScreen  = $true
-        Process   = $ProcessName
+        Process   = if ($ProcessId) {$ProcessName} else {$null}
         ProcessId = [int[]]@($ProcessIds | Where-Object {$_ -gt 0})
     }
 }
