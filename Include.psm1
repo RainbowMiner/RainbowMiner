@@ -2015,10 +2015,10 @@ function Stop-SubProcess {
         $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_pid.txt"
         $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
         $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName).sh"
-        if ($MI = Get-Content $PIDPath -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+        if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
             $Exec = Split-Path $MI.miner_exec -Leaf
             $ArgumentList = "--stop --name $Exec --pidfile `"$($MI.pid_path)`" --retry 5"
-            Invoke-Exe "start-stop-daemon" -ArgumentList $ArgumentList -WaitForExit -RunAs > $null
+            Invoke-Exe "start-stop-daemon" -ArgumentList $ArgumentList -WaitForExit -RunAs:$(-not (Test-IsElevated) -and (Test-OCDaemon)) > $null
 
             $Timer = New-Object -TypeName System.Diagnostics.Stopwatch
             $Timer.Restart()
@@ -2031,6 +2031,11 @@ function Stop-SubProcess {
             }
             $Timer.Stop()
             Write-Log -Level Info "$($Title) screen process $(if (-not $Stopped) {"NOT "})stopped$(if ($Name) {": $($Name)"})"
+            if ($Stopped) {
+                $MI | Add-Member end_date "$(Get-Date)" -Force
+                Set-ContentJson -Data $MI -PathToFile $PIDInfo > $null
+                if (Test-Path $PIDPath) {Remove-Item -Path $PIDPath -ErrorAction Ignore -Force}
+            }
         }
     } elseif ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
