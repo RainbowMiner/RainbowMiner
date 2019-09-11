@@ -1874,8 +1874,6 @@ function Start-SubProcessInScreen {
         $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
     }
 
-    Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
-
     $Stuff = @()
     $Stuff += "cd /"
     $Stuff += "cd '$WorkingDirectory'"
@@ -1903,8 +1901,8 @@ function Start-SubProcessInScreen {
     & chmod +x $PIDBash > $null
     & chmod +x $PIDTest > $null
 
-    $Job = Start-Job -ArgumentList $PID, $FilePath, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
-        param($ControllerProcessID, $FilePath, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd)
+    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
+        param($ControllerProcessID, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd)
 
         Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
 
@@ -1950,10 +1948,11 @@ function Start-SubProcessInScreen {
 
         $ControllerProcess.Handle >$null
         $Process.Handle >$null
+        $ProcessName = $Process.Name
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {
-                $ArgumentList = "--stop --name '$(Split-Path $FilePath -Leaf)' --pidfile '$PIDPath' --retry 2"
+                $ArgumentList = "--stop --name '$ProcessName' --pidfile '$PIDPath' --retry 5"
                 if (Test-OCDaemon) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                 } else {
@@ -2063,9 +2062,10 @@ function Stop-SubProcess {
                         try {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                $ArgumentList = "--stop --name '$(Split-Path $MI.miner_exec -Leaf)' --pidfile '$($MI.pid_path)' --retry 2"
+                                $ArgumentList = "--stop --name '$($Process.Name)' --pidfile '$($MI.pid_path)' --retry 5"
                                 if (Test-OCDaemon) {
-                                    Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
+                                    $Msg = Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList"
+                                    if ($Msg) {Write-Log -Level Info "OCDaemon reports: $Msg"}
                                 } else {
                                     $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
                                     $Proc | Wait-Process
