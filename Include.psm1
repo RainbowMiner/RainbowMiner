@@ -1708,7 +1708,7 @@ function Start-SubProcessInScreen {
         $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
     }
 
-    ConvertTo-Json @{miner_exec = "$FilePath"; start_date = "$StartDate"; end_date = ""; pid_path = "$PIDPath"; pid_bash = "$PIDBash" } | Set-Content $PIDInfo
+    Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$StartDate"; end_date = ""; pid_path = "$PIDPath"; pid_bash = "$PIDBash" } -PathToFile $PIDInfo > $null
 
     & chmod +x $FilePath > $null
 
@@ -1998,7 +1998,7 @@ function Get-PIDInfo {
         [PSCustomObject]$Job
     )
     $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.Process)_info.txt"
-    if (Test-Path $PIDPath) {Get-Content $PIDPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+    if (Test-Path $PIDInfo) {Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 }
 
 function Stop-SubProcess {
@@ -2015,21 +2015,22 @@ function Stop-SubProcess {
         $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_pid.txt"
         $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
         $PIDBash = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName).sh"
-        if ($MI = Get-Content $PIDPath -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+        if ($MI = Get-Content $PIDPath -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
             $Exec = Split-Path $MI.miner_exec -Leaf
             $ArgumentList = "--stop --name $Exec --pidfile `"$($MI.pid_path)`" --retry 5"
             Invoke-Exe "start-stop-daemon" -ArgumentList $ArgumentList -WaitForExit -RunAs > $null
 
             $Timer = New-Object -TypeName System.Diagnostics.Stopwatch
             $Timer.Restart()
-            while ((Test-Path $PIDPath) -and $Timer.Elapsed.TotalSeconds -lt 10) {
-                Start-Sleep -Milliseconds 500
+            $Stopped = $false
+            while (-not $Stopped -and $Timer.Elapsed.TotalSeconds -lt 10) {
+                if (-not $Job.ProcessId -or -not $Job.Process -or $Job.Process.HasExited) {$Stopped = $true}
+                else {
+                    Start-Sleep -Milliseconds 500
+                }
             }
             $Timer.Stop()
-            if (-not (Test-Path $PIDPath)) {
-                Write-Log -Level Info "$($Title) screen process stopped$(if ($Name) {": $($Name)"})"
-                return
-            }
+            Write-Log -Level Info "$($Title) screen process $(if (-not $Stopped) {"NOT "})stopped$(if ($Name) {": $($Name)"})"
         }
     } elseif ($Job.HasOwnMinerWindow -and $Job.ProcessId) {
         $Job.ProcessId | Select-Object -First 1 | Foreach-Object {
