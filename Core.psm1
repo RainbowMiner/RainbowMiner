@@ -19,8 +19,6 @@
         if ($IsLinux) {
             Initialize-OCDaemon
 
-            if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
-
             if (-not (Test-Path "/opt/rainbowminer/lib")) {
                 if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                     $Dir = "$Pwd/IncludesLinux/lib"
@@ -1801,7 +1799,7 @@ function Invoke-Core {
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Where-Object {@($Session.ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique) -notcontains $_.ProcessId -and @($Session.ActiveMiners | Select-Object -ExpandProperty Path | Split-Path -Leaf | Select-Object -unique) -icontains $_.ProcessName} | Select-Object ProcessId,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force -ErrorAction Ignore}
     } elseif ($IsLinux) {
-        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Where-Object {-not (Compare-Object @($Session.ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique) @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and @($Session.ActiveMiners | Select-Object -ExpandProperty Path | Split-Path -Leaf | Select-Object -unique) -icontains $_.ProcessName} | Select-Object Id,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-Exe "kill" -ArgumentList "$($_.Id)" -RunAs > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
+        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Where-Object {-not (Compare-Object @($Session.ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique) @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and @($Session.ActiveMiners | Select-Object -ExpandProperty Path | Split-Path -Leaf | Select-Object -unique) -icontains $_.ProcessName} | Select-Object Id,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Ignore}
     }
 
     if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
@@ -2435,13 +2433,7 @@ function Stop-Core {
     if ($IsWindows) {
         Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {$_.ExecutablePath -like "$(Get-Location)\Bin\*"} | Stop-Process -Force -ErrorAction Ignore
     } elseif ($IsLinux) {
-        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Foreach-Object {
-            if (Test-OCDaemon) {
-                Invoke-Exe "kill" -ArgumentList "$($_.Id)" -RunAs > $null
-            } else {
-                Stop-Process $_.Id -Force -ErrorAction Ignore
-            }
-        }
+        Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Stop-Process -Force -ErrorAction Ignore
     }
     Stop-Autoexec
 }
