@@ -2063,7 +2063,7 @@ function Stop-SubProcess {
                         try {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                $ArgumentList = "--stop --name `"$(Split-Path $FilePath -Leaf)`" --pidfile `"$($MI.pid_path)`" --retry 5"
+                                $ArgumentList = "--stop --name `"$(Split-Path $MI.miner_exec -Leaf)`" --pidfile `"$($MI.pid_path)`" --retry 5"
                                 if (Test-OCDaemon) {
                                     Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                                 } else {
