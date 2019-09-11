@@ -2036,6 +2036,9 @@ function Stop-SubProcess {
                     $MI | Add-Member end_date "$(Get-Date)" -Force
                     Set-ContentJson -Data $MI -PathToFile $PIDInfo > $null
                     if (Test-Path $PIDPath) {Remove-Item -Path $PIDPath -ErrorAction Ignore -Force}
+                    if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
+                    if (Test-Path $PIDBash) {Remove-Item -Path $PIDBash -ErrorAction Ignore -Force}
+                    $Job.ProcessId = [int[]]@()
                 }
             }
         } catch {
