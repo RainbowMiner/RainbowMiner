@@ -7,8 +7,6 @@
         [Switch]$SetupOnly = $false
     )
 
-    [Console]::TreatControlCAsInput = $True
-
     try {
         #Setup config file name and path
         $RunCleanup = $true
@@ -19,6 +17,8 @@
         if (-not [IO.Path]::GetExtension($ConfigFile)) {$ConfigFile = "$($ConfigFile).txt"}
 
         if ($IsLinux) {
+            [Console]::TreatControlCAsInput = $True
+
             Initialize-OCDaemon
 
             if (-not (Test-Path "/opt/rainbowminer/lib")) {
