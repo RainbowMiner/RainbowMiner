@@ -4361,7 +4361,7 @@ function Invoke-NvidiaSettings {
         }
         if ($NvCmd) {
             if (Test-OCDaemon) {
-                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')"
+                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')" -OnEmptyAdd "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
             } else {
                 Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
             }
@@ -6640,7 +6640,7 @@ param(
         }
     } else {
         if ($IsLinux -and $Runas -and (Test-OCDaemon)) {
-            Set-OCDaemon "$NVSMI $($Arguments -join ' ')"
+            Set-OCDaemon "$NVSMI $($Arguments -join ' ')" -OnEmptyAdd "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
         } else {
             Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
         }
