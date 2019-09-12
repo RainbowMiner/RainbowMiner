@@ -7,6 +7,8 @@
         [Switch]$SetupOnly = $false
     )
 
+    [Console]::TreatControlCAsInput = $True
+
     try {
         #Setup config file name and path
         $RunCleanup = $true
@@ -2228,14 +2230,15 @@ function Invoke-Core {
             }
         }
  
-        $keyPressedValue = $false
-
-        if ((Test-Path ".\stopp.txt") -or $API.Stop) {$keyPressedValue = "X"}
-        elseif ($API.Pause -ne $Session.PauseMiners) {$keyPressedValue = "P"}
-        elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {$keyPressedValue = "L"}
-        elseif ($API.Update) {$keyPressedValue = "U"}
-        elseif ($API.UpdateBalance) {$keyPressedValue = "B"}
-        elseif ([console]::KeyAvailable) {$keyPressedValue = $([System.Console]::ReadKey($true)).key}
+        $keyPressedValue =  if ((Test-Path ".\stopp.txt") -or $API.Stop) {"X"}
+                            elseif ($API.Pause -ne $Session.PauseMiners) {"P"}
+                            elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {"L"}
+                            elseif ($API.Update) {"U"}
+                            elseif ($API.UpdateBalance) {"B"}
+                            elseif ([console]::KeyAvailable) {
+                                $key = [System.Console]::ReadKey($true)
+                                if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
+                            }
 
         if ($keyPressedValue) {
             switch ($keyPressedValue) {
@@ -2410,7 +2413,6 @@ function Invoke-Core {
 }
 
 function Stop-Core {
-    [console]::TreatControlCAsInput = $false
 
     #Stop services
     if (-not $Session.Config.DisableAPI)         {Stop-APIServer}
@@ -2444,4 +2446,5 @@ function Stop-Core {
         }
     }
     Stop-Autoexec
+    [console]::TreatControlCAsInput = $false
 }
