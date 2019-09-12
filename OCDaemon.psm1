@@ -84,7 +84,7 @@ function Set-OCDaemon {
 param(
     [Parameter(Mandatory = $True)]
     [String]$Cmd,
-    [Parameter(Mandatory = $True)]
+    [Parameter(Mandatory = $False)]
     [String]$OnEmptyAdd = ""
 )
     if (-not (Test-Path Variable:Global:GlobalOCD)) {[System.Collections.ArrayList]$Global:GlobalOCD = @()}
