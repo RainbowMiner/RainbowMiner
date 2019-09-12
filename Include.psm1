@@ -1903,8 +1903,8 @@ function Start-SubProcessInScreen {
     & chmod +x $PIDBash > $null
     & chmod +x $PIDTest > $null
 
-    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
-        param($ControllerProcessID, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd)
+    $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
+        param($ControllerProcessID, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
 
         Import-Module "$(Join-Path $CurrentPwd "OCDaemon.psm1")"
 
@@ -1916,7 +1916,7 @@ function Start-SubProcessInScreen {
         $Process = $null
         $started = $false
 
-        if (Test-OCDaemon) {
+        if (-not $IsAdmin -and (Test-OCDaemon)) {
             $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.0.$ScreenName" -FilePath $PIDBash -Move -Quiet
         } else {
             $ProcessParams = @{
@@ -1924,6 +1924,8 @@ function Start-SubProcessInScreen {
                 ArgumentList     = ""
                 WorkingDirectory = $WorkingDirectory
                 PassThru         = $true
+                RedirectStandardOutput  = "/dev/null"
+                RedirectStandardError = "/dev/null"
             }
             if ($null -ne (Start-Process @ProcessParams)) {$started=$true}
         }
@@ -1955,7 +1957,7 @@ function Start-SubProcessInScreen {
         do {
             if ($ControllerProcess.WaitForExit(1000)) {
                 $ArgumentList = "--stop --name $ProcessName --pidfile $PIDPath --retry 5"
-                if (Test-OCDaemon) {
+                if (-not $IsAdmin -and (Test-OCDaemon)) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                 } else {
                     $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
@@ -2065,7 +2067,7 @@ function Stop-SubProcess {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
                                 $ArgumentList = "--stop --name $($Process.Name) --pidfile $($MI.pid_path) --retry 5"
-                                if (Test-OCDaemon) {
+                                if (-not $Session.IsAdmin -and (Test-OCDaemon)) {
                                     $Msg = Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList"
                                     if ($Msg) {Write-Log -Level Info "OCDaemon reports: $Msg"}
                                 } else {

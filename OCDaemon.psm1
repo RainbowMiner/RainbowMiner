@@ -101,7 +101,7 @@ param(
 
     if (-not (Test-OCDaemon)) {
         if (-not $Session.IsAdmin) {
-            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"ocdaemon start`" at the commandline to enable overclocking."
+            Write-Log -Level Warn "The overclocking daemon is not running. Please stop RainbowMiner and run `"./install.sh`" at the commandline to enable overclocking."
         }
         return
     }
@@ -111,7 +111,7 @@ param(
         $tmpfn = "$($Session.OCDaemonPrefix).$($Session.OCDaemonCount)"
         Invoke-OCDaemonWithName -Name $tmpfn -Cmd $Cmd
         if (Test-Path "/opt/rainbowminer/ocdcmd/$tmpfn.sh") {
-            Write-Log -Level Warn "OCDaemon failed. Please run `"ocdaemon start`" at the command line"
+            Write-Log -Level Warn "OCDaemon failed. Please run `"./install.sh`" at the command line"
         }
         $Session.OCDaemonCount++
     }
