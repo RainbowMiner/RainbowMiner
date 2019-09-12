@@ -1924,7 +1924,6 @@ function Start-SubProcessInScreen {
                 ArgumentList     = ""
                 WorkingDirectory = $WorkingDirectory
                 PassThru         = $true
-                RedirectStandardError = "/dev/null"
             }
             if ($null -ne (Start-Process @ProcessParams)) {$started=$true}
         }
