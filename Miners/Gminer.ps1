@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.62-gminer/gminer_1_62_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.63-gminer/gminer_1_63_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.62-gminer/gminer_1_62_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.63-gminer/gminer_1_63_windows64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
@@ -28,6 +28,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckaroo29s";     MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo swap";        Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Equihash Cuckaroo29s/SWAP
     [PSCustomObject]@{MainAlgorithm = "Cuckatoo31";      MinMemGb = 8;   MinMemGbW10 = 10; Params = "--algo grin31";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Equihash Cuckatoo31/GRIN31
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGb = 4;   MinMemGbW10 = 6;  Params = "--algo cuckarood29"; Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; NoCPUMining = $true} #Equihash Cuckarood29/GRIN
+    [PSCustomObject]@{MainAlgorithm = "Eaglesong";       MinMemGb = 2;                     Params = "--algo eaglesong";   Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGb = 2;                     Params = "--algo 96_5";        Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGb = 2;                     Params = "--algo 144_5";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 144,5
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGb = 2;                     Params = "--algo 125_4";       Vendor = @("AMD","NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 125,4/ZelHash
@@ -74,7 +75,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
             $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm -ne "Eaglesong" -or $Pools.$Algorithm_Norm.Name -notmatch "Sparkpool")) {
                     $PersCoin = if ($Algorithm_Norm -match "^Equihash") {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
