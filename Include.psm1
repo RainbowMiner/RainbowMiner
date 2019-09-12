@@ -1874,6 +1874,8 @@ function Start-SubProcessInScreen {
         $ArgumentList = "$ArgumentList 2>&1 | tee `'$($LogPath)`'"
     }
 
+    Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
+
     $Stuff = @()
     $Stuff += "cd /"
     $Stuff += "cd '$WorkingDirectory'"
