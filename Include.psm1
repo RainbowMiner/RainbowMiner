@@ -1954,7 +1954,7 @@ function Start-SubProcessInScreen {
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {
-                $ArgumentList = "--stop --name '$PIDBash' --pidfile '$PIDPath' --retry 5"
+                $ArgumentList = "--stop --pidfile '$PIDPath' --retry 5"
                 if (Test-OCDaemon) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                 } else {
@@ -2064,7 +2064,7 @@ function Stop-SubProcess {
                         try {
                             $PIDInfo = Join-Path (Resolve-Path ".\Data\pid") "$($Job.ScreenName)_info.txt"
                             if ($MI = Get-Content $PIDInfo -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
-                                $ArgumentList = "--stop --exec '$($MI.miner_exec)' --pidfile '$($MI.pid_path)' --retry 5"
+                                $ArgumentList = "--stop --pidfile '$($MI.pid_path)' --retry 5"
                                 if (Test-OCDaemon) {
                                     $Msg = Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList"
                                     if ($Msg) {Write-Log -Level Info "OCDaemon reports: $Msg"}
