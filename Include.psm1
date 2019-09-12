@@ -1879,7 +1879,17 @@ function Start-SubProcessInScreen {
     $Stuff = @()
     $Stuff += "cd /"
     $Stuff += "cd '$WorkingDirectory'"
+
+    $Stuff += "export GPU_FORCE_64BIT_PTR=1"
+    $Stuff += "export GPU_MAX_HEAP_SIZE=100"
+    $Stuff += "export GPU_USE_SYNC_OBJECTS=1"
+    $Stuff += "export GPU_MAX_ALLOC_PERCENT=100"
+    $Stuff += "export GPU_SINGLE_ALLOC_PERCENT=100"
+    $Stuff += "export GPU_MAX_WORKGROUP_SIZE=256"
+    $Stuff += "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff += "export $($matches[1])=$($matches[2])"}
+
     $Stuff += "export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
     $Stuff += "start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList"
 
