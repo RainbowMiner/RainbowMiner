@@ -61,7 +61,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "hsr"; Params = ""} #HSR
     [PSCustomObject]@{MainAlgorithm = "jeonghash"; Params = ""} #GLTJeongHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = ""} #Lyra2z
-    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = ""; ExtendInterval = 2} #MTP
+    [PSCustomObject]@{MainAlgorithm = "mtp"; MinMemGB = 6; Params = ""; ExtendInterval = 2} #MTP
     [PSCustomObject]@{MainAlgorithm = "padihash"; Params = ""} #GLTPadiHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "pawelhash"; Params = ""} #GLTPawelHash  (new with v0.8.6)
     [PSCustomObject]@{MainAlgorithm = "phi"; Params = ""} #PHI
@@ -111,15 +111,18 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
 if (-not $Uri) {return}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
-    $Miner_Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-    $Miner_Model = $_.Model
-    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-
-    $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+    $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
+    $Miner_Model  = $_.Model
 
     $Commands | ForEach-Object {
+        $MinMemGB     = [int]$_.MinMemGB
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+        $Miner_Port   = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+        $Miner_Name   = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+        $Miner_Port   = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+
+        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
         
