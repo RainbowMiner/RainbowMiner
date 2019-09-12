@@ -10,7 +10,7 @@ export GPU_SINGLE_ALLOC_PERCENT=100
 export GPU_MAX_WORKGROUP_SIZE=256
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-command="& {./RainbowMiner.ps1 -configfile ./Config/config.txt -setuponly; exit \$lastexitcode}"
+command="& {./RainbowMiner.ps1 -configfile ./Config/config.txt; exit \$lastexitcode}"
 
 while true; do
 
