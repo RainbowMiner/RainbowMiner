@@ -1659,7 +1659,7 @@ function Start-SubProcess {
         [String]$ScreenName = ""
     )
 
-    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore)) {
+    if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore) -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
         Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
