@@ -1880,7 +1880,7 @@ function Start-SubProcessInScreen {
     $Stuff += "cd /"
     $Stuff += "cd '$WorkingDirectory'"
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff += "export $($matches[1])=$($matches[2])"}
-    $Stuff += "export LD_LIBRARY_PATH=./:$($LDExportPath)"
+    $Stuff += "export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
     $Stuff += "start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList"
 
     $Cmd = @()
