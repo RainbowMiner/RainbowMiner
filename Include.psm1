@@ -1742,7 +1742,7 @@ function Start-SubProcessInConsole {
     [int[]]$Running = @()
     Get-SubProcessRunningIds $FilePath | Foreach-Object {$Running += $_}
 
-    $LDExp = if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}
+    $LDExp = if ($IsLinux) {if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")}} else {""}
     $Job = Start-Job -ArgumentList $PID, (Resolve-Path ".\DotNet\Tools\CreateProcess.cs"), $LDExp, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $IsWindows, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation {
         param($ControllerProcessID, $CreateProcessPath, $LDExportPath, $FilePath, $ArgumentList, $WorkingDirectory, $LogPath, $EnvVars, $StartWithoutTakingFocus, $CurrentPwd)
 
@@ -1790,7 +1790,7 @@ function Start-SubProcessInConsole {
 
                 # Set lib path to local
                 #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
-                $env:LD_LIBRARY_PATH = "./:$($LDExportPath)"
+                $env:LD_LIBRARY_PATH = "$($LDExportPath)"
             }
 
             $Process = Start-Process @ProcessParams
