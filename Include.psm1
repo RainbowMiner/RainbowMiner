@@ -6975,6 +6975,21 @@ function Get-Uptime {
     }
 }
 
+function Get-ReadableHex32 {
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $True)]
+    [String]$key
+)
+    if ($key.Length % 32) {
+        $key
+    } else {
+        $s = ""
+        for ($i=0; $i -lt $key.Length; $i+=32) {$s+="$($key.Substring($i,8))-$($key.Substring($i+4,4))-$($key.Substring($i+8,4))-$($key.Substring($i+12,4))-$($key.Substring($i+16,12))"}
+        $s
+    }
+}
+
 function Invoke-NHRequest {
 [cmdletbinding()]   
 param(    
@@ -6999,6 +7014,11 @@ param(
     [Parameter(Mandatory = $False)]
     [switch]$ForceLocal
 )
+    #autofix key/secret/organizationid
+    if ($key) {$key = Get-ReadableHex32 $key}
+    if ($secret) {$secret = Get-ReadableHex32 $secret}
+    if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
+
     $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
     if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]::Synchronized(@{})}
     if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
