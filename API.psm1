@@ -842,23 +842,19 @@
                     $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($API.MRRAlgos) {
+                        [hashtable]$StatsCPU = @{}
+                        [hashtable]$StatsGPU = @{}
+                        if ($CpuDevices) {
+                            $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                        }
+                        if ($GpuDevices) {
+                            $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                        }
                         $API.MRRAlgos | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
-                            $Speed = 0
-                            if ($CpuDevices) {
-                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "CPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
-                            }
-                            if ($GpuDevices) {
-                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "GPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
-                            }
-                            if (-not $Speed) {
-                                if ($CpuDevices) {
-                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "CPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
-                                }
-                                if ($GpuDevices) {
-                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "GPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
-                                }
-                            }
+                            $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
                             $Mrr_Data.Add([PSCustomObject]@{
                                 Algorithm = $Algo
                                 Title     = $_.display
@@ -873,6 +869,8 @@
                                 ActualRigs= ($API.MRRAllRigs | Where-Object {$Algo -eq (Get-MiningRigRentalAlgorithm $_.type)} | Measure-Object).Count
                             }) > $null
                         }
+                        Remove-Variable "StatsCPU"
+                        Remove-Variable "StatsGPU"
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "AllRigs_Request"
@@ -888,25 +886,21 @@
                     $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($API.MRRAllRigs) {
+                        [hashtable]$StatsCPU = @{}
+                        [hashtable]$StatsGPU = @{}
+                        if ($CpuDevices) {
+                            $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                        }
+                        if ($GpuDevices) {
+                            $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                        }
                         $API.MRRAllRigs | Foreach-Object {
                             $Rig = $_
                             $Pool_Data = $API.MRRAlgos | Where-Object {$_.name -eq $Rig.type}
                             $Algo  = Get-MiningRigRentalAlgorithm $_.type
-                            $Speed = 0
-                            if ($CpuDevices) {
-                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "CPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
-                            }
-                            if ($GpuDevices) {
-                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "GPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
-                            }
-                            if (-not $Speed) {
-                                if ($CpuDevices) {
-                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "CPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
-                                }
-                                if ($GpuDevices) {
-                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "GPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
-                                }
-                            }
+                            $Speed = [Double]$StatsCPU[$Algo] + [Double]$StatsGPU[$Algo]
                             $Mrr_Data.Add([PSCustomObject]@{
                                 Algorithm = $Algo
                                 Title     = $Pool_Data.display
@@ -928,6 +922,8 @@
                                 HashRateAdv = $Rig.hashrate.advertised.hash * (Get-MiningRigRentalsDivisor $Rig.hashrate.advertised.type)
                             }) > $null
                         }
+                        Remove-Variable "StatsCPU"
+                        Remove-Variable "StatsGPU"
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "AllRigs_Request"
