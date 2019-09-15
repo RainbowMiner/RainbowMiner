@@ -843,6 +843,9 @@
                         $Pool_Request | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
                             $Speed = ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo} | Select-Object -ExpandProperty Speed | Measure-Object -Sum).Sum
+                            if (-not $Speed) {
+                                $Speed = ($API.Stats.Keys | Where-Object {$_ -match "_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                            }
                             $Mrr_Data += [PSCustomObject]@{
                                 Algorithm = $Algo
                                 Title     = $_.display
