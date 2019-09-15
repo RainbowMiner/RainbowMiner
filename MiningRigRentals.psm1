@@ -283,7 +283,7 @@ param(
     [Parameter(Mandatory = $True)]
     [String[]]$workers
 )
-    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret | Where-Object description -match "\[($($workers -join '|'))\]"
+    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret | Where-Object description -match "\[($($workers -join '|'))\]" -Cache 55
 }
 
 function Update-MiningRigRentalRigs {
