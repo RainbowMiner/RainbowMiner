@@ -24,7 +24,6 @@
 >
   <thead>
       <tr>
-          <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
           <th data-field="Title" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="tHashRate" data-align="right" data-sortable="true">Hashrate</th>
           <th data-field="RigsPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Rig Price</th>
@@ -32,7 +31,7 @@
           <th data-field="LastPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Last Price</th>
           <th data-field="Unit" data-align="right" data-sortable="true">Unit</th>
           <th data-field="RigsRented" data-align="right" data-sortable="true">Rented</th>
-          <th data-field="RigsAvail" data-align="right" data-sortable="true">Avail</th>
+          <th data-field="tRigs" data-align="right" data-sortable="true">Rigs</th>
       </tr>
   </thead>
 </table>
@@ -52,6 +51,7 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+            item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
         });
         return data;
     }
