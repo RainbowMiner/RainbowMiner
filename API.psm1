@@ -836,6 +836,32 @@
                     }
                     break
                 }
+                "/mrrstats" {
+                    $Pool_Request = [PSCustomObject]@{}
+                    $Mrr_Data = @()
+                    if ($Pool_Request = Get-MiningRigRentalAlgos) {
+                        $Pool_Request | Foreach-Object {
+                            $Algo  = Get-MiningRigRentalAlgorithm $_.name
+                            $Speed = ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo} | Select-Object -ExpandProperty Speed | Measure-Object -Sum).Sum
+                            $Mrr_Data += [PSCustomObject]@{
+                                Algorithm = $Algo
+                                Title     = $_.display
+                                SuggPrice = $_.suggested_price.amount
+                                LastPrice = $_.stats.prices.last.amount
+                                RigsPrice = ($Speed / (Get-MiningRigRentalsDivisor $_.suggested_price.unit))*[double]$_.suggested_price.amount
+                                Unit      = $_.hashtype.ToUpper()
+                                Hot       = $_.hot
+                                RigsAvail = $_.stats.available.rigs
+                                RigsRented= $_.stats.rented.rigs                                
+                                HashRate  = $Speed
+                            }
+                        }
+                    }
+                    $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
+                    Remove-Variable "Pool_Request"
+                    Remove-Variable "Mrr_Data"
+                    break
+                }
                 default {
                     # Set index page
                     if ($Path -eq "/") {

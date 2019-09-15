@@ -1,0 +1,60 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navmrrstats" class="h2">MiningRigRental Statistics</h1>
+</div>
+<p>
+    "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
+</p>
+<table id="mrrstats" class="table"
+  data-toggle="table"
+  data-url="/mrrstats"
+  data-response-handler="formatMRRStats"
+  data-filter-control="true"
+  data-filter-show-clear="true"
+  data-sort-order="asc"
+  data-sort-name="Algorithm"
+  data-cache="false"
+  data-show-columns="true"
+  data-show-toggle="true"
+  data-show-refresh="true"
+  data-icons-prefix="fa"
+  data-icons="icons"
+  data-detail-view="true"
+  data-detail-formatter="detailFormatter"
+>
+  <thead>
+      <tr>
+          <th data-field="Algorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
+          <th data-field="Title" data-sortable="true" data-filter-control="select">Name</th>
+          <th data-field="tHashRate" data-align="right" data-sortable="true">Hashrate</th>
+          <th data-field="RigsPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Rig Price</th>
+          <th data-field="SuggPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Suggested</th>
+          <th data-field="LastPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Last Price</th>
+          <th data-field="Unit" data-align="right" data-sortable="true">Unit</th>
+          <th data-field="RigsRented" data-align="right" data-sortable="true">Rented</th>
+          <th data-field="RigsAvail" data-align="right" data-sortable="true">Avail</th>
+      </tr>
+  </thead>
+</table>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+    $(function () {
+        function refreshTable() {
+            if (!$("table#mrrstats tr.detail-view").length) $("table#mrrstats").bootstrapTable("refresh", { silent: true });
+            window.setTimeout(refreshTable, 600000);
+        }
+        window.setTimeout(refreshTable, 600000);
+    });
+
+    function formatMRRStats(data) {
+        // This function can alter the returned data before building the table, formatting it in a way
+        // that is easier to display and manipulate in a table
+        $.each(data, function (index, item) {
+            item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+        });
+        return data;
+    }
+
+</script>
+<!--#include file="/parts/foot.html" -->
