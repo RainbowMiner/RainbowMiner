@@ -837,11 +837,18 @@
                     break
                 }
                 "/mrrstats" {
+                    $AllRigs_Request = @()
                     $Pool_Request = [PSCustomObject]@{}
                     $Mrr_Data = @()
                     $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
                     $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
-                    if ($Pool_Request = Get-MiningRigRentalAlgos) {
+
+                    if ($API.Config.Pools.MiningRigRentals.API_Key -and $API.Config.Pools.MiningRigRentals.API_Secret) {
+                        $Workers = @($API.Config.DeviceModel | Where-Object {$API.Config.Devices.$_.Worker} | Foreach-Object {$API.Config.Devices.$_.Worker} | Select-Object -Unique) + $API.Config.WorkerName | Select-Object -Unique
+                        $AllRigs_Request = Get-MiningRigRentalRigs -key $API.Config.Pools.MiningRigRentals.API_Key -secret $API.Config.Pools.MiningRigRentals.API_Secret -workers $Workers
+                    }
+
+                    if ($Pool_Request = Get-MiningRigRentalAlgos -FromCache) {
                         $Pool_Request | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
                             $Speed = 0
@@ -868,12 +875,74 @@
                                 Unit      = $_.hashtype.ToUpper()
                                 Hot       = $_.hot
                                 RigsAvail = $_.stats.available.rigs
-                                RigsRented= $_.stats.rented.rigs                                
+                                RigsRented= $_.stats.rented.rigs
                                 HashRate  = $Speed
+                                ActualRigs= ($AllRigs_Request | Where-Object {$Algo -eq (Get-MiningRigRentalAlgorithm $_.type)} | Measure-Object).Count
                             }
                         }
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
+                    Remove-Variable "AllRigs_Request"
+                    Remove-Variable "Pool_Request"
+                    Remove-Variable "Mrr_Data"
+                    break
+                }
+                "/mrrrigs" {
+                    $AllRigs_Request = @()
+                    $Pool_Request = [PSCustomObject]@{}
+                    $Mrr_Data = @()
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+
+                    if ($API.Config.Pools.MiningRigRentals.API_Key -and $API.Config.Pools.MiningRigRentals.API_Secret) {
+                        $Workers = @($API.Config.DeviceModel | Where-Object {$API.Config.Devices.$_.Worker} | Foreach-Object {$API.Config.Devices.$_.Worker} | Select-Object -Unique) + $API.Config.WorkerName | Select-Object -Unique
+                        $AllRigs_Request = Get-MiningRigRentalRigs -key $API.Config.Pools.MiningRigRentals.API_Key -secret $API.Config.Pools.MiningRigRentals.API_Secret -workers $Workers
+                    }
+
+                    if ($Pool_Request = Get-MiningRigRentalAlgos -FromCache) {
+                        $AllRigs_Request | Foreach-Object {
+                            $Rig = $_
+                            $Pool_Data = $Pool_Request | Where-Object {$_.name -eq $Rig.type}
+                            $Algo  = Get-MiningRigRentalAlgorithm $_.type
+                            $Speed = 0
+                            if ($CpuDevices) {
+                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "CPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
+                            }
+                            if ($GpuDevices) {
+                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "GPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
+                            }
+                            if (-not $Speed) {
+                                if ($CpuDevices) {
+                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "CPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                                }
+                                if ($GpuDevices) {
+                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "GPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                                }
+                            }
+                            $Mrr_Data += [PSCustomObject]@{
+                                Algorithm = $Algo
+                                Title     = $Pool_Data.display
+                                SuggPrice = $Pool_Data.suggested_price.amount
+                                LastPrice = $Pool_Data.stats.prices.last.amount
+                                RigsPrice = ($Speed / (Get-MiningRigRentalsDivisor $Pool_Data.suggested_price.unit))*[double]$Pool_Data.suggested_price.amount
+                                Unit      = $Pool_Data.hashtype.ToUpper()
+                                Hot       = $Pool_Data.hot
+                                RigsAvail = $Pool_Data.stats.available.rigs
+                                RigsRented= $Pool_Data.stats.rented.rigs
+                                Price     = $Rig.price.BTC.price
+                                MinPrice  = $Rig.price.BTC.minimum
+                                Modifier  = $Rig.price.BTC.modifier
+                                Multiplier= Get-MiningRigRentalsDivisor $Rig.price.type
+                                PriceData = $Rig.price
+                                MinHours  = $Rig.minhours
+                                MaxHours  = $Rig.maxhours
+                                HashRate  = $Speed
+                                HashRateAdv = $Rig.hashrate.advertised.hash * (Get-MiningRigRentalsDivisor $Rig.hashrate.advertised.type)
+                            }
+                        }
+                    }
+                    $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
+                    Remove-Variable "AllRigs_Request"
                     Remove-Variable "Pool_Request"
                     Remove-Variable "Mrr_Data"
                     break

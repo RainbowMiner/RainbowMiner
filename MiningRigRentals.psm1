@@ -255,6 +255,20 @@ param(
 }
 
 function Get-MiningRigRentalAlgos {
+[cmdletbinding()]   
+param(
+    [Parameter(Mandatory = $False)]
+    [Switch]$FromCache = $false
+)
+    if ($FromCache -and (Test-Path ".\Data\mrralgos.json")) {
+        try {
+            Get-Content ".\Data\mrralgos.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+        return
+    }
+
     $Name = "MiningRigRentals"
 
     try {
@@ -270,6 +284,8 @@ function Get-MiningRigRentalAlgos {
         Write-Log -Level Warn "Pool API ($Name) returned nothing. "
         return
     }
+    Set-ContentJson ".\Data\mrralgos.json" -Data $Pool_Request.data -Compress
+
     $Pool_Request.data
 }
 
@@ -281,9 +297,11 @@ param(
     [Parameter(Mandatory = $True)]
     [String]$secret,
     [Parameter(Mandatory = $True)]
-    [String[]]$workers
+    [String[]]$workers,
+    [Parameter(Mandatory = $False)]
+    [Int]$Cache = 55
 )
-    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret | Where-Object description -match "\[($($workers -join '|'))\]" -Cache 55
+    Invoke-MiningRigRentalRequest "/rig/mine" $key $secret -Cache $Cache | Where-Object description -match "\[($($workers -join '|'))\]"
 }
 
 function Update-MiningRigRentalRigs {

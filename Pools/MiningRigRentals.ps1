@@ -42,8 +42,6 @@ $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices
 
 $AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 
-if (-not $AllRigs_Request) {return}
-
 $Pool_Request = [PSCustomObject]@{}
 
 if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
@@ -53,6 +51,8 @@ if ($Session.MRRTag -ne $Pool_Request_Tag) {
     Set-MiningRigRentalConfigDefault -Data $Pool_Request > $null
     $Session.MRRTag = $Pool_Request_Tag
 }
+
+if (-not $AllRigs_Request) {return}
 
 [hashtable]$Pool_RegionsTable = @{}
 
