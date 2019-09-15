@@ -839,12 +839,25 @@
                 "/mrrstats" {
                     $Pool_Request = [PSCustomObject]@{}
                     $Mrr_Data = @()
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
                     if ($Pool_Request = Get-MiningRigRentalAlgos) {
                         $Pool_Request | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
-                            $Speed = ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo} | Select-Object -ExpandProperty Speed | Measure-Object -Sum).Sum
+                            $Speed = 0
+                            if ($CpuDevices) {
+                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "CPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
+                            }
+                            if ($GpuDevices) {
+                                $Speed += ($API.ActiveMiners | Where-Object {$_.BaseAlgorithm[0] -eq $Algo -and $_.DeviceName -match "GPU"} | Select-Object -ExpandProperty Speed | Select-Object -First 1 | Measure-Object -Maximum).Maximum
+                            }
                             if (-not $Speed) {
-                                $Speed = ($API.Stats.Keys | Where-Object {$_ -match "_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                                if ($CpuDevices) {
+                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "CPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                                }
+                                if ($GpuDevices) {
+                                    $Speed += ($API.Stats.Keys | Where-Object {$_ -match "GPU#.+_$($Algo)_"} | Foreach-Object {$API.Stats.$_.Day} | Measure-Object -Maximum).Maximum
+                                }
                             }
                             $Mrr_Data += [PSCustomObject]@{
                                 Algorithm = $Algo
