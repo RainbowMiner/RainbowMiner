@@ -1,15 +1,15 @@
 ﻿<!--#include file="/parts/head.html" -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 id="title" data-navbaractive="navmrrstats" class="h2">MiningRigRental Statistics</h1>
+    <h1 id="title" data-navbaractive="navmrrrigs" class="h2">MiningRigRental Rigs</h1>
 </div>
 <p>
-    "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
+    "Adv.Price", "Min.Price", "Suggested" and "Last Price" in BTC per day and "Unit" / "Rig Price" in BTC per day
 </p>
 
-<table id="mrrstats" class="table"
+<table id="mrrrigs" class="table"
         data-toggle="table"
-        data-url="/mrrstats"
-        data-response-handler="formatMRRStats"
+        data-url="/mrrrigs"
+        data-response-handler="formatMRRRigs"
         data-filter-control="true"
         data-filter-show-clear="true"
         data-sort-order="asc"
@@ -26,13 +26,15 @@
         <tr>
             <th data-field="Title" data-sortable="true" data-filter-control="select">Name</th>
             <th data-field="tHashRate" data-align="right" data-sortable="true">Hashrate</th>
+            <th data-field="tHashRateAdv" data-align="right" data-sortable="true">Adv.HR</th>
+            <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Adv.Price</th>
+            <th data-field="MinPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Min.Price</th>
             <th data-field="RigsPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Rig Price</th>
             <th data-field="SuggPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Suggested</th>
             <th data-field="LastPrice" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Last Price</th>
+            <th data-field="tModifier" data-align="right" data-sortable="true">+-</th>
+            <th data-field="tHours" data-align="right" data-sortable="true">h</th>
             <th data-field="Unit" data-align="right" data-sortable="true">Unit</th>
-            <th data-field="RigsRented" data-align="right" data-sortable="true">Rented</th>
-            <th data-field="tRigs" data-align="right" data-sortable="true">Rigs</th>
-            <th data-field="ActualRigs" data-align="right" data-sortable="true">Yours</th>
         </tr>
     </thead>
 </table>
@@ -42,18 +44,21 @@
 <script type="text/javascript">
     $(function () {
         function refreshTable() {
-            if (!$("table#mrrstats tr.detail-view").length) $("table#mrrstats").bootstrapTable("refresh", { silent: true });
+            if (!$("table#mrrrigs tr.detail-view").length) $("table#mrrrigs").bootstrapTable("refresh", { silent: true });
             window.setTimeout(refreshTable, 600000);
         }
         window.setTimeout(refreshTable, 600000);
     });
 
-    function formatMRRStats(data) {
+    function formatMRRRigs(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             item.tHashRate = (item.HashRate) ? formatHashRate(item.HashRate) : "-";
+            item.tHashRateAdv = (item.HashRateAdv) ? formatHashRate(item.HashRateAdv) : "-";
+            item.tModifier = (item.Modifier != '0') ? item.Modifier + " %" : "-";
             item.tRigs = parseInt(item.RigsRented) + parseInt(item.RigsAvail)
+            item.tHours = "" + item.MinHours + "-" + item.MaxHours + " h";
         });
         return data;
     }

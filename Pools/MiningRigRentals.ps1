@@ -40,11 +40,11 @@ if (-not $API_Key -or -not $API_Secret) {return}
 
 $Workers = @($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker} | Foreach-Object {$Session.Config.Devices.$_.Worker} | Select-Object -Unique) + $Worker | Select-Object -Unique
 
-$AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
+$API.MRRAllRigs = $AllRigs_Request = Get-MiningRigRentalRigs -key $API_Key -secret $API_Secret -workers $Workers
 
 $Pool_Request = [PSCustomObject]@{}
 
-if (-not ($Pool_Request = Get-MiningRigRentalAlgos)) {return}
+if (-not ($API.MRRAlgos = $Pool_Request = Get-MiningRigRentalAlgos)) {return}
 
 $Pool_Request_Tag = Get-MD5Hash "$($Pool_Request.name | Sort-Object)"
 if ($Session.MRRTag -ne $Pool_Request_Tag) {

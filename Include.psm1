@@ -4762,7 +4762,7 @@ function Set-ContentJson {
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                ConvertTo-Json -InputObject $Data -Compress:$Compress | Set-Content $PathToFile -Encoding utf8 -Force
+                ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
             }

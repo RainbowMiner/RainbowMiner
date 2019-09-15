@@ -27,7 +27,7 @@ function Set-MiningRigRentalConfigDefault {
             # static = use PriceBTC/MinPriceBTC as price
             # mrr    = use MiningRigRental's suggested_price
             
-            foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
+            foreach ($Algorithm_Norm in @(@($Setup.PSObject.Properties.Name | Select-Object) + @($Data | Where-Object {$_} | Foreach-Object {Get-MiningRigRentalAlgorithm $_.name}) | Select-Object -Unique)) {
                 if (-not $Preset.$Algorithm_Norm) {$Preset | Add-Member $Algorithm_Norm $(if ($Setup.$Algorithm_Norm) {$Setup.$Algorithm_Norm} else {[PSCustomObject]@{}}) -Force}
             }
 
@@ -41,7 +41,7 @@ function Set-MiningRigRentalConfigDefault {
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). Is the file openend by an editor?"
+            Write-Log -Level Warn "Could not write to $(([IO.FileInfo]$PathToFile).Name). $($_.Exception.Message)"
             $Session.ConfigFiles[$ConfigName].Healthy = $false
         }
     }
@@ -255,20 +255,6 @@ param(
 }
 
 function Get-MiningRigRentalAlgos {
-[cmdletbinding()]   
-param(
-    [Parameter(Mandatory = $False)]
-    [Switch]$FromCache = $false
-)
-    if ($FromCache -and (Test-Path ".\Data\mrralgos.json")) {
-        try {
-            Get-Content ".\Data\mrralgos.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-        return
-    }
-
     $Name = "MiningRigRentals"
 
     try {
@@ -284,7 +270,6 @@ param(
         Write-Log -Level Warn "Pool API ($Name) returned nothing. "
         return
     }
-    Set-ContentJson ".\Data\mrralgos.json" -Data $Pool_Request.data -Compress
 
     $Pool_Request.data
 }

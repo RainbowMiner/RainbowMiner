@@ -1003,6 +1003,7 @@ function Invoke-Core {
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }
     }
+
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
 
     #Store pools to file
