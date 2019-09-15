@@ -3,217 +3,234 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 </head>
 <body>
-<style>
-fieldset {margin-top:1em}
-legend {font-size:1.5em;font-weight:bold}        
-</style>
+    <style>
+        fieldset {
+            margin-top: 1em
+        }
+
+        legend {
+            font-size: 1.5em;
+            font-weight: bold
+        }
+    </style>
 
     <h1>RainbowMiner API</h1>
 
     API data is available at <span id="res">http://localhost:4000/&lt;resource&gt;</span>
 
     <fieldset>
-    <legend>Common Resources</legend>
+        <legend>Common Resources</legend>
 
-    <h3>Version</h3>
-    <a href="/version">/version</a>
-    <p>Returns the version number of RainbowMiner.</p>    
+        <h3>Version</h3>
+        <a href="/version">/version</a>
+        <p>Returns the version number of RainbowMiner.</p>
 
-    <h3>Info</h3>
-    <a href="/info">/info</a>
-    <p>Small configuration info for localhost display.</p>    
+        <h3>Info</h3>
+        <a href="/info">/info</a>
+        <p>Small configuration info for localhost display.</p>
 
-    <h3>Config</h3>
-    <a href="/config">/config</a>
-    <p>Shows the full configuration for the running script, after all variable substitution and pool entries are added</p>
+        <h3>Config</h3>
+        <a href="/config">/config</a>
+        <p>Shows the full configuration for the running script, after all variable substitution and pool entries are added</p>
 
-    <h3>setup.json</h3>
-    <a href="/setup.json">/setup.json</a>
-    <p>Download a setup.json - put this file into the RainbowMiner root folder, before first start.</p>
+        <h3>setup.json</h3>
+        <a href="/setup.json">/setup.json</a>
+        <p>Download a setup.json - put this file into the RainbowMiner root folder, before first start.</p>
 
-    <h3>Computer Stats</h3>
-    <a href="/computerstats">/computerstats</a>
-    <p>Shows current computer stats</p>
+        <h3>Computer Stats</h3>
+        <a href="/computerstats">/computerstats</a>
+        <p>Shows current computer stats</p>
 
-    <h3>System Uptime</h3>
-    <a href="/systemuptime">/systemuptime</a>
-    <p>Shows Windows/Linux uptime since last boot</p>
+        <h3>System Uptime</h3>
+        <a href="/systemuptime">/systemuptime</a>
+        <p>Shows Windows/Linux uptime since last boot</p>
 
-    <h3>RainbowMiner Uptime</h3>
-    <a href="/uptime">/uptime</a>
-    <p>Shows RainbowMiner uptime since last start (restart and update are ignored)</p>
+        <h3>RainbowMiner Uptime</h3>
+        <a href="/uptime">/uptime</a>
+        <p>Shows RainbowMiner uptime since last start (restart and update are ignored)</p>
 
-    <h3>Rates</h3>
-    <a href="/rates">/rates</a>
-    <p>Shows current bitcoin exchange rates</p>
-
-    </fieldset><fieldset>
-    <legend>Miner Resources</legend>
-
-    <h3>Miner</h3>
-    <a href="/miners">/miners</a>
-    <p>Dump of the $Miners variable</p>
-
-    <h3>Running Miners</h3>
-    <a href="/runningminers">/runningminers</a>
-    <p>Shows data about the miners that are currently running.</p>
-
-    <h3>Active Miners</h3>
-    <a href="/activeminers">/activeminers</a>
-    <p>Shows data about all miners that are enabled.</p>
-
-    <h3>Fastest Miners</h3>
-    <a href="/fastestminers">/fastestminers</a>
-    <p>Shows data about the fastest miners (requires 'UseFastestMinerPerAlgoOnly = $true', otherwise will be identical to 'Miners'; see readme).</p>
-
-    <h3>Failed Miners</h3>
-    <a href="/failedminers">/failedminers</a>
-    <p>Shows data about all miners that are failed.</p>
-
-    <h3>Miner Benchmark Stats</h3>
-    <a href="/minerstats">/minerstats</a>
-    <p>Shows the benchmark status of all miners</p>
-
-    <h3>Current Profit</h3>
-    <a href="/currentprofit">/currentprofit</a>
-    <p>Shows the running miner's current profit.</p>
-
-    <h3>Last Activity</h3>
-    <a href="/activity">/activity</a>
-    <p>Shows a list of all active miners over the past three days</p>
+        <h3>Rates</h3>
+        <a href="/rates">/rates</a>
+        <p>Shows current bitcoin exchange rates</p>
 
     </fieldset><fieldset>
-    <legend>Pool Resources</legend>
+        <legend>Miner Resources</legend>
 
-    <h3>Pools</h3>
-    <a href="/pools">/pools</a>
-    <p>Dump of the $Pools variable</p>
+        <h3>Miner</h3>
+        <a href="/miners">/miners</a>
+        <p>Dump of the $Miners variable</p>
 
-    <h3>Pool Balances</h3>
-    <a href="/balances">/balances</a> |
-    <a href="/balances">/balances?as_csv=1</a>
-    <p>Shows the balances and earnings at the pools by currencies (add &amp;as_csv=1 to download CSV)</p>
+        <h3>Running Miners</h3>
+        <a href="/runningminers">/runningminers</a>
+        <p>Shows data about the miners that are currently running.</p>
 
-    <a href="/balances">/balances?add_total=1</a> |
-    <a href="/balances">/balances?add_total=1&as_csv=1</a>
-    <p>Shows the balances and earnings at the pools by currencies plus a *Totals* entry, that contains a sum of all currencies (add &amp;as_csv=1 to download CSV)</p>
+        <h3>Active Miners</h3>
+        <a href="/activeminers">/activeminers</a>
+        <p>Shows data about all miners that are enabled.</p>
 
-    <a href="/balances?consolidate=1">/balances?consolidate=1</a> |
-    <a href="/balances?consolidate=1">/balances?consolidate=1&as_csv=1</a>
-    <p>Shows the balances and consolidated earnings at the pools by BTC (add &amp;as_csv=1 to download CSV)</p>
+        <h3>Fastest Miners</h3>
+        <a href="/fastestminers">/fastestminers</a>
+        <p>Shows data about the fastest miners (requires 'UseFastestMinerPerAlgoOnly = $true', otherwise will be identical to 'Miners'; see readme).</p>
 
-    <h3>Pool Earnings</h3>
-    <a href="/earnings">/earnings</a> |
-    <a href="/earnings?as_csv=1">/earnings?as_csv=1</a>
-    <p>Lists all earning events, sorted by pool and currency (add &amp;as_csv=1 to download CSV)</p>
+        <h3>Failed Miners</h3>
+        <a href="/failedminers">/failedminers</a>
+        <p>Shows data about all miners that are failed.</p>
 
-    <h3>Pool Payouts</h3>
-    <a href="/payouts">/payouts</a>
-    <p>Lists all payouts from supported pools</p>
+        <h3>Miner Benchmark Stats</h3>
+        <a href="/minerstats">/minerstats</a>
+        <p>Shows the benchmark status of all miners</p>
 
-    <h3>NewPools</h3>
-    <a href="/newpools">/newpools</a>
-    <p>Dump of the $NewPools variable</p>
+        <h3>Current Profit</h3>
+        <a href="/currentprofit">/currentprofit</a>
+        <p>Shows the running miner's current profit.</p>
 
-    <h3>AllPools</h3>
-    <a href="/allpools">/allpools</a>
-    <p>Dump of the $AllPools variable</p>
-
-    <h3>Totals</h3>
-    <a href="/totals">/totals</a>
-    <p>Shows sum of all calculated profits per pool since last reset</p>
-
-    <h3>TotalsCsv</h3>
-    <a href="/totalscsv">/totalscsv</a>
-    <p>Shows sum of all calculated profits per pool since last reset as csv</p>
-
-</fieldset><fieldset>
-    <legend>Device Resources</legend>
-
-    <h3>Selected Devices</h3>
-    <a href="/devices">/devices</a>
-    <p>Dump of the $Devices variable, used only for debugging. Shows information about selected mining devices, used only for debugging.</p>
-
-    <h3>All Devices</h3>
-    <a href="/alldevices">/devices</a>
-    <p>Dump of the $AllDevices variable, used only for debugging. Shows information about all found mining devices, used only for debugging.</p>
-
-    <h3>Device Groups</h3>
-    <a href="/devicecombos">/devicecombos</a>
-    <p>Show a list of possible device combinations</p>
+        <h3>Last Activity</h3>
+        <a href="/activity">/activity</a>
+        <p>Shows a list of all active miners over the past three days</p>
 
     </fieldset><fieldset>
-    <legend>Algorithm Resources</legend>
+        <legend>Pool Resources</legend>
 
-    <h3>Algorithms</h3>
-    <a href="/algorithms">/algorithms</a>
-    <p>Shows all algorithms that can be mined with at least one pool</p>
+        <h3>Pools</h3>
+        <a href="/pools">/pools</a>
+        <p>Dump of the $Pools variable</p>
+
+        <h3>Pool Balances</h3>
+        <a href="/balances">/balances</a> |
+        <a href="/balances">/balances?as_csv=1</a>
+        <p>Shows the balances and earnings at the pools by currencies (add &amp;as_csv=1 to download CSV)</p>
+
+        <a href="/balances">/balances?add_total=1</a> |
+        <a href="/balances">/balances?add_total=1&as_csv=1</a>
+        <p>Shows the balances and earnings at the pools by currencies plus a *Totals* entry, that contains a sum of all currencies (add &amp;as_csv=1 to download CSV)</p>
+
+        <a href="/balances?consolidate=1">/balances?consolidate=1</a> |
+        <a href="/balances?consolidate=1">/balances?consolidate=1&as_csv=1</a>
+        <p>Shows the balances and consolidated earnings at the pools by BTC (add &amp;as_csv=1 to download CSV)</p>
+
+        <h3>Pool Earnings</h3>
+        <a href="/earnings">/earnings</a> |
+        <a href="/earnings?as_csv=1">/earnings?as_csv=1</a>
+        <p>Lists all earning events, sorted by pool and currency (add &amp;as_csv=1 to download CSV)</p>
+
+        <h3>Pool Payouts</h3>
+        <a href="/payouts">/payouts</a>
+        <p>Lists all payouts from supported pools</p>
+
+        <h3>NewPools</h3>
+        <a href="/newpools">/newpools</a>
+        <p>Dump of the $NewPools variable</p>
+
+        <h3>AllPools</h3>
+        <a href="/allpools">/allpools</a>
+        <p>Dump of the $AllPools variable</p>
+
+        <h3>Totals</h3>
+        <a href="/totals">/totals</a>
+        <p>Shows sum of all calculated profits per pool since last reset</p>
+
+        <h3>TotalsCsv</h3>
+        <a href="/totalscsv">/totalscsv</a>
+        <p>Shows sum of all calculated profits per pool since last reset as csv</p>
 
     </fieldset><fieldset>
-    <legend>Command Resources</legend>
+        <legend>Device Resources</legend>
 
-    <h3>Pause</h3>
-    <a href="/pause">/pause</a>
-    <p>Pause and restart mining</p>
+        <h3>Selected Devices</h3>
+        <a href="/devices">/devices</a>
+        <p>Dump of the $Devices variable, used only for debugging. Shows information about selected mining devices, used only for debugging.</p>
 
-    <h3>Status</h3>
-    <a href="/status">/status</a>
-    <p>Shows the status of mining: true=running, false=paused</p>
+        <h3>All Devices</h3>
+        <a href="/alldevices">/devices</a>
+        <p>Dump of the $AllDevices variable, used only for debugging. Shows information about all found mining devices, used only for debugging.</p>
 
-    <h3>Update</h3>
-    <a href="/update">/update</a>
-    <p>Update RainbowMiner to the newest release</p>
-
-    <h3>Stop</h3>
-    <a href="/stop">/stop</a>
-    <p>Exit RainbowMiner</p>
+        <h3>Device Groups</h3>
+        <a href="/devicecombos">/devicecombos</a>
+        <p>Show a list of possible device combinations</p>
 
     </fieldset><fieldset>
-    <legend>Debugging Resources</legend>
+        <legend>Algorithm Resources</legend>
 
-    <h3>Debug</h3>
-    <a href="/debug">/debug</a>
-    <p>Shows all data added to the $API hashtable, used only for debugging.</p>
+        <h3>Algorithms</h3>
+        <a href="/algorithms">/algorithms</a>
+        <p>Shows all algorithms that can be mined with at least one pool</p>
 
-    <h3>Session Vars</h3>
-    <a href="/sessionvars">/sessionvars</a>
-    <p>Lists all relevant session variables.</p>
+    </fieldset><fieldset>
+        <legend>MiningRigRental Resources</legend>
 
-    <h3>Stats</h3>
-    <a href="/stats">/stats</a>
-    <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal RainbowMiner calculations.</p>
+        <h3>MRR Stats</h3>
+        <a href="/mrrstats">/mrrstats</a>
+        <p>Shows public available MiningRigRentals statistics</p>
 
-    <h3>PoolStats</h3>
-    <a href="/poolstats">/poolstats</a>
-    <p>Dump of the $PoolsStats variable, used only for debugging. PoolStats data is used for internal RainbowMiner calculations.</p>
+        <h3>MRR Rigs</h3>
+        <a href="/mrrrigs">/mrrrigs</a>
+        <p>Shows private rigs informations</p>
 
-    <h3>WatchdogTimers</h3>
-    <a href="/watchdogtimers">/watchdogtimers</a>
-    <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal RainbowMiner calculations.</p>
+    </fieldset><fieldset>
+        <legend>Command Resources</legend>
 
-    <h3>Asynchronous Loader Jobs</h3>
-    <a href="/asyncloaderjobs">/asyncloaderjobs</a>
-    <p>Dump of the $AsyncLoader.Jobs variable, used only for debugging. These are the jobs running in the background.</p>
+        <h3>Pause</h3>
+        <a href="/pause">/pause</a>
+        <p>Pause and restart mining</p>
 
-    <h3>Asynchronous Loader Errors</h3>
-    <a href="/asyncloadererrors">/asyncloadererrors</a>
-    <p>Dump of the $AsyncLoader.Errors variable, used only for debugging. These are the past 50 errors, the jobs running in the background have caused.</p>
+        <h3>Status</h3>
+        <a href="/status">/status</a>
+        <p>Shows the status of mining: true=running, false=paused</p>
 
-    <h3>Miner Ports</h3>
-    <a href="/minerports">/minerports</a>
-    <p>Lists all assigned localhost ports</p>
+        <h3>Update</h3>
+        <a href="/update">/update</a>
+        <p>Update RainbowMiner to the newest release</p>
 
-    <h3>Download List</h3>
-    <a href="/downloadlist">/downloadlist</a>
-    <p>List of current miners downloading</p>
+        <h3>Stop</h3>
+        <a href="/stop">/stop</a>
+        <p>Exit RainbowMiner</p>
 
-</fieldset>
-<script>
+    </fieldset><fieldset>
+        <legend>Debugging Resources</legend>
+
+        <h3>Debug</h3>
+        <a href="/debug">/debug</a>
+        <p>Shows all data added to the $API hashtable, used only for debugging.</p>
+
+        <h3>Session Vars</h3>
+        <a href="/sessionvars">/sessionvars</a>
+        <p>Lists all relevant session variables.</p>
+
+        <h3>Stats</h3>
+        <a href="/stats">/stats</a>
+        <p>Dump of the $Stats variable, used only for debugging. Stats data is used for internal RainbowMiner calculations.</p>
+
+        <h3>PoolStats</h3>
+        <a href="/poolstats">/poolstats</a>
+        <p>Dump of the $PoolsStats variable, used only for debugging. PoolStats data is used for internal RainbowMiner calculations.</p>
+
+        <h3>WatchdogTimers</h3>
+        <a href="/watchdogtimers">/watchdogtimers</a>
+        <p>Dump of the $WatchdogTimers variable, used only for debugging. WatchdogTimers data is used for internal RainbowMiner calculations.</p>
+
+        <h3>Asynchronous Loader Jobs</h3>
+        <a href="/asyncloaderjobs">/asyncloaderjobs</a>
+        <p>Dump of the $AsyncLoader.Jobs variable, used only for debugging. These are the jobs running in the background.</p>
+
+        <h3>Asynchronous Loader Errors</h3>
+        <a href="/asyncloadererrors">/asyncloadererrors</a>
+        <p>Dump of the $AsyncLoader.Errors variable, used only for debugging. These are the past 50 errors, the jobs running in the background have caused.</p>
+
+        <h3>Miner Ports</h3>
+        <a href="/minerports">/minerports</a>
+        <p>Lists all assigned localhost ports</p>
+
+        <h3>Download List</h3>
+        <a href="/downloadlist">/downloadlist</a>
+        <p>List of current miners downloading</p>
+
+    </fieldset>
+    <script>
     $(function () {
         var port = $(location).attr('port')
         $("a").each(function () { $(this).attr('href', $(this).attr('href').replace(':4000', ':' + port)) })
         $("#res").text($("#res").text().replace(':4000', ':' + port))
     })
-</script>
+    </script>
 </body>
 </html>
