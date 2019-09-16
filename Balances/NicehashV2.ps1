@@ -25,15 +25,17 @@ if ($Platform_Version -eq 2) {
         return
     }
 
-    try {
-        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -Cache ($Config.BalanceUpdateMinutes*60)
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
+    if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
+        try {
+            $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -Cache ($Config.BalanceUpdateMinutes*60)
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Pool Accounts API ($Name) has failed. "
+        }
     }
 
-    if ($Request_Balance) {
+    if ($Request_Balance.currency -match "BTC") {
         $Request_Balance | Where-Object {$_.currency -eq "BTC"} | Foreach-Object {
             $Pending = if ($_.currency -eq "BTC") {[Decimal]$Request.unpaidAmount} else {0}
             [PSCustomObject]@{
@@ -47,15 +49,6 @@ if ($Platform_Version -eq 2) {
             }        
         }
     } else {
-        try {
-            $Request = Invoke-RestMethodAsync "https://api2.nicehash.com/main/api/v2/mining/external/$($PoolConfig.BTC)/rigs/" -cycletime ($Config.BalanceUpdateMinutes*60)
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool Mining API ($Name) has failed. "
-            return
-        }
-
         [PSCustomObject]@{
             Caption     = "$($Name) (BTC)"
             Currency    = "BTC"
@@ -65,51 +58,5 @@ if ($Platform_Version -eq 2) {
             Payouts     = @()
             LastUpdated = (Get-Date).ToUniversalTime()
         }
-    }
-} else {
-    $UnpaidRequest = [PSCustomObject]@{}
-
-    try {
-        [Decimal]$Sum = 0
-        $UnpaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=stats.provider&addr=$($PoolConfig.BTC)" -cycletime ($Config.BalanceUpdateMinutes*60)
-        $UnpaidRequest.result.stats.balance | Foreach {$Sum += [Decimal]$_}
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Pool Balance API ($Name) has failed. "
-        return
-    }
-
-    $PaidRequest = [PSCustomObject]@{}
-
-    $SumPaid = [Decimal]0
-    if ($PoolConfig.API_ID -and $PoolConfig.API_Key) {
-        try {
-            $PaidRequest = Invoke-RestMethodAsync "https://api.nicehash.com/api?method=balance&id=$($PoolConfig.API_ID)&key=$($PoolConfig.API_Key)" -cycletime ($Config.BalanceUpdateMinutes*60)
-            @("balance_confirmed","balance_pending") | Where-Object {$PaidRequest.result.$_} | Foreach-Object {$SumPaid += [Decimal]$PaidRequest.result.$_}
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool paid Balance API ($Name) has failed. "
-        }
-    }
-    [PSCustomObject]@{
-        Caption     = "$($Name) (BTC)"
-        Currency    = "BTC"
-        Balance     = $Sum
-        Pending     = [Decimal]0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
-        Total       = $Sum
-        Payouts     = @($UnpaidRequest.result.payments | Select-Object)
-        LastUpdated = (Get-Date).ToUniversalTime()
-    }
-    [PSCustomObject]@{
-        Caption     = "$($Name)Paid (BTC)"
-        Info        = "Paid"
-        Currency    = "BTC"
-        Balance     = $SumPaid
-        Pending     = [Decimal]0 # Pending is always 0 since NiceHash doesn't report unconfirmed or unexchanged profits like other pools do
-        Total       = $SumPaid
-        Payouts     = @()
-        LastUpdated = (Get-Date).ToUniversalTime()
     }
 }
