@@ -34,12 +34,14 @@ catch {
 }
 
 $Pools_Data = @(
-    [PSCustomObject]@{id = "beam";    symbol = "BEAM";    port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "";        symbol = "ETH";     port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","tw","kr","jp")}
-    #[PSCustomObject]@{id = "etc";     symbol = "ETC";     port = 5555;  fee = 1; ssl = $false; region = @("cn")}
-    [PSCustomObject]@{id = "grin";    symbol = "GRIN_29"; port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
-    [PSCustomObject]@{id = "grin";    symbol = "GRIN_31"; port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
-    #[PSCustomObject]@{id = "xmr";     symbol = "XMR";     port = 11000; fee = 1; ssl = $false; region = @("cn")}    
+    [PSCustomObject]@{id = "beam";   symbol = "BEAM";     port = 2222;  fee = 1; ssl = $true;  region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "";       symbol = "ETH";      port = 3333;  fee = 1; ssl = $false; region = @("cn","asia","tw","kr","jp")}
+    #[PSCustomObject]@{id = "ckb";    symbol = "CKB";      port = 8888;  fee = 1; ssl = $false; region = @("cn")}
+    [PSCustomObject]@{id = "ckb";    symbol = "CKB_TEST"; port = 8888;  fee = 1; ssl = $false; region = @("cn")}
+    #[PSCustomObject]@{id = "etc";    symbol = "ETC";      port = 5555;  fee = 1; ssl = $false; region = @("cn")}
+    [PSCustomObject]@{id = "grin";   symbol = "GRIN_29";  port = 6666;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    [PSCustomObject]@{id = "grin";   symbol = "GRIN_31";  port = 6667;  fee = 1; ssl = $false; region = @("cn","asia","eu","us")}
+    #[PSCustomObject]@{id = "xmr";    symbol = "XMR";      port = 11000; fee = 1; ssl = $false; region = @("cn")}    
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnly} | ForEach-Object {
