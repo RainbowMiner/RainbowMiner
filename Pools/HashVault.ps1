@@ -33,7 +33,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XCASH"; port = 3333; fee = 0.9; rpc = "xtendcash"} #pool.xtendcash.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XEQ";   port = 3333; fee = 0.9; rpc = "equilibria"} #pool.equilibria.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XHV";   port = 3333; fee = 0.9; rpc = "haven"} #pool.haven.hashvault.pro:3333
-    [PSCustomObject]@{symbol = "XLA";   port = 3333; fee = 0.9; rpc = "scala"} #pool.scala.hashvault.pro:3333
+    #[PSCustomObject]@{symbol = "XLA";   port = 3333; fee = 0.9; rpc = "scala"} #pool.scala.hashvault.pro:3333
     [PSCustomObject]@{symbol = "XMR";   port = 3333; fee = 0.9; rpc = "monero"} #pool.hashvault.pro:3333
 )
 
