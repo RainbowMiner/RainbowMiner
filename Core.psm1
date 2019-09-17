@@ -324,7 +324,8 @@ function Invoke-Core {
                 $Session.ConfigFiles["Config"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
-                    $val = if ($ConfigSetup.$_ -ne $null) {$ConfigSetup.$_} else {$Session.DefaultValues[$_]}
+                    $val = $Session.DefaultValues[$_]
+                    if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
                 }
