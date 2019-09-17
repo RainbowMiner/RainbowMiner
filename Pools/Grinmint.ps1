@@ -85,7 +85,6 @@ $Pools_Data | ForEach-Object {
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
-            ErrorRatio    = $Stat.ErrorRatio_Average
         }
     }
 }

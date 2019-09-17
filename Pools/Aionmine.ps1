@@ -70,6 +70,5 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet =
         Hashrate      = $Stat.HashRate_Live
         BLK           = $Stat.BlockRate_Average
         #TSL           = $Pool_TSL
-        ErrorRatio    = $Stat.ErrorRatio_Average
     }
 }

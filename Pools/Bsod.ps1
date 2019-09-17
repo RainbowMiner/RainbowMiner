@@ -75,7 +75,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
         if ($Pool_Request -and $Pool_Request.$Pool_Key) {
             $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_CoinSymbol)_Profit.txt")) {$NewStat = $true; $DataWindow = "estimate_last24h"}
             $Pool_Price = Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow $DataWindow -Factor $Pool_Factor
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -ErrorRatio 0.000 -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_shared -BlockRate $Pool_BLK -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate $($Pool_Request.$_.estimate_current) -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_shared -BlockRate $Pool_BLK -Quiet
         } else {
             $Divisor = $Pool_Factor * 1e9
             $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_shared -BlockRate $Pool_BLK -Quiet
@@ -109,7 +109,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
-                ErrorRatio    = $Stat.ErrorRatio_Average
+				ErrorRatio    = if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {$Stat.Estimate_Week / $Stat.Actual24h_Week} else {1}
                 Failover      = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
                     [PSCustomObject]@{
                         Protocol      = "stratum+tcp"

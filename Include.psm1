@@ -919,6 +919,10 @@ function Set-Stat {
         [Parameter(Mandatory = $true)]
         [Double]$Value,
         [Parameter(Mandatory = $false)]
+        [Double]$Actual24h = 0,
+        [Parameter(Mandatory = $false)]
+        [Double]$Estimate = 0,
+        [Parameter(Mandatory = $false)]
         [Double]$Difficulty = 0.0,
         [Parameter(Mandatory = $false)]
         [DateTime]$Updated = (Get-Date).ToUniversalTime(), 
@@ -936,8 +940,6 @@ function Set-Stat {
         [Double]$HashRate = 0,
         [Parameter(Mandatory = $false)]
         [Double]$BlockRate = 0,
-        [Parameter(Mandatory = $false)]
-        [Double]$ErrorRatio = 0,
         [Parameter(Mandatory = $false)]
         [Double]$UplimProtection = 0,
         [Parameter(Mandatory = $false)]
@@ -987,8 +989,8 @@ function Set-Stat {
                     HashRate_Average   = [Double]$Stat.HashRate_Average
                     BlockRate_Live     = [Double]$Stat.BlockRate_Live
                     BlockRate_Average  = [Double]$Stat.BlockRate_Average
-                    ErrorRatio         = if ($Stat.ErrorRatio -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio}
-                    ErrorRatio_Average = if ($Stat.ErrorRatio_Average -eq $null) {$ErrorRatio} else {[Double]$Stat.ErrorRatio_Average}
+                    Actual24h_Week     = [Double]$Stat.Actual24h_Week
+                    Estimate_Week      = [Double]$Stat.Estimate_Week
                 }
             }
         }
@@ -1070,8 +1072,8 @@ function Set-Stat {
                         HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)} else {$HashRate}
                         BlockRate_Live     = $BlockRate
                         BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)} else {$BlockRate}
-                        ErrorRatio_Live    = $ErrorRatio
-                        ErrorRatio_Average = if ($Stat.ErrorRatio_Average -gt 0) {((1 - $Span_ThreeDay) * $Stat.ErrorRatio_Average) + ($Span_ThreeDay * [Double]$ErrorRatio)} else {$ErrorRatio}
+                        Actual24h_Week     = if ($Stat.Actual24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Actual24h_Week) + ($Span_Week * $Actual24h)} else {$Actual24h}
+                        Estimate_Week      = if ($Stat.Estimate_Week -gt 0) {((1 - $Span_Week) * $Stat.Estimate_Week) + ($Span_Week * $Estimate)} else {$Estimate}
                     }
                 }
             }
@@ -1146,8 +1148,8 @@ function Set-Stat {
                     HashRate_Average   = $HashRate
                     BlockRate_Live     = $BlockRate
                     BlockRate_Average  = $BlockRate
-                    ErrorRatio         = $ErrorRatio
-                    ErrorRatio_Average = $ErrorRatio
+                    Actual24h_Week     = $Actual24h
+                    Estimate_Week      = $Estimate
                 }
             }
         }
@@ -1191,8 +1193,8 @@ function Set-Stat {
                     HashRate_Average   = [Decimal]$Stat.HashRate_Average
                     BlockRate_Live     = [Decimal]$Stat.BlockRate_Live
                     BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
-                    ErrorRatio_Live    = [Decimal]$Stat.ErrorRatio_Live
-                    ErrorRatio_Average = [Decimal]$Stat.ErrorRatio_Average
+                    Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
+                    Estimate_Week      = [Decimal]$Stat.Estimate_Week
                 }
             }
         }
@@ -5629,8 +5631,6 @@ function Get-YiiMPValue {
         [Parameter(Mandatory = $False)]
         [Switch]$CheckDataWindow = $false,
         [Parameter(Mandatory = $False)]
-        [Switch]$IncludeErrorRatio = $false,
-        [Parameter(Mandatory = $False)]
         [Double]$ActualDivisor = 1000
     )    
     [Double]$Value = 0
@@ -5705,13 +5705,7 @@ function Get-YiiMPValue {
         }
     }
     if (-not $hasdetails){$Value*=1e-6/$Factor}
-    if ($IncludeErrorRatio) {
-        $Base = if ($Values["actual_last24h"]) {$Values["actual_last24h"]} else {$Values["estimate_last24h"]}
-        [PSCustomObject]@{
-            Price = $Value
-            ErrorRatio = if ($Base -and $Values["estimate_current"]) {$Values["estimate_current"]/$Base - 1} else {0}
-        }
-    } else {$Value}
+    $Value
 }
 
 function Get-DeviceSubsets($Device) {
