@@ -201,9 +201,9 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableServerConfig = $false, # enable download of config files from the server
     [Parameter(Mandatory = $false)]
-    [Array]$ServerConfigName = @("config","coins","pools","algorithms","scheduler"), # list of config files to be downloaded from the server
+    [Array]$ServerConfigName = @(), # list of config files to be downloaded from the server
     [Parameter(Mandatory = $false)]
-    [Array]$ExcludeServerConfigVars = @("WorkerName","DeviceName","ExcludeDeviceName","Proxy","APIPort","APIUser","APIPassword","APIAuth","MSIApath","NVSMIpath","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","RunMode","StartPaused"), # do not copy these vars from the server's config.txt
+    [Array]$ExcludeServerConfigVars = @(), # do not copy these vars from the server's config.txt
     [Parameter(Mandatory = $false)]
     [Switch]$EnableServerExcludeList = $false,
     [Parameter(Mandatory = $false)]

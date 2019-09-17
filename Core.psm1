@@ -150,14 +150,12 @@
             $Session.DefaultValues.Keys | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
             Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
         } else {
-            $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
             $ConfigForUpdate_changed = $false
             if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
             $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
-            Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) -IncludeEqual | Foreach-Object {
-                $Val = "`$$($_.InputObject)"
-                if ($_.SideIndicator -eq "=>" -or ($_.SideIndicator -eq "==" -and $ConfigForUpdate."$($_.InputObject)" -eq $Val -and $ConfigSetup."$($_.InputObject)" -ne $null)) {if ($ConfigSetup."$($_.InputObject)" -ne $null) {$Val = $ConfigSetup."$($_.InputObject)";if ($Val -is [array]) {$Val = $Val -join ","} elseif ($Val -is [bool]) {[int]$Val}};$ConfigForUpdate | Add-Member $_.InputObject "$Val" -Force;$ConfigForUpdate_changed=$true}
+            Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
+                if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
                 elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
             }
             if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
@@ -322,10 +320,11 @@ function Invoke-Core {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
+                $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
                 $Session.ConfigFiles["Config"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
-                    $val = $Session.DefaultValues[$_]
+                    $val = if ($ConfigSetup.$_ -ne $null) {$ConfigSetup.$_} else {$Session.DefaultValues[$_]}
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
                 }
@@ -338,6 +337,9 @@ function Invoke-Core {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Combos ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Scheduler @() -Force
+
+                Remove-Variable "ConfigSetup"
+                Remove-Variable "Parameters"
 
                 if (-not $Session.Config.Wallet -or -not $Session.Config.WorkerName -or -not $Session.Config.PoolName) {
                     $Session.RunSetup = $true
