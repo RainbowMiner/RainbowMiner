@@ -150,12 +150,14 @@
             $Session.DefaultValues.Keys | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction SilentlyContinue}
             Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
         } else {
+            $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
             $ConfigForUpdate_changed = $false
             if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
             $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
-            Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) | Foreach-Object {
-                if ($_.SideIndicator -eq "=>") {$ConfigForUpdate | Add-Member $_.InputObject "`$$($_.InputObject)";$ConfigForUpdate_changed=$true}
+            Compare-Object @($ConfigForUpdate.PSObject.Properties.Name) @($Session.DefaultValues.Keys) -IncludeEqual | Foreach-Object {
+                $Val = "`$$($_.InputObject)"
+                if ($_.SideIndicator -eq "=>" -or ($_.SideIndicator -eq "==" -and $ConfigForUpdate."$($_.InputObject)" -eq $Val -and $ConfigSetup."$($_.InputObject)" -ne $null)) {if ($ConfigSetup."$($_.InputObject)" -ne $null) {$Val = $ConfigSetup."$($_.InputObject)"};$ConfigForUpdate | Add-Member $_.InputObject $Val -Force;$ConfigForUpdate_changed=$true}
                 elseif ($_.SideIndicator -eq "<=" -and @("API_ID","API_Key","UserName","LocalAPIport","RemoteAPI","ConfigFile","ExcludeNegativeProfit","DisableAutoUpdate","Regin","Debug","Verbose","ErrorAction","WarningAction","InformationAction","ErrorVariable","WarningVariable","InformationVariable","OutVariable","OutBuffer","PipelineVariable") -icontains $_.InputObject) {$ConfigForUpdate.PSObject.Properties.Remove($_.InputObject);$ConfigForUpdate_changed=$true}
             }
             if ($ConfigForUpdate_changed) {Set-ContentJson -PathToFile $ConfigFile -Data $ConfigForUpdate > $null}
