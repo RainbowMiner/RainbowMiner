@@ -26,6 +26,7 @@
           <th data-field="Name" data-sortable="true" data-filter-control="select">Name</th>
           <th data-field="tCoin" data-sortable="true" data-filter-control="select">Coin</th>
           <th data-field="Price" data-align="right" data-sortable="true" data-formatter="formatPrices">BTC/GH/Day</th>
+          <th data-field="tErrorRatio" data-align="right" data-sortable="true">Act/Est</th>
           <th data-field="Hashrate" data-align="right" data-sortable="true" data-formatter="formatHashRate">Hashrate</th>
           <th data-field="BLK" data-align="right" data-sortable="true" data-formatter="formatBLK">TTF (min)</th>
           <th data-field="TSL" data-align="right" data-sortable="true" data-formatter="formatTSL">Last (min)</th>
@@ -51,6 +52,7 @@
         $.each(data, function (index, item) {
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
             item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
+            item.tErrorRatio = typeof item.ErrorRatio != "undefined" ? parseFloat(item.ErrorRatio).toFixed(3) : "-";
             if (typeof item.tCoin == "undefined" || item.tCoin == null) {item.tCoin = ""}
         });
         return data;
