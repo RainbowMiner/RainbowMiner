@@ -83,6 +83,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
 
     if (-not $InfoOnly) {
         $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_Profit.txt")) {$NewStat = $true; $DataWindow = "estimate_last24h"}
+        $DataWindow = "min3"
         $Pool_Price = Get-YiiMPValue $Pool_Request.$_ -DataWindow $DataWindow -Factor $Pool_Factor
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ($Pool_Price*$Pool_Divisor) -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -ErrorRatio 0.000 -HashRate ($Pool_Request.$_.hashrate/$Pool_Divisor) -BlockRate $Pool_BLK -Quiet
     }
