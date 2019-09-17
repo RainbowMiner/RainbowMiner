@@ -921,7 +921,7 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$Actual24h = 0,
         [Parameter(Mandatory = $false)]
-        [Double]$Estimate = 0,
+        [Double]$Estimate24h = 0,
         [Parameter(Mandatory = $false)]
         [Double]$Difficulty = 0.0,
         [Parameter(Mandatory = $false)]
@@ -990,7 +990,7 @@ function Set-Stat {
                     BlockRate_Live     = [Double]$Stat.BlockRate_Live
                     BlockRate_Average  = [Double]$Stat.BlockRate_Average
                     Actual24h_Week     = [Double]$Stat.Actual24h_Week
-                    Estimate_Week      = [Double]$Stat.Estimate_Week
+                    Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
                     ErrorRatio         = [Double]$Stat.ErrorRatio
                 }
             }
@@ -1074,7 +1074,7 @@ function Set-Stat {
                         BlockRate_Live     = $BlockRate
                         BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)} else {$BlockRate}
                         Actual24h_Week     = if ($Stat.Actual24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Actual24h_Week) + ($Span_Week * $Actual24h)} else {$Actual24h}
-                        Estimate_Week      = if ($Stat.Estimate_Week -gt 0) {((1 - $Span_Week) * $Stat.Estimate_Week) + ($Span_Week * $Estimate)} else {$Estimate}
+                        Estimate24h_Week   = if ($Stat.Estimate24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Estimate24h_Week) + ($Span_Week * $Estimate24h)} else {$Estimate24h}
                         ErrorRatio         = $Stat.ErrorRatio
                     }
                 }
@@ -1151,7 +1151,7 @@ function Set-Stat {
                     BlockRate_Live     = $BlockRate
                     BlockRate_Average  = $BlockRate
                     Actual24h_Week     = $Actual24h
-                    Estimate_Week      = $Estimate
+                    Estimate24h_Week   = $Estimate24h
                     ErrorRatio         = 0
                 }
             }
@@ -1197,8 +1197,8 @@ function Set-Stat {
                     BlockRate_Live     = [Decimal]$Stat.BlockRate_Live
                     BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
-                    Estimate_Week      = [Decimal]$Stat.Estimate_Week
-                    ErrorRatio         = [Decimal](1+$(if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {($Stat.Actual24h_Week/$Stat.Estimate_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}))
+                    Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
+                    ErrorRatio         = [Decimal](1+$(if ($Stat.Actual24h_Week -and $Stat.Estimate24h_Week) {($Stat.Actual24h_Week/$Stat.Estimate24h_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}))
                 }
             }
         }
