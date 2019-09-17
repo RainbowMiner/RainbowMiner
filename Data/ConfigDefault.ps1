@@ -14,6 +14,7 @@
     EnableOCProfiles = $false
     EnableOCVoltage = $false
     EnableAutoUpdate = $true
+    EnableErrorRatio = $true
     EnableAutoAlgorithmAdd = $true
     EnableAlgorithmMapping = $true
     EnableAutoBenchmark = $true

@@ -1398,11 +1398,15 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $false)]
         [Bool]$InfoOnly = $false,
         [Parameter(Mandatory = $false)]
-        [Bool]$IgnoreFees = $false
+        [Bool]$IgnoreFees = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableErrorRatio = $false
     )
         
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
         $Pool_Name = $_.BaseName
+
+        if ($EnableErrorRatio -and $Config.DataWindow -in @("actual_last24h","minimum-3","minimum-2h")) {$EnableErrorRatio = $false}
 
         [Hashtable]$Parameters = @{
             StatSpan = $StatSpan
@@ -1415,6 +1419,7 @@ function Get-PoolsContent {
             } else {
                 $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
                 $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
+                if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
                 if ($Pool.Price -eq $null) {$Pool | Add-Member Price 0 -Force}
                 if ($Pool.StablePrice -eq $null) {$Pool | Add-Member StablePrice 0 -Force}
