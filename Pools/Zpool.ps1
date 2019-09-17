@@ -105,7 +105,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     Workers       = $Pool_Request.$_.workers
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
-					ErrorRatio    = if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {$Stat.Estimate_Week / $Stat.Actual24h_Week} else {1}
+					ErrorRatio    = $Stat.ErrorRatio
                 }
             }
         }

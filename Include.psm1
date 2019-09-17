@@ -991,6 +991,7 @@ function Set-Stat {
                     BlockRate_Average  = [Double]$Stat.BlockRate_Average
                     Actual24h_Week     = [Double]$Stat.Actual24h_Week
                     Estimate_Week      = [Double]$Stat.Estimate_Week
+                    ErrorRatio         = [Double]$Stat.ErrorRatio
                 }
             }
         }
@@ -1074,6 +1075,7 @@ function Set-Stat {
                         BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)} else {$BlockRate}
                         Actual24h_Week     = if ($Stat.Actual24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Actual24h_Week) + ($Span_Week * $Actual24h)} else {$Actual24h}
                         Estimate_Week      = if ($Stat.Estimate_Week -gt 0) {((1 - $Span_Week) * $Stat.Estimate_Week) + ($Span_Week * $Estimate)} else {$Estimate}
+                        ErrorRatio         = $Stat.ErrorRatio
                     }
                 }
             }
@@ -1150,6 +1152,7 @@ function Set-Stat {
                     BlockRate_Average  = $BlockRate
                     Actual24h_Week     = $Actual24h
                     Estimate_Week      = $Estimate
+                    ErrorRatio         = 0
                 }
             }
         }
@@ -1195,6 +1198,7 @@ function Set-Stat {
                     BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate_Week      = [Decimal]$Stat.Estimate_Week
+                    ErrorRatio         = [Decimal]$(if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {(1-$Stat.Actual24h_Week/$Stat.Estimate_Week) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays*$Stat.Duration.TotalDays/49} else {1})})
                 }
             }
         }
