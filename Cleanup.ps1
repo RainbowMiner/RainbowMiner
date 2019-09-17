@@ -591,6 +591,11 @@ try {
         Get-ChildItem "Stats\Pools" -Filter "*_VOLLAR_*" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "4.4.2.4")) {
+        $AddAlgorithm += @("Eaglesong")
+        Get-ChildItem "Stats\Pools" -Filter "*_Profit.txt" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
