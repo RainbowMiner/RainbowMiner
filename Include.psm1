@@ -1198,7 +1198,7 @@ function Set-Stat {
                     BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate_Week      = [Decimal]$Stat.Estimate_Week
-                    ErrorRatio         = [Decimal](1+$(if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {($Stat.Actual24h_Week/$Stat.Estimate_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays*(2 - $Stat.Duration.TotalDays/49)} else {1})}))
+                    ErrorRatio         = [Decimal](1+$(if ($Stat.Actual24h_Week -and $Stat.Estimate_Week) {($Stat.Actual24h_Week/$Stat.Estimate_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}))
                 }
             }
         }
