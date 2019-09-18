@@ -7,30 +7,32 @@ class Xmrig : Miner {
 
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $this.Arguments | ConvertFrom-Json
-        $ConfigFile        = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($this.DeviceName -like "GPU*") {"-$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')"})_$($this.Port)-$($Parameters.Threads).json"
-        $ThreadsConfigFile = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).json"
+        $ConfigFN          = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($this.DeviceName -like "GPU*") {"-$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')"})_$($this.Port)-$($Parameters.Threads).json"
+        $ThreadsConfigFN   = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).json"
+        $ConfigFile        = Join-Path $Miner_Path $ConfigFN
+        $ThreadsConfigFile = Join-Path $Miner_Path $ThreadsConfigFN
         $ThreadsConfig     = $null
-        $LogFile           = "$Miner_Path\log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
+        $LogFile           = Join-Path $Miner_Path "log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
 
         try {
-            if (Test-Path "$Miner_Path\$ThreadsConfigFile") {
-                $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if (Test-Path $ThreadsConfigFile) {
+                $ThreadsConfig = Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             }
             if (-not ($ThreadsConfig | Measure-Object).Count) {
-                $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -Force
+                $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
-                $ArgumentList = ("$($Parameters.PoolParams) --config=$ThreadsConfigFile $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $ArgumentList = ("$($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath $LogFile -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
                 if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
                     $wait = 0
                     $Job | Add-Member HasOwnMinerWindow $true -Force
                     While ($wait -lt 60) {
-                        if (($ThreadsConfig = @(Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
+                        if (($ThreadsConfig = @(Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads | Select-Object)) {
                             if ($this.DeviceName -like "GPU*") {
-                                ConvertTo-Json -InputObject @($ThreadsConfig | Sort-Object -Property Index -Unique) -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
+                                ConvertTo-Json -InputObject @($ThreadsConfig | Sort-Object -Property Index -Unique) -Depth 10 | Set-Content $ThreadsConfigFile -ErrorAction Ignore -Force
                             }
                             else {
-                                ConvertTo-Json -InputObject @($ThreadsConfig | Select-Object -Unique) -Depth 10 | Set-Content "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
+                                ConvertTo-Json -InputObject @($ThreadsConfig | Select-Object -Unique) -Depth 10 | Set-Content $ThreadsConfigFile -ErrorAction Ignore -Force
                             }
                             break
                         }
@@ -43,12 +45,12 @@ class Xmrig : Miner {
                     Stop-SubProcess -Job $Job -Title "Miner $($this.Name) (prerun)"
                     Remove-Variable "Job"
                 }
-                if ((Test-Path "$Miner_Path\$ThreadsConfigFile") -and -not ($ThreadsConfig | Measure-Object).Count) {
-                    Remove-Item "$Miner_Path\$ThreadsConfigFile" -ErrorAction Ignore -Force
+                if ((Test-Path $ThreadsConfigFile) -and -not ($ThreadsConfig | Measure-Object).Count) {
+                    Remove-Item $ThreadsConfigFile -ErrorAction Ignore -Force
                 }
-                $ThreadsConfig = Get-Content "$Miner_Path\$ThreadsConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                $ThreadsConfig = Get-Content $ThreadsConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
             }
-            if (-not ((Get-Content "$Miner_Path\$ConfigFile" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads)) {
+            if (-not ((Get-Content $ConfigFile -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).threads)) {
                 if ($ThreadsConfig -and $ThreadsConfig.Count) {
                     if ($this.DeviceName -like "GPU*") {
                         $Parameters.Config | Add-Member threads ([Array](@($ThreadsConfig | Where-Object {$Parameters.Devices -contains $_.index} | Select-Object) * $Parameters.Threads)) -Force
@@ -60,7 +62,7 @@ class Xmrig : Miner {
                             $Parameters.Config | Add-Member threads ([Array]($ThreadsConfig)) -Force
                         }
                     }
-                    $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content "$Miner_Path\$ConfigFile" -Force
+                    $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Force
                 }
                 else {
                     Write-Log -Level Warn "Error parsing threads config file - cannot create miner config file ($($this.Name) {$($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')})$(if ($Error.Count){"[Error: '$($Error[0])'].";$Error.RemoveAt(0)})"
@@ -71,7 +73,7 @@ class Xmrig : Miner {
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
-        return ("$($Parameters.PoolParams) --config=$ConfigFile $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+        return ("$($Parameters.PoolParams) --config=$ConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
     }
 
     [String[]]UpdateMinerData () {
