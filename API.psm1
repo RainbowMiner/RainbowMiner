@@ -296,7 +296,7 @@
                 "/debug" {
                     #create zip log and xxx out all purses
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"
-                    $DebugPath = ".\Logs\debug-$DebugDate"
+                    $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
                     $PurgeStrings = @()
                     @($API.Config,$API.UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
@@ -325,12 +325,12 @@
                     if ($IsLinux) {
                         $Params = @{
                             FilePath     = "7z"
-                            ArgumentList = "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip"
+                            ArgumentList = "a `"$($DebugPath).zip`" `"$(Join-Path $DebugPath "*")`" -y -sdel -tzip"
                         }
                     } else {
                         $Params = @{
                             FilePath     = "7z"
-                            ArgumentList = "a `"$($DebugPath).zip`" `"$($DebugPath)\*`" -y -sdel -tzip"
+                            ArgumentList = "a `"$($DebugPath).zip`" `"$(Join-Path $DebugPath "*")`" -y -sdel -tzip"
                             WindowStyle  = "Hidden"
                         }
                     }
@@ -340,7 +340,7 @@
 
                     Remove-Item $DebugPath -Recurse -Force
 
-                    $Data = [System.IO.File]::ReadAllBytes([IO.Path]::GetFullPath("$($DebugPath).zip"))
+                    $Data = [System.IO.File]::ReadAllBytes("$($DebugPath).zip")
                     $ContentType = $MIMETypes[".zip"]
                     $ContentFileName = "debug_$($DebugDate).zip"
 
