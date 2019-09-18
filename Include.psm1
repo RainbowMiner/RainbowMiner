@@ -1870,6 +1870,8 @@ function Start-SubProcessInScreen {
 
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
 
+    if (-not $ScreenName) {$ScreenName = Get-MD5Hash "$FilePath $ArgumentList";$ScreenName = "$($ScreenName.SubString(0,3))$($ScreenName.SubString(28,3))".ToLower()}
+
     if (-not (Test-Path ".\Data\pid")) {New-Item ".\Data\pid" -ItemType "directory" -force > $null}
 
     $PIDPath = Join-Path (Resolve-Path ".\Data\pid") "$($ScreenName)_pid.txt"
