@@ -40,7 +40,7 @@ function Confirm-Version {
         try {
             $ReposURI = "https://api.github.com/repos/rainbowminer/$Name/releases/latest"
             if ($Force) {
-                $Request = Invoke-RestMethod $ReposURI -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                $Request = Invoke-GetUrl $ReposURI
             } else {
                 $Request = Invoke-RestMethodAsync $ReposURI -cycletime 3600 -noquickstart
             }
@@ -5866,6 +5866,8 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$password = "",
     [Parameter(Mandatory = $False)]
+        [string]$useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
+    [Parameter(Mandatory = $False)]
         $JobData,
     [Parameter(Mandatory = $False)]
         [string]$JobKey = "",
@@ -5903,21 +5905,20 @@ Param(
         $password = $JobData.password
     }
 
-    $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
     if ($url -match "^https" -and [Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {[Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12}
 
-    $RequestMethod = if ($body) {"Post"} else {"Get"}
+    $RequestMethod = if ($body) {"POST"} else {"GET"}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 
     if (-not $headers) {$headers = @{}}
     if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $ua -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $RequestMethod -Headers $headers -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
 }
@@ -6276,7 +6277,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-Content ".\Data\minerdata.json" -Raw -ErrorAction Ignore};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-Content ".\Data\poolsdata.json" -Raw -ErrorAction Ignore};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $Rates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-GetUrl $ReportUrl -method POST -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-Content ".\Data\minerdata.json" -Raw -ErrorAction Ignore};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-Content ".\Data\poolsdata.json" -Raw -ErrorAction Ignore};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $Rates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport}
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -6303,7 +6304,7 @@ function Invoke-ReportMinerStatus {
             $ReportDone = $true
         }
         if (-not $ReportDone) {
-            $Response = Invoke-RestMethod -Uri $ReportUrl -Method Post -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport} -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+            $Response = Invoke-GetUrl $ReportUrl -Method POST -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport}
             if ($Response) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1} 
         }
     }
@@ -7055,18 +7056,15 @@ param(
         }
 
         if (-not $Remote -and $key -and $secret -and $organizationid) {
-            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
             $uuid = [string]([guid]::NewGuid())
             $timestamp = Get-UnixTimestamp -Milliseconds
-            #$timestamp_nh = Invoke-RestMethod "$($base)/main/api/v2/time" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop | Select-Object -ExpandProperty serverTime
+            #$timestamp_nh = Invoke-GetUrl "$($base)/main/api/v2/time" -timeout $Timeout | Select-Object -ExpandProperty serverTime
             #if ([Math]::Abs($timestamp_nh - $timestamp) -gt 3000) {$timestamp = $timestamp_nh}
             $paramstr = "$(($params.GetEnumerator() | Foreach-Object {"$($_.Name)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"}) -join '&')"
             $str = "$key`0$timestamp`0$uuid`0`0$organizationid`0`0$($method.ToUpper())`0$endpoint`0$(if ($method -eq "GET") {$paramstr} else {"`0$($params | ConvertTo-Json -Depth 10 -Compress)"})"
             $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
             $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
             $sign = [System.BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.Getbytes(${str})))
-
-            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
 
             $headers = [hashtable]@{
                 'X-Time'            = $timestamp
@@ -7081,7 +7079,7 @@ param(
                     default {$params | ConvertTo-Json -Depth 10}
                 }
 
-                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
+                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -method $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "Nicehash API call: $($_.Exception.Message)"
