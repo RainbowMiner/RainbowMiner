@@ -124,7 +124,7 @@ param(
                     "GET" {if ($params.Count) {$params} else {$null}}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
-                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -method $method -body $body
+                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
