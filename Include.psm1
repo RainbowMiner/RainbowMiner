@@ -5896,7 +5896,7 @@ Param(
                 myip      = $Session.MyIP
             }
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-            if ($Result.Status) {$Result.Content;return}
+            if ($Result.Status) {$Result.Content;Remove-Variable "Result";return}
         }
 
         $url      = $JobData.url
@@ -5933,7 +5933,7 @@ Param(
             }
             if ($Result) {Remove-Variable "Result"}
         } else {
-            Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+            Invoke-RestMethod $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
         }
     } else {
         $oldProgressPreference = $Global:ProgressPreference
@@ -5941,6 +5941,7 @@ Param(
         Invoke-WebRequest $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
+    Remove-Variable "headers"
 }
 
 function Invoke-RestMethodAsync {
