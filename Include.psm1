@@ -5931,9 +5931,9 @@ Param(
             } else {
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
-                $Result = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+                $Result = Invoke-WebRequest $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
                 $Global:ProgressPreference = $oldProgressPreference
-                try {ConvertFrom-Json "$($Result.Content)".Trim() -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0)};"$($Result.Content)".Trim()}
+                try {ConvertFrom-Json $Result.Content -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0)};$Result.Content.Trim()}
             }
             if ($Result) {Remove-Variable "Result"}
         } else {
@@ -5942,7 +5942,7 @@ Param(
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
 }
