@@ -40,6 +40,9 @@ Param(
 
         Set-OsFlags
 
+        $AllProtocols = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12' 
+        [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+
         $Cycle = -1
 
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch

@@ -31,7 +31,6 @@ function Confirm-Version {
 
     $Name = "RainbowMiner"
     if ($Force -or -not (Test-Path Variable:Script:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Script:GlobalVersion.NextCheck) {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
         $RBMVersion = $Version = Get-Version($RBMVersion)
         $Uri = ""
@@ -2158,7 +2157,6 @@ function Expand-WebRequest {
     $FileName = Join-Path ".\Downloads" (Split-Path $Uri -Leaf)
 
     if (Test-Path $FileName) {Remove-Item $FileName}
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $oldProgressPreference = $Global:ProgressPreference
     $Global:ProgressPreference = "SilentlyContinue"
     Invoke-WebRequest $Uri -OutFile $FileName -UseBasicParsing
@@ -5910,8 +5908,6 @@ Param(
         $password = $JobData.password
     }
 
-    if ($url -match "^https" -and [Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {[Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12}
-
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 
@@ -6285,8 +6281,6 @@ function Invoke-ReportMinerStatus {
             Write-Log -Level Info "Miner Status get pool stats has failed. "
         }
     }
-
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
