@@ -44,7 +44,7 @@
 
         Set-OsFlags
 
-        $AllProtocols = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12' 
+        $AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
         [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
 
         # List of possible mime types for files
