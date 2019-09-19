@@ -5920,7 +5920,7 @@ Param(
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
         if ($IsLinux) {
-            if (Get-Command "wget" -ErrorAction Ignore) {
+            if ($false -and (Get-Command "wget" -ErrorAction Ignore)) {
                 $bodystr      = if ($body) {if ($body -is [string]) {$body} else {[string]::Join("&",@(foreach ($nv in $body.GetEnumerator()) {if ($nv.Name) {'{0}={1}' -f $nv.Name, (Get-UrlEncode($nv.Value))}}))}}
                 $headerstr    = if ($headers.Count) {[string]::Join(" ",@(foreach ($nv in $headers.GetEnumerator()) {if ($nv.Name) {"--header='{0}: {1}'" -f $nv.Name, $nv.Value}}))}
                 $ArgumentList = "-q -O - -T $timeout --server-response -U '$useragent' --method=$requestmethod$(if ($headerstr) {" $headerstr"})$(if ($bodystr) {" --body-data='$($bodystr -replace "'","''")'"}) -- `"$RequestUrl`""
