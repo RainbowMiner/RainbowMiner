@@ -5915,26 +5915,7 @@ Param(
     if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
-        if ($IsLinux) {
-            if ($false -and (Get-Command "wget" -ErrorAction Ignore)) {
-                $bodystr      = if ($body) {if ($body -is [string]) {$body} else {[string]::Join("&",@(foreach ($nv in $body.GetEnumerator()) {if ($nv.Name) {'{0}={1}' -f $nv.Name, (Get-UrlEncode($nv.Value))}}))}}
-                $headerstr    = if ($headers.Count) {[string]::Join(" ",@(foreach ($nv in $headers.GetEnumerator()) {if ($nv.Name) {"--header='{0}: {1}'" -f $nv.Name, $nv.Value}}))}
-                $ArgumentList = "-q -O - -T $timeout --server-response -U '$useragent' --method=$requestmethod$(if ($headerstr) {" $headerstr"})$(if ($bodystr) {" --body-data='$($bodystr -replace "'","''")'"}) -- `"$RequestUrl`""
-                $Result = (Invoke-Expression "wget $ArgumentList" -ErrorAction Stop 2>($tmpFile=New-TemporaryFile)) | Out-String
-                if (Test-Path $tmpFile) {Get-Content $tmpFile -ErrorAction Ignore | Where-Object {$_ -match "^  HTTP.+\s+(\d+)\s+(.+)$"} | Foreach-Object {$Status = [int]$Matches[1];$StatusMsg = $Matches[2]};Remove-Item $tmpFile} else {$Status = 500; $StatusMsg = "Something went wrong"}
-                if ($Status -ne 200) {throw "wget $RequestUrl failed ($Status $StatusMsg)"}
-                try {ConvertFrom-Json "$Result".Trim() -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0)};"$Result".Trim()}
-            } else {
-                $oldProgressPreference = $Global:ProgressPreference
-                $Global:ProgressPreference = "SilentlyContinue"
-                $Result = Invoke-WebRequest $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
-                $Global:ProgressPreference = $oldProgressPreference
-                try {ConvertFrom-Json $Result.Content -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0)};$Result.Content.Trim()}
-            }
-            if ($Result) {Remove-Variable "Result"}
-        } else {
-            Invoke-RestMethod $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
-        }
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
