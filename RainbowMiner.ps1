@@ -242,6 +242,13 @@ if ($IsWindows) {
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
     }
 }
+try { 
+    Import-Module ThreadJob -ErrorAction Stop
+    Set-Alias Start-Job Start-ThreadJob
+}
+catch { 
+    Write-Log "Failed to import module (ThreadJob) - using normal 'Start-Job' instead. "
+}
 
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
