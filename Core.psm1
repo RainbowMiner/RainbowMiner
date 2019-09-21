@@ -1288,7 +1288,6 @@ function Invoke-Core {
         $Miner_DevFees = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
         $Miner_Profits = [PSCustomObject]@{}
-        $Miner_Profits_MarginOfError = [PSCustomObject]@{}
         $Miner_Profits_Bias = [PSCustomObject]@{}
         $Miner_Profits_Unbias = [PSCustomObject]@{}
         $Miner_OCprofile = [PSCustomObject]@{}
@@ -1389,12 +1388,6 @@ function Invoke-Core {
         $Miner_Profit = [Double]($Miner_Profits.PSObject.Properties.Value | Measure-Object -Sum).Sum
         $Miner_Profit_Bias = [Double]($Miner_Profits_Bias.PSObject.Properties.Value | Measure-Object -Sum).Sum
         $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.PSObject.Properties.Value | Measure-Object -Sum).Sum
-        
-        $Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
-            $Miner_Profits_MarginOfError | Add-Member $_ ([Double]$Pools.$_.MarginOfError * (& {if ($Miner_Profit) {([Double]$Miner.HashRates.$_ * $Pools.$_.StablePrice) / $Miner_Profit}else {1}}))
-        }
-
-        $Miner_Profit_MarginOfError = [Double]($Miner_Profits_MarginOfError.PSObject.Properties.Value | Measure-Object -Sum).Sum
 
         $Miner_Profit_Cost = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
         if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
@@ -1407,7 +1400,6 @@ function Invoke-Core {
                 $Miner_Profits_Bias.$_ = $null
                 $Miner_Profits_Unbias.$_ = $null
                 $Miner_Profit = $null
-                $Miner_Profits_MarginOfError = $null
                 $Miner_Profit_Bias = $null
                 $Miner_Profit_Unbias = $null
                 $Miner_Profit_Cost = $null
@@ -1424,7 +1416,6 @@ function Invoke-Core {
         $Miner | Add-Member Profits_Bias $Miner_Profits_Bias
         $Miner | Add-Member Profits_Unbias $Miner_Profits_Unbias
         $Miner | Add-Member Profit $Miner_Profit
-        $Miner | Add-Member Profit_MarginOfError $Miner_Profit_MarginOfError
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
@@ -1554,7 +1545,6 @@ function Invoke-Core {
     #Update the active miners
     $Session.ActiveMiners | Foreach-Object {
         $_.Profit = 0
-        $_.Profit_MarginOfError = 0
         $_.Profit_Bias = 0
         $_.Profit_Unbias = 0
         $_.Profit_Cost = 0
@@ -1581,7 +1571,6 @@ function Invoke-Core {
         if ($ActiveMiner) {
             $ActiveMiner.Version            = $Miner.Version
             $ActiveMiner.Profit             = $Miner.Profit
-            $ActiveMiner.Profit_MarginOfError = $Miner.Profit_MarginOfError
             $ActiveMiner.Profit_Bias        = $Miner.Profit_Bias
             $ActiveMiner.Profit_Unbias      = $Miner.Profit_Unbias
             $ActiveMiner.Profit_Cost        = $Miner.Profit_Cost
@@ -1636,7 +1625,6 @@ function Invoke-Core {
                 DeviceName           = $Miner.DeviceName
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
-                Profit_MarginOfError = $Miner.Profit_MarginOfError
                 Profit_Bias          = $Miner.Profit_Bias
                 Profit_Unbias        = $Miner.Profit_Unbias
                 Profit_Cost          = $Miner.Profit_Cost
