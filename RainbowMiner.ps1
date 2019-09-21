@@ -289,7 +289,7 @@ while (-not $Session.Stopp) {
             [System.GC]::Collect()
             Get-MemoryUsage -ForceFullCollection >$null
         }
-        Write-Log (Get-MemoryUsage).MemText
+        Write-Log (Get-MemoryUsage -Reset).MemText
     }
 }
 

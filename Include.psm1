@@ -1454,7 +1454,7 @@ function Get-MinersContent {
         InfoOnly = $InfoOnly
     }
 
-    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore)) {
+    foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0})) {
         $Name = $Miner.BaseName
         if ($InfoOnly -or ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
@@ -5822,7 +5822,9 @@ function Get-MemoryUsage
 [cmdletbinding()]
 Param(   
     [Parameter(Mandatory = $False)]
-    [Switch]$ForceFullCollection
+    [Switch]$ForceFullCollection,
+    [Parameter(Mandatory = $False)]
+    [Switch]$Reset
 )
     $memusagebyte = [System.GC]::GetTotalMemory($ForceFullCollection)
     $memdiff = $memusagebyte - [int64]$script:last_memory_usage_byte
@@ -5831,7 +5833,9 @@ Param(
         MemDiff    = $memdiff
         MemText    = "Memory usage: {0:n1} MB ({1:n0} Bytes {2})" -f  ($memusagebyte/1MB), $memusagebyte, "$(if ($memdiff -gt 0){"+"})$($memdiff)"
     }
-    $script:last_memory_usage_byte = $memusagebyte
+    if ($Reset) {
+        $script:last_memory_usage_byte = $memusagebyte
+    }
 }
 
 function Get-MD5Hash {
