@@ -1796,7 +1796,7 @@ function Start-SubProcessInConsole {
                 $ProcessParams.RedirectStandardError  = $LogPath -replace ".txt","-err.txt"
 
                 # Fix executable permissions
-                & chmod +x $FilePath > $null
+                (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
 
                 # Set lib path to local
                 #$BE = "/usr/lib/x86_64-linux-gnu/libcurl-compat.so.3.0.0"
@@ -1921,9 +1921,9 @@ function Start-SubProcessInScreen {
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
     Set-BashFile -FilePath $PIDtest -Cmd $Stuff
 
-    & chmod +x $FilePath > $null
-    & chmod +x $PIDBash > $null
-    & chmod +x $PIDTest > $null
+    (Start-Process "chmod" -ArgumentList "+x $FilePath" -PassThru).WaitForExit() > $null
+    (Start-Process "chmod" -ArgumentList "+x $PIDBash" -PassThru).WaitForExit() > $null
+    (Start-Process "chmod" -ArgumentList "+x $PIDTest" -PassThru).WaitForExit() > $null
 
     $Job = Start-Job -ArgumentList $PID, $WorkingDirectory, $Session.OCDaemonPrefix,$PIDPath, $PIDBash, $ScreenName, $ExecutionContext.SessionState.Path.CurrentFileSystemLocation, $Session.IsAdmin {
         param($ControllerProcessID, $WorkingDirectory, $OCDaemonPrefix, $PIDPath, $PIDBash, $ScreenName, $CurrentPwd, $IsAdmin)
@@ -1980,9 +1980,7 @@ function Start-SubProcessInScreen {
                 if (-not $IsAdmin -and (Test-OCDaemon)) {
                     Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.1.$ScreenName" -Cmd "start-stop-daemon $ArgumentList" -Quiet > $null
                 } else {
-                    $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                    $Proc | Wait-Process
-                    Remove-Variable "Proc" -ErrorAction Ignore
+                    (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                 }
             }
             if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
@@ -2091,9 +2089,7 @@ function Stop-SubProcess {
                                     $Msg = Invoke-OCDaemon -Cmd "start-stop-daemon $ArgumentList"
                                     if ($Msg) {Write-Log -Level Info "OCDaemon reports: $Msg"}
                                 } else {
-                                    $Proc = Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru
-                                    $Proc | Wait-Process
-                                    Remove-Variable "Proc" -ErrorAction Ignore
+                                    (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                                 }
                                 if (Test-Path $MI.pid_path) {Remove-Item -Path $MI.pid_path -ErrorAction Ignore -Force}
                                 if (Test-Path $PIDInfo) {Remove-Item -Path $PIDInfo -ErrorAction Ignore -Force}
@@ -2406,8 +2402,8 @@ function Test-TcpServer {
 }
 
 function Get-MyIP {
-    if ($IsWindows) {
-        $IpcResult = & ipconfig | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'} | Foreach-Object {$Matches[1]}
+    if ($IsWindows -and ($cmd = Get-Command "ipconfig" -ErrorAction Ignore)) {
+        $IpcResult = Invoke-Exe $cmd.Source -ExpandLines | Where-Object {$_ -match 'IPv4.+\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'} | Foreach-Object {$Matches[1]}
         if ($IpcResult.Count -gt 1 -and (Get-Command "Get-NetRoute" -ErrorAction Ignore) -and ($Trunc = Get-NetRoute -DestinationPrefix 0.0.0.0/0 | Select-Object -ExpandProperty NextHop | Where-Object {$_ -match '^(\d{1,3}\.\d{1,3}\.)'} | Foreach-Object {$Matches[1]})) {
             $IpcResult = $IpcResult | Where-Object {$_ -match "^$($Trunc)"}
         }
@@ -3371,7 +3367,7 @@ function Update-DeviceInformation {
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
 
-                    [int]$Utilization = [math]::min((((& ps -A -o pcpu) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
+                    [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
                     if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
@@ -3801,7 +3797,6 @@ class Miner {
                     Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
                     if ($Global:IsLinux) {
                         $Command = ".\IncludesLinux\bin\OhGodAnETHlargementPill-r2"
-                        if (Test-Path $Command) {& chmod +x $Command > $null}
                     } else {
                         $Command = ".\Includes\OhGodAnETHlargementPill-r2.exe"
                     }
