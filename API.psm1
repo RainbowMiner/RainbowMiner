@@ -750,18 +750,16 @@
                                 $pheaders_in.PSObject.Properties | Foreach-Object {if ($pheaders -eq $null) {$pheaders = @{}};$pheaders[$_.Name] = $_.Value}
                                 Remove-Variable "pheaders_in" -ErrorAction Ignore
                             }
-                            if ($Parameters.jobkey -eq "rates") {
+                            if ($Parameters.jobkey -eq "morerates") {
                                 try {
                                     $RatesUri = [System.Uri]$Parameters.url
                                     $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                                    $NewSyms = Compare-Object $Session.GlobalGetTicker @($RatesQry["fsyms"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$_.InputObject}
-                                    if ($NewSyms) {
-                                        $Session.GlobalGetTicker = $Session.GlobalGetTicker + @($NewSyms) | Select-Object -Unique | Sort-Object
-                                    }
-                                    $Parameters.url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$(($Session.GlobalGetTicker -join ',').ToUpper())&tsyms=BTC&extraParams=https://rbminer.net"
+                                    Compare-Object $Session.GlobalGetTicker @($RatesQry["symbols"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GlobalGetTicker += $_.InputObject}
+                                    $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
+                                    $Parameters.url = "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)"
                                     Remove-Variable "RatesUri" -ErrorAction Ignore
                                     Remove-Variable "RatesQry" -ErrorAction Ignore
-                                    Remove-Variable "NewSyms" -ErrorAction Ignore
+                                    Remove-Variable "SymbolStr" -ErrorAction Ignore
                                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                             }
                             $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey

@@ -118,7 +118,7 @@ function Get-PoolPayoutCurrencies {
 
 function Get-Balance {
     [CmdletBinding()]
-    param($Config, $NewRates, [Bool]$Refresh = $false, [Bool]$Details = $false)
+    param($Config, [Bool]$Refresh = $false, [Bool]$Details = $false)
     
     if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
         $Script:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Group-Object -Property Caption | Foreach-Object {
@@ -208,6 +208,9 @@ function Get-Balance {
     }
     
     $Balances
+
+    Remove-Variable "Balances"
+    Remove-Variable "Totals"
 }
 
 function Set-UnprofitableAlgos {
@@ -267,61 +270,47 @@ function Update-Rates {
         $Symbols
     )
 
+    $NewRatesFound = $false
+
+    if (-not (Test-Path Variable:Script:NewRates)) {[hashtable]$Script:NewRates = @{}}
+
     if (-not $Symbols) {
-        $Symbols = $Session.Config.Currency + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+        $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+        $Script:NewRates.Clear()
+        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear()}
+
+        if (-not $Script:NewRates.Count) {
+            Write-Log -Level Info "Coinbase is down, using fallback. "
+            try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+        }
+
+        $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
+
+        $NewRatesFound = $true
+    } else {
+        $Symbols = @($Symbols | Select-Object -Unique)
     }
 
-    [hashtable]$NewRates = @{}
-    try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$NewRates.Clear()}
-
-    if (-not $NewRates.Count) {
-        Write-Log -Level Info "Coinbase is down, using fallback. "
-        try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+    Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
+        elseif ($Session.GlobalGetTicker -inotcontains $_.InputObject) {$Session.GlobalGetTicker += $_.InputObject.ToUpper();$NewRatesFound = $true}
     }
 
-    $Session.Rates["BTC"] = $NewRates["BTC"] = [Double]1
-
-    Compare-Object $Symbols @($NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$NewRates[$_.InputObject]}
-        elseif ($Session.GlobalGetTicker -inotcontains $_.InputObject) {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
-    }
-    Remove-Variable "NewRates" -Force
-
-    if ($Session.GlobalGetTicker.Count -gt 0) {
-        $UpdatedRates = @()
+    if ($NewRatesFound -and $Session.GlobalGetTicker.Count -gt 0) {
         try {
-            $SymbolStr = "$((Compare-Object $UpdatedRates $Session.GlobalGetTicker | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Sort-Object) -join ',')".ToUpper()
-            if ($SymbolStr) {
-                $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
-                if (-not $RatesAPI.status) {
-                    Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
-                } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
-                    $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {$UpdatedRates += $_.Name;[double](1e8/$_.Value)} else {0}}                    
-                }
-                if ($RatesAPI) {Remove-Variable "RatesAPI"}
+            $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
+            $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
+            if (-not $RatesAPI.status) {
+                Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
+            } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
+                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
             }
+            if ($RatesAPI) {Remove-Variable "RatesAPI"}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
         }
-        try {
-            $SymbolStr = "$((Compare-Object $UpdatedRates $Session.GlobalGetTicker | Where-Object SideIndicator -eq "=>" | Foreach-Object {$_.InputObject} | Sort-Object) -join ',')".ToUpper()
-            if ($SymbolStr) {
-                $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=BTC&extraParams=https://rbminer.net" -Jobkey "rates"
-                if ($RatesAPI.Response -eq "Error") {
-                    Write-Log -Level Info "Cryptocompare says $($RatesAPI.Message)"
-                } else {
-                    $RatesAPI.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value.BTC -gt 0) {$UpdatedRates += $_.Name;[Double](1/$_.Value.BTC)} else {0}}
-                }
-                if ($RatesAPI) {Remove-Variable "RatesAPI"}
-            }
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Info "Cryptocompare API for $($SymbolStr) has failed. "
-        }
-        Remove-Variable "UpdatedRates"
     }
 
     Get-WorldCurrencies -Silent
@@ -382,46 +371,6 @@ function Get-WhatToMineFactor {
     if ($Algo) {
         if (-not (Test-Path Variable:Global:WTMData)) {Get-WhatToMineData -Silent}
         $Global:WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * 10}
-    }
-}
-
-function Get-Ticker {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        $Symbol,
-        [Parameter(Mandatory = $false)]
-        $Convert = "BTC",
-        [Parameter(Mandatory = $false)]
-        $Jobkey = $null
-    )
-
-    if (-not $Convert) {$Convert="BTC"}
-    $Convert = $Convert.ToUpper()
-    #eventually consult crypto-bridge: https://api.crypto-bridge.org/api/v1/ticker
-    #eventually consult crex24: https://api.crex24.com/CryptoExchangeService/BotPublic/ReturnTicker
-
-    try {
-        $SymbolStr = (@($Symbol | Sort-Object) -join ',').ToUpper()
-        if ($SymbolStr -match ',') {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/pricemulti?fsyms=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey -cycletime 1800
-            if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
-            } else {
-                $RatesAPI
-            }
-        } else {
-            $RatesAPI = Invoke-RestMethodAsync "https://min-api.cryptocompare.com/data/price?fsym=$($SymbolStr)&tsyms=$($Convert)&extraParams=https://github.com/rainbowminer/RainbowMiner" -Jobkey $Jobkey -cycletime 1800
-            if ($RatesAPI.Response -eq "Error") {
-                Write-Log -Level Warn "Cryptocompare says $($RatesAPI.Message)"
-            } else {
-                [PSCustomObject]@{$SymbolStr = $RatesAPI}
-            }
-        }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-        Write-Log -Level Warn "Cryptocompare API for $($SymbolStr) to $($Convert) has failed. "
     }
 }
 
