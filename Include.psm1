@@ -5913,11 +5913,11 @@ Param(
     if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -SkipCertificateCheck -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        Invoke-WebRequest $RequestUrl -UseBasicParsing -DisableKeepAlive -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
         $Global:ProgressPreference = $oldProgressPreference
     }
     Remove-Variable "headers"

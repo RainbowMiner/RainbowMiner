@@ -243,6 +243,16 @@ if ($IsWindows) {
     }
 }
 
+if ($IsLinux) {
+    try {
+        Import-Module ThreadJob -ErrorAction Stop
+        Set-Alias Start-Job Start-ThreadJob
+    }
+    catch { 
+        Write-Log "Failed to import module (ThreadJob) - using normal 'Start-Job' instead. "
+    }
+}
+
 Import-Module .\API.psm1
 Import-Module .\Asyncloader.psm1
 Import-Module .\Core.psm1
