@@ -127,7 +127,7 @@ function Get-Balance {
         })
     }
 
-    $Balances = $Script:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+    $Balances = $Script:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
 
     if (-not $Balances) {return}
 
@@ -1291,14 +1291,14 @@ function Get-ChildItemContent {
             }
         }
         elseif ($Quick) {
-            $Content = try {$_ | Get-Content | ConvertFrom-Json} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
+            $Content = try {$_ | Get-Content -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
             if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
         else {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}                
                 try {
-                    ($_ | Get-Content | ConvertFrom-Json) | ForEach-Object {Invoke-ExpressionRecursive $_}
+                    ($_ | Get-Content -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
                 catch [ArgumentException] {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -2381,7 +2381,7 @@ function Get-Device {
         [Switch]$IgnoreOpenCL = $false
     )
 
-    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw | ConvertFrom-Json}
+    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 
     if ($Name) {
         $Name_Devices = $Name | ForEach-Object {
@@ -3059,7 +3059,7 @@ function Update-DeviceInformation {
                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $AdapterId = $_.Index
 
-                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 
                         $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                             $_ | Add-Member Data ([PSCustomObject]@{
@@ -3130,7 +3130,7 @@ function Update-DeviceInformation {
 
                             $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
 
-                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw | ConvertFrom-Json}
+                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 
                             if ($null -ne $AdlResult) {
                                 $AdlResult | ForEach-Object {
@@ -3230,7 +3230,7 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw | ConvertFrom-Json}
+                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
                     $Smi = $_
@@ -3276,7 +3276,7 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw | ConvertFrom-Json}
+            if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
                 $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
@@ -3428,7 +3428,7 @@ function Get-AlgorithmMap {
     )
     if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
         [hashtable]$Global:GlobalAlgorithmMap = @{}
-        (Get-Content "Data\algorithmmap.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
+        (Get-Content "Data\algorithmmap.json" -Raw  -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3491,7 +3491,7 @@ function Get-Algorithms {
     )
     if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
         [hashtable]$Global:GlobalAlgorithms = @{}
-        (Get-Content "Data\algorithms.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
+        (Get-Content "Data\algorithms.json" -Raw  -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3510,7 +3510,7 @@ function Get-CoinsDB {
     )
     if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
         [hashtable]$Global:GlobalCoinsDB = @{}
-        (Get-Content "Data\coinsdb.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
+        (Get-Content "Data\coinsdb.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
         $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3527,7 +3527,7 @@ function Get-EquihashCoins {
     )
     if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
         [hashtable]$Global:GlobalEquihashCoins = @{}
-        (Get-Content "Data\equihashcoins.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+        (Get-Content "Data\equihashcoins.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
@@ -3540,7 +3540,7 @@ function Get-NimqHashrates {
     )
     if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
         [hashtable]$Global:GlobalNimqHashrates = @{}
-        (Get-Content "Data\nimqhashrates.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+        (Get-Content "Data\nimqhashrates.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
@@ -3559,7 +3559,7 @@ function Get-PoolsInfo {
     )
     
     if (-not (Test-Path Variables:Global:GlobalPoolsInfo)) {
-        $Global:GlobalPoolsInfo = Get-Content "Data\poolsinfo.json" -Raw | ConvertFrom-Json
+        $Global:GlobalPoolsInfo = Get-Content "Data\poolsinfo.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
         $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
@@ -3589,7 +3589,7 @@ function Get-Regions {
     )
     if (-not (Test-Path Variable:Global:GlobalRegions)) {
         [hashtable]$Global:GlobalRegions = @{}
-        (Get-Content "Data\regions.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
+        (Get-Content "Data\regions.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {
         if ($AsHash) {$Global:GlobalRegions}
@@ -3605,7 +3605,7 @@ function Get-Regions2 {
     )
     if (-not (Test-Path Variable:Global:GlobalRegions2)) {
         [hashtable]$Global:GlobalRegions2 = @{}
-        (Get-Content "Data\regions2.json" -Raw | ConvertFrom-Json).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+        (Get-Content "Data\regions2.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }
@@ -3618,7 +3618,7 @@ function Get-WorldCurrencies {
         [Switch]$Silent = $false
     )
     if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
-        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-Content ".\Data\worldcurrencies.json" | ConvertFrom-Json} else {@("USD","INR","RUB","EUR","GBP")}
+        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-Content ".\Data\worldcurrencies.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
     if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
@@ -4431,7 +4431,7 @@ function Test-TimeSync {
         {
             $configuredNtpServerNameRegistryPolicy = Get-ItemProperty `
                 -Path HKLM:\SOFTWARE\Policies\Microsoft\W32Time\Parameters `
-                -Name 'NtpServer' -ErrorAction SilentlyContinue |
+                -Name 'NtpServer' -ErrorAction Ignore |
                 Select-Object -ExpandProperty NtpServer
         }
 
@@ -5258,7 +5258,7 @@ function Set-SchedulerConfigDefault {
         try {
             $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1" -Quick | Select-Object -ExpandProperty Content
             if ($Preset -is [string] -or $Preset -eq $null) {
-                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json | ConvertFrom-Json;$a.DayOfWeek = "$_";$a})
+                $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             

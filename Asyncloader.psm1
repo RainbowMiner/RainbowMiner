@@ -70,9 +70,9 @@ Param(
                 }
             }
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
-            if ($Delta -gt 0) {Start-Sleep -Milliseconds ($Delta*1000)}
-            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Error.Clear()}
-            if ($Errors.Count) {$Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8;$Errors.Clear()}
+            if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
+            if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}
+            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}
         }
     });
     $AsyncLoader.Loader.Runspace = $newRunspace

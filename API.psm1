@@ -242,11 +242,11 @@
                     Break
                 }
                 "/remoteminers" {
-                    $Data = ConvertTo-Json @(($API.RemoteMiners | Select-Object | ConvertFrom-Json) | Select-Object) -Depth 10
+                    $Data = ConvertTo-Json @(($API.RemoteMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object) -Depth 10
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/minerinfo" {
@@ -254,11 +254,11 @@
                     Break
                 }
                 "/pools" {
-                    $Data = ConvertTo-Json @(($API.Pools | Select-Object | ConvertFrom-Json).PSObject.Properties | Select-Object -ExpandProperty Value)
+                    $Data = ConvertTo-Json @(($API.Pools | Select-Object | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Select-Object -ExpandProperty Value)
                     Break
                 }
                 "/newpools" {
-                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object) | ConvertFrom-Json | Select-Object)
+                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object) | ConvertFrom-Json -ErrorAction Ignore | Select-Object)
                     Break
                 }
                 "/allpools" {
@@ -266,19 +266,19 @@
                     Break
                 }
                 "/selectedpools" {
-                    $Data = ConvertTo-Json @(($API.SelectedPools | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.SelectedPools | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/algorithms" {
-                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json).Algorithm | Sort-Object -Unique)
+                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object | ConvertFrom-Json -ErrorAction Ignore).Algorithm | Sort-Object -Unique)
                     Break
                 }
                 "/miners" {
-                    $Data = ConvertTo-Json @(($API.Miners | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/fastestminers" {
-                    $Data = ConvertTo-Json @(($API.FastestMiners | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.FastestMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/config" {
@@ -294,7 +294,7 @@
                     Break
                 }
                 "/downloadlist" {
-                    $Data = ConvertTo-Json @(($API.DownloadList | Select-Object | ConvertFrom-Json) | Select-Object)
+                    $Data = ConvertTo-Json @(($API.DownloadList | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/debug" {
@@ -411,7 +411,7 @@
                             $ContentType = "text/csv"
                             $ContentFileName = "earnings_$(Get-Date -Format "yyyy-MM-dd_HHmmss").csv"
                         } else {
-                            $Filter = if ($Parameters.filter) {$Parameters.filter | ConvertFrom-Json}
+                            $Filter = if ($Parameters.filter) {$Parameters.filter | ConvertFrom-Json -ErrorAction Ignore}
                             $Sort   = if ($Parameters.sort) {$Parameters.sort} else {"Date"}
                             $Order  = $Parameters.order -eq "desc"
 
@@ -445,7 +445,7 @@
                     Break
                 }
                 "/balances" {
-                    $Balances = ($API.Balances | Select-Object | ConvertFrom-Json) | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
+                    $Balances = ($API.Balances | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
                     if ($Parameters.consolidate) {
                         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
                             $BalanceGroup = $_.Group | Where-Object {$API.Rates."$($_.Currency)"}
@@ -519,7 +519,7 @@
                     Break
                 }
                 "/payouts" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json) | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
+                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
                         $Balance_BaseName = $_.BaseName
                         $Balance_Currency = $_.Currency
                         $_.Payouts | Foreach-Object {
@@ -551,7 +551,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | Select-Object | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw | Foreach-Object {
+                    ($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -602,8 +602,8 @@
                 "/activity" {
                     $LimitDays = (Get-Date).ToUniversalTime().AddDays(-2)
                     $BigJson = ''
-                    Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw | Foreach-Object {$BigJson += $_}
-                    $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json
+                    Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw -ErrorAction Ignore | Foreach-Object {$BigJson += $_}
+                    $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json -ErrorAction Ignore
                     $Data = $GroupedData | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                         $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
@@ -631,7 +631,7 @@
                     $Profit = [decimal]$API.CurrentProfit
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
-                    $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json
+                    $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore
                     $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
                     $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
                     $Timer = Get-UpTime
@@ -754,7 +754,8 @@
                                 try {
                                     $RatesUri = [System.Uri]$Parameters.url
                                     $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                                    Compare-Object $Session.GlobalGetTicker @($RatesQry["symbols"] -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
+                                    if ($Session.GlobalGetTicker -isnot [array]) {$Session.GlobalGetTicker = @()}
+                                    Compare-Object $Session.GlobalGetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
                                     $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
                                     $Parameters.url = "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)"
                                     Remove-Variable "RatesUri" -ErrorAction Ignore
@@ -1000,7 +1001,7 @@
             $Response.ContentLength64 = $ResponseBuffer.Length
             $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
             $Response.Close()
-            if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
+            if ($Error.Count -and $Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
             Foreach ($var in @("Context","Data","ContentEncoding","InputStream","Parameters","Request","Response","ResponseBuffer","task")) {Remove-Variable $var -Force -ErrorAction Ignore}
         }
