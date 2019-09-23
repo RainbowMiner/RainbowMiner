@@ -453,6 +453,8 @@ function Invoke-Core {
         $Session.Config | Add-Member AlgorithmMap (Get-AlgorithmMap) -Force
         $Session.Config | Add-Member EquihashCoins (Get-EquihashCoins) -Force
         if ($Session.CurrentPowerPrice -eq $null) {$Session.CurrentPowerPrice = $Session.Config.PowerPrice}
+
+        $Session.LogLevel = $Session.Config.LogLevel
     }
 
     #Start/stop services

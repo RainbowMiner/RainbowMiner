@@ -471,8 +471,14 @@ Function Write-Log {
         [Parameter(Mandatory = $false)][ValidateSet("Error", "Warn", "Info", "Verbose", "Debug")][string]$Level = "Info"
     )
 
-    Begin { 
+    Begin {
         if ($Session.SetupOnly) {return}
+        if ($(Switch ($Session.LogLevel) {
+            "Silent" {$true}
+            "Info"   {$Level -eq "Debug"}
+            "Warn"   {@("Info","Debug") -icontains $Level}
+            "Error"  {@("Warn","Info","Debug") -icontains $Level}
+        })) {return}
     }
     Process {
         # Inherit the same verbosity settings as the script importing this
