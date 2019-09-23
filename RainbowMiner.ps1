@@ -275,7 +275,7 @@ if (Test-Path $ConfigFile) {
 }
 
 #Start the log
-if (-not $psISE -and $Session.LogLevel -eq "debug") {Start-Transcript ".\Logs\$(if ($SetupOnly) {"Setup"} else {"RainbowMiner"})_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\$(if ($SetupOnly) {"Setup"} else {"RainbowMiner"})_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
 Write-Log "Starting RainbowMiner v$($Session.Version)"
 
@@ -315,7 +315,7 @@ while (-not $Session.Stopp) {
 Stop-Core
 
 #Stop the log
-if (-not $psISE -and $Session.LogLevel -eq "debug") {
+if (-not $psISE -and $Session.LogLevel -ne "Silent") {
     Stop-Transcript
 }
 

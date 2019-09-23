@@ -473,12 +473,6 @@ Function Write-Log {
 
     Begin {
         if ($Session.SetupOnly) {return}
-        if ($(Switch ($Session.LogLevel) {
-            "Silent" {$true}
-            "Info"   {$Level -eq "Debug"}
-            "Warn"   {@("Info","Debug") -icontains $Level}
-            "Error"  {@("Warn","Info","Debug") -icontains $Level}
-        })) {return}
     }
     Process {
         # Inherit the same verbosity settings as the script importing this
@@ -521,13 +515,22 @@ Function Write-Log {
         }
 
         # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
-        if ($mutex.WaitOne(2000)) {
-            $proc = Get-Process -id $PID
-            "$date [$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
-            $mutex.ReleaseMutex()
-        }
-        else {
-            Write-Warning -Message "Log file is locked, unable to write message to $FileName."
+        $NoLog = Switch ($Session.LogLevel) {
+                    "Silent" {$true}
+                    "Info"   {$Level -eq "Debug"}
+                    "Warn"   {@("Info","Debug") -icontains $Level}
+                    "Error"  {@("Warn","Info","Debug") -icontains $Level}
+                }
+
+        if (-not $NoLog) {
+            if ($mutex.WaitOne(2000)) {
+                $proc = Get-Process -id $PID
+                "$date [$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
+                $mutex.ReleaseMutex()
+            }
+            else {
+                Write-Warning -Message "Log file is locked, unable to write message to $FileName."
+            }
         }
     }
     End {}
