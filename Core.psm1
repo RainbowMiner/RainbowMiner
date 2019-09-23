@@ -2232,7 +2232,7 @@ function Invoke-Core {
                             elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {"L"}
                             elseif ($API.Update) {"U"}
                             elseif ($API.UpdateBalance) {"B"}
-                            elseif ([console]::KeyAvailable) {
+                            elseif ($(try {[console]::KeyAvailable} catch {if ($Error.Count) {$Error.RemoveAt(0)}})) {
                                 $key = [System.Console]::ReadKey($true)
                                 if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
                             }
