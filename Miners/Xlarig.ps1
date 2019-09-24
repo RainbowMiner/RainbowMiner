@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\CPU-Xlarig\xlarig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xlarig/XLArig-v3.1.0-linux64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-xlarig/XLArig-v3.2.0-linux64.zip"
     $DevFee = 0.0
 } else {
     $Path = ".\Bin\CPU-Xlarig\xlarig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-xlarig/XLArig-v3.1.0-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.0-xlarig/XLArig-v3.2.0-win64.zip"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/scala-network/XLArig/releases"
 $Port = "541{0:d2}"
-$Version = "3.1.0"
+$Version = "3.2.0"
 
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
