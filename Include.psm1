@@ -2555,7 +2555,7 @@ function Get-Device {
                     ((-not $ExcludeName) -or (-not ($ExcludeName_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -and -not ($ExcludeName | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})))
                 ) {
                     $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
-                    if ($Device.Vendor -eq "AMD" -and $AmdModelsEx -notcontains $Device.Model) {
+                    if ($AmdModelsEx -notcontains $Device.Model) {
                         $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
                         if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx+=$Device.Model}
                         else {$AmdModels[$Device.Model]=$AmdGb}

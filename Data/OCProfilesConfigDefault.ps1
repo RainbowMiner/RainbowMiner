@@ -279,6 +279,76 @@
         CoreClockBoost = "100"
         LockVoltagePoint = "*"
     }
+    'Profile1-P1041004GB' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-P1041004GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "400"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-P1041004GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "200"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-P1041004GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-P1041004GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "350"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile1-P1041008GB' = [PSCustomObject]@{
+        PowerLimit = 0
+        ThermalLimit = 0
+        MemoryClockBoost = "*"
+        CoreClockBoost = "*"
+        LockVoltagePoint = "*"
+    }
+    'Profile2-P1041008GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "400"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile3-P1041008GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "200"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile4-P1041008GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "-500"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
+    'Profile5-P1041008GB' = [PSCustomObject]@{
+        PowerLimit = 80
+        ThermalLimit = 0
+        MemoryClockBoost = "350"
+        CoreClockBoost = "100"
+        LockVoltagePoint = "*"
+    }
     'Profile1-P106100' = [PSCustomObject]@{
         PowerLimit = 0
         ThermalLimit = 0
