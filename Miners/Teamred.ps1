@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.8-teamred/teamredminer-v0.5.8-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.9-teamred/teamredminer-v0.5.9-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.8-teamred/teamredminer-v0.5.8-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.9-teamred/teamredminer-v0.5.9-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.5.8"
+$Version = "0.5.9"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -42,6 +42,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "trtl_chukwa";      MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "x16r";             MinMemGb = 4; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16rt";            MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";           MinMemGb = 2; Params = ""; DevFee = 2.5; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "x16s";             MinMemGb = 2; Params = ""; DevFee = 2.5}
 )
 
