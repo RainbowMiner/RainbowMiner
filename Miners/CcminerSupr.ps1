@@ -20,7 +20,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "c11";    ExtendInterval = 3; Params = "-N 1"} #c11
     #[PSCustomObject]@{MainAlgorithm = "x16r";   Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16R RavenCoin
-    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16Rv2 RavenCoin (new in git12)
+    #[PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = "-N 1"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16Rv2 RavenCoin (new in git12)
     #[PSCustomObject]@{MainAlgorithm = "x16s";   Params = "-N 1"; FaultTolerance = 0.5} #X16S PigeonCoin
     [PSCustomObject]@{MainAlgorithm = "x17";    Params = "-N 1"; ExtendInterval = 2} #x17 (new in git11)
 )
