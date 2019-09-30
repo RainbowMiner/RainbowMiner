@@ -118,13 +118,14 @@ param(
 	            'x-api-nonce'= $nonce
                 'Cache-Control' = 'no-cache'
             }
+            $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
             try {
                 $body = Switch($method) {
                     "PUT" {$params | ConvertTo-Json -Depth 10}
                     "GET" {if ($params.Count) {$params} else {$null}}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
-                $Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
+                $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
