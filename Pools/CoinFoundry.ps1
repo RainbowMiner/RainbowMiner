@@ -41,7 +41,7 @@ $Pools_Ports = [PSCustomObject]@{
 $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallets."$($_.coin)" -and ($_.hashrate -or $AllowZero)) -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.coin
     $Pool_RpcPath        = $_.id
-    $Pool_Algorithm      = $_.algorithm
+    $Pool_Algorithm      = if ($_.algorithm -eq "x16r") {"x16rv2"} else {$_.algorithm}
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_Ports          = $Pools_Ports."$($_.id)"
     $Pool_Fee            = $_.fee
