@@ -41,8 +41,8 @@ $Pool_Coins = [PSCustomObject]@{
     MYNT = [PSCustomObject]@{port = 4548; fee = 1.0; rpc="mynt";     regions=@("us")}
     PGN  = [PSCustomObject]@{port = 4517; fee = 1.0; rpc="pgn";      regions=@("us")}
     RITO = [PSCustomObject]@{port = 4545; fee = 1.0; rpc="rito";     regions=@("us","eu")}
-    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk","east.us","west.us","ca")}
-    RVNt = [PSCustomObject]@{port = 4505; fee = 1.0; rpc="rvnt";     regions=@("us")}
+    RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk","east.us","west.us","ca"); algo = "X16rv2"}
+    RVNt = [PSCustomObject]@{port = 4505; fee = 1.0; rpc="rvnt";     regions=@("us"); algo = "X16rv2"}
     SAFE = [PSCustomObject]@{port = 4503; fee = 1.0; rpc="safe";     regions=@("us")}
     STONE= [PSCustomObject]@{port = 4518; fee = 1.0; rpc="pool";     regions=@("us")}
     VDL  = [PSCustomObject]@{port = 4547; fee = 1.0; rpc="vdl";      regions=@("us")}
@@ -62,7 +62,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_PoolFee   = if ($Pool_Coin.fee -ne $null) {$Pool_Coin.fee} else {$Pool_Fee}
     $Pool_Regions   = if ($Pool_Coin.regions) {$Pool_Coin.regions} else {@("us")}
 
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
+    $Pool_Algorithm = if ($Pool_Coin.algo) {$Pool_Coin.algo} else {$PoolCoins_Request.$Pool_CoinSymbol.algo}
     $Pool_CoinName  = $PoolCoins_Request.$Pool_CoinSymbol.name
 
     if ($Pool_Algorithm -eq "equihash") {

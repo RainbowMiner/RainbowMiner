@@ -36,17 +36,17 @@ catch {
 $Pool_Coin = "Ravencoin"
 $Pool_Currency = "RVN"
 $Pool_Host = "ravenminer.com"
+$Pool_Algorithm = "X16rv2"
+$Pool_Port = 3737
 
 [hashtable]$Pool_RegionsTable = @{}
 
 @("us","eu","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
-    $Pool_Algorithm = $Pool_Request.$_.name
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "x16rv2"} | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     $Pool_User = $Wallets.$Pool_Currency
-    $Pool_Port = $Pool_Request.$_.port
 
     $Pool_Factor = $Pool_Request.$_.mbtc_mh_factor
 
