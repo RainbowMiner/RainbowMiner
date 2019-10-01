@@ -162,7 +162,6 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
         }
 
         if ($Pool_CoinRequest.reward -and $Pool_CoinRequest.revenue -and ($Divisor = ConvertFrom-Hash "$($Pool_CoinRequest.reward.fact) $($Pool_CoinRequest.reward.unit)")) {
-            if (-not $Session.Rates."$($Pool_CoinRequest.revenue.currency)") {Update-Rates $Pool_CoinRequest.revenue.currency}
             if (-not ($lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.reward.currency)) {
                 $lastSatPrice = if ($Session.Rates."$($Pool_CoinRequest.revenue.currency)") {$Pool_CoinRequest.revenue.value / $Session.Rates."$($Pool_CoinRequest.revenue.currency)" * 1e8} else {0}
             }
