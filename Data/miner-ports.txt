@@ -120,7 +120,7 @@
 530	CpuminerYespower
 531	CpuminerBinarium
 532	CpuminerRplant
-533	
+533	NanominerRh
 534	Nanominer
 535	CpuminerVerus
 536	Nheqminer
