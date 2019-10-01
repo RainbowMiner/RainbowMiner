@@ -1017,7 +1017,7 @@ function Invoke-Core {
     #Store pools to file
     if (-not $Session.IsDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
         $Session.Updatetracker.PoolsSave = Get-Date
-        Set-ContentJson ".\Data\poolsdata.json" @($NewPools | Select-Object Name,Algorithm,CoinSymbol,Price,StablePrice,PenaltyFactor -Unique) -Compress > $null
+        Set-ContentJson ".\Data\poolsdata.json" @($NewPools | Select-Object Name,Algorithm,CoinSymbol,Price,StablePrice,PenaltyFactor,ErrorRatio -Unique) -Compress > $null
         $Session.ReportPoolsData = $true
     }
 
