@@ -16,7 +16,11 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda100.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda101-libcurl4.tar.gz"
+            Cuda = "10.1"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda100-libcurl4.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
