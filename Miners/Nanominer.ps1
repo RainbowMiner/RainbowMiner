@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.3-nanominer/nanominer-linux-1.5.3.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.0-nanominer/nanominer-linux-1.6.0.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5.3-nanominer/nanominer-windows-1.5.3.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.0-nanominer/nanominer-windows-1.6.0.zip"
 }
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "8.0"
 $DevFee = 3.0
-$Version = "1.5.3"
+$Version = "1.6.0"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -28,7 +28,8 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "CryptonightR";            Params = ""; MinMemGb = 4; MinMemGbW10 = 8; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightR
     [PSCustomObject]@{MainAlgorithm = "CryptoNightReverseWaltz"; Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #CryptonightRwz
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "RandomHash";              Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 3.0} #RandomHash/PASCcoin
+    #[PSCustomObject]@{MainAlgorithm = "RandomHash";              Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash/PASCcoin
+    [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin
     #[PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
 )
 
@@ -71,11 +72,11 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
                     $Wallet    = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
                     $PaymentId = $null
-                    if ($Algorithm_Norm -eq "RandomHash" -or $Algorithm_Norm -match "^Cryptonight") {
+                    if ($Algorithm_Norm -match "^RandomHash" -or $Algorithm_Norm -match "^Cryptonight") {
                         if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
                             $Wallet    = $Matches[1]
                             $PaymentId = $Matches[2]
-                        } elseif ($Algorithm_Norm -eq "RandomHash") {
+                        } elseif ($Algorithm_Norm -match "^RandomHash") {
                             $PaymentId = "0"
                         }
                     }
