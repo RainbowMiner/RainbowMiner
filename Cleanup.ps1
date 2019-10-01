@@ -596,6 +596,10 @@ try {
         Get-ChildItem "Stats\Pools" -Filter "*_Profit.txt" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "4.4.3.1")) {
+        Get-ChildItem "Stats\Miners" -Filter "*x16rv2_HashRate.txt" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
