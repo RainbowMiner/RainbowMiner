@@ -30,6 +30,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Ethash";                  Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD");          NH = $true; ExtendInterval = 2; DevFee = 1.0} #Ethash
     #[PSCustomObject]@{MainAlgorithm = "RandomHash";              Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash/PASCcoin
     [PSCustomObject]@{MainAlgorithm = "RandomHash2";             Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomHash2/PASCcoin
+    [PSCustomObject]@{MainAlgorithm = "RandomX";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("CPU");          NH = $true; ExtendInterval = 2; DevFee = 5.0} #RandomX
     #[PSCustomObject]@{MainAlgorithm = "UbqHash";                 Params = ""; MinMemGb = 4; MinMemGbW10 = 4; Vendor = @("AMD","NVIDIA"); NH = $true; ExtendInterval = 2; DevFee = 1.0} #UbqHash
 )
 
