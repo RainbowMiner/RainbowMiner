@@ -60,9 +60,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
     [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
     [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
-    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""} #x16rt
-    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""} #x16rt-veil
-    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""} #x16rv2
+    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
+    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
+    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
     [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
     #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #yescryptr16, CpuminerOptBF faster
