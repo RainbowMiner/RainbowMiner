@@ -1064,6 +1064,7 @@ function Set-Stat {
                 Updated = $Updated
                 Failed = [Math]::Max($Stat.Failed-1,0)
             }
+            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
             if ($AddStat) {$Stat | Add-Member -NotePropertyMembers $AddStat}
         }
     }
