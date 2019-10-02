@@ -22,7 +22,6 @@ $PoolCoins_Request = [PSCustomObject]@{}
 
 try {
     $PoolCoins_Request = Invoke-RestMethodAsync "http://api.zergpool.com:8080/api/currencies" -tag $Name -cycletime 120
-    $Pool_Time         = Get-UnixTimestamp
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -122,7 +121,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_TSL = if ($PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo} else {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast}
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_solo -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_solo" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -Actual24h $($PoolCoins_Request.$Pool_CoinSymbol.actual_last24h/1000) -Estimate24h $($PoolCoins_Request.$Pool_CoinSymbol.estimate_last24) -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_solo -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_solo" -Quiet
     }
 
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0) {$AECurrency}
@@ -153,6 +152,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                     Hashrate      = $Stat.HashRate_Live
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
+                    ErrorRatio    = $Stat.ErrorRatio
                 }
             }
         }
