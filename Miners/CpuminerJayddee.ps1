@@ -25,9 +25,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Garlicoin
     [PSCustomObject]@{MainAlgorithm = "anime"; Params = ""} #Anime
     [PSCustomObject]@{MainAlgorithm = "argon2"; Params = ""} #Argon2
-    [PSCustomObject]@{MainAlgorithm = "argon2d-crds"; Params = ""} #Argon2Credits
-    [PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = ""} #Argon2Dynamic
-    [PSCustomObject]@{MainAlgorithm = "argon2d-uis"; Params = ""} #Argon2Unitus
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-crds"; Params = ""} #Argon2Credits
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = ""} #Argon2Dynamic
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-uis"; Params = ""} #Argon2Unitus
     #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #axiom
     [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
@@ -43,7 +43,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #JHA
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyra2v3
     #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #lyra2z330, CpuminerRplant faster
-    [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m
+    #[PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m, (CpuminerRKZ faster)
     [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #pentablake
     [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
     [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #pluck
