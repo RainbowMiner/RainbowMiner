@@ -5,10 +5,15 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-CpuPower\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-3.8.8.5.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-CpuPower\cpuminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-1.0-linux64.tar.gz"
+} else {
+    $Path = ".\Bin\CPU-CpuPower\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.sse42 -and $f.aes){'aes-sse42'}else{'sse2'})).exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.5-cpupower/Cpuminer-opt-cpupower-1.0-win64.zip"
+}
 $ManualUri = "https://github.com/cpu-pool/cpuminer-opt-cpupower/releases"
 $Port = "539{0:d2}"
 $DevFee = 0.0
@@ -17,7 +22,7 @@ $Version = "3.8.8.5"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; ExtendInterval = 2} #CpuPower (CpuminerRKZ faster)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
