@@ -5,20 +5,26 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsLinux) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.sse2 -and $f.aes){'aes-sse2'}else{'sse2'}))"
-$URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m2-nosuch/cpuminer-nosuch-m2-ubuntu18.7z"
-$ManualUri = "https://github.com/patrykwnosuch/cpuminer-3.8.8.1-nosuch/releases"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.sse2 -and $f.aes){'aes-sse2'}else{'sse2'}))"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m4-nosuch/cpu-nosuch-m4-ubuntu18.7z"
+} else {
+    $Path = ".\Bin\CPU-Nosuch\cpuminer-$($f=$Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'avx2-sha'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.sse2 -and $f.aes){'aes-sse2'}else{'sse2'})).exe"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.8.8.1m4-nosuch/cpu-nosuch-m4-win64.7z"
+}
+$ManualUri = "https://github.com/patrykwnosuch/cpuminer-nosuch/releases"
 $Port = "531{0:d2}"
 $DevFee = 0.0
-$Version = "3.8.8.1"
+$Version = "3.8.8.1-m4"
 
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "binarium-v1"; Params = ""; ExtendInterval = 2} #Binarium-V1
     [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""; ExtendInterval = 2} #HODL
-    [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #M7M
+    #[PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #M7M (CpuminerRKZ faster)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
