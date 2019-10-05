@@ -8,10 +8,10 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-NBMiner\nbminer"
+    $Path = ".\Bin\GPU-NBMiner\nbminer"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.5-nbminer/NBMiner_25.5_Linux.tgz"
 } else {
-    $Path = ".\Bin\NVIDIA-NBMiner\nbminer.exe"
+    $Path = ".\Bin\GPU-NBMiner\nbminer.exe"
     $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.5-nbminer/NBMiner_25.5_Win.zip"
 }
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
@@ -94,8 +94,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             "ethproxy" {$Stratum = $Stratum -replace "stratum","ethproxy"}
                             "ethstratumnh" {$Stratum = $Stratum -replace "stratum","nicehash"}
                         }
-                    } elseif ($MainAlgorithm_Norm -eq "Eaglesong") {
-                        $Stratum = $Stratum -replace "stratum","ckbproxy"
                     }
 
                     $Arguments = "--api 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog --no-nvml $($_.Params)"
