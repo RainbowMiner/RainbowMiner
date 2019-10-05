@@ -9,10 +9,10 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-NBMiner\nbminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.2-nbminer/NBMiner_25.2_Linux.tgz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.5-nbminer/NBMiner_25.5_Linux.tgz"
 } else {
     $Path = ".\Bin\NVIDIA-NBMiner\nbminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.2-nbminer/NBMiner_25.2_Win.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v25.5-nbminer/NBMiner_25.5_Win.zip"
 }
 $ManualURI = "https://github.com/NebuTech/NBMiner/releases"
 $Port = "340{0:d2}"
