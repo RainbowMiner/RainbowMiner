@@ -6,35 +6,34 @@
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.5; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "ella";  symbol = "ELLA";  port = 3030; fee = 1.5; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "dbix";  symbol = "DBIX";  port = 2020; fee = 1.5; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "yoc";   symbol = "YOC";   port = 4040; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.5; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "hush";  symbol = "HUSH";  port = 7070; fee = 1.5; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "btcp";  symbol = "BTCP";  port = 1010; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btcz";  symbol = "BTCZ";  port = 2020; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.5; divisor = 1e12}
-    [PSCustomObject]@{rpc = "xzc";   symbol = "XZC";   port = 8080; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.5; divisor = 1e8}
-    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.5; divisor = 1e8}
-
-    #[PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckatoo31";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42; primary = $true}
-    #[PSCustomObject]@{rpc = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1.5; divisor = 1e18}
+    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "ella";  symbol = "ELLA";  port = 3030; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "dbix";  symbol = "DBIX";  port = 2020; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "yoc";   symbol = "YOC";   port = 4040; fee = 1.0; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "hush";  symbol = "HUSH";  port = 7070; fee = 1.0; divisor = 1e8}
+    #[PSCustomObject]@{rpc = "btcp";  symbol = "BTCP";  port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "btcz";  symbol = "BTCZ";  port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
+    [PSCustomObject]@{rpc = "xzc";   symbol = "XZC";   port = 8080; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8}
 )
+
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
     $Pool_Currency = $_.symbol
