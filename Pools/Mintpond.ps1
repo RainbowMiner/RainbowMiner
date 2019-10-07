@@ -19,8 +19,8 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "JEM"; url = "jemcash"; port = 3090; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
-    [PSCustomObject]@{symbol = "XZC"; url = "zcoin";   port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "RVN"; url = "ravencoin"; port = 3010; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
+    [PSCustomObject]@{symbol = "XZC"; url = "zcoin";     port = 3000; fee = 0.9; ssl = $false; protocol = "stratum+tcp"}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
