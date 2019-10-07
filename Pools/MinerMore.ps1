@@ -39,6 +39,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 $Pool_Coins = [PSCustomObject]@{
     HTH  = [PSCustomObject]@{port = 4515; fee = 1.0; rpc="hth";      regions=@("us")}
     MYNT = [PSCustomObject]@{port = 4548; fee = 1.0; rpc="mynt";     regions=@("us")}
+    PEXA = [PSCustomObject]@{port = 4553; fee = 1.0; rpc="pexa";     regions=@("us")}
     PGN  = [PSCustomObject]@{port = 4517; fee = 1.0; rpc="pgn";      regions=@("us")}
     RITO = [PSCustomObject]@{port = 4545; fee = 1.0; rpc="rito";     regions=@("us","eu")}
     RVN  = [PSCustomObject]@{port = 4501; fee = 1.0; rpc="rvn";      regions=@("us","eu","hk","east.us","west.us","ca"); algo = "X16rv2"}
@@ -48,7 +49,6 @@ $Pool_Coins = [PSCustomObject]@{
     VDL  = [PSCustomObject]@{port = 4547; fee = 1.0; rpc="vdl";      regions=@("us")}
     XMG  = [PSCustomObject]@{port = 4537; fee = 1.0; rpc="xmg";      regions=@("us")}
     XRD  = [PSCustomObject]@{port = 4552; fee = 1.0; rpc="xrd";      regions=@("us")}
-    XSG  = [PSCustomObject]@{port = 4508; fee = 1.0; rpc="xsg";      regions=@("us")}
     YEC  = [PSCustomObject]@{port = 4550; fee = 1.0; rpc="yec";      regions=@("us")}
     YTN  = [PSCustomObject]@{port = 4543; fee = 1.0; rpc="ytn";      regions=@("us")}
 }
