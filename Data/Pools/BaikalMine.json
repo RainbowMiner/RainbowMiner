@@ -184,20 +184,6 @@
                     ]
     },
     {
-        "symbol":  "TEO",
-        "coin":  "TrustETH reOrigin",
-        "algo":  "TETHashV1",
-        "rpc":  "tao.baikalmine.com",
-        "host":  "tao.baikalmine.com",
-        "port":  [
-                     2620
-                 ],
-        "fee":  0.5,
-        "regions":  [
-                        "eu"
-                    ]
-    },
-    {
         "symbol":  "TSF",
         "coin":  "Teslafunds",
         "algo":  "Ethash",
