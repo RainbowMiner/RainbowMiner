@@ -17,23 +17,16 @@ $Pool_Region = Get-Region "US"
 $Pool_Request = [PSCustomObject]@{}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "BEAM"  ; rpc = "beam"     ; port = @(7776,7777)}
-    [PSCustomObject]@{symbol = "BTG"   ; rpc = "btg"      ; port = @(8866,8817)}
     [PSCustomObject]@{symbol = "BCI"   ; rpc = "bci"      ; port = 9166}
-    [PSCustomObject]@{symbol = "BTCZ"  ; rpc = "btcz"     ; port = 6586}
+    [PSCustomObject]@{symbol = "BEAM"  ; rpc = "beam"     ; port = @(7786,7787)}
+    [PSCustomObject]@{symbol = "BTG"   ; rpc = "btg"      ; port = @(8866,8817)}
     [PSCustomObject]@{symbol = "BTX"   ; rpc = "btx"      ; port = 3629}
     [PSCustomObject]@{symbol = "BSD"   ; rpc = "bsd"      ; port = 8686}
-    #[PSCustomObject]@{symbol = "CRDS"  ; rpc = "crds"     ; port = 2771}
     [PSCustomObject]@{symbol = "DYN"   ; rpc = "dyn"      ; port = 5960}
     [PSCustomObject]@{symbol = "GRLC"  ; rpc = "grlc"     ; port = 8600}
-    [PSCustomObject]@{symbol = "GENX"  ; rpc = "genx"     ; port = 9983}
     [PSCustomObject]@{symbol = "HODL"  ; rpc = "hodl"     ; port = 4693}
-    [PSCustomObject]@{symbol = "PGN"   ; rpc = "pign"     ; port = 4096}
-    [PSCustomObject]@{symbol = "POLY"  ; rpc = "poly"     ; port = 7935}
-    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 6666}
     [PSCustomObject]@{symbol = "ROI"   ; rpc = "roi"      ; port = 4699}
-    [PSCustomObject]@{symbol = "SCASH" ; rpc = "scash"    ; port = 8983}
-    [PSCustomObject]@{symbol = "UBQ"   ; rpc = "ubiq"     ; port = 3030}
+    [PSCustomObject]@{symbol = "RVN"   ; rpc = "rvn"      ; port = 7777}
     [pscustomobject]@{symbol = "VEIL"  ; rpc = "veil"     ; port = 7220}
     [pscustomobject]@{symbol = "XVG-X17" ; rpc = "xvg-x17"  ; port = 7477}
     [PSCustomObject]@{symbol = "VTC"   ; rpc = "vtc"      ; port = 5778}
