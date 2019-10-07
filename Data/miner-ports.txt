@@ -90,6 +90,7 @@
 346	TTminer3
 347	Gminer155
 348	NinjaRig
+349	SrbMinerMulti
 
 400	Sgminer
 401	SgminerBitcore
@@ -129,6 +130,7 @@
 539	CpuPower
 540	XmrigUpx
 541	Xlarig
+542	CpuminerRKZ
 
 
 4068    CcminerSpModTribus
