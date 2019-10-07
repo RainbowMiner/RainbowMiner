@@ -45,13 +45,13 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.5; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.5; divisor = 1e18}
     #[PSCustomObject]@{rpc = "ella";  symbol = "ELLA";  port = 3030; fee = 1.5; divisor = 1e18}
     #[PSCustomObject]@{rpc = "dbix";  symbol = "DBIX";  port = 2020; fee = 1.5; divisor = 1e18}
     #[PSCustomObject]@{rpc = "yoc";   symbol = "YOC";   port = 4040; fee = 1.5; divisor = 1e18}
-    [PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.5; divisor = 1e18}
+    #[PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.5; divisor = 1e18}
     [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.5; divisor = 1e8}
@@ -65,10 +65,9 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42}
     [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.5; divisor = 1e8}
     [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.5; divisor = 1e8}
-
-    #[PSCustomObject]@{rpc = "grin";  coin = "GRIN";            algo = "Cuckatoo31";   symbol = "GRIN";  port = 3030; fee = 1.5; divisor = 1e9; cycles = 42; primary = $true}
-    #[PSCustomObject]@{rpc = "progpow-eth"; coin = "Ethereum ProgPoW"; algo = "ProgPoW"; symbol = "ETH"; port = 2020; fee = 1.5; divisor = 1e18}
+    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.5; divisor = 1e8}
 )
+
 
 $Pool_Currencies = @($Pools_Data | Select-Object -ExpandProperty symbol | Where-Object {$Wallets."$($_)"} | Select-Object -Unique)
 
