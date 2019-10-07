@@ -46,15 +46,7 @@ catch {
 
 @("eu") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Xlat = [PSCustomObject]@{
-    "DGBM" = "DGB"
-    "DGBQ" = "DGB"
-    "DGBS" = "DGB"
-    "DGBSK" = "DGB"
-    "XVGG" = "XVG"
-}
-
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($Pool_Xlat.$Pool_CoinSymbol) {$Pool_Xlat.$Pool_CoinSymbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_User = $Wallets.$Pool_CoinSymbol;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
 
     $Pool_Host = "pool.hashpool.eu"
     $Pool_Port = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol -match "^\d+$") {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$PoolCoins_Request.$Pool_CoinSymbol.port}
@@ -65,40 +57,24 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm.fees -ne $null) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
 
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
-    #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
-
-    $Pool_Factor = [Double]$(switch ($Pool_Algorithm) {
-        "blake2s" {1000}
-        "sha256d" {1000}
-        default {1}
-    })
+    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_CoinSymbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
 
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
     $Pool_BLK = $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks"
 
     if (-not $InfoOnly) {
-        if ($Pool_Request -and $Pool_Request.$Pool_Key) {
-            $NewStat = $false; if (-not (Test-Path "Stats\Pools\$($Name)_$($Pool_CoinSymbol)_Profit.txt")) {$NewStat = $true; $DataWindow = "actual_last24h"}
-            $Pool_Price = Get-YiiMPValue $Pool_Request.$Pool_Key -DataWindow $DataWindow -Factor $Pool_Factor
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value $Pool_Price -Duration $(if ($NewStat) {New-TimeSpan -Days 1} else {$StatSpan}) -ChangeDetection $(-not $NewStat) -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $Pool_BLK -Quiet
-        } else {
-            $Divisor = $Pool_Factor * 1e9
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $Pool_BLK -Quiet
-            $Pool_DataWindow = $null
-        }
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $Pool_BLK -Quiet
     }
 
-    $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
+    $Pool_Params = if ($Params.$Pool_CoinSymbol) {",$($Params.$Pool_CoinSymbol)"}
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_Currency
-                Currency      = $Pool_Currency
+                CoinSymbol    = $Pool_CoinSymbol
+                Currency      = $Pool_CoinSymbol
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
                 MarginOfError = $Stat.Week_Fluctuation
@@ -106,7 +82,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Host          = "pool.hashpool.eu"
                 Port          = $Pool_Port
                 User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+                Pass          = "c=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
                 Updated       = $Stat.Updated
@@ -117,6 +93,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
 				ErrorRatio    = $Stat.ErrorRatio
+                WTM           = $true
             }
         }
     }
