@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6c-phoenix/PhoenixMiner_4.6c_Linux.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.7b-phoenix/PhoenixMiner_4.7b_Linux.tar.gz"
 } else {
     $Path = ".\Bin\GPU-Phoenix\PhoenixMiner.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6c-phoenix/PhoenixMiner_4.6c_Windows.7z"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.7b-phoenix/PhoenixMiner_4.7b_Windows.7z"
 }
 $ManualURI = "https://bitcointalk.org/index.php?topic=2647654.0"
 $Port = "308{0:d2}"
 $DevFee = 0.65
 $Cuda = "8.0"
-$Version = "4.6c"
+$Version = "4.7b"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -89,6 +89,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
                     $Coin = if ($Algorithm_Norm -match "ProgPow") {"bci"}
                             elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "UBQ" -or $Pools.$Algorithm_Norm.CoinName -like "ubiq") {"ubq"}
+                            elseif ($Pools.$Algorithm_Norm.CoinSymbol -eq "QKC" -or $Pools.$Algorithm_Norm.CoinName -like "quarkchain") {"qkc"}
                             else {"auto"}
 
 					[PSCustomObject]@{
