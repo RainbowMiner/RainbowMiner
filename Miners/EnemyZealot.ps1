@@ -10,25 +10,25 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
 $Port = "302{0:d2}"
 $DevFee = 1.0
-$Version = "2.2"
+$Version = "2.3"
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda101-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-linux-cuda101-libcurl4.tar.gz"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda100-libcurl4.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-linux-cuda100-libcurl4.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda92.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-linux-cuda92.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda91.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-linux-cuda91.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -36,15 +36,19 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-enemyz\z-enemy.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda10.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-win-cuda10.1.zip"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-win-cuda10.0.zip"
+            Cuda = "10.0"
+        },
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.2-zenemy/z-enemy-2.2-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.3-zenemy/z-enemy-2.3-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
