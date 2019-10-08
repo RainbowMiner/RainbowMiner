@@ -14,7 +14,7 @@ if ($IsLinux) {
     $Path = ".\Bin\CPU-Rplant\cpuminer-$($f = $Global:GlobalCPUInfo.Features;$(if($f.avx2 -and $f.sha -and $f.aes){'ryzen'}elseif($f.avx2 -and $f.aes){'avx2'}elseif($f.avx -and $f.aes){'avx'}elseif($f.aes){'aes'}elseif($f.sse42){'sse42'}elseif([Environment]::Is64BitOperatingSystem){'sse2'}else{'sse2-w32'})).exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.0.18-rplant/cpuminer-rplant-4.0.18-win.zip"
 }
-$ManualUri = "https://pool.rplant.xyz/miners"
+$ManualUri = "https://github.com/rplant8/cpuminer-opt-rplant/releases"
 $Port = "532{0:d2}"
 $DevFee = 0.0
 $Version = "4.0.18"
