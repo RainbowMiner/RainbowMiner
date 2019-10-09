@@ -132,6 +132,7 @@
 540	XmrigUpx
 541	Xlarig
 542	CpuminerRKZ
+543	CpuminerPower2b
 
 
 4068    CcminerSpModTribus
