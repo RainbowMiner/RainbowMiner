@@ -604,6 +604,10 @@ try {
         Get-ChildItem "Stats\Pools" -Filter "Zpool_BMW512_Profit.txt" -File | Foreach-Object {Remove-Item $_.FullName -Force;$ChangesTotal++}
     }
 
+    if ($Version -le (Get-Version "4.4.3.9")) {
+        $AddAlgorithm += @("Yespower2b")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
