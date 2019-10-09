@@ -10,12 +10,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-BMiner\bminer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.8.6-bminer/bminer-v15.8.6-5f20661-amd64.tar.xz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.8.7-bminer/bminer-v15.8.7-6831c33-amd64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-BMiner\bminer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.8.6-bminer/bminer-lite-v15.8.6-5f20661-amd64.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v15.8.7-bminer/bminer-lite-v15.8.7-6831c33-amd64.zip"
 }
-$Version = "15.8.6"
+$Version = "15.8.7"
 $ManualURI = "https://www.bminer.me/releases/"
 $Port = "307{0:d2}"
 $DevFee = 2.0
@@ -37,6 +37,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "zhash";        SecondaryAlgorithm = ""; NH = $true; MinMemGb = 1; Params = ""; DevFee = 2.0; Vendor = @("NVIDIA")} #" -nofee" #Zhash
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake2s";  NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Blake2s
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "blake14r"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Decred
+    #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "eaglesong"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + Eaglesong
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "tensority"; NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + BTM
     #[PSCustomObject]@{MainAlgorithm = "ethash";       SecondaryAlgorithm = "vbk";       NH = $false; MinMemGb = 4; Params = ""; DevFee = 1.3; Vendor = @("NVIDIA"); ExtendInterval = 2} #Ethash + VeriBlock
 )
