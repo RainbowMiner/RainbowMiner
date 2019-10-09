@@ -33,6 +33,7 @@
 132	CcminerHoney
 133	CcminerBmw512
 134	CcminerMtpNh
+135	CcminerSpModRfv2
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
