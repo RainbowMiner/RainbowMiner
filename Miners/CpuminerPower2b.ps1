@@ -22,7 +22,7 @@ $Version = "1.0.0"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; ExtendInterval = 2} #CPUpower
+    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.7} #CPUpower
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -71,6 +71,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee = $DevFee
 					ManualUri = $ManualUri
                     Version   = $Version
+                    MaxRejectedShareRatio = 0.7
 				}
 			}
 		}
