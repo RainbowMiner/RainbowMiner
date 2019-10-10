@@ -1921,7 +1921,7 @@ function Start-SubProcessInScreen {
                     $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
                     if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
                 }
-            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 20)
+            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
             $StopWatch.Stop()
         }
 
