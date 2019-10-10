@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-wildrig/wildrig-multi-linux-0.19.1-preview.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.2b-wildrig/wildrig-multi-linux-0.19.2-beta.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.1-wildrig/wildrig-multi-windows-0.19.1-preview.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.2b-wildrig/wildrig-multi-windows-0.19.2-beta.7z"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.1"
+$Version = "0.19.2"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -52,10 +52,11 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "sonoa";      Params = ""} #Sonoa
     [PSCustomObject]@{MainAlgorithm = "timetravel"; Params = ""} #Timetravel
     [PSCustomObject]@{MainAlgorithm = "tribus";     Params = ""} #Tribus
-    [PSCustomObject]@{MainAlgorithm = "veil";       Params = ""; Algorithm = "x16rt"} #X16rt-VEIL
+    [PSCustomObject]@{MainAlgorithm = "veil";       Params = ""; Algorithm = "x16rt"; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt-VEIL
     [PSCustomObject]@{MainAlgorithm = "wildkeccak"; Params = ""; ExtendInterval = 3; DevFee = 2.0} #Wildkeccak
-    [PSCustomObject]@{MainAlgorithm = "x16r";       Params = ""} #X16r
-    [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = ""} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16r";       Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16r
+    [PSCustomObject]@{MainAlgorithm = "x16rt";      Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rt
+    [PSCustomObject]@{MainAlgorithm = "x16rv2";     Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #X16rv2
     [PSCustomObject]@{MainAlgorithm = "x16s";       Params = ""} #X16s
     [PSCustomObject]@{MainAlgorithm = "x17";        Params = ""} #X17
     [PSCustomObject]@{MainAlgorithm = "x18";        Params = ""} #X18
@@ -112,13 +113,14 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = "--api-port $($Miner_Port) --algo $($Algorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -r 4 -R 10 --send-stale --donate-level 1 --multiple-instance --opencl-devices $($DeviceIDsAll) --opencl-platform $($Miner_PlatformId) --opencl-threads auto --opencl-launch auto $($Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					API            = "XMRig"
 					Port           = $Miner_Port
 					Uri            = $Uri
 					DevFee         = if ($_.DevFee) {$_.DevFee} else {$DevFee}
 					ManualUri      = $ManualUri
                     ExtendInterval = $_.ExtendInterval
+                    FaultTolerance = $_.FaultTolerance
 					EnvVars        = @("GPU_MAX_WORKGROUP_SIZE=256")
                     Version        = $Version
 				}
