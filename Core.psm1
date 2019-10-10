@@ -1464,7 +1464,7 @@ function Invoke-Core {
         if (-not $Miner.ManualUri -and $Miner.Uri -notmatch "RainbowMiner" -and $Miner.Uri -match "^(.+?github.com/.+?/releases)") {$Miner | Add-Member ManualUri $Matches[1] -Force}
         if ($Miner.EnvVars -eq $null) {$Miner | Add-Member EnvVars @() -Force}
         if ($Miner.NoCPUMining -eq $null) {$Miner | Add-Member NoCPUMining $false -Force}
-        if ($Miner.MaxRejectedShareRatio -eq $null) {$Miner | Add-Member MaxRejectedShareRatio $Session.Config.MaxRejectedShareRatio}
+        if ($Miner.MaxRejectedShareRatio -eq $null) {$Miner | Add-Member MaxRejectedShareRatio $Session.Config.MaxRejectedShareRatio -Force}
         $Miner.MaxRejectedShareRatio = [Double]$Miner.MaxRejectedShareRatio
         if ($Miner.MaxRejectedShareRatio -lt 0) {$Miner.MaxRejectedShareRatio = 0}
         elseif ($Miner.MaxRejectedShareRatio -gt 1) {$Miner.MaxRejectedShareRatio = 1}
