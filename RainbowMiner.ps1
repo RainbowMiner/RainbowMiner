@@ -221,7 +221,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.4.4.0"
+$Session.Version         = "4.4.4.1"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
@@ -243,16 +243,6 @@ if ($IsWindows) {
         Import-Module Defender -ErrorAction Ignore
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1" -ErrorAction Ignore
         Import-Module "$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1" -ErrorAction Ignore
-    }
-}
-
-if ($IsLinux) {
-    try {
-        Import-Module ThreadJob -ErrorAction Stop
-        Set-Alias Start-Job Start-ThreadJob
-    }
-    catch { 
-        Write-Log "Failed to import module (ThreadJob) - using normal 'Start-Job' instead. "
     }
 }
 
