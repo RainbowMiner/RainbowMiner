@@ -1895,8 +1895,9 @@ function Start-SubProcessInScreen {
 
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
 
-        $Process = $null
-        $started = $false
+        $Process  = $null
+        $BashProc = $null
+        $started  = $false
 
         if (-not $IsAdmin -and (Test-OCDaemon)) {
             $started = Invoke-OCDaemonWithName -Name "$OCDaemonPrefix.0.$ScreenName" -FilePath $PIDBash -Move -Quiet
@@ -1907,17 +1908,24 @@ function Start-SubProcessInScreen {
                 WorkingDirectory = $WorkingDirectory
                 PassThru         = $true
             }
-            if ($null -ne (Start-Process @ProcessParams)) {$started=$true}
+            if ($null -ne ($BashProc = Start-Process @ProcessParams)) {
+                $StopWatch.Restart()
+                do {
+                    Start-Sleep -Milliseconds 500
+                } until ($BashProc.HasExited -or ($StopWatch.Elapsed.TotalSeconds) -ge 60)
+                $started=$true
+                Remove-Variable "BashProc" -Force
+            }
         }
         if ($started) {
-            $StopWatch.Restart()            
+            $StopWatch.Restart()
             do {
                 Start-Sleep -Milliseconds 500
                 if (Test-Path $PIDPath) {
                     $ProcessId = [int](Get-Content $PIDPath -Raw -ErrorAction Ignore | Select-Object -First 1)
                     if ($ProcessId) {$Process = Get-Process -Id $ProcessId -ErrorAction Ignore}
                 }
-            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
+            } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 20)
             $StopWatch.Stop()
         }
 
