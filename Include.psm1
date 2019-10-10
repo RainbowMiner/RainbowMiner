@@ -1909,11 +1909,7 @@ function Start-SubProcessInScreen {
                 PassThru         = $true
             }
             if ($null -ne ($BashProc = Start-Process @ProcessParams)) {
-                $StopWatch.Restart()
-                do {
-                    Start-Sleep -Milliseconds 500
-                } until ($BashProc.HasExited -or ($StopWatch.Elapsed.TotalSeconds) -ge 60)
-                $started=$true
+                $started = $BashProc.WaitForExit(60000)
                 Remove-Variable "BashProc" -Force
             }
         }
