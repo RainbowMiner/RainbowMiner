@@ -16,15 +16,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-linux-cuda10.0.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-linux-cuda10.0.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-linux-cuda9.2.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-linux-cuda9.2.tar.gz"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-linux-cuda9.1.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-linux-cuda9.1.tar.gz"
             Cuda = "9.1"
         }
     )
@@ -32,15 +32,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-Trex\t-rex.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-win-cuda10.0.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-win-cuda10.0.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-win-cuda9.2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-win-cuda9.2.zip"
             Cuda = "9.2"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.4-trex/t-rex-0.14.4-win-cuda9.1.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.14.6-trex/t-rex-0.14.6-win-cuda9.1.zip"
             Cuda = "9.1"
         }
     )
@@ -116,7 +116,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
     $Commands | ForEach-Object {
         $MinMemGB     = [int]$_.MinMemGB
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb) -and ($Cuda -match "^10" -or (Get-NvidiaArchitecture $_.Model) -ne "Turing")}
         $Miner_Port   = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
         $Miner_Name   = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
         $Miner_Port   = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
