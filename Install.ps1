@@ -50,9 +50,9 @@ if ($IsWindows) {
     if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
     Expand-WebRequest "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
 
-    Write-Host "Install Microsoft Visual C++ 2017 .."
+    Write-Host "Install Microsoft Visual C++ 2015/2017/2019 .."
     if (-not (Test-IsElevated)) {Write-Host "Please watch for UAC popups and confirm them!" -ForegroundColor Yellow}
-    Expand-WebRequest "https://aka.ms/vs/15/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
+    Expand-WebRequest "https://aka.ms/vs/16/release/vc_redist.$($EnvBits).exe" -ArgumentList "/q" -ErrorAction Ignore
 
     Invoke-Expression ".\Includes\pci\lspci.exe" | Select-String "VGA compatible controller" | Tee-Object -Variable lspci | Tee-Object -FilePath ".\Data\gpu-count.txt" | Out-Null
 }
