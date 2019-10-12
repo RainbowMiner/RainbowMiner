@@ -57,9 +57,9 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 Finally: check, if Powershell 6 is in your PATH, because RainbowMiner will not run correctly, if the path to powershell is missing. Sometimes "C:\Program Files\PowerShell\6" has to be added manually to the PATH environement variable after installing Powershell 6. Here is a nice tutorial, how to add to PATH environment variable https://www.howtogeek.com/118594/how-to-edit-your-system-path-for-easy-command-line-access/amp/
 
 A note on Windows Nvidia drivers. Recommended lite-packed versions are available for direct download:
-[Windows 10 / Nvidia 431.68](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/431.68/nvidia-geforce-graphics-driver-lite-431.68-win10-64bit-standard-03-08-2019.exe)
-[Windows 10 / Nvidia 431.68 DCH](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/431.68/nvidia-geforce-graphics-driver-lite-431.68-win10-64bit-dch-03-08-2019.exe)
-[Windows 7,8,8.1 / Nvidia 431.60 DCH](https://github.com/alanfox2000/repack_NVIDIAGeforceGraphicsDriver/releases/download/431.60/nvidia-geforce-graphics-driver-lite-431.60-win8-win7-64bit-standard-03-08-2019.exe)
+[Windows 10 / Nvidia 431.68](http://us.download.nvidia.com/Windows/431.86/431.86-desktop-win10-64bit-international-nsd-whql.exe)
+[Windows 10 / Nvidia 431.68 DCH](http://us.download.nvidia.com/Windows/431.86/431.86-desktop-win10-64bit-international-nsd-dch-whql.exe)
+[Windows 7,8,8.1 / Nvidia 431.60](http://us.download.nvidia.com/Windows/431.60/431.60-desktop-win8-win7-64bit-international-whql.exe)
 
 ### Ubuntu 18.x Pre-requesites
 (This section is WIP! Want to help? Make an [issue](https://github.com/RainbowMiner/RainbowMiner/issues) or a [PR](https://github.com/RainbowMiner/RainbowMiner/pulls)))
