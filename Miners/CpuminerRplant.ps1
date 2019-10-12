@@ -29,7 +29,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""; ExtendInterval = 2} #Argon2i (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""; ExtendInterval = 2} #Argon2m (Merge)
     [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""; ExtendInterval = 2} #IOtE
-    [PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""; ExtendInterval = 2} #Honeycomb
+    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""; ExtendInterval = 2} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""; ExtendInterval = 2} #Lyra2cz
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; ExtendInterval = 2; MaxRejectedShareRatio = 0.7} #Yespower2b

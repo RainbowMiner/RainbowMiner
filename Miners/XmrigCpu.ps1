@@ -27,9 +27,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2/chukwa"; Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "argon2/wrkz";   Params = ""; ExtendInterval = 2}
     #[PSCustomObject]@{MainAlgorithm = "cn/1";          Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/2";          Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cn/2";          Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/double";     Params = ""; ExtendInterval = 2}
-    [PSCustomObject]@{MainAlgorithm = "cn/gpu";        Params = ""; ExtendInterval = 2}
+    #[PSCustomObject]@{MainAlgorithm = "cn/gpu";        Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/half";       Params = ""; ExtendInterval = 2}
     [PSCustomObject]@{MainAlgorithm = "cn/fast2";      Params = ""; ExtendInterval = 2; Algorithm = "cn/fast"}
     [PSCustomObject]@{MainAlgorithm = "cn/r";          Params = ""; ExtendInterval = 2}

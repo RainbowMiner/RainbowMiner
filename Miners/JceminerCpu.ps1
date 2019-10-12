@@ -17,8 +17,8 @@ $Version = "0.33q"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; ScratchPadMb = 2; Params = "--variation 3"}
-    [PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; ScratchPadMb = 2; Params = "--variation 15"}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; ScratchPadMb = 2; Params = "--variation 3"}
+    #[PSCustomObject]@{MainAlgorithm = "cryptonight/2";          Threads = 1; ScratchPadMb = 2; Params = "--variation 15"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/xfh";        Threads = 1; ScratchPadMb = 2; Params = "--variation 18"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/mkt";        Threads = 1; ScratchPadMb = 2; Params = "--variation 9"}
     [PSCustomObject]@{MainAlgorithm = "cryptonight/fast";       Threads = 1; ScratchPadMb = 2; Params = "--variation 11"}

@@ -31,7 +31,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #axiom
     [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
     [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
-    [PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #bmw512
+    #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #bmw512
     #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = "-N 2048 -R 32 -K `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
     #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptoNightV7
     [PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
@@ -60,9 +60,9 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
     [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
     [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
-    [PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
-    [PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
-    [PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
+    #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
+    #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
+    #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
     [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
     [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
