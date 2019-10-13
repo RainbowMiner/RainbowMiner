@@ -34,6 +34,7 @@
           <th data-field="tProfit" data-align="right" data-sortable="true">Earned</th>
           <th data-field="tPowerDraw" data-align="right" data-sortable="true">Power</th>
           <th data-field="tEff" data-align="right" data-sortable="true">mBTC/kWh</th>
+          <th data-field="tRatio" data-align="right" data-sortable="true">Rejected</th>
       </tr>
   </thead>
 </table>
@@ -57,11 +58,14 @@
             }
             // Format the algorithm(s)
             var algorithms = new Array();
+            var ratios = new Array();
             for (var i = 0; i < item.Algorithm.length; i++) {
                 algorithms.push(formatAlgorithm(item.Algorithm[i]));
+                ratios.push(typeof item.Ratio != "undefined"? (Math.round(parseFloat(item.Ratio[i]) * 100,2)) + ' %' : '-.-- %');
             }
             item.tAlgorithms = algorithms.join(",");
             item.tPool = item.Pool.join(",");
+            item.tRatio = ratios.join(",");
 
             // Format the speed(s)
             if (Array.isArray(item.Speed)) {
@@ -100,7 +104,7 @@
             item.tPowerDraw = item.TotalPowerDraw? Math.round(powerdraw*1000)/1000 + ' kWh':'-.---';
             item.tProfit = item.TotalProfit ? Math.round(profit*1000)/1000 + ' mBTC' : '-.---';
             item.tActive = Math.round(parseFloat(item.Active) * 100) / 100;
-            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0? Math.round(profit/powerdraw*1000)/1000 : '-.---';
+            item.tEff = item.TotalProfit && item.TotalPowerDraw && powerdraw && item.tActive > 1.0 ? Math.round(profit / powerdraw * 1000) / 1000 : '-.---';
         });
         return data;
     }

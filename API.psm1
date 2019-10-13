@@ -551,7 +551,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw | Foreach-Object {
+                    ($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -559,9 +559,11 @@
                         [String]$Algo = $_.HashRates.PSObject.Properties.Name | Select -First 1
                         [String]$SecondAlgo = ''
                         $Speed = @($_.HashRates.$Algo)
+                        $Ratio = @($_.Ratios.$Algo)
                         if (($_.HashRates.PSObject.Properties.Name | Measure-Object).Count -gt 1) {
                             $SecondAlgo = $_.HashRates.PSObject.Properties.Name | Select -Index 1
                             $Speed += $_.HashRates.$SecondAlgo
+                            $Ratio += $_.Ratios.$SecondAlgo
                         }
                         
                         $Miners_Key = "$($_.Name)_$($Algo -replace '\-.*$')"
@@ -578,6 +580,7 @@
                                     Algorithm = $Algo
                                     SecondaryAlgorithm = $SecondAlgo
                                     Speed = $Speed
+                                    Ratio = $Ratio
                                     PowerDraw = $_.PowerDraw
                                     Devices     = $Miner_DeviceModel
                                     DeviceModel = $_.DeviceModel

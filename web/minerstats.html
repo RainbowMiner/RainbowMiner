@@ -64,7 +64,8 @@
                       <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Algorithm</th>
                       <th data-field="Devices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Device</th>
                       <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
-                      <th data-field="tSpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+                      <th data-field="tSpeed" data-align="right" data-sortable="true">Speed</th>
+                      <th data-field="tRatio" data-sortable="true">Rejected</th>
                       <th data-field="tPowerDraw" data-sortable="true">Power</th>
                       <th data-field="tStatus" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Status</th>
                       <th data-field="tButton" data-align="center">Bench</th>
@@ -122,7 +123,23 @@
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             item.tButton = '<button class="btn btn-default" type="button" name="benchmark" title="Start Benchmark" data-name="' + item.Name + '" data-algorithm="' + item.Algorithm + '" data-devicemodel="' + item.Devices + '"><i class="fa fa-sync"></i></button>';
-            item.tAlgorithm = formatAlgorithm(item.Algorithm);
+            var algo = new Array();
+            var speed = new Array();
+            var ratio = new Array();
+
+            algo.push(formatAlgorithm(item.Algorithm));
+            speed.push(formatHashRateValue(item.Speed[0]));
+            ratio.push(item.Ratio[0] != null? parseFloat(item.Ratio[0])*100 + ' %' : '-.-- %');
+
+            if (item.SecondaryAlgorithm != "") {
+                algo.push(formatAlgorithm(item.SecondaryAlgorithm));
+                speed.push(formatHashRateValue(item.Speed[1]));
+                ratio.push(item.Ratio[1] != null? parseFloat(item.Ratio[1])*100 + ' %' : '-.-- %');
+            }
+
+            item.tAlgorithm = algo.join(" / ");
+            item.tSpeed = speed.join(" / ");
+            item.tRatio = ratio.join(" / ");
 
             // Format the device(s)
             item.Name = item.Name.replace(/-GPU.+$/,'');
@@ -133,7 +150,6 @@
             if (item.Benchmarking) item.tStatus = 'Benchmarking';
             else if (item.NeedsBenchmark) item.tStatus = 'Needs Benchmark'
             else if (item.BenchmarkFailed) item.tStatus = 'Failed Benchmark'
-            item.tSpeed = item.Speed[0];
 
             // Format the Profile(s)
             var tOC = new Array();
