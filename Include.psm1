@@ -1028,7 +1028,7 @@ function Set-Stat {
                         Diff_Live          = $Difficulty
                         Diff_Average       = if ($Stat.Diff_Average -gt 0) {((1 - $Span_Day) * $Stat.Diff_Average) + ($Span_Day * $Difficulty)} else {$Difficulty}
                         Ratio_Live         = $Ratio
-                        Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {((1 - $Span_Day) * $Stat.Ratio_Average) + ($Span_Day * $Ratio)} else {$Ratio}
+                        Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round(((1 - $Span_Hour) * $Stat.Ratio_Average) + ($Span_Hour * $Ratio),4)} else {$Ratio}
                     }
                 }
                 "Pools" {
