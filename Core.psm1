@@ -1431,11 +1431,11 @@ function Invoke-Core {
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
 
-        $HmF = $false
+        $HmF = 0
         if ($Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw -and $MaxWatts."$($Miner.DeviceModel)") {
-            $Miner.Profit_Bias *= $Miner.PowerDraw / $MaxWatts."$($Miner.DeviceModel)"
-            $Miner.Profit_Unbias *= $Miner.PowerDraw / $MaxWatts."$($Miner.DeviceModel)"
-            $HmF = $true
+            $HmF = $Miner.PowerDraw / $MaxWatts."$($Miner.DeviceModel)"
+            $Miner.Profit_Bias *= $HmF
+            $Miner.Profit_Unbias *= $HmF
         }
 
         if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
@@ -1630,7 +1630,7 @@ function Invoke-Core {
             $ActiveMiner.MultiProcess       = [int]$Miner.MultiProcess
         }
         else {
-            Write-Log "New miner object for $($Miner.BaseName)"
+            #Write-Log "New miner object for $($Miner.BaseName)"
             $Session.ActiveMiners += New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 Version              = $Miner.Version
