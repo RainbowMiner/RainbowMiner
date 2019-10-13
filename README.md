@@ -726,6 +726,7 @@ To convert those binary 0/1 values into a hex number, you may use this [Bin/Hex 
   - "device" (default): each device group (e.g. GTX1070, RX570, CPU..) will get the most profitable miner to work on the different algorithm. If you have three different device groups, there will be three miners launched.
   - "combo": in addition to "device" mode, all possible combinations of device groups are taken into account. E.g. if all device types are considered most profitable for one specific miner, only one instance of the miner will be launched. Device types will only be combined for specific algorithm, if they have exactly equal params configured in miners.config.txt (the strings have to match). The combination of devices will be monitored seperatly: if the combo is less efficient than single miners, it will be deactivated automatically.
 - **EnableResetVega** = set to 1 to always reset Vega Gpus before mining
+- **EnableHeatMyFlat** = set to 1 to instruct RainbowMiner to prefer miners, that run hotter
 
 #### Setup network operations
 
