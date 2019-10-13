@@ -1279,6 +1279,11 @@ function Invoke-Core {
 
     Write-Log "Calculating profit for each miner. "
 
+    $MaxWatts = [PSCustomObject]@{}
+    $AllMiners | Group-Object DeviceModel | Foreach-Object {
+        $MaxWatts | Add-Member $_.Name ($_.Group.PowerDraw | Measure-Object -Maximum).Maximum
+    }
+
     [hashtable]$AllMiners_VersionCheck = @{}
     [hashtable]$AllMiners_VersionDate  = @{}
     [System.Collections.ArrayList]$Miner_Arguments_List = @()
@@ -1426,10 +1431,19 @@ function Invoke-Core {
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
 
+        $HmF = $false
+        if ($Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw -and $MaxWatts."$($Miner.DeviceModel)") {
+            $Miner.Profit_Bias *= $Miner.PowerDraw / $MaxWatts."$($Miner.DeviceModel)"
+            $Miner.Profit_Unbias *= $Miner.PowerDraw / $MaxWatts."$($Miner.DeviceModel)"
+            $HmF = $true
+        }
+
         if ($Session.Config.UsePowerPrice -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             $Miner.Profit -= $Miner.Profit_Cost
-            $Miner.Profit_Bias -= $Miner.Profit_Cost
-            $Miner.Profit_Unbias -= $Miner.Profit_Cost
+            if (-not $HmF) {
+                $Miner.Profit_Bias -= $Miner.Profit_Cost
+                $Miner.Profit_Unbias -= $Miner.Profit_Cost
+            }
         }
 
         $Miner | Add-Member DeviceName @($Miner.DeviceName | Select-Object -Unique | Sort-Object) -Force
