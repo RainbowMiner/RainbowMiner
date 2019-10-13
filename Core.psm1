@@ -1406,9 +1406,9 @@ function Invoke-Core {
                 $Miner_HashRates.$_ = $null
                 $Miner_Difficulties.$_ = $null
                 $Miner_Ratios.$_ = $null
-                $Miner_Profits.$_ = $null
-                $Miner_Profits_Bias.$_ = $null
-                $Miner_Profits_Unbias.$_ = $null
+                #$Miner_Profits.$_ = $null
+                #$Miner_Profits_Bias.$_ = $null
+                #$Miner_Profits_Unbias.$_ = $null
                 $Miner_Profit = $null
                 $Miner_Profit_Bias = $null
                 $Miner_Profit_Unbias = $null
@@ -1423,9 +1423,9 @@ function Invoke-Core {
         $Miner | Add-Member OCprofile $Miner_OCprofile -Force
 
         $Miner | Add-Member Pools $Miner_Pools
-        $Miner | Add-Member Profits $Miner_Profits
-        $Miner | Add-Member Profits_Bias $Miner_Profits_Bias
-        $Miner | Add-Member Profits_Unbias $Miner_Profits_Unbias
+        #$Miner | Add-Member Profits $Miner_Profits
+        #$Miner | Add-Member Profits_Bias $Miner_Profits_Bias
+        #$Miner | Add-Member Profits_Unbias $Miner_Profits_Unbias
         $Miner | Add-Member Profit $Miner_Profit
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
