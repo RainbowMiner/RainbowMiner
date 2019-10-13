@@ -3684,7 +3684,7 @@ class Miner {
     $LogFile    
     [Bool]$ShowMinerWindow = $false
     $MSIAprofile
-    $OCprofile
+    [hashtable]$OCprofile = @{}
     $DevFee
     $BaseName = $null
     $FaultTolerance = 0.1
@@ -4195,6 +4195,7 @@ class Miner {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
+            $this.OCprofileBackup = @()
             return
         }
         if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
@@ -4221,7 +4222,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
         [System.Collections.ArrayList]$AmdCmd = @()
 
-        $Vendor = $Script:GlobalCachedDevices | Where-Object {@($this.OCprofile.PSObject.Properties.Name) -icontains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Script:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Global:IsWindows) {
             if ($Vendor -ne "NVIDIA") {
@@ -4243,7 +4244,7 @@ class Miner {
         }
 
         $Profiles = [PSCustomObject]@{}
-        foreach ($DeviceModel in @($this.OCprofile.PSObject.Properties.Name)) {
+        foreach ($DeviceModel in @($this.OCprofile.Keys)) {
             $x = Switch -Regex ($DeviceModel) {
                 "1050" {2}
                 "P106-?100" {2}
@@ -4316,7 +4317,7 @@ class Miner {
                         try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
-                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup > $null;$applied_any=$true}
+                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup;$applied_any=$true}
                     }
                     $DeviceId++
                 }                 

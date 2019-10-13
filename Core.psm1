@@ -1291,16 +1291,17 @@ function Invoke-Core {
         $Miner = $_
 
         $Miner_HashRates = [PSCustomObject]@{}
-        $Miner_Difficulties = [PSCustomObject]@{}
-        $Miner_Ratios = [PSCustomObject]@{}
-        $Miner_DevFees = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
-        $Miner_Profits = [PSCustomObject]@{}
-        $Miner_Profits_Bias = [PSCustomObject]@{}
-        $Miner_Profits_Unbias = [PSCustomObject]@{}
-        $Miner_OCprofile = [PSCustomObject]@{}
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile | Add-Member $p ""}
+        $Miner_Profits = [hashtable]@{}
+        $Miner_Profits_Bias = [hashtable]@{}
+        $Miner_Profits_Unbias = [hashtable]@{}
+        $Miner_DevFees = [hashtable]@{}
+        $Miner_Difficulties = [hashtable]@{}
+        $Miner_OCprofile = [hashtable]@{}
+        $Miner_Ratios = [hashtable]@{}
+
+        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile[$p] = ""}
 
         if ($Session.Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
@@ -1373,7 +1374,7 @@ function Invoke-Core {
             if ($Miner_MSIAprofile -ne 0) {$Miner | Add-Member -Name MSIAprofile -Value $($Miner_MSIAprofile) -MemberType NoteProperty -Force}           
             if ($Miner_Penalty -ne -1) {$Miner | Add-Member -Name Penalty -Value $($Miner_Penalty) -MemberType NoteProperty -Force}
             if ($Miner_ExtendInterval -ne -1) {$Miner | Add-Member -Name ExtendInterval -Value $($Miner_ExtendInterval) -MemberType NoteProperty -Force}
-            if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}            
+            if ($Miner_FaultTolerance -ne -1) {$Miner | Add-Member -Name FaultTolerance -Value $($Miner_FaultTolerance) -MemberType NoteProperty -Force}
         }
 
         if (-not $Miner.MSIAprofile -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -MemberType NoteProperty -Force}
@@ -1381,22 +1382,22 @@ function Invoke-Core {
         foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner_OCprofile.$p -eq '') {$Miner_OCprofile.$p=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
         $FirstAlgoName = ""
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object { #temp fix, must use 'PSObject.Properties' to preserve order
-            $Miner_DevFees | Add-Member $_ ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0})) -Force
-            $Miner_DevFeeFactor = (1-$Miner_DevFees.$_/100)
+            $Miner_DevFees[$_] = ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0}))
+            $Miner_DevFeeFactor = (1-$Miner_DevFees[$_]/100)
             if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
             $Miner_HashRates | Add-Member $_ ([Double]$Miner.HashRates.$_)
-            $Miner_Difficulties | Add-Member $_ ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
-            $Miner_Ratios | Add-Member $_ ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
             $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
-            $Miner_Profits | Add-Member $_ ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
-            $Miner_Profits_Bias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
-            $Miner_Profits_Unbias | Add-Member $_ ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
+            $Miner_Difficulties[$_] = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
+            $Miner_Ratios[$_] = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
+            $Miner_Profits[$_] = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
+            $Miner_Profits_Bias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
+            $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
             if (-not $FirstAlgoName) {$FirstAlgoName = $_}
         }
 
-        $Miner_Profit = [Double]($Miner_Profits.PSObject.Properties.Value | Measure-Object -Sum).Sum
-        $Miner_Profit_Bias = [Double]($Miner_Profits_Bias.PSObject.Properties.Value | Measure-Object -Sum).Sum
-        $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.PSObject.Properties.Value | Measure-Object -Sum).Sum
+        $Miner_Profit = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
+        $Miner_Profit_Bias = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
+        $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
 
         $Miner_Profit_Cost = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
         if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
@@ -1404,11 +1405,11 @@ function Invoke-Core {
         $Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
             if (-not [String]$Miner.HashRates.$_) {
                 $Miner_HashRates.$_ = $null
-                $Miner_Difficulties.$_ = $null
-                $Miner_Ratios.$_ = $null
-                #$Miner_Profits.$_ = $null
-                #$Miner_Profits_Bias.$_ = $null
-                #$Miner_Profits_Unbias.$_ = $null
+                $Miner_Difficulties[$_] = $null
+                $Miner_Ratios[$_] = $null
+                #$Miner_Profits[$_] = $null
+                #$Miner_Profits_Bias[$_] = $null
+                #$Miner_Profits_Unbias[$_] = $null
                 $Miner_Profit = $null
                 $Miner_Profit_Bias = $null
                 $Miner_Profit_Unbias = $null
@@ -1539,7 +1540,7 @@ function Invoke-Core {
     #Store miners to file
     if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\minerdata.json"))) {
         $Session.Updatetracker.MinerSave = Get-Date
-        Set-ContentJson ".\Data\minerdata.json" ([PSObject]@{Miners = @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.PSObject.Properties.Value | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
+        Set-ContentJson ".\Data\minerdata.json" ([PSObject]@{Miners = @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
         $Session.ReportMinerData = $true
     }
 
@@ -1961,7 +1962,7 @@ function Invoke-Core {
             @{Label = "Fee"; Expression = {($_.DevFee.PSObject.Properties.Value | ForEach-Object {if ($_) {'{0:p2}' -f ($_/100) -replace ",*0+\s%"," %"}else {"-"}}) -join ','}; Align = 'right'},
             @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}},
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'},
-            @{Label = "Diff"; Expression = {$_.Difficulties.PSObject.Properties.Value | ForEach-Object {if ($_) {($_ | ConvertTo-Float) -replace " "} else {"-"}}}; Align = 'right'},
+            @{Label = "Diff"; Expression = {$_.Difficulties.Values | ForEach-Object {if ($_) {($_ | ConvertTo-Float) -replace " "} else {"-"}}}; Align = 'right'},
             @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
             #@{Label = "Diff"; Expression = {$_.HashRates.PSObject.Properties.Name | ForEach-Object {if ($_) {$_} else {"-"}}}; Align = 'right'}
         )
