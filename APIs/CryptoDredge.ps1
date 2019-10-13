@@ -1,8 +1,8 @@
 ﻿using module ..\Include.psm1
 
 class CryptoDredge : Miner {
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "127.0.0.1"
         $Timeout = 10 #seconds
@@ -18,7 +18,7 @@ class CryptoDredge : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
 
         $HashRate_Name = $this.Algorithm[0]
@@ -39,7 +39,5 @@ class CryptoDredge : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }

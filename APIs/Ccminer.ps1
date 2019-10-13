@@ -1,8 +1,8 @@
 ﻿using module ..\Include.psm1
 
 class Ccminer : Miner {
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -19,7 +19,7 @@ class Ccminer : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
 
         $HashRate_Name = $this.Algorithm[0]
@@ -44,7 +44,5 @@ class Ccminer : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }

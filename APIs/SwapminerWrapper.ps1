@@ -42,7 +42,7 @@ class SwapminerWrapper : Miner {
         return "configpath=$ConfigPath mode=rolling $($Parameters.Params)".Trim()
     }
 
-    [String[]]UpdateMinerData () {
+    [Void]UpdateMinerData () {
         if ($this.Process.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -75,7 +75,5 @@ class SwapminerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
-
-        return @()
     }
 }

@@ -3,7 +3,7 @@
 class EthminerWrapper : Miner {
     [Double]$Difficulty_Value = 0.0
 
-    [String[]]UpdateMinerData () {
+    [Void]UpdateMinerData () {
         if ($this.Process.HasMoreData) {
             $HashRate_Name = $this.Algorithm[0]
 
@@ -53,7 +53,5 @@ class EthminerWrapper : Miner {
 
             $this.CleanupMinerData()
         }
-
-        return @()
     }
 }

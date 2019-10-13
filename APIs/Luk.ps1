@@ -1,8 +1,8 @@
 ﻿using module ..\Include.psm1
 
 class Luk : Miner {
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -18,7 +18,7 @@ class Luk : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @("", $Response)
+            return
         }
 
         $HashRate_Name  = $this.Algorithm[0]        
@@ -39,7 +39,5 @@ class Luk : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @("", $Data | ConvertTo-Json -Compress)
     }
 }

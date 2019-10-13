@@ -1,8 +1,8 @@
 ﻿using module ..\Include.psm1
 
 class Xgminer : Miner {
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -19,7 +19,7 @@ class Xgminer : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
 
         $Difficulty_Value = [Double]$Data.SUMMARY.Difficulty_Accepted
@@ -54,7 +54,5 @@ class Xgminer : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }

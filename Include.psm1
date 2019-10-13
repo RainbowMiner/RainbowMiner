@@ -426,7 +426,7 @@ function Set-MinerStats {
 
                 $Stat = $null
                 if (-not $Miner.IsBenchmarking() -or $Miner_Speed) {
-                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
+                    $Stat = Set-Stat -Name "$($Miner.Name)_$($Miner_Algorithm -replace '\-.*$')_HashRate" -Value $Miner_Speed -Difficulty $Miner_Diff -Ratio $Miner.RejectedShareRatio[$Miner_Index] -Duration $StatSpan -FaultDetection $true -FaultTolerance $Miner.FaultTolerance -PowerDraw $Miner_PowerDraw -Sub $Session.DevicesToVendors[$Miner.DeviceModel] -Quiet:$($Quiet -or ($Miner.GetRunningTime() -lt (New-TimeSpan -Seconds 30)) -or $Miner.IsWrapper())
                     $Statset++
                 }
 
@@ -566,6 +566,7 @@ Function Write-ActivityLog {
                 Speed          = @($Miner.Speed_Live)
                 Profit         = $Miner.Profit
                 PowerDraw      = $Miner.PowerDraw
+                Ratio          = $Miner.RejectedShareRatio
                 Crashed        = $Crashed
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
@@ -882,6 +883,8 @@ function Set-Stat {
         [Parameter(Mandatory = $false)]
         [Double]$Difficulty = 0.0,
         [Parameter(Mandatory = $false)]
+        [Double]$Ratio = 0.0,
+        [Parameter(Mandatory = $false)]
         [DateTime]$Updated = (Get-Date).ToUniversalTime(), 
         [Parameter(Mandatory = $true)]
         [TimeSpan]$Duration, 
@@ -938,6 +941,8 @@ function Set-Stat {
                     PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
                     Diff_Live          = [Double]$Stat.Diff_Live
                     Diff_Average       = [Double]$Stat.Diff_Average
+                    Ratio_Live         = [Double]$Stat.Ratio_Live
+                    Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
             }
             "Pools" {
@@ -1022,6 +1027,8 @@ function Set-Stat {
                         PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {((1 - $Span_Week) * $Stat.PowerDraw_Average) + ($Span_Week * $PowerDraw)} else {$PowerDraw}
                         Diff_Live          = $Difficulty
                         Diff_Average       = if ($Stat.Diff_Average -gt 0) {((1 - $Span_Day) * $Stat.Diff_Average) + ($Span_Day * $Difficulty)} else {$Difficulty}
+                        Ratio_Live         = $Ratio
+                        Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {((1 - $Span_Day) * $Stat.Ratio_Average) + ($Span_Day * $Ratio)} else {$Ratio}
                     }
                 }
                 "Pools" {
@@ -1100,6 +1107,8 @@ function Set-Stat {
                     PowerDraw_Average  = $PowerDraw
                     Diff_Live          = $Difficulty
                     Diff_Average       = $Difficulty
+                    Ratio_Live         = $Ratio
+                    Ratio_Average      = $Ratio
                 }
             }
             "Pools" {
@@ -1146,6 +1155,8 @@ function Set-Stat {
                     PowerDraw_Average  = [Decimal]$Stat.PowerDraw_Average
                     Diff_Live          = [Decimal]$Stat.Diff_Live
                     Diff_Average       = [Decimal]$Stat.Diff_Average
+                    Ratio_Live         = [Decimal]$Stat.Ratio_Live
+                    Ratio_Average      = [Decimal]$Stat.Ratio_Average
                 }
             }
             "Pools" {
@@ -3690,6 +3701,7 @@ class Miner {
     $MiningPriority
     $MiningAffinity
     $ManualUri
+    [Double[]]$RejectedShareRatio = @()
     [String]$EthPillEnable = "disable"
     [String]$EthPillEnableMTP = "disable"
     $DataInterval
@@ -3808,7 +3820,10 @@ class Miner {
 
     hidden StartMiningPreProcess() {
         $this.Stratum = @()
-        $this.Algorithm | Foreach-Object {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
+        $this.Algorithm | Foreach-Object {
+            $this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}
+            $this.RejectedShareRatio += 0.0
+        }
         $this.ActiveLast = Get-Date
     }
 
@@ -3967,26 +3982,33 @@ class Miner {
     UpdateShares([Int]$Index,[Double]$Accepted,[Double]$Rejected) {
         $this.Stratum[$Index].Accepted = $Accepted
         $this.Stratum[$Index].Rejected = $Rejected
+        if ($Accepted + $Rejected) {
+            $this.RejectedShareRatio[$Index] = [Math]::Round($Rejected / ($Accepted + $Rejected),4)
+        }
     }
 
     [Int64]GetShareCount([Int]$Index) {
         return [Int64]($this.Stratum[$Index].Accepted + $this.Stratum[$Index].Rejected)
     }
 
-    [Double]GetRejectedShareRatio([Int]$Index) {
-        return [Double]$(if ($this.GetShareCount($Index) -ge 10) {$this.Stratum[$Index].Rejected / $this.GetShareCount($Index)})
+    [Double]GetRejectedShareRatio([Int]$Index,[Int]$minShares) {
+        return [Double]$(if ($this.GetShareCount($Index) -ge $minShares) {$this.Stratum[$Index].Rejected / $this.GetShareCount($Index)})
+    }
+
+    [Double]GetMaxRejectedShareRatio([Int]$minShares) {
+        $Index = 0
+        return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index,$minShares);$Index++} | Measure-Object -Maximum).Maximum
     }
 
     [Double]GetMaxRejectedShareRatio() {
-        $Index = 0
-        return ($this.Algorithm | Foreach-Object {$this.GetRejectedShareRatio($Index);$Index++} | Measure-Object -Maximum).Maximum
+        return $this.GetMaxRejectedShareRatio(10)
     }
 
     [Bool]CheckShareRatio() {
         return $this.MaxRejectedShareRatio -le 0 -or $this.GetMaxRejectedShareRatio() -le $this.MaxRejectedShareRatio
     }
 
-    [String[]]UpdateMinerData () {
+    [Void]UpdateMinerData () {
 
         if ($this.Process.HasMoreData) {
             $Date = (Get-Date).ToUniversalTime()
@@ -4057,19 +4079,14 @@ class Miner {
 
             $this.CleanupMinerData()
         }
-
-        return @()
     }
 
     AddMinerData($data) {
-        $data | Add-Member Date (Get-Date).ToUniversalTime() -Force
-        $data | Add-Member PowerDraw $(Get-DevicePowerDraw -DeviceName $this.DeviceName) -Force
-        $data | Add-Member Round $this.Rounds -Force
-        $this.Data += $data
-        if ($this.Data.Count -gt $this.MinSamples) {
-            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
-            $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
-        }
+        $this.Data += $data | Add-Member -NotePropertyMembers @{
+            Date = (Get-Date).ToUniversalTime()
+            PowerDraw = $(Get-DevicePowerDraw -DeviceName $this.DeviceName)
+            Round = $this.Rounds
+        } -Force -PassThru
         $this.ActiveLast = Get-Date
     }
 
@@ -4078,6 +4095,10 @@ class Miner {
     }
 
     CleanupMinerData() {
+        if ($this.Data.Count -gt $this.MinSamples) {
+            $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
+            $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
+        }
     }
 
     ResetMinerData() {

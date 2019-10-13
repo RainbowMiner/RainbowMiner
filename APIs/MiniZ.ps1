@@ -1,8 +1,8 @@
 ﻿using module ..\Include.psm1
 
 class MiniZ : Miner {
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -18,7 +18,7 @@ class MiniZ : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
 
         $Accepted_Shares = [Int64]($Data.result.accepted_shares | Measure-Object -Sum).Sum
@@ -39,7 +39,5 @@ class MiniZ : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, "")
     }
 }

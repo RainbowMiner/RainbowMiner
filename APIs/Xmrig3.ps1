@@ -103,8 +103,8 @@ class Xmrig3 : Miner {
         return ("--config=$ConfigFN $($Parameters.PoolParams) --algo=$($Parameters.Algorithm) $($Parameters.DeviceParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
     }
 
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -123,7 +123,7 @@ class Xmrig3 : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
         $Global:ProgressPreference = $oldProgressPreference
 
@@ -150,7 +150,5 @@ class Xmrig3 : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }

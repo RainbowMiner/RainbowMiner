@@ -27,8 +27,8 @@ class Jceminer : Miner {
         return "$Params $($Parameters.Params)".Trim()
     }
 
-    [String[]]UpdateMinerData () {
-        if ($this.GetStatus() -ne [MinerStatus]::Running) {return @()}
+    [Void]UpdateMinerData () {
+        if ($this.GetStatus() -ne [MinerStatus]::Running) {return}
 
         $Server = "localhost"
         $Timeout = 10 #seconds
@@ -47,7 +47,7 @@ class Jceminer : Miner {
         }
         catch {
             Write-Log -Level Info "Failed to connect to miner ($($this.Name)). "
-            return @($Request, $Response)
+            return
         }
         $Global:ProgressPreference = $oldProgressPreference
 
@@ -76,7 +76,5 @@ class Jceminer : Miner {
         })
 
         $this.CleanupMinerData()
-
-        return @($Request, $Data | ConvertTo-Json -Compress)
     }
 }
