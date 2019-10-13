@@ -84,6 +84,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "_.+$")" -or $InfoOnl
                 #TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Wallets.$Pool_Currency
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
     }

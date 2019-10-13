@@ -88,6 +88,13 @@ $Pool_Request.return | ForEach-Object {
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
                     EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
@@ -108,6 +115,13 @@ $Pool_Request.return | ForEach-Object {
                         SSL           = $true
                         Updated       = $Stat.Updated
                         PoolFee       = $Pool_Fee
+                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
                     }
                 }
             }

@@ -22,20 +22,20 @@ $Version = "3.9.7c"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""; ExtendInterval = 2} #Argon2d-crds
-    #[PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""; ExtendInterval = 2} #Argon2d-dyn
-    #[PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""; ExtendInterval = 2} #Argon2d-uis
-    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; ExtendInterval = 2} #CPUpower
-    [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""; ExtendInterval = 2} #m7m (fastest)
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #YescryptR32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #YescryptR8
-    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower (CpuminerRplant faster)
-    #[PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = ""; ExtendInterval = 2} #YespowerLITB
-    #[PSCustomObject]@{MainAlgorithm = "yespowerltncg"; Params = ""; ExtendInterval = 2} #YespowerLTNCG
-    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YespowerR16-ynt (CpuminerRplant faster)
-    #[PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""; ExtendInterval = 2} #YespowerURX
+    #[PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""} #Argon2d-crds
+    #[PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""} #Argon2d-dyn
+    #[PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""} #Argon2d-uis
+    [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CPUpower
+    [PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m (fastest)
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8
+    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower (CpuminerRplant faster)
+    #[PSCustomObject]@{MainAlgorithm = "yespowerlitb"; Params = ""} #YespowerLITB
+    #[PSCustomObject]@{MainAlgorithm = "yespowerltncg"; Params = ""} #YespowerLTNCG
+    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16-ynt (CpuminerRplant faster)
+    #[PSCustomObject]@{MainAlgorithm = "yespowerurx"; Params = ""} #YespowerURX
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -70,20 +70,21 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path = $Path
-					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "Ccminer"
-					Port = $Miner_Port
-					Uri = $Uri
-					FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
-					DevFee = $DevFee
-					ManualUri = $ManualUri
-                    Version   = $Version
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "Ccminer"
+					Port           = $Miner_Port
+					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
+                    Penalty        = 0
+					DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

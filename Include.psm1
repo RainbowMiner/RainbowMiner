@@ -1384,9 +1384,7 @@ function Get-PoolsContent {
         foreach($p in $Config.PSObject.Properties.Name) {$Parameters.$p = $Config.$p}
 
         foreach($Pool in @(& $_.FullName @Parameters)) {
-            if ($PoolName -eq "WhatToMine") {
-                $Pool
-            } else {
+            if ($PoolName -ne "WhatToMine") {
                 $Penalty = [Double]$Config.Penalty + [Double]$Algorithms."$($Pool.Algorithm)".Penalty + [Double]$Coins."$($Pool.CoinSymbol)".Penalty
                 $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
                 if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
@@ -1395,16 +1393,10 @@ function Get-PoolsContent {
                 if ($Pool.StablePrice -eq $null) {$Pool | Add-Member StablePrice 0 -Force}
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
-                $Pool | Add-Member -NotePropertyMembers @{
-                    AlgorithmList = if ($Pool.Algorithm -match "-") {@((Get-Algorithm $Pool.Algorithm), ($Pool.Algorithm -replace '\-.*$'))}else{@($Pool.Algorithm)}
-                    Name          = $Pool_Name
-                    Penalty       = $Penalty
-                    PenaltyFactor = $Pool_Factor
-                    Wallet        = $Config.Wallets."$($Pool.Currency)"
-                    Worker        = $Config.Worker
-                    Email         = $Config.Email
-                } -Force -PassThru
+                $Pool.Penalty = $Penalty
+                $Pool.PenaltyFactor = $Pool_Factor
             }
+            $Pool
         }
     }
 }

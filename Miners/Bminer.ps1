@@ -112,9 +112,10 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							API            = "Bminer"
 							Port           = $Miner_Port
 							Uri            = $Uri
+                            FaultTolerance = $_.FaultTolerance
+					        ExtendInterval = $_.ExtendInterval
+                            Penalty        = 0
 							DevFee         = $_.DevFee
-							FaultTolerance = $_.FaultTolerance
-							ExtendInterval = $_.ExtendInterval
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version
@@ -134,12 +135,13 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							API            = "Bminer"
 							Port           = $Miner_Port
 							Uri            = $Uri
+                            FaultTolerance = $_.FaultTolerance
+					        ExtendInterval = $_.ExtendInterval
+                            Penalty        = 0
 							DevFee         = [PSCustomObject]@{
 								                "$MainAlgorithm_Norm" = $_.DevFee
 								                "$SecondAlgorithm_Norm" = 0
 							                 }
-							FaultTolerance = $_.FaultTolerance
-							ExtendInterval = $_.ExtendInterval
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version

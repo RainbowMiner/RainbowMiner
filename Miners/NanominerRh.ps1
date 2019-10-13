@@ -93,6 +93,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					Uri            = $Uri
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
 					DevFee         = $_.DevFee
 					ManualUri      = $ManualUri
                     MiningAffinity = $Session.Config.CPUMiningAffinity

@@ -17,26 +17,26 @@ $Version = "1.3.6.3"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "allium"; Params = ""; ExtendInterval = 2} #allium, CpuminerJayddee faster
-    #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""; ExtendInterval = 2} #axiom
-    #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""; ExtendInterval = 2} #BMW
-    #[PSCustomObject]@{MainAlgorithm = "drop"; Params = ""; ExtendInterval = 2} #Drop
-    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""; ExtendInterval = 2} #Fresh
-    #[PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""; ExtendInterval = 2} #Heavy
-    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""; ExtendInterval = 2} #JHA
-    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""; ExtendInterval = 2} #Luffa
-    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""; ExtendInterval = 2} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""; ExtendInterval = 2} #PHI2
-    #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""; ExtendInterval = 2} #Pluck
-    [PSCustomObject]@{MainAlgorithm = "rfv2"; Params = ""; ExtendInterval = 2} #Rainforest2
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
-    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""; ExtendInterval = 2} #ScryptN
-    #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""; ExtendInterval = 2} #SHAvite3
-    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""; ExtendInterval = 2} #Skein2
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
-    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""; ExtendInterval = 2} #X12
-    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2} #Yescrypt, CpuminerJayddee faster
-    #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""; ExtendInterval = 2} #ZR5
+    #[PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #allium, CpuminerJayddee faster
+    #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #axiom
+    #[PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #BMW
+    #[PSCustomObject]@{MainAlgorithm = "drop"; Params = ""} #Drop
+    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #Fresh
+    #[PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""} #Heavy
+    #[PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #JHA
+    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
+    #[PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #Pentablake
+    #[PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
+    #[PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #Pluck
+    [PSCustomObject]@{MainAlgorithm = "rfv2"; Params = ""} #Rainforest2
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
+    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN
+    #[PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #SHAvite3
+    #[PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #Skein2
+    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
+    #[PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #X12
+    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt, CpuminerJayddee faster
+    #[PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #ZR5
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -71,20 +71,21 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path = $Path
-					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "Ccminer"
-					Port = $Miner_Port
-					Uri = $Uri
-					FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
-					DevFee = $DevFee
-					ManualUri = $ManualUri
-                    Version = $Version
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "Ccminer"
+					Port           = $Miner_Port
+					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
+                    Penalty        = 0
+                    DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

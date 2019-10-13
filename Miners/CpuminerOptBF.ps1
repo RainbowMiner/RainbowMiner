@@ -22,16 +22,16 @@ $Version = "3.8.12"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower, CpuminerYespower faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""; ExtendInterval = 2} #YescryptR8, CpuminerRplant faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16, CpuminerRplant faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; Params = ""; ExtendInterval = 2} #YescryptR24, CpuminerRplant faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""; ExtendInterval = 2} #YescryptR32, CpuminerRplant same but also linux
-    #[PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""; ExtendInterval = 2} #yespowerR16 (old yenten)
-    [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""; ExtendInterval = 2} #YespowerR8
-    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YespowerR16, CpuminerRplant faster
-    [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""; ExtendInterval = 2} #YespowerR24
-    [PSCustomObject]@{MainAlgorithm = "yespowerr32"; Params = ""; ExtendInterval = 2} #YespowerR32
+    #[PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower, CpuminerYespower faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #YescryptR8, CpuminerRplant faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16, CpuminerRplant faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr24"; Params = ""} #YescryptR24, CpuminerRplant faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #YescryptR32, CpuminerRplant same but also linux
+    #[PSCustomObject]@{MainAlgorithm = "yespower05r16"; Params = ""} #yespowerR16 (old yenten)
+    [PSCustomObject]@{MainAlgorithm = "yespowerr8"; Params = ""} #YespowerR8
+    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16, CpuminerRplant faster
+    [PSCustomObject]@{MainAlgorithm = "yespowerr24"; Params = ""} #YespowerR24
+    [PSCustomObject]@{MainAlgorithm = "yespowerr32"; Params = ""} #YespowerR32
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -66,20 +66,21 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path = $Path
-					Arguments = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -R 10 -r 4 $($DeviceParams) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "Ccminer"
-					Port = $Miner_Port
-					Uri = $Uri
-					FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
-					DevFee = $DevFee
-					ManualUri = $ManualUri
-                    Version   = $Version
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "-b $($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) -R 10 -r 4 $($DeviceParams) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "Ccminer"
+					Port           = $Miner_Port
+					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
+                    Penalty        = 0
+                    DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

@@ -57,8 +57,6 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             Host          = "$($_.host)$(if ($Region -ne "asia") {"-$($Region)"}).f2pool.com"
             Port          = if ($Pool_Currency -eq "ETH" -and $Pool_Wallet -match "^0x[0-9a-f]{40}") {8008} else {$_.port}
             User          = "$($Pool_Wallet).{workername:$Worker}"
-            Wallet        = $Pool_Wallet
-            Worker        = "{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Region
             SSL           = $Pool_SSL
@@ -67,6 +65,13 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             DataWindow    = $DataWindow
             Hashrate      = $Stat.HashRate_Live
             EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+            AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Pool_Wallet
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }

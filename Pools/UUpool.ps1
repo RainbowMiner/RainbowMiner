@@ -60,7 +60,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
         $hr = $Pool_DataRequest.$Pool_Id.hr  -split "\s+"
         $est= $Pool_DataRequest.$Pool_Id.est -split "[\s/]+"
 
-        $Pool_Wallet   = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$Wallets."$($_.coin)"}
+        $Pool_User   = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$Wallets."$($_.coin)"}
 
         $Pool_Hashrate = [Double]$hr[0]  * $(Switch ($hr[1])  {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
         $Pool_Estimate = [Double]$est[0] / $(Switch ($est[2]) {"K" {1e3};"M" {1e6};"G" {1e9};"T" {1e12};"P" {1e15};default {1}})
@@ -88,7 +88,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         Protocol      = "stratum+tcp"
                         Host          = "$($Matches[1].Trim())"
                         Port          = "$($Matches[2].Trim())"
-                        User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                        User          = "$($Pool_User).{workername:$Worker}"
                         Pass          = "x"
                         Region        = Switch -Regex ($Pool_Host) {"\(EU\)" {$Pool_RegionsTable.EU};"\(US\)" {$Pool_RegionsTable.US};default {$Pool_RegionsTable.CN}}
                         SSL           = $false
@@ -98,6 +98,13 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         Workers       = $Pool_RequestWorkers.data
                         Hashrate      = $Stat.HashRate_Live
                         EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Wallet        = $Pool_User
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
                     }
                 }
             }

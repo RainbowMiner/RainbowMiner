@@ -117,10 +117,11 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					API            = "XMRig"
 					Port           = $Miner_Port
 					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
 					DevFee         = if ($_.DevFee) {$_.DevFee} else {$DevFee}
 					ManualUri      = $ManualUri
-                    ExtendInterval = $_.ExtendInterval
-                    FaultTolerance = $_.FaultTolerance
 					EnvVars        = @("GPU_MAX_WORKGROUP_SIZE=256")
                     Version        = $Version
 				}

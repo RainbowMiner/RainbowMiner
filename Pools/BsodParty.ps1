@@ -122,6 +122,13 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                         Pass          = "m=party.$PartyPassword,c=$Pool_Currency{diff:,d=`$difficulty}"
                     }
                 })
+                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Pool_User
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
     }

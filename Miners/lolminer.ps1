@@ -71,19 +71,21 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                 
 					[PSCustomObject]@{
-						Name        = $Miner_Name
-						DeviceName  = $Miner_Device.Name
-						DeviceModel = $Miner_Model
-						Path        = $Path
-						Arguments   = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --tls $(if ($Pools.$Algorithm_Norm.SSL) {1} else {0}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3$(if ($PersCoin -and $PersCoin -ne "auto") {" --overwritePersonal $PersCoin"}) $($_.Params)"
-						HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-						API         = "Lol"
-						Port        = $Miner_Port
-						DevFee      = $_.Fee
-						Uri         = $Uri
-						ExtendInterval = $_.ExtendInterval
-						ManualUri   = $ManualUri
-                        Version     = $Version
+						Name           = $Miner_Name
+						DeviceName     = $Miner_Device.Name
+						DeviceModel    = $Miner_Model
+						Path           = $Path
+						Arguments      = "--pool $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"}) --devices $($Miner_Device.Type_Vendor_Index -join ',') --apiport $($Miner_Port) --tls $(if ($Pools.$Algorithm_Norm.SSL) {1} else {0}) --digits 2 --longstats 60 --shortstats 5 --connectattempts 3$(if ($PersCoin -and $PersCoin -ne "auto") {" --overwritePersonal $PersCoin"}) $($_.Params)"
+						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+						API            = "Lol"
+						Port           = $Miner_Port
+                        FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = $_.ExtendInterval
+                        Penalty        = 0
+						DevFee         = $_.Fee
+						Uri            = $Uri
+						ManualUri      = $ManualUri
+                        Version        = $Version
 					}
 				}
 			}

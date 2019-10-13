@@ -163,11 +163,12 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					API            = "SrbMiner"
 					Port           = $Miner_Port
 					Uri            = $Uri
+					FaultTolerance = $_.FaultTolerance
+					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
 					EnvVars        = @("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")
-                    FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
                     Version        = $Version
 				}
 			}

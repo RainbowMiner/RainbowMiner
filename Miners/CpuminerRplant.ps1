@@ -22,40 +22,40 @@ $Version = "4.0.20"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "argon2ad"; Params = ""; ExtendInterval = 2} #Argon2ad (URX)
-    [PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""; ExtendInterval = 2} #Argon2d500 (DYN)
-    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""; ExtendInterval = 2} #Argon2d4096 (UIS)
-    [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""; ExtendInterval = 2} #Argon2d (GLT)
-    [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""; ExtendInterval = 2} #Argon2i (GLT)
-    [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""; ExtendInterval = 2} #Argon2m (Merge)
-    [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""; ExtendInterval = 2} #IOtE
-    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""; ExtendInterval = 2} #Honeycomb
-    [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""; ExtendInterval = 2} #Lyra2cz
-    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""; ExtendInterval = 2} #Lyra2z330
-    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; ExtendInterval = 2; MaxRejectedShareRatio = 0.7} #Yespower2b
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""; ExtendInterval = 2} #YescryptR16
-    [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""; ExtendInterval = 2} #YescryptR16v2
-    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""; ExtendInterval = 2} #YescryptR24
-    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""; ExtendInterval = 2} #YescryptR32
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""; ExtendInterval = 2} #YescryptR8
-    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""; ExtendInterval = 2} #YescryptR8g (KOTO)
-    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""; ExtendInterval = 2} #YespowerR16
-    [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""; ExtendInterval = 2} #Yespower LightBit (LITB)y
-    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""; ExtendInterval = 2} #Yespower LighningCash-Gold v3 (LTNCG)
-    [PSCustomObject]@{MainAlgorithm = "yespowerRES"; Params = ""; ExtendInterval = 2} #Yespower Resistance (RES)
-    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""; ExtendInterval = 2} #Yespower SugarChain (SUGAR)
-    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""; ExtendInterval = 2} #Yespower Uranium-X (URX)
-    [PSCustomObject]@{MainAlgorithm = "Binarium_hash_v1"; Params = ""; ExtendInterval = 2} #Binarium
+    [PSCustomObject]@{MainAlgorithm = "argon2ad"; Params = ""} #Argon2ad (URX)
+    [PSCustomObject]@{MainAlgorithm = "argon2d500"; Params = ""} #Argon2d500 (DYN)
+    [PSCustomObject]@{MainAlgorithm = "argon2d4096"; Params = ""} #Argon2d4096 (UIS)
+    [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
+    [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
+    [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
+    [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
+    #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
+    [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #Lyra2z330
+    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
+    [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
+    [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
+    [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""} #YescryptR32
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""} #YescryptR8
+    [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #YescryptR8g (KOTO)
+    [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
+    [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""} #Yespower LightBit (LITB)y
+    [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""} #Yespower LighningCash-Gold v3 (LTNCG)
+    [PSCustomObject]@{MainAlgorithm = "yespowerRES"; Params = ""} #Yespower Resistance (RES)
+    [PSCustomObject]@{MainAlgorithm = "yespowerSUGAR"; Params = ""} #Yespower SugarChain (SUGAR)
+    [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""} #Yespower Uranium-X (URX)
+    [PSCustomObject]@{MainAlgorithm = "Binarium_hash_v1"; Params = ""} #Binarium
 )
 
 if ($IsLinux) {
     $Commands += [PSCustomObject[]]@(
-        [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""; ExtendInterval = 2} #Argon2d250
-        [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; ExtendInterval = 2} #CpuPower
-        [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; ExtendInterval = 2} #Lyra2h
-        [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; ExtendInterval = 2} #ScryptJane16
-        [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; ExtendInterval = 2} #Verium
-        [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; ExtendInterval = 2} #Yespower
+        [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""} #Argon2d250
+        [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
+        [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""} #Lyra2h
+        [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
+        [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
+        [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
     )
 }
 
@@ -92,21 +92,22 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Lyra2z330" -or $Pools.$Algorithm_Norm.Name -ne "Zpool")) {
                 $Miner_Coin = $Pools.$Algorithm_Norm.CoinSymbol
 				[PSCustomObject]@{
-					Name = $Miner_Name
-					DeviceName = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path = $Path
-					Arguments = "-b $($Miner_Port) -a $(if ($Miner_Coin -and $_.$Miner_Coin) {$_.$Miner_Coin} else {$_.MainAlgorithm}) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
-					HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
-					API = "Ccminer"
-					Port = $Miner_Port
-					Uri = $Uri
-					FaultTolerance = $_.FaultTolerance
-					ExtendInterval = $_.ExtendInterval
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "-b $($Miner_Port) -a $(if ($Miner_Coin -and $_.$Miner_Coin) {$_.$Miner_Coin} else {$_.MainAlgorithm}) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams) $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					API            = "Ccminer"
+					Port           = $Miner_Port
+					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
+                    Penalty        = 0
                     MaxRejectedShareRatio = $_.MaxRejectedShareRatio
-					DevFee = $DevFee
-					ManualUri = $ManualUri
-                    Version = $Version
+					DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

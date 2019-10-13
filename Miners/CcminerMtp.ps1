@@ -97,9 +97,10 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					API            = "Ccminer"
 					Port           = $Miner_Port
 					Uri            = $Uri
-					DevFee         = 0.0
-					FaultTolerance = $_.FaultTolerance
+                    FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
+					DevFee         = 0.0
 					ManualUri      = $ManualUri
                     MiningPriority = 2
                     Version        = $Version

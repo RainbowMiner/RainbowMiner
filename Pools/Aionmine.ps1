@@ -35,7 +35,7 @@ catch {
     return
 }
 
-$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_Wallet -or $InfoOnly} | Foreach-Object {
+$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | Foreach-Object {
     
     $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
     $reward        = 1.5
@@ -58,9 +58,8 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet =
         Protocol      = "stratum+tcp"
         Host          = "stratum.aionmine.org"
         Port          = 3333
-        User          = "$($Pool_Wallet).{workername:$Worker}"
+        User          = "$($Pool_User).{workername:$Worker}"
         Pass          = "x"
-        Worker        = "{workername:$Worker}"
         Region        = $Pool_Default_Region
         SSL           = $false
         Updated       = $Stat.Updated
@@ -70,5 +69,12 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_Wallet =
         Hashrate      = $Stat.HashRate_Live
         BLK           = $Stat.BlockRate_Average
         #TSL           = $Pool_TSL
+        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+        Name          = $Name
+        Penalty       = 0
+        PenaltyFactor = 1
+        Wallet        = $Pool_User
+        Worker        = "{workername:$Worker}"
+        Email         = $Email
     }
 }

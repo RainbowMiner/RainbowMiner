@@ -81,6 +81,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     Uri = $Uri
                     FaultTolerance = $_.FaultTolerance
                     ExtendInterval = $_.ExtendInterval
+                    Penalty = 0
                     DevFee = $DevFee
                     ManualUri = $ManualUri
                     Version   = $Version

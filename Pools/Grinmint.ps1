@@ -62,9 +62,10 @@ if (-not $InfoOnly) {
 
 $Pools_Data | ForEach-Object {
     $Stat = if ($_.algo -match "29") {$Stat29} else {$Stat31}
+    $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     Foreach ($Pool_Region in $Pool_RegionsTable.Keys) {
         [PSCustomObject]@{
-            Algorithm     = Get-Algorithm $_.algo
+            Algorithm     = $Pool_Algorithm_Norm
             CoinName      = $Pool_Currency
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
@@ -85,6 +86,13 @@ $Pools_Data | ForEach-Object {
             Hashrate      = $Stat.HashRate_Live
             BLK           = $Stat.BlockRate_Average
             TSL           = $Pool_TSL
+            AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Wallets.$Pool_Currency
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }

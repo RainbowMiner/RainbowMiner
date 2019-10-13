@@ -47,7 +47,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
     $Pool_Currency = $_.Value.symbol
-    $Pool_Worker = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
+    $Pool_User = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
     $Pool_Fee = [double]$_.Value.fee
     $Pool_Port = [int]$_.Value.port
     $Pool_Host = "$($_.Value.algorithm).mining-dutch.nl"
@@ -65,19 +65,19 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
     }
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
-        if ($Pool_Worker -or $InfoOnly) {
+        if ($Pool_User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $_.Value.currency
                 CoinSymbol    = $Pool_Currency
                 Currency      = if ($AECurrency) {$AECurrency} else {$Pool_Currency}
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
                 Protocol      = "stratum+tcp"
                 Host          = "$(if ($Pool_Region -ne "eu") {"$($Pool_Region)."})$($Pool_Host)"
                 Port          = $Pool_Port
-                User          = "$Pool_Worker.{workername:$Worker}"
+                User          = "$Pool_User.{workername:$Worker}"
                 Pass          = "x{diff:,d=`$difficulty}"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
@@ -89,6 +89,13 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 TSL           = [int]$_.Value.timesincelast
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
                 WTM           = $true
+                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Pool_User
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
     }

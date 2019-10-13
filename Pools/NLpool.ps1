@@ -115,6 +115,13 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                     BLK           = $Stat.BlockRate_Average
                     TSL           = $Pool_TSL
 					ErrorRatio    = $Stat.ErrorRatio
+                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
             }
         }

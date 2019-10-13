@@ -79,6 +79,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee         = $DevFee
 					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
 					ManualUri      = $ManualUri
 					EnvVars        = @("GPU_FORCE_64BIT_PTR=0")
                     Version        = $Version

@@ -93,20 +93,22 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             else {"auto"}
 
 					[PSCustomObject]@{
-						Name = $Miner_Name
-						DeviceName = $Miner_Device.Name
-						DeviceModel = $Miner_Model
-						Path = $Path
-						Arguments = "-cdmport $($Miner_Port) -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
-						HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
-						API = "Claymore"
-						Port = $Miner_Port
-						Uri = $Uri
-						DevFee = $DevFee
-						ManualUri = $ManualUri
-                        StartCommand = "Get-ChildItem `"$(Join-Path ($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) | Split-Path) "*pools.txt")`" | Remove-Item -Force"
-                        ExtendInterval = 2
-                        Version     = $Version
+						Name           = $Miner_Name
+						DeviceName     = $Miner_Device.Name
+						DeviceModel    = $Miner_Model
+						Path           = $Path
+						Arguments      = "-cdmport $($Miner_Port) -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
+						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+						API            = "Claymore"
+						Port           = $Miner_Port
+						Uri            = $Uri
+					    FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = 2
+                        Penalty        = 0
+						DevFee         = $DevFee
+						ManualUri      = $ManualUri
+                        StartCommand   = "Get-ChildItem `"$(Join-Path ($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) | Split-Path) "*pools.txt")`" | Remove-Item -Force"
+                        Version        = $Version
 					}
 				}
 			}

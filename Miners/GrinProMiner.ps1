@@ -78,24 +78,25 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 					[PSCustomObject]@{
-						Name = $Miner_Name
-						DeviceName = $Miner_Device.Name
-						DeviceModel = $Miner_Model
-						Path = $Path
-						#Arguments = "ignore-config=true $($DeviceIDsAll) api-port=$($Miner_Port) stratum-address=$($Pools.$Algorithm_Norm.Host) stratum-port=$($Pools.$Algorithm_Norm.Port) stratum-login=$($Pools.$Algorithm_Norm.User) $(if ($Pools.$Algorithm_Norm.Pass) {"stratum-password=$($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
-						Arguments = $Arguments
-						HashRates = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
-						API = "GrinPro"
-						Port = $Miner_Port
-						Uri = $Uri
-						DevFee = $_.DevFee
-						FaultTolerance = $_.FaultTolerance
-						ExtendInterval = $_.ExtendInterval
-						ManualUri = $ManualUri
-						StopCommand = if ($IsWindows) {"Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"} else {$null}
-						NoCPUMining = $_.NoCPUMining
-						DotNetRuntime = if ($IsWindows) {"2.0"} else {$null}
-                        Version     = $Version
+						Name           = $Miner_Name
+						DeviceName     = $Miner_Device.Name
+						DeviceModel    = $Miner_Model
+						Path           = $Path
+						#Arguments      = "ignore-config=true $($DeviceIDsAll) api-port=$($Miner_Port) stratum-address=$($Pools.$Algorithm_Norm.Host) stratum-port=$($Pools.$Algorithm_Norm.Port) stratum-login=$($Pools.$Algorithm_Norm.User) $(if ($Pools.$Algorithm_Norm.Pass) {"stratum-password=$($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+						Arguments      = $Arguments
+						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
+						API            = "GrinPro"
+						Port           = $Miner_Port
+						Uri            = $Uri
+                        FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = $_.ExtendInterval
+                        Penalty        = 0
+						DevFee         = $_.DevFee
+						ManualUri      = $ManualUri
+						StopCommand    = if ($IsWindows) {"Sleep 15; Get-CIMInstance CIM_Process | Where-Object ExecutablePath | Where-Object {`$_.ExecutablePath -like `"$([IO.Path]::GetFullPath($Path) | Split-Path)\*`"} | Select-Object ProcessId,ProcessName | Foreach-Object {Stop-Process -Id `$_.ProcessId -Force -ErrorAction Ignore}"} else {$null}
+						NoCPUMining    = $_.NoCPUMining
+						DotNetRuntime  = if ($IsWindows) {"2.0"} else {$null}
+                        Version        = $Version
 					}
 				}
 			}

@@ -110,6 +110,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    Uri            = $Uri
 					    FaultTolerance = $_.FaultTolerance
 					    ExtendInterval = $_.ExtendInterval
+                        Penalty        = 0
 					    DevFee         = $_.DevFee
 					    ManualUri      = $ManualUri
                         MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}

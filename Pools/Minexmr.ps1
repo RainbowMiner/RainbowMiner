@@ -112,7 +112,6 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 Port          = $Pool_Port.CPU
                 Ports         = $Pool_Port
                 User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($Pool_Wallet.difficulty) {"+$($Pool_Wallet.difficulty)"} else {"{diff:+`$difficulty}"})"
-                Worker        = "{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $Pool_SSL
@@ -122,6 +121,13 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
+                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Pool_Wallet.wallet
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
         $Pool_SSL = $true

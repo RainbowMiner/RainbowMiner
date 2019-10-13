@@ -74,21 +74,22 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.$Miner_Type) {$Pools.$Algorithm_Norm.Ports.$Miner_Type} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
-					    Name = $Miner_Name
-					    DeviceName = $Miner_Device.Name
-					    DeviceModel = $Miner_Model
-					    Path = $Path
-                        Arguments = "--api-port=$($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
-					    HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
-					    API = "XMRig"
-					    Port = $Miner_Port
-					    DevFee = $DevFee
-					    Uri = $Uri
+					    Name           = $Miner_Name
+					    DeviceName     = $Miner_Device.Name
+					    DeviceModel    = $Miner_Model
+					    Path           = $Path
+                        Arguments      = "--api-port=$($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
+					    API            = "XMRig"
+					    Port           = $Miner_Port
+					    DevFee         = $DevFee
+					    Uri            = $Uri
 					    FaultTolerance = $_.FaultTolerance
 					    ExtendInterval = $_.ExtendInterval
-					    ManualUri = $ManualUri
-					    NoCPUMining = $_.NoCPUMining
-                        Version     = $Version
+                        Penalty        = 0
+					    ManualUri      = $ManualUri
+					    NoCPUMining    = $_.NoCPUMining
+                        Version        = $Version
 				    }
 			    }
 		    }

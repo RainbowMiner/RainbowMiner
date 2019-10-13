@@ -90,9 +90,11 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					API            = "XMRig3"
 					Port           = $Miner_Port
 					Uri            = $Uri
+                    FaultTolerance = $_.FaultTolerance
+					ExtendInterval = $_.ExtendInterval
+                    Penalty        = 0
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
-                    ExtendInterval = $_.ExtendInterval
                     Version        = $Version
 				}
 			}

@@ -89,8 +89,9 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         if ($User -or $InfoOnly) {
             foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+                $Pool_Algorithm1 = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
                 [PSCustomObject]@{
-                    Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
+                    Algorithm     = $Pool_Algorithm1
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = $Pool_Currency
@@ -109,11 +110,18 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_TSL
                     EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    AlgorithmList = if ($Pool_Algorithm1 -match "-") {@($Pool_Algorithm1, ($Pool_Algorithm1 -replace '\-.*$'))}else{@($Pool_Algorithm1)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
 
                 if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                     [PSCustomObject]@{
-                        Algorithm     = "$($Pool_Algorithm_Norm)$(if ($Pool_Algorithm_Norm -EQ "Ethash"){$MinMem.$Pool_Coin})"
+                        Algorithm     = $Pool_Algorithm1
                         CoinName      = $Pool_Coin
                         CoinSymbol    = $Pool_Symbol
                         Currency      = $Pool_Currency
@@ -131,6 +139,13 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
                         PoolFee       = $Pool_Fee
                         Hashrate      = $Stat.HashRate_Live
                         TSL           = $Pool_TSL
+                        AlgorithmList = if ($Pool_Algorithm1 -match "-") {@($Pool_Algorithm1, ($Pool_Algorithm1 -replace '\-.*$'))}else{@($Pool_Algorithm1)}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
                     }
                 }
             }

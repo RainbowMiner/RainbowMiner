@@ -86,11 +86,12 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 					    API            = "SrbMiner"
 					    Port           = $Miner_Port
 					    Uri            = $Uri
+                        FaultTolerance = $_.FaultTolerance
+					    ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} elseif ($Miner_Vendor -eq "CPU") {2} else {$null}
+                        Penalty        = 0
 					    DevFee         = $_.Fee
 					    ManualUri      = $ManualUri
 					    EnvVars        = if ($Miner_Vendor -ne "CPU") {@("GPU_MAX_SINGLE_ALLOC_PERCENT=100","GPU_FORCE_64BIT_PTR=0")} else {$null}
-                        FaultTolerance = $_.FaultTolerance
-					    ExtendInterval = if ($_.ExtendInterval) {$_.ExtendInterval} elseif ($Miner_Vendor -eq "CPU") {2} else {$null}
                         Version        = $Version
 				    }
 			    }

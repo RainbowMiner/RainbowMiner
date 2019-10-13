@@ -88,9 +88,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Port          = $Pool_Port
                     User          = "$($Pool_Wallet.wallet).{workername:$Worker}$(if ($_.useemail -and $Email) {"/$($Email)"})"
                     Pass          = "x"
-                    Wallet        = $Pool_Wallet.wallet
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
                     Region        = $Pool_RegionsTable.$Pool_Region
                     SSL           = $Pool_SSL
                     Updated       = $Stat.Updated
@@ -99,6 +96,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Workers       = $Pool_RequestWorkers.data
                     Hashrate      = $Stat.HashRate_Live
                     EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Pool_Wallet.wallet
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
                 $Pool_SSL = $true
             }

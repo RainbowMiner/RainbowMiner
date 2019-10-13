@@ -69,19 +69,21 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
-					Name        = $Miner_Name
-					DeviceName  = $Miner_Device.Name
-					DeviceModel = $Miner_Model
-					Path        = $Path
-					Arguments   = "--api-port -$($Miner_Port) -P stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$(Get-UrlEncode $Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) --cuda --cu-devices $($DeviceIDsAll) --exit $($_.Params)"
-					HashRates   = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week }
-					API         = "EthminerWrapper"
-					Port        = $Miner_Port
-					Uri         = $Uri
-					DevFee      = $DevFee
-					ManualUri   = $ManualUri
+					Name           = $Miner_Name
+					DeviceName     = $Miner_Device.Name
+					DeviceModel    = $Miner_Model
+					Path           = $Path
+					Arguments      = "--api-port -$($Miner_Port) -P stratum$(if ($Pools.$Algorithm_Norm.SSL) {"s"})://$(Get-UrlEncode $Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$Algorithm_Norm.Pass)"})@$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) --cuda --cu-devices $($DeviceIDsAll) --exit $($_.Params)"
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week }
+					API            = "EthminerWrapper"
+					Port           = $Miner_Port
+					Uri            = $Uri
+					FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
-                    Version     = $Version
+                    Penalty        = 0
+					DevFee         = $DevFee
+					ManualUri      = $ManualUri
+                    Version        = $Version
 				}
 			}
 		}

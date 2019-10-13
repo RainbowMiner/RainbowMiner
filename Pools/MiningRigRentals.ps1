@@ -191,6 +191,13 @@ foreach ($Worker1 in $Workers) {
                         }
                     })
                     EthMode       = if ($Pool_Rig.port -in @(3322,3333,3344) -and $Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.BTC
+                    Worker        = $Worker1
+                    Email         = $Email
                 }
             }
 

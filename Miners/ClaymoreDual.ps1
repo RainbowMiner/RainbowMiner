@@ -189,21 +189,23 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						}
 
 						[PSCustomObject]@{
-							Name        = $Miner_Name
-							DeviceName  = $Miner_Device.Name
-							DeviceModel = $Miner_Model
-							Path        = $Path               
-							Arguments   = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {"-ewal $($Pools.$MainAlgorithm_Norm.Wallet) -eworker $($Pools.$MainAlgorithm_Norm.Worker)"} else {"-ewal $($Pools.$MainAlgorithm_Norm.User)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins $(if ($MainAlgorithm_Norm -eq "Ethash") {"etc"} else {"1"}) -wd 1 -logsmaxsize 10 -r -1 -dbg -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
-							HashRates   = $Miner_HashRates
-							API         = "Claymore"
-							Port        = $Miner_Port
-							Uri         = $Uri
-                            ExtendInterval = 2
-							DevFee      = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
-							ManualUri   = $ManualUri
-                            StopCommand = "Start-Sleep 3"
-							EnvVars     = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
-                            Version     = $Version
+							Name           = $Miner_Name
+							DeviceName     = $Miner_Device.Name
+							DeviceModel    = $Miner_Model
+							Path           = $Path               
+							Arguments      = "-mport -$($Miner_Port) -epool $($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$MainAlgorithm_Norm.Wallet) {"-ewal $($Pools.$MainAlgorithm_Norm.Wallet) -eworker $($Pools.$MainAlgorithm_Norm.Worker)"} else {"-ewal $($Pools.$MainAlgorithm_Norm.User)"})$(if ($Pools.$MainAlgorithm_Norm.Pass) {" -epsw $($Pools.$MainAlgorithm_Norm.Pass)"}) -allpools 1 -allcoins $(if ($MainAlgorithm_Norm -eq "Ethash") {"etc"} else {"1"}) -wd 1 -logsmaxsize 10 -r -1 -dbg -1 $($Miner_Protocol_Params) $($Arguments_Secondary) $($Arguments_Platform) -di $($DeviceIDsAll) $($_.Params)"
+							HashRates      = $Miner_HashRates
+							API            = "Claymore"
+							Port           = $Miner_Port
+							Uri            = $Uri
+                            FaultTolerance = $_.FaultTolerance
+					        ExtendInterval = if ($_.ExtendInterval -ne $null) {$_.ExtendInterval} else {2}
+                            Penalty        = 0
+							DevFee         = if ($_.SecondaryAlgorithm) {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee;$SecondaryAlgorithm_Norm = 0.0}} else {[PSCustomObject]@{$MainAlgorithm_Norm = $Miner_Fee}}
+							ManualUri      = $ManualUri
+                            StopCommand    = "Start-Sleep 3"
+							EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
+                            Version        = $Version
 						}
 					}
 				}

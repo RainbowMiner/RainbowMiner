@@ -79,21 +79,22 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                     $PersCoin = if ($Algorithm_Norm -match "^Equihash") {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
-					    Name = $Miner_Name
-					    DeviceName = $Miner_Device.Name
-					    DeviceModel = $Miner_Model
-					    Path = $Path
-					    Arguments = "--api $($Miner_Port) --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
-					    HashRates = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
-					    API = "Gminer"
-					    Port = $Miner_Port
-					    DevFee = $DevFee
-					    Uri = $Uri
-					    FaultTolerance = $_.FaultTolerance
+					    Name           = $Miner_Name
+					    DeviceName     = $Miner_Device.Name
+					    DeviceModel    = $Miner_Model
+					    Path           = $Path
+					    Arguments      = "--api $($Miner_Port) --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
+					    API            = "Gminer"
+					    Port           = $Miner_Port
+                        FaultTolerance = $_.FaultTolerance
 					    ExtendInterval = $_.ExtendInterval
-					    ManualUri = $ManualUri
-					    NoCPUMining = $_.NoCPUMining
-                        Version     = $Version
+                        Penalty        = 0
+					    DevFee         = $DevFee
+					    Uri            = $Uri
+					    ManualUri      = $ManualUri
+					    NoCPUMining    = $_.NoCPUMining
+                        Version        = $Version
 				    }
 			    }
 		    }

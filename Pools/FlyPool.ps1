@@ -67,8 +67,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         Host          = "$($Pool_Region)$($_.host)"
                         Port          = $Pool_Port
                         User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                        Wallet        = $Wallets.$Pool_Currency
-                        Worker        = "{workername:$Worker}"
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $Pool_Ssl
@@ -81,6 +79,13 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         BLK           = $Stat.BlockRate_Average
                         WTM           = $true
                         EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Wallet        = $Wallets.$Pool_Currency
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
                     }
                 }
                 $Pool_Ssl = $true

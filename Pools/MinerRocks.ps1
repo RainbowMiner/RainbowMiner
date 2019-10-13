@@ -125,6 +125,13 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         TSL           = $Pool_Data.TSL
                         BLK           = $Stat.BlockRate_Average
                         ScratchPadUrl = $Pool_ScratchPadUrl
+                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                        Name          = $Name
+                        Penalty       = 0
+                        PenaltyFactor = 1
+                        Wallet        = $Pool_Wallet.wallet
+                        Worker        = "{workername:$Worker}"
+                        Email         = $Email
                     }
                 }
             }

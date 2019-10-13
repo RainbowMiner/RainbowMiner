@@ -99,6 +99,13 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                         }
                     })
                     EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.BTC
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
             }
         }

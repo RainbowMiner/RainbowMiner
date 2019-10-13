@@ -70,9 +70,9 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
                 Protocol      = "stratum+tcp"
                 Host          = $Pool_Host
                 Port          = $Pool_Port
@@ -87,6 +87,13 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL
                 WTM           = $true
+                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Pool_User
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
         }
     }
