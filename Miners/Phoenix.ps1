@@ -109,6 +109,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						ManualUri      = $ManualUri
                         StartCommand   = "Get-ChildItem `"$(Join-Path ($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) | Split-Path) "*pools.txt")`" | Remove-Item -Force"
                         Version        = $Version
+                        Powerdraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 					}
 				}
 			}

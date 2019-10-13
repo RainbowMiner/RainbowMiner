@@ -206,6 +206,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             StopCommand    = "Start-Sleep 3"
 							EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
                             Version        = $Version
+                            Powerdraw      = 0
+                            BaseName       = $Name
+                            BaseAlgorithm  = if ($_.SecondaryAlgorithm) {@($MainAlgorithm_Norm -replace '\-.*',$SecondaryAlgorithm_Norm -replace '\-.*')} else {@($MainAlgorithm_Norm -replace '\-.*')}
 						}
 					}
 				}

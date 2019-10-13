@@ -70,6 +70,9 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | Where-Obj
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
                     Version        = $Version
+                    Powerdraw      = 0
+                    BaseName       = $Name
+                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}
 			}
 		}

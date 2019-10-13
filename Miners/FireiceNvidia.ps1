@@ -143,6 +143,9 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 						DevFee         = $DevFee
 						ManualUri      = $ManualUri
                         Version        = $Version
+                        Powerdraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 					}
 				}
 			}

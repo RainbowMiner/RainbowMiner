@@ -117,6 +117,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version
+                            Powerdraw      = 0
+                            BaseName       = $Name
+                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*')
                             EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
@@ -152,6 +155,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version
+                            Powerdraw      = 0
+                            BaseName       = $Name
+                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*',$SecondAlgorithm_Norm -replace '\-.*')
                             EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}

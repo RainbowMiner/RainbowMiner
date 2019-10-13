@@ -89,6 +89,9 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					MiningPriority = 2
 					MaxRejectedShareRatio = if ($_.MaxRejectedShareRatio) {$_.MaxRejectedShareRatio} else {0.5}
                     Version        = $Version
+                    Powerdraw      = 0
+                    BaseName       = $Name
+                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}
 			}
 		}

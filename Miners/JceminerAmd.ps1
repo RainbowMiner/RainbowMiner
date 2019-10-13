@@ -144,6 +144,9 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
                     Version        = $Version
+                    Powerdraw      = 0
+                    BaseName       = $Name
+                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}
 			}
 		}

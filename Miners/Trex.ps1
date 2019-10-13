@@ -145,6 +145,9 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DevFee         = if ($_.DevFee) {$_.DevFee} else {$DevFee}
 					ManualUri      = $ManualUri
                     Version        = $Version
+                    Powerdraw      = 0
+                    BaseName       = $Name
+                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}
 			}
 		}

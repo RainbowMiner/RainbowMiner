@@ -90,6 +90,9 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    ManualUri      = $ManualUri
 					    NoCPUMining    = $_.NoCPUMining
                         Version        = $Version
+                        Powerdraw      = 0
+                        BaseName       = $Name
+                        BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				    }
 			    }
 		    }

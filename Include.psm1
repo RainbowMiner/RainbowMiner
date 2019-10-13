@@ -1389,8 +1389,8 @@ function Get-PoolsContent {
                 $Pool_Factor = 1-($Penalty + [Double]$(if (-not $IgnoreFees){$Pool.PoolFee}) )/100
                 if ($EnableErrorRatio -and $Pool.ErrorRatio) {$Pool_Factor *= $Pool.ErrorRatio}
                 if ($Pool_Factor -lt 0) {$Pool_Factor = 0}
-                if ($Pool.Price -eq $null) {$Pool | Add-Member Price 0 -Force}
-                if ($Pool.StablePrice -eq $null) {$Pool | Add-Member StablePrice 0 -Force}
+                if ($Pool.Price -eq $null) {$Pool.Price = 0}
+                if ($Pool.StablePrice -eq $null) {$Pool.StablePrice = 0}
                 $Pool.Price *= $Pool_Factor
                 $Pool.StablePrice *= $Pool_Factor
                 $Pool.Penalty = $Penalty
@@ -1421,14 +1421,16 @@ function Get-MinersContent {
         $Name = $Miner.BaseName
         if ($InfoOnly -or ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
-                $p = @($c.HashRates.PSObject.Properties.Name | Foreach-Object {$_ -replace '\-.*$'} | Select-Object)
-                $c | Add-Member -NotePropertyMembers @{
-                    Name = if ($c.Name) {$c.Name} else {$Name}
-                    BaseName = $Name
-                    BaseAlgorithm = $p
-                    DeviceModel = if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"} else {$c.DeviceModel}
-                    PowerDraw = $Session.Stats."$($c.Name)_$($p[0])_HashRate".PowerDraw_Average
-                } -Force -PassThru
+                if ($InfoOnly) {
+                    $c | Add-Member -NotePropertyMembers @{
+                        Name     = if ($c.Name) {$c.Name} else {$Name}
+                        BaseName = $Name
+                    } -Force -PassThru
+                } else {
+                    $c.PowerDraw = $Session.Stats."$($c.Name)_$($c.BaseAlgorithm[0])_HashRate".PowerDraw_Average
+                    if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
+                    $c
+                }
             }
         }
     }
