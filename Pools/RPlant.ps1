@@ -88,7 +88,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             Host          = "stratum-$($Pool_Region).rplant.xyz"
             Port          = $Pool_Ports.$Pool_Currency
             User          = "$($Pool_User).{workername:$Worker}"
-            Pass          = if ($Pool_Wallet.difficulty) {"d=$($Pool_Wallet.difficulty)"} else {"{diff:d=`$difficulty}"}
+            Pass          = "x"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
             Updated       = $Stat.Updated
