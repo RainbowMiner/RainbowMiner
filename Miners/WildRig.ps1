@@ -124,7 +124,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ManualUri      = $ManualUri
 					EnvVars        = @("GPU_MAX_WORKGROUP_SIZE=256")
                     Version        = $Version
-                    Powerdraw      = 0
+                    PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}

@@ -98,7 +98,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ManualUri      = $ManualUri
                     MiningAffinity = $Session.Config.CPUMiningAffinity
                     Version        = $Version
-                    Powerdraw      = 0
+                    PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}

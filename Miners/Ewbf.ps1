@@ -81,7 +81,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					Uri            = $Uri
 					ManualUri      = $ManualUri
                     Version        = $Version
-                    Powerdraw      = 0
+                    PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}

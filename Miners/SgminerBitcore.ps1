@@ -69,7 +69,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					ManualUri      = $ManualUri
 					EnvVars        = @("GPU_FORCE_64BIT_PTR=0")
                     Version        = $Version
-                    Powerdraw      = 0
+                    PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}

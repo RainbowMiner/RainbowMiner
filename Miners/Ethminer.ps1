@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         DevFee         = 0
                         EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")} else {$null}
                         Version        = $Version
-                        Powerdraw      = 0
+                        PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 					}

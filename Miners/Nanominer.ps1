@@ -115,7 +115,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    ManualUri      = $ManualUri
                         MiningAffinity = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningAffinity} else {$null}
                         Version        = $Version
-                        Powerdraw      = 0
+                        PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				    }

@@ -119,7 +119,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version
-                            Powerdraw      = 0
+                            PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*')
 						}
@@ -148,7 +148,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							ManualUri      = $ManualUri
 							NoCPUMining    = $_.NoCPUMining
                             Version        = $Version
-                            Powerdraw      = 0
+                            PowerDraw      = 0
                             BaseName       = $Name
                             BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*$',$SecondAlgorithm_Norm -replace '\-.*$')
 						}

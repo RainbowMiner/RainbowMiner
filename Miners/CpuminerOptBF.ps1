@@ -81,7 +81,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     DevFee         = $DevFee
 					ManualUri      = $ManualUri
                     Version        = $Version
-                    Powerdraw      = 0
+                    PowerDraw      = 0
                     BaseName       = $Name
                     BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 				}

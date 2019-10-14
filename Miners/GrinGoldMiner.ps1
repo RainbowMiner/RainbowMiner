@@ -97,7 +97,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						NoCPUMining    = $_.NoCPUMining
 						DotNetRuntime  = if ($IsWindows) {"2.0"} else {$null}
                         Version        = $Version
-                        Powerdraw      = 0
+                        PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 					}

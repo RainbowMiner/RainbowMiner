@@ -140,7 +140,7 @@ foreach ($Miner_Vendor in @("CPU")) {
 						DevFee         = $DevFee
 						ManualUri      = $ManualUri
                         Version        = $Version
-                        Powerdraw      = 0
+                        PowerDraw      = 0
                         BaseName       = $Name
                         BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
 					}
