@@ -4,8 +4,6 @@
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Request = [PSCustomObject]@{}
-
 $Payout_Currencies = $Config.Pools.$Name.Wallets.PSObject.Properties | Where-Object Value | Select-Object Name,Value -Unique | Sort-Object Name,Value
 
 if (-not $Payout_Currencies) {
@@ -23,7 +21,8 @@ catch {
 }
 
 $Count = 0
-$Payout_Currencies | Where-Object {@($Request.pools.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) -icontains $_.Name} | Foreach-Object {
+$Payout_Currencies | Where-Object {@($Pools_Request.pools.PSObject.Properties.Value | Select-Object -ExpandProperty symbol -Unique) -icontains $_.Name} | Foreach-Object {
+    $Request = [PSCustomObject]@{}
     try {
         $Request = Invoke-RestMethodAsync "https://pool.rplant.xyz/api/worker_stats?$($_.Value)" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60)
         $Count++
