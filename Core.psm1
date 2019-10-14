@@ -1140,8 +1140,8 @@ function Invoke-Core {
                 $Pool_WTM_Algo = @($Pool_WTM.Algorithm)
                 if ($Pool_WTM.Algorithm -match "^Equihash") {$Pool_WTM_Algo += "$($Pool_WTM.Algorithm)-$($Pool_WTM.Coinsymbol)"}
                 $Pools_WTM | Where-Object {$_.Algorithm -in $Pool_WTM_Algo -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
-                   $_.Price         = ($Pool_WTM.Price * $_.PenaltyFactor)
-                   $_.StablePrice   = ($Pool_WTM.StablePrice * $_.PenaltyFactor)
+                   $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor
+                   $_.StablePrice   = $Pool_WTM.StablePrice * $_.PenaltyFactor
                    $_.MarginOfError = $Pool_WTM.MarginOfError
                    $_.Updated       = $Pool_WTM.Updated
                 }
@@ -1290,7 +1290,6 @@ function Invoke-Core {
     $AllMiners | ForEach-Object {
         $Miner = $_
 
-        $Miner_HashRates = [PSCustomObject]@{}
         $Miner_Pools = [PSCustomObject]@{}
 
         $Miner_Profits = [hashtable]@{}
@@ -1381,37 +1380,42 @@ function Invoke-Core {
 
         foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner_OCprofile.$p -eq '') {$Miner_OCprofile.$p=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
         $FirstAlgoName = ""
+        $NoResult = $false
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
-            $Miner_DevFees[$_] = ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0}))
-            $Miner_DevFeeFactor = (1-$Miner_DevFees[$_]/100)
-            if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
-            $Miner.HashRates.$_  = [Double]$Miner.HashRates.$_
-            $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
-            $Miner_Difficulties[$_] = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
-            $Miner_Ratios[$_] = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
-            $Miner_Profits[$_] = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
-            $Miner_Profits_Bias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
-            $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
             if (-not $FirstAlgoName) {$FirstAlgoName = $_}
+
+            $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
+
+            $Miner_DevFees[$_] = ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0}))
+
+            if (-not [String]$Miner.HashRates.$_) {
+                $Miner.HashRates.$_       = $null
+                $Miner_Difficulties[$_]   = $null
+                $Miner_Ratios[$_]         = $null
+                $NoResult = $true
+            } else {
+                $Miner_DevFeeFactor = (1-$Miner_DevFees[$_]/100)
+                if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
+                $Miner.HashRates.$_       = [Double]$Miner.HashRates.$_
+                $Miner_Difficulties[$_]   = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
+                $Miner_Ratios[$_]         = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
+                $Miner_Profits[$_]        = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
+                $Miner_Profits_Bias[$_]   = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
+                $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
+            }
         }
 
-        $Miner_Profit = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
-        $Miner_Profit_Bias = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
-        $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
-
-        $Miner_Profit_Cost = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
-        if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
-
-        $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
-            if (-not [String]$Miner.HashRates.$_) {
-                $Miner.HashRates.$_ = $null
-                $Miner_Difficulties[$_] = $null
-                $Miner_Ratios[$_] = $null
-                $Miner_Profit = $null
-                $Miner_Profit_Bias = $null
-                $Miner_Profit_Unbias = $null
-                $Miner_Profit_Cost = $null
-            }
+        if ($NoResult) {
+            $Miner_Profit        = $null
+            $Miner_Profit_Bias   = $null
+            $Miner_Profit_Unbias = $null
+            $Miner_Profit_Cost   = $null
+        } else {
+            $Miner_Profit        = [Double]($Miner_Profits.Values | Measure-Object -Sum).Sum
+            $Miner_Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
+            $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
+            $Miner_Profit_Cost   = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
+            if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
         }
 
         $Miner | Add-Member Difficulties $Miner_Difficulties -Force
