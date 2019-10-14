@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*')
+                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*$')
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -150,7 +150,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*$',$SecondAlgorithm_Norm -replace '\-.*$')
+                            BaseAlgorithm  = @($($MainAlgorithm_Norm -replace '\-.*$'),$($SecondAlgorithm_Norm -replace '\-.*$'))
 						}
 					}
 				}
