@@ -23,7 +23,7 @@ $Pool_Fee = 3
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Algorithm     = $Pool_Algorithm_Norm
+        Algorithm     = ""
         CoinName      = ""
         CoinSymbol    = ""
         Currency      = "BTC"
@@ -32,6 +32,12 @@ if ($InfoOnly) {
         MarginOfError = 0
         Protocol      = "stratum+tcp"
         PoolFee       = $Pool_Fee
+        Name          = $Name
+        Penalty       = 0
+        PenaltyFactor = 1
+        Wallet        = $Wallets.BTC
+        Worker        = $Worker
+        Email         = $Email
     }
     return
 }
