@@ -81,7 +81,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 Pass          = "x{diff:,d=`$difficulty}"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
-                Updated       = $Stat.Updated
+                Updated       = (Get-Date).ToUniversalTime()
                 PoolFee       = $Pool_Fee
                 Workers       = [int]$_.Value.poolworkers
                 Hashrate      = $Stat.HashRate_Live

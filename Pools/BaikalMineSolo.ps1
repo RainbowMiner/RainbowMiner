@@ -86,7 +86,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         PoolFee       = $_.fee
                         DataWindow    = $DataWindow
                         Workers       = $Pool_Workers
-                        Hashrate      = $Stat.HashRate_Live
+                        Hashrate      = (Get-Date).ToUniversalTime()
                         TSL           = $Pool_TSL
                         BLK           = $Stat.BlockRate_Average
                         WTM           = $true

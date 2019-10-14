@@ -85,7 +85,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Pass          = "c=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
                 Region        = $Pool_RegionsTable.$Pool_Region
                 SSL           = $false
-                Updated       = $Stat.Updated
+                Updated       = (Get-Date).ToUniversalTime()
                 PoolFee       = $Pool_PoolFee
                 DataWindow    = $Pool_DataWindow
                 Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers

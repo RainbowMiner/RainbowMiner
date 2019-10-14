@@ -91,7 +91,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Pool_Region
             SSL           = $false
-            Updated       = $Stat.Updated
+            Updated       = (Get-Date).ToUniversalTime()
             PoolFee       = $Pool_Fee
             Workers       = $_.minerCount
             Hashrate      = $Stat.HashRate_Live

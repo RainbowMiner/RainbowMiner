@@ -82,7 +82,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                         Pass          = "x"
                         Region        = $Pool_RegionsTable.$Pool_Region
                         SSL           = $Pool_Ssl
-                        Updated       = $Stat.Updated
+                        Updated       = (Get-Date).ToUniversalTime()
                         PoolFee       = $_.fee
                         DataWindow    = $DataWindow
                         Workers       = $Pool_Workers
