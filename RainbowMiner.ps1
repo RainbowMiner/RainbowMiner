@@ -185,7 +185,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableResetVega = $false,
     [Parameter(Mandatory = $false)]
-    [Switch]$EnableHeatMyFlat = $false,
+    [Int]$EnableHeatMyFlat = 0,
     [Parameter(Mandatory = $false)]
     [Switch]$StartPaused = $false,
     [Parameter(Mandatory = $false)]

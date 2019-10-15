@@ -1254,7 +1254,7 @@ function Start-Setup {
                             $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enableheatmyflat" {
-                            $Config.EnableHeatMyFlat = Read-HostBool -Prompt "Priorize heat over profit to heat my flat" -Default $Config.EnableHeatMyFlat | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.EnableHeatMyFlat = Read-HostInt -Prompt "Priorize heat over profit to heat my flat. Set intensity from 1 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enablealgorithmmapping" {
                             $Config.EnableAlgorithmMapping = Read-HostBool -Prompt "Show Equihash ','-numbers, instead of the RainbowMiner way" -Default $Config.EnableAlgorithmMapping | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -1463,7 +1463,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member ShowMinerWindow $(if (Get-Yes $Config.ShowMinerWindow){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member FastestMinerOnly $(if (Get-Yes $Config.FastestMinerOnly){"1"}else{"0"}) -Force
                             $ConfigActual | Add-Member EnableAlgorithmMapping $(if (Get-Yes $Config.EnableAlgorithmMapping){"1"}else{"0"}) -Force
-                            $ConfigActual | Add-Member EnableHeatMyFlat $(if (Get-Yes $Config.EnableHeatMyFlat){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member EnableHeatMyFlat $Config.EnableHeatMyFlat -Force
                             $ConfigActual | Add-Member UIstyle $Config.UIstyle -Force
                             $ConfigActual | Add-Member DeviceName $($Config.DeviceName -join ",") -Force
                             $ConfigActual | Add-Member ExcludeDeviceName $($Config.ExcludeDeviceName -join ",") -Force
