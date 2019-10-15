@@ -1230,6 +1230,7 @@ function Invoke-Core {
         $AllMiners = $AllMiners | Where-Object {@($MinersNeedSdk) -notcontains $_}
         Start-Sleep 2
     }
+    Remove-Variable "MinersNeedSdk"
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best miners .."}
 
@@ -1290,17 +1291,18 @@ function Invoke-Core {
     $AllMiners | ForEach-Object {
         $Miner = $_
 
-        $Miner_Pools = [PSCustomObject]@{}
+        $Miner | Add-Member Pools        ([PSCustomObject]@{})
 
-        $Miner_Profits = [hashtable]@{}
-        $Miner_Profits_Bias = [hashtable]@{}
+        $Miner | Add-Member Difficulties ([hashtable]@{}) -Force
+        $Miner | Add-Member Ratios       ([hashtable]@{}) -Force
+        $Miner | Add-Member OCprofile    ([hashtable]@{}) -Force
+
+        $Miner_Profits        = [hashtable]@{}
+        $Miner_Profits_Bias   = [hashtable]@{}
         $Miner_Profits_Unbias = [hashtable]@{}
-        $Miner_DevFees = [hashtable]@{}
-        $Miner_Difficulties = [hashtable]@{}
-        $Miner_OCprofile = [hashtable]@{}
-        $Miner_Ratios = [hashtable]@{}
+        $Miner_DevFees        = [hashtable]@{}
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner_OCprofile[$p] = ""}
+        foreach($p in @($Miner.DeviceModel -split '-')) {$Miner.OCprofile[$p] = ""}
 
         if ($Session.Config.Miners) {
             $Miner_CommonCommands = $Miner_Arguments = $Miner_Difficulty = ''
@@ -1318,7 +1320,7 @@ function Invoke-Core {
                     if ($Session.Config.Miners.$Miner_CommonCommands.Penalty -ne $null -and $Session.Config.Miners.$Miner_CommonCommands.Penalty -ne '' -and $Miner_Penalty -eq -1) {$Miner_Penalty = [double]$Session.Config.Miners.$Miner_CommonCommands.Penalty}
                     if ($Session.Config.Miners.$Miner_CommonCommands.ExtendInterval -and $Miner_ExtendInterval -eq -1) {$Miner_ExtendInterval = [int]$Session.Config.Miners.$Miner_CommonCommands.ExtendInterval}
                     if ($Session.Config.Miners.$Miner_CommonCommands.FaultTolerance -and $Miner_FaultTolerance -eq -1) {$Miner_FaultTolerance = [double]$Session.Config.Miners.$Miner_CommonCommands.FaultTolerance}
-                    if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in @($Miner.DeviceModel -split '-')) {if (-not $Miner_OCprofile.$p) {$Miner_OCprofile.$p=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}}}
+                    if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile -and $i -gt 1) {foreach ($p in @($Miner.DeviceModel -split '-')) {if (-not $Miner.OCprofile[$p]) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}}}
                     $Miner_CommonCommands_found = $true
                 }
             }
@@ -1338,15 +1340,17 @@ function Invoke-Core {
 
             #overclocking is different
             foreach($p in @($Miner.DeviceModel -split '-')) {
-                if ($Miner_OCprofile.$p -ne '') {continue}
+                if ($Miner.OCprofile[$p] -ne '') {continue}
                 $Miner_CommonCommands_array[1] = $p
                 for($i=$Miner_CommonCommands_array.Count;$i -gt 1; $i--) {
                     $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                     if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
-                        if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner_OCprofile.$p=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}
+                        if ($Session.Config.Miners.$Miner_CommonCommands.OCprofile) {$Miner.OCprofile[$p]=$Session.Config.Miners.$Miner_CommonCommands.OCprofile}
                     }
                 }
             }
+
+            Remove-Variable "Miner_CommonCommands_array"
 
             if ($Miner.Arguments -is [string] -or $Miner.Arguments.Params -is [string]) {
                 if ($Miner_Arguments -ne '') {
@@ -1378,27 +1382,27 @@ function Invoke-Core {
 
         if (-not $Miner.MSIAprofile -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -MemberType NoteProperty -Force}
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner_OCprofile.$p -eq '') {$Miner_OCprofile.$p=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
+        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
         $FirstAlgoName = ""
         $NoResult = $false
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
             if (-not $FirstAlgoName) {$FirstAlgoName = $_}
 
-            $Miner_Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
+            $Miner.Pools | Add-Member $_ ([PSCustomObject]$Pools.$_)
 
             $Miner_DevFees[$_] = ([Double]$(if (-not $Session.Config.IgnoreFees -and $Miner.DevFee) {[Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.DevFee.GetType().Name) {$Miner.DevFee.$_} else {$Miner.DevFee})} else {0}))
 
             if (-not [String]$Miner.HashRates.$_) {
                 $Miner.HashRates.$_       = $null
-                $Miner_Difficulties[$_]   = $null
-                $Miner_Ratios[$_]         = $null
+                $Miner.Difficulties[$_]   = $null
+                $Miner.Ratios[$_]         = $null
                 $NoResult = $true
             } else {
                 $Miner_DevFeeFactor = (1-$Miner_DevFees[$_]/100)
                 if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
                 $Miner.HashRates.$_       = [Double]$Miner.HashRates.$_
-                $Miner_Difficulties[$_]   = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
-                $Miner_Ratios[$_]         = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
+                $Miner.Difficulties[$_]   = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
+                $Miner.Ratios[$_]         = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
                 $Miner_Profits[$_]        = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
                 $Miner_Profits_Bias[$_]   = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
                 $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
@@ -1418,16 +1422,19 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
         }
 
-        $Miner | Add-Member Difficulties $Miner_Difficulties -Force
-        $Miner | Add-Member Ratios $Miner_Ratios -Force
-        $Miner | Add-Member DevFee $Miner_DevFees -Force
-        $Miner | Add-Member OCprofile $Miner_OCprofile -Force
+        Remove-Variable "Miner_Profits"
+        Remove-Variable "Miner_Profits_Bias"
+        Remove-Variable "Miner_Profits_Unbias"
 
-        $Miner | Add-Member Pools $Miner_Pools
         $Miner | Add-Member Profit $Miner_Profit
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
+        if ($Miner.PSObject.Properties.Name -contains "DevFee") {
+            $Miner.DevFee = $Miner_DevFees
+        } else {
+            $Miner | Add-Member DevFee $Miner_DevFees -Force
+        }
 
         $HmF = 0
         if ($Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw -and $MaxWatts."$($Miner.DeviceModel)") {
@@ -1474,10 +1481,11 @@ function Invoke-Core {
         if (-not $Miner.ExtendInterval) {$Miner.ExtendInterval = 1}
         if (-not $Miner.FaultTolerance) {$Miner.FaultTolerance = if ($Miner.DeviceName -match "^CPU") {0.25} else {0.1}}
         if (-not $Miner.Penalty)        {$Miner.Penalty = 0}
-        if (-not $Miner.API) {$Miner | Add-Member API "Miner" -Force}
-        if ($Miner.EnvVars -eq $null) {$Miner | Add-Member EnvVars @() -Force}
+        if (-not $Miner.API)            {$Miner | Add-Member API "Miner" -Force}
+        if ($Miner.EnvVars -eq $null)   {$Miner | Add-Member EnvVars @() -Force}
     }
     Remove-Variable "Miner_Arguments_List" -Force
+    Remove-Variable "MaxWatts"
 
     $Miners_DownloadList = @()
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]}
@@ -1717,8 +1725,8 @@ function Invoke-Core {
                     $BestMiners = (@($BestMiners | Select-Object) + $BestMiner) | Where-Object {$_ -ne $Miner_PBM}
                 }
             }
-            Remove-Variable "Miners_PBM" -Force
         }
+        Remove-Variable "Miners_PBM" -Force
 
         $NoCPUMining = $Session.Config.EnableCheckMiningConflict -and $MinersNeedingBenchmarkCount -eq 0 -and ($BestMiners | Where-Object DeviceModel -eq "CPU" | Measure-Object).Count -and ($BestMiners | Where-Object NoCPUMining -eq $true | Measure-Object).Count
         if ($NoCPUMining) {$BestMiners2 = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {-not $_.NoCPUMining -and $_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}}
