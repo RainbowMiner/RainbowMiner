@@ -152,7 +152,7 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
         try {
             (Invoke-RestMethodAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins\s+" | Select-Object -Skip 1 | Where-Object {$_ -match "(reward|revenue)"} | Foreach-Object {
                 $cod = $Matches[1]
-                $dat = ([regex]'(?smi)>([\d\.\,]+)\s+([\w]+)<.+for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
+                $dat = ([regex]'(?smi)>([\d\.\,E+-]+)\s+([\w]+)<.+for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
                 if ($dat -and $dat.Groups -and $dat.Groups.Count -eq 5) {
                     $Pool_CoinRequest | Add-Member $cod ([PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}) -Force
                 }
