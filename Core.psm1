@@ -505,9 +505,6 @@ function Invoke-Core {
         }
     }
 
-    #Give API access to all possible devices
-    if ($API.AllDevices -eq $null) {$API.AllDevices = $Session.AllDevices}
-
     $MSIAenabled = $IsWindows -and -not $Session.Config.EnableOCProfiles -and $Session.Config.MSIAprofile -gt 0 -and (Test-Path $Session.Config.MSIApath)
     $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
 
@@ -806,14 +803,6 @@ function Invoke-Core {
         Write-Log ("Next donation run will start in {0:hh} hour(s) {0:mm} minute(s). " -f $($Session.LastDonated.AddHours($DonateDelayHours) - ($Session.Timer.AddMinutes($DonateMinutes))))
     }
 
-    #Give API access to the current running configuration
-    $API.Config = $Session.Config
-    $API.UserConfig = $Session.UserConfig
-    $SessionVars = [hashtable]@{}
-    $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array] -and $Session[$_] -isnot [pscustomobject] -and $Session[$_] -ne $null} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
-    $API.SessionVars = $SessionVars
-    Remove-Variable "SessionVars"
-
     #Clear pool cache if the pool configuration has changed
     if ($Session.AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Session.AllPools = $null}
 
@@ -880,16 +869,13 @@ function Invoke-Core {
             $Session.DevicesByTypes.$_ | Group-Object Model | Foreach-Object {$Session.DeviceNames[$_.Name] = @($_.Group | Select-Object -ExpandProperty Name | Sort-Object)}
         }
 
-        #Give API access to the device information
-        $API.DeviceCombos = $Session.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
+        $Session.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
 
         #Update device information for the first time
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
     }
     
     $Session.ConfigFullComboModelNames = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name)
-
-    $API.Devices = $Session.Devices
 
     if (-not $Session.Devices) {
         $Session.PauseMiners = $API.Pause = $true
@@ -943,7 +929,6 @@ function Invoke-Core {
         $MinerInfoChanged = $true
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo -Compress > $null}
-    $API.MinerInfo = $Session.MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -981,16 +966,10 @@ function Invoke-Core {
         }
     }
 
-    #Give API access to the current rates
-    $API.Rates = $Session.Rates
-
     #Load the stats
     Write-Log "Loading saved statistics. "
 
     [hashtable]$Session.Stats = Get-Stat -Miners
-
-    #Give API access to the current stats
-    $API.Stats = $Session.Stats
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -1000,19 +979,21 @@ function Invoke-Core {
     $SelectedPoolNames = @()
     $NewPools = @()
     $TimerPools = @{}
+    $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
             $SelectedPoolNames += $_
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
-            $start = Get-UnixTimestamp -Milliseconds
+            $StopWatch.Restart()
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio
-            $TimerPools[$_] = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
+            $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }
     }
-
     $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
+    Remove-Variable "StopWatch"
+    Remove-Variable "TimerPools"
 
     #Store pools to file
     if (-not $Session.IsDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
@@ -1044,6 +1025,7 @@ function Invoke-Core {
                 $Earnings.PSObject.Properties.Name | Where-Object {$_ -match "^Earnings" -or $_ -eq "Started"} | Foreach-Object {
                     $Balance | Add-Member $_ $Earnings.$_ -Force
                 }
+                Remove-Variable "Earnings"
             }
             $API.Balances = $BalancesData | ConvertTo-Json -Depth 10
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
@@ -1063,9 +1045,7 @@ function Invoke-Core {
         if ($SelectedPoolNames -and $SelectedPoolNames.Count -gt 0) {Compare-Object @($SelectedPoolNames | Select-Object) @($Session.Stats.Keys | Where-Object {$_ -match '^(.+?)_.+Profit$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Pools\$($_.InputObject)_*_Profit.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
         if ($Session.AvailMiners -and $Session.AvailMiners.Count -gt 0) {Compare-Object @($Session.AvailMiners | Select-Object) @($Session.Stats.Keys | Where-Object {$_ -match '^(.+?)-.+Hashrate$'} | % {$Matches[1]} | Select-Object -Unique) | Where-Object SideIndicator -eq "=>" | Foreach-Object {Get-ChildItem "Stats\Miners\$($_.InputObject)-*_Hashrate.txt" -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-7) | Remove-Item -Force}}
     }
-
-    #Give API access to the current running configuration
-    #$API.NewPools = $NewPools | ConvertTo-Json -Depth 10 -Compress
+    Remove-Variable "SelectedPoolNames"
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Selecting best pools .."}
 
@@ -1098,9 +1078,6 @@ function Invoke-Core {
                 ($Pool.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $Pool.CoinSymbol)
             )}
     Remove-Variable "NewPools" -Force
-
-    #Give API access to the current running configuration
-    $API.AllPools = $Session.AllPools
 
     #Blend out pools, that do not pass minimum algorithm settings or have idle set
     $Session.AllPools = $Session.AllPools | Where-Object {($_.Exclusive -and -not $_.Idle) -or -not (
@@ -1899,15 +1876,11 @@ function Invoke-Core {
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
 
-    #Give API access to WatchdogTimers information
-    $API.WatchdogTimers = $Session.WatchdogTimers
-
     #Update API miner information
     #$RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.ActiveMiners  = $Session.ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
     $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
     $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
-    $API.Asyncloaderjobs = $Asyncloader.Jobs
 
     #
     #Start output to host
