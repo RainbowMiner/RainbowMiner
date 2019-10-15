@@ -1454,7 +1454,6 @@ function Invoke-Core {
         if ($Miner.EnvVars -eq $null)   {$Miner | Add-Member EnvVars @() -Force}
     }
     Remove-Variable "Miner_Arguments_List" -Force
-    Remove-Variable "MaxWatts"
 
     $Miners_DownloadList = @()
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]}
