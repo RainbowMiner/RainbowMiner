@@ -129,12 +129,12 @@
 
             algo.push(formatAlgorithm(item.Algorithm));
             speed.push(formatHashRateValue(item.Speed[0]));
-            ratio.push(item.Ratio[0] != null? parseFloat(item.Ratio[0])*100 + ' %' : '-.-- %');
+            ratio.push(item.Ratio[0] != null? Math.round(parseFloat(item.Ratio[0])*10000)/100 + ' %' : '-.-- %');
 
             if (item.SecondaryAlgorithm != "") {
                 algo.push(formatAlgorithm(item.SecondaryAlgorithm));
                 speed.push(formatHashRateValue(item.Speed[1]));
-                ratio.push(item.Ratio[1] != null? parseFloat(item.Ratio[1])*100 + ' %' : '-.-- %');
+                ratio.push(item.Ratio[1] != null? Math.round(parseFloat(item.Ratio[1])*10000)/100 + ' %' : '-.-- %');
             }
 
             item.tAlgorithm = algo.join(" / ");
