@@ -608,6 +608,10 @@ try {
         $AddAlgorithm += @("Yespower2b")
     }
 
+    if ($Version -le (Get-Version "4.4.4.7")) {
+        $AddAlgorithm += @("Kangaroo12")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
