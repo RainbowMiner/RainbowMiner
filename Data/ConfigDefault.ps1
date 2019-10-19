@@ -28,13 +28,6 @@
     MinimumMiningIntervals = 1
     EnableServerConfig = $false
     ServerConfigName = @("config","coins","pools","algorithms","scheduler")
-    ExcludeServerConfigVars = @(
-        "WorkerName","DeviceName","ExcludeDeviceName","Proxy",
-        "APIPort","APIUser","APIPassword","APIAuth",
-        "MSIApath","NVSMIpath",
-        "CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity",
-        "ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars",
-        "RunMode","StartPaused"
-    )
+    ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName")
     EnableServerExcludeList = $false
 }

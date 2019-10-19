@@ -5376,13 +5376,23 @@ function Get-ConfigPath {
         [Parameter(Mandatory = $True)]
         [string]$ConfigName,
         [Parameter(Mandatory = $False)]
-        [string]$WorkerName = ""
+        [string]$WorkerName = "",
+        [Parameter(Mandatory = $False)]
+        [string]$GroupName = ""
     )
     if (Test-Config $ConfigName -Exists) {
         $PathToFile = $Session.ConfigFiles[$ConfigName].Path
-        if ($WorkerName) {
-            $PathToFileM = Join-Path (Join-Path (Split-Path $PathToFile) $WorkerName.ToLower()) (Split-Path -Leaf $PathToFile)
-            if (Test-Path $PathToFileM) {$PathToFile = $PathToFileM}
+        if ($WorkerName -or $GroupName) {
+            $FileName = Split-Path -Leaf $PathToFile
+            $FilePath = Split-Path $PathToFile
+            if ($WorkerName) {
+                $PathToFileM = Join-Path (Join-Path $FilePath $WorkerName.ToLower()) $FileName
+                if (Test-Path $PathToFileM) {$PathToFile = $PathToFileM}
+            }
+            if ($GroupName) {
+                $PathToFileM = Join-Path (Join-Path $FilePath $GroupName.ToLower()) $FileName
+                if (Test-Path $PathToFileM) {$PathToFile = $PathToFileM}
+            }
         }
         $PathToFile
     }
@@ -5398,12 +5408,14 @@ function Get-ConfigContent {
         [Parameter(Mandatory = $False)]
         [string]$WorkerName = "",
         [Parameter(Mandatory = $False)]
+        [string]$GroupName = "",
+        [Parameter(Mandatory = $False)]
         [Switch]$UpdateLastWriteTime,
         [Parameter(Mandatory = $False)]
         [Switch]$ConserveUnkownParameters
     )
     if ($UpdateLastWriteTime) {$WorkerName = ""}
-    if ($PathToFile = Get-ConfigPath $ConfigName $WorkerName) {
+    if ($PathToFile = Get-ConfigPath -ConfigName $ConfigName -WorkerName $WorkerName -GroupName $GroupName) {
         try {
             if ($UpdateLastWriteTime) {
                 $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
@@ -5434,7 +5446,7 @@ function Get-SessionServerConfig {
 
     $CurrentConfig = if ($Session.Config) {$Session.Config} else {
         $Result = Get-ConfigContent "Config"
-        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
+        @("RunMode","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","ExcludeServerConfigVars","EnableServerExcludeList","WorkerName","GroupName") | Where-Object {$Session.DefaultValues.ContainsKey($_) -and $Result.$_ -eq "`$$_"} | ForEach-Object {
             $val = $Session.DefaultValues[$_]
             if ($val -is [array]) {$val = $val -join ','}
             $Result.$_ = $val
@@ -5445,7 +5457,7 @@ function Get-SessionServerConfig {
     if ($CurrentConfig -and $CurrentConfig.RunMode -eq "client" -and $CurrentConfig.ServerName -and $CurrentConfig.ServerPort -and (Get-Yes $CurrentConfig.EnableServerConfig)) {
         $ServerConfigName = if ($CurrentConfig.ServerConfigName) {Get-ConfigArray $CurrentConfig.ServerConfigName}
         if (($ServerConfigName | Measure-Object).Count) {
-            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
+            Get-ServerConfig -ConfigFiles $Session.ConfigFiles -ConfigName $ServerConfigName -ExcludeConfigVars (Get-ConfigArray $CurrentConfig.ExcludeServerConfigVars) -Server $CurrentConfig.ServerName -Port $CurrentConfig.ServerPort -WorkerName $CurrentConfig.WorkerName -GroupName $CurrentConfig.GroupName -Username $CurrentConfig.ServerUser -Password $CurrentConfig.ServerPassword -Force:$Force -EnableServerExcludeList:(Get-Yes $CurrentConfig.EnableServerExcludeList) > $null
         }
     }
 }
@@ -5466,6 +5478,8 @@ function Get-ServerConfig {
         [Parameter(Mandatory = $False)]
         [string]$WorkerName = "",
         [Parameter(Mandatory = $False)]
+        [string]$GroupName = "",
+        [Parameter(Mandatory = $False)]
         [string]$Username = "",
         [Parameter(Mandatory = $False)]
         [string]$Password = "",
@@ -5478,11 +5492,11 @@ function Get-ServerConfig {
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
-        $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
+        $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($GroupName) {$GroupName} elseif ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
-        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
+        $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
         $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 8
         if ($Result.Status -and $Result.Content) {
             if ($EnableServerExcludeList -and $Result.ExcludeList) {$ExcludeConfigVars = $Result.ExcludeList}

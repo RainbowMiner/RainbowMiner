@@ -702,21 +702,21 @@
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
-                                $Client | Add-Member machineip $Parameters.myip -Force
-                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                                $Client.machineip = $Parameters.myip
+                                $Client.timestamp = Get-UnixTimestamp
                             }
                             else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
                             $GetConfigA = @($_ -split 'ZZZ' | Select-Object)
-                            if ($PathToFile = Get-ConfigPath $GetConfigA[0] $Parameters.workername) {
+                            if ($PathToFile = Get-ConfigPath -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname) {
                                 $ConfigLwt = Get-UnixTimestamp (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
                                 $GetConfigNew = ($GetConfigA.Count -lt 2) -or ([int]$GetConfigA[1] -lt $ConfigLwt)
                                 $Result | Add-Member $GetConfigA[0] ([PSCustomObject]@{
                                                             isnew = $GetConfigNew
                                                             lwt   = $ConfigLwt
-                                                            data  = if ($GetConfigNew) {Get-ConfigContent $GetConfigA[0] -WorkerName $Parameters.workername}
+                                                            data  = if ($GetConfigNew) {Get-ConfigContent -ConfigName $GetConfigA[0] -WorkerName $Parameters.workername -GroupName $Parameters.groupname}
                                                             }) -Force
                                 $Status = $true
                             }
@@ -737,8 +737,8 @@
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
-                                $Client | Add-Member machineip $Parameters.myip -Force
-                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                                $Client.machineip = $Parameters.myip
+                                $Client.timestamp = Get-UnixTimestamp
                             }
                             else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
@@ -785,8 +785,8 @@
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
-                                $Client | Add-Member machineip $Parameters.myip -Force
-                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                                $Client.machineip = $Parameters.myip
+                                $Client.timestamp = Get-UnixTimestamp
                             }
                             else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }
@@ -817,8 +817,8 @@
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
-                                $Client | Add-Member machineip $Parameters.myip -Force
-                                $Client | Add-Member timestamp (Get-UnixTimestamp) -Force
+                                $Client.machineip = $Parameters.myip
+                                $Client.timestamp = Get-UnixTimestamp
                             }
                             else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
                         }

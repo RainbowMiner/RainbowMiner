@@ -249,10 +249,10 @@ function Start-Setup {
                 "C" {$GlobalSetupName = "Common";$GlobalSetupSteps.AddRange(@("workername","miningmode","devicename","excludedevicename","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","region","currency","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enableheatmyflat","enablealgorithmmapping","showminerwindow","ignorefees","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark")) > $null}
                 "E" {$GlobalSetupName = "Energycost";$GlobalSetupSteps.AddRange(@("powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability")) > $null}
                 "S" {$GlobalSetupName = "Selection";$GlobalSetupSteps.AddRange(@("poolname","poolnamenh1","poolnamenh2","minername","excludeminername","excludeminerswithfee","disabledualmining","enablecheckminingconflict","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin")) > $null}
-                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
-                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","poolnamenh1","poolnamenh2","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enableheatmyflat","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","mincombooversingleratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","loglevel","donate")) > $null}
+                "N" {$GlobalSetupName = "Network";$GlobalSetupSteps.AddRange(@("runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit")) > $null}
+                "A" {$GlobalSetupName = "All";$GlobalSetupSteps.AddRange(@("startsetup","workername","runmode","apiport","apiinit","apiauth","apiuser","apipassword","serverinit","serverinit2","servername","serverport","serveruser","serverpassword","clientconnect","enableserverconfig","groupname","serverconfigname","excludeserverconfigvars1","excludeserverconfigvars2","clientinit","wallet","nicehash","nicehash2","nicehashorganizationid","nicehashapikey","nicehashapisecret","addcoins1","addcoins2","addcoins3","mph","mphapiid","mphapikey","mrr","mrrapikey","mrrapisecret","region","currency","benchmarkintervalsetup","enableminerstatus","minerstatusurl","minerstatuskey","minerstatusemail","pushoveruserkey","minerstatusmaxtemp","enableautominerports","enableautoupdate","enableautoalgorithmadd","enableautobenchmark","poolname","poolnamenh1","poolnamenh2","autoaddcoins","minername","excludeminername","algorithm","excludealgorithm","disableunprofitablealgolist","excludecoinsymbol","excludecoin","disabledualmining","excludeminerswithfee","enablecheckminingconflict","devicenamebegin","miningmode","devicename","excludedevicename","devicenamewizard","devicenamewizardgpu","devicenamewizardamd1","devicenamewizardamd2","devicenamewizardnvidia1","devicenamewizardnvidia2","devicenamewizardcpu1","devicenamewizardend","devicenameend","cpuminingthreads","cpuminingaffinity","gpuminingaffinity","pooldatawindow","enableerrorratio","poolstataverage","hashrateweight","hashrateweightstrength","poolaccuracyweight","defaultpoolregion","uistyle","fastestmineronly","showpoolbalances","showpoolbalancesdetails","showpoolbalancesexcludedpools","enableheatmyflat","enablealgorithmmapping","showminerwindow","ignorefees","watchdog","enableocprofiles","enableocvoltage","enableresetvega","msia","msiapath","nvsmipath","ethpillenable","ethpillenablemtp","proxy","delay","interval","benchmarkinterval","minimumminingintervals","disableextendinterval","switchingprevention","maxrejectedshareratio","mincombooversingleratio","enablefastswitching","disablemsiamonitor","disableapi","disableasyncloader","usetimesync","miningprioritycpu","miningprioritygpu","autoexecpriority","powerpricecurrency","powerprice","poweroffset","usepowerprice","checkprofitability","quickstart","startpaused","loglevel","donate")) > $null}
             }
-            $GlobalSetupSteps.Add("save") > $null                            
+            $GlobalSetupSteps.Add("save") > $null
 
             if (-not $IsInitialSetup) {
                 Clear-Host
@@ -741,7 +741,6 @@ function Start-Setup {
                                 $GlobalSetupStepStore = $false
                             }
                         }
-
                         "enableserverconfig" {
                             if ($Config.RunMode -eq "client") {
                                 if ($IsInitialSetup) {
@@ -751,9 +750,23 @@ function Start-Setup {
                                     Write-Host " "
                                     Write-Host "HINT:" -Foreground Cyan
                                     Write-Host "If specific config files for this client are needed, put them into subdirectory `".\Config\$($Config.WorkerName.ToLower())`" on your server" -ForegroundColor Cyan
+                                    Write-Host "Clients can be grouped together for shared config files. You will be asked for a group, if you enable now." -ForegroundColor Cyan
                                     Write-Host " "
                                 }
                                 $Config.EnableServerConfig = Read-HostBool "Enable automatic download of selected server config files? " -Default $Config.EnableServerConfig | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            } else {
+                                $GlobalSetupStepStore = $false
+                            }
+                        }
+                        "groupname" {
+                            if ($Config.RunMode -eq "client" -and (Get-Yes $Config.EnableServerConfig)) {
+                                $Config.GroupName = Read-HostString -Prompt "Enter a group name, if clients should be grouped together for shared config (($(if ($Config.ServerUser) {"clear"} else {"leave empty"}) for no group)" -Default $Config.GroupName -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                if ($IsInitialSetup -and $Config.GroupName) {
+                                    Write-Host " "
+                                    Write-Host "HINT:" -Foreground Cyan
+                                    Write-Host "If specific config files for this client's group are needed, put them into subdirectory `".\Config\$($Config.GroupName.ToLower())`" on your server" -ForegroundColor Cyan
+                                    Write-Host " "
+                                }
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -1531,6 +1544,7 @@ function Start-Setup {
                             $ConfigActual | Add-Member ServerUser $Config.ServerUser -Force
                             $ConfigActual | Add-Member ServerPassword $Config.ServerPassword -Force
                             $ConfigActual | Add-Member EnableServerConfig $(if (Get-Yes $Config.EnableServerConfig){"1"}else{"0"}) -Force
+                            $ConfigActual | Add-Member GroupName $Config.GroupName -Force
                             $ConfigActual | Add-Member ServerConfigName $($Config.ServerConfigName -join ",") -Force
                             $ConfigActual | Add-Member ExcludeServerConfigVars $($Config.ExcludeServerConfigVars -join ",") -Force
                             $ConfigActual | Add-Member EnableServerExcludeList $(if (Get-Yes $Config.EnableServerExcludeList){"1"}else{"0"}) -Force

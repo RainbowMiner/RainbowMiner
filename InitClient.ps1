@@ -39,6 +39,7 @@ $Config | Add-Member ServerName $(if ($Config.ServerName -eq "`$ServerName") {""
 $Config | Add-Member ServerPort $(if ($Config.ServerPort -eq "`$ServerPort" -or -not $Config.ServerPort) {4000} else {[int]$Config.ServerPort}) -Force
 $Config | Add-Member ServerUser $(if ($Config.ServerUser -eq "`$ServerUser") {""} else {$Config.ServerUser}) -Force
 $Config | Add-Member ServerPassword $(if ($Config.ServerPassword -eq "`$ServerPassword") {""} else {$Config.ServerPassword}) -Force
+$Config | Add-Member GroupName $(if ($Config.GroupName -eq "`$GroupName") {""} else {$Config.GroupName}) -Force
 $Config | Add-Member StartPaused $(if ($Config.StartPaused -eq "`$StartPaused") {$false} else {Get-Yes $Config.StartPaused}) -Force
 $Config | Add-Member EnableServerConfig $(if ($Config.EnableServerConfig -eq "`$EnableServerConfig") {$ConfigSetup.EnableServerConfig} else {$Config.EnableServerConfig}) -Force
 $Config | Add-Member ServerConfigName $(if ($Config.ServerConfigName -eq "`$ServerConfigName" -or $Config.ServerConfigName -eq "") {$ConfigSetup.ServerConfigName} else {@(Get-ConfigArray $Config.ServerConfigName)}) -Force
@@ -60,6 +61,7 @@ do {
     $Config.EnableServerConfig = Read-HostBool -Prompt "Enable automatic download of selected server config files? " -Default $Config.EnableServerConfig
     if (Get-Yes $Config.EnableServerConfig) {
         $Config.ServerConfigName = Read-HostArray -Prompt "Enter the config files to be copied to this machine" -Default $Config.ServerConfigName -Characters "A-Z" -Valid @("algorithms","coins","config","miners","mrr","ocprofiles","pools","scheduler")
+        $Config.GroupName = Read-HostString -Prompt "Enter a group name, if you want to group clients together for shared config files " -Default $Config.GroupName -Characters "A-Z0-9"
         $Config.EnableServerExcludeList = Read-HostBool -Prompt "Use the server's exclusion variable list?" -Default $Config.EnableServerExcludeList
         if (-not (Get-Yes $Config.EnableServerExcludeList)) {
             $Config.ExcludeServerConfigVars = Read-HostArray -Prompt "Enter all config parameters, that should not be overwritten (if unclear, use default values!)" -Default $Config.ExcludeServerConfigVars -Characters "A-Z0-9:_"
@@ -84,6 +86,7 @@ do {
     Write-Host " ServerPassword = $($Config.ServerPassword)"
     if (Get-Yes $Config.EnableServerConfig) {
         Write-Host " ServerConfigName = $($Config.ServerConfigName) (automatic download from server enabled)"
+        Write-Host " GroupName = $($Config.GroupName)"
         Write-Host " EnableServerExcludeList = $($Config.EnableServerExcludeList) $(if (Get-Yes $Config.EnableServerExcludeList) {"(server's list will be used)"} else {"(the following list will be used)"})"
         if (-not (Get-Yes $Config.EnableServerExcludeList)) {
             Write-Host " ExcludeServerConfigVars = $($Config.ExcludeServerConfigVars)"
