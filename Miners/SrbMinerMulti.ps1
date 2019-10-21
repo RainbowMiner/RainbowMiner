@@ -8,11 +8,11 @@ param(
 if (-not $IsWindows) {return}
 
 $Path = ".\Bin\ANY-SRBMinerMulti\SRBMiner-MULTI.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.2-srbminermulti/SRBMiner-Multi-0-1-2.zip"
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.3-srbminermulti/SRBMiner-Multi-0-1-3.zip"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5190081.0"
 $Port = "349{0:d2}"
 $DevFee = 0.85
-$Version = "0.1.2"
+$Version = "0.1.3"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No AMD nor CPU present in system
 
