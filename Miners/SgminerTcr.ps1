@@ -5,19 +5,24 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsLinux -and -not $IsWindows) {return}
 
-$Path = ".\Bin\AMD-SgminerMTP\sgminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.3-sgminermtp/sgminermtp-0.1.3.zip"
-$ManualUri = "https://github.com/zcoinofficial/sgminer/releases"
-$Port = "411{0:d2}"
+if ($IsLinux) {
+    $Path = ".\Bin\AMD-SgminerTCR\sgminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.4-sgminertcr/sgminertcr-v0.1.4-linux.7z"
+} else {
+    $Path = ".\Bin\AMD-SgminerTCR\sgminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.4-sgminertcr/sgminertcr-v0.1.4-win64.zip"
+}
+$ManualUri = "https://github.com/tecracoin/sgminer/releases"
+$Port = "414{0:d2}"
 $DevFee = 0.0
-$Version = "0.1.3"
+$Version = "0.1.4"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "mtp"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_vega --worksize 256 -I 23"}
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr"; Params = "--kernel mtp --worksize 64 -I 20"; ParamsVega = "--kernel mtp_vega --worksize 256 -I 23"}
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -68,7 +73,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Penalty        = 0
 					DevFee         = $DevFee
 					ManualUri      = $ManualUri
-					EnvVars        = @("GPU_FORCE_64BIT_PTR=0")
+					EnvVars        = @("GPU_FORCE_64BIT_PTR=0","GPU_MAX_SINGLE_ALLOC_PERCENT=100")
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
