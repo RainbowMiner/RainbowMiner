@@ -731,7 +731,7 @@ function Invoke-Core {
     $Session.PauseMinersByScheduler = $false
     [Double]$PowerPrice = $Session.Config.PowerPrice
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
-    $DayOfWeek = (Get-Date).DayOfWeek
+    $DayOfWeek = [int](Get-Date).DayOfWeek
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
