@@ -204,6 +204,9 @@
         "SuprNova" = [PSCustomObject]@{
             Currencies=@("BTG")
         }
+        "Tecracoin" = [PSCustomObject]@{
+            Currencies=@("TCR")
+        }
         "UUpool" = [PSCustomObject]@{
             Currencies=@("VOLLAR")
         }
