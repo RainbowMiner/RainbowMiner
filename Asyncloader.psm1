@@ -50,22 +50,23 @@ Param(
         while (-not $AsyncLoader.Stop) {
             $StopWatch.Restart()
             $Cycle++
+
+            $AsyncLoader.Jobs.Keys | Where-Object {$AsyncLoader.Jobs.$_.CycleTime -le 0} | Foreach-Object {$AsyncLoader.Jobs.$Jobkey.CycleTime = $AsyncLoader.Interval}
+
             if (-not $AsyncLoader.Pause) {
-                foreach ($JobKey in @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.LastRequest} | Select-Object)) {
-                    if ($AsyncLoader.Jobs.$JobKey.CycleTime -le 0) {$AsyncLoader.Jobs.$JobKey.CycleTime = $AsyncLoader.Interval}
-                    $Job = $AsyncLoader.Jobs.$JobKey
-                    if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
-                        try {
-                            Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                            if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
-                        }
-                        catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
-                            $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                        }
-                        finally {
-                            $Error.Clear()
-                        }
+                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value -and -not $_.Value.Running -and -not $_.Value.Paused -and $_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Sort-Object {$_.Value.LastRequest - (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Foreach-Object {
+                    $JobKey = $_.Name
+                    $Job    = $_.Value
+                    try {
+                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                    }
+                    catch {
+                        if ($Error.Count){$Error.RemoveAt(0)}
+                        $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
+                    }
+                    finally {
+                        $Error.Clear()
                     }
                 }
             }
