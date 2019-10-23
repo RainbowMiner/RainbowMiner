@@ -732,8 +732,8 @@ function Invoke-Core {
     [Double]$PowerPrice = $Session.Config.PowerPrice
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = (Get-Date).DayOfWeek
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
     $Session.CurrentPowerPrice = $PowerPrice
 
@@ -1738,12 +1738,12 @@ function Invoke-Core {
         if (($Session.AllPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
             $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
-                Write-Log -Level Warn "No more miners are profitable. $(if ($Session.Config.CheckProfitability) {" Waiting for profitability."})"
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
+                if (-not $Session.Profitable -or -not $Session.Config.CheckProfitability) {
+                    Write-Log -Level Warn "No more miners are profitable. $(if ($Session.Config.CheckProfitability) {" Waiting for profitability."})"
+                }
             }
         }
-
-        if ($Session.PauseMinersByScheduler -and $Session.IsExclusiveRun) {$Session.PauseMinersByScheduler = $false}
 
         if (-not $Session.PauseMiners -and -not $Session.PauseMinersByScheduler -and -not $Session.AutoUpdate -and $Session.Profitable) {
             $BestMiners_Combo | ForEach-Object {$_.Best = $true}
