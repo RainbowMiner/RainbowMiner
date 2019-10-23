@@ -33,13 +33,17 @@ catch {
     Write-Log -Level Info "Pool Currency API ($Name) has failed. "
 }
 
+[hashtable]$Pool_RegionsTable = @{}
+
+@("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
+
 $Pool_Coin = "Tecracoin"
 $Pool_Currency = "TCR"
 $Pool_Host = "pool-mtp.tecracoin.io"
 $Pool_Algorithm = "MTPTcr"
 $Pool_Port = 4556
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "mtp"} | Where-Object {$Pool_Request.$_.actual_last24h -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "mtp"} | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     $Pool_User = $Wallets.$Pool_Currency
