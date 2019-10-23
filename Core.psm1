@@ -581,12 +581,12 @@ function Invoke-Core {
 
     #Check for powerprice config
     if (Set-ConfigDefault "Scheduler") {
-        if (-not $Session.IsDonationRun -and ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime))) {
+        if ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime)) {
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 $Session.Config | Add-Member Scheduler @() -Force
                 $AllScheduler | Foreach-Object {
-                    $_ | Add-Member DayOfWeek "$($_.DayOfWeek -replace "[^0-6\*]+")"[0] -Force
+                    $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
                     $_ | Add-Member From $(Get-HourMinStr $_.From) -Force
                     $_ | Add-Member To   $(Get-HourMinStr $_.To -to) -Force
                     $_ | Add-Member PowerPrice $($_.PowerPrice -replace ",","." -replace "[^0-9\.]+") -Force
@@ -731,9 +731,9 @@ function Invoke-Core {
     $Session.PauseMinersByScheduler = $false
     $PowerPrice = [Double]$Session.Config.PowerPrice
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
-    $DayOfWeek = [int](Get-Date).DayOfWeek
+    $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq [int]$_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
     $Session.CurrentPowerPrice = $PowerPrice
 
