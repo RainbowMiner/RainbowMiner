@@ -18,6 +18,7 @@ Param(
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
+    $AsyncLoader.Verbose    = $false
 
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
@@ -54,9 +55,11 @@ Param(
             if (-not $AsyncLoader.Pause) {
                 foreach ($JobKey in @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)) {
                     $Job = $AsyncLoader.Jobs.$JobKey
-                    if ($Job.CycleTime -le 0) {$Jobs.CycleTime = $AsyncLoader.Interval}
+                    if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
                     if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
-                        #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Start job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                        if ($AsyncLoader.Verbose) {
+                            "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Start job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                        }
                         try {
                             Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
                             if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
@@ -64,11 +67,15 @@ Param(
                         catch {
                             if ($Error.Count){$Error.RemoveAt(0)}
                             $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                            #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                            if ($AsyncLoader.Verbose) {
+                                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                            }
                         }
                         finally {
                             $Error.Clear()
-                            #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Done job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                            if ($AsyncLoader.Verbose) {
+                                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Done job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                            }
                         }
                     }
                 }
