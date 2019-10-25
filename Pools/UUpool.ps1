@@ -21,9 +21,9 @@ $Pool_Request = [PSCustomObject]@{}
 
 @("CN","EU","US") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$Pool_Request = [PSCustomObject]@{}
+$Pool_Request = @()
 try {
-    $Pool_Request = (Invoke-RestMethodAsync "https://uupool.cn/getCoins" -retry 3 -retrywait 500 -tag $Name -cycletime 3600).pow
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/uupool.json" -retry 3 -retrywait 200 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -36,29 +36,13 @@ if (-not $Pool_Request -or -not ($Pool_Request | Measure-Object).Count) {
     return
 }
 
-$Pool_DataRequest = [PSCustomObject]@{}
-try {
-    $Pool_DataRequest = Invoke-RestMethodAsync "https://uupool.cn/api/getAllInfo.php" -retry 3 -retrywait 500 -tag $Name -cycletime 120
-}
-catch {
-    if ($Error.Count){$Error.RemoveAt(0)}
-    Write-Log -Level Warn "Pool API ($Name) has failed. "
-    return
-}
-
-if (-not $Pool_DataRequest -or ($Pool_DataRequest | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measure-Object Name).Count -le 1) {
-    Write-Log -Level Warn "Pool API ($Name) returned nothing. "
-    return
-}
-
 $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -replace "^VDS$","VOLLAR" -replace "^ULORD$","UT";$Wallets.$Pool_Currency -or $Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
     $Pool_Algorithm = $_.algorithm
     $Pool_Algorithm_Norm = Get-Algorithm $_.algorithm
-    $Pool_Id = $_.coin.ToLower()
 
-    if ($Pool_DataRequest.$Pool_Id) {
-        $hr = $Pool_DataRequest.$Pool_Id.hr  -split "\s+"
-        $est= $Pool_DataRequest.$Pool_Id.est -split "[\s/]+"
+    if ($_.hr) {
+        $hr = $_.hr  -split "\s+"
+        $est= $_.est -split "[\s/]+"
 
         $Pool_User   = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$Wallets."$($_.coin)"}
 
@@ -79,7 +63,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                     [PSCustomObject]@{
                         PoolEstimate  = $Pool_Estimate
                         Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = if ($Pool_DataRequest.$Pool_Id.name) {$Pool_DataRequest.$Pool_Id.name} else {$_.coin}
+                        CoinName      = $_.name
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
                         Price         = $Stat.$StatAverage #instead of .Live

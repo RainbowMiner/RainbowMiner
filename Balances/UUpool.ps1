@@ -4,9 +4,9 @@
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Request = [PSCustomObject]@{}
+$Pool_Request = @()
 try {
-    $Pool_Request = (Invoke-RestMethodAsync "https://uupool.cn/getCoins" -retry 3 -retrywait 500 -tag $Name -cycletime 3600).pow
+    $Pool_Request = Invoke-RestMethodAsync "https://rbminer.net/api/data/uupool.json" -retry 3 -retrywait 200 -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
