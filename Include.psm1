@@ -5907,11 +5907,17 @@ Param(
     if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        #Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        $oldProgressPreference = $Global:ProgressPreference
+        $Global:ProgressPreference = "SilentlyContinue"
+        $Return = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body | Select-Object -ExpandProperty Content
+        try {$Return | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0);};$Return}
+        if ($Return -ne $null) {Remove-Variable "Return"}
+        $Global:ProgressPreference = $oldProgressPreference
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body).Content
         $Global:ProgressPreference = $oldProgressPreference
     }
     Remove-Variable "headers"
@@ -6099,7 +6105,11 @@ Param(
             $AsyncLoader.Jobs.$Jobkey.Prefail++
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
         } elseif (-not $Quickstart) {
-            $Request | ConvertTo-Json -Compress -Depth 10 | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
+            if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
+                $Request | ConvertTo-Json -Compress -Depth 10 | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
+            } else {
+                $Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
+            }
         }
         if ($Request) {Remove-Variable "Request"}
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null}
@@ -6112,7 +6122,13 @@ Param(
             if (Test-Path ".\Cache\$($Jobkey).asy") {Write-Log -Level Warn $AsyncLoader.Jobs.$Jobkey.Error} else {throw $AsyncLoader.Jobs.$Jobkey.Error}
         }
         if (Test-Path ".\Cache\$($Jobkey).asy") {
-            try {Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}
+            try {
+                if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
+                    Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+                } else {
+                    Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Stop
+                }
+            }
             catch {if ($Error.Count){$Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
         }
     }
