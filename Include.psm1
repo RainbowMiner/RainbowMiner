@@ -6015,9 +6015,11 @@ Param(
 )
     if (-not $url -and -not $Jobkey) {return}
 
-    $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout}
-
     if (-not $Jobkey) {$Jobkey = Get-MD5Hash "$($url)$(if ($body) {$body | ConvertTo-Json -Compress})$(if ($headers) {$headers | ConvertTo-Json -Compress})";$StaticJobKey = $false} else {$StaticJobKey = $true}
+
+    if (-not (Test-Path Variable:Global:Asyncloader) -or -not $AsyncLoader.Jobs.$Jobkey) {
+        $JobData = [PSCustomObject]@{Url=$url;Error=$null;Running=$true;Paused=$false;Method=$method;Body=$body;Headers=$headers;Success=0;Fail=0;Prefail=0;LastRequest=(Get-Date).ToUniversalTime();CycleTime=$cycletime;Retry=$retry;RetryWait=$retrywait;Tag=$tag;Timeout=$timeout;Index=0}
+    }
 
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
@@ -6035,6 +6037,7 @@ Param(
             $Quickstart = -not $nocache -and -not $noquickstart -and $AsyncLoader.Quickstart -ne -1 -and (Test-Path ".\Cache\$($Jobkey).asy")
             if (-not $Quickstart -and $delay) {Start-Sleep -Milliseconds $delay}
             $AsyncLoader.Jobs.$Jobkey = $JobData
+            $AsyncLoader.Jobs.$Jobkey.Index = $AsyncLoader.Jobs.Count
             if ($Quickstart) {
                 $AsyncLoader.Quickstart += $delay
                 if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
