@@ -51,29 +51,32 @@ Param(
             $StopWatch.Restart()
             $Cycle++
 
-            $AsyncLoader.Jobs.Keys | Where-Object {$AsyncLoader.Jobs.$_.CycleTime -le 0} | Foreach-Object {$AsyncLoader.Jobs.$Jobkey.CycleTime = $AsyncLoader.Interval}
-
             if (-not $AsyncLoader.Pause) {
-                $AsyncLoader.Jobs.GetEnumerator() | Where-Object {$_.Value -and -not $_.Value.Running -and -not $_.Value.Paused -and $_.Value.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Sort-Object {$_.Value.LastRequest - (Get-Date).ToUniversalTime().AddSeconds(-$_.Value.CycleTime)} | Foreach-Object {
-                    $JobKey = $_.Name
-                    $Job    = $_.Value
-                    try {
-                        Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                        if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
-                    }
-                    catch {
-                        if ($Error.Count){$Error.RemoveAt(0)}
-                        $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                    }
-                    finally {
-                        $Error.Clear()
+                foreach ($JobKey in @($AsyncLoader.Jobs.Keys | Sort-Object {$AsyncLoader.Jobs.$_.Index} | Select-Object)) {
+                    $Job = $AsyncLoader.Jobs.$JobKey
+                    if ($Job.CycleTime -le 0) {$Jobs.CycleTime = $AsyncLoader.Interval}
+                    if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
+                        #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Start job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                        try {
+                            Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
+                            if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                        }
+                        catch {
+                            if ($Error.Count){$Error.RemoveAt(0)}
+                            $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
+                            #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                        }
+                        finally {
+                            $Error.Clear()
+                            #"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Done job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                        }
                     }
                 }
             }
-            $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
-            if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
             if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}
             if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}
+            $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
+            if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
     });
     $AsyncLoader.Loader.Runspace = $newRunspace
