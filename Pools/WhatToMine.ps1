@@ -1,7 +1,7 @@
 ﻿using module ..\Include.psm1
 
 param(
-    $Wallets,
+    $Pools,
     [TimeSpan]$StatSpan,
     [Bool]$InfoOnly = $false
 )
@@ -24,6 +24,8 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 }
 
 [hashtable]$Pool_Algorithms = @{}
+
+$Wallets = $Pools | Where-Object {$_.Algorithm -notmatch '-'} | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
 
 $Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
 
@@ -182,3 +184,4 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
     }
 }
 
+if ($Wallets -ne $null) {Remove-Variable "Wallets"}

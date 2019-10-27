@@ -1398,6 +1398,7 @@ function Get-PoolsContent {
             }
             $Pool
         }
+        Remove-Variable "Parameters"
     }
 }
 
@@ -1434,6 +1435,7 @@ function Get-MinersContent {
             }
         }
     }
+    Remove-Variable "Parameters"
 }
 
 function Get-BalancesContent {
