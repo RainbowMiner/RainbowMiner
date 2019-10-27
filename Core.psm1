@@ -1059,11 +1059,8 @@ function Invoke-Core {
     $Session.AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Session.AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Session.AllPools | Where-Object Name -EQ $_}) | Where-Object {
         $Pool = $_
         $Pool_Name = $Pool.Name
-        if ($Pool.CoinSymbol) {
-            $Pool_Algo = @($Pool.Algorithm,"$($Pool.Algorithm)-$($Pool.CoinSymbol)")
-        } else {
-            $Pool_Algo = @($Pool.Algorithm)
-        }
+        $Pool_Algo = $Pool.Algorithm -replace '\-.+$'
+        if ($Pool.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($Pool.CoinSymbol)")}
         -not (
                 (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
