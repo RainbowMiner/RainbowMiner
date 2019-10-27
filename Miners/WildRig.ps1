@@ -10,14 +10,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.3-wildrig/wildrig-multi-linux-0.19.3-beta.tar.gz"
+    $Version = "0.19.3"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.3-wildrig/wildrig-multi-windows-0.19.3-beta.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-wildrigmulti/wildrig-multi-windows-0.20.0.1.7z"
+    $Version = "0.20.0"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
-$Version = "0.19.3"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
@@ -33,7 +34,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "dedal";      Params = ""} #Dedal
     [PSCustomObject]@{MainAlgorithm = "exosis";     Params = ""} #Exosis
     [PSCustomObject]@{MainAlgorithm = "geek";       Params = ""} #Geek
-    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash    
+    [PSCustomObject]@{MainAlgorithm = "glt-astralhash"; Params = ""} #GLT-AstralHash
+    [PSCustomObject]@{MainAlgorithm = "glt-globalhash"; Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
     [PSCustomObject]@{MainAlgorithm = "glt-jeonghash";  Params = ""} #GLT-JeongHash
     [PSCustomObject]@{MainAlgorithm = "glt-padihash";   Params = ""} #GLT-PadiHash
     [PSCustomObject]@{MainAlgorithm = "glt-pawelhash";  Params = ""} #GLT-PawelHash
@@ -42,6 +44,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "honeycomb";  Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
+    [PSCustomObject]@{MainAlgorithm = "mtp";        Params = ""; Version = "0.20.0"} #MTP, new in v0.20.0 beta
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";    Params = ""; Version = "0.20.0"} #MTPTcr, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
@@ -66,10 +70,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "x25x";       Params = ""} #X25x
     [PSCustomObject]@{MainAlgorithm = "xevan";      Params = ""} #Xevan
 )
-
-if (-not $IsLinux) {
-    $Commands += [PSCustomObject]@{MainAlgorithm = "glt-globalhash"; Params = ""} #GLT-GlobalHash, new in v0.18.0 beta
-}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -98,7 +98,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
     $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
     $Miner_PlatformId = $Miner_Device | Select -Unique -ExpandProperty PlatformId
 
-    $Commands | ForEach-Object {
+    $Commands | Where-Object {-not $_.Version -or (Compare-Version $Version $_.Version) -ge 0} | ForEach-Object {
         $Algorithm = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
