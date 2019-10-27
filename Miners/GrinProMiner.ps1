@@ -99,7 +99,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
-                        BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
+                        BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
 					}
 				}
 			}

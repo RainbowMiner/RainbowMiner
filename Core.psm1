@@ -1175,7 +1175,7 @@ function Invoke-Core {
             Where-Object {-not $Session.Config.DisableDualMining -or $_.HashRates.PSObject.Properties.Name.Count -eq 1} | #filter dual algo miners
             Where-Object {(Compare-Object @($Session.Devices.Name | Select-Object) @($_.DeviceName | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} | 
             Where-Object {(Compare-Object @($Pools.PSObject.Properties.Name | Select-Object) @($_.HashRates.PSObject.Properties.Name | Select-Object) | Where-Object SideIndicator -EQ "=>" | Measure-Object).Count -eq 0} |             
-            Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm -join '-')".Disable} |
+            Where-Object {-not $Session.Config.Miners."$($_.BaseName)-$($_.DeviceModel)-$($_.BaseAlgorithm)".Disable} |
             Where-Object {$Miner_Name = $_.BaseName
                             ($_.HashRates.PSObject.Properties.Name | Where-Object {$Pools.$_.HasMinerExclusions} | Where-Object {
                                 $Pool_Name = $Pools.$_.Name
@@ -1186,12 +1186,13 @@ function Invoke-Core {
             Where-Object {
                 $MinerOk = $true
                 foreach ($p in @($_.DeviceModel -split '-')) {
-                    if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm -join '-')".Disable -or 
+                    $BaseAlgo = $_.BaseAlgorithm -split '-'
+                    if ($Session.Config.Miners."$($_.BaseName)-$($p)-$($_.BaseAlgorithm)".Disable -or 
                         $Session.Config.Devices.$p -and
                         (
                             ($Session.Config.Devices.$p.DisableDualMining -and $_.HashRates.PSObject.Properties.Name.Count -gt 1) -or
-                            ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
-                            ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.ExcludeAlgorithm $_.BaseAlgorithm -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
+                            ($Session.Config.Devices.$p.Algorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.Algorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0) -or
+                            ($Session.Config.Devices.$p.ExcludeAlgorithm.Count -gt 0 -and (Compare-Object $Session.Config.Devices.$p.ExcludeAlgorithm $BaseAlgo -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0) -or
                             ($Session.Config.Devices.$p.MinerName.Count -gt 0 -and ($Session.Config.Devices.$p.MinerName -inotcontains $_.Basename)) -or
                             ($Session.Config.Devices.$p.ExcludeMinerName.Count -gt 0 -and ($Session.Config.Devices.$p.ExcludeMinerName -icontains $_.Basename))
                         )
@@ -1283,7 +1284,7 @@ function Invoke-Core {
             $Miner_Penalty = $Miner_ExtendInterval = $Miner_FaultTolerance = -1
             $Miner_CommonCommands_found = $false
             [System.Collections.ArrayList]$Miner_CommonCommands_array = @($Miner.BaseName,$Miner.DeviceModel)
-            $Miner_CommonCommands_array.AddRange(@($Miner.BaseAlgorithm | Select-Object))
+            $Miner_CommonCommands_array.AddRange(@($Miner.BaseAlgorithm -split '-' | Select-Object))
             for($i=$Miner_CommonCommands_array.Count;$i -gt 0; $i--) {
                 $Miner_CommonCommands = $Miner_CommonCommands_array.GetRange(0,$i) -join '-'
                 if (Get-Member -InputObject $Session.Config.Miners -Name $Miner_CommonCommands -MemberType NoteProperty) {
@@ -1353,9 +1354,9 @@ function Invoke-Core {
             if ($Miner_FaultTolerance -ne -1) {$Miner.FaultTolerance = $Miner_FaultTolerance}
         }
 
-        if (-not $Miner.MSIAprofile -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".MSIAprofile -MemberType NoteProperty -Force}
+        if (-not $Miner.MSIAprofile -and $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -gt 0) {$Miner | Add-Member -Name MSIAprofile -Value $Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".MSIAprofile -MemberType NoteProperty -Force}
 
-        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm | Select-Object -First 1)".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
+        foreach($p in @($Miner.DeviceModel -split '-')) {if ($Miner.OCprofile[$p] -eq '') {$Miner.OCprofile[$p]=if ($Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile -ne "") {$Session.Config.Algorithms."$($Miner.BaseAlgorithm -replace '-.*$')".OCprofile} else {$Session.Config.Devices.$p.DefaultOCprofile}}}
         $FirstAlgoName = ""
         $NoResult = $false
         $Miner.HashRates.PSObject.Properties.Name | ForEach-Object {
@@ -1395,19 +1396,27 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
         }
 
+        if ($Miner.DevFee -isnot [PSCustomObject]) {
+            if ($Miner.DevFee -eq $null) {
+                $Miner | Add-Member DevFee ([PSCustomObject]$Miner_DevFees) -Force
+            } else {
+                $Miner.DevFee = [PSCustomObject]$Miner_DevFees
+            }
+        } else {
+            $Miner_DevFees.Keys | Foreach-Object {
+                if ($Miner.DevFee.$_ -eq $null) {$Miner.DevFee | Add-Member $_ $Miner_DevFees.$_ -Force} else {$Miner.DevFee.$_ = $Miner_DevFees.$_}
+            }
+        }
+
         Remove-Variable "Miner_Profits"
         Remove-Variable "Miner_Profits_Bias"
         Remove-Variable "Miner_Profits_Unbias"
+        Remove-Variable "Miner_DevFees"
 
         $Miner | Add-Member Profit $Miner_Profit
         $Miner | Add-Member Profit_Bias $Miner_Profit_Bias
         $Miner | Add-Member Profit_Unbias $Miner_Profit_Unbias
         $Miner | Add-Member Profit_Cost $Miner_Profit_Cost
-        if ($Miner.PSObject.Properties.Name -contains "DevFee") {
-            $Miner.DevFee = $Miner_DevFees
-        } else {
-            $Miner | Add-Member DevFee $Miner_DevFees -Force
-        }
 
         $HmF = $Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw
 
@@ -1432,10 +1441,10 @@ function Invoke-Core {
             $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI            
         }
 
-        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Session.Stats.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate") -and $Session.Stats["$($Miner.Name)_$($Miner.BaseAlgorithm[0])_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {
-            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm[0])_HashRate.txt" | Remove-Item -ErrorAction Ignore
-            if ($Miner.BaseAlgorithm[1]) {
-                Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm[1])_HashRate.txt" | Remove-Item -ErrorAction Ignore
+        if ($Session.Config.EnableAutoBenchmark -and ($Session.Config.MiningMode -eq "legacy" -or $Miner.DeviceModel -notmatch '-') -and $AllMiners_VersionDate[$Miner.BaseName] -ne $null -and $Session.Stats.ContainsKey("$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate") -and $Session.Stats["$($Miner.Name)_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate"].Updated -lt $AllMiners_VersionDate[$Miner.BaseName]) {
+            Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '-.*$')_HashRate.txt" | Remove-Item -ErrorAction Ignore
+            if ($Miner.BaseAlgorithm -match '-') {
+                Get-ChildItem ".\Stats\Miners\*-$($Miner.Name -replace "-(CPU|GPU)#.+")-$($Miner.DeviceName -join '*')*_$($Miner.BaseAlgorithm -replace '^.*-')_HashRate.txt" | Remove-Item -ErrorAction Ignore
             }
         }
 
@@ -1498,7 +1507,7 @@ function Invoke-Core {
     #Store miners to file
     if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\minerdata.json"))) {
         $Session.Updatetracker.MinerSave = Get-Date
-        Set-ContentJson ".\Data\minerdata.json" ([PSObject]@{Miners = @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm | Select-Object -First 1}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
+        Set-ContentJson ".\Data\minerdata.json" ([PSObject]@{Miners = @($Miners | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm -replace '-.*$'}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
         $Session.ReportMinerData = $true
     }
 
@@ -1513,7 +1522,7 @@ function Invoke-Core {
     $API.Miners = $Miners | ConvertTo-Json -Depth 10 -Compress
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
-    if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -join '')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
+    if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
     $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10 -Compress
@@ -1615,7 +1624,7 @@ function Invoke-Core {
                 API                  = $Miner.API
                 Port                 = $Miner.Port
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
-                BaseAlgorithm        = $Miner.BaseAlgorithm
+                BaseAlgorithm        = @($Miner.BaseAlgorithm -split '-' | Select-Object)
                 Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
                 CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
                 CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
@@ -1996,11 +2005,12 @@ function Invoke-Core {
                 Write-Host "If you do not want that accuracy, set DisableExtendInterval to 0 in your config.txt" -ForegroundColor Yellow
                 $OldForegroundColor = [console]::ForegroundColor
                 [console]::ForegroundColor = "Yellow"
-                $MinersNeedingBenchmark | Select-Object BaseName,BaseAlgorithm,ExtendInterval | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Sort-Object -Property @{Expression = {$_.ExtendInterval}; Descending = $True},@{Expression = {$_.BaseName + $_.BaseAlgorithm -join '-'}; Descending = $False} | Format-Table (
+                $MinersNeedingBenchmark | Select-Object BaseName,BaseAlgorithm,ExtendInterval | Where-Object {$_.ExtendInterval -gt 1 -and $_.ExtendInterval -ne $null} | Sort-Object -Property @{Expression = {$_.ExtendInterval}; Descending = $True},@{Expression = {"$($_.BaseName)-$($_.BaseAlgorithm)"}; Descending = $False} | Format-Table (
                     @{Label = "Miner"; Expression = {$_.BaseName}},
-                    @{Label = "Algorithms"; Expression = {$_.BaseAlgorithm -join '-'}},
+                    @{Label = "Algorithms"; Expression = {$_.BaseAlgorithm}},
                     @{Label = "Aprox. Time"; Expression = {"$($BenchmarkMinutes*$_.ExtendInterval)-$($BenchmarkMinutes*$_.ExtendInterval*2) minutes"}}
                 )
+                Remove-Variable "MinersNeedingBenchmark"
                 [console]::ForegroundColor = $OldForegroundColor
             }
         }

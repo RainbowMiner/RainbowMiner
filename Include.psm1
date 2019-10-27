@@ -1427,7 +1427,7 @@ function Get-MinersContent {
                         BaseName = $Name
                     } -Force -PassThru
                 } else {
-                    $c.PowerDraw = $Session.Stats."$($c.Name)_$($c.BaseAlgorithm[0])_HashRate".PowerDraw_Average
+                    $c.PowerDraw = $Session.Stats."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
                     if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
                     $c
                 }

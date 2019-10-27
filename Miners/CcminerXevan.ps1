@@ -88,7 +88,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | Where-Obj
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
+                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
 				}
 			}
 		}

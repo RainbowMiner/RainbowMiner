@@ -121,7 +121,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = @($MainAlgorithm_Norm -replace '\-.*$')
+                            BaseAlgorithm  = $MainAlgorithm_Norm -replace '\-.*$'
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -133,7 +133,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							Arguments      = "$($Arguments) -uri2 $($SecondAlgorithm)://$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$(Get-UrlEncode $Pools.$SecondAlgorithm_Norm.Pass)"})@$($Pools.$SecondAlgorithm_Norm.Host):$($Pools.$SecondAlgorithm_Norm.Port)"
 							HashRates      = [PSCustomObject]@{
 								                "$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week
-								                "$SecondAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week
+								                "$SecondAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm -replace '\-.*$')_HashRate".Week
 							                 }
 							API            = "Bminer"
 							Port           = $Miner_Port
@@ -150,7 +150,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = @($($MainAlgorithm_Norm -replace '\-.*$'),$($SecondAlgorithm_Norm -replace '\-.*$'))
+                            BaseAlgorithm  = "$($MainAlgorithm_Norm -replace '\-.*$')-$($SecondAlgorithm_Norm -replace '\-.*$')"
 						}
 					}
 				}
