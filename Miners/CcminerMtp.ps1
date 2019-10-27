@@ -9,33 +9,32 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer"
-    $Version = "1.2.3"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-ccminermtp/ccminermtp-v1.2.3-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda101.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-ccminermtp/ccminermtp-v1.2.3-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-ccminermtp/ccminermtp-v1.2.3-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
 } else {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
-    $Version = "1.2.3"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.3-ccminermtp/ccminermtp-v1.2.3-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-win.7z"
             Cuda = "10.1"
         }
     )
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
+$Version = "1.3.0"
 $DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
@@ -106,7 +105,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = @($Algorithm_Norm -replace '\-.*')
+                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
 				}
 			}
 		}
