@@ -82,7 +82,6 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         Workers       = $Pool_RequestWorkers.data
                         Hashrate      = $Stat.HashRate_Live
                         EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
-                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1

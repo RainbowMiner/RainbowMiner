@@ -114,7 +114,6 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"minerproxy"} else {$null}
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

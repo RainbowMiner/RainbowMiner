@@ -51,8 +51,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
 
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
     $Divisor = 1e9
 
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
@@ -64,37 +62,34 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
-        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = $Pool_Host
-                Port          = $Pool_Port
-                User          = $Pool_User
-                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_CoinSymbol
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = "stratum+tcp"
+            Host          = $Pool_Host
+            Port          = $Pool_Port
+            User          = $Pool_User
+            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $false
+            Updated       = $Stat.Updated
+            PoolFee       = $Pool_PoolFee
+            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+            WTM           = $true
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Pool_User
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }

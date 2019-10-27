@@ -121,7 +121,6 @@ if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
                 Hashrate      = $Stat.HashRate_Live
                 TSL           = $Pool_TSL
                 BLK           = $Stat.BlockRate_Average
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

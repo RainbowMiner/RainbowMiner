@@ -89,7 +89,6 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 TSL           = [int]$_.Value.timesincelast
                 EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
                 WTM           = $true
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1

@@ -59,8 +59,6 @@ $Pool_Request.return | ForEach-Object {
 
     if ($Pool_Algorithm_Norm -eq "Sia") {$Pool_Algorithm_Norm = "SiaClaymore"} #temp fix
 
-    if ($Pool_Symbol -and $Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Symbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-    
     $Divisor = 1e9
 
     if (-not $InfoOnly) {
@@ -69,7 +67,33 @@ $Pool_Request.return | ForEach-Object {
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
         if ($User -or $InfoOnly) {
-            foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_Symbol
+                Currency      = $Pool_Currency
+                Price         = $Stat.$StatAverage #instead of .Live
+                StablePrice   = $Stat.Week
+                MarginOfError = $Stat.Week_Fluctuation
+                Protocol      = "stratum+tcp"
+                Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
+                Port          = $Pool_Port
+                User          = "$User.{workername:$Worker}"
+                Pass          = "x{diff:,d=`$difficulty}"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_Fee
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Wallets.$Pool_Currency
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
+            }
+
+            if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
@@ -78,51 +102,21 @@ $Pool_Request.return | ForEach-Object {
                     Price         = $Stat.$StatAverage #instead of .Live
                     StablePrice   = $Stat.Week
                     MarginOfError = $Stat.Week_Fluctuation
-                    Protocol      = "stratum+tcp"
+                    Protocol      = "stratum+ssl"
                     Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
                     Port          = $Pool_Port
                     User          = "$User.{workername:$Worker}"
                     Pass          = "x{diff:,d=`$difficulty}"
                     Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $false
+                    SSL           = $true
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_Fee
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethstratumnh"} else {$null}
-                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
                     Wallet        = $Wallets.$Pool_Currency
                     Worker        = "{workername:$Worker}"
                     Email         = $Email
-                }
-
-                if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
-                    [PSCustomObject]@{
-                        Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin
-                        CoinSymbol    = $Pool_Symbol
-                        Currency      = $Pool_Currency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.Week
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+ssl"
-                        Host          = $Pool_Hosts | Sort-Object -Descending {$_ -ilike "$Pool_Region*"} | Select-Object -First 1
-                        Port          = $Pool_Port
-                        User          = "$User.{workername:$Worker}"
-                        Pass          = "x{diff:,d=`$difficulty}"
-                        Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $true
-                        Updated       = $Stat.Updated
-                        PoolFee       = $Pool_Fee
-                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-                        Wallet        = $Wallets.$Pool_Currency
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
-                    }
                 }
             }
         }

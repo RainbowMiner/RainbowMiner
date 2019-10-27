@@ -52,47 +52,42 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.data.poolStats.hashRate -BlockRate (24*$Pool_Request.data.poolStats.blocksPerHour) -Quiet
     }
     
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
     $Pool_TSL = if ($Pool_Request.data.minedBlocks) {(Get-UnixTimestamp)-($Pool_Request.data.minedBlocks.time | Measure-Object -Maximum).Maximum}
 
     if ($AllowZero -or $Pool_Request.data.poolStats.hashRate -gt 0 -or $InfoOnly) {
         foreach($Pool_Region in $_.regions) {
             $Pool_Ssl = $false
             foreach($Pool_Port in $Pool_Ports) {
-                foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-                    [PSCustomObject]@{
-                        Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $Pool_Coin.Name
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
-                        Price         = 0
-                        StablePrice   = 0
-                        MarginOfError = 0
-                        Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                        Host          = "$($Pool_RegionsMap.$Pool_Region)$($_.host)"
-                        Port          = $Pool_Port
-                        User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                        Pass          = "x"
-                        Region        = $Pool_RegionsTable.$Pool_Region
-                        SSL           = $Pool_Ssl
-                        Updated       = (Get-Date).ToUniversalTime()
-                        PoolFee       = $_.fee
-                        DataWindow    = $DataWindow
-                        Workers       = $Pool_Request.data.poolStats.workers
-                        Hashrate      = $Stat.HashRate_Live
-                        TSL           = $Pool_TSL
-                        BLK           = $Stat.BlockRate_Average
-                        WTM           = $true
-                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
-                        AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-                        Wallet        = $Wallets.$Pool_Currency
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
-                    }
+                [PSCustomObject]@{
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $Pool_Coin.Name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = 0
+                    StablePrice   = 0
+                    MarginOfError = 0
+                    Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                    Host          = "$($Pool_RegionsMap.$Pool_Region)$($_.host)"
+                    Port          = $Pool_Port
+                    User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = $Pool_RegionsTable.$Pool_Region
+                    SSL           = $Pool_Ssl
+                    Updated       = (Get-Date).ToUniversalTime()
+                    PoolFee       = $_.fee
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_Request.data.poolStats.workers
+                    Hashrate      = $Stat.HashRate_Live
+                    TSL           = $Pool_TSL
+                    BLK           = $Stat.BlockRate_Average
+                    WTM           = $true
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Wallets.$Pool_Currency
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
                 $Pool_Ssl = $true
             }

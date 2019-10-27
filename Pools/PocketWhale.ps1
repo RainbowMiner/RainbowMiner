@@ -91,7 +91,6 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
                     Hashrate      = $Stat.HashRate_Live
                     TSL           = $Pool_Data.TSL
                     BLK           = $Stat.BlockRate_Average
-                    AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1

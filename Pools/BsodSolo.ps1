@@ -58,8 +58,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_PoolFee = if ($PoolCoins_Request.$Pool_CoinSymbol.fees_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.fees_solo} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
 
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
     #$Divisor = 1e9 * [Double]$Pool_Request.$Pool_Algorithm.mbtc_mh_factor
 
     $Pool_Factor = [Double]$(switch ($Pool_Algorithm) {
@@ -86,47 +84,44 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
-        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_Currency
-                Price         = $Stat.$StatAverage #instead of .Live
-                StablePrice   = $Stat.Week
-                MarginOfError = $Stat.Week_Fluctuation
-                Protocol      = "stratum+tcp"
-                Host          = "$($Pool_Region).bsod.pw"
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "m=solo,c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = $Stat.Updated
-                PoolFee       = $Pool_PoolFee
-                DataWindow    = $Pool_DataWindow
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_solo
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-				ErrorRatio    = $Stat.ErrorRatio
-                Failover      = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
-                    [PSCustomObject]@{
-                        Protocol      = "stratum+tcp"
-                        Host          = "$($_).bsod.pw"
-                        Port          = $Pool_Port
-                        User          = "$($Pool_User).{workername:$Worker}"
-                        Pass          = "m=solo,c=$Pool_Currency{diff:,d=`$difficulty}"
-                    }
-                })
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_CoinSymbol
+            Currency      = $Pool_Currency
+            Price         = $Stat.$StatAverage #instead of .Live
+            StablePrice   = $Stat.Week
+            MarginOfError = $Stat.Week_Fluctuation
+            Protocol      = "stratum+tcp"
+            Host          = "$($Pool_Region).bsod.pw"
+            Port          = $Pool_Port
+            User          = "$($Pool_User).{workername:$Worker}"
+            Pass          = "m=solo,c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $false
+            Updated       = $Stat.Updated
+            PoolFee       = $Pool_PoolFee
+            DataWindow    = $Pool_DataWindow
+            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_solo
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+			ErrorRatio    = $Stat.ErrorRatio
+            Failover      = @($Pool_RegionsTable.Keys | Where-Object {$_ -ne $Pool_Region} | Foreach-Object {
+                [PSCustomObject]@{
+                    Protocol      = "stratum+tcp"
+                    Host          = "$($_).bsod.pw"
+                    Port          = $Pool_Port
+                    User          = "$($Pool_User).{workername:$Worker}"
+                    Pass          = "m=solo,c=$Pool_Currency{diff:,d=`$difficulty}"
+                }
+            })
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Pool_User
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }

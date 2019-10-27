@@ -77,8 +77,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_Currency")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
     $Pool_TSL = (Get-UnixTimestamp)-$PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
     if (-not $InfoOnly) {
@@ -86,37 +84,34 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     }
 
     foreach($Pool_Region in $Pool_Regions) {
-        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_CoinName
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_Currency
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = "$(if ($Pool_Regions.Count -gt 1) {"$($Pool_Region)."})$($Pool_Host)"
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "x{diff:,d=`$difficulty}"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = (Get-Date).ToUniversalTime()
-                PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-                WTM           = $true
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_CoinName
+            CoinSymbol    = $Pool_CoinSymbol
+            Currency      = $Pool_Currency
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = "stratum+tcp"
+            Host          = "$(if ($Pool_Regions.Count -gt 1) {"$($Pool_Region)."})$($Pool_Host)"
+            Port          = $Pool_Port
+            User          = "$($Pool_User).{workername:$Worker}"
+            Pass          = "x{diff:,d=`$difficulty}"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $false
+            Updated       = (Get-Date).ToUniversalTime()
+            PoolFee       = $Pool_PoolFee
+            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+            WTM           = $true
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Pool_User
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }

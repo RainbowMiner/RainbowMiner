@@ -57,8 +57,6 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm.fees -ne $null) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
     $Pool_DataWindow = $DataWindow
 
-    if ($Pool_Algorithm_Norm -ne "Equihash" -and $Pool_Algorithm_Norm -like "Equihash*") {$Pool_Algorithm_All = @($Pool_Algorithm_Norm,"$Pool_Algorithm_Norm-$Pool_CoinSymbol")} else {$Pool_Algorithm_All = @($Pool_Algorithm_Norm)}
-
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
     $Pool_BLK = $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks"
 
@@ -69,39 +67,36 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_Params = if ($Params.$Pool_CoinSymbol) {",$($Params.$Pool_CoinSymbol)"}
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {
-        foreach($Pool_Algorithm_Norm in $Pool_Algorithm_All) {
-            [PSCustomObject]@{
-                Algorithm     = $Pool_Algorithm_Norm
-                CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
-                Currency      = $Pool_CoinSymbol
-                Price         = 0
-                StablePrice   = 0
-                MarginOfError = 0
-                Protocol      = "stratum+tcp"
-                Host          = "pool.hashpool.eu"
-                Port          = $Pool_Port
-                User          = "$($Pool_User).{workername:$Worker}"
-                Pass          = "c=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
-                Region        = $Pool_RegionsTable.$Pool_Region
-                SSL           = $false
-                Updated       = (Get-Date).ToUniversalTime()
-                PoolFee       = $Pool_PoolFee
-                DataWindow    = $Pool_DataWindow
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-                Hashrate      = $Stat.HashRate_Live
-                BLK           = $Stat.BlockRate_Average
-                TSL           = $Pool_TSL
-				ErrorRatio    = $Stat.ErrorRatio
-                WTM           = $true
-                AlgorithmList = if ($Pool_Algorithm_Norm -match "-") {@($Pool_Algorithm_Norm, ($Pool_Algorithm_Norm -replace '\-.*$'))}else{@($Pool_Algorithm_Norm)}
-                Name          = $Name
-                Penalty       = 0
-                PenaltyFactor = 1
-                Wallet        = $Pool_User
-                Worker        = "{workername:$Worker}"
-                Email         = $Email
-            }
+        [PSCustomObject]@{
+            Algorithm     = $Pool_Algorithm_Norm
+            CoinName      = $Pool_Coin
+            CoinSymbol    = $Pool_CoinSymbol
+            Currency      = $Pool_CoinSymbol
+            Price         = 0
+            StablePrice   = 0
+            MarginOfError = 0
+            Protocol      = "stratum+tcp"
+            Host          = "pool.hashpool.eu"
+            Port          = $Pool_Port
+            User          = "$($Pool_User).{workername:$Worker}"
+            Pass          = "c=$Pool_CoinSymbol{diff:,d=`$difficulty}$Pool_Params"
+            Region        = $Pool_RegionsTable.$Pool_Region
+            SSL           = $false
+            Updated       = (Get-Date).ToUniversalTime()
+            PoolFee       = $Pool_PoolFee
+            DataWindow    = $Pool_DataWindow
+            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+            Hashrate      = $Stat.HashRate_Live
+            BLK           = $Stat.BlockRate_Average
+            TSL           = $Pool_TSL
+			ErrorRatio    = $Stat.ErrorRatio
+            WTM           = $true
+            Name          = $Name
+            Penalty       = 0
+            PenaltyFactor = 1
+            Wallet        = $Pool_User
+            Worker        = "{workername:$Worker}"
+            Email         = $Email
         }
     }
 }
