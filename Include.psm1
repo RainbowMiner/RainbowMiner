@@ -5888,6 +5888,7 @@ Param(
                 myip      = $Session.MyIP
             }
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
+            Remove-Variable "serverbody"
             if ($Result.Status) {$Result.Content;Remove-Variable "Result";return}
         }
 
@@ -5906,14 +5907,9 @@ Param(
     if (-not $headers) {$headers = @{}}
     if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
     if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
+    
     if ($method -eq "REST") {
-        #Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
-        $Return = Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body | Select-Object -ExpandProperty Content
-        try {$Return | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count) {$Error.RemoveAt(0);};$Return}
-        if ($Return -ne $null) {Remove-Variable "Return"}
-        $Global:ProgressPreference = $oldProgressPreference
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
