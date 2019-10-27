@@ -28,17 +28,22 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "argon2d-glt"; GLT="argon2d-glt"; Params = ""} #Argon2d (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2i-glt"; GLT="argon2i-glt"; Params = ""} #Argon2i (GLT)
     [PSCustomObject]@{MainAlgorithm = "argon2m"; Params = ""} #Argon2m (Merge)
+	[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""; LinuxOnly = $true} #CpuPower
     [PSCustomObject]@{MainAlgorithm = "cryptovantaa"; Params = ""} #IOtE
     #[PSCustomObject]@{MainAlgorithm = "honeycomb"; Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2cz"; Params = ""} #Lyra2cz
+	[PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""; LinuxOnly = $true} #Lyra2h
     [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #Lyra2z330
     [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""; MaxRejectedShareRatio = 0.7} #Yespower2b
+	[PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""; LinuxOnly = $true} #Verium
+	[PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""; LinuxOnly = $true} #ScryptJane16
     [PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #YescryptR16
     [PSCustomObject]@{MainAlgorithm = "yescryptr16v2"; GLT="yescryptr16v2glt"; Params = ""} #YescryptR16v2
     [PSCustomObject]@{MainAlgorithm = "yescryptr24"; GLT="yescryptr24glt"; Params = ""} #YescryptR24
     [PSCustomObject]@{MainAlgorithm = "yescryptr32"; GLT="yescryptr32glt"; Params = ""} #YescryptR32
     [PSCustomObject]@{MainAlgorithm = "yescryptr8"; GLT="yescryptr8glt"; Params = ""} #YescryptR8
     [PSCustomObject]@{MainAlgorithm = "yescryptr8g"; Params = ""} #YescryptR8g (KOTO)
+    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""; LinuxOnly = $true} #Yespower
     [PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YespowerR16
     [PSCustomObject]@{MainAlgorithm = "yespowerLITB"; Params = ""} #Yespower LightBit (LITB)y
     [PSCustomObject]@{MainAlgorithm = "yespowerLTNCG"; Params = ""} #Yespower LighningCash-Gold v3 (LTNCG)
@@ -47,17 +52,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yespowerURX"; Params = ""} #Yespower Uranium-X (URX)
     [PSCustomObject]@{MainAlgorithm = "Binarium_hash_v1"; Params = ""} #Binarium
 )
-
-if ($IsLinux) {
-    $Commands += [PSCustomObject[]]@(
-        [PSCustomObject]@{MainAlgorithm = "argon2d250"; Params = ""} #Argon2d250
-        [PSCustomObject]@{MainAlgorithm = "cpupower"; Params = ""} #CpuPower
-        [PSCustomObject]@{MainAlgorithm = "lyra2h"; Params = ""} #Lyra2h
-        [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
-        [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
-        [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #Yespower
-    )
-}
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
@@ -84,7 +78,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
     $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"
 
-    $Commands | ForEach-Object {
+    $Commands | Where-Object {-not $_.LinuxOnly -or $IsLinux} | ForEach-Object {
 
         $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
 
