@@ -323,7 +323,7 @@ function Get-WhatToMineData {
     
     if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
-            $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10
+            $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
             $WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
                 [PSCustomObject]@{
                     algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
@@ -340,10 +340,13 @@ function Get-WhatToMineData {
                             factor = $WtmFactors.$_
                         }
                     }
+                    Remove-Variable "WtmFactors"
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
+                Remove-Variable "WtmKeys"
                 if (Test-Path Variable:Global:WTMData) {Remove-Variable "WTMData" -Force -ErrorAction Ignore}
             }
+            if ($WtmUrl) {Remove-Variable "WtmUrl"}
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "WhatToMiner datagrabber failed. "
