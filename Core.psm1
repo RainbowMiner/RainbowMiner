@@ -1116,9 +1116,7 @@ function Invoke-Core {
             $start = Get-UnixTimestamp -Milliseconds
             Get-PoolsContent "WhatToMine" -Config ([PSCustomObject]@{Pools = $Pools_WTM}) -StatSpan $RoundSpan -InfoOnly $false | Foreach-Object {
                 $Pool_WTM = $_
-                $Pool_WTM_Algo = @($Pool_WTM.Algorithm)
-                if ($Pool_WTM.Algorithm -match "^Equihash") {$Pool_WTM_Algo += "$($Pool_WTM.Algorithm)-$($Pool_WTM.Coinsymbol)"}
-                $Pools_WTM | Where-Object {$_.Algorithm -in $Pool_WTM_Algo -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
+                $Pools_WTM | Where-Object {$_.Algorithm -eq $Pool_WTM.Algorithm -and $_.CoinSymbol -eq $Pool_WTM.CoinSymbol} | Foreach-Object {
                    $_.Price         = $Pool_WTM.Price * $_.PenaltyFactor
                    $_.StablePrice   = $Pool_WTM.StablePrice * $_.PenaltyFactor
                    $_.MarginOfError = $Pool_WTM.MarginOfError
