@@ -9,13 +9,12 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-WildRig\wildrig-multi"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.19.3-wildrig/wildrig-multi-linux-0.19.3-beta.tar.gz"
-    $Version = "0.19.3"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-wildrig/wildrig-multi-linux-0.20.0.2.tar.gz"
 } else {
     $Path = ".\Bin\AMD-WildRig\wildrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-wildrig/wildrig-multi-windows-0.20.0.1.7z"
-    $Version = "0.20.0"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.20.0-wildrig/wildrig-multi-windows-0.20.0.2.7z"
 }
+$Version = "0.20.0.2"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5023676.0"
 $Port = "407{0:d2}"
 $DevFee = 1.0
@@ -44,8 +43,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "honeycomb";  Params = ""} #Honeycomb
     [PSCustomObject]@{MainAlgorithm = "lyra2v3";    Params = ""} #Lyra2RE3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban";Params = ""} #Lyra2vc0ban
-    [PSCustomObject]@{MainAlgorithm = "mtp";        Params = ""; Version = "0.20.0"} #MTP, new in v0.20.0 beta
-    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";    Params = ""; Version = "0.20.0"} #MTPTcr, new in v0.20.0 beta
+    [PSCustomObject]@{MainAlgorithm = "mtp";        Params = ""} #MTP, new in v0.20.0 beta
+    [PSCustomObject]@{MainAlgorithm = "mtp-tcr";    Params = ""} #MTPTcr, new in v0.20.0 beta
     [PSCustomObject]@{MainAlgorithm = "phi";        Params = ""} #PHI
     #[PSCustomObject]@{MainAlgorithm = "rainforest"; Params = ""} #Rainforest
     [PSCustomObject]@{MainAlgorithm = "renesis";    Params = ""} #Renesis
