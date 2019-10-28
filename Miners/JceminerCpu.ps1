@@ -92,9 +92,9 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $Global:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
 
     $Commands | ForEach-Object {        
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
        
-        $Arguments = [PSCustomObject]@{Params = "--low --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) --stakjson --any $($_.Params)"}
+        $Arguments = [PSCustomObject]@{Params = "--low --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm_0.Protocol)://$($Pools.$Algorithm_Norm_0.Host):$($Pools.$Algorithm_Norm_0.Port) -u $($Pools.$Algorithm_Norm_0.User)$(if ($Pools.$Algorithm_Norm_0.Pass) {" -p $($Pools.$Algorithm_Norm_0.Pass)"})$(if ($Pools.$Algorithm_Norm_0.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm_0.SSL) {" --ssl"}) --stakjson --any $($_.Params)"}
 
         if ($Session.Config.CPUMiningThreads) {
             $Arguments | Add-Member Config ([PSCustomObject]@{cpu_threads_conf = @($Miner_Threads | Foreach-Object {[PSCustomObject]@{cpu_architecture="auto";affine_to_cpu=$_;use_cache=$true;multi_hash=6}} | Select-Object)})
@@ -102,7 +102,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
             $Arguments.Params = "--auto $($Arguments.Params)"
         }
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				[PSCustomObject]@{
 					Name           = $Miner_Name
@@ -110,7 +110,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = $Arguments
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Jceminer"
 					Port           = $Miner_Port
 					Uri            = $Uri
@@ -122,7 +122,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                    BaseAlgorithm  = $Algorithm_Norm_0
 				}
 			}
 		}

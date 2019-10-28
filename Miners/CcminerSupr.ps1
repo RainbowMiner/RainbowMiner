@@ -54,9 +54,9 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
     $Commands | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				[PSCustomObject]@{
@@ -65,7 +65,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = "-R 1 -b $($Miner_Port) -d $($DeviceIDsAll) -a $($_.MainAlgorithm) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate"."$(if ($_.HashrateDuration){$_.HashrateDuration}else{"Week"})"}
 					API            = "Ccminer"
 					Port           = $Miner_Port
 					Uri            = $Uri
@@ -77,7 +77,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                    BaseAlgorithm  = $Algorithm_Norm_0
 				}
 			}
 		}

@@ -54,7 +54,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
             $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
-            $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+            $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
             $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
             $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -70,7 +70,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
             $Miner_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
-		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.$Miner_Type) {$Pools.$Algorithm_Norm.Ports.$Miner_Type} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
@@ -79,7 +79,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
                         Arguments      = "--api-port=$($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
-					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
 					    API            = "XMRig"
 					    Port           = $Miner_Port
 					    DevFee         = $DevFee
@@ -92,7 +92,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
-                        BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                        BaseAlgorithm  = $Algorithm_Norm_0
 				    }
 			    }
 		    }

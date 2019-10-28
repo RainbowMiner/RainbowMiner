@@ -48,9 +48,9 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
     $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"
     
     $Commands | ForEach-Object {
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
 				$Pool_Port = $Pools.$Algorithm_Norm.Port
 				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
@@ -87,7 +87,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = $Arguments
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Nanominer"
 					Port           = $Miner_Port
 					Uri            = $Uri
@@ -100,7 +100,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                    BaseAlgorithm  = $Algorithm_Norm_0
 				}
 			}
 		}

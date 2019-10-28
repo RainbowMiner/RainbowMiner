@@ -65,12 +65,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $MainAlgorithm = $_.MainAlgorithm
-            $MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm
+            $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
-            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
-			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm,"$($MainAlgorithm_Norm)-$($Miner_Model)")) {
+			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
 				$SecondAlgorithm = $_.SecondaryAlgorithm
 				if ($SecondAlgorithm -ne '') {
 					$SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
@@ -107,7 +107,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							DeviceModel    = $Miner_Model
 							Path           = $Path
 							Arguments      = $Arguments
-							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
+							HashRates      = [PSCustomObject]@{$MainAlgorithm_Norm = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1})}
 							API            = "NBminer"
 							Port           = $Miner_Port
 							Uri            = $Uri
@@ -120,8 +120,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = $MainAlgorithm_Norm -replace '\-.*$'
-                            EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
+                            BaseAlgorithm  = $MainAlgorithm_Norm_0
+                            EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm_0 -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
 						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
@@ -140,8 +140,8 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							Path           = $Path
 							Arguments      = "$($Arguments) -do $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -du $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"})"
 							HashRates      = [PSCustomObject]@{
-								                $MainAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
-								                $SecondAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm -replace '\-.*$')_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
+								                $MainAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
+								                $SecondAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                 							}
 							API            = "NBminer"
 							Port           = $Miner_Port
@@ -158,7 +158,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = "$($MainAlgorithm_Norm -replace '\-.*$')-$($SecondAlgorithm_Norm -replace '\-.*$')"
+                            BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
                             EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}

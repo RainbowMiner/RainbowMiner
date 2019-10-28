@@ -147,12 +147,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
  
 		$Commands | ForEach-Object {
 			$MainAlgorithm = $_.MainAlgorithm
-			$MainAlgorithm_Norm = Get-Algorithm $MainAlgorithm        
+			$MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm        
 			$MinMemGB = $_.MinMemGB
-            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
 			$Miner_Device = $Miner_Device_hash[$MinMemGB]
 
-			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm,"$($MainAlgorithm_Norm)-$($Miner_Model)")) {
+			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device) {
 
 					$DeviceIDsAll = ($Miner_Device | % {'{0:x}' -f $_.Type_Vendor_Index} ) -join ''
@@ -174,17 +174,17 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						if ($_.SecondaryAlgorithm) {
 							$SecondaryAlgorithm = $_.SecondaryAlgorithm
 							$SecondaryAlgorithm_Norm = Get-Algorithm $SecondaryAlgorithm
-                            $Miner_BaseAlgo = "$($MainAlgorithm_Norm -replace '\-.*$')-$($SecondaryAlgorithm_Norm -replace '\-.*$')"
+                            $Miner_BaseAlgo = "$($MainAlgorithm_Norm_0)-$($SecondaryAlgorithm_Norm)"
 							$Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($SecondaryAlgorithm_Norm) + @(if ($_.SecondaryIntensity -ge 0) {$_.SecondaryIntensity}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm -replace '\-.*$')_HashRate".Week}
+							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week; "$SecondaryAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondaryAlgorithm_Norm)_HashRate".Week}
 							$Pool_Port_Secondary = if ($Pools.$SecondaryAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondaryAlgorithm_Norm.Ports.GPU) {$Pools.$SecondaryAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondaryAlgorithm_Norm.Port}
 							$Arguments_Secondary = "-mode 0 -dcoin $($Coins.$SecondaryAlgorithm) -dpool $($Pools.$SecondaryAlgorithm_Norm.Host):$($Pool_Port_Secondary) -dwal $($Pools.$SecondaryAlgorithm_Norm.User)$(if ($Pools.$SecondaryAlgorithm_Norm.Pass) {" -dpsw $($Pools.$SecondaryAlgorithm_Norm.Pass)"})$(if($_.SecondaryIntensity -ge 0){" -dcri $($_.SecondaryIntensity)"})"
 							if ($Fee -gt 0) {$Miner_Fee = $DevFeeDual}
 						}
 						else {
-                            $Miner_BaseAlgo = $MainAlgorithm_Norm -replace '\-.*$'
+                            $Miner_BaseAlgo = $MainAlgorithm_Norm_0
 							$Miner_Name = ((@($Name) + @($MainAlgorithm_Norm -replace '^ethash', '') + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-') -replace '-+','-'
-							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm -replace '\-.*$')_HashRate".Week}
+							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 							$Arguments_Secondary = "-mode 1"
 							$Miner_Fee = $Fee
 						}

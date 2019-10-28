@@ -55,9 +55,9 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
     $Commands | ForEach-Object {
 
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				[PSCustomObject]@{
 					Name           = $Miner_Name
@@ -65,7 +65,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = "--status-port $($Miner_Port) --host $($Pools.$Algorithm_Norm.Host) --port $($Pools.$Algorithm_Norm.Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "Nicehash") {" --nicehash"}) $($DeviceParams) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Luk"
 					Port           = $Miner_Port
 					Uri            = $Uri
@@ -77,7 +77,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                    BaseAlgorithm  = $Algorithm_Norm_0
 				}
 			}
 		}

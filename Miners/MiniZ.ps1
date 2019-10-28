@@ -80,7 +80,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
     $Miner_Model = $_.Model
 
     $Commands | ForEach-Object {
-        $Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+        $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}        
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
@@ -90,7 +90,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 
         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
 
-		foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
                 $PersCoin = Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
@@ -100,7 +100,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = "--telemetry $($Miner_Port) -cd $($DeviceIDsAll) --server $(if ($Pools.$Algorithm_Norm.SSL) {"ssl://"})$($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"}) --gpu-line --nonvml --extra --latency$(if (-not $Session.Config.ShowMinerWindow) {" --nocolor"})$(if ($Pools.$Algorithm_Norm.Name -eq "MiningRigRentals" -and $PersCoin -ne "auto") {" --smart-pers"}) $($_.Params)"
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 					API            = "MiniZ"
 					Port           = $Miner_Port
                     FaultTolerance = $_.FaultTolerance
@@ -112,7 +112,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
                     Version        = $Version
                     PowerDraw      = 0
                     BaseName       = $Name
-                    BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                    BaseAlgorithm  = $Algorithm_Norm_0
 				}
 			}
 		}

@@ -62,12 +62,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 		}
 
 		$Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
-			$Algorithm_Norm = Get-Algorithm $_.MainAlgorithm
+			$Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 			$MinMemGB = $_.MinMemGB
-            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm.CoinSymbol -eq "ETP") {$MinMemGB = 3}
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1Gb - 0.25gb)}
 
-			foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -notmatch "^progpow" -or $Pools.$Algorithm_Norm.Name -ne "SuprNova")) {
 					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
 					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
@@ -98,7 +98,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 						DeviceModel    = $Miner_Model
 						Path           = $Path
 						Arguments      = "-cdmport $($Miner_Port) -coin $($Coin) -di $($DeviceIDsAll) -pool $(if($Pools.$Algorithm_Norm.SSL){"ssl://"})$($Pools.$Algorithm_Norm.Host):$($Pool_Port) $(if ($Pools.$Algorithm_Norm.Wallet -and $Pools.$Algorithm_Norm.Name -notmatch "nicehash") {"-wal $($Pools.$Algorithm_Norm.Wallet) -worker $($Pools.$Algorithm_Norm.Worker)"} else {"-wal $($Pools.$Algorithm_Norm.User)"})$(if ($Pools.$Algorithm_Norm.Pass) {" -pass $($Pools.$Algorithm_Norm.Pass)"}) $($Miner_Protocol_Params) $($Miner_Deviceparams) $($CommonParams) $($_.Params)"
-						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week)}
+						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week)}
 						API            = "Claymore"
 						Port           = $Miner_Port
 						Uri            = $Uri
@@ -111,7 +111,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
-                        BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                        BaseAlgorithm  = $Algorithm_Norm_0
 					}
 				}
 			}

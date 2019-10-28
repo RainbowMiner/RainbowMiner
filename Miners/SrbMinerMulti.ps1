@@ -61,7 +61,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
             $Algorithm = $_.MainAlgorithm
-            $Algorithm_Norm = Get-Algorithm $Algorithm
+            $Algorithm_Norm_0 = Get-Algorithm $Algorithm
             $MinMemGb = $_.MinMemGb
         
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
@@ -69,7 +69,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
             $DeviceIntensity = ($Miner_Device | % {"0"}) -join ','
 
-		    foreach($Algorithm_Norm in @($Algorithm_Norm,"$($Algorithm_Norm)-$($Miner_Model)")) {
+		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
 				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
@@ -83,7 +83,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
 					    Arguments      = "--algorithm $Algorithm --api-enable --api-port $($Miner_Port) --api-rig-name $($Session.Config.Pools.$($Pools.$Algorithm_Norm.Name).Worker) $(if ($Miner_Vendor -eq "CPU") {"--disable-gpu$(if ($Session.Config.CPUMiningThreads){" --cpu-threads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})"} else {"--gpu-id $DeviceIDsAll --gpu-intensity $DeviceIntensity --disable-cpu --disable-gpu-watchdog --max-no-share-sent 120"}) --pool $($Pools.$Algorithm_Norm.Host):$($Pool_Port) --wallet $($Pools.$Algorithm_Norm.User) --password $($Pools.$Algorithm_Norm.Pass) --tls $(if ($Pools.$Algorithm_Norm.SSL) {"true"} else {"false"}) --nicehash $(if ($Pools.$Algorithm_Norm.Name -match 'NiceHash') {"true"} else {"false"}) --retry-time 10 $($_.Params)"
-					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm -replace '\-.*$')_HashRate".Week}
+					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					    API            = "SrbMiner"
 					    Port           = $Miner_Port
 					    Uri            = $Uri
@@ -96,7 +96,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
                         Version        = $Version
                         PowerDraw      = 0
                         BaseName       = $Name
-                        BaseAlgorithm  = $Algorithm_Norm -replace '\-.*$'
+                        BaseAlgorithm  = $Algorithm_Norm_0
 				    }
 			    }
 		    }
