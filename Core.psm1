@@ -1389,7 +1389,7 @@ function Invoke-Core {
             $Miner_Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner_Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
             $Miner_Profit_Cost   = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
-            if ($Miner.DeviceName -match "^CPU" -and $Session.Config.PowerOffset -gt 0) {$Miner_Profit_Cost=0}
+            if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner_Profit_Cost=0}
         }
 
         if ($Miner.DevFee -isnot [PSCustomObject]) {
@@ -1683,6 +1683,9 @@ function Invoke-Core {
 
     $Session.Profitable = $true
 
+    $PowerOffset_Watt = [Double]0
+    $PowerOffset_Cost = [Double]0
+
     if (($Miners | Measure-Object).Count -gt 0) {
         #Get most profitable miner combination
         $BestMiners             = $Session.ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Session.ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
@@ -1739,9 +1742,12 @@ function Invoke-Core {
             }
         }
 
-        $PowerOffset_Cost = [Double]0
         if (($Session.AllPools | Measure-Object).Count -gt 0 -and $Check_Profitability) {
-            $PowerOffset_Cost = [Double]($Session.Config.PowerOffset*24/1000 * $PowerPriceBTC)
+            $PowerOffset_Watt = $Session.Config.PowerOffset
+            if ($Session.Config.PowerOffsetPercent -gt 0) {
+                $PowerOffset_Watt += ($BestMiners_Combo.PowerDraw | Measure-Object -Sum).Sum * $Session.Config.PowerOffsetPercent / 100
+            }
+            $PowerOffset_Cost = [Double]($PowerOffset_Watt*24/1000 * $PowerPriceBTC)
             if ((($BestMiners_Combo.Profit | Measure-Object -Sum).Sum - $PowerOffset_Cost) -le 0) {
                 if ($Session.Config.CheckProfitability -and ($BestMiners_Combo | Where-Object {$_.IsExclusiveMiner -or $_.IsLocked} | Measure-Object).Count -eq 0) {$Session.Profitable = $false}
                 if (-not $Session.Profitable -or -not $Session.Config.CheckProfitability) {
@@ -1942,7 +1948,7 @@ function Invoke-Core {
             @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.HashRates.PSObject.Properties.Name}},
             @{Label = "Speed"; Expression = {$_.HashRates.PSObject.Properties.Value | ForEach-Object {if ($_ -ne $null) {"$($_ | ConvertTo-Hash)/s"} elseif ($Session.Benchmarking) {"Benchmarking"} else {"Waiting"}}}; Align = 'right'},
             @{Label = "Diff"; Expression = {$m = $_;($m.HashRates.PSObject.Properties.Name | ForEach-Object {if ($m.Difficulties.$_) {($m.Difficulties.$_ | ConvertTo-Float) -replace " "} else {"-"}}) -join ','}; Align = 'right'},
-            @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
+            @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
             $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Session.Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Session.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
@@ -2027,7 +2033,7 @@ function Invoke-Core {
         @{Label = "Algorithm"; Expression = {Get-MappedAlgorithm $_.BaseAlgorithm}},
         @{Label = "Coin"; Expression = {$_.CoinName | Foreach-Object {if ($_) {$_} else {"-"}}}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}},
-        @{Label = "Power$(if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
+        @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
         @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
     ) | Out-Host
 
@@ -2042,7 +2048,7 @@ function Invoke-Core {
         ) | Out-Host
     }
 
-    if ($Session.Config.UsePowerPrice -and $Session.Config.PowerOffset -gt 0) {Write-Host "* net power consumption. A base power offset of $("{0:d}" -f [int]$Session.Config.PowerOffset)W is being added to calculate the final profit."; Write-Host " "}
+    if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {Write-Host "* net power consumption. A base power offset of $(if ($Session.Config.PowerOffsetPercent -gt 0) {"{0:f1}%" -f $Session.Config.PowerOffsetPercent})$(if ($Session.Config.PowerOffset -gt 0) {if ($Session.Config.PowerOffsetPercent -gt 0) {" +"};"{0:d}W" -f [int]$Session.Config.PowerOffset}) is being added to calculate the final profit$(if ($PowerOffset_Watt -gt 0) { " (currently {0:d}W)" -f [int]$PowerOffset_Watt})."; Write-Host " "}
 
     #Display pool balances, formatting it to show all the user specified currencies
     if ($Session.Config.ShowPoolBalances -and $BalancesData -and $BalancesData.Count -gt 1) {
