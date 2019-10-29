@@ -320,11 +320,10 @@
                         Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
-                    @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
+                    @("Config","UserConfig") | Where-Object {$Session.$_} | Foreach-Object {
                         $NewFile = "$DebugPath\$($_).json"
-                        ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                        ($Session.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
-
 
                     if ($IsLinux) {
                         $Params = @{
