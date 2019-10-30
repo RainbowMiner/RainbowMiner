@@ -6164,13 +6164,7 @@ function Invoke-ReportMinerStatus {
     $minerreport = ConvertTo-Json @(
         $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
             $Miner = $_
-            $Miner.Speed_Live = [Double[]]@()           
-            $Miner.Algorithm | ForEach-Object {
-                $Miner_Speed = $Miner.GetHashRate($_,$false)
-                $Miner.Speed_Live += [Double]$Miner_Speed
-            }
             $Miner_PowerDraw = $Miner.GetPowerDraw()
-
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
 
@@ -6219,6 +6213,7 @@ function Invoke-ReportMinerStatus {
                 Benchmarking   = $Miner.Speed -contains $null
                 Devices        = $Devices
             }
+            Remove-Variable "Devices"
         }
     ) -Depth 10 -Compress
     
