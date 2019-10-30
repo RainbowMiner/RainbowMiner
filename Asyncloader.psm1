@@ -14,7 +14,7 @@ Param(
 
     $AsyncLoader.Stop       = $false
     $AsyncLoader.Pause      = $true
-    $AsyncLoader.Jobs       = [hashtable]::Synchronized(@{})
+    $AsyncLoader.Jobs       = [hashtable]@{}
     $AsyncLoader.CycleTime  = 10
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
@@ -72,7 +72,6 @@ Param(
                             }
                         }
                         finally {
-                            $Error.Clear()
                             if ($AsyncLoader.Verbose) {
                                 "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Done job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
                             }

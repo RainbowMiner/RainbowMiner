@@ -6051,6 +6051,7 @@ Param(
                 $AsyncLoader.Quickstart += $delay
                 if ($AsyncLoader.Quickstart -gt 0) {$AsyncLoader.Jobs.$Jobkey.LastRequest = $AsyncLoader.Jobs.$Jobkey.LastRequest.AddMilliseconds($AsyncLoader.Quickstart)}
             }
+            #Write-Log -Level Info "New job $($Jobkey): $($JobData.Url)" 
         } else {
             $AsyncLoader.Jobs.$Jobkey.Running=$true
             $AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()
@@ -6084,9 +6085,6 @@ Param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 #Write-Log -Level Info "GetUrl Failed $RequestError"
             }
-            finally {
-                $Error.Clear()
-            }
             if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
 
             $retry--
@@ -6109,7 +6107,7 @@ Param(
             if ($AsyncLoader.Jobs.$Jobkey.Prefail -gt 5) {$AsyncLoader.Jobs.$Jobkey.Fail++;$AsyncLoader.Jobs.$Jobkey.Prefail=0}            
         } elseif (-not $Quickstart) {
             if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                $Request | ConvertTo-Json -Compress -Depth 10 | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
+                $Request | ConvertTo-Json -Compress -Depth 10 -ErrorAction Ignore | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
             } else {
                 $Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
             }
@@ -6121,9 +6119,7 @@ Param(
         $Error.Clear()
     }
     if (-not $quiet) {
-        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0) {
-            if (Test-Path ".\Cache\$($Jobkey).asy") {Write-Log -Level Warn $AsyncLoader.Jobs.$Jobkey.Error} else {throw $AsyncLoader.Jobs.$Jobkey.Error}
-        }
+        if ($AsyncLoader.Jobs.$Jobkey.Error -and $AsyncLoader.Jobs.$Jobkey.Prefail -eq 0 -and -not (Test-Path ".\Cache\$($Jobkey).asy")) {throw $AsyncLoader.Jobs.$Jobkey.Error}
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
