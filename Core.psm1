@@ -1058,7 +1058,7 @@ function Invoke-Core {
 
     #This finds any pools that were already in $Script:AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    $Script:AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Script:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:AllPools | Where-Object Name -EQ $_}) | Where-Object {
+    $Script:AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Script:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:AllPools | Where-Object Name -EQ $_ | Foreach-Object {$_ | ConvertTo-Json -Depth 10 -Compress -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}}) | Where-Object {
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm -replace '\-.+$'
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
