@@ -5910,19 +5910,19 @@ Param(
     if (-not $requestmethod) {$requestmethod = if ($body) {"POST"} else {"GET"}}
     $RequestUrl = $url -replace "{timestamp}",(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
 
-    if (-not $headers) {$headers = @{}}
-    if (-not $headers.ContainsKey("Cache-Control")) {$headers["Cache-Control"] = "no-cache"}
-    if ($user) {$headers["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
+    if ($headers) {$headers_local = $headers.Clone()} else {$headers_local = @{}}
+    if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
+    if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
     
     if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body
+        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
     } else {
         $oldProgressPreference = $Global:ProgressPreference
         $Global:ProgressPreference = "SilentlyContinue"
-        (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers -Body $body).Content
+        (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
         $Global:ProgressPreference = $oldProgressPreference
     }
-    Remove-Variable "headers"
+    Remove-Variable "headers_local"
 }
 
 function Invoke-RestMethodAsync {
