@@ -11,15 +11,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda101.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
@@ -27,14 +27,14 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.0-ccminermtp/ccminermtp-v1.3.0-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-win.7z"
             Cuda = "10.1"
         }
     )
 }
 $ManualUri = "https://github.com/zcoinofficial/ccminer/releases"
 $Port = "126{0:d2}"
-$Version = "1.3.0"
+$Version = "1.3.1"
 $DevFee = 0.0
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
