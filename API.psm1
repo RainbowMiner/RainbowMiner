@@ -262,7 +262,7 @@
                     Break
                 }
                 "/allpools" {
-                    $Data = ConvertTo-Json @($Session.AllPools | Select-Object)
+                    $Data = ConvertTo-Json @($API.AllPools | Select-Object)
                     Break
                 }
                 "/selectedpools" {
@@ -270,7 +270,7 @@
                     Break
                 }
                 "/algorithms" {
-                    $Data = ConvertTo-Json @(($Session.AllPools | Select-Object).Algorithm | Sort-Object -Unique)
+                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object).Algorithm | Sort-Object -Unique)
                     Break
                 }
                 "/miners" {
