@@ -1145,8 +1145,10 @@ function Invoke-Core {
             Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
         }
         $Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
-            $Pools.$_ | Add-Member Price_SyncDecay ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)) -Force
-            $Pool_Price = $Pools.$_.Price * $Pools.$_.Price_SyncDecay
+            $Pool_Price = $Pools.$_.Price
+            if (-not $Pools.$_.Exclusive) {
+                $Pool_Price *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
+            }
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_ | Add-Member Price_Bias ($Pool_Price * (1 - ([Math]::Floor(($Pools.$_.MarginOfError * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00) * (-not $Pools.$_.PPS))) -Force
             $Pools.$_ | Add-Member Price_Unbias $Pool_Price -Force
