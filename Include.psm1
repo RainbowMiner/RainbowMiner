@@ -3661,10 +3661,10 @@ class Miner {
     $Type
     [string[]]$Algorithm = @()
     [string[]]$BaseAlgorithm = @()
-    $Currency
-    $CoinName
-    $CoinSymbol
-    $DeviceName
+    [string[]]$Currency = @()
+    [string[]]$CoinName = @()
+    [string[]]$CoinSymbol = @()
+    [string[]]$DeviceName = @()
     $DeviceModel
     [Bool]$Enabled = $false
     [string[]]$Pool = @()
