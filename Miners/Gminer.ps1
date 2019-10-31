@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.70-gminer/gminer_1_70_linux64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.71-gminer/gminer_1_71_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.70-gminer/gminer_1_70_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.71-gminer/gminer_1_71_windows64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "1.70"
+$Version = "1.71"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -38,6 +38,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGb = 3.0;                   Params = "--algo 192_7";       Vendor = @("AMD","NVIDIA"); ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGb = 0.5;                   Params = "--algo 210_9";       Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "EquihashVds";     MinMemGb = 2;                     Params = "--algo vds";         Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 96,5 + Scrypt "VDS"
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 0.65} #Ethash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
