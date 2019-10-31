@@ -633,6 +633,7 @@ function Set-Total {
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
             $CsvLine | Export-Csv $PathCsv -NoTypeInformation -ErrorAction Ignore -Append
+            Remove-Variable "CsvLine"
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
