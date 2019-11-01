@@ -52,7 +52,7 @@ if ($InfoOnly) {
         Type      = @("AMD")
         Name      = $Name
         Path      = $Path
-        Port      = $Miner_Port
+        Port      = $Port
         Uri       = $Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
@@ -72,14 +72,17 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
         $MinMemGb = $_.MinMemGb
         $Params   = $_.Params
 
-        for($Threads = 1; $Threads -le 3; $Threads++) {        
+        for($Threads = 1; $Threads -le 3; $Threads++) {
+            $First = $True
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * $Threads * 1gb - 0.25gb)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-				    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-				    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) + @($Threads) | Select-Object) -join '-'
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) + @($Threads) | Select-Object) -join '-'
+                        $First = $false
+                    }		            
 
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
@@ -89,7 +92,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                         Config = [PSCustomObject]@{
                             "algo"            = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                             "api" = [PSCustomObject]@{
-                                "port"         = $Miner_Port
+                                "port"         = "`$mport"
                                 "access-token" = $null
                                 "worker-id"    = $null
                             }

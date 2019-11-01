@@ -79,10 +79,8 @@ if ($InfoOnly) {
 }
 
 $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $First = $true
     $Miner_Device = $Session.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
     $Miner_Model = $_.Model
 
     $Miner_Threads = @()
@@ -91,19 +89,24 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
     $DevFee = if($GLobal:GlobalCPUInfo.Features.aes -and $Global:GlobalCPUInfo.Features.'64bit'){1.5}else{3.0}
 
-    $Commands | ForEach-Object {        
+    $Commands | ForEach-Object {
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
-       
-        $Arguments = [PSCustomObject]@{Params = "--low --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm_0.Protocol)://$($Pools.$Algorithm_Norm_0.Host):$($Pools.$Algorithm_Norm_0.Port) -u $($Pools.$Algorithm_Norm_0.User)$(if ($Pools.$Algorithm_Norm_0.Pass) {" -p $($Pools.$Algorithm_Norm_0.Pass)"})$(if ($Pools.$Algorithm_Norm_0.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm_0.SSL) {" --ssl"}) --stakjson --any $($_.Params)"}
-
-        if ($Session.Config.CPUMiningThreads) {
-            $Arguments | Add-Member Config ([PSCustomObject]@{cpu_threads_conf = @($Miner_Threads | Foreach-Object {[PSCustomObject]@{cpu_architecture="auto";affine_to_cpu=$_;use_cache=$true;multi_hash=6}} | Select-Object)})
-        } else {
-            $Arguments.Params = "--auto $($Arguments.Params)"
-        }
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+                if ($First) {
+                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                    $First = $false
+                }
+                $Arguments = [PSCustomObject]@{Params = "--low --mport `$mport -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) --stakjson --any $($_.Params)";Config = $null}
+
+                if ($Session.Config.CPUMiningThreads) {
+                    $Arguments.Config = [PSCustomObject]@{cpu_threads_conf = @($Miner_Threads | Foreach-Object {[PSCustomObject]@{cpu_architecture="auto";affine_to_cpu=$_;use_cache=$true;multi_hash=6}} | Select-Object)}
+                } else {
+                    $Arguments.Params = "--auto $($Arguments.Params)"
+                }
+
 				[PSCustomObject]@{
 					Name           = $Miner_Name
 					DeviceName     = $Miner_Device.Name

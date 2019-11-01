@@ -64,11 +64,9 @@ if ($InfoOnly) {
 }
 
 $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $First = $True
     $Miner_Device = $Session.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
-    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
     $Miner_Model = $_.Model
-    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-    $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
 
     $Commands | ForEach-Object {
 
@@ -76,11 +74,15 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-
+                if ($First) {
+                    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                    $First = $false
+                }
                 $Arguments = [PSCustomObject]@{
                     Algorithm    = if ($_.Algorithm) {$_.Algorithm} else {$_.MainAlgorithm}
                     PoolParams   = "-o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pools.$Algorithm_Norm.Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --keepalive$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"})"
-                    APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=$($Miner_Port)"
+                    APIParams    = "--http-enabled --http-host=127.0.0.1 --http-port=`$mport"
                     Config = [PSCustomObject]@{
                         "api" = [PSCustomObject]@{
                             "id"           = $null

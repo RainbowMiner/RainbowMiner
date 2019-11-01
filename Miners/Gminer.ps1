@@ -39,6 +39,8 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGb = 0.5;                   Params = "--algo 210_9";       Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "EquihashVds";     MinMemGb = 2;                     Params = "--algo vds";         Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 96,5 + Scrypt "VDS"
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $false; Fee = 0.65} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash2gb";       MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $false; Fee = 0.65} #Ethash
+    [PSCustomObject]@{MainAlgorithm = "Ethash3gb";       MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $false; Fee = 0.65} #Ethash
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -65,19 +67,25 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+            $First = $true
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
+            if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
-
+            
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-
-            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
-
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($_.MainAlgorithm -ne "Ethash" -or $Pools.$Algorithm_Norm.EthMode -eq "ethproxy")) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($_.MainAlgorithm -notmatch "^Ethash" -or $Pools.$Algorithm_Norm.EthMode -eq "ethproxy")) {
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = if ($Algorithm_Norm_0 -match "^Ethash\d") {
+                            (@($Name) + @($Algorithm_Norm_0 -replace "^Ethash") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        } else {
+                            (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        }
+                        $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+                        $First = $false
+                    }
                     $PersCoin = if ($Algorithm_Norm -match "^Equihash") {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
@@ -85,7 +93,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-					    Arguments      = "--api $($Miner_Port) --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
+					    Arguments      = "--api `$mport --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
 					    API            = "Gminer"
 					    Port           = $Miner_Port

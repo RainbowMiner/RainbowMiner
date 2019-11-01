@@ -3,8 +3,11 @@
 class Nanominer : Miner {
 
     [String]GetArguments() {
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
         $Miner_Path = Split-Path $this.Path
-        $Parameters = $this.Arguments | ConvertFrom-Json
+        $Parameters = $Arguments | ConvertFrom-Json
         $ConfigFile = "config_$($this.Pool -join '-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"}).txt"
 
         if (Test-Path $this.Path) {

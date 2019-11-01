@@ -60,6 +60,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $DeviceParams = if ($Miner_Vendor -eq "CPU") {"$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"} else {""}
     
         $Commands |  Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+            $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
             if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$Algorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
@@ -67,10 +68,12 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and ($Algorithm_Norm -ne "Ethash" -or $Pools.$Algorithm_Norm.Name -notmatch "F2Pool")) {
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $First = $false
+                    }
 					$Pool_Port = if ($Miner_Vendor -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-
                     $Wallet    = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
                     $PaymentId = $null
                     if ($Algorithm_Norm -match "^RandomHash" -or $Algorithm_Norm -match "^Cryptonight") {
@@ -95,8 +98,6 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         Threads   = if ($Miner_Vendor -eq "CPU") {$Session.Config.CPUMiningThreads} else {$null}
                         Devices   = if ($Miner_Vendor -ne "CPU") {$Miner_Device.Type_Index} else {$null} 
 				    }
-
-                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name

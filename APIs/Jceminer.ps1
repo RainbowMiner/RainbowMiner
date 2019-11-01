@@ -3,7 +3,10 @@
 class Jceminer : Miner {
 
     [String]GetArguments() {
-        $Parameters = $this.Arguments | ConvertFrom-Json
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
+        $Parameters = $Arguments | ConvertFrom-Json
 
         $Params = ""
         if ($Parameters.Config -ne $null) {

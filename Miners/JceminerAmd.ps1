@@ -102,18 +102,20 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 
     $DevFee = 0.9
 
-    $Commands | ForEach-Object {        
+    $Commands | ForEach-Object {
+        $First = $true
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-				$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
-				$DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
-
+                if ($First) {
+		            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+		            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+		            $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ','
+                    $First = $false
+                }
+        		$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 				$Model_Configs = @()
 				$Miner_Device | Foreach-Object {
 					$Model_Default = $Model_Defaults | Where-Object {$_.name -eq $Miner_Model -and $_.minmemgb -le $_.OpenCL.GlobalMemsize -and $_.algogb -le $MinMemGb} | Select-Object -Last 1
@@ -125,7 +127,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 
 				$Arguments = [PSCustomObject]@{
 					Config = [PSCustomObject]@{gpu_threads_conf = $Model_Configs}
-					Params = "-g $($DeviceIDsAll) --no-cpu --doublecheck --mport $($Miner_Port) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) --stakjson --any $($_.Params)"
+					Params = "-g $($DeviceIDsAll) --no-cpu --doublecheck --mport `$mport -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"})$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl"}) --stakjson --any $($_.Params)"
 				}
 
 				[PSCustomObject]@{

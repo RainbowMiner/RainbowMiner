@@ -53,7 +53,7 @@ if ($InfoOnly) {
         Type      = @("AMD")
         Name      = $Name
         Path      = $Path
-        Port      = $Miner_Port
+        Port      = $Port
         Uri       = $Uri
         DevFee    = $DevFee
         ManualUri = $ManualUri
@@ -68,24 +68,27 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 
     $Miner_PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
 
-    $Commands | ForEach-Object {        
+    $Commands | ForEach-Object {
+        $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)})
-        $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
-
-        $AdditionalParams = @()
-        if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
-            $AdditionalParams += "--no_ntime_roll"
-        }
-        if ($IsLinux -and $Algorithm_Norm_0 -match "^cn") {
-            $AdditionalParams += "--allow_large_alloc"
-        }
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-				$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                if ($First) {
+				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                    $DeviceIDsAll = $Device.Type_Vendor_Index -join ','
+                    $AdditionalParams = @()
+                    if ($Pools.$Algorithm_Norm_0.Name -match "^bsod" -and $Algorithm_Norm_0 -eq "x16rt") {
+                        $AdditionalParams += "--no_ntime_roll"
+                    }
+                    if ($IsLinux -and $Algorithm_Norm_0 -match "^cn") {
+                        $AdditionalParams += "--allow_large_alloc"
+                    }
+                    $First = $False
+                }
+
 				$Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 
 				[PSCustomObject]@{
@@ -93,7 +96,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=$($Miner_Port) --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
+					Arguments      = "-a $($_.MainAlgorithm) -d $($DeviceIDsAll) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) --api_listen=`$mport --platform=$($Miner_PlatformId) $(if ($AdditionalParams.Count) {$AdditionalParams -join " "}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Xgminer"
 					Port           = $Miner_Port

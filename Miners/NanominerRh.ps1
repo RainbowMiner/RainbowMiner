@@ -42,6 +42,7 @@ if ($InfoOnly) {
 }
 
 $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+    $First = $true
     $Miner_Device = $Session.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
     $Miner_Model  = $_.Model
 
@@ -52,10 +53,14 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
-				$Pool_Port = $Pools.$Algorithm_Norm.Port
-				$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-				$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
+                if ($First) {
+				    $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                    $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                    $First = $false
+                }
 
+				$Pool_Port = $Pools.$Algorithm_Norm.Port
+				
                 $Wallet    = if ($Pools.$Algorithm_Norm.Wallet) {$Pools.$Algorithm_Norm.Wallet} else {$Pools.$Algorithm_Norm.User}
                 $PaymentId = $null
                 if ($Wallet -match "^(.+?)[\.\+]([0-9a-f]{16,})") {
@@ -78,8 +83,6 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
                     Threads   = $Session.Config.CPUMiningThreads
                     Devices   = $null
 				}
-
-                $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 
 				[PSCustomObject]@{
 					Name           = $Miner_Name

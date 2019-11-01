@@ -3,9 +3,10 @@
 class SrbMiner : Miner {
 
     [String]GetArguments() {
-        if ($this.Arguments -notlike "{*}") {return $this.Arguments}
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
 
-        $Parameters = $this.Arguments | ConvertFrom-Json
+        $Parameters = $Arguments | ConvertFrom-Json
 
         #Write config files. Keep separate files and do not overwrite to preserve optional manual customization
         $Threads = $Parameters.Config.gpu_conf.threads | Select-Object -Unique

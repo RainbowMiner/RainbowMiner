@@ -64,30 +64,36 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | Where-Object {$_.Vendor -icontains $Miner_Vendor} | ForEach-Object {
+            $First = $true
             $MainAlgorithm = $_.MainAlgorithm
             $MainAlgorithm_Norm_0 = Get-Algorithm $MainAlgorithm
+			$SecondAlgorithm = $_.SecondaryAlgorithm
+			if ($SecondAlgorithm -ne '') {
+				$SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
+			}
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
             if ($_.MainAlgorithm -eq "Ethash" -and $Pools.$MainAlgorithm_Norm_0.CoinSymbol -eq "ETP") {$MinMemGB = 3}
             $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 			foreach($MainAlgorithm_Norm in @($MainAlgorithm_Norm_0,"$($MainAlgorithm_Norm_0)-$($Miner_Model)")) {
-				$SecondAlgorithm = $_.SecondaryAlgorithm
-				if ($SecondAlgorithm -ne '') {
-					$SecondAlgorithm_Norm = Get-Algorithm $SecondAlgorithm
-				}
 				if ($Pools.$MainAlgorithm_Norm.Host -and $Miner_Device -and 
                         ($MainAlgorithm -ne "Ethash" -or $Pools.$MainAlgorithm_Norm.Name -ne "MiningRigRentals") -and 
                         ($SecondAlgorithm -ne "Ethash" -or $Pools.$SecondAlgorithm_Norm.Name -ne "MiningRigRentals") -and
                         ($MainAlgorithm -ne "ProgPow" -or $Pools.$MainAlgorithm_Norm.CoinSymbol -eq "SERO") -and
                         ($_.NH -or ($Pools.$MainAlgorithm_Norm.Name -notmatch "Nicehash" -and ($SecondAlgorithm -eq '' -or $Pools.$SecondAlgorithm_Norm.Name -notmatch "Nicehash")))
                     ) {
+                    if ($First) {
+			            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+			            $Miner_Name = if ($SecondAlgorithm -eq '') {
+			                (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        } else {
+                            (@($Name) + @($MainAlgorithm_Norm_0) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        }
+                        $offset = if ($Miner_Vendor -eq "AMD") {($Session.AllDevices | Where-Object Vendor -eq "NVIDIA" | Measure-Object).Count} else {0}
+                        $DeviceIDsAll = ($Miner_Device | % {'{0:d}' -f ($_.Type_Vendor_Index + $offset)}) -join ','
+                        $First = $false
+                    }
 					$Pool_Port = if ($Pools.$MainAlgorithm_Norm.Ports -ne $null -and $Pools.$MainAlgorithm_Norm.Ports.GPU) {$Pools.$MainAlgorithm_Norm.Ports.GPU} else {$Pools.$MainAlgorithm_Norm.Port}
-					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-
-                    $offset = if ($Miner_Vendor -eq "AMD") {($Session.AllDevices | Where-Object Vendor -eq "NVIDIA" | Measure-Object).Count} else {0}
-
-                    $DeviceIDsAll = ($Miner_Device | % {'{0:d}' -f ($_.Type_Vendor_Index + $offset)}) -join ','
 
                     $Stratum = $Pools.$MainAlgorithm_Norm.Protocol
                     if ($MainAlgorithm_Norm -match "^(Ethash|ProgPow)") {
@@ -97,10 +103,9 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                         }
                     }
 
-                    $Arguments = "--api 127.0.0.1:$($Miner_Port) -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog --no-nvml $($_.Params)"
+                    $Arguments = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -u $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog --no-nvml $($_.Params)"
 
 					if ($SecondAlgorithm -eq '') {
-						$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
 						[PSCustomObject]@{
 							Name           = $Miner_Name
 							DeviceName     = $Miner_Device.Name
@@ -124,7 +129,6 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             EnvVars        = if ($IsLinux -and $MainAlgorithm_Norm_0 -eq "ProgPow" -and @($env:LD_LIBRARY_PATH -split ':' | Select-Object) -inotcontains "/tmp") {@("LD_LIBRARY_PATH=$(if ($env:LD_LIBRARY_PATH) {"$($env:LD_LIBRARY_PATH):"})/tmp")}
 						}
 					} else {
-						$Miner_Name = (@($Name) + @($MainAlgorithm_Norm) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         $Pool_Port2 = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
                         $Stratum2 = $Pools.$SecondAlgorithm_Norm.Protocol
                         if ($SecondAlgorithm_Norm -match "^(Ethash|ProgPow)") {

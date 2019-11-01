@@ -67,6 +67,7 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
         }
 
         $Commands | ForEach-Object {
+            $First = $true
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
             $MinMemGb = $_.MinMemGb
             $Params = $_.Params
@@ -75,13 +76,14 @@ foreach ($Miner_Vendor in @("NVIDIA")) {
 
 			foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 				if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
-					$Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
-					$Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-					$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
+	            		$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $First = $false
+                    }
 					$Pool_Port = if ($Miner_Model -ne "CPU" -and $Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.GPU) {$Pools.$Algorithm_Norm.Ports.GPU} else {$Pools.$Algorithm_Norm.Port}
 					$Arguments = [PSCustomObject]@{
-						Params = "--httpd $($Miner_Port) $($Miner_Deviceparams) $($_.Params)".Trim()
+						Params = "--httpd `$mport $($Miner_Deviceparams) $($_.Params)".Trim()
 						Config = [PSCustomObject]@{
 							call_timeout    = 10
 							retry_time      = 10

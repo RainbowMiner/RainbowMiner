@@ -3,7 +3,10 @@
 class GrinPro : Miner {
 
     [String]GetArguments() {
-        $Parameters = $this.Arguments | ConvertFrom-Json
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
+        $Parameters = $Arguments | ConvertFrom-Json
 
         $ConfigPath = Join-Path $([IO.Path]::GetFullPath($this.Path) | Split-Path) "$($this.Pool -join '-')-$($this.DeviceModel)$(if ($Parameters.SSL){"-ssl"})"
 

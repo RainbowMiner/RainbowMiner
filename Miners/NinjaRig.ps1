@@ -51,34 +51,35 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
         $Miner_Model = $_.Model
 
         $Commands | ForEach-Object {
+            $First = $true
             $MinMemGb = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}
             $Miner_Device = $Device | Where-Object {$_.Model -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
             $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
-            $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
-            $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
-            $Miner_Port = Get-MinerPort -MinerName $Name -DeviceName @($Miner_Device.Name) -Port $Miner_Port
-
-            $DeviceIDsAll = ($Miner_Device | % {'[{0:d}]' -f ($_.Type_Vendor_Index+1)} ) -join ','
-            
-            $DeviceParams = Switch ($Miner_Vendor) {
-                "CPU"    {"$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})$($f=$Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.aes){" --cpu-optimization AVX2"})"}
-                "AMD"    {"-t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
-                "NVIDIA" {"-t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
-            }
-
             $Miner_Type = if ($Miner_Vendor -eq "CPU") {"CPU"} else {"GPU"}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash")) {
+                    if ($First) {
+                        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                        $DeviceIDsAll = ($Miner_Device | % {'[{0:d}]' -f ($_.Type_Vendor_Index+1)} ) -join ','
+            
+                        $DeviceParams = Switch ($Miner_Vendor) {
+                            "CPU"    {"$(if ($Session.Config.CPUMiningThreads){"-t $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" --cpu-affinity $($Session.Config.CPUMiningAffinity)"})$($f=$Global:GlobalCPUInfo.Features;if($f.avx2 -and $f.aes){" --cpu-optimization AVX2"})"}
+                            "AMD"    {"-t 0 --use-gpu=OPENCL --gpu-filter=$DeviceIDsAll"}
+                            "NVIDIA" {"-t 0 --use-gpu=CUDA --gpu-filter=$DeviceIDsAll"}
+                        }
+                        $First = $false
+                    }
 				    $Pool_Port = if ($Pools.$Algorithm_Norm.Ports -ne $null -and $Pools.$Algorithm_Norm.Ports.$Miner_Type) {$Pools.$Algorithm_Norm.Ports.$Miner_Type} else {$Pools.$Algorithm_Norm.Port}
 				    [PSCustomObject]@{
 					    Name           = $Miner_Name
 					    DeviceName     = $Miner_Device.Name
 					    DeviceModel    = $Miner_Model
 					    Path           = $Path
-                        Arguments      = "--api-port=$($Miner_Port) -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
+                        Arguments      = "--api-port=`$mport -a $($_.MainAlgorithm) -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($DeviceParams)$(if ($Pools.$Algorithm_Norm.Name -match "NiceHash") {" --nicehash"})$(if ($Pools.$Algorithm_Norm.SSL) {" --tls"}) $($_.Params) -c params.json --donate-level=1"
 					    HashRates      = [PSCustomObject]@{$Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))}
 					    API            = "XMRig"
 					    Port           = $Miner_Port

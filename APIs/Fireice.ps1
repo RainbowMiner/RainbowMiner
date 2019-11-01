@@ -3,8 +3,11 @@
 class Fireice : Miner {
 
     [String]GetArguments() {
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
+
         $Miner_Path       = Split-Path $this.Path
-        $Parameters       = $this.Arguments | ConvertFrom-Json
+        $Parameters       = $Arguments | ConvertFrom-Json
         $Miner_Vendor     = $Parameters.Vendor
         $ConfigFN         = "common_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)-$($Parameters.Config.httpd_port).txt"
         $PoolConfigFN     = "pool_$($this.Pool -join'-')-$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($Parameters.Pools[0].use_tls){"-ssl"}).txt"
@@ -18,6 +21,7 @@ class Fireice : Miner {
         $DeviceConfigFile = Join-Path $Miner_Path $DeviceConfigFN
         $LegacyDeviceConfigFile = Join-Path $Miner_Path $LegacyDeviceConfigFN
 
+        if ($Parameters.Config.httpd_port) {$Parameters.Config.httpd_port = $this.Port}
         ($Parameters.Config | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$" | Set-Content $ConfigFile -ErrorAction Ignore -Encoding UTF8 -Force
         ($Parameters.Pools  | ConvertTo-Json -Depth 10) -replace "^{" -replace "}$","," | Set-Content $PoolConfigFile -ErrorAction Ignore -Encoding UTF8 -Force
                 

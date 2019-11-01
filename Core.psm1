@@ -1167,7 +1167,6 @@ function Invoke-Core {
 
     # select only the ones that have a HashRate matching our algorithms, and that only include algorithms we have pools for
     # select only the miners that match $Session.Config.MinerName, if specified, and don't match $Session.Config.ExcludeMinerName    
-    if ($Session.Config.EnableAutoMinerPorts) {Set-ActiveMinerPorts @($Session.ActiveMiners | Where-Object {$_.GetActivateCount() -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Select-Object);Set-ActiveTcpPorts} else {Set-ActiveTcpPorts -Disable}
     $AllMiner_Warnings = @()
     $AllMiners = if (($Script:AllPools | Measure-Object).Count -gt 0 -and (Test-Path "Miners")) {
         Get-MinersContent -Pools $Pools | 
@@ -1550,7 +1549,6 @@ function Invoke-Core {
             $_.Path -eq $Miner.Path -and
             $_.Arguments -eq $Miner.Arguments -and
             $_.API -eq $Miner.API -and
-            $_.Port -eq $Miner.Port -and
             (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
         }
 
@@ -1589,6 +1587,7 @@ function Invoke-Core {
             $ActiveMiner.EthPillEnable      = $Session.Config.EthPillEnable
             $ActiveMiner.EthPillEnableMTP   = $Session.Config.EthPillEnableMTP
             $ActiveMiner.DataInterval       = $Session.Config.BenchmarkInterval
+            $ActiveMiner.EnableAutoPort     = $Session.Config.EnableAutoMinerPorts
             $ActiveMiner.Enabled            = $true
             $ActiveMiner.IsFocusWalletMiner = $Miner_IsFocusWalletMiner
             $ActiveMiner.IsExclusiveMiner   = $Miner_IsExclusiveMiner
@@ -1662,6 +1661,7 @@ function Invoke-Core {
                 DataInterval         = $Session.Config.BenchmarkInterval
                 Donator              = $Session.IsDonationRun
                 MaxBenchmarkRounds   = $Session.Strikes
+                EnableAutoPort       = $Session.Config.EnableAutoMinerPorts
                 Enabled              = $true
                 IsFocusWalletMiner   = $Miner_IsFocusWalletMiner
                 IsExclusiveMiner     = $Miner_IsExclusiveMiner
@@ -2042,7 +2042,7 @@ function Invoke-Core {
         @{Label = "Coin"; Expression = {$_.CoinName | Foreach-Object {if ($_) {$_} else {"-"}}}},
         @{Label = "Device"; Expression = {@(Get-DeviceModelName $Session.Devices -Name @($_.DeviceName) -Short) -join ','}},
         @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}},
-        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.Arguments)"}}
+        @{Label = "Command"; Expression = {"$($_.Path.TrimStart((Convert-Path ".\"))) $($_.GetArguments())"}}
     ) | Out-Host
 
     if ($Session.Config.UIstyle -eq "full" -or $Session.Benchmarking) {

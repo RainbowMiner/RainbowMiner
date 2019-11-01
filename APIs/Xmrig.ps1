@@ -3,16 +3,19 @@
 class Xmrig : Miner {
 
     [String]GetArguments() {
-        if ($this.Arguments -notlike "{*}") {return $this.Arguments}
+        $Arguments = ([Miner]$this).GetArguments()
+        if ($Arguments -notlike "{*}") {return $Arguments}
 
         $Miner_Path        = Split-Path $this.Path
-        $Parameters        = $this.Arguments | ConvertFrom-Json
+        $Parameters        = $Arguments | ConvertFrom-Json
         $ConfigFN          = "config_$($this.BaseAlgorithm -join '-')-$($this.DeviceModel)$(if ($this.DeviceName -like "GPU*") {"-$(($Parameters.Devices | %{"{0:x}" -f $_}) -join '')"})_$($this.Port)-$($Parameters.Threads).json"
         $ThreadsConfigFN   = "threads_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).json"
         $ConfigFile        = Join-Path $Miner_Path $ConfigFN
         $ThreadsConfigFile = Join-Path $Miner_Path $ThreadsConfigFN
         $ThreadsConfig     = $null
         $LogFile           = Join-Path $Miner_Path "log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig).txt"
+
+        if ($Parameters.Config.api.port) {$Parameters.Config.api.port = $this.Port}
 
         try {
             if (Test-Path $ThreadsConfigFile) {

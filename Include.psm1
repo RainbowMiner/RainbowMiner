@@ -3714,6 +3714,7 @@ class Miner {
     [Bool]$IsExclusiveMiner = $false
     [Bool]$IsLocked = $false
     [Bool]$IsRunningFirstRounds = $false
+    [Bool]$EnableAutoPort = $false
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
     [Int]$MultiProcess = 0
@@ -3730,13 +3731,14 @@ class Miner {
     hidden [PSCustomObject]$EthPill = $null
     hidden [DateTime]$IntervalBegin = 0
     hidden [DateTime]$LastSetOCTime = 0
+    hidden [Int]$StartPort = 0
 
     [String[]]GetProcessNames() {
         return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
     }
 
     [String]GetArguments() {
-        return $this.Arguments
+        return $this.Arguments -replace "\`$mport",$this.Port
     }
 
     [String]GetMinerDeviceName() {
@@ -3756,9 +3758,20 @@ class Miner {
         $this.Activated++
         $this.Rounds = 0
         $this.IntervalBegin = 0
+        if (-not $this.StartPort) {$this.StartPort = $this.Port}
 
         if (-not $this.Process) {
             if ($this.StartCommand) {try {Invoke-Expression $this.StartCommand} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "StartCommand failed for miner $($this.Name)"}}
+
+            $this.Port = $this.StartPort
+
+            if ($this.EnableAutoPort) {
+                $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
+                $portmax = [math]::min($this.Port+9999,65535)
+                while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
+                if ($this.Port -gt $portmax) {$this.Port=$this.StartPort}
+            }
+
             $ArgumentList = $this.GetArguments()
             
             $Prescription = if ($this.EthPillEnable    -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnable}
@@ -5756,60 +5769,6 @@ function Get-Subsets($a){
     }
     #group the subsets by length, iterate through them and sort
     $l | Group-Object -Property Length | %{$_.Group | sort}
-}
-
-function Set-ActiveMinerPorts {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        $RunningMiners
-    )
-    if (-not (Test-Path Variable:Global:GlobalActiveMinerPorts) -or $Global:GlobalActiveMinerPorts -eq $null) {[hashtable]$Global:GlobalActiveMinerPorts = @{}}
-    $Global:GlobalActiveMinerPorts.Clear()
-    if ($RunningMiners) {foreach($m in $RunningMiners) {$Global:GlobalActiveMinerPorts[$m.GetMinerDeviceName()] = $m.Port}}
-}
-
-function Set-ActiveTcpPorts {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $False)]
-        [Switch]$Disable = $false
-    )
-    if ($Disable) {$Global:GlobalActiveTcpPorts=$null;return}
-    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts) -or $Global:GlobalActiveTcpPorts -eq $null) {[System.Collections.ArrayList]$Global:GlobalActiveTcpPorts = @()}
-    $Global:GlobalActiveTcpPorts.Clear()
-    try {
-        $NewPorts = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
-        if ($NewPorts.Count -gt 0 ) {$Global:GlobalActiveTcpPorts.AddRange($NewPorts)>$null}
-        $NewPorts = $null
-    } catch {if ($Error.Count){$Error.RemoveAt(0)};$Global:GlobalActiveTcpPorts=$null}
-}
-
-function Get-MinerPort{
-    [cmdletbinding()]
-    Param(   
-        [Parameter(Mandatory = $True)]
-        [string]$MinerName,
-        [Parameter(Mandatory = $False)]
-        [string[]]$DeviceName = @(),
-        [Parameter(Mandatory = $False)]
-        $Port = 30000
-    )
-    if (-not (Test-Path Variable:Global:GlobalActiveTcpPorts) -or $Global:GlobalActiveTcpPorts -eq $null) {return $Port}
-
-    if ($DeviceName -and $DeviceName.Count) {$MinerName = "$($MinerName)-$(($DeviceName | Sort-Object) -join '-')"}
-    if ($Global:GlobalActiveMinerPorts -and $Global:GlobalActiveMinerPorts.ContainsKey($MinerName)) {return $Global:GlobalActiveMinerPorts[$MinerName]}
-    if (-not (Test-Path Variable:Global:GlobalMinerPorts)) {[hashtable]$Global:GlobalMinerPorts = @{};$API.MinerPorts = $Global:GlobalMinerPorts}
-    $Port = [int]($Port -replace "[^\d]")
-    $portin  = [int]$Port
-    if ($Global:GlobalActiveTcpPorts.Contains($portin)) {
-        $portmax = [math]::min($portin+9999,65535)
-        do {$portin+=20} until ($portin -gt $portmax -or -not $Global:GlobalActiveTcpPorts.Contains($portin))
-        if ($portin -gt $portmax) {$portin=[int]$Port}
-    }
-    if (-not $Global:GlobalMinerPorts.ContainsKey($MinerName) -or $portin -ne $Global:GlobalMinerPorts[$MinerName]) {Write-Log "Assigning port $portin to $MinerName"}
-    $Global:GlobalMinerPorts[$MinerName]=$portin
-    $portin
 }
 
 function Get-MemoryUsage
