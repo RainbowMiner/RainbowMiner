@@ -19,6 +19,7 @@
     EnableAlgorithmMapping = $true
     EnableAutoBenchmark = $true
     EnableMinerStatus = $true
+    EnableAutoMinerPorts = $true
     DisableUnprofitableAlgolist = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores
     CPUMiningAffinity = Get-CPUAffinity $Global:GlobalCPUInfo.RealCores.Count -Hex

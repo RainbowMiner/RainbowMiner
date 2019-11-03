@@ -3766,11 +3766,20 @@ class Miner {
             $this.Port = $this.StartPort
 
             if ($this.EnableAutoPort) {
-                $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
-                $portmax = [math]::min($this.Port+9999,65535)
-                while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
-                if ($this.Port -gt $portmax) {$this.Port=$this.StartPort}
+                try {
+                    $PortsInUse = @(([Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()).GetActiveTcpListeners() | Select-Object -ExpandProperty Port -Unique)
+                    $portmax = [math]::min($this.Port+9999,65535)
+                    while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
+                    if ($this.Port -gt $portmax) {$this.Port=$this.StartPort}
+                    if ($PortsInUse -ne $null) {Remove-Variable "PortsInUse"}
+                } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
+                    $this.Port=$this.StartPort
+                }
             }
+
+            Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
             $ArgumentList = $this.GetArguments()
             
