@@ -473,6 +473,7 @@ function Invoke-Core {
         $API.Pause = $false
         $API.Update = $false
         $API.UpdateBalance = $false
+        $API.WatchdogReset = $false
         $API.LockMiners = $false
         $API.RemoteAPI = $true
         $API.ApplyOC = $false
@@ -2244,6 +2245,7 @@ function Invoke-Core {
                             elseif ($API.LockMiners -ne $Session.LockMiners.Locked -and -not $Session.IsExclusiveRun -and -not $Session.IsDonationRun) {"L"}
                             elseif ($API.Update) {"U"}
                             elseif ($API.UpdateBalance) {"B"}
+                            elseif ($API.WatchdogReset) {"W"}
                             elseif ($(try {[console]::KeyAvailable} catch {if ($Error.Count) {$Error.RemoveAt(0)}})) {
                                 $key = [System.Console]::ReadKey($true)
                                 if (-not $key.Modifiers) {$key.key} elseif ($key.Modifiers -eq "Control" -and $key.key -eq "C") {"X"}
@@ -2321,6 +2323,7 @@ function Invoke-Core {
                     $keyPressed = $true
                 }
                 "W" {
+                    $API.WatchdogReset = $false
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
                     $Session.WatchdogTimers = @()
                     Update-WatchdogLevels -Reset
