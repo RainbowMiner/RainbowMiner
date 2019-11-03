@@ -2019,7 +2019,7 @@ function Invoke-Core {
                     @{Label = "Miner"; Expression = {$_.BaseName}},
                     @{Label = "Algorithms"; Expression = {$_.BaseAlgorithm}},
                     @{Label = "Aprox. Time"; Expression = {"$($BenchmarkMinutes*$_.ExtendInterval)-$($BenchmarkMinutes*$_.ExtendInterval*2) minutes"}}
-                )
+                ) | Out-Host
                 Remove-Variable "MinersNeedingBenchmark"
                 [console]::ForegroundColor = $OldForegroundColor
             }
@@ -2072,7 +2072,7 @@ function Invoke-Core {
         }
         $Columns += $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
         $ColumnFormat += $Columns | Foreach-Object {@{Name = "$($_ -replace "Value in\s+")"; Expression = "$_"; Align = "right"}}
-        $BalancesData | Format-Table -Wrap -Property $ColumnFormat
+        $BalancesData | Format-Table -Wrap -Property $ColumnFormat | Out-Host
         Remove-Variable "Columns" -Force
         Remove-Variable "ColumnFormat" -Force
         Remove-Variable "BalancesData" -Force
