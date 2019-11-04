@@ -44,6 +44,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
+				BaseName    = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.amtDue / $coinUnits
                 Pending     = 0

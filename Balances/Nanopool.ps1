@@ -29,17 +29,20 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         } else {
             $Balance = [Math]::Max([Decimal]$Request.data.userParams.balance,0)
             $Pending = [Decimal]$Request.data.userParams.balance_uncomfirmed
+			$Payouts = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
+				BaseName    = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Balance
                 Pending     = [Decimal]$Pending
                 Total       = [Decimal]$Balance + [Decimal]$Pending
                 Paid        = [Decimal]$Request.data.userParams.e_sum
                 Earned      = [Decimal]0
-                Payouts     = @(try {Invoke-RestMethodAsync "https://api.nanopool.org/v1/$($Pool_Currency.ToLower())/payments/$($Pool_Wallet.wallet)/0/50" -delay $(if ($Count){500} else {0}) -cycletime ($Config.BalanceUpdateMinutes*60) -retry 5 -retrywait 200 | Where-Object status | Select-Object -ExpandProperty data} catch {})
+                Payouts     = @(Get-BalancesPayouts $Payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
+			Remove-Variable "Payouts"
         }
     }
     catch {

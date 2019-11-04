@@ -22,6 +22,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
 			$Divisor = [Decimal]1e18
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.symbol))"
+				BaseName    = $Name
                 Currency    = $_.symbol
                 Balance     = [Decimal]$Request.data.currentStatistics.unpaid/$Divisor
                 Pending     = [Decimal]$Request.data.currentStatistics.unconfirmed/$Divisor

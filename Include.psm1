@@ -1458,10 +1458,26 @@ function Get-BalancesContent {
     foreach($Balance in @(Get-ChildItem "Balances" -File -ErrorAction Ignore | Where-Object {$UsePools -match "^$($_.BaseName)`(Coins|Party|Solo`)?$" -or $Config.ShowPoolBalancesExcludedPools})) {
         $Name = $Balance.BaseName 
         foreach($c in @(& $Balance.FullName @Parameters)) {
-            $c | Add-Member -NotePropertyMembers @{
-                Name = "$(if ($c.Name) {$c.Name} else {$Name})$(if ($c.Info) {$c.Info})"
-                BaseName = $Name
-            } -Force -PassThru
+            $c | Add-Member Name "$(if ($c.Name) {$c.Name} else {$Name})$(if ($c.Info) {$c.Info})" -Force -PassThru
+        }
+    }
+}
+
+function Get-BalancesPayouts {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $Payouts,
+        [Parameter(Mandatory = $false)]
+        [Decimal]$Divisor = 1
+    )
+
+    $Payouts | Foreach-Object {
+        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime})"
+        [PSCustomObject]@{
+            Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
+            Amount   = [Double]$_.amount / $Divisor
+            Txid     = "$(if ($_.tx) {$_.tx} elseif ($_.txid) {$_.txid}  elseif ($_.tx_id) {$_.tx_id} elseif ($_.txHash) {$_.txHash})"
         }
     }
 }

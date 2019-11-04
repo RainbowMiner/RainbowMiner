@@ -36,6 +36,7 @@ $Payout_Currencies | Where-Object {@($Pool_Request.pools | Foreach-Object {$_.co
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
+				BaseName    = $Name
                 Currency    = $_.Name
                 Balance     = [Decimal]$Request.pendingBalance
                 Pending     = [Decimal]0

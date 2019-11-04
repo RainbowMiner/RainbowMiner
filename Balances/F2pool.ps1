@@ -66,13 +66,14 @@ $Payout_Currencies | Where-Object {$Pools_Data.$($_.Name) -ne $null} | Foreach-O
             } else {
                 [PSCustomObject]@{
                     Caption     = "$($Name) ($($_ -replace "/.+$"))"
+					BaseName    = $Name
                     Currency    = $Currency.Name
                     Balance     = [Decimal]$Request.balance
                     Pending     = [Decimal]0
                     Total       = [Decimal]$Request.balance
                     Paid        = [Decimal]$Request.paid
                     Earned      = [Decimal]$Request.paid + [Decimal]$Request.balance
-                    Payouts     = @($Request.payout_history | Select-Object)
+                    Payouts     = @(Get-BalancesPayouts $Request.payout_history | Select-Object)
                     LastUpdated = (Get-Date).ToUniversalTime()
                 }
             }

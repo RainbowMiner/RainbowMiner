@@ -27,6 +27,7 @@ $Pool_Request.data | Where-Object {$Pool_Currency = $_.currency -replace "_.+$";
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.currency))"
+				BaseName    = $Name
                 Info        = "$(if ($_.currency -ne $Pool_Currency) {"$($_.currency)"})"
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.data.balance

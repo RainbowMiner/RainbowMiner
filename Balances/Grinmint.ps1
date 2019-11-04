@@ -19,8 +19,8 @@ try {
             $Unpaid   = [Decimal]$Request.unpaid_balance / $Divisor
             $Immature = [Decimal]$Request.immature_balance / $Divisor
             [PSCustomObject]@{
-                    Caption     = $Name
-                    Info        = ""
+                    Caption     = "$($Name) (GRIN)"
+					BaseName    = $Name
                     Currency    = "GRIN"
                     Balance     = $Unpaid
                     Pending     = $Immature

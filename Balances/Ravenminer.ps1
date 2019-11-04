@@ -55,6 +55,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 
 [PSCustomObject]@{
         Caption     = "$($Name) (RVN)"
+		BaseName    = $Name
         Currency    = $Request.currency
         Balance     = [Decimal]$Request.balance
         Pending     = [Decimal]$Request.unsold
@@ -62,6 +63,6 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
         #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
         Paid24h     = [Decimal]$Request.paid24h
         Earned      = [Decimal]$Request.total
-        Payouts     = @($Request.payouts | Select-Object)
+        Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
         LastUpdated = (Get-Date).ToUniversalTime()
 }

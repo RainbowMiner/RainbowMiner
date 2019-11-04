@@ -54,16 +54,19 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -and (-no
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
         } else {
             $Pending = ($Request.blocks | Where-Object {$_ -match "^\d+?:\d+?:\d+?:\d+?:\d+?:(\d+?):"} | Foreach-Object {[int64]$Matches[1]} | Measure-Object -Sum).Sum / $coinUnits
+			$Payouts = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
+				BaseName    = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.stats.balance / $coinUnits
                 Pending     = [Decimal]$Pending
                 Total       = [Decimal]$Request.stats.balance / $coinUnits + [Decimal]$Pending
                 Paid        = [Decimal]$Request.stats.paid / $coinUnits
-                Payouts     = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
+                Payouts     = @(Get-BalancesPayouts $Payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
+			Remove-Variable "Payouts"
         }
     }
     catch {

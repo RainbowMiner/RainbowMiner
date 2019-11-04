@@ -49,12 +49,13 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
+				BaseName    = $Name
                 Currency    = $Pool_Currency
                 Balance     = [Decimal]$Request.stats.balance / $Divisor
                 Pending     = [Decimal]$Request.stats.pending / $Divisor
                 Total       = [Decimal]$Request.stats.balance / $Divisor
                 Paid        = [Decimal]$Request.stats.paid / $Divisor
-                Payouts     = @($Request.payments | Foreach-Object {[PSCustomObject]@{time=$_.timestamp;amount=[Decimal]$_.amount / $Divisor;txid=$_.tx}})
+                Payouts     = @(Get-BalancesPayouts $Request.payments -Divisor $Divisor | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

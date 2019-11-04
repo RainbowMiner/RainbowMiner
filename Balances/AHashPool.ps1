@@ -28,12 +28,13 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 
 [PSCustomObject]@{
     Caption     = "$($Name) ($($Request.currency))"
+	BaseName    = $Name
     Currency    = $Request.currency
     Balance     = [Decimal]$Request.balance
     Pending     = [Decimal]$Request.unsold
     Total       = [Decimal]$Request.total_unpaid
     Paid        = [Decimal]$Request.total_paid
     Earned      = [Decimal]$Request.total_earned
-    Payouts     = @($Request.payouts | Select-Object)
+    Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
     LastUpdated = (Get-Date).ToUniversalTime()
 }

@@ -40,6 +40,7 @@ if ($Platform_Version -eq 2) {
             $Pending = if ($_.currency -eq "BTC") {[Decimal]$Request.unpaidAmount} else {0}
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.currency))"
+                BaseName    = $Name
                 Currency    = $_.currency
                 Balance     = [Decimal]$_.balance
                 Pending     = [Decimal]$Pending
@@ -51,6 +52,7 @@ if ($Platform_Version -eq 2) {
     } else {
         [PSCustomObject]@{
             Caption     = "$($Name) (BTC)"
+            BaseName    = $Name
             Currency    = "BTC"
             Balance     = [Decimal]$Request.externalBalance
             Pending     = [Decimal]$Request.unpaidAmount

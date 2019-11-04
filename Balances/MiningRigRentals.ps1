@@ -16,6 +16,7 @@ if (($Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Measur
 $Request.PSObject.Properties.Name | Foreach-Object {
     [PSCustomObject]@{
         Caption     = "$($Name) ($($_))"
+		BaseName    = $Name
         Currency    = $_
         Balance     = [Decimal]$Request.$_.confirmed
         Pending     = [Decimal]$Request.$_.unconfirmed

@@ -33,6 +33,7 @@ $Payout_Currencies | Where-Object {@("BTC") + @($PoolCoins_Request.PSObject.Prop
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
+				BaseName    = $Name
                 Currency    = $Request.currency
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
@@ -40,7 +41,7 @@ $Payout_Currencies | Where-Object {@("BTC") + @($PoolCoins_Request.PSObject.Prop
                 #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
                 Paid24h     = [Decimal]$Request.paid24h
                 Earned      = [Decimal]$Request.total
-                Payouts     = @($Request.payouts | Select-Object)
+                Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }

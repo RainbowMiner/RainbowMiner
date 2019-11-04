@@ -23,6 +23,7 @@ $Payout_Currencies | Foreach-Object {
         } else {
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($Request.currency))"
+				BaseName    = $Name
                 Currency    = $Request.currency
                 Balance     = [Decimal]$Request.balance
                 Pending     = [Decimal]$Request.unsold
@@ -30,7 +31,7 @@ $Payout_Currencies | Foreach-Object {
                 #Paid        = [Decimal]$Request.total - [Decimal]$Request.unpaid
                 Paid24h     = [Decimal]$Request.paid24h
                 Earned      = [Decimal]$Request.total
-                Payouts     = @($Request.payouts | Select-Object)
+                Payouts     = @(Get-BalancesPayouts $Request.payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
         }
