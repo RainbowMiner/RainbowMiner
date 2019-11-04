@@ -774,7 +774,7 @@ function Set-Balance {
 
     $Stat = Get-Content $Path -ErrorAction Ignore -Raw
 
-    $Balance_Total = [Decimal]$Balance.Total
+    $Balance_Total = [Decimal]$Balance.Balance
     $Balance_Paid  = [Decimal]$Balance.Paid
 
     try {
