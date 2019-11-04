@@ -327,9 +327,13 @@
           var vb = item.version.split(" ");
           item.tversion = vb.length > 1 ? vb[1] : item.version
 
-          // If worker hasn't reported in 10 minutes, mark as offline
-          if (((now - new Date(item.lastseen * 1000)) / 1000) > 10 * 60) {
-              item.status = "Offline";
+          if (item.status == "Running") {
+              if (!item.online || ((now - new Date(item.lastseen * 1000)) / 1000) > 10 * 60) { item.status = "Offline" }
+              else {
+                  $.each(item.data, function (dix, ditem) {
+                      if (ditem.Benchmarking) { item.status = "Benchmarking" }
+                  })
+              }
           }
 
           item.tpowerdraw = Math.round(parseFloat(item.powerdraw)) + ' W';
