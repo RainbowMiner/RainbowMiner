@@ -629,6 +629,10 @@ try {
         $AddAlgorithm += @("MTPTcr")
     }
 
+    if ($Version -le (Get-Version "4.4.5.6")) {
+        $AddAlgorithm += @("YespowerIC")
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
