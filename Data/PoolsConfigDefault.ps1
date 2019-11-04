@@ -116,6 +116,9 @@
         "LuckyPool" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
+        "Luxor" = [PSCustomObject]@{
+            Currencies=@("XMR")
+        }
         "MinerMore" = [PSCustomObject]@{
             Currencies=@("RVN","SIN","YEC")
         }
