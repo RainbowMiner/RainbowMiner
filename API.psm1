@@ -11,7 +11,7 @@
     $API.Pause       = $false
     $API.Update      = $false
     $API.UpdateBalance = $false
-    $API.WatchdogReset     = $false
+    $API.WatchdogReset = $false
     $API.ApplyOC     = $false
     $API.LockMiners  = $false
     $API.IsVirtual   = $false
@@ -605,7 +605,7 @@
                     Break
                 }
                 "/activity" {
-                    $LimitDays = (Get-Date).ToUniversalTime().AddDays(-2)
+                    $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[Math]::Max(1,[Math]::Min(7,[int]$Session.Config.MaxActivityDays)))
                     $BigJson = ''
                     Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw -ErrorAction Ignore | Foreach-Object {$BigJson += $_}
                     $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json -ErrorAction Ignore
