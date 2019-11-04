@@ -368,6 +368,7 @@ All variables defined in "ExcludeServerConfig" will not be overwritten by the se
 <details><summary>HashVault</summary> https://hashvault.pro/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Icemining</summary> https://icemining.ca/ no auto-exchange, very good BCD (BitcoinDiamond) performance, a seperate wallet address is needed for each coin you want to mine. Set in pools configuration or edit pools.config.txt</details>
+<details><summary>Luxor</summary> https://mining.luxor.tech/ no auto-exchange, small pool with hand picked coins, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>PocketWhale</summary> https://swap2.luckypool.io/ SWAP-pool for us region, pays in XWP, set your XWP-address in pools configuration or edit pools.config.txt. No price, so only suitable for FocusWallet mining.</details>
 <details><summary>SparkPool</summary> https://sparkpool.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>MinerMore</summary> https://minermore.com/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -783,6 +784,7 @@ For Server (Runmode=server) setup:
 - **RebootOnGPUFailure** = (currently disabled)
 - **EnableOCProfiles** = set to 1, if you plan to use custom overclocking profiles [default=0]
 - **EnableOCVoltage** = set to 1, if you plan to set voltage for overclocking [default=0]
+- **MaxActivityDays** = set max. days for localhost's Activity history [default=2]
 - **MSIApath** = absolute windows path to MSI Afterburner executable [default=c:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe]
 - **MSIAprofile** = default MSI Afterburner profile (1-5), set to 0 to disable [default=2]
 - **NVSMIpath** = absolute windows path to Nvidia smi tools [default=c:\Program Files\NVIDIA Corporation\NVSMI]
