@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://bitcointalk.org/index.php?topic=3378390.0"
+$ManualUri = "https://github.com/z-enemy/z-enemy/releases"
 $Port = "302{0:d2}"
 $DevFee = 1.0
 $Version = "2.3"

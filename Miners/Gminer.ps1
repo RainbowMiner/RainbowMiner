@@ -14,7 +14,7 @@ if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.71-gminer/gminer_1_71_windows64.zip"
 }
-$ManualUri = "https://bitcointalk.org/index.php?topic=5034735.0"
+$ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"

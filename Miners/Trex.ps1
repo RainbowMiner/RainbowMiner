@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://bitcointalk.org/index.php?topic=4432704.0"
+$ManualUri = "https://github.com/trexminer/T-Rex/releases"
 $Port = "316{0:d2}"
 $DevFee = 1.0
 $Version = "0.14.4"

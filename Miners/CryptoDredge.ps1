@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows -and -not $IsLinux) {return}
 
-$ManualUri = "https://bitcointalk.org/index.php?topic=4807821"
+$ManualUri = "https://github.com/technobyl/CryptoDredge/releases"
 $Port = "313{0:d2}"
 $DevFee = 1.0
 $Version = "0.22.0"
