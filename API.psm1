@@ -608,7 +608,7 @@
                     $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[Math]::Max(1,[Math]::Min(7,[int]$Session.Config.MaxActivityDays)))
                     $BigJson = ''
                     Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw -ErrorAction Ignore | Foreach-Object {$BigJson += $_}
-                    $GroupedData = "[$($BigJson -replace "[,\r\n]+$")]" | ConvertFrom-Json -ErrorAction Ignore
+                    $GroupedData = "[$($BigJson){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore
                     $Data = $GroupedData | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                         $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
