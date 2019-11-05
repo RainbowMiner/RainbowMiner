@@ -42,7 +42,7 @@
         Import-Module ".\Include.psm1"
         Import-Module ".\MiningRigRentals.psm1"
 
-        $BasePath = "$PWD\web"
+        $BasePath = Join-Path $PWD "web"
 
         Set-OsFlags
 
@@ -64,17 +64,6 @@
             ".ps1" = "text/html" # ps1 files get executed, assume their response is html
             ".7z"  = "application/x-7z-compressed”
             ".zip" = "application/zip”
-        }
-
-        function Get-FilteredMinerObject {
-            [CmdletBinding()]
-            param(
-                [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
-                $Miner
-            )
-            $Out = [PSCustomObject]@{}
-            $Miner.PSObject.Properties | Foreach-Object {$Out | Add-Member $_.Name $_.Value}
-            $Out
         }
 
         $Clients = @()
@@ -231,15 +220,15 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2 # | Foreach-Object {Get-FilteredMinerObject $_}) -Depth 2
+                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2
                     Break
                 }
                 "/remoteminers" {
@@ -950,7 +939,7 @@
                     }
 
                     # Check if there is a file with the requested path
-                    $Filename = $BasePath + $Path
+                    $Filename = Join-Path $BasePath $Path
                     if (Test-Path $Filename -PathType Leaf) {
                         # If the file is a powershell script, execute it and return the output. A $Parameters parameter is sent built from the query string
                         # Otherwise, just return the contents of the file
@@ -964,9 +953,9 @@
                             if ($Data -and $File.Extension -match "htm") {
                                 # Process server side includes for html files
                                 # Includes are in the traditional '<!-- #include file="/path/filename.html" -->' format used by many web servers
-                                $IncludeRegex = [regex]'<!-- *#include *file="(.*)" *-->'
+                                $IncludeRegex = [regex]'<!-- *#include *file="(.*?)" *-->'
                                 $IncludeRegex.Matches($Data) | Foreach-Object {
-                                    $IncludeFile = $BasePath +'/' + $_.Groups[1].Value
+                                    $IncludeFile = Join-Path $BasePath $_.Groups[1].Value
                                     If (Test-Path $IncludeFile -PathType Leaf) {
                                         $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
                                         $Data = $Data -Replace $_.Value, $IncludeData
