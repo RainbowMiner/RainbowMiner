@@ -11,15 +11,15 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-ccminertcr/ccminertcr-v1.2.5-linux-cuda101.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-ccminertcr/ccminertcr-v1.2.6-linux-cuda101.7z"
             Cuda = "10.1"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-ccminertcr/ccminertcr-v1.2.5-linux-cuda100.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-ccminertcr/ccminertcr-v1.2.6-linux-cuda100.7z"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-ccminertcr/ccminertcr-v1.2.5-linux-cuda92.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-ccminertcr/ccminertcr-v1.2.6-linux-cuda92.7z"
             Cuda = "9.2"
         }
     )
@@ -27,12 +27,12 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-CcminerTCR\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.5-ccminertcr/ccminertcr-v1.2.5-win.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.2.6-ccminertcr/ccminertcr-v1.2.6-win.7z"
             Cuda = "10.1"
         }
     )
 }
-$Version = "1.2.5"
+$Version = "1.2.6"
 $ManualUri = "https://github.com/tecracoin/ccminer/releases"
 $Port = "136{0:d2}"
 $DevFee = 0.0
