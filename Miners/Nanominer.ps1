@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Nanominer\nanominer"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.1-nanominer/nanominer-linux-1.6.1.tar.gz"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-nanominer/nanominer-linux-1.6.2.tar.gz"
 } else {
     $Path = ".\Bin\ANY-Nanominer\nanominer.exe"
-    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.1-nanominer/nanominer-windows-1.6.1.zip"
+    $URI = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.6.2-nanominer/nanominer-windows-1.6.2.zip"
 }
 $ManualURI = "https://github.com/nanopool/nanominer/releases"
 $Port = "534{0:d2}"
 $Cuda = "8.0"
 $DevFee = 3.0
-$Version = "1.6.1"
+$Version = "1.6.2"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
