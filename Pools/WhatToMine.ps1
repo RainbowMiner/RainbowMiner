@@ -150,20 +150,24 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
 
         $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
-        $Pool_CoinRequest = [PSCustomObject]@{}
+        $Pool_CoinRequest = [PSCustomObject]@{reward=$null;revenue=$null}
         try {
-            (Invoke-WebRequestAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins\s+" | Select-Object -Skip 1 | Where-Object {$_ -match "(reward|revenue)"} | Foreach-Object {
-                $cod = $Matches[1]
+            (Invoke-WebRequestAsync "https://minerstat.com/coin/$($_.coin1)" -tag $Name -cycletime 120) -split "icon_coins reward" | Select-Object -Skip 1 | Foreach-Object {
                 $dat = ([regex]'(?smi)>([\d\.\,E+-]+)\s+([\w]+)<.+for\s([\d\.\,]+)\s*(.+?)<').Matches($_)
                 if ($dat -and $dat.Groups -and $dat.Groups.Count -eq 5) {
-                    $Pool_CoinRequest | Add-Member $cod ([PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}) -Force
+                    $Pool_CoinRequest.reward  = [PSCustomObject]@{value=[decimal]($dat.Groups[1].Value -replace ',');currency=$dat.Groups[2].Value;fact=[decimal]($dat.Groups[3].Value -replace ',');unit=$dat.Groups[4].Value}
+                    $Pool_CoinRequest.revenue = [PSCustomObject]@{currency='';value=0}
+                    ([regex]'(currency|exchangeRate)[\s='']+([^\s'';]+)').Matches($_) | Foreach-Object {
+                        if ($_.Groups[1].Value -eq "currency") {$Pool_CoinRequest.revenue.currency = $_.Groups[2].Value}
+                        else {$Pool_CoinRequest.revenue.value = [decimal]$_.Groups[2].Value}
+                    }
                 }
             }
         } catch {
            if ($Error.Count){$Error.RemoveAt(0)} 
         }
 
-        if ($Pool_CoinRequest.reward -and $Pool_CoinRequest.revenue -and ($Divisor = ConvertFrom-Hash "$($Pool_CoinRequest.reward.fact) $($Pool_CoinRequest.reward.unit)")) {
+        if ($Pool_CoinRequest.reward -and $Pool_CoinRequest.revenue.value -and ($Divisor = ConvertFrom-Hash "$($Pool_CoinRequest.reward.fact) $($Pool_CoinRequest.reward.unit)")) {
             if (-not ($lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.reward.currency)) {
                 $lastSatPrice = if ($Session.Rates."$($Pool_CoinRequest.revenue.currency)") {$Pool_CoinRequest.revenue.value / $Session.Rates."$($Pool_CoinRequest.revenue.currency)" * 1e8} else {0}
             }
@@ -181,6 +185,7 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
                 Updated       = $Stat.Updated
             }
         }
+        if ($Pool_CoinRequest -ne $null) {Remove-Variable "Pool_CoinRequest"}
     }
 }
 
