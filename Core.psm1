@@ -1403,7 +1403,7 @@ function Invoke-Core {
             $Miner.Profit_Bias   = [Double]($Miner_Profits_Bias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Unbias = [Double]($Miner_Profits_Unbias.Values | Measure-Object -Sum).Sum
             $Miner.Profit_Cost   = [Double]($Miner.PowerDraw*24/1000 * $PowerPriceBTC)
-            if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner_Profit_Cost=0}
+            if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
         }
 
         $HmF = $Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw

@@ -25,11 +25,13 @@
           <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
           <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
           <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatBTC">Profit</th>
+          <th data-field="tRevenue" data-align="right" data-sortable="true" data-formatter="formatBTC">Revenue</th>
           <th data-field="tPowerDraw" data-sortable="true">Power</th>
+          <th data-field="tEff" data-align="right" data-sortable="true" data-formatter="formatBTCEff">sat/W</th>
           <th data-field="tPrimaryAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
-          <th data-field="tPrimarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed</th>
+          <th data-field="tPrimarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed 1</th>
           <!-- th data-field="tSecondaryAlgorithm" data-sortable="true" data-filter-control="select">2nd Algo</th -->
-          <!-- th data-field="tSecondarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">2nd Speed</th -->
+          <th data-field="tSecondarySpeed" data-align="right" data-sortable="true" data-formatter="formatHashRateValue">Speed 2</th>
           <th data-field="tDevFee" data-align="right" data-sortable="true">Fee</th>
       </tr>
   </thead>
@@ -45,19 +47,35 @@
         window.setTimeout(refreshTable, 10000);
     });
 
+    function formatBTCEff(data) {
+        if (typeof data == "undefined" || !data) return "-";
+        var value = parseFloat(data) * 1e8;
+        return value.toFixed(2).toString();
+    }
+
+    function sleep(milliseconds) {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
+
     function formatActiveMiners(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
+
         $.each(data, function (index, item) {
             // Format the algorithm(s)
             item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
             item.tSecondaryAlgorithm = formatAlgorithm(item.Algorithm[1]);
-
+            item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-');
             // Format the speed(s)
             if (Array.isArray(item.Speed)) {
                 item.tPrimarySpeed = item.Speed[0];
                 item.tSecondarySpeed = item.Speed[1];
-                item.tDevFee = (parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-') + '/' + (parseFloat(item.DevFee[item.Algorithm[1]]) ? parseFloat(item.DevFee[item.Algorithm[1]]) + ' %' : '-');
+
+                item.tPrimaryAlgorithm += ' + ' + item.tSecondaryAlgorithm;
+
+                if (parseFloat(item.DevFee[item.Algorithm[1]])) {
+                    item.tDevFee += '/' + parseFloat(item.DevFee[item.Algorithm[1]]) + ' %';
+                }
             } else {
                 item.tPrimarySpeed = item.Speed;
                 item.tDevFee = parseFloat(item.DevFee[item.Algorithm[0]]) ? parseFloat(item.DevFee[item.Algorithm[0]]) + ' %' : '-';
@@ -68,6 +86,19 @@
             item.Name = item.Name.split(/\-/)[0];
             if (item.ManualUri && item.ManualUri.toString() != '') {
                 item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
+            }
+
+            var powerDraw = parseFloat(item.PowerDraw);
+            item.tPowerDraw = Math.round(powerDraw) + ' W';
+
+            item.tRevenue = parseFloat(item.Profit)
+            if (globalconfig.UsePowerPrice) {
+                item.tRevenue += parseFloat(item.Profit_Cost)
+            }
+
+            item.tEff = 0;
+            if (powerDraw > 0) {
+                item.tEff = item.tRevenue / powerDraw;
             }
 
             // Format the Profile(s)
@@ -88,8 +119,6 @@
             }
             if (!tOC.length) { tOC.push("-"); }
             item.tOC = tOC.join('<br />');
-
-            item.tPowerDraw = Math.round(parseFloat(item.PowerDraw)) + ' W';
         });
         return data;
     }
