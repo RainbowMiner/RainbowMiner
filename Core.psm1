@@ -1738,10 +1738,10 @@ function Invoke-Core {
 
         #Prefer multi-miner over single-miners
         if ($Session.Config.MiningMode -eq "combo" -and $MinersNeedingBenchmarkCount -eq 0 -and ($Session.DeviceCombos -match '-' | Measure-Object).Count) {
-            $BestMiners_Combo = $BestMiners_Combo | Group-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.BaseAlgorithm -join '')$($_.Currency)$($_.CoinSymbol)"} | Foreach-Object {
+            $BestMiners_Combo = $BestMiners_Combo | Group-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.Algorithm -join '')$($_.Currency)$($_.CoinSymbol)"} | Foreach-Object {
                 $Combo_Name    = $_.Name
                 $Combo_Devices = @($_.Group.DeviceName | Select-Object -Unique | Sort-Object)
-                $BestMiners_Multi = if ($_.Count -gt 1) {$BestMiners | Where-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.BaseAlgorithm -join '')$($_.Currency)$($_.CoinSymbol)" -eq $Combo_Name -and (Compare-Object $_.DeviceName $Combo_Devices | Measure-Object).Count -eq 0} | Sort-Object Profit_Bias -Descending | Select-Object -First 1}
+                $BestMiners_Multi = if ($_.Count -gt 1) {$BestMiners | Where-Object {"$($_.Name -replace '-.+$')$($_.Vendor)$($_.Pool -join '')$($_.Algorithm -join '')$($_.Currency)$($_.CoinSymbol)" -eq $Combo_Name -and (Compare-Object $_.DeviceName $Combo_Devices | Measure-Object).Count -eq 0} | Sort-Object Profit_Bias -Descending | Select-Object -First 1}
                 if ($BestMiners_Multi -and (($_.Group.Profit_Bias | Measure-Object -Sum).Sum*$Session.Config.MinComboOverSingleRatio -lt $BestMiners_Multi.Profit_Bias)) {$BestMiners_Multi} else {$_.Group}
             }
         }
