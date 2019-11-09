@@ -18,8 +18,9 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 @("eu","us","asia") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; symbol = "ZEC"; port = @(3333,3443); fee = 1; divisor = 1}
-    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; symbol = "YEC"; port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-beam.flypool.org";  rpc = "api-beam.flypool.org";  symbol = "BEAM"; port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-zcash.flypool.org"; rpc = "api-zcash.flypool.org"; symbol = "ZEC";  port = @(3333,3443); fee = 1; divisor = 1}
+    [PSCustomObject]@{regions = @("eu","us","asia"); host = "1-ycash.flypool.org"; rpc = "api-ycash.flypool.org"; symbol = "YEC";  port = @(3333,3443); fee = 1; divisor = 1}
 )
 
 $Pool_Currencies = $Pools_Data.symbol | Select-Object -Unique | Where-Object {$Wallets.$_ -or $InfoOnly}

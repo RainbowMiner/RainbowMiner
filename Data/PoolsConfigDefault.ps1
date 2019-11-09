@@ -74,7 +74,7 @@
             Currencies=@("XWP")
         }
         "FlyPool" = [PSCustomObject]@{
-            Currencies=@("YEC")
+            Currencies=@("BEAM","YEC")
         }
         "GosCx" = [PSCustomObject]@{
             Currencies=@("GIN")
