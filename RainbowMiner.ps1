@@ -73,7 +73,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$ShowMinerWindow = $false, #if true all miner windows will be visible (they can steal focus)
     [Parameter(Mandatory = $false)]
-    [Switch]$FastestMinerOnly = $false, #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
+    [Switch]$FastestMinerOnly = $false, #if true, show the most profitable miner per algo and device index, only. E.g. if there are 2 miners available to mine the same algo, only the more profitable of the two will ever be used, the other ones will be hidden in the summary screen
     [Parameter(Mandatory = $false)]
     [Switch]$IgnoreFees = $false,
     [Parameter(Mandatory = $false)]

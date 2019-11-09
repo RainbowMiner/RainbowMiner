@@ -363,18 +363,25 @@ function Get-WhatToMineData {
 }
 
 function Get-WhatToMineUrl {
-    "https://whattomine.com/coins.json?$(@(Get-WhatToMineData | Where-Object {$_.id} | Foreach-Object {"$($_.id)=true&factor[$($_.id)_hr]=10&factor[$($_.id)_p]=0"}) -join '&')"
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [int]$Factor = 10
+    )
+    "https://whattomine.com/coins.json?$(@(Get-WhatToMineData | Where-Object {$_.id} | Foreach-Object {"$($_.id)=true&factor[$($_.id)_hr]=$Factor&factor[$($_.id)_p]=0"}) -join '&')"
 }
 
 function Get-WhatToMineFactor {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string]$Algo
+        [string]$Algo,
+        [Parameter(Mandatory = $false)]
+        [int]$Factor = 10
     )
     if ($Algo) {
         if (-not (Test-Path Variable:Global:WTMData)) {Get-WhatToMineData -Silent}
-        $Global:WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * 10}
+        $Global:WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
     }
 }
 

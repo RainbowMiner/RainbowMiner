@@ -271,6 +271,20 @@
                     $Data = ConvertTo-Json @(($API.FastestMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
+                "/getwtmurls" {
+                    $WTMdata = Get-WhatToMineData
+                    $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
+                    $WTMdata_result = [hashtable]@{}
+                    @(($API.FastestMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
+                        $Group = $_.Group
+                        $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if ($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=0&factor[$($_.id)_p]=0"}}) -join '&')$(if ($Session.Config.UsePowerPrice) {"&factor[cost]=$($Session.CurrentPowerPrice)"})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
+                    }
+                    $Data = ConvertTo-Json $WTMdata_result
+                    Remove-Variable "WTMdata"
+                    Remove-Variable "WTMdata_algos"
+                    Remove-Variable "WTMdata_result"
+                    Break
+                }
                 "/config" {
                     $Data = ConvertTo-Json $Session.Config
                     Break

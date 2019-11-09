@@ -1,6 +1,6 @@
 ﻿<!--#include file="/parts/head.html" -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-  <h1 id="title" class="h2" data-navbaractive="navactiveminers">Active Miners</h1>
+  <h1 id="title" class="h2" data-navbaractive="navactiveminers">Active Miners <span id="wtmbuttons"></span></h1>
 </div>
 <table id="miners" class="table"
   data-toggle="table"
@@ -61,6 +61,8 @@
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
 
+        var devicemodels = new Array();
+
         $.each(data, function (index, item) {
             // Format the algorithm(s)
             item.tPrimaryAlgorithm = formatAlgorithm(item.Algorithm[0]);
@@ -119,6 +121,23 @@
             }
             if (!tOC.length) { tOC.push("-"); }
             item.tOC = tOC.join('<br />');
+            if (devicemodels.indexOf(item.DeviceModel)==-1) devicemodels.push(item.DeviceModel);
+        });
+
+        $.ajax({
+            url: '/getwtmurls', success: function (result) {
+                var wtmbuttons = '';
+                devicemodels.sort(function (a, b) {
+                    if (a < b) return -1;
+                    if (a > b) return 1;
+                    return 0;
+                }
+                )
+                $.each(devicemodels, function (ix,device) {
+                    wtmbuttons += '<a href="' + result[device] + '" target="_blank" class="btn btn-primary">WTM ' + device + '</a> ';
+                });
+                $('#wtmbuttons').html(wtmbuttons);
+            }
         });
         return data;
     }
