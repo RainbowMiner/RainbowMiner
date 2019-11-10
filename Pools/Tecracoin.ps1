@@ -17,7 +17,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 $Pool_Request = [PSCustomObject]@{}
 
 try {
-    $Pool_Request = Invoke-RestMethodAsync "http://pool-mtp.tecracoin.io/api/status" -tag $Name -cycletime 120
+    $Pool_Request = Invoke-RestMethodAsync "https://pool.tecracoin.io/api/status" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -26,7 +26,7 @@ catch {
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://pool-mtp.tecracoin.io/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "https://pool.tecracoin.io/api/currencies" -tag $Name -cycletime 120
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
@@ -39,7 +39,7 @@ catch {
 
 $Pool_Coin = "Tecracoin"
 $Pool_Currency = "TCR"
-$Pool_Host = "pool-mtp.tecracoin.io"
+$Pool_Host = "pool.tecracoin.io"
 $Pool_Algorithm = "MTPTcr"
 $Pool_Port = 4556
 
