@@ -14,28 +14,26 @@ param(
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
 
-$Pool_Region_Default = "eu"
-
 [hashtable]$Pool_RegionsTable = @{}
 @("eu","ca","sg") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
 $Pools_Data = @(
-    [PSCustomObject]@{symbol = "AEON";  port = 5555;  fee = 0.9; rpc = "aeon"}
-    [PSCustomObject]@{symbol = "BBR";   port = 5555;  fee = 0.9; rpc = "boolberry"; scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
-    [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"}
-    [PSCustomObject]@{symbol = "GRFT";  port = 5005;  fee = 0.9; rpc = "graft"}
-    [PSCustomObject]@{symbol = "LOKI";  port = 5005;  fee = 0.9; rpc = "loki"}
-    [PSCustomObject]@{symbol = "MSR";   port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "RYO";   port = 5555;  fee = 1.2; rpc = "ryo"}
-    [PSCustomObject]@{symbol = "SUMO";  port = 4003;  fee = 0.9; rpc = "sumokoin"}
-    [PSCustomObject]@{symbol = "TRTL";  port = 5005;  fee = 0.9; rpc = "turtle"}
+    [PSCustomObject]@{symbol = "AEON";  port = 5555;  fee = 0.9; rpc = "aeon"; regions = @("eu")}
     [PSCustomObject]@{symbol = "TUBE";  port = 5555;  fee = 0.9; rpc = "bittube"; regions = @("eu","ca","sg")}
-    [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"}
-    [PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"}
+    [PSCustomObject]@{symbol = "BBR";   port = 5555;  fee = 0.9; rpc = "boolberry"; regions = @("eu"); scratchpad = "http://boolberry.miner.rocks:8008/scratchpad.bin"}
+    [PSCustomObject]@{symbol = "CCX";   port = 10126; fee = 0.9; rpc = "conceal"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "GRFT";  port = 5005;  fee = 0.9; rpc = "graft"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XHV";   port = 4005;  fee = 0.9; rpc = "haven"; regions = @("eu","ca","sg")}
+    [PSCustomObject]@{symbol = "XTA";   port = 30042; fee = 0.9; rpc = "italo"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "LOKI";  port = 5005;  fee = 0.9; rpc = "loki"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "MSR";   port = 5005;  fee = 0.9; rpc = "masari";   regions = @("eu","sg")}
+    [PSCustomObject]@{symbol = "XMR";   port = 5555;  fee = 0.9; rpc = "monero"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "RYO";   port = 5555;  fee = 1.2; rpc = "ryo"; regions = @("eu")}
     [PSCustomObject]@{symbol = "XLA";   port = 5005;  fee = 0.9; rpc = "stellite"; regions = @("eu","sg")}
-    [PSCustomObject]@{symbol = "XMR";   port = 5551;  fee = 0.9; rpc = "monero"}
-    [PSCustomObject]@{symbol = "XTA";   port = 30042; fee = 0.9; rpc = "italo"}
+    [PSCustomObject]@{symbol = "SUMO";  port = 4005;  fee = 0.9; rpc = "sumokoin"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "TRTL";  port = 5005;  fee = 0.9; rpc = "turtle"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "UPX";   port = 30022; fee = 0.9; rpc = "uplexa"; regions = @("eu")}
+    [PSCustomObject]@{symbol = "XCASH"; port = 30062;  fee = 0.9; rpc = "xcash"; regions = @("eu")}
 )
 
 $Pools_Requests = [hashtable]@{}
@@ -53,7 +51,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
     $Pool_Divisor       = if ($_.divisor) {$_.divisor} else {1}
     $Pool_HostPath      = if ($_.host) {$_.host} else {$Pool_RpcPath}
 
-    $Pool_Regions       = if ($_.regions) {$_.regions} else {$Pool_Region_Default}
+    $Pool_Regions       = $_.regions
 
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Coin.Algo
 
@@ -101,6 +99,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
         foreach ($Pool_Port in $Pool_Ports) {
             if ($Pool_Port) {
+                $First = $true
                 foreach($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
@@ -111,7 +110,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         StablePrice   = $Stat.Week
                         MarginOfError = $Stat.Week_Fluctuation
                         Protocol      = "stratum+$(if ($Pool_SSL) {"ssl"} else {"tcp"})"
-                        Host          = "$(if ($Pool_Region -ne $Pool_Region_Default) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
+                        Host          = "$(if (-not $First) {"$($Pool_Region)."})$($Pool_HostPath).miner.rocks"
                         Port          = $Pool_Port.CPU
                         Ports         = $Pool_Port
                         User          = "$($Pool_Wallet.wallet)$(if ($Pool_Wallet.difficulty) {".$($Pool_Wallet.difficulty)"} else {"{diff:.`$difficulty}"})"
@@ -132,6 +131,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
                     }
+                    $First = $false
                 }
             }
             $Pool_SSL = $true
