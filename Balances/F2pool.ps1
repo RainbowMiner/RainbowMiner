@@ -73,7 +73,13 @@ $Payout_Currencies | Where-Object {$Pools_Data.$($_.Name) -ne $null} | Foreach-O
                     Total       = [Decimal]$Request.balance
                     Paid        = [Decimal]$Request.paid
                     Earned      = [Decimal]$Request.paid + [Decimal]$Request.balance
-                    Payouts     = @(Get-BalancesPayouts $Request.payout_history | Select-Object)
+                    Payouts     = @($Request.payout_history | Foreach-Object {
+                        [PSCustomObject]@{
+                            Date     = (Get-Date $_[0]).ToUniversalTime()
+                            Amount   = [Double]$_[2]
+                            Txid     = $_[1]
+                        }
+                    } | Select-Object)
                     LastUpdated = (Get-Date).ToUniversalTime()
                 }
             }
