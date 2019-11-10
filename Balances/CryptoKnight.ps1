@@ -11,7 +11,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "XHV";  port = 5831;  fee = 0.0; rpc = "haven"}
     [PSCustomObject]@{symbol = "MSR";  port = 3333;  fee = 0.0; rpc = "msr"; host = "masari"}
     [PSCustomObject]@{symbol = "XMR";  port = 4441;  fee = 0.0; rpc = "xmr"; host = "monero"}
-    [PSCustomObject]@{symbol = "XWP";  port = 7731;  fee = 0.0; rpc = "swap"; divisor = 32; regions = @("eu","asia")}
+    [PSCustomObject]@{symbol = "XWP";  port = 3000;  fee = 0.0; rpc = "swap"; divisor = 32}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
