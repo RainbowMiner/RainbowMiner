@@ -3,6 +3,7 @@
     "Australia": ["SoutheastAsia", "US", "HongKong", "Japan"],
 	"Canada": ["US", "USEast", "USWest"],
 	"Europe": ["US", "Canada", "USWest", "USEast", "SoutheastAsia"],
+    "Finland": ["Europe", "US", "USWest", "Canada", "SoutheastAsia"],
 	"Japan": ["Korea","Taiwan", "HongKong", "Asia", "SoutheastAsia"],
     "Korea": ["Japan","Taiwan", "HongKong", "Asia", "SoutheastAsia"],
 	"Russia": ["Europe", "Asia", "SoutheastAsia"],
