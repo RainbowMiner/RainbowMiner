@@ -39,15 +39,24 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 @("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($_ -eq "EPIC" -or $PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $Pool_Currency -replace '-.+$'
 
     $Pool_Host = "$(if ($Pool_Currency -eq "NIM") {"nimiq"} else {"stratum"}).icemining.ca"
 
     $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
-    if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
-    $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+
+    if ($Pool_Algorithm -eq "epic") {
+        $Pool_Algorithm_Norm = @("RandomX","ProgPow","Cuckoo") | Foreach-Object {
+            if (-not $Pool_Algorithms.ContainsKey($_)) {$Pool_Algorithms.$_ = Get-Algorithm $_}
+            $Pool_Algorithms.$_
+        }
+    } else {
+        if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
+        $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
+    }
+
     $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
 
@@ -56,40 +65,42 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_Algorithm -eq "epic") {10} else {$PoolCoins_Request.$Pool_CoinSymbol.hashrate}) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
     }
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
-    foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
-        [PSCustomObject]@{
-            Algorithm     = $Pool_Algorithm_Norm
-            CoinName      = $Pool_Coin
-            CoinSymbol    = $Pool_CoinSymbol
-            Currency      = $Pool_Currency
-            Price         = 0
-            StablePrice   = 0
-            MarginOfError = 0
-            Protocol      = "stratum+tcp"
-            Host          = $Pool_Host
-            Port          = $Pool_Port
-            User          = $Pool_User
-            Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
-            Region        = $Pool_RegionsTable.$Pool_Region
-            SSL           = $false
-            Updated       = $Stat.Updated
-            PoolFee       = $Pool_PoolFee
-            Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
-            Hashrate      = $Stat.HashRate_Live
-            BLK           = $Stat.BlockRate_Average
-            TSL           = $Pool_TSL
-            WTM           = $true
-            Name          = $Name
-            Penalty       = 0
-            PenaltyFactor = 1
-            Wallet        = $Pool_User
-            Worker        = "{workername:$Worker}"
-            Email         = $Email
+    $Pool_Algorithm_Norm | Foreach-Object {
+        foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
+            [PSCustomObject]@{
+                Algorithm     = $_
+                CoinName      = $Pool_Coin
+                CoinSymbol    = $Pool_CoinSymbol
+                Currency      = $Pool_Currency
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
+                Protocol      = "stratum+tcp"
+                Host          = $Pool_Host
+                Port          = $Pool_Port
+                User          = $Pool_User
+                Pass          = "{workername:$Worker},c=$Pool_Currency{diff:,d=`$difficulty}$Pool_Params"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $false
+                Updated       = $Stat.Updated
+                PoolFee       = $Pool_PoolFee
+                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers
+                Hashrate      = $Stat.HashRate_Live
+                BLK           = $Stat.BlockRate_Average
+                TSL           = $Pool_TSL
+                WTM           = $true
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Pool_User
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
+            }
         }
     }
 }
