@@ -5724,7 +5724,7 @@ function Get-ServerConfig {
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
-        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 8
+        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 20
         if ($Result.Status -and $Result.Content) {
             if ($EnableServerExcludeList -and $Result.ExcludeList) {$ExcludeConfigVars = $Result.ExcludeList}
             $ChangeTag = Get-ContentDataMD5hash($ServerLWT) 
@@ -5751,7 +5751,7 @@ function Get-ServerConfig {
             }
             if ($ChangeTag -ne (Get-ContentDataMD5hash($ServerLWT))) {Set-ContentJson $ServerLWTFile -Data $ServerLWT > $null}
         } elseif (-not $Result.Status) {
-            Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Unknown download error"})"
+            Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Get-ServerConfig failed"})"
             $rv = $false
         }
     }
