@@ -28,7 +28,7 @@ class Xmrig3 : Miner {
             if (-not ($ThreadsConfig.$Algo | Measure-Object).Count -and -not ($ThreadsConfig.$Algo0 | Measure-Object).Count) {
                 $Parameters.Config | ConvertTo-Json -Depth 10 | Set-Content $ThreadsConfigFile -Force
 
-                $ArgumentList = ("$($Parameters.PoolParams) --algo=$Algo --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+                $ArgumentList = ("--algo=$Algo $($Parameters.PoolParams) --config=$ThreadsConfigFN $($Parameters.DeviceParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
                 $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -WorkingDirectory $Miner_Path -LogPath (Join-Path $Miner_Path $LogFile) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -ShowMinerWindow $true -IsWrapper ($this.API -eq "Wrapper")
                 if ($Job.Process | Get-Job -ErrorAction SilentlyContinue) {
                     $wait = 0
@@ -100,7 +100,7 @@ class Xmrig3 : Miner {
             Write-Log -Level Warn "Creating miner config files failed ($($this.BaseName) $($this.BaseAlgorithm -join '-')@$($this.Pool -join '-')}) [Error: '$($_.Exception.Message)']."
         }
 
-        return ("--config=$ConfigFN $($Parameters.PoolParams) --algo=$($Parameters.Algorithm) $($Parameters.DeviceParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
+        return ("$($Parameters.DeviceParams) --config=$ConfigFN --algo=$($Parameters.Algorithm) $($Parameters.PoolParams) $($Parameters.APIParams) $($Parameters.Params)" -replace "\s+",' ').Trim()
     }
 
     [Void]UpdateMinerData () {
