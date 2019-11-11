@@ -307,8 +307,8 @@
                         $DataSaved[$_] = "$(if ($Parameters.$_ -is [array]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
                         if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                             $ConfigChanged++
-                            $ConfigActual.$_ = $DataSaved[$_]
                         }
+                        $ConfigActual.$_ = $DataSaved[$_]
                     }
 
                     #reset checkbox-arrays
