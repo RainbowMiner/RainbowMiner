@@ -158,7 +158,7 @@
 
 			            if ($PostName.EndsWith("[]")) {
 				            $PostName = $PostName.Substring(0,$PostName.Length-2)
-				            if (!(New-Object PSObject -Property @{PostName=@()}).PostName) {
+				            if ($Parameters.$Postname -isnot [array]) {
 					            $Parameters | Add-Member $Postname (@()) -Force
 					            $Parameters."$PostName" += $PostValue
 				            } else {
@@ -283,6 +283,51 @@
                     Remove-Variable "WTMdata"
                     Remove-Variable "WTMdata_algos"
                     Remove-Variable "WTMdata_result"
+                    Break
+                }
+                "/getconfig" {
+                    $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                    $ConfigParameters = @{}
+                    $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
+                        $val = $Session.DefaultValues[$_]
+                        if ($ConfigSetup.$_ -ne $null) {$val = $ConfigSetup.$_}
+                        if ($val -is [array]) {$val = $val -join ','}
+                        $ConfigParameters.Add($_ , $val)
+                    }
+                    $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters | Select-Object -ExpandProperty Content) -Depth 10
+                    Remove-Variable "ConfigSetup"
+                    Remove-Variable "ConfigParameters"
+                    Break
+                }
+                "/saveconfig" {
+                    $ConfigActual = Get-ConfigContent "Config"
+                    $DataSaved = [hashtable]@{}
+                    $ConfigChanged = 0
+                    $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
+                        $DataSaved[$_] = "$(if ($Parameters.$_ -is [array]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
+                        if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
+                            $ConfigChanged++
+                            $ConfigActual.$_ = $DataSaved[$_]
+                        }
+                    }
+
+                    #reset checkbox-arrays
+                    @("ExcludePoolName") | Where-Object {$Parameters.$_ -eq $null} | Foreach-Object {
+                        $DataSaved[$_] = ""
+                        if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
+                            $ConfigChanged++
+                            $ConfigActual.$_ = $DataSaved[$_]
+                        }
+                    }
+
+                    if ($ConfigChanged -and ($ConfigPath = Get-ConfigPath "Config")) {
+                        Set-ContentJson -PathToFile $ConfigPath -Data $ConfigActual > $null
+                        $Data = ConvertTo-Json ([PSCustomObject]@{Success=$true;Data=$DataSaved})
+                    } else {
+                        $Data = ConvertTo-Json ([PSCustomObject]@{Success=$false})
+                    }
+                    Remove-Variable "ConfigActual"
+                    Remove-Variable "DataSaved"
                     Break
                 }
                 "/config" {

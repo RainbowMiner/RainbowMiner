@@ -1,0 +1,134 @@
+﻿<!--#include file="/parts/head.html" -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 id="title" data-navbaractive="navsetup" class="h2">Setup</h1>
+</div>
+<div class="alert alert-info" role="alert">Ever growing setup page. We will start with HeatMyFlat :)</div>
+
+<form id="formConfig">
+    <div class="card mb-3">
+        <div class="card-header"><h6>Basic Setup</h6></div>
+        <div class="card-body">
+            <h6 class="card-title">Basic Setup</h6>
+            <div class="form-group row">
+                <label for="inputWallet" class="col-sm-2 col-form-label">BTC Wallet</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputWallet" name="Wallet" placeholder="Enter your BTC wallet address">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputWorkerName" class="col-sm-2 col-form-label">WorkerName</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputWorkerName" name="WorkerName" placeholder="Enter your worker's name">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputRegion" class="col-sm-2 col-form-label">Region</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputRegion" name="Region" placeholder="Enter your region">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputCurrency" class="col-sm-2 col-form-label">Currencies</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputCurrency" name="Currency" placeholder="Enter all currencies to be displayed (e.g. EUR,USD,BTC)">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="card-header"><h6>Pools, Miners and Algorithms</h6></div>
+        <div class="card-body">
+            <h6 class="card-title">Pools, Miners and Algorithms</h6>
+            <div class="form-group row">
+                <label for="inputPools" class="col-sm-2 col-form-label">Pools</label>
+                <div class="col-sm-10" id="pools">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputPools" class="col-sm-2 col-form-label">Exclude Pools</label>
+                <div class="col-sm-10" id="excludepools">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputAlgorithm" class="col-sm-2 col-form-label">Algorithm</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputAlgorithm" name="Algorithm" placeholder="Enter the algorithm you want to mine (leave empty for all)">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputExcludeAlgorithm" class="col-sm-2 col-form-label">Exclude Algorithm</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputExcludeAlgorithm" name="ExcludeAlgorithm" placeholder="Enter the algorithm you do not want to exclude">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputMinerName" class="col-sm-2 col-form-label">MinerName</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputMinerName" name="MinerName" placeholder="Enter the miners you want to use (leave empty for all)">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputExcludeMinerName" class="col-sm-2 col-form-label">Exclude MinerName</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputExcludeMinerName" name="ExcludeMinerName" placeholder="Enter the miners you do want to exclude">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="card-header"><h6>Technical</h6></div>
+        <div class="card-body">
+            <div class="form-group row">
+                <label for="inputInterval" class="col-sm-2 col-form-label">Interval</label>
+                <div class="input-group col-sm-10">
+                    <input type="text" class="form-control" id="inputInterval" name="Interval" placeholder="Enter interval in seconds" aria-describedby="addto-inputInterval">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="addto-inputInterval">seconds</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputEnableHeatMyFlat" class="col-sm-2 col-form-label">Heat my flat</label>
+                <div class="col-sm-10">
+                    <input type="range" class="custom-range" min="0" max="10" id="inputEnableHeatMyFlat" name="EnableHeatMyFlat">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+
+<!-- End of page scripts -->
+<script type="text/javascript">
+  $(function() {
+      $.ajax({
+          url: '/config', success: function (result) {
+              $("input.form-control,input.custom-range").each(function(index) {
+                  var conf = $(this).attr('id').replace(/^input/,"")
+                  $(this).val(result[conf])
+              })
+              var pools = new Array(), excludepools = new Array()
+              $.each(result.Pools, function (key, data) {
+                  var checked = $.inArray(key,result.PoolName) !== -1? " checked":''
+                  pools.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="pool' + key + '" name="PoolName[]" value="'+key+'"' + checked + '><label class="custom-control-label" for="pool' + key + '">' + key + '</label></div>')
+                  checked = $.inArray(key, result.ExcludePoolName) !== -1 ? " checked" : ''
+                  excludepools.push('<div class="custom-control custom-checkbox custom-control-inline"><input type="checkbox" class="custom-control-input" id="excludepool' + key + '" name="ExcludePoolName[]" value="' + key + '"' + checked + '><label class="custom-control-label" for="excludepool' + key + '">' + key + '</label></div>')
+              })
+              $("#pools").html(pools.join(''));
+              $("#excludepools").html(excludepools.join(''));
+          }
+      });
+      $("#formConfig").submit(function (event) {
+          // Stop form from submitting normally
+          event.preventDefault();
+          $.post("/saveconfig", $(this).serialize()).done(function (data) {
+              $('.modal-body').html('RainbowMiner will pick up the new configuration after the current round has ended.');
+              $('.modal-title').text('Configuration saved!');
+              $('#myModal').modal({ show: true });
+          });
+      })
+  });
+</script>
+<!--#include file="/parts/foot.html" -->
