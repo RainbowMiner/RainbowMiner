@@ -44,7 +44,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
         if (-not $Request.stats -or -not $coinUnits) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($_.Name) returned nothing. "
         } else {
-			$Payouts = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2}
+			$Payouts = @($i=0;$Request.payments | Where-Object {$_ -match "^(.+?):(\d+?):"} | Foreach-Object {[PSCustomObject]@{time=$Request.payments[$i+1];amount=[Decimal]$Matches[2] / $coinUnits;txid=$Matches[1]};$i+=2})
             [PSCustomObject]@{
                 Caption     = "$($Name) ($Pool_Currency)"
 				BaseName    = $Name
@@ -54,7 +54,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
                 Total       = [Decimal]$Request.stats.balance / $coinUnits + [Decimal]$Request.stats.pendingIncome / $coinUnits
                 Paid        = [Decimal]$Request.stats.paid / $coinUnits
                 Paid24h     = [Decimal]$Request.stats.paid24h / $coinUnits
-                Payouts     = @(Get-BalancesPayouts $Payouts | Select-Object))
+                Payouts     = @(Get-BalancesPayouts $Payouts | Select-Object)
                 LastUpdated = (Get-Date).ToUniversalTime()
             }
 			Remove-Variable "Payouts"
