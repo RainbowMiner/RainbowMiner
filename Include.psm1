@@ -1142,8 +1142,8 @@ function Set-Stat {
                         HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.HashRate_Average) + ($Span_Hour * [Double]$HashRate)} else {$HashRate}
                         BlockRate_Live     = $BlockRate
                         BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {((1 - $Span_Hour) * $Stat.BlockRate_Average) + ($Span_Hour * [Double]$BlockRate)} else {$BlockRate}
-                        Actual24h_Week     = if ($Stat.Actual24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Actual24h_Week) + ($Span_Week * $Actual24h)} else {$Actual24h}
-                        Estimate24h_Week   = if ($Stat.Estimate24h_Week -gt 0) {((1 - $Span_Week) * $Stat.Estimate24h_Week) + ($Span_Week * $Estimate24h)} else {$Estimate24h}
+                        Actual24h_Week     = if ($Stat.Actual24h_Week -gt 0) {((1 - $Span_Day) * $Stat.Actual24h_Week) + ($Span_Day * $Actual24h)} else {$Actual24h}
+                        Estimate24h_Week   = if ($Stat.Estimate24h_Week -gt 0) {((1 - $Span_Day) * $Stat.Estimate24h_Week) + ($Span_Day * $Estimate24h)} else {$Estimate24h}
                         ErrorRatio         = $Stat.ErrorRatio
                     }
                 }
