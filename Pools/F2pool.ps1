@@ -31,7 +31,6 @@ catch {
 $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency; ($Wallets.$Pool_Currency -and ($AllowZero -or $_.hashrate)) -or $InfoOnly} | ForEach-Object {
 
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
-    $Pool_SSL = $Pool_Algorithm_Norm -match "Equihash"
     $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
     if (-not $Pool_CoinName) {$Pool_CoinName = $Pool_Currency}
 
@@ -59,7 +58,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             User          = "$($Pool_Wallet).{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Region
-            SSL           = $Pool_SSL
+            SSL           = $false
             Updated       = $Stat.Updated
             PoolFee       = $_.fee
             DataWindow    = $DataWindow
