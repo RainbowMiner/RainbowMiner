@@ -89,8 +89,11 @@
             </div>
             <div class="form-group row">
                 <label for="inputEnableHeatMyFlat" class="col-sm-2 col-form-label">Heat my flat</label>
-                <div class="col-sm-10">
+                <div class="col col-sm-9">
                     <input type="range" class="custom-range" min="0" max="10" id="inputEnableHeatMyFlat" name="EnableHeatMyFlat">
+                </div>
+                <div class="col col-sm-1">
+                        <span class="input-group-text" id="inputEnableHeatMyFlatValue">0</span>
                 </div>
             </div>
         </div>
@@ -102,6 +105,12 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+    function update_heatmyflat() {
+        var val = parseInt($("input#inputEnableHeatMyFlat").val())
+        if (!val) val = "Off"
+        $("span#inputEnableHeatMyFlatValue").text(val)
+    }
+
   $(function() {
       $.ajax({
           url: '/config', success: function (result) {
@@ -109,6 +118,7 @@
                   var conf = $(this).attr('id').replace(/^input/,"")
                   $(this).val(result[conf])
               })
+              update_heatmyflat()
               var pools = new Array(), excludepools = new Array()
               $.each(result.Pools, function (key, data) {
                   var checked = $.inArray(key,result.PoolName) !== -1? " checked":''
@@ -129,6 +139,7 @@
               $('#myModal').modal({ show: true });
           });
       })
+      $("#inputEnableHeatMyFlat").change(update_heatmyflat);
   });
 </script>
 <!--#include file="/parts/foot.html" -->
