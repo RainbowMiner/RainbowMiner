@@ -64,13 +64,14 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
 
     $Pool_TSL = $PoolCoins_Request.$Pool_CoinSymbol.timesincelast
 
-    if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_Algorithm -eq "epic") {10} else {$PoolCoins_Request.$Pool_CoinSymbol.hashrate}) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
-    }
-
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
 
     $Pool_Algorithm_Norm | Foreach-Object {
+
+        if (-not $InfoOnly) {
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)$(if ($Pool_CoinSymbol -eq "EPIC") {"-$_"})_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_CoinSymbol -eq "EPIC") {10} else {$PoolCoins_Request.$Pool_CoinSymbol.hashrate}) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+        }
+
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
             [PSCustomObject]@{
                 Algorithm     = $_
