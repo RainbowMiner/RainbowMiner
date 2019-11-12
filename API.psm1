@@ -285,7 +285,7 @@
                     Remove-Variable "WTMdata_result"
                     Break
                 }
-                "/getconfig" {
+                "/loadconfig" {
                     $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
                     $ConfigParameters = @{}
                     $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
