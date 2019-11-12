@@ -229,7 +229,7 @@ Set-OsFlags
 
 $Global:Session = [hashtable]::Synchronized(@{}) 
 
-$Session.Version         = "4.4.6.2"
+$Session.Version         = "4.4.6.3"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
