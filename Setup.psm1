@@ -263,13 +263,11 @@ function Start-Setup {
 
             if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
                 $NicehashWallet = $PoolsActual.Nicehash.BTC
-                $NicehashPlatform = $PoolsActual.Nicehash.Platform
                 $NicehashOrganizationID = $PoolsActual.Nicehash.OrganizationID
                 $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
                 $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
             } else {
                 $NicehashWallet = "`$Wallet"
-                $NicehashPlatform = "v2"
                 $NicehashOrganizationID = ""
                 $NicehashAPIKey = ""
                 $NicehashAPISecret = ""
@@ -407,7 +405,7 @@ function Start-Setup {
 
                         "nicehashorganizationid" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($false -and $PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
+                            if ($PoolNames -icontains "NiceHash") {
                                 if ($IsInitialSetup) {
                                     Write-Host " "
                                     Write-Host "You will mine on Nicehash. If you want to see your balance in RainbowMiner, you can now enter your API Key and the API Secret. Create a new key-pair on `"My Settings->API key`" page, `"Wallet permission`" needs to be set. " -ForegroundColor Cyan
@@ -422,12 +420,7 @@ function Start-Setup {
                         "nicehashapikey" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
                             if ($PoolNames -icontains "NiceHash") {
-                                if ($NicehashPlatform -notin @("2","v2","new")) {
-                                    $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                } else {
-                                    #$NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (create a key pair on `"My Settings->API key`", enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                    $GlobalSetupStepStore = $false
-                                }
+                                $NicehashAPIKey = Read-HostString -Prompt "Enter your Nicehash API Key (found on `"Settings`" page, enter including all '-')" -Default $NicehashAPIKey -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -435,7 +428,7 @@ function Start-Setup {
 
                         "nicehashapisecret" {
                             $PoolNames = @(Get-ConfigArray $Config.PoolName)
-                            if ($false -and $PoolNames -icontains "NiceHash" -and $NicehashPlatform -in @("2","v2","new")) {
+                            if ($PoolNames -icontains "NiceHash") {
                                 $NicehashAPISecret = Read-HostString -Prompt "Enter your Nicehash API Secret (enter including all '-')" -Default $NicehashAPISecret -Characters "0-9a-f-" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                             } else {
                                 $GlobalSetupStepStore = $false
@@ -817,7 +810,6 @@ function Start-Setup {
                                                 } elseif ($Var -eq "Pools") {
                                                     if ($PoolsActual | Get-Member Nicehash -MemberType NoteProperty) {
                                                         $NicehashWallet = $PoolsActual.Nicehash.BTC
-                                                        $NicehashPlatform = $PoolsActual.Nicehash.Platform
                                                         $NicehashOrganizationID = $PoolsActual.Nicehash.OrganizationID
                                                         $NicehashAPIKey = $PoolsActual.Nicehash.API_Key
                                                         $NicehashAPISecret = $PoolsActual.Nicehash.API_Secret
@@ -1568,14 +1560,12 @@ function Start-Setup {
                             $CheckPools = @()
                             if (Get-Member -InputObject $PoolsActual -Name NiceHash) {
                                 $PoolsActual.NiceHash | Add-Member BTC $(if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}) -Force
-                                $PoolsActual.NiceHash | Add-Member Platform $NicehashPlatform -Force
                                 $PoolsActual.NiceHash | Add-Member OrganizationID $NicehashOrganizationID -Force
                                 $PoolsActual.NiceHash | Add-Member API_Key $NicehashAPIKey -Force
                                 $PoolsActual.NiceHash | Add-Member API_Secret $NicehashAPISecret -Force
                             } else {
                                 $PoolsActual | Add-Member NiceHash ([PSCustomObject]@{
                                         BTC     = if($NicehashWallet -eq $Config.Wallet -or $NicehashWallet -eq ''){"`$Wallet"}else{$NicehashWallet}
-                                        Platform = $NicehashPlatform
                                         OrganizationID = $NicehashOrganizationID
                                         API_Key = $NicehashAPIKey
                                         API_Secret = $NicehashAPISecret
