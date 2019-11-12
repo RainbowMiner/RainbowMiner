@@ -2746,6 +2746,8 @@ function Get-Device {
                     $Vendor_Name = "INTEL"
                 }
 
+                $Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+
                 $Device = [PSCustomObject]@{
                     Index = [Int]$Index
                     PlatformId = [Int]$PlatformId
@@ -2759,7 +2761,8 @@ function Get-Device {
                     Type_Index = [Int]$Type_Index."$($Device_OpenCL.Type)"
                     Type_Mineable_Index = [Int]$Type_Mineable_Index."$($Device_OpenCL.Type)"
                     OpenCL = $Device_OpenCL
-                    Model = [String]$($Device_Name -replace "[^A-Za-z0-9]+" -replace "GeForce|Radeon|Intel")
+                    Model = $Model
+                    Model_Base = $Model
                     Model_Name = [String]$Device_Name
                     InstanceId = [String]$InstanceId
                     CardId = $CardId
@@ -2800,6 +2803,7 @@ function Get-Device {
             $Devices | Where-Object Model -eq $Model | Foreach-Object {
                 $AmdGb = "$([int]($_.OpenCL.GlobalMemSize / 1GB))GB"
                 $_.Model = "$($_.Model)$AmdGb"
+                $_.Model_Base = "$($_.Model)$AmdGb"
                 $_.Model_Name = "$($_.Model_Name) $AmdGb"
             }
         }
@@ -2885,6 +2889,7 @@ function Get-Device {
                 Type_Index = $CPUIndex
                 Type_Mineable_Index = $CPUIndex
                 Model = "CPU"
+                Model_Base = "CPU"
                 Model_Name = $Global:GlobalCPUInfo.Name
                 Features = $Global:GlobalCPUInfo.Features.Keys
             }
