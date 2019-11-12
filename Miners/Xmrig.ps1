@@ -9,19 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.1b-xmrig/xmrig-4.6.1-beta-xenial-x64.tar.gz"
-    $CudaLib = ""
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.2b-xmrig/xmrig-4.6.2-beta-xenial-cuda10_1-x64.7z"
+    $CudaLib = "libxmrig-cuda.so"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.1b-xmrig/xmrig-4.6.1-beta2-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.2b-xmrig/xmrig-4.6.2-beta-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
 $Cuda = "10.1"
-$Version = "4.6.1-beta"
+$Version = "4.6.2-beta"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
@@ -90,7 +90,7 @@ foreach ($Miner_Vendor in @("AMD","CPU","NVIDIA")) {
                         $DeviceParams = Switch ($Miner_Vendor) {
                             "AMD" {"--no-cpu --opencl --opencl-devices=$($Miner_Device.Type_Vendor_Index -join ',') --opencl-platform=$($Miner_Device | Select -Property Platformid -Unique -ExpandProperty PlatformId)"}
                             "CPU" {""} #{"$(if ($Session.Config.CPUMiningThreads -and $Global:GlobalCPUInfo.Threads){"--cpu-max-threads-hint=$([Math]::Ceiling($Session.Config.CPUMiningThreads/$Global:GlobalCPUInfo.Threads*100))"}) $(if ($Session.Config.CPUMiningAffinity -ne ''){"--cpu-affinity $($Session.Config.CPUMiningAffinity)"})"}
-                            "NVIDIA" {"--no-cpu --cuda --cuda-loader=$CudaLib --no-nvml"}
+                            "NVIDIA" {"--no-cpu --cuda --cuda-loader=$CudaLib --cuda-devices=$($Miner_Device.Type_Vendor_Index -join ',') --no-nvml"}
                         }
                     }
 
