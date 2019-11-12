@@ -48,7 +48,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
     $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
 
     if ($Pool_Algorithm -eq "epic") {
-        $Pool_Algorithm_Norm = @("RandomX","ProgPow","Cuckoo") | Foreach-Object {
+        $Pool_Algorithm_Norm = @("RandomX","ProgPoW","CuckooCycle") | Foreach-Object {
             if (-not $Pool_Algorithms.ContainsKey($_)) {$Pool_Algorithms.$_ = Get-Algorithm $_}
             $Pool_Algorithms.$_
         }

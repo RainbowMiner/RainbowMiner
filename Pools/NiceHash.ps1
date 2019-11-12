@@ -18,10 +18,6 @@ $Pool_Request = [PSCustomObject]@{}
 
 if (-not $InfoOnly) {
     if (-not $Wallets.BTC) {return}
-    if ($Platform -notin @("2","v2","new")) {
-        Write-Log -Level Warn "Nicehash has disabled it's old platform. Please update your Nicehash wallet and set `"Platform`" to `"v2`", in your pools.config.txt"
-        return
-    }
 }
 
 try {

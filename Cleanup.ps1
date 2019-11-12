@@ -633,6 +633,29 @@ try {
         $AddAlgorithm += @("YespowerIC")
     }
 
+    if ($Version -le (Get-Version "4.4.6.3")) {
+        $Changes = 0
+        $ConfigActual = Get-Content "$ConfigFile" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $SelectedPools = @(Get-ConfigArray $ConfigActual.PoolName | Select-Object)
+        if ($SelectedPools -icontains "NiceHashV2") {
+            $PoolsActual  = Get-Content "$PoolsConfigFile" -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+            if ($SelectedPools -inotcontains "NiceHash") {
+                if ($PoolsActual.NiceHashV2 -ne $null) {
+                    $PoolsActual | Add-Member NiceHash ($PoolsActual.NiceHashV2 | ConvertTo-Json | ConvertFrom-Json) -Force
+                    $PoolsActual | ConvertTo-Json | Set-Content $PoolsConfigFile -Encoding UTF8
+                }
+                $SelectedPools += "NiceHash"
+                $Changes++
+            }
+            $ConfigActual.PoolName = @($SelectedPools | Where-Object {$_ -ne "NiceHashV2"} | Sort-Object) -join ','
+            $Changes++
+        }
+        if ($Changes) {
+            $ConfigActual | ConvertTo-Json | Set-Content $ConfigFile -Encoding UTF8
+            $ChangesTotal += $Changes
+        }
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
