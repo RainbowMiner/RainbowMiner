@@ -14,7 +14,7 @@ if ($IsLinux) {
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.1b-xmrig/xmrig-4.6.1-beta-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v4.6.1b-xmrig/xmrig-4.6.1-beta2-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
