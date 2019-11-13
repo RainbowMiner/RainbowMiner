@@ -1177,7 +1177,7 @@ function Set-Stat {
                     }
                 }
             }
-            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation$" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
+            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
         }
     }
     catch {
