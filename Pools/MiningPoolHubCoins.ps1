@@ -65,6 +65,7 @@ $Pool_Request.return | ForEach-Object {
 
     $Divisor = 1e9
 
+    $Pool_Hashrate = $_.pool_hash
     if ($Pool_Hashrate -match "^([\d\.]+)([KMGTP])$") {
         $Pool_Hashrate = [double]$Matches[1]
         Switch($Matches[2]) {
