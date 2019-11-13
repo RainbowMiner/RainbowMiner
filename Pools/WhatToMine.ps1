@@ -42,7 +42,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
         $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
         if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
         } else {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
         }
@@ -104,7 +104,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
             $Pool_CoinRequest | Add-Member btc_revenue24 $Pool_CoinRequest.btc_revenue
 
             if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
             } else {
                 $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
             }
@@ -174,7 +174,7 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
 
             $revenue = $Pool_CoinRequest.reward.value * $lastSatPrice / 1e8
             
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($revenue / $Divisor) -Duration $StatSpan -ChangeDetection $false -Quiet
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
 
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

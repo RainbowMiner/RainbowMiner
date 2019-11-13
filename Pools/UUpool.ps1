@@ -55,7 +55,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         elseif ($_.cny -and $Session.Rates.CNY) {$_.cny/$Session.Rates.CNY}
                         else {0}
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Estimate * $lastBTCPrice) -Duration $StatSpan -HashRate $Pool_Hashrate -ChangeDetection $false -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Estimate * $lastBTCPrice) -Duration $StatSpan -HashRate $Pool_Hashrate -ChangeDetection $true -Quiet
 
         if ($Pool_Hashrate -or $AllowZero -or $InfoOnly) {
             foreach($Pool_Host in @($_.address -split ',')) {
