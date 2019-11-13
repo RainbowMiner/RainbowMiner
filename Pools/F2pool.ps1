@@ -43,6 +43,8 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
+    $Pool_SSL = $Pool_Currency -in @("BEAM")
+
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
     foreach($Region in $_.region) {
         [PSCustomObject]@{
@@ -59,7 +61,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
             User          = "$($Pool_Wallet).{workername:$Worker}"
             Pass          = "x"
             Region        = $Pool_RegionsTable.$Region
-            SSL           = $false
+            SSL           = $Pool_SSL
             Updated       = $Stat.Updated
             PoolFee       = $_.fee
             DataWindow    = $DataWindow
