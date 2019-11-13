@@ -59,7 +59,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
     $Pool_Host = ".nicehash.com"
 
     if (-not $InfoOnly) {
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $true -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value ([Double]$_.paying / 1e8) -Duration $StatSpan -ChangeDetection $false -Quiet
     }
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {

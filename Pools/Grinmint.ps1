@@ -56,8 +56,8 @@ $Pool_TSL      = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $las
 $btcPrice      = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
     
 if (-not $InfoOnly) {
-    $Stat29 = Set-Stat -Name "$($Name)_$($Pool_Currency)29_Profit" -Value ($PBR29 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
-    $Stat31 = Set-Stat -Name "$($Name)_$($Pool_Currency)31_Profit" -Value ($PBR31 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.primary_hashrate -BlockRate $Pool_BLK
+    $Stat29 = Set-Stat -Name "$($Name)_$($Pool_Currency)29_Profit" -Value ($PBR29 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK
+    $Stat31 = Set-Stat -Name "$($Name)_$($Pool_Currency)31_Profit" -Value ($PBR31 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.pool_stats.primary_hashrate -BlockRate $Pool_BLK
 }
 
 $Pools_Data | ForEach-Object {
