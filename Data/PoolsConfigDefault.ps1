@@ -183,9 +183,6 @@
             Autoexchange=$true
             Yiimp=$true
         }
-        "PocketWhale" = [PSCustomObject]@{
-            Currencies=@("XWP")
-        }
         "PoolSexy" = [PSCustomObject]@{
             Currencies=@("DBIX")
         }
