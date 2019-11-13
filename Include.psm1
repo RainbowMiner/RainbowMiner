@@ -1177,7 +1177,7 @@ function Set-Stat {
                     }
                 }
             }
-            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
+            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation$" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
         }
     }
     catch {
@@ -1241,8 +1241,8 @@ function Set-Stat {
                     HashRate_Average   = $HashRate
                     BlockRate_Live     = $BlockRate
                     BlockRate_Average  = $BlockRate
-                    Actual24h_Week     = $Actual24h
-                    Estimate24h_Week   = $Estimate24h
+                    Actual24h_Week     = 0 #$Actual24h
+                    Estimate24h_Week   = 0 #$Estimate24h
                     ErrorRatio         = 0
                 }
             }
