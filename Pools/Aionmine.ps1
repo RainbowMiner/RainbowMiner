@@ -35,7 +35,7 @@ catch {
     return
 }
 
-$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;($_.poolStats.poolHashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | Foreach-Object {
+$Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | Foreach-Object {
     
     $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
     $reward        = 1.5
@@ -45,6 +45,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
     
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $_.poolStats.poolHashrate -BlockRate $Pool_BLK
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     [PSCustomObject]@{

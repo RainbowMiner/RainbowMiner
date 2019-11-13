@@ -39,7 +39,7 @@ if (($PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignor
 
 @("us") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;($_ -eq "EPIC" -or $PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};$Pool_User = $Wallets.$Pool_Currency;$Pool_User -or $InfoOnly} | ForEach-Object {
     $Pool_Currency = $Pool_Currency -replace '-.+$'
 
     $Pool_Host = "$(if ($Pool_Currency -eq "NIM") {"nimiq"} else {"stratum"}).icemining.ca"
@@ -70,6 +70,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
 
         if (-not $InfoOnly) {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)$(if ($Pool_CoinSymbol -eq "EPIC") {"-$_"})_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $(if ($Pool_CoinSymbol -eq "EPIC") {10} else {$PoolCoins_Request.$Pool_CoinSymbol.hashrate}) -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks" -Quiet
+            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
 
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {        

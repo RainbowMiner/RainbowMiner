@@ -69,9 +69,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_TSL = [int](Get-UnixTimestamp) - [int]$Pool_Request.lastBlock
     
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.profitBtc) -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$Pool_Request.pool) -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if (($ok -and $Pool_Port -and ($AllowZero -or [int64]$Pool_Request.pool -gt 0)) -or $InfoOnly) {
+    if (($ok -and $Pool_Port) -or $InfoOnly) {
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm

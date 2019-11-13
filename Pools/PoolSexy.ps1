@@ -78,10 +78,11 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $Pool_TSL = if ($blocks_last) {$timestamp - $blocks_last}
 
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value $profitLive -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
+            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
         }
     }
 
-    if ($ok -and ($AllowZero -or $Pool_Request.hashrate -gt 0) -or $InfoOnly) {
+    if ($ok -or $InfoOnly) {
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
             CoinName      = $Pool_Coin.Name

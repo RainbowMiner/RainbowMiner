@@ -28,7 +28,7 @@ catch {
     Write-Log -Level Warn "Pool API ($Name) has failed. "
 }
 
-$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency; ($Wallets.$Pool_Currency -and ($AllowZero -or $_.hashrate)) -or $InfoOnly} | ForEach-Object {
+$Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.currency; $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
 
     $Pool_Algorithm_Norm = Get-Algorithm $_.algo
     $Pool_CoinName = Get-CoinSymbol $Pool_Currency -Reverse
@@ -40,6 +40,7 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
         $Pool_Rate = $Session.Rates.$Pool_Currency
         if (-not $Pool_Rate -and $_.price -and $Session.Rates.USD) {$Pool_Rate = $Session.Rates.USD / $_.price}                          
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($_.id -split '-' | Select-Object -Skip 1)_Profit" -Value $(if ($Pool_Rate) {$_.estimate / $Divisor / $Pool_Rate} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'

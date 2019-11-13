@@ -58,45 +58,44 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_BLK = ($PoolBlocks_Request.candidates | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.immature | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count + ($PoolBlocks_Request.matured | Where-Object {$_.timestamp -ge $Timestamp_24h -and -not $_.orphan} | Measure-Object).Count
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Hashrate -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if ($AllowZero -or $Pool_Hashrate -gt 0 -or $InfoOnly) {
-        foreach($Pool_Region in $_.regions) {
-            $Pool_Ssl = $false
-            foreach($Pool_Port in $Pool_Ports) {
-                [PSCustomObject]@{
-                    Algorithm     = $Pool_Algorithm_Norm
-                    CoinName      = $_.coin
-                    CoinSymbol    = $Pool_Currency
-                    Currency      = $Pool_Currency
-                    Price         = 0
-                    StablePrice   = 0
-                    MarginOfError = 0
-                    Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
-                    Host          = $_.host
-                    Port          = $Pool_Port
-                    User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
-                    Pass          = "x"
-                    Region        = $Pool_RegionsTable.$Pool_Region
-                    SSL           = $Pool_Ssl
-                    Updated       = $Stat.Updated
-                    PoolFee       = $_.fee
-                    DataWindow    = $DataWindow
-                    Workers       = $Pool_Workers
-                    Hashrate      = (Get-Date).ToUniversalTime()
-                    TSL           = $Pool_TSL
-                    BLK           = $Stat.BlockRate_Average
-                    WTM           = $true
-                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
-                    Name          = $Name
-                    Penalty       = 0
-                    PenaltyFactor = 1
-                    Wallet        = $Wallets.$Pool_Currency
-                    Worker        = "{workername:$Worker}"
-                    Email         = $Email
-                }
-                $Pool_Ssl = $true
+    foreach($Pool_Region in $_.regions) {
+        $Pool_Ssl = $false
+        foreach($Pool_Port in $Pool_Ports) {
+            [PSCustomObject]@{
+                Algorithm     = $Pool_Algorithm_Norm
+                CoinName      = $_.coin
+                CoinSymbol    = $Pool_Currency
+                Currency      = $Pool_Currency
+                Price         = 0
+                StablePrice   = 0
+                MarginOfError = 0
+                Protocol      = "stratum+$(if ($Pool_Ssl) {"ssl"} else {"tcp"})"
+                Host          = $_.host
+                Port          = $Pool_Port
+                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                Pass          = "x"
+                Region        = $Pool_RegionsTable.$Pool_Region
+                SSL           = $Pool_Ssl
+                Updated       = $Stat.Updated
+                PoolFee       = $_.fee
+                DataWindow    = $DataWindow
+                Workers       = $Pool_Workers
+                Hashrate      = (Get-Date).ToUniversalTime()
+                TSL           = $Pool_TSL
+                BLK           = $Stat.BlockRate_Average
+                WTM           = $true
+                EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"qtminer"} else {$null}
+                Name          = $Name
+                Penalty       = 0
+                PenaltyFactor = 1
+                Wallet        = $Wallets.$Pool_Currency
+                Worker        = "{workername:$Worker}"
+                Email         = $Email
             }
+            $Pool_Ssl = $true
         }
     }
 }

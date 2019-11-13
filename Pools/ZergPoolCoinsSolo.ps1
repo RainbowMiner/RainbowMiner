@@ -51,17 +51,20 @@ $Pool_Currencies = @("BTC", "DASH", "LTC") + @($Wallets.PSObject.Properties.Name
 
 if ($AECurrency -eq "") {$AECurrency = $Pool_Currencies | Select-Object -First 1}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_Currency = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol) {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$Pool_CoinSymbol};($PoolCoins_Request.$_.hashrate_solo -gt 0 -or $AllowZero) -or $InfoOnly} | ForEach-Object {
-    $Pool_Host = "$($PoolCoins_Request.$Pool_CoinSymbol.algo).mine.zergpool.com"
-    $Pool_Port = $PoolCoins_Request.$Pool_CoinSymbol.port
-    $Pool_Algorithm = $PoolCoins_Request.$Pool_CoinSymbol.algo
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
+
+    $Pool_Currency = if ($PoolCoins_Request.$_.symbol) {$PoolCoins_Request.$_.symbol} else {$_}    
+
+    $Pool_Host = "$($PoolCoins_Request.$_.algo).mine.zergpool.com"
+    $Pool_Port = $PoolCoins_Request.$_.port
+    $Pool_Algorithm = $PoolCoins_Request.$_.algo
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms[$Pool_Algorithm] = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms[$Pool_Algorithm]
-    $Pool_Coin = $PoolCoins_Request.$Pool_CoinSymbol.name
+    $Pool_Coin = $PoolCoins_Request.$_.name
     $Pool_PoolFee = if ($Pool_Request.$Pool_Algorithm) {$Pool_Request.$Pool_Algorithm.fees} else {$Pool_Fee}
 
-    if ($PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor) {
-        $Pool_Factor = [Double]$PoolCoins_Request.$Pool_CoinSymbol.mbtc_mh_factor
+    if ($PoolCoins_Request.$_.mbtc_mh_factor) {
+        $Pool_Factor = [Double]$PoolCoins_Request.$_.mbtc_mh_factor
     } else {
         $Pool_Factor = [Double]$(Switch ($_) {
             "aergo" {1}
@@ -117,17 +120,18 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     $Divisor = 1e9 * $Pool_Factor
 
-    $Pool_TSL = if ($PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo -ne $null) {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast_solo} else {$PoolCoins_Request.$Pool_CoinSymbol.timesincelast}
+    $Pool_TSL = if ($PoolCoins_Request.$_.timesincelast_solo -ne $null) {$PoolCoins_Request.$_.timesincelast_solo} else {$PoolCoins_Request.$_.timesincelast}
 
     if (-not $InfoOnly) {
         if ($Pool_Request.$Pool_Algorithm.coins -eq 1) {
             $Pool_Actual24h   = $Pool_Request.$Pool_Algorithm.actual_last24h_solo/1000
             $Pool_Estimate24h = $Pool_Request.$Pool_Algorithm.estimate_last24h
         } else {
-            $Pool_Actual24h   = $PoolCoins_Request.$Pool_CoinSymbol.actual_last24h_solo/1000
-            $Pool_Estimate24h = $PoolCoins_Request.$Pool_CoinSymbol.estimate_last24
+            $Pool_Actual24h   = $PoolCoins_Request.$_.actual_last24h_solo/1000
+            $Pool_Estimate24h = $PoolCoins_Request.$_.estimate_last24
         }
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value ([Double]$PoolCoins_Request.$Pool_CoinSymbol.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate_solo -BlockRate $PoolCoins_Request.$Pool_CoinSymbol."24h_blocks_solo" -Quiet
+        $Stat = Set-Stat -Name "$($Name)_$($_)_Profit" -Value ([Double]$PoolCoins_Request.$_.estimate / $Divisor) -Duration $StatSpan -ChangeDetection $true -Actual24h $Pool_Actual24h -Estimate24h $Pool_Estimate24h -HashRate $PoolCoins_Request.$_.hashrate_solo -BlockRate $PoolCoins_Request.$_."24h_blocks_solo" -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0) {$AECurrency}
@@ -139,7 +143,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
-                CoinSymbol    = $Pool_CoinSymbol
+                CoinSymbol    = $_
                 Currency      = $Pool_ExCurrency
                 Price         = $Stat.$StatAverage #instead of .Live
                 StablePrice   = $Stat.Week
@@ -153,7 +157,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 SSL           = $false
                 Updated       = $Stat.Updated
                 PoolFee       = $Pool_PoolFee
-                Workers       = $PoolCoins_Request.$Pool_CoinSymbol.workers_solo
+                Workers       = $PoolCoins_Request.$_.workers_solo
                 Hashrate      = $Stat.HashRate_Live
                 BLK           = $Stat.BlockRate_Average
                 TSL           = $Pool_TSL

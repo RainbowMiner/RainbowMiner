@@ -43,7 +43,7 @@ $Pool_Host = "pool.tecracoin.io"
 $Pool_Algorithm = "MTPTcr"
 $Pool_Port = 4556
 
-$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "mtp"} | Where-Object {$Pool_Request.$_.hashrate -gt 0 -or $InfoOnly -or $AllowZero} | ForEach-Object {
+$Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$_ -eq "mtp"} | ForEach-Object {
     $Pool_Algorithm_Norm = Get-Algorithm $Pool_Algorithm
     $Pool_PoolFee = [Double]$Pool_Request.$_.fees
     $Pool_User = $Wallets.$Pool_Currency
@@ -55,10 +55,11 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -Actual24h $($Pool_Request.$_.actual_last24h/1000) -Estimate24h $($Pool_Request.$_.estimate_last24h) -HashRate $Pool_Request.$_.hashrate -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_Params = if ($Params.$Pool_Currency) {",$($Params.$Pool_Currency)"}
-
+    
     if ($Pool_User -or $InfoOnly) {
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             [PSCustomObject]@{

@@ -55,40 +55,41 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
                         elseif ($_.cny -and $Session.Rates.CNY) {$_.cny/$Session.Rates.CNY}
                         else {0}
 
-        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Estimate * $lastBTCPrice) -Duration $StatSpan -HashRate $Pool_Hashrate -ChangeDetection $true -Quiet
+        if (-not $InfoOnly) {
+            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($Pool_Estimate * $lastBTCPrice) -Duration $StatSpan -HashRate $Pool_Hashrate -ChangeDetection $true -Quiet
+            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        }
 
-        if ($Pool_Hashrate -or $AllowZero -or $InfoOnly) {
-            foreach($Pool_Host in @($_.address -split ',')) {
-                if ($Pool_Host -match "^(.+?):(\d+)") {
-                    [PSCustomObject]@{
-                        PoolEstimate  = $Pool_Estimate
-                        Algorithm     = $Pool_Algorithm_Norm
-                        CoinName      = $_.name
-                        CoinSymbol    = $Pool_Currency
-                        Currency      = $Pool_Currency
-                        Price         = $Stat.$StatAverage #instead of .Live
-                        StablePrice   = $Stat.Week
-                        MarginOfError = $Stat.Week_Fluctuation
-                        Protocol      = "stratum+tcp"
-                        Host          = "$($Matches[1].Trim())"
-                        Port          = "$($Matches[2].Trim())"
-                        User          = "$($Pool_User).{workername:$Worker}"
-                        Pass          = "x"
-                        Region        = Switch -Regex ($Pool_Host) {"\(EU\)" {$Pool_RegionsTable.EU};"\(US\)" {$Pool_RegionsTable.US};default {$Pool_RegionsTable.CN}}
-                        SSL           = $false
-                        Updated       = $Stat.Updated
-                        PoolFee       = $_.rates -replace "[^\d\.]+"
-                        DataWindow    = $DataWindow
-                        Workers       = $Pool_RequestWorkers.data
-                        Hashrate      = $Stat.HashRate_Live
-                        EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
-                        Name          = $Name
-                        Penalty       = 0
-                        PenaltyFactor = 1
-                        Wallet        = $Pool_User
-                        Worker        = "{workername:$Worker}"
-                        Email         = $Email
-                    }
+        foreach($Pool_Host in @($_.address -split ',')) {
+            if ($Pool_Host -match "^(.+?):(\d+)") {
+                [PSCustomObject]@{
+                    PoolEstimate  = $Pool_Estimate
+                    Algorithm     = $Pool_Algorithm_Norm
+                    CoinName      = $_.name
+                    CoinSymbol    = $Pool_Currency
+                    Currency      = $Pool_Currency
+                    Price         = $Stat.$StatAverage #instead of .Live
+                    StablePrice   = $Stat.Week
+                    MarginOfError = $Stat.Week_Fluctuation
+                    Protocol      = "stratum+tcp"
+                    Host          = "$($Matches[1].Trim())"
+                    Port          = "$($Matches[2].Trim())"
+                    User          = "$($Pool_User).{workername:$Worker}"
+                    Pass          = "x"
+                    Region        = Switch -Regex ($Pool_Host) {"\(EU\)" {$Pool_RegionsTable.EU};"\(US\)" {$Pool_RegionsTable.US};default {$Pool_RegionsTable.CN}}
+                    SSL           = $false
+                    Updated       = $Stat.Updated
+                    PoolFee       = $_.rates -replace "[^\d\.]+"
+                    DataWindow    = $DataWindow
+                    Workers       = $Pool_RequestWorkers.data
+                    Hashrate      = $Stat.HashRate_Live
+                    EthMode       = if ($Pool_Algorithm_Norm -match "^(Ethash|ProgPow)") {"ethproxy"} else {$null}
+                    Name          = $Name
+                    Penalty       = 0
+                    PenaltyFactor = 1
+                    Wallet        = $Pool_User
+                    Worker        = "{workername:$Worker}"
+                    Email         = $Email
                 }
             }
         }

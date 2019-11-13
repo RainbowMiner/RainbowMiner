@@ -90,9 +90,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $dayData     = -not (Test-Path "Stats\Pools\$($Pool_StatFn).txt")
 
         $Stat = Set-Stat -Name $Pool_StatFn -Value ($profitLive*$lastBTCPrice) -Duration $(if ($dayData) {New-TimeSpan -Days 1} else {$StatSpan}) -HashRate $(if ($dayData) {$Pool_Request.pool_statistics.avg24} else {$Pool_Request.pool_statistics.hashRate}) -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if (($ok -and ($AllowZero -or $Pool_Request.pool_statistics.hashRate -gt 0)) -or $InfoOnly) {
+    if ($ok -or $InfoOnly) {
         $Pool_SSL = $false
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -asobject -pidchar '.'
         foreach ($Pool_Port in $Pool_Ports) {

@@ -38,7 +38,7 @@ $Pools_Ports = [PSCustomObject]@{
     zec1 = @([PSCustomObject]@{CPU=3036;GPU=3036;RIG=3037})
 }
 
-$Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallets."$($_.coin)" -and ($_.hashrate -or $AllowZero)) -or $InfoOnly} | ForEach-Object {
+$Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {$Wallets."$($_.coin)" -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.coin
     $Pool_RpcPath        = $_.id
     $Pool_Algorithm      = if ($_.algorithm -eq "x16r") {"x16rv2"} else {$_.algorithm}
@@ -85,6 +85,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {($Wallet
         }
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($blocks*$reward*$lastBTCPrice/$hashrate) -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
     if ($ok -or $InfoOnly) {

@@ -60,7 +60,7 @@ $Pool_Ports = [PSCustomObject]@{
     "YTN"   = 3382
 }
 
-$Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.symbol)" -and $Pool_Ports."$($_.symbol)" -and ($_.hashrate -or $AllowZero)) -or $InfoOnly} | ForEach-Object {
+$Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.symbol)" -and $Pool_Ports."$($_.symbol)") -or $InfoOnly} | ForEach-Object {
     $Pool_Currency       = $_.symbol
     $Pool_RpcPath        = $_.name
     $Pool_Algorithm      = $_.algorithm
@@ -75,6 +75,7 @@ $Pools_Request.pools.PSObject.Properties.Value | Where-Object {($Wallets."$($_.s
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate ([int64]$_.hashrate) -BlockRate ([double]$_.maxRoundTime) -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     foreach ($Pool_Region in $Pool_RegionsTable.Keys) {    

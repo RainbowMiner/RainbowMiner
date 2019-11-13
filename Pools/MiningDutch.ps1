@@ -44,7 +44,7 @@ $Pool_Fee = 2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.PSObject.Properties | Where-Object {[int]$_.Value.workers_shared -gt 0 -or $AllowZero} | ForEach-Object {
+$Pool_Request.PSObject.Properties | ForEach-Object {
 
     $Pool_Algorithm = $_.Value.name
     $Pool_Algorithm_Norm = Get-Algorithm $_.Value.name
@@ -66,6 +66,7 @@ $Pool_Request.PSObject.Properties | Where-Object {[int]$_.Value.workers_shared -
     if (-not $InfoOnly) {
         $Pool_Price = Get-YiiMPValue $_.Value -DataWindow $DataWindow -Factor $Pool_Factor -ActualDivisor 1
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_Profit" -Value $Pool_Price -Duration $StatSpan -ChangeDetection $false -FaultDetection $true -FaultTolerance 5 -HashRate ([double]$_.Value.hashrate_shared * 1e6) -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {

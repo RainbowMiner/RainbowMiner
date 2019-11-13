@@ -48,7 +48,7 @@ $Pool_Fee = 0.9 + 0.2
 
 $Pool_Currency = if ($AEcurrency) {$AEcurrency} else {"BTC"}
 
-$Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -or $InfoOnly -or $AllowZero} | ForEach-Object {
+$Pool_Request.return | ForEach-Object {
     $Pool_Host = $_.host
     $Pool_Hosts = $_.host_list.split(";")
     $Pool_Port = $_.port
@@ -65,7 +65,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
 
     $Divisor = 1e9
 
-    $Pool_Hashrate = $_.pool_hash
+    $Pool_Hashrate = if ($_.pool_hash -eq '-') {0} else {$_.pool_hash}
     if ($Pool_Hashrate -match "^([\d\.]+)([KMGTP])$") {
         $Pool_Hashrate = [double]$Matches[1]
         Switch($Matches[2]) {
@@ -82,6 +82,7 @@ $Pool_Request.return | Where-Object {($_.pool_hash -ne '-' -and $_.pool_hash) -o
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Coin)_Profit" -Value ([Double]$_.profit / $Divisor) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_HashRate -FaultDetection $true -FaultTolerance 5 -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     foreach($Pool_Region in $Pool_RegionsTable.Keys) {

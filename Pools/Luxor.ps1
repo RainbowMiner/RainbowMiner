@@ -63,9 +63,10 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$Wall
         if ($Pool_TSL -lt 0) {$Pool_TSL = 0}
 
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value 0 -Duration $StatSpan -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -ChangeDetection $false -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
     
-    if (($ok -and ($AllowZero -or $Pool_Request.hashrate -gt 0)) -or $InfoOnly) {
+    if ($ok -or $InfoOnly) {
         foreach ($Pool_Region in $Pool_Region_Default) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm

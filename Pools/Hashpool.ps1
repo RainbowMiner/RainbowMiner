@@ -46,7 +46,7 @@ catch {
 
 @("eu") | Foreach-Object {$Pool_RegionsTable.$_ = Get-Region $_}
 
-$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_User = $Wallets.$Pool_CoinSymbol;($PoolCoins_Request.$_.hashrate -gt 0 -or $AllowZero) -and $Pool_User -or $InfoOnly} | ForEach-Object {
+$PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | Where-Object {$Pool_CoinSymbol = $_;$Pool_User = $Wallets.$Pool_CoinSymbol;$Pool_User -or $InfoOnly} | ForEach-Object {
 
     $Pool_Host = "pool.hashpool.eu"
     $Pool_Port = if ($PoolCoins_Request.$Pool_CoinSymbol.symbol -match "^\d+$") {$PoolCoins_Request.$Pool_CoinSymbol.symbol} else {$PoolCoins_Request.$Pool_CoinSymbol.port}
@@ -62,6 +62,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
 
     if (-not $InfoOnly) {
         $Stat = Set-Stat -Name "$($Name)_$($Pool_CoinSymbol)_Profit" -Value 0 -Duration $StatSpan -ChangeDetection $false -HashRate $PoolCoins_Request.$Pool_CoinSymbol.hashrate -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     $Pool_Params = if ($Params.$Pool_CoinSymbol) {",$($Params.$Pool_CoinSymbol)"}
