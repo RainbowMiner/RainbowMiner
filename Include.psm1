@@ -1665,19 +1665,12 @@ function Get-BalancesPayouts {
 }
 
 filter ConvertTo-Float {
-    [CmdletBinding()]
-    $Num = $_
-
-    switch ([math]::floor([math]::log($Num, 1e3))) {
-        "-Infinity" {"0  "}
-        -2 {"{0:n2} µ" -f ($Num * 1e6)}
-        -1 {"{0:n2} m" -f ($Num * 1e3)}
-         0 {"{0:n2}  " -f ($Num / 1)}
-         1 {"{0:n2} k" -f ($Num / 1e3)}
-         2 {"{0:n2} M" -f ($Num / 1e6)}
-         3 {"{0:n2} G" -f ($Num / 1e9)}
-         4 {"{0:n2} T" -f ($Num / 1e12)}
-         Default {"{0:n2} P" -f ($Num / 1e15)}
+    if (-not $_) {"0  "}
+    else {
+        $Units = "pnµm kMGTPEZY"
+        $Base1000 = [Math]::Floor([Math]::Log([Math]::Abs($_), 1000))
+        $Base1000 = [Math]::Max(-4, [Math]::Min($Base1000, $Units.Length - 5))
+        "{0:n2} $($Units[$Base1000+4])" -f ($_ / [Math]::Pow(1000, $Base1000))
     }
 }
 
