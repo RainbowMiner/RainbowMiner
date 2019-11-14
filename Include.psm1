@@ -110,7 +110,7 @@ function Get-PoolPayoutCurrencies {
     $Payout_Currencies = [PSCustomObject]@{}
     if (-not (Test-Path Variable:Global:PoolFields)) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
-        $Global:PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining","MaximumMarginOfError") | Select-Object -Unique | Sort-Object
+        $Global:PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
         Remove-Variable "Setup"
     }
     @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
@@ -929,13 +929,7 @@ function Set-Stat {
     elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
     else                               {$Path0 = "Stats";          $Mode = "Profit"}
 
-    if ($Sub) {
-        #legacy
-        if (Test-Path ("$Path0\$Name.txt")) {Move-Item "$Path0\$Name.txt" "$Path0\$Sub-$Name.txt" -Force}
-        $Path = "$Path0\$Sub-$Name.txt"
-    } else {
-        $Path = "$Path0\$Name.txt"
-    }
+    $Path = if ($Sub) {"$Path0\$Sub-$Name.txt"} else {"$Path0\$Name.txt"}
 
     $SmallestValue = 1E-20
 
@@ -1031,8 +1025,6 @@ function Set-Stat {
                 }
             }
         }
-
-        if ($Stat.Day -and -not $Stat.ThreeDay) {$Stat.ThreeDay=($Stat.Day+$Stat.Week)/2;$Stat.ThreeDay_Fluctuation=($Stat.Day_Fluctuation+$Stat.Week_Fluctuation)/2} #backward compatibility
 
         $ToleranceMin = $Value
         $ToleranceMax = $Value
@@ -1241,8 +1233,8 @@ function Set-Stat {
                     HashRate_Average   = $HashRate
                     BlockRate_Live     = $BlockRate
                     BlockRate_Average  = $BlockRate
-                    Actual24h_Week     = 0 #$Actual24h
-                    Estimate24h_Week   = 0 #$Estimate24h
+                    Actual24h_Week     = 0
+                    Estimate24h_Week   = 0
                     ErrorRatio         = 0
                 }
             }
@@ -1558,8 +1550,9 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $false)]
         [Switch]$EnableErrorRatio = $false
     )
-
+        
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
+        $Pool_Name = $_.BaseName
 
         if ($EnableErrorRatio -and $Config.DataWindow -in @("actual_last24h","minimum-3","minimum-2h")) {$EnableErrorRatio = $false}
 
@@ -1664,12 +1657,19 @@ function Get-BalancesPayouts {
 }
 
 filter ConvertTo-Float {
-    if (-not $_) {"0  "}
-    else {
-        $Units = "pnµm kMGTPEZY"
-        $Base1000 = [Math]::Floor([Math]::Log([Math]::Abs($_), 1000))
-        $Base1000 = [Math]::Max(-4, [Math]::Min($Base1000, $Units.Length - 5))
-        "{0:n2} $($Units[$Base1000+4])" -f ($_ / [Math]::Pow(1000, $Base1000))
+    [CmdletBinding()]
+    $Num = $_
+
+    switch ([math]::floor([math]::log($Num, 1e3))) {
+        "-Infinity" {"0  "}
+        -2 {"{0:n2} µ" -f ($Num * 1e6)}
+        -1 {"{0:n2} m" -f ($Num * 1e3)}
+         0 {"{0:n2}  " -f ($Num / 1)}
+         1 {"{0:n2} k" -f ($Num / 1e3)}
+         2 {"{0:n2} M" -f ($Num / 1e6)}
+         3 {"{0:n2} G" -f ($Num / 1e9)}
+         4 {"{0:n2} T" -f ($Num / 1e12)}
+         Default {"{0:n2} P" -f ($Num / 1e15)}
     }
 }
 
@@ -5399,7 +5399,7 @@ function Set-PoolsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
-            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaximumMarginOfError = "100"}
+            $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = 0;Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100"}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             $Global:PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
