@@ -167,7 +167,7 @@
             Currencies=@("ETH")
         }
         "NiceHash" = [PSCustomObject]@{
-            Fields=[PSCustomObject]@{OrganizationID="";API_Key="";API_Secret="";StatAverage="Minute_5";MaximumMarginOfError="0"}
+            Fields=[PSCustomObject]@{OrganizationID="";API_Key="";API_Secret="";StatAverage="Minute_5";MaxMarginOfError="0"}
             SetupFields=[PSCustomObject]@{OrganizationID="Enter your Nicehash Organization ID (pulls and adds NH balance)";API_Key = "Enter your Nicehash API key (pulls and adds NH balance)";API_Secret = "Enter your Nicehash API secret (pulls and adds NH balance)"}
             Currencies=@("BTC")
             Autoexchange=$true
