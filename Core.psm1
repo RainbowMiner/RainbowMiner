@@ -725,8 +725,8 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member Wallets $c -Force
             $Session.Config.Pools.$p | Add-Member Params $cparams -Force
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
-            $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+")) -Force
-            $Session.Config.Pools.$p | Add-Member MaxMarginOfError ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+")/100,3)) -Force
+            $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
+            $Session.Config.Pools.$p | Add-Member MaxMarginOfError ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)) -Force
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
     }
@@ -796,8 +796,8 @@ function Invoke-Core {
                 $Session.Config.Pools.$p | Add-Member Wallets $c -Force
                 $Session.Config.Pools.$p | Add-Member Params $cparams -Force
                 $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
-                $Session.Config.Pools.$p | Add-Member Penalty ([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+")) -Force
-                $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]1}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+")/100,3)}) -Force
+                $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
+                $Session.Config.Pools.$p | Add-Member MaxMarginOfError $(if ($Session.Config.Pools.$p.MaxMarginOfError -eq $null) {if ($p -eq "NiceHash") {[double]0} else {[double]100}} else {[Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)}) -Force
             }
             if ($DonationData.ExcludeMinerName) {
                 $Session.Config | Add-Member ExcludeMinerName @($Session.Config.ExcludeMinerName + (Compare-Object $DonationData.ExcludeMinerName $Session.Config.MinerName | Where-Object SideIndicator -eq "<=" | Select-Object -ExpandProperty InputObject) | Select-Object -Unique) -Force
@@ -1147,7 +1147,7 @@ function Invoke-Core {
             if (-not $_.Exclusive) {
                 $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                 if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError) {
-                    $Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError)*($Session.Config.PoolAccuracyWeight/100)
+                    $Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100)*($Session.Config.PoolAccuracyWeight/100)
                 }
                 if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
                     $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100
@@ -1169,7 +1169,7 @@ function Invoke-Core {
                 $Pool_Price *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                 $Pool_Price_Bias = $Pool_Price
                 if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools.$_.MaxMarginOfError) {
-                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$_.MaxMarginOfError) * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00)
+                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$_.MaxMarginOfError/100) * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00)
                 }
             } else {
                 $Pool_Price_Bias = $Pool_Price
