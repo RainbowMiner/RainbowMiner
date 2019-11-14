@@ -10,17 +10,17 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 $ManualUri = "https://bitcointalk.org/index.php?topic=4767892.0"
 $Port = "330{0:d2}"
 $DevFee = 2.0
-$Version = "1.5r"
+$Version = "1.5s"
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5r-miniz/miniZ_v1.5r_cuda10_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda10_linux-x64.tar.gz"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5r-miniz/miniZ_v1.5r_linux-x64.tar.gz"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda8_linux-x64.tar.gz"
             Cuda = "8.0"
         }
     )
@@ -28,11 +28,11 @@ if ($IsLinux) {
     $Path = ".\Bin\Equihash-MiniZ\miniZ.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5r-miniz/miniZ_v1.5r_cuda10_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda10_win-x64.zip"
             Cuda = "10.0"
         },
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5r-miniz/miniZ_v1.5r_win-x64.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.5s-miniz/miniZ_v1.5s_cuda8_win-x64.zip"
             Cuda = "8.0"
         }
     )
@@ -43,11 +43,11 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash16x5";    MinMemGB = 1;                  Params = "--par=96,5";  ExtendInterval = 2; AutoPers = $true}  #Equihash 96,5
     [PSCustomObject]@{MainAlgorithm = "Equihash24x5";    MinMemGB = 2;                  Params = "--par=144,5"; ExtendInterval = 2; AutoPers = $true} #Equihash 144,5
-    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 2;                  Params = "--par=192,7"; ExtendInterval = 2; AutoPers = $true} #Equihash 192,7
+    #[PSCustomObject]@{MainAlgorithm = "Equihash24x7";    MinMemGB = 3;                  Params = "--par=192,7"; ExtendInterval = 2; AutoPers = $true} #Equihash 192,7
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x4";   MinMemGB = 3;                  Params = "--par=125,4"; ExtendInterval = 3; AutoPers = $true} #Equihash 125,4,0 (ZelCash)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5";   MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=150,5"; ExtendInterval = 3; AutoPers = $true} #Equihash 150,5,0 (GRIMM)
     [PSCustomObject]@{MainAlgorithm = "EquihashR25x5x3"; MinMemGB = 3; MinMemGbW10 = 4; Params = "--par=beam";  ExtendInterval = 3; AutoPers = $false} #Equihash 150,5,3 (BEAM)
-    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 4;                  Params = "--par=210,9"; ExtendInterval = 2; AutoPers = $true} #Equihash 210,9 (AION)
+    [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGB = 2;                  Params = "--par=210,9"; ExtendInterval = 2; AutoPers = $true} #Equihash 210,9 (AION)
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -84,7 +84,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
         $MinMemGB = if ($_.MinMemGbW10 -and $Session.WindowsVersion -ge "10.0.0.0") {$_.MinMemGbW10} else {$_.MinMemGb}        
-        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb)}
+        $Miner_Device = $Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGB * 1gb - 0.25gb) -and ($Cuda -ne "8.0" -or (Get-NvidiaArchitecture $_.Model_Base) -eq "Turing")}
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
