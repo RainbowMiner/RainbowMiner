@@ -536,7 +536,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
                 $AllAlgorithms.PSObject.Properties.Name | Where-Object {-not $Session.Config.Algorithm.Count -or $Session.Config.Algorithm -icontains $_} | Foreach-Object {
                     $Session.Config.Algorithms | Add-Member $_ $AllAlgorithms.$_ -Force
-                    $Session.Config.Algorithms.$_ | Add-Member Penalty ([double]($Session.Config.Algorithms.$_.Penalty -replace "[^\d\.\-]+")) -Force
+                    $Session.Config.Algorithms.$_ | Add-Member Penalty ([Math]::Round([double]($Session.Config.Algorithms.$_.Penalty -replace "[^\d\.\-]+"),2)) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinHashrate) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Algorithms.$_.MinWorkers) -Force
                     $Session.Config.Algorithms.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Algorithms.$_.MaxTimeToFind) -Force
@@ -556,7 +556,7 @@ function Invoke-Core {
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
                 $AllCoins.PSObject.Properties.Name | Select-Object | Foreach-Object {
                     $Session.Config.Coins | Add-Member $_ $AllCoins.$_ -Force
-                    $Session.Config.Coins.$_ | Add-Member Penalty ([double]($Session.Config.Coins.$_.Penalty -replace "[^\d\.\-]+")) -Force
+                    $Session.Config.Coins.$_ | Add-Member Penalty ([Math]::Round([double]($Session.Config.Coins.$_.Penalty -replace "[^\d\.\-]+"),2)) -Force
                     $Session.Config.Coins.$_ | Add-Member MinHashrate (ConvertFrom-Hash $Session.Config.Coins.$_.MinHashrate) -Force
                     $Session.Config.Coins.$_ | Add-Member MinWorkers (ConvertFrom-Hash $Session.Config.Coins.$_.MinWorkers) -Force
                     $Session.Config.Coins.$_ | Add-Member MaxTimeToFind (ConvertFrom-Time $Session.Config.Coins.$_.MaxTimeToFind) -Force
