@@ -5,20 +5,29 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsLinux -and -not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-YesCryptR8G\ccminer.exe"
+if ($IsLinux) {
+    $Path = ".\Bin\NVIDIA-YesCryptR8G\ccminer"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.tar.7z"
+            Cuda = "9.1"
+        }
+    )
+} else {
+    $Path = ".\Bin\NVIDIA-YesCryptR8G\ccminer.exe"
+    $UriCuda = @(
+        [PSCustomObject]@{
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.zip"
+            Cuda = "10.0"
+        }
+    )
+}
 $ManualUri = "https://github.com/Kudaraidee/ccminer-KlausT-8.21-mod-koto-sapling-2/releases"
 $Port = "137{0:d2}"
 $DevFee = 0.0
 $Version = "8.21-r17kotov2"
-
-$UriCuda = @(
-    [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.zip"
-        Cuda = "10.0"
-    }        
-)
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
