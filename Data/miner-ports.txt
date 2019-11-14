@@ -27,7 +27,7 @@
 126	CcminerMtp
 127	CcminerThe1
 128	CcminerDyn
-129	CcminerVerus
+129	CcminerYescrypt
 130	CcminerRfv2
 131	RhminerCpu
 132	CcminerHoney
@@ -35,6 +35,7 @@
 134	CcminerMtpNh
 135	CcminerSpModRfv2
 136	CcminerTcr
+137	CcminerYescryptR8G
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
