@@ -824,7 +824,7 @@
                             $Result = Invoke-GetUrlAsync $Parameters.url -method $Parameters.method -cycletime $Parameters.cycletime -retry $Parameters.retry -retrywait $Parameters.retrywait -tag $Parameters.tag -delay $Parameters.delay -timeout $Parameters.timeout -body $pbody -headers $pheaders -jobkey $Parameters.jobkey
                             if ($Result) {$Status = $true}
                         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-                        $Data = [PSCustomObject]@{Status=$Status;Content=if (($Result.GetType()).IsArray) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
+                        $Data = [PSCustomObject]@{Status=$Status;Content=if ($Result -is [array]) {@($Result | Select-Object)} else {$Result}} | ConvertTo-Json -Depth 10 -Compress
                         if ($pbody -ne $null) {Remove-Variable "pbody" -ErrorAction Ignore}
                         if ($pheaders -ne $null) {Remove-Variable "pheaders" -ErrorAction Ignore}
                         if ($Result -ne $null) {Remove-Variable "Result" -ErrorAction Ignore}
@@ -1043,22 +1043,35 @@
 
             # If $Data is null, the API will just return whatever data was in the previous request.  Instead, show an error
             # This happens if the script just started and hasn't filled all the properties in yet.
-            If($Data -eq $Null) { 
+            If($Data -eq $null) { 
                 $Data = @{'Error' = "API data not available"} | ConvertTo-Json
             }
 
-            # Send the response
-			$Response.Headers.Add("Accept-Encoding","gzip");
-			$Response.Headers.Add("Server","RainbowMiner API on $($Session.MachineName)");
-			$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
-            $Response.Headers.Add("Content-Type", $ContentType)
-            #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
-            if ($ContentFileName -ne "") {$Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")}
-            $Response.StatusCode = $StatusCode
-            $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
-            $Response.ContentLength64 = $ResponseBuffer.Length
-            $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
-            $Response.Close()
+            try {
+                # Send the response
+			    $Response.Headers.Add("Accept-Encoding","gzip");
+			    $Response.Headers.Add("Server","RainbowMiner API on $($Session.MachineName)");
+			    $Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
+                $Response.Headers.Add("Content-Type", $ContentType)
+                #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
+                $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
+                if ($ResponseBuffer -eq $null) {
+                    $Data = @{'Error' = "API data utf8 conversion problem$(if ($ContentFileName) {" with file $ContentFileName"})"} | ConvertTo-Json
+                    $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
+                } elseif ($ContentFileName -ne "") {
+                    $Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
+                }
+                $Response.StatusCode = $StatusCode
+                $Response.ContentLength64 = $ResponseBuffer.Length
+                $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                if ($Session.LogLevel -ne "Silent") {
+                    "Response not sent: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                }
+            } finally {
+                $Response.Close()
+            }
             if ($Error.Count -and $Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
             $Error.Clear()
             Foreach ($var in @("Context","Data","ContentEncoding","InputStream","Parameters","Request","Response","ResponseBuffer","task")) {Remove-Variable $var -Force -ErrorAction Ignore}
