@@ -247,9 +247,9 @@
         $false
     }
 
-    $Session.Timer = (Get-Date).ToUniversalTime()
-    $Session.NextReport = $Session.Timer
-    $Session.DecayStart = $Session.Timer
+    $Session.Timer      = (Get-Date).ToUniversalTime()
+    $Session.NextReport = (Get-Date).ToUniversalTime()
+    $Session.DecayStart = (Get-Date).ToUniversalTime()
     [hashtable]$Session.Updatetracker = @{
         Balances = 0
         TimeDiff = 0
@@ -956,8 +956,6 @@ function Invoke-Core {
     $Session.RoundStart = $Session.Timer
     $RoundEnd = $Session.Timer.AddSeconds($Session.CurrentInterval)
 
-    $DecayExponent = [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod)
-
     #Update the exchange rates
     Write-Log "Updating exchange rates. "
     Update-Rates
@@ -1132,30 +1130,38 @@ function Invoke-Core {
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
-        $OutOfSyncTimer = ($Script:AllPools | Select-Object -ExpandProperty Updated | Measure-Object -Maximum).Maximum
-        $OutOfSyncTime = $OutOfSyncTimer.AddMinutes(-$Session.OutofsyncWindow)
-        $OutOfSyncDivisor = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
-        $OutOfSyncLimit = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
+        $OutOfSyncTimer    = ($Script:AllPools | Select-Object -ExpandProperty Updated | Measure-Object -Maximum).Maximum
+        $OutOfSyncTime     = $OutOfSyncTimer.AddMinutes(-$Session.OutofsyncWindow)
+        $OutOfSyncDivisor  = [Math]::Log($Session.OutofsyncWindow-$Session.SyncWindow) #precalc for sync decay method
+        $OutOfSyncLimit    = 1/($Session.OutofsyncWindow-$Session.SyncWindow)
 
-        $Pools_Hashrates = @{}
+        $Pools_Hashrates   = @{}
         $Script:AllPools | Select-Object Algorithm,CoinSymbol,Hashrate,StablePrice | Group-Object -Property {"$($_.Algorithm)$($_.CoinSymbol)"} | Foreach-Object {$Pools_Hashrates[$_.Name] = ($_.Group | Where-Object StablePrice | Select-Object -ExpandProperty Hashrate | Measure-Object -Maximum).Maximum;if (-not $Pools_Hashrates[$_.Name]) {$Pools_Hashrates[$_.Name]=1}}
         $Script:AllPools | Where-Object {$_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)} | Foreach-Object {$_ | Add-Member PostBlockMining $true -Force}
+
+        $Pools_Running     = @($Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {for($i=0;$i -lt $_.Pool.Count;$i++) {"$($_.Pool | Select-Object -Index $i)|$($_.BaseAlgorithm | Select-Object -Index $i)|$($_.CoinSymbol | Select-Object -Index $i)"}} | Select-Object)
+        $Session.DecayFact = [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod) / ([Math]::Max($Session.Config.SwitchingPrevention,1)))
 
         Write-Log "Calculating pool compare prices. "
         $Script:AllPools | Foreach-Object {
             $Price_Cmp =  $_."$(if (-not $Session.Config.EnableFastSwitching -and -not $_.PPS) {"Stable"})Price"
             if (-not $_.Exclusive) {
                 $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
-                if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError) {
-                    $Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100)*($Session.Config.PoolAccuracyWeight/100)
+                if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError -and $Pools_Running -notcontains "$($_.Name)|$($_.Algorithm -replace "\-.+$")|$($_.CoinSymbol)") {
+                    #$Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100)*($Session.Config.PoolAccuracyWeight/100)
+                    $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
                 }
                 if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
-                    $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100
+                    $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
                 }
             }
             $_ | Add-Member Price_Cmp $Price_Cmp -Force
         }
+
         #$(if ($Session.Config.EnableFastSwitching -or $_.PPS) {$_.Price} else {$_.StablePrice * (1 - $_.MarginOfError*($Session.Config.PoolAccuracyWeight/100))}) * $(if ($_.Hashrate -eq $null -or -not $Session.Config.HashrateWeightStrength) {1} else {1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100))*$Session.Config.HashrateWeight/100}) * ([Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1))
+
+        Remove-Variable "Pools_Hashrates"
+        Remove-Variable "Pools_Running"
 
         Write-Log "Selecting best pool for each algorithm. "
         $Script:AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($Script:AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm)"}, {$_.PostBlockMining}, {-not $_.PostBlockMining -and (-not $_.CoinSymbol -or $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -inotcontains $_.CoinSymbol)}, {$_.Price_Cmp}, {$_.Region -EQ $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -EQ $Session.Config.SSL} | Select-Object -First 1)}
@@ -1169,7 +1175,7 @@ function Invoke-Core {
                 $Pool_Price *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                 $Pool_Price_Bias = $Pool_Price
                 if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools.$_.MaxMarginOfError) {
-                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$_.MaxMarginOfError/100) * [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, $DecayExponent / ([Math]::Max($Session.Config.SwitchingPrevention,1)))) * 100.00) / 100.00)
+                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$_.MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00)
                 }
             } else {
                 $Pool_Price_Bias = $Pool_Price
@@ -1181,7 +1187,6 @@ function Invoke-Core {
                 HasMinerExclusions = ($Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count)
             } -Force
         }
-        Remove-Variable "Pools_Hashrates"
     }
 
     #Give API access to the pools information
@@ -1875,6 +1880,8 @@ function Invoke-Core {
             $(if ($_.MiningPriority -ne $null) {$_.MiningPriority} else {$Session.Config.MiningPriorityGPU}),
             $(if ($_.MiningAffinity -ne $null) {$_.MiningAffinity} elseif ($_.DeviceModel -ne "CPU") {$Session.Config.GPUMiningAffinity})
         )
+
+        $Session.DecayStart = (Get-Date).ToUniversalTime()
 
         $_.SetStatus([MinerStatus]::Running)
 
