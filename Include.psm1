@@ -6105,8 +6105,6 @@ Param(
         $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
     }
 
-        Write-Host "$RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body"
-
     if ($Job) {
         $Job | Wait-Job -Timeout ($timeout+2) > $null
         if ($Job.state -eq 'Running') {
