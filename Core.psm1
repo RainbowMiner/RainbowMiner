@@ -613,11 +613,11 @@ function Invoke-Core {
                 $Session.Config | Add-Member Devices $AllDevices -Force
                 $OCprofileFirst = $Session.Config.OCProfiles.PSObject.Properties.Name | Foreach-Object {$_ -replace "-.+$"} | Select-Object -Unique -First 1
                 foreach ($p in @($Session.Config.Devices.PSObject.Properties.Name)) {
-                    $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                    $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
-                    foreach ($q in @("MinerName","PoolName","ExcludeMinerName","ExcludePoolName")) {
+                    foreach ($q in @("Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName")) {
                         if ($Session.Config.Devices.$p.$q -is [string]){$Session.Config.Devices.$p.$q = if ($Session.Config.Devices.$p.$q.Trim() -eq ""){@()}else{[regex]::split($Session.Config.Devices.$p.$q.Trim(),"\s*[,;]+\s*")}}
                     }
+                    $Session.Config.Devices.$p | Add-Member Algorithm @(($Session.Config.Devices.$p.Algorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
+                    $Session.Config.Devices.$p | Add-Member ExcludeAlgorithm @(($Session.Config.Devices.$p.ExcludeAlgorithm | Select-Object) | Where-Object {$_} | Foreach-Object {Get-Algorithm $_}) -Force
                     $Session.Config.Devices.$p | Add-Member DisableDualMining ($Session.Config.Devices.$p.DisableDualMining -and (Get-Yes $Session.Config.Devices.$p.DisableDualMining)) -Force
                     if ($p -ne "CPU" -and -not $Session.Config.Devices.$p.DefaultOCprofile) {
                         $Session.Config.Devices.$p | Add-Member DefaultOCprofile $OCprofileFirst -Force
@@ -1147,7 +1147,7 @@ function Invoke-Core {
             $Price_Cmp =  $_."$(if (-not $Session.Config.EnableFastSwitching -and -not $_.PPS) {"Stable"})Price"
             if (-not $_.Exclusive) {
                 $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
-                if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError -and $Pools_Running -notcontains "$($_.Name)|$($_.Algorithm -replace "\-.+$")|$($_.CoinSymbol)") {
+                if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention) -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError -and $Pools_Running -notcontains "$($_.Name)|$($_.Algorithm -replace "\-.+$")|$($_.CoinSymbol)") {
                     #$Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100)*($Session.Config.PoolAccuracyWeight/100)
                     $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
                 }

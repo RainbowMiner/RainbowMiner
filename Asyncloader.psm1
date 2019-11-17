@@ -65,11 +65,11 @@ Param(
                             if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
                         }
                         catch {
-                            if ($Error.Count){$Error.RemoveAt(0)}
                             $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
                             if ($AsyncLoader.Verbose) {
                                 "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
                             }
+                            if ($Error.Count){$Error.RemoveAt(0)}
                         }
                         finally {
                             if ($AsyncLoader.Verbose) {
@@ -79,8 +79,8 @@ Param(
                     }
                 }
             }
-            if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}
-            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}
+            if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}}
+            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Foreach-Object {$_ | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}}
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }

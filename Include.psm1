@@ -6077,14 +6077,54 @@ Param(
     if ($headers) {$headers_local = $headers.Clone()} else {$headers_local = @{}}
     if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
-    
-    if ($method -eq "REST") {
-        Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+
+    $ScriptBlock = {
+        param($RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body)
+
+        $AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
+        [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+
+        try {
+            if ($method -eq "REST") {
+                Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+            } else {
+                $oldProgressPreference = $Global:ProgressPreference
+                $Global:ProgressPreference = "SilentlyContinue"
+                (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                $Global:ProgressPreference = $oldProgressPreference
+            }
+        } catch {
+            [PSCustomObject]@{Error="[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)"}
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+    }
+
+    if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
+        $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
     } else {
-        $oldProgressPreference = $Global:ProgressPreference
-        $Global:ProgressPreference = "SilentlyContinue"
-        (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
-        $Global:ProgressPreference = $oldProgressPreference
+        $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+    }
+
+    $Job | Wait-Job -Timeout ($timeout+2) > $null
+
+    if ($Job) {
+        if ($Job.state -eq 'Running') {
+            Write-Log -Level Warn "Time-out while loading $($RequestUrl)"
+            $Job | Stop-Job -PassThru | Receive-Job > $null
+        } else {
+            $Data = Receive-Job $Job | Select-Object -ExcludeProperty RunspaceId, PSSourceJobInstanceId, PSShowComputerName, PSComputerName
+            Remove-Variable "Job"
+            if ($Data.Error -ne $null) {
+                $Error = $Data.Error
+                Remove-Variable "Data"
+                throw $Data.Error
+            }
+            $Data
+            if ($Data -ne $null) {
+                Remove-Variable "Data"
+            }
+        }
+        Remove-Job $Job -Force
     }
     Remove-Variable "headers_local"
 }
