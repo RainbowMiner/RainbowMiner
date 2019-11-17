@@ -6094,7 +6094,7 @@ Param(
                 $Global:ProgressPreference = $oldProgressPreference
             }
         } catch {
-            [PSCustomObject]@{Error="[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)"}
+            [PSCustomObject]@{ErrorMessage="[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)"}
             if ($Error.Count){$Error.RemoveAt(0)}
         }
     }
@@ -6105,19 +6105,19 @@ Param(
         $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
     }
 
-    $Job | Wait-Job -Timeout ($timeout+2) > $null
+        Write-Host "$RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body"
 
     if ($Job) {
+        $Job | Wait-Job -Timeout ($timeout+2) > $null
         if ($Job.state -eq 'Running') {
             Write-Log -Level Warn "Time-out while loading $($RequestUrl)"
             $Job | Stop-Job -PassThru | Receive-Job > $null
         } else {
-            $Data = Receive-Job $Job | Select-Object -ExcludeProperty RunspaceId, PSSourceJobInstanceId, PSShowComputerName, PSComputerName
-            Remove-Variable "Job"
-            if ($Data.Error -ne $null) {
-                $Error = $Data.Error
+            $Data = Receive-Job -Job $Job | Select-Object -ExcludeProperty RunspaceId, PSSourceJobInstanceId, PSShowComputerName, PSComputerName
+            if ($Data -and $Data.ErrorMessage -ne $null) {
+                $Error = $Data.ErrorMessage
                 Remove-Variable "Data"
-                throw $Data.Error
+                throw $Data.ErrorMessage
             }
             $Data
             if ($Data -ne $null) {
@@ -6125,6 +6125,7 @@ Param(
             }
         }
         Remove-Job $Job -Force
+        Remove-Variable "Job"
     }
     Remove-Variable "headers_local"
 }
