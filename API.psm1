@@ -1043,8 +1043,10 @@
 
             # If $Data is null, the API will just return whatever data was in the previous request.  Instead, show an error
             # This happens if the script just started and hasn't filled all the properties in yet.
-            If($Data -eq $null) { 
-                $Data = @{'Error' = "API data not available"} | ConvertTo-Json
+            If($Data -eq $null) {
+                $StatusCode = 404
+                $ContentType = "text/html"
+                $Data = "API data not (yet) available"
             }
 
             try {
