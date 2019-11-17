@@ -6112,6 +6112,7 @@ Param(
             $Job | Stop-Job -PassThru | Receive-Job > $null
         } else {
             $Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data
+            if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
             if ($Data -and $Data.ErrorMessage -ne $null) {
                 $Error = $Data.ErrorMessage
                 Remove-Variable "Data"
