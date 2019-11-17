@@ -187,7 +187,7 @@ param(
     [Parameter(Mandatory = $false)]
     [Switch]$EnableResetVega = $false,
     [Parameter(Mandatory = $false)]
-    [Int]$EnableHeatMyFlat = 0,
+    [Double]$EnableHeatMyFlat = 0,
     [Parameter(Mandatory = $false)]
     [int]$MaxActivityDays = 2, # maximum days for the activity list on localhost
     [Parameter(Mandatory = $false)]

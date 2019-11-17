@@ -1216,7 +1216,7 @@ function Start-Setup {
                             $Config.FastestMinerOnly = Read-HostBool -Prompt "Show fastest miner only" -Default $Config.FastestMinerOnly | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "enableheatmyflat" {
-                            $Config.EnableHeatMyFlat = Read-HostInt -Prompt "Priorize heat over profit to heat my flat. Set intensity from 1 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                            $Config.EnableHeatMyFlat = Read-HostDouble -Prompt "Priorize heat over profit to heat my flat. Set intensity from 0 to 10, (0 to disable, 5 is a good point to start)" -Default $Config.EnableHeatMyFlat -Min 0 -Max 10 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                         }
                         "maxactivitydays" {
                             $Config.MaxActivityDays = Read-HostInt -Prompt "History length for activity-list on localhost in days" -Default $Config.MaxActivityDays -Min 1 -Max 7 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
