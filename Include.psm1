@@ -6084,7 +6084,7 @@ Param(
         $AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
         [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
 
-        try {
+        [PSCustomObject]@{Data = $(try {
             if ($method -eq "REST") {
                 Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
             } else {
@@ -6096,7 +6096,7 @@ Param(
         } catch {
             [PSCustomObject]@{ErrorMessage="[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)"}
             if ($Error.Count){$Error.RemoveAt(0)}
-        }
+        })}
     }
 
     if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
@@ -6106,12 +6106,12 @@ Param(
     }
 
     if ($Job) {
-        $Job | Wait-Job -Timeout ($timeout+2) > $null
+        $Job | Wait-Job -Timeout ($timeout*2) > $null
         if ($Job.state -eq 'Running') {
             Write-Log -Level Warn "Time-out while loading $($RequestUrl)"
             $Job | Stop-Job -PassThru | Receive-Job > $null
         } else {
-            $Data = Receive-Job -Job $Job | Select-Object -ExcludeProperty RunspaceId, PSSourceJobInstanceId, PSShowComputerName, PSComputerName
+            $Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data
             if ($Data -and $Data.ErrorMessage -ne $null) {
                 $Error = $Data.ErrorMessage
                 Remove-Variable "Data"
