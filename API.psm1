@@ -1054,26 +1054,39 @@
 			    $Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
                 $Response.Headers.Add("Content-Type", $ContentType)
                 #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
-                $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
-                if ($ResponseBuffer -eq $null) {
-                    $Data = @{'Error' = "API data utf8 conversion problem$(if ($ContentFileName) {" with file $ContentFileName"})"} | ConvertTo-Json
-                    $ResponseBuffer = if ($Data -is [string]) {[System.Text.Encoding]::UTF8.GetBytes($Data)} else {$Data}
-                } elseif ($ContentFileName -ne "") {
+                if ($ContentFileName -ne "") {
                     $Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
                 }
                 $Response.StatusCode = $StatusCode
-                $Response.ContentLength64 = $ResponseBuffer.Length
-                $Response.OutputStream.Write($ResponseBuffer,0,$ResponseBuffer.Length)
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                if ($Session.LogLevel -ne "Silent") {
-                    "Response not sent: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                if ($Data -is [string]) {
+                    $Response = New-Object IO.StreamWriter($Response.OutputStream,[Text.Encoding]::UTF8)
+					$Response.WriteLine($Data)
+                } else {
+                    $Response.ContentLength64 = $Data.Length
+                    $Response.OutputStream.Write($Data,0,$Data.Length)
                 }
-            } finally {
-                $Response.Close()
+            } catch {
+                if ($Session.LogLevel -ne "Silent") {
+                    "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Response not sent: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                }
+                if ($Error.Count){$Error.RemoveAt(0)}
             }
-            if ($Error.Count -and $Session.LogLevel -ne "Silent") {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
-            $Error.Clear()
+
+            try {
+                $Response.Close()
+            } catch {
+                if ($Session.LogLevel -ne "Silent") {
+                    "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Close response failed: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                }
+                if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
+            if ($Error.Count) {
+                if (-and $Session.LogLevel -ne "Silent") {
+                    $Error | Foreach-Object {"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
+                }
+                $Error.Clear()
+            }
             Foreach ($var in @("Context","Data","ContentEncoding","InputStream","Parameters","Request","Response","ResponseBuffer","task")) {Remove-Variable $var -Force -ErrorAction Ignore}
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
