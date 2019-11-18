@@ -1070,7 +1070,7 @@
                 }
             } catch {
                 if ($Session.LogLevel -ne "Silent") {
-                    "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Response not sent: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
                 }
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
@@ -1079,14 +1079,14 @@
                 $Response.Close()
             } catch {
                 if ($Session.LogLevel -ne "Silent") {
-                    "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Close response failed: $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8
+                    Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close response failed: $($_.Exception.Message)" -Append -Timestamp
                 }
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
 
             if ($Error.Count) {
-                if (-and $Session.LogLevel -ne "Silent") {
-                    $Error | Foreach-Object {"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Append -Encoding utf8}
+                if ($Session.LogLevel -ne "Silent") {
+                    $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}
                 }
                 $Error.Clear()
             }

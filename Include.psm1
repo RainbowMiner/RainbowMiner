@@ -475,6 +475,28 @@ function Set-MinerStats {
     if ($Watchdog) {-not $Miner_Failed_Total}
 }
 
+function Write-ToFile {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)]
+        [string]$FilePath = "",
+        [Parameter(Mandatory = $False)]
+        [string]$Message = "",
+        [Parameter(Mandatory = $False)]
+        [switch]$Append = $false,
+        [Parameter(Mandatory = $False)]
+        [switch]$Timestamp = $false
+    )
+    $file = New-Object System.IO.StreamWriter ($FilePath, $Append, [System.Text.Encoding]::UTF8)
+    if ($Timestamp) {
+        $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+    } else {
+        $file.WriteLine($Text)
+    }
+    $file.Close()
+    Remove-Variable "file"
+}
+
 Function Write-Log {
     [CmdletBinding()]
     Param(
@@ -496,7 +518,6 @@ Function Write-Log {
         $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
 
         $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
-        $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
         if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (-not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
@@ -536,7 +557,8 @@ Function Write-Log {
         if (-not $NoLog) {
             if ($mutex.WaitOne(2000)) {
                 $proc = Get-Process -id $PID
-                "$date [$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" | Out-File -FilePath $filename -Append -Encoding utf8
+                Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
+                Remove-Variable "proc"
                 $mutex.ReleaseMutex()
             }
             else {
@@ -567,7 +589,7 @@ Function Write-ActivityLog {
         # Attempt to aquire mutex, waiting up to 1 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         if ($mutex.WaitOne(1000)) {
             $ocmode = if ($Miner.DeviceModel -notmatch "^CPU") {$Session.OCmode} else {"off"}
-            "$([PSCustomObject]@{
+            Write-ToFile -FilePath $filename -Message "$([PSCustomObject]@{
                 ActiveStart    = "{0:yyyy-MM-dd HH:mm:ss}" -f $ActiveStart
                 ActiveLast     = "{0:yyyy-MM-dd HH:mm:ss}" -f $Miner.GetActiveLast()
                 Name           = $Miner.BaseName
@@ -581,7 +603,7 @@ Function Write-ActivityLog {
                 Crashed        = $Crashed
                 OCmode         = $ocmode
                 OCP            = if ($ocmode -eq "ocp") {$Miner.OCprofile} elseif ($ocmode -eq "msia") {$Miner.MSIAprofile} else {$null}
-            } | ConvertTo-Json -Compress)," | Out-File -FilePath $filename -Append -Encoding utf8
+            } | ConvertTo-Json -Compress)," -Append
             $mutex.ReleaseMutex()
         }
         else {
@@ -1979,7 +2001,7 @@ function Start-SubProcessInConsole {
 
         do {
             if ($ControllerProcess.WaitForExit(1000)) {$Process.CloseMainWindow()>$null}
-            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
+            if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
             $Error.Clear()
         }
         while ($Process.HasExited -eq $false)
@@ -2149,7 +2171,7 @@ function Start-SubProcessInScreen {
                     (Start-Process "start-stop-daemon" -ArgumentList $ArgumentList -PassThru).WaitForExit() > $null
                 }
             }
-            if ($Error.Count) {$Error | Out-File (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Append -Encoding utf8}
+            if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath (Join-Path $CurrentPwd "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").jobs.txt") -Message "$($_.Exception.Message)" -Append -Timestamp}}
             $Error.Clear()
         }
         while ($Process.HasExited -eq $false)
@@ -6286,7 +6308,7 @@ Param(
                 $AsyncLoader.Jobs.$Jobkey.Prefail=0                
             }
             catch {
-                $RequestError = "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
+                $RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
                 if ($Error.Count){$Error.RemoveAt(0)}
                 #Write-Log -Level Info "GetUrl Failed $RequestError"
             }

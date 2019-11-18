@@ -2184,7 +2184,7 @@ function Invoke-Core {
 
     #Reduce Memory
     @("BalancesData","BestMiners_Combo","BestMiners_Combo2","CcMiner","CcMinerNameToAdd","ComboAlgos","ConfigBackup","Miner","Miner_Table","Miners","Miners_Device_Combos","AllCurrencies","MissingCurrencies","MissingCurrenciesTicker","p","Pool","Pools","Pool_Config","Pool_Parameters","Pool_WatchdogTimers","q") | Foreach-Object {Remove-Variable $_ -ErrorAction Ignore}
-    if ($Error.Count) {$Error | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Append -Encoding utf8}
+    if ($Error.Count) {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").main.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}}
     $Error.Clear()
     $Global:Error.Clear()
     Get-Job -State Completed | Remove-Job -Force

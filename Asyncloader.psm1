@@ -59,30 +59,30 @@ Param(
                     if ($Job.CycleTime -le 0) {$Job.CycleTime = $AsyncLoader.Interval}
                     if ($Job -and -not $Job.Running -and -not $Job.Paused -and $Job.LastRequest -le (Get-Date).ToUniversalTime().AddSeconds(-$Job.CycleTime)) {
                         if ($AsyncLoader.Verbose) {
-                            "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Start job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Start job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                         }
                         try {
                             Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                            if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add($AsyncLoader.Jobs.$Jobkey.Error)>$null}
+                            if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($AsyncLoader.Jobs.$Jobkey.Error)")>$null}
                         }
                         catch {
                             $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
                             if ($AsyncLoader.Verbose) {
-                                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" -Append -Timestamp
                             }
                             if ($Error.Count){$Error.RemoveAt(0)}
                         }
                         finally {
                             if ($AsyncLoader.Verbose) {
-                                "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Done job $JobKey with $($Job.Url) using $($Job.Method)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8
+                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Done job $JobKey with $($Job.Url) using $($Job.Method)" -Append -Timestamp
                             }
                         }
                     }
                 }
                 Get-Job -State Completed | Remove-Job -Force
             }
-            if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}}
-            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Foreach-Object {$_ | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}}
+            if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
+            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" $_ -Append}};$Errors.Clear()}
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
