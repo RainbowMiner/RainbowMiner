@@ -36,8 +36,9 @@ catch {
     Write-Log -Level Warn "RainbowMiner API is down!"
 }
 
-$AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
-[System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+    [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+}
 
 $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI

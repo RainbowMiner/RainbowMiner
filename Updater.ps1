@@ -10,8 +10,9 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 #[Environment]::CurrentDirectory = $ExecutionContext.SessionState.Path.CurrentFileSystemLocation
 
-$AllProtocols = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12' 
-[System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+    [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+}
 
 if (-not (Test-Path ".\Data\version.json")) {
     Write-Host "No version info found. Update will be stopped"

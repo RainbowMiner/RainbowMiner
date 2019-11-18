@@ -261,8 +261,9 @@ if ($IsLinux) {
     Import-Module .\OCDaemon.psm1
 }
 
-$AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
-[System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+    [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+}
 
 if ($UseTimeSync) {Test-TimeSync}
 
