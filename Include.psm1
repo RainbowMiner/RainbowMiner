@@ -6105,28 +6105,24 @@ Param(
         $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
     }
 
+    Remove-Variable "headers_local"
+
     if ($Job) {
         $Job | Wait-Job -Timeout ($timeout*2) > $null
+        $Error = ''
         if ($Job.state -eq 'Running') {
             Write-Log -Level Warn "Time-out while loading $($RequestUrl)"
             $Job | Stop-Job -PassThru | Receive-Job > $null
         } else {
             $Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data
             if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-            if ($Data -and $Data.ErrorMessage -ne $null) {
-                $Error = $Data.ErrorMessage
-                Remove-Variable "Data"
-                throw $Data.ErrorMessage
-            }
-            $Data
-            if ($Data -ne $null) {
-                Remove-Variable "Data"
-            }
+            if ($Data -and $Data.ErrorMessage -eq $null) {$Data} else {$Error = $Data.ErrorMessage}
+            if ($Data -ne $null) {Remove-Variable "Data"}
         }
         Remove-Job $Job -Force
         Remove-Variable "Job"
+        if ($Error -ne '') {throw $Error}
     }
-    Remove-Variable "headers_local"
 }
 
 function Invoke-RestMethodAsync {

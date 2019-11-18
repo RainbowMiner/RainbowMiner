@@ -78,6 +78,7 @@ Param(
                         }
                     }
                 }
+                Get-Job -State Completed | Remove-Job -Force
             }
             if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {"[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)" | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Error.Clear()}}
             if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Foreach-Object {$_ | Out-File "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Append -Encoding utf8};$Errors.Clear()}}
