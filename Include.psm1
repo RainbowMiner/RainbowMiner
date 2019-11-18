@@ -6111,15 +6111,15 @@ Param(
         $Job | Wait-Job -Timeout ($timeout*2) > $null
         $Error = ''
         if ($Job.state -eq 'Running') {
-            Write-Log -Level Warn "Time-out while loading $($RequestUrl)"
-            $Job | Stop-Job -PassThru | Receive-Job > $null
+            $Error = "Time-out while loading $($RequestUrl)"
+            try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         } else {
-            $Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data
+            try {$Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data} catch {if ($Error.Count){$Error.RemoveAt(0)}}
             if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-            if ($Data -and $Data.ErrorMessage -eq $null) {$Data} else {$Error = $Data.ErrorMessage}
+            if ($Data -and $Data.ErrorMessage -ne $null)  {$Error = $Data.ErrorMessage} else {$Data}
             if ($Data -ne $null) {Remove-Variable "Data"}
         }
-        Remove-Job $Job -Force
+        try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         Remove-Variable "Job"
         if ($Error -ne '') {throw $Error}
     }
