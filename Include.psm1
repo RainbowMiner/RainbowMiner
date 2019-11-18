@@ -6142,8 +6142,8 @@ Param(
             $ErrorMessage = "Time-out while loading $($RequestUrl)"
             try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         } else {
-            try {$Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($Data -and $Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.ErrorMessage} else {$Data}
+            try {$Data = Receive-Job -Job $Job} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if ($Data -and $Data.Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.Data.ErrorMessage} else {$Data.Data}
             if ($Data -ne $null) {Remove-Variable "Data"}
         }
         try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
