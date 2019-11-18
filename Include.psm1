@@ -491,7 +491,7 @@ function Write-ToFile {
     if ($Timestamp) {
         $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
     } else {
-        $file.WriteLine($Text)
+        $file.WriteLine($Message)
     }
     $file.Close()
     Remove-Variable "file"
