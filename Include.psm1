@@ -6081,22 +6081,28 @@ Param(
     $ScriptBlock = {
         param($RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body)
 
-        $AllProtocols = [System.Net.SecurityProtocolType]'Tls12,Tls11,Tls' 
-        [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
-
-        [PSCustomObject]@{Data = $(try {
+        if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+            [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+        }
+        
+        try {
             if ($method -eq "REST") {
-                Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
             } else {
                 $oldProgressPreference = $Global:ProgressPreference
                 $Global:ProgressPreference = "SilentlyContinue"
-                (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
                 $Global:ProgressPreference = $oldProgressPreference
             }
+            if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
         } catch {
-            [PSCustomObject]@{ErrorMessage="[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($_.Exception.Message)"}
+            $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
             if ($Error.Count){$Error.RemoveAt(0)}
-        })}
+        }
+
+        [PSCustomObject]@{Data = $Data}
+
+        if ($Data -ne $null) {Remove-Variable "Data"}
     }
 
     if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
@@ -6109,19 +6115,18 @@ Param(
 
     if ($Job) {
         $Job | Wait-Job -Timeout ($timeout*2) > $null
-        $Error = ''
+        $ErrorMessage = ''
         if ($Job.state -eq 'Running') {
-            $Error = "Time-out while loading $($RequestUrl)"
+            $ErrorMessage = "Time-out while loading $($RequestUrl)"
             try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         } else {
             try {$Data = Receive-Job -Job $Job | Select-Object -ExpandProperty Data} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
-            if ($Data -and $Data.ErrorMessage -ne $null)  {$Error = $Data.ErrorMessage} else {$Data}
+            if ($Data -and $Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.ErrorMessage} else {$Data}
             if ($Data -ne $null) {Remove-Variable "Data"}
         }
         try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         Remove-Variable "Job"
-        if ($Error -ne '') {throw $Error}
+        if ($ErrorMessage -ne '') {throw $ErrorMessage}
     }
 }
 
