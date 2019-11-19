@@ -125,11 +125,14 @@ param(
                     "GET" {if ($params.Count) {$params} else {$null}}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
+                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
                 $Request = Invoke-RestMethod "$base$endpoint" -UseBasicParsing -UserAgent $ua -TimeoutSec $Timeout -ErrorAction Stop -Headers $headers -Method $method -Body $body
                 #$Request = Invoke-GetUrl "$base$endpoint" -timeout $Timeout -headers $headers -requestmethod $method -body $body
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null;Remove-Variable "ServicePoint"}
             }
         }
         if ($Request.success -ne $null -and -not $Request.success) {

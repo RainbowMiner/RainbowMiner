@@ -6067,7 +6067,9 @@ Param(
     [Parameter(Mandatory = $False)]
         [string]$JobKey = "",
     [Parameter(Mandatory = $False)]
-        [switch]$ForceLocal
+        [switch]$ForceLocal,
+    [Parameter(Mandatory = $False)]
+        [switch]$AsJob
 )
     if ($JobKey -and $JobData) {
         if (-not $ForceLocal -and $Session.Config.RunMode -eq "Client" -and $Session.Config.ServerName -and $Session.Config.ServerPort -and (Test-TcpServer $Session.Config.ServerName -Port $Session.Config.ServerPort -Timeout 1)) {
@@ -6108,15 +6110,65 @@ Param(
     if (-not $headers_local.ContainsKey("Cache-Control")) {$headers_local["Cache-Control"] = "no-cache"}
     if ($user) {$headers_local["Authorization"] = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($user):$($password)")))"}
 
-    $ScriptBlock = {
-        param($RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body)
+    if ($AsJob) {
+        $ScriptBlock = {
+            param($RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body)
 
-        if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
-            [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
-        }
+            if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+            }
         
+            try {
+                if ($method -eq "REST") {
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
+                    $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
+                } else {
+                    $oldProgressPreference = $Global:ProgressPreference
+                    $Global:ProgressPreference = "SilentlyContinue"
+                    $Data = (Invoke-WebRequest $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body).Content
+                    $Global:ProgressPreference = $oldProgressPreference
+                }
+                if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
+            } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
+            } finally {
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null;Remove-Variable "ServicePoint"}
+            }
+
+            [PSCustomObject]@{Data = $Data}
+
+            if ($Data -ne $null) {Remove-Variable "Data"}
+        }
+
+        if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
+            $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+        } else {
+            $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
+        }
+
+        Remove-Variable "headers_local"
+
+        if ($Job) {
+            $Job | Wait-Job -Timeout ($timeout*2) > $null
+            $ErrorMessage = ''
+            if ($Job.state -eq 'Running') {
+                $ErrorMessage = "Time-out while loading $($RequestUrl)"
+                try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            } else {
+                try {$Data = Receive-Job -Job $Job} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                if ($Data -and $Data.Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.Data.ErrorMessage} else {$Data.Data}
+                if ($Data -ne $null) {Remove-Variable "Data"}
+            }
+            try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            Remove-Variable "Job"
+            if ($ErrorMessage -ne '') {throw $ErrorMessage}
+        }
+    } else {
+        $ErrorMessage = ''
         try {
             if ($method -eq "REST") {
+                $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint($RequestUrl)
                 $Data = Invoke-RestMethod $RequestUrl -UseBasicParsing -UserAgent $useragent -TimeoutSec $timeout -ErrorAction Stop -Method $requestmethod -Headers $headers_local -Body $body
             } else {
                 $oldProgressPreference = $Global:ProgressPreference
@@ -6126,36 +6178,14 @@ Param(
             }
             if ($Data -and $Data.unlocked -ne $null) {$Data.PSObject.Properties.Remove("unlocked")}
         } catch {
-            $Data = [PSCustomObject]@{ErrorMessage="$($_.Exception.Message)"}
             if ($Error.Count){$Error.RemoveAt(0)}
+            $ErrorMessage = "$($_.Exception.Message)"
+        } finally {
+            if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null;Remove-Variable "ServicePoint"}
         }
-
-        [PSCustomObject]@{Data = $Data}
-
+        if ($ErrorMessage -eq '') {$Data}
         if ($Data -ne $null) {Remove-Variable "Data"}
-    }
-
-    if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
-        $Job = Start-ThreadJob -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
-    } else {
-        $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
-    }
-
-    Remove-Variable "headers_local"
-
-    if ($Job) {
-        $Job | Wait-Job -Timeout ($timeout*2) > $null
-        $ErrorMessage = ''
-        if ($Job.state -eq 'Running') {
-            $ErrorMessage = "Time-out while loading $($RequestUrl)"
-            try {$Job | Stop-Job -PassThru | Receive-Job > $null} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-        } else {
-            try {$Data = Receive-Job -Job $Job} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            if ($Data -and $Data.Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.Data.ErrorMessage} else {$Data.Data}
-            if ($Data -ne $null) {Remove-Variable "Data"}
-        }
-        try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-        Remove-Variable "Job"
+        Remove-Variable "headers_local"
         if ($ErrorMessage -ne '') {throw $ErrorMessage}
     }
 }
