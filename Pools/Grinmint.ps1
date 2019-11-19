@@ -47,7 +47,7 @@ $Pools_Data = @(
 
 $reward = 60
 $diff   = $Pool_NetworkRequest.target_difficulty
-$PBR29  = (86400 / 42) * ($Pool_NetworkRequest.secondary_scaling/$diff)
+$PBR29  = (86400 / 21) * ($Pool_NetworkRequest.secondary_scaling/$diff)
 $PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
 
 $lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
