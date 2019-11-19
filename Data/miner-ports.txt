@@ -94,6 +94,10 @@
 347	Gminer155
 348	NinjaRig
 349	SrbMinerMulti
+350	FireIceRX
+351	FireIceRXAmd (linux)
+352	FireIceRXCpu (linux)
+353	FireIceRXNvidia (linux)
 
 400	Sgminer
 401	SgminerBitcore
