@@ -38,34 +38,30 @@ catch {
 #    $Name  = $Matches[2]
 #    $Pool_Request | where {$_.host -match "^$($Short).2miners.com"} | select-object -first 1 | foreach {"[PSCustomObject]@{host = `"$($_.host)`"; coin = `"$($Name)`"; algo = `"`"; symbol = `"$(($_.host -split '\.' | Select -First 1).ToUpper())`"; port = $($_.port); fee = 1}"}
 #}
+# List of coins
+#$Pool_HostStatus | where-object {$_.host -notmatch "^solo" -and $_.host -match "^([a-z]+)\."} | Foreach-Object {$Matches[1]} | select-object -unique | sort-object
 
 $Pools_Data = @(
-    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "music"; symbol = "MUSIC"; port = 4040; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "ella";  symbol = "ELLA";  port = 3030; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "dbix";  symbol = "DBIX";  port = 2020; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "yoc";   symbol = "YOC";   port = 4040; fee = 1.0; divisor = 1e18}
-    #[PSCustomObject]@{rpc = "aka";   symbol = "AKA";   port = 5050; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "hush";  symbol = "HUSH";  port = 7070; fee = 1.0; divisor = 1e8}
-    #[PSCustomObject]@{rpc = "btcp";  symbol = "BTCP";  port = 1010; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "btcz";  symbol = "BTCZ";  port = 2020; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "btg";   symbol = "BTG";   port = 4040; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "ckb";   symbol = "CKB";   port = 6464; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "clo";   symbol = "CLO";   port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etc";   symbol = "ETC";   port = 1010; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
+    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
     [PSCustomObject]@{rpc = "xmr";   symbol = "XMR";   port = 2222; fee = 1.0; divisor = 1e12}
     [PSCustomObject]@{rpc = "xzc";   symbol = "XZC";   port = 8080; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
-    [PSCustomObject]@{rpc = "ae";    symbol = "AE";    port = 4040; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "rvn";   symbol = "RVN";   port = 6060; fee = 1.0; divisor = 1e8}
-    [PSCustomObject]@{rpc = "beam";  symbol = "BEAM";  port = 5252; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zcl";   symbol = "ZCL";   port = 2020; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zec";   symbol = "ZEC";   port = 1010; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zel";   symbol = "ZEL";   port = 9090; fee = 1.0; divisor = 1e8}
+    [PSCustomObject]@{rpc = "zen";   symbol = "ZEN";   port = 3030; fee = 1.0; divisor = 1e8}
 )
 
 $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Object {
@@ -79,58 +75,61 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
 
     $ok = ($Pool_HostStatus | Where-Object {$_.host -notmatch 'solo-' -and $_.host -match "$($Pool_Host)"} | Measure-Object).Count -gt 0
     if ($ok -and -not $InfoOnly) {
-        $Pool_Request = [PSCustomObject]@{}
+        $Pool_Blocks = [PSCustomObject]@{}
+
         try {
-            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_Host)/api/stats" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
-            if ($Pool_Request.code -ne $null -or $Pool_Request.nodes -eq $null -or -not $Pool_Request.nodes) {throw}
+            $Pool_Blocks = Invoke-RestMethodAsync "https://$($Pool_Host)/api/blocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
+            if ($Pool_Blocks.code -ne $null) {$ok=$false}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
-            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
             $ok = $false
         }
 
-        if ($ok) {
-            $Pool_Blocks = [PSCustomObject]@{}
-
-            try {
-                $Pool_Blocks = Invoke-RestMethodAsync "https://$($Pool_Host)/api/blocks" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
-                if ($Pool_Blocks.code -ne $null) {throw}
-            }
-            catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
-                $ok = $false
-            }
-
-            $timestamp    = Get-UnixTimestamp
-            $timestamp24h = $timestamp - 24*3600
-            
-            $blocks = @()
-            if ($Pool_Blocks.candidatesTotal) {$blocks += $Pool_Blocks.candidates | Select-Object timestamp,reward,difficulty}
-            if ($Pool_Blocks.immatureTotal)   {$blocks += $Pool_Blocks.immature   | Select-Object timestamp,reward,difficulty}
-            if ($Pool_Blocks.maturedTotal)    {$blocks += $Pool_Blocks.matured    | Select-Object timestamp,reward,difficulty}
-
-            $blocks_measure = $blocks | Where-Object {$_.timestamp -gt $timestamp24h} | Measure-Object timestamp -Minimum -Maximum
-            $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
-            $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
-            $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
-            $reward         = $(if ($blocks) {$blocks | Sort-Object timestamp | Select-Object -Last 1 -ExpandProperty reward} else {0})/$Pool_Divisor
-            $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
-
-            if ($_.cycles) {
-                $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes.primaryWeight} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
-                $btcRewardLive   = $PBR * $reward * $btcPrice
-                $addName         = $_.algo -replace "[^\d]"
-                $Divisor         = 1
-            } else {
-                $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
-                $addName         = ""
-                $Divisor         = 1
-            }
-            $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($addName)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
-            if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
+        if (-not $ok) {
+            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
+            return
         }
+
+        $Pool_Request = [PSCustomObject]@{}
+        try {
+            $Pool_Request = Invoke-RestMethodAsync "https://$($Pool_Host)/api/stats" -tag $Name -retry 5 -retrywait 250 -cycletime 120 -delay 250
+            if ($Pool_Request.code -ne $null -or $Pool_Request.nodes -eq $null -or -not $Pool_Request.nodes) {$ok=$false}
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            $ok = $false
+        }
+
+        if (-not $ok) {
+            Write-Log -Level Warn "Pool API ($Name) for $($Pool_Currency) has failed. "
+            return
+        }
+
+        $timestamp    = [int]($Pool_Request.now / 1000)
+        $timestamp24h = $timestamp - 24*3600
+            
+        $blocks = @($Pool_Blocks.candidates | Where-Object {$_.timestamp -gt $timestamp24h} | Select-Object timestamp,reward,difficulty) + @($Pool_Blocks.immature | Where-Object {$_.timestamp -gt $timestamp24h} | Select-Object timestamp,reward,difficulty) + @($Pool_Blocks.matured | Where-Object {$_.timestamp -gt $timestamp24h} | Select-Object timestamp,reward,difficulty) | Select-Object
+
+        $blocks_measure = $blocks | Measure-Object timestamp -Minimum -Maximum
+        $avgTime        = if ($blocks_measure.Count -gt 1) {($blocks_measure.Maximum - $blocks_measure.Minimum) / ($blocks_measure.Count - 1)} else {$timestamp}
+        $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
+        $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
+        $reward         = $(if ($blocks) {($blocks | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
+        $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+
+        if ($_.cycles) {
+            $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes.primaryWeight} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)
+            $btcRewardLive   = $PBR * $reward * $btcPrice
+            $addName         = $_.algo -replace "[^\d]"
+            $Divisor         = 1
+        } else {
+            $btcRewardLive   = if ($Pool_Request.hashrate -gt 0) {$btcPrice * $reward * 86400 / $avgTime / $Pool_Request.hashrate} else {0}
+            $addName         = ""
+            $Divisor         = 1
+        }
+        $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($addName)_Profit" -Value ($btcRewardLive/$Divisor) -Duration $StatSpan -ChangeDetection $false -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK -Quiet
+        if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }
 
     if ($ok) {
