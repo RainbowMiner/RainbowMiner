@@ -50,7 +50,7 @@ $Pools_Data = @(
     [PSCustomObject]@{rpc = "eth";   symbol = "ETH";   port = 2020; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "etp";   symbol = "ETP";   port = 9292; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "exp";   symbol = "EXP";   port = 3030; fee = 1.0; divisor = 1e18}
-    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN29";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42}
+    [PSCustomObject]@{rpc = "grin";  symbol = "GRIN29";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 21}
     [PSCustomObject]@{rpc = "grin";  symbol = "GRIN31";  port = 3030; fee = 1.0; divisor = 1e9; cycles = 42; primary = $true}
     [PSCustomObject]@{rpc = "moac";  symbol = "MOAC";  port = 5050; fee = 1.0; divisor = 1e18}
     [PSCustomObject]@{rpc = "pirl";  symbol = "PIRL";  port = 6060; fee = 1.0; divisor = 1e18}
