@@ -459,7 +459,7 @@ function Set-MinerStats {
 
             if ($Statset -eq $Miner.Algorithm.Count) {$Miner.Benchmarked = 0}
 
-            $Miner.EndOfRoundCleanup()            
+            $Miner.EndOfRoundCleanup()
 
             Write-ActivityLog $Miner -Crashed $(if ($Miner_Failed) {2} else {0})
             if ($Miner_Failed) {
@@ -3943,7 +3943,9 @@ class Miner {
     [Bool]$NoCPUMining = $false
     [Bool]$NeedsBenchmark = $false
     [Int]$MultiProcess = 0
+    [DateTime]$StartTime = [DateTime]::MinValue
     [DateTime]$ActiveLast = [DateTime]::MinValue
+    [TimeSpan]$RunningTime = [TimeSpan]::Zero
     hidden [System.Management.Automation.Job]$Process = $null
     [Int[]]$ProcessId = @()
     [String]$ScreenName = ""
@@ -4030,6 +4032,7 @@ class Miner {
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
+            $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
             $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')"
             $this.Process    = $Job.Process
@@ -4092,6 +4095,7 @@ class Miner {
         if ($this.API -notmatch "Wrapper" -and $this.Process.HasMoreData) {$this.Process | Receive-Job > $null}
         if (($this.Speed_Live | Measure-Object -Sum).Sum) {$this.ZeroRounds = 0} else {$this.ZeroRounds++}
         $this.Rounds++
+        $this.RunningTime = (Get-Date).ToUniversalTime() - $this.StartTime
     }
 
     [DateTime]GetActiveStart() {
