@@ -81,6 +81,7 @@
         $Server.Start()
 
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
+        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 
         While ($Server.IsListening -and -not $API.Stop) {
             $task = $Server.GetContextAsync();
@@ -1062,8 +1063,9 @@
                 }
                 $Response.StatusCode = $StatusCode
                 if ($Data -is [string]) {
-                    $Response = New-Object IO.StreamWriter($Response.OutputStream,[Text.Encoding]::UTF8)
-					$Response.WriteLine($Data)
+                    $StreamWriter = New-Object IO.StreamWriter($Response.OutputStream,$Utf8NoBomEncoding)
+					$StreamWriter.WriteLine($Data)
+                    $StreamWriter.Flush()
                 } else {
                     $Response.ContentLength64 = $Data.Length
                     $Response.OutputStream.Write($Data,0,$Data.Length)
@@ -1073,6 +1075,19 @@
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
                 }
                 if ($Error.Count){$Error.RemoveAt(0)}
+            }
+
+            if ($StreamWriter) {
+                try {
+                    $StreamWriter.Close()
+                    $StreamWriter.Dispose()
+                } catch {
+                    if ($Session.LogLevel -ne "Silent") {
+                        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close streamwriter failed: $($_.Exception.Message)" -Append -Timestamp
+                    }
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                }
+                if ($StreamWriter) {Remove-Variable "StreamWriter"}
             }
 
             try {
