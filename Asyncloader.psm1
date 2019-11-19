@@ -37,8 +37,6 @@ Param(
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
-        [System.Collections.ArrayList]$Errors = @()
-
         Set-OsFlags
 
         if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolType]::Tls12) {
@@ -63,14 +61,11 @@ Param(
                         }
                         try {
                             Invoke-GetUrlAsync -Jobkey $Jobkey -force -quiet
-                            if ($AsyncLoader.Jobs.$Jobkey.Error) {$Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $($AsyncLoader.Jobs.$Jobkey.Error)")>$null}
+                            if ($AsyncLoader.Jobs.$Jobkey.Error) {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($AsyncLoader.Jobs.$Jobkey.Error)" -Append -Timestamp}
                         }
                         catch {
-                            $Errors.Add("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Cycle problem with $($Job.Url) using $($Job.Method): $($_.Exception.Message)")>$null
-                            if ($AsyncLoader.Verbose) {
-                                Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" -Append -Timestamp
-                            }
                             if ($Error.Count){$Error.RemoveAt(0)}
+                            Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "Error job $JobKey with $($Job.Url) using $($Job.Method): $($_.Exception.Message)" -Append -Timestamp
                         }
                         finally {
                             if ($AsyncLoader.Verbose) {
@@ -82,7 +77,6 @@ Param(
                 Get-Job -State Completed | Remove-Job -Force
             }
             if ($Error.Count)  {if ($Session.LogLevel -ne "Silent") {$Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}};$Error.Clear()}
-            if ($Errors.Count) {if ($Session.LogLevel -ne "Silent") {$Errors | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").asyncloader.txt" $_ -Append}};$Errors.Clear()}
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
