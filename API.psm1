@@ -1071,10 +1071,10 @@
                     $Response.OutputStream.Write($Data,0,$Data.Length)
                 }
             } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 if ($Session.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
                 }
-                if ($Error.Count){$Error.RemoveAt(0)}
             }
 
             if ($StreamWriter) {
@@ -1082,10 +1082,10 @@
                     $StreamWriter.Close()
                     $StreamWriter.Dispose()
                 } catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
                     if ($Session.LogLevel -ne "Silent") {
                         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close streamwriter failed: $($_.Exception.Message)" -Append -Timestamp
                     }
-                    if ($Error.Count){$Error.RemoveAt(0)}
                 }
                 if ($StreamWriter) {Remove-Variable "StreamWriter"}
             }
@@ -1093,10 +1093,10 @@
             try {
                 $Response.Close()
             } catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
                 if ($Session.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close response failed: $($_.Exception.Message)" -Append -Timestamp
                 }
-                if ($Error.Count){$Error.RemoveAt(0)}
             }
 
             if ($Error.Count) {
