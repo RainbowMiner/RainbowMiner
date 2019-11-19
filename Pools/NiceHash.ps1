@@ -84,7 +84,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                     SSL           = $Pool_Protocol -match "ssl"
                     Updated       = $Stat.Updated
                     PoolFee       = $Pool_PoolFee
-                    PPS           = $true
+                    PaysLive      = $true
                     Failover      = @($Pool_Failover | Select-Object | Foreach-Object {
                         [PSCustomObject]@{
                             Protocol = $Pool_Protocol
