@@ -480,7 +480,7 @@ function Write-ToFile {
     param (
         [Parameter(Mandatory = $True)]
         [string]$FilePath,
-        [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [ValidateNotNullOrEmpty()]
         [Alias("LogContent")]
         [string]$Message,
