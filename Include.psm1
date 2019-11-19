@@ -6356,7 +6356,7 @@ Param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $RequestError = "$($_.Exception.Message)"
             } finally {
-                if ($RequestError -ne '') {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
+                if ($RequestError) {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
             }
 
             if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
