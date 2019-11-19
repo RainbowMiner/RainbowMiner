@@ -479,22 +479,30 @@ function Write-ToFile {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $True)]
-        [string]$FilePath = "",
-        [Parameter(Mandatory = $False)]
-        [string]$Message = "",
+        [string]$FilePath,
+        [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
+        [ValidateNotNullOrEmpty()]
+        [Alias("LogContent")]
+        [string]$Message,
         [Parameter(Mandatory = $False)]
         [switch]$Append = $false,
         [Parameter(Mandatory = $False)]
         [switch]$Timestamp = $false
     )
-    $file = New-Object System.IO.StreamWriter ($FilePath, $Append, [System.Text.Encoding]::UTF8)
-    if ($Timestamp) {
-        $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
-    } else {
-        $file.WriteLine($Message)
+
+    Process {
+        try {
+            if ($Global:IsLinux) {$FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)}
+            $file = New-Object System.IO.StreamWriter ($FilePath, $Append, [System.Text.Encoding]::UTF8)
+            if ($Timestamp) {
+                $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+            } else {
+                $file.WriteLine($Message)
+            }
+            $file.Close()
+        } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        if ($file) {Remove-Variable "file"}
     }
-    $file.Close()
-    Remove-Variable "file"
 }
 
 Function Write-Log {
