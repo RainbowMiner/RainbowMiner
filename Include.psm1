@@ -6341,15 +6341,20 @@ Param(
                     #Write-Log -Level Info "GetUrl $($AsyncLoader.Jobs.$Jobkey.Url)" 
                     $Request = Invoke-GetUrl -JobData $AsyncLoader.Jobs.$Jobkey -JobKey $JobKey
                 }
-                if (-not $Request) {throw "Empty request"}
-                $AsyncLoader.Jobs.$Jobkey.Success++
-                $AsyncLoader.Jobs.$Jobkey.Prefail=0                
+                if ($Request) {
+                    $AsyncLoader.Jobs.$Jobkey.Success++
+                    $AsyncLoader.Jobs.$Jobkey.Prefail=0
+                } else {
+                    $RequestError = "Empty request"
+                }
             }
             catch {
-                $RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($_.Exception.Message)"
                 if ($Error.Count){$Error.RemoveAt(0)}
-                #Write-Log -Level Info "GetUrl Failed $RequestError"
+                $RequestError = "$($_.Exception.Message)"
+            } finally {
+                if ($RequestError -ne '') {$RequestError = "Problem fetching $($AsyncLoader.Jobs.$Jobkey.Url) using $($AsyncLoader.Jobs.$Jobkey.Method): $($RequestError)"}
             }
+
             if (-not $Quickstart) {$AsyncLoader.Jobs.$Jobkey.LastRequest=(Get-Date).ToUniversalTime()}
 
             $retry--
