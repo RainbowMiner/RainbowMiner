@@ -34,6 +34,19 @@ class Gminer : Miner {
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
+
+            if ($this.Algorithm[1]) {
+                $Accepted_Shares = [Int64]($Data.devices.accepted_shares2 | Measure-Object -Sum).Sum
+                $Rejected_Shares = [Int64]($Data.devices.rejected_shares2 | Measure-Object -Sum).Sum
+
+                $HashRate_Name = [String]$this.Algorithm[1]
+                $HashRate_Value = [Double]($Data.devices.speed2 | Measure-Object -Sum).Sum
+
+                if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
+                    $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
+                }
+            }
         }
 
         $this.AddMinerData([PSCustomObject]@{
