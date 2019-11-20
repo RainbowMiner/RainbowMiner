@@ -522,6 +522,7 @@
     "scryptsipc": "ScryptSIPC",
     "sha256": "SHA256",
     "sha256ab": "SHA256ab",
+    "sha256csm": "SHA256csm",
     "sha256d": "SHA256d",
     "sha256q": "SHA256q",
     "sha256t": "SHA256t",
