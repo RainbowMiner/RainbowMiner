@@ -8,31 +8,35 @@ param(
 if (-not $IsLinux -and -not $IsWindows) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-YesCryptR8G\ccminer"
+    $Path = ".\Bin\NVIDIA-YesCryptR8\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.tar.7z"
             Cuda = "9.1"
         }
     )
+    $ManualUri = "https://github.com/Kudaraidee/ccminer-KlausT-8.21-mod-koto-sapling-2/releases"
+    $Version = "8.21-r17kotov2"
 } else {
-    $Path = ".\Bin\NVIDIA-YesCryptR8G\ccminer.exe"
+    $Path = ".\Bin\NVIDIA-YesCryptR8\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.zip"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18v4-ccminerklaust/ccmineryescryptrv4.zip"
             Cuda = "10.0"
         }
     )
+    $ManualUri = "https://github.com/Minerx117/ccmineryescryptr8g/releases"
+    $Version = "8.21-r18kotov4"
 }
-$ManualUri = "https://github.com/Kudaraidee/ccminer-KlausT-8.21-mod-koto-sapling-2/releases"
+
 $Port = "137{0:d2}"
 $DevFee = 0.0
-$Version = "8.21-r17kotov2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescryptR8G"; Params = "-a yescrypt"; ExtendInterval = 2; FaultTolerance = 0.3} #YesctyptR8G
+    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-a yescryptR8"; ExtendInterval = 2; FaultTolerance = 0.3} #YesctyptR8
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
