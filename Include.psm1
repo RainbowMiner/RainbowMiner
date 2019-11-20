@@ -3960,10 +3960,6 @@ class Miner {
     hidden [DateTime]$LastSetOCTime = 0
     hidden [Int]$StartPort = 0
 
-    [String[]]GetProcessNames() {
-        return @(([IO.FileInfo]($this.Path | Split-Path -Leaf -ErrorAction Ignore)).BaseName)
-    }
-
     [String]GetArguments() {
         return $this.Arguments -replace "\`$mport",$this.Port
     }
