@@ -11,7 +11,7 @@ $Path = ".\Bin\NVIDIA-YesCrypt\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "129{0:d2}"
 $DevFee = 0.0
-$Version = "8.21-v10"
+$Version = "8.21-r18v10"
 
 $UriCuda = @(
     [PSCustomObject]@{
@@ -24,7 +24,7 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #yescrypt
-    [PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3}, #YesctyptR8
+    #[PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3}, #YesctyptR8, CcminerYescryptR8 faster
     [PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR16 #Yenten
     [PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #PPN
     [PSCustomObject]@{MainAlgorithm = "yescryptR24"; Params = ""; ExtendInterval = 2; FaultTolerance = 0.3} #YescryptR24
