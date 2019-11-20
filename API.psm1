@@ -222,15 +222,15 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object) -Depth 2
+                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object) -Depth 2
+                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object) -Depth 2
+                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
                     Break
                 }
                 "/remoteminers" {
