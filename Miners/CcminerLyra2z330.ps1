@@ -23,8 +23,7 @@ $Version = "8.21r9-lyra2z330-v1"
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "Lyra2z330"; Params = "-i 11.87 -a lyra2z330"; ExtendInterval = 2; FaultTolerance = 0.3} #Lyra2z330
-    [PSCustomObject]@{MainAlgorithm = "Yescrypt";  Params = "-a yescrypt";  ExtendInterval = 2; FaultTolerance = 0.3} #Yescrypt
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-i 11.87"; ExtendInterval = 2; FaultTolerance = 0.3} #Lyra2z330
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
@@ -75,7 +74,7 @@ $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-O
 					DeviceName     = $Miner_Device.Name
 					DeviceModel    = $Miner_Model
 					Path           = $Path
-					Arguments      = "--no-cpu-verify -N 1 -R 1 -b `$mport -d $($DeviceIDsAll) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
+					Arguments      = "--no-cpu-verify -N 1 -R 1 -b `$mport -a $($_.MainAlgorithm) -d $($DeviceIDsAll) -q -o $($Pools.$Algorithm_Norm.Protocol)://$($Pools.$Algorithm_Norm.Host):$($Pool_Port) -u $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" -p $($Pools.$Algorithm_Norm.Pass)"}) $($_.Params)"
 					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Day * $(if ($_.Penalty -ne $null) {$_.Penalty} else {1})}
 					API            = "Ccminer"
 					Port           = $Miner_Port
