@@ -4,7 +4,7 @@
 103	CcminerAllium
 104	CcminerCool
 105	CcminerCryptonight
-106	CcminerKlaust
+106	CcminerLyra2v3
 107	CcminerRavencoin
 108	CcminerSib
 109	CcminerSkunk
@@ -36,6 +36,7 @@
 135	CcminerSpModRfv2
 136	CcminerTcr
 137	CcminerYescryptR8G
+138	CcminerLyra2z330
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd

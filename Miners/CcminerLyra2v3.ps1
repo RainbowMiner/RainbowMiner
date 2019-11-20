@@ -7,7 +7,7 @@ param(
 
 if (-not $IsWindows) {return}
 
-$Path = ".\Bin\NVIDIA-KlausT\ccminer.exe"
+$Path = ".\Bin\NVIDIA-Lyra2RE3\ccminer.exe"
 $ManualUri = "https://github.com/nemosminer/ccminer-KlausT-8.21-mod-r18-src-fix/releases"
 $Port = "106{0:d2}"
 $DevFee = 0.0
@@ -23,49 +23,7 @@ $UriCuda = @(
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    #GPU - profitable 20/04/2018
-    #[PSCustomObject]@{MainAlgorithm = "c11"; Params = ""} #C11
-    #[PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
-    #[PSCustomObject]@{MainAlgorithm = "dmd-gr"; Params = ""} #dmd-gr
-    #[PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
-    #[PSCustomObject]@{MainAlgorithm = "fugue256"; Params = ""} #Fugue256
-    #[PSCustomObject]@{MainAlgorithm = "groestl"; Params = ""} #Groestl
-    #[PSCustomObject]@{MainAlgorithm = "jackpot"; Params = ""} #Jackpot
-    #[PSCustomObject]@{MainAlgorithm = "keccak"; Params = ""} #Keccak
-    #[PSCustomObject]@{MainAlgorithm = "luffa"; Params = ""} #Luffa
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v2"; Params = ""} #Lyra2RE2
     [PSCustomObject]@{MainAlgorithm = "lyra2v3"; Params = "-N 1"} #Lyra2RE3
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-N 1"} #Lyra2z330, error on multiple devices
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z"; Params = "-N 1"} #lyra2z
-    #[PSCustomObject]@{MainAlgorithm = "neoscrypt"; Params = "-N 1"} #NeoScrypt
-    #[PSCustomObject]@{MainAlgorithm = "penta"; Params = ""} #Pentablake
-    #[PSCustomObject]@{MainAlgorithm = "skein"; Params = ""} #Skein
-    #[PSCustomObject]@{MainAlgorithm = "s3"; Params = ""} #S3
-    #[PSCustomObject]@{MainAlgorithm = "tribus"; Params = ""} #Tribus
-    #[PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
-    #[PSCustomObject]@{MainAlgorithm = "whirlpool"; Params = ""} #Whirlpool
-    #[PSCustomObject]@{MainAlgorithm = "whirlpoolx"; Params = ""} #whirlpoolx
-    #[PSCustomObject]@{MainAlgorithm = "X17"; Params = ""} #X17 Verge
-    #[PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = "-N 1"} #yescrypt
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR8"; Params = "-N 1"},
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR16"; Params = "-N 1"} #YescryptR16 #Yenten
-    #[PSCustomObject]@{MainAlgorithm = "yescryptR16v2"; Params = "-N 1"} #PPN
-
-    # ASIC - never profitable 20/04/2018
-    #[PSCustomObject]@{MainAlgorithm = "blake"; Params = ""} #blake
-    #[PSCustomObject]@{MainAlgorithm = "blakecoin"; Params = ""} #Blakecoin
-    #[PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #Blake2s
-    #[PSCustomObject]@{MainAlgorithm = "myr-gr"; Params = ""} #MyriadGroestl
-    #[PSCustomObject]@{MainAlgorithm = "nist5"; Params = ""} #Nist5
-    #[PSCustomObject]@{MainAlgorithm = "quark"; Params = ""} #Quark
-    #[PSCustomObject]@{MainAlgorithm = "qubit"; Params = ""} #Qubit
-    #[PSCustomObject]@{MainAlgorithm = "vanilla"; Params = ""} #BlakeVanilla
-    #[PSCustomObject]@{MainAlgorithm = "sha256d"; Params = ""} #sha256d
-    #[PSCustomObject]@{MainAlgorithm = "sia"; Params = ""} #SiaCoin
-    #[PSCustomObject]@{MainAlgorithm = "x11"; Params = ""} #X11
-    #[PSCustomObject]@{MainAlgorithm = "x13"; Params = ""} #x13
-    #[PSCustomObject]@{MainAlgorithm = "x14"; Params = ""} #x14
-    #[PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
