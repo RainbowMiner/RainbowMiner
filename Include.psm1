@@ -6425,7 +6425,12 @@ function Invoke-ReportMinerStatus {
     $Rates = [PSCustomObject]@{}
     $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
 
-    Write-Log "Pinging monitoring server. "
+    $Including_Strings = @()
+    if ($Session.ReportTotals) {$Including_Strings += "totals"}
+    if ($Session.ReportMinerData) {$Including_Strings += "minerdata"}
+    if ($Session.ReportPoolsData) {$Including_Strings += "poolsdata"}
+    Write-Log "Pinging monitoring server$(if ($Including_Strings.Count) {" (including $($Including_Strings -join ", "))"}). "
+    Remove-Variable "Including_Strings"
 
     $Profit = 0.0
     $PowerDraw = 0.0
