@@ -1858,11 +1858,13 @@ function Start-SubProcess {
         [Parameter(Mandatory = $false)]
         [Int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ScreenName = ""
+        [String]$ScreenName = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetAMDEnv = $false
     )
 
     if ($IsLinux -and (Get-Command "screen" -ErrorAction Ignore) -and (Get-Command "start-stop-daemon" -ErrorAction Ignore)) {
-        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName
+        Start-SubProcessInScreen -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess -ScreenName $ScreenName -SetAMDEnv:$SetAMDEnv
     } elseif (($ShowMinerWindow -and -not $IsWrapper) -or -not $IsWindows) {
         Start-SubProcessInConsole -FilePath $FilePath -ArgumentList $ArgumentList -LogPath $LogPath -WorkingDirectory $WorkingDirectory -Priority $Priority -CPUAffinity $CPUAffinity -EnvVars $EnvVars -MultiProcess $MultiProcess
     } else {
@@ -2056,7 +2058,9 @@ function Start-SubProcessInScreen {
         [Parameter(Mandatory = $false)]
         [int]$MultiProcess = 0,
         [Parameter(Mandatory = $false)]
-        [String]$ScreenName = ""
+        [String]$ScreenName = "",
+        [Parameter(Mandatory = $false)]
+        [Switch]$SetAMDEnv = $false
     )
 
     $ScreenName = ($ScreenName -replace "[^A-Z0-9_-]").ToLower()
@@ -2081,15 +2085,18 @@ function Start-SubProcessInScreen {
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
     $Stuff = @()
+    $Stuff += "export DISPLAY=:0"
     $Stuff += "cd /"
     $Stuff += "cd '$WorkingDirectory'"
 
-    $Stuff += "export GPU_FORCE_64BIT_PTR=1"
-    $Stuff += "export GPU_MAX_HEAP_SIZE=100"
-    $Stuff += "export GPU_USE_SYNC_OBJECTS=1"
-    $Stuff += "export GPU_MAX_ALLOC_PERCENT=100"
-    $Stuff += "export GPU_SINGLE_ALLOC_PERCENT=100"
-    $Stuff += "export GPU_MAX_WORKGROUP_SIZE=256"
+    if ($SetAMDEnv) {
+        $Stuff += "export GPU_FORCE_64BIT_PTR=1"
+        $Stuff += "export GPU_MAX_HEAP_SIZE=100"
+        $Stuff += "export GPU_USE_SYNC_OBJECTS=1"
+        $Stuff += "export GPU_MAX_ALLOC_PERCENT=100"
+        $Stuff += "export GPU_SINGLE_ALLOC_PERCENT=100"
+        $Stuff += "export GPU_MAX_WORKGROUP_SIZE=256"
+    }
     $Stuff += "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
 
     $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff += "export $($matches[1])=$($matches[2])"}
@@ -4004,6 +4011,9 @@ class Miner {
 
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
+            $Devices = @($this.DeviceModel -split '-')
+            $Vendor  = $Script:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+
             $ArgumentList = $this.GetArguments()
             
             $Prescription = if ($this.EthPillEnable    -ne "disable" -and (Compare-Object $this.BaseAlgorithm @("Ethash") -IncludeEqual -ExcludeDifferent | Measure-Object).Count) {$this.EthPillEnable}
@@ -4024,13 +4034,13 @@ class Miner {
                     }
                     $Command = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Command)
                     #$this.EthPill = [int](Start-Process -FilePath $Command -PassThru -Verb RunAs -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')").Id
-                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')"
+                    $this.EthPill = Start-SubProcess -FilePath $Command -ArgumentList "--$($Prescription) $($Prescription_Device.Type_Vendor_Index -join ',')" -WorkingDirectory (Split-Path $Command) -ShowMinerWindow $true -IsWrapper $false -ScreenName "ethpill_$($Prescription)_$($Prescription_Device.Type_Vendor_Index -join '_')" -SetAMDEnv:$($Vendor -eq "AMD")
                     Start-Sleep -Milliseconds 250 #wait 1/4 second
                 }
             }
             $this.StartTime = (Get-Date).ToUniversalTime()
             $this.LogFile = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Logs\$($this.Name)-$($this.Port)_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt")
-            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')"
+            $Job = Start-SubProcess -FilePath $this.Path -ArgumentList $ArgumentList -LogPath $this.LogFile -WorkingDirectory (Split-Path $this.Path) -Priority ($this.DeviceName | ForEach-Object {if ($_ -like "CPU*") {$this.Priorities.CPU} else {$this.Priorities.GPU}} | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum) -CPUAffinity $this.Priorities.CPUAffinity -ShowMinerWindow $this.ShowMinerWindow -IsWrapper $this.IsWrapper() -EnvVars $this.EnvVars -MultiProcess $this.MultiProcess -ScreenName "$($this.DeviceName -join '_')" -SetAMDEnv:$($Vendor -eq "AMD")
             $this.Process    = $Job.Process
             $this.ProcessId  = $Job.ProcessId
             $this.ScreenName = $Job.ScreenName
@@ -4603,7 +4613,7 @@ function Invoke-NvidiaSettings {
         }
         if ($NvCmd) {
             if (Test-OCDaemon) {
-                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')" -OnEmptyAdd "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
             } else {
                 Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
             }
@@ -6926,7 +6936,7 @@ param(
         }
     } else {
         if ($IsLinux -and $Runas -and (Test-OCDaemon)) {
-            Set-OCDaemon "$NVSMI $($Arguments -join ' ')" -OnEmptyAdd "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+            Set-OCDaemon "$NVSMI $($Arguments -join ' ')" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
         } else {
             Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
         }
