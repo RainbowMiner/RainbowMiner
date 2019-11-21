@@ -9,27 +9,27 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.10-ttminer/TT-Miner-3.0.10.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-ttminer/TT-Miner-3.1.0.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.0.10-ttminer/TT-Miner-3.0.10.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.0-ttminer/TT-Miner-3.1.0.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
-$Version = "3.0.10"
+$Version = "3.1.0"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
+    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2} #Eaglesong
     #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"    ; MinMemGB = 2; NH = $false; Params = "-A ETHASH%CUDA%"} #Ethash2GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"    ; MinMemGB = 3; NH = $false; Params = "-A ETHASH%CUDA%"} #Ethash3GB 
     #[PSCustomObject]@{MainAlgorithm = "ETHASH"       ; MinMemGB = 4; NH = $false;  Params = "-A ETHASH%CUDA%"} #Ethash 
     #[PSCustomObject]@{MainAlgorithm = "HONEYCOMB"     ; MinMemGB = 2; NH = $false; Params = "-A HONEYCOMB%CUDA%"; ExtendInterval = 2} #HoneyComb
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; NH = $true;  Params = "-A LYRA2V3%CUDA%"; ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 6; NH = $true;  Params = "-A MTP%CUDA%"; ExtendInterval = 2} #MTP
-    #[PSCustomObject]@{MainAlgorithm = "MYRGR"        ; MinMemGB = 2; NH = $true;  Params = "-A MYRGR%CUDA%"; ExtendInterval = 2} #MYRGR    
     [PSCustomObject]@{MainAlgorithm = "PROGPOW2gb"    ; MinMemGB = 2; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW2gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW3gb"    ; MinMemGB = 3; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW3gb 
     [PSCustomObject]@{MainAlgorithm = "PROGPOW"       ; MinMemGB = 4; NH = $false; Params = "-A PROGPOW%CUDA%"; ExtendInterval = 2} #ProgPoW (BCI)
@@ -39,7 +39,6 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "PROGPOWZ2gb"   ; MinMemGB = 2; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ2gb
     [PSCustomObject]@{MainAlgorithm = "PROGPOWZ3gb"   ; MinMemGB = 3; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ3gb
     [PSCustomObject]@{MainAlgorithm = "PROGPOWZ"      ; MinMemGB = 4; NH = $false; Params = "-A PROGPOWZ%CUDA%"; ExtendInterval = 2; Cuda ="10.1"} #ProgPoWZ (ZANO)
-    [PSCustomObject]@{MainAlgorithm = "TETHASHV1"     ; MinMemGB = 3; NH = $false; Params = "-A TETHASHV1%CUDA%"; ExtendInterval = 2} #TEThash 
     [PSCustomObject]@{MainAlgorithm = "UBQHASH"       ; MinMemGB = 3; NH = $false; Params = "-A UBQHASH%CUDA%"; ExtendInterval = 2} #Ubqhash 
 )
 
@@ -63,7 +62,7 @@ if (-not (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersi
 
 $Cuda = ""
 if ($IsLinux) {
-    $Cuda = "-$(if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.1") {"101"} elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.0") {"100"} else {"92"})"
+    $Cuda = "-$(if (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.2") {"102"} elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.1") {"101"} elseif (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion "10.0") {"100"} else {"92"})"
 }
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
