@@ -87,7 +87,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			            $Miner_Name = if ($SecondAlgorithm -eq '') {
 			                (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         } else {
-                            (@($Name) + @($SecondAlgorithm_Norm) + @($MainAlgorithm_Norm_0) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                            (@($Name) + @($MainAlgorithm_Norm_0) + @($SecondAlgorithm_Norm) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         }
                         $offset = if ($Miner_Vendor -eq "AMD") {($Session.AllDevices | Where-Object Vendor -eq "NVIDIA" | Measure-Object).Count} else {0}
                         $DeviceIDsAll = ($Miner_Device | % {'{0:d}' -f ($_.Type_Vendor_Index + $offset)}) -join ','
@@ -142,15 +142,15 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 							Path           = $Path
 							Arguments      = "--api 127.0.0.1:`$mport -d $($DeviceIDsAll) -o $($Stratum2)://$($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port2) -u $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {":$($Pools.$SecondAlgorithm_Norm.Pass)"}) -do $($Stratum)://$($Pools.$MainAlgorithm_Norm.Host):$($Pool_Port) -du $($Pools.$MainAlgorithm_Norm.User)$(if ($Pools.$MainAlgorithm_Norm.User -match '^solo:') {"."})$(if ($Pools.$MainAlgorithm_Norm.Pass) {":$($Pools.$MainAlgorithm_Norm.Pass)"}) --no-watchdog --no-nvml $($_.Params)"
 							HashRates      = [PSCustomObject]@{
-                                                $SecondAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
 								                $MainAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
+                                                $SecondAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                 							}
 							API            = "NBminer"
 							Port           = $Miner_Port
 							Uri            = $Uri
 							DevFee         = [PSCustomObject]@{
-                                                ($SecondAlgorithm_Norm) = $_.DevFee
-								                ($MainAlgorithm_Norm) = 0
+                                                ($MainAlgorithm_Norm) = $_.DevFee
+                                                ($SecondAlgorithm_Norm) = 0
 							                }
 					        FaultTolerance = $_.FaultTolerance
 					        ExtendInterval = $_.ExtendInterval
@@ -160,7 +160,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = "$($SecondAlgorithm_Norm)-$($MainAlgorithm_Norm_0)"
+                            BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
                             EnvVars        = if ($Miner_Vendor -eq "AMD") {@("GPU_FORCE_64BIT_PTR=0")}
 						}
 					}
