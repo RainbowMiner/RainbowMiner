@@ -134,7 +134,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = $Algorithm_Norm_0
+                            BaseAlgorithm  = "$($MainAlgorithm_Norm_0)-$($SecondAlgorithm_Norm)"
 				        }
                     } else {
 				        [PSCustomObject]@{
