@@ -25,7 +25,9 @@ class NBminer : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
-        $HashRate_Name = [String]$this.Algorithm[0]
+        $ix = if ($this.Algorithm[1]) {1} else {0}
+
+        $HashRate_Name = [String]$this.Algorithm[$ix]
 
         $HashRate_Value = $Difficulty_Value = 0.0
         $Accepted_Shares = $Rejected_Shares = 0
@@ -41,8 +43,8 @@ class NBminer : Miner {
             $Difficulty | Add-Member @{$HashRate_Name = $Difficulty_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
-            if ($this.Algorithm[1]) {
-                $HashRate_Name = [String]$this.Algorithm[1]
+            if ($ix -and $this.Algorithm[0]) {
+                $HashRate_Name = [String]$this.Algorithm[0]
 
                 $HashRate_Value = $Difficulty_Value = 0.0
                 $Accepted_Shares = $Rejected_Shares = 0
