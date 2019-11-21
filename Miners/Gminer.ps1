@@ -92,14 +92,15 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and (-not $SecondAlgorithm_Norm -or $Pools.$SecondAlgorithm_Norm.Host)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
+                        $DualIntensity = $_.Intensity
                         $Miner_Name = if ($Ethmining -and $Algorithm_Norm_0 -match "^Ethash\d") {
-                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($_.Intensity -ne $null) {"-$($_.Intensity)"})"}) + @($Algorithm_Norm_0 -replace "^Ethash") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Algorithm_Norm_0 -replace "^Ethash") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         } else {
-                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($_.Intensity -ne $null) {"-$($_.Intensity)"})"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         }
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
                         if ($_.Intensity -ne $null) {
-                            $DeviceIntensitiesAll = " $($_.Intensity)"*$Miner_Device.Count
+                            $DeviceIntensitiesAll = " $($DualIntensity)"*$Miner_Device.Count
                         }
                         $First = $false
                     }
