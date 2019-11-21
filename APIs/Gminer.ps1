@@ -32,7 +32,6 @@ class Gminer : Miner {
         $HashRate_Value = [Double]($Data.devices.speed | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
-            if ($this.Algorithm[1] -and $HashRate_Name -match "Eaglesong") {$HashRate_Value /= 2} #temp fix for Gminer v1.78 https://github.com/develsoftware/GMinerRelease/issues/44
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
@@ -44,6 +43,7 @@ class Gminer : Miner {
                 $HashRate_Value = [Double]($Data.devices.speed2 | Measure-Object -Sum).Sum
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
+                    if ($HashRate_Name -match "Eaglesong") {$HashRate_Value /= 2} #temp fix for Gminer v1.78 https://github.com/develsoftware/GMinerRelease/issues/44
                     $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
