@@ -25,6 +25,8 @@ class Gminer : Miner {
         }
         $Global:ProgressPreference = $oldProgressPreference
 
+        $Version = if ($Data.miner -match "(\d\.[\d\.]+)") {$Matches[1]} else {$null}
+
         $Accepted_Shares = [Int64]($Data.devices.accepted_shares | Measure-Object -Sum).Sum
         $Rejected_Shares = [Int64]($Data.devices.rejected_shares | Measure-Object -Sum).Sum
 
@@ -32,6 +34,7 @@ class Gminer : Miner {
         $HashRate_Value = [Double]($Data.devices.speed | Measure-Object -Sum).Sum
 
         if ($HashRate_Name -and $HashRate_Value -gt 0) {
+            if ($HashRate_Name -eq "Eaglesong" -and $Version -ne $null -and [version]$Version -le [version]"1.77") {$HashRate_Value /= 2}
             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
 
@@ -43,7 +46,7 @@ class Gminer : Miner {
                 $HashRate_Value = [Double]($Data.devices.speed2 | Measure-Object -Sum).Sum
 
                 if ($HashRate_Name -and $HashRate_Value -gt 0) {
-                    if ($HashRate_Name -match "Eaglesong") {$HashRate_Value /= 2} #temp fix for Gminer v1.78 https://github.com/develsoftware/GMinerRelease/issues/44
+                    if ($HashRate_Name -eq "Eaglesong" -and $Version -ne $null -and [version]$Version -le [version]"1.78") {$HashRate_Value /= 2}
                     $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                     $this.UpdateShares(1,$Accepted_Shares,$Rejected_Shares)
                 }
