@@ -9,16 +9,16 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\GPU-Gminer\miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.77-gminer/gminer_1_77_linux64.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-gminer/gminer_1_79_linux64.tar.xz"
 } else {
     $Path = ".\Bin\GPU-Gminer\miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.77-gminer/gminer_1_77_windows64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.79-gminer/gminer_1_79_windows64.zip"
 }
 $ManualUri = "https://github.com/develsoftware/GMinerRelease/releases"
 $Port = "329{0:d2}"
 $DevFee = 2.0
 $Cuda = "9.0"
-$Version = "1.77"
+$Version = "1.79"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No AMD, NVIDIA present in system
 
@@ -39,7 +39,17 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Equihash21x9";    MinMemGb = 0.5;                   Params = "--algo 210_9";       Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $true} #Equihash 210,9
     [PSCustomObject]@{MainAlgorithm = "EquihashVds";     MinMemGb = 2;                     Params = "--algo vds";         Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; AutoPers = $false} #Equihash 96,5 + Scrypt "VDS"
     [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 0.65} #Ethash
-    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;                     Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 0;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 1;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 2;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 3;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 4;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 5;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 6;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 7;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 8;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 9;    Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "Ethash";          MinMemGb = 4;   Intensity = 10;   Params = "--algo ethash+eaglesong";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 3.00; SecondaryAlgorithm = "Eaglesong"} #Ethash+Eaglesong
     [PSCustomObject]@{MainAlgorithm = "Ethash2gb";       MinMemGb = 2;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 0.65} #Ethash
     [PSCustomObject]@{MainAlgorithm = "Ethash3gb";       MinMemGb = 3;                     Params = "--algo ethash";      Vendor = @("NVIDIA");       ExtendInterval = 2; NH = $true; Fee = 0.65} #Ethash
 )
@@ -78,16 +88,21 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
             $Ethmining = $_.MainAlgorithm -match "^Ethash"
 
+            $DualIntensity = $_.Intensity
+
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($_.NH -or $Pools.$Algorithm_Norm.Name -notmatch "Nicehash") -and (-not $SecondAlgorithm_Norm -or $Pools.$SecondAlgorithm_Norm.Host)) {
                     if ($First) {
                         $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                         $Miner_Name = if ($Ethmining -and $Algorithm_Norm_0 -match "^Ethash\d") {
-                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)"}) + @($Algorithm_Norm_0 -replace "^Ethash") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Algorithm_Norm_0 -replace "^Ethash") + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         } else {
-                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
+                            (@($Name) + @($SecondAlgorithm_Norm | Select-Object | Foreach-Object {"$($Algorithm_Norm_0)-$($_)$(if ($DualIntensity -ne $null) {"-$($DualIntensity)"})"}) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
                         }
                         $DeviceIDsAll = $Miner_Device.Type_Vendor_Index -join ' '
+                        if ($_.Intensity -ne $null) {
+                            $DeviceIntensitiesAll = " $($DualIntensity)"*$Miner_Device.Count
+                        }
                         $First = $false
                     }
                     $PersCoin = if ($Algorithm_Norm -match "^Equihash") {Get-EquihashCoinPers $Pools.$Algorithm_Norm.CoinSymbol -Default "auto"}
@@ -99,7 +114,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 					        DeviceName     = $Miner_Device.Name
 					        DeviceModel    = $Miner_Model
 					        Path           = $Path
-					        Arguments      = "--api `$mport --devices $($DeviceIDsAll) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port)$(if ($Ethmining -and $Pools.$Algorithm_Norm.EthMode -ne $null -and $Pools.$Algorithm_Norm.EthMode -ne "ethproxy") {" --proto stratum"}) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --dserver $($Pools.$SecondAlgorithm_Norm.Host) --dport $($SecondPool_Port) --duser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dpass $($Pools.$SecondAlgorithm_Norm.Pass)"}) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
+					        Arguments      = "--api `$mport --devices $($DeviceIDsAll)$(if ($DualIntensity -ne $null) {" --dual_intensity$($DeviceIntensitiesAll)"}) --server $($Pools.$Algorithm_Norm.Host) --port $($Pool_Port)$(if ($Ethmining -and $Pools.$Algorithm_Norm.EthMode -ne $null -and $Pools.$Algorithm_Norm.EthMode -ne "ethproxy") {" --proto stratum"}) --user $($Pools.$Algorithm_Norm.User)$(if ($Pools.$Algorithm_Norm.Pass) {" --pass $($Pools.$Algorithm_Norm.Pass)"})$(if ($PersCoin -and ($_.AutoPers -or $PersCoin -ne "auto")) {" --pers $($PersCoin)"})$(if ($Pools.$Algorithm_Norm.SSL) {" --ssl 1"}) --cuda $([int]($Miner_Vendor -eq "NVIDIA")) --opencl $([int]($Miner_Vendor -eq "AMD")) --dserver $($Pools.$SecondAlgorithm_Norm.Host) --dport $($SecondPool_Port) --duser $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" --dpass $($Pools.$SecondAlgorithm_Norm.Pass)"}) --watchdog 0 --pec 0 --nvml 0 $($_.Params)"
 					        HashRates      = [PSCustomObject]@{
                                                 $Algorithm_Norm = $($Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
                                                 $SecondAlgorithm_Norm = $($Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week * $(if ($_.Penalty) {1-$_.Penalty/100} else {1}))
@@ -119,7 +134,7 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
                             Version        = $Version
                             PowerDraw      = 0
                             BaseName       = $Name
-                            BaseAlgorithm  = $Algorithm_Norm_0
+                            BaseAlgorithm  = "$($Algorithm_Norm_0)-$($SecondAlgorithm_Norm)"
 				        }
                     } else {
 				        [PSCustomObject]@{
