@@ -5755,13 +5755,19 @@ function Get-ServerConfig {
     $rv = $true
     $ConfigName = $ConfigName | Where-Object {Test-Config $_ -Exists}
     if (($ConfigName | Measure-Object).Count -and $Server -and $Port -and (Test-TcpServer -Server $Server -Port $Port -Timeout 2)) {
+        $ErrorMessage = ""
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
         $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($GroupName) {$GroupName} elseif ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
         $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
-        $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 20
+        try {
+            $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 20
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}}
+            $ErrorMessage = "$($_.Exception.Message)"
+        }
         if ($Result.Status -and $Result.Content) {
             if ($EnableServerExcludeList -and $Result.ExcludeList) {$ExcludeConfigVars = $Result.ExcludeList}
             $ChangeTag = Get-ContentDataMD5hash($ServerLWT) 
@@ -5788,7 +5794,7 @@ function Get-ServerConfig {
             }
             if ($ChangeTag -ne (Get-ContentDataMD5hash($ServerLWT))) {Set-ContentJson $ServerLWTFile -Data $ServerLWT > $null}
         } elseif (-not $Result.Status) {
-            Write-Log -Level Warn "$(if ($Result.Content) {$Result.Content} else {"Get-ServerConfig failed"})"
+            Write-Log -Level Warn "Get-ServerConfig failed $(if ($Result.Content) {$Result.Content} else {$ErrorMessage})"
             $rv = $false
         }
     }
