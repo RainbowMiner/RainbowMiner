@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.9-teamred/teamredminer-v0.5.9-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.0-teamred/teamredminer-v0.6.0-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.5.9-teamred/teamredminer-v0.5.9-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.0-teamred/teamredminer-v0.6.0-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.5.9"
+$Version = "0.6.0"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
@@ -35,6 +35,7 @@ $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "cnv8_upx2";        MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckarood29_grin"; MinMemGb = 8; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "cuckatoo31_grin";  MinMemGb = 8; Params = ""; DevFee = 2.5}
+    [PSCustomObject]@{MainAlgorithm = "ethash";           MinMemGb = 4; Params = ""; DevFee = 0.75}
     [PSCustomObject]@{MainAlgorithm = "lyra2rev3";        MinMemGb = 2; Params = ""; DevFee = 2.5}
     [PSCustomObject]@{MainAlgorithm = "lyra2z";           MinMemGb = 2; Params = ""; DevFee = 3.0}
     [PSCustomObject]@{MainAlgorithm = "mtp";              MinMemGb = 6; Params = ""; DevFee = 2.5}
@@ -72,6 +73,11 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
         $First = $True
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
         $Miner_Device = @($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)})
+        $Miner_DevFee = $_.DevFee
+
+        if ($_.MainAlgorithm -eq "ethash" -and (($Miner_Model -split '-') -notmatch "(Baffin|Ellesmere|RX\d)" | Measure-Object).Count) {
+            $Miner_DevFee = 1.0
+        }
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
 			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
@@ -104,7 +110,7 @@ $Session.DevicesByTypes.AMD | Select-Object Vendor, Model -Unique | ForEach-Obje
                     FaultTolerance = $_.FaultTolerance
 					ExtendInterval = $_.ExtendInterval
                     Penalty        = 0
-					DevFee         = $_.DevFee
+					DevFee         = $Miner_DevFee
 					ManualUri      = $ManualUri
                     Version        = $Version
                     PowerDraw      = 0
