@@ -5765,7 +5765,7 @@ function Get-ServerConfig {
         try {
             $Result = Invoke-GetUrl $Uri -user $Username -password $Password -ForceLocal -timeout 20
         } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}}
+            if ($Error.Count){$Error.RemoveAt(0)}
             $ErrorMessage = "$($_.Exception.Message)"
         }
         if ($Result.Status -and $Result.Content) {
