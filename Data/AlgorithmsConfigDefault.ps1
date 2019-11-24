@@ -2,6 +2,7 @@
     "Allium" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Balloon" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Bitcore" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
+    "BMW512" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Dedal" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
     "Equihash24x7" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="5";OCprofile="Profile5"}
     "GLTAstralHash" = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";MSIAprofile="4";OCprofile="Profile4"}
