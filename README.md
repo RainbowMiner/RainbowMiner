@@ -776,6 +776,8 @@ For Server (Runmode=server) setup:
 - **Watchdog** = use (1) or do not use (0) watchdog [default=1]
 - **UseTimeSync** = set to 1, if RainbowMiner should adjust the windows clock by rtp [default=1]
 - **SwitchingPrevention** = finetune the switching prevention algorithm. Set to zero to disable [default=2]
+- **PoolSwitchingHysteresis** = prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, can be overwritten per pool) [default=3]
+- **MinerSwitchingHysteresis** = prevention of on-pool miner-to-miner hopping: the higher, the less switching (in %, 0 to disable) [default=3]
 - **MaxRejectedShareRatio** = set max. allowed ratio "bad shares/found shares" until a miner gets disabled [default=0.3]
 - **EnableFastSwitching** = set to 1 to remove switching prevention completly. Expect a lot of switching [default=0]
 - **HashrateWeight** = adjust weight of pool hashrates on the profit comparison in % (0..100, 0=disable) [default=20]
@@ -820,7 +822,7 @@ The default pool config look like this:
     "Zpool": {
         "BTC": "$Wallet",
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": "0"
     }
 
 The line "BTC": "$Wallet" defines the payout wallet address. $Wallet uses the value in your config.txt, $<CURRENCY> uses the value, defined for the corresponding currency in coins.config.txt
@@ -829,7 +831,7 @@ If you want to change it to LTC, for example, you have to change this line like 
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": "0"
     }
 
 Or like this, if you setup a global wallet address in coins.config.txt
@@ -837,7 +839,7 @@ Or like this, if you setup a global wallet address in coins.config.txt
     "Zpool": {
         "LTC": "$LTC",
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": "0"
     }
 
 For non-autoexchange pools, you may define multiple wallets. The wallets define, which coins may be mined at a pool. In the following example, Rainbowminer will mine RVN and SUQA on Icemining, hereby using the default RVN wallet in the coins.config.txt.
@@ -846,7 +848,7 @@ For non-autoexchange pools, you may define multiple wallets. The wallets define,
         "RVN": "$RVN",
         "SUQA": "<YOUR_SUQA_ADDRESS>"
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": "0"
     }
     
 Alternatively you may instruct RainbowMiner to automatically use every currency defined in coins.config.txt (which is enabled by adding a wallet address and setting parameter "EnableAutoPool" to "1") for a certain pool. To do so, set paremeter "EnableAutoCoin" to "1".
@@ -862,13 +864,13 @@ Example:
 
 Many of our pools are based on the open-source YiiMP pool (e.g. AHashpool,BlazePool,Blockmaster,ZergPool,ZPool etc.). Some of these pools accept additional parameters. A prominent example is the setting of a custom payout limit at ZergPool (pl=x.xx). To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
 
-Example:
+Example 1:
 
     "ZergPool": {
         "LTC": "<YOUR_LTC_ADDRESS>",
         "LTC-Params": "pl=1.5",
         "Worker": "$WorkerName",
-        "Penalty": 0
+        "Penalty": "0"
     }
 
 In this example, if mining Zergpool, it will autoexchange everything into LTC. The parameter string "pl=1.5" will be added to the password, that is passed to the pool. In the case of ZergPool it will define a payout limit of 1.5 LTC. Of course any parameters can be added here, depending on the pool's options.
@@ -880,7 +882,7 @@ If you feel like a pool tends to exagerate it's results, you can set a penalty i
     "Ravenminer": {
         "RVN": "<YOUR_RAVENCOIN_ADDRESS>",
         "Worker": "$WorkerName",
-        "Penalty": 5
+        "Penalty": "5"
     }
 
 This would reduce the hashrate-results from the pool Ravenminer by 5%
@@ -911,7 +913,7 @@ Example:
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
-        "Penalty": 0,
+        "Penalty": "0",
         "DataWindow": "minimum3"
     }
 
@@ -934,7 +936,7 @@ Example:
     "Zpool": {
         "LTC": "<YOUR_LITECOIN_ADDRESS>",
         "Worker": "$WorkerName",
-        "Penalty": 0,
+        "Penalty": "0",
         "DataWindow": "minimum3",
         "StatAverage": "Hour"
     }
@@ -1004,6 +1006,28 @@ Example:
         "FocusWallet": "SUQA",
         "AllowZero": "1"
     }
+
+#### Change switching prevention
+    
+To avoid rapid pool-to-pool hopping, the global config.txt parameter "PoolSwitchingHysteresis" can already be set.
+If needed, the global value can be overwritten with the pools.config.txt parameter "SwitchingHysteresis".
+Set if to a value of `"0"`-`"100"` or leave it empty `""` to use the global "PoolSWitchingHysteresis"
+
+Example:
+
+    "ZergPool": {
+        "BTC": "<YOUR_BTC_ADDRESS>",
+        "Worker": "$WorkerName",
+        "SwitchingHysteresis": "5"
+    },
+    "ZergPoolCoins": {
+        "BTC": "<YOUR_BTC_ADDRESS>",
+        "Worker": "$WorkerName",
+        "SwitchingHysteresis": "0"
+    }
+
+
+In this example, the switching hysteresis would be set to 5% (another pool with the same algorithm would need at least a 5% higher price to be accepted) and switched off completely for ZergPoolCoins.
 
 ### Config\miners.config.txt
 
