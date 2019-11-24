@@ -222,7 +222,7 @@ function Set-UnprofitableAlgos {
     if (-not $Session.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
         $Key = Get-ContentDataMD5hash $Session.UnprofitableAlgos
         try {
-            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
+            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -241,7 +241,7 @@ function Get-CoinSymbol {
     
     if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
         try {
-            $Request = Invoke-GetUrlAsync "http://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
+            $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -282,7 +282,7 @@ function Update-Rates {
 
         if (-not $Script:NewRates.Count) {
             Write-Log -Level Info "Coinbase is down, using fallback. "
-            try {Invoke-GetUrl "http://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
         }
 
         $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
