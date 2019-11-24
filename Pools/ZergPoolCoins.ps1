@@ -139,7 +139,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
     $Pool_ExCurrency = if ($Wallets.$Pool_Currency -or $InfoOnly) {$Pool_Currency} elseif ($PoolCoins_Request.$Pool_Currency.noautotrade -eq 0) {$AECurrency}
 
     if (($Pool_ExCurrency -and $Wallets.$Pool_ExCurrency) -or $InfoOnly) {
-        $Pool_Params = if ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"}
+        $Pool_Params = if ($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)") {",$($Params."$($Pool_ExCurrency)-$($Pool_CoinSymbol)")"} elseif ($Params.$Pool_ExCurrency) {",$($Params.$Pool_ExCurrency)"} 
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             #Option 2/3
             [PSCustomObject]@{
