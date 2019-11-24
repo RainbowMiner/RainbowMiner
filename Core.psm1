@@ -1192,11 +1192,12 @@ function Invoke-Core {
         }
         $Pools | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {
             $Pool_Price = $Pools.$_.Price
+            $Pool_Name  = $Pools.$_.Name
             if (-not $Pools.$_.Exclusive) {
                 $Pool_Price *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $Pools.$_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
                 $Pool_Price_Bias = $Pool_Price
-                if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools.$_.MaxMarginOfError) {
-                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$_.MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00)
+                if (-not $Session.Config.EnableFastSwitching -and $Session.Config.Pools.$Pool_Name.MaxMarginOfError) {
+                    $Pool_Price_Bias *= 1-([Math]::Floor(([Math]::Min($Pools.$_.MarginOfError,$Session.Config.Pools.$Pool_Name.MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00)
                 }
             } else {
                 $Pool_Price_Bias = $Pool_Price
