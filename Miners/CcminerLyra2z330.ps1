@@ -10,7 +10,7 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\NVIDIA-Lyra2z330\ccminer.exe"
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r9-ccminerlyra2z330/ccminerlyra2z330v1.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r9-ccminerlyra2z330v2/ccminerlyra2z330v2.zip"
         Cuda = "10.0"
     }
 )
@@ -18,7 +18,7 @@ $UriCuda = @(
 $ManualUri = "https://github.com/Minerx117/ccminer8.21r9-lyra2z330/releases"
 $Port = "138{0:d2}"
 $DevFee = 0.0
-$Version = "8.21r9-lyra2z330-v1"
+$Version = "8.21r9-lyra2z330-v2"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
