@@ -437,6 +437,8 @@ function Invoke-Core {
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
         $Session.Config.EnableHeatMyFlat = [Math]::Max([Math]::Min($Session.Config.EnableHeatMyFlat,10.0),0.0)
+        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis,100.0),0.0)
+        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis,100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
@@ -1140,10 +1142,11 @@ function Invoke-Core {
         $Script:AllPools | Where-Object {$_.TSL -ne $null -and $Session.Config.Pools."$($_.Name)".EnablePostBlockMining -and $_.CoinSymbol -and ($_.TSL -lt $Session.Config.Coins."$($_.CoinSymbol)".PostBlockMining)} | Foreach-Object {$_ | Add-Member PostBlockMining $true -Force}
 
         $Pools_Running     = @{}
+        $Pools_Benchmarking= @{}
         $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
             for($i=0;$i -lt $_.Pool.Count;$i++) {
                 $Pool_Ix = "$($_.Pool | Select-Object -Index $i)-$($_.BaseAlgorithm | Select-Object -Index $i)-$($_.CoinSymbol | Select-Object -Index $i)"
-                if (-not $Pools_Running.ContainsKey($Pool_Ix) -or $Pools_Running[$Pool_Ix] -gt $_.Rounds) {$Pools_Running[$Pool_Ix] = $_.Rounds}
+                if (-not $Pools_Running.ContainsKey($Pool_Ix) -or $Pools_Running[$Pool_Ix] -gt $_.Rounds) {$Pools_Running[$Pool_Ix] = $_.Rounds;$Pools_Benchmarking[$Pool_Ix]=$Pools_Benchmarking[$Pool_Ix] -or $_.NeedsBenchmark}
             }
         }
         $Session.DecayFact = [Math]::Min($Session.Config.SwitchingPrevention,1) * [Math]::Pow($Session.DecayBase, [int](($Session.Timer - $Session.DecayStart).TotalSeconds / $Session.DecayPeriod) / ([Math]::Max($Session.Config.SwitchingPrevention,1)))
@@ -1152,17 +1155,24 @@ function Invoke-Core {
         $Script:AllPools | Foreach-Object {
             $Price_Cmp =  $_."$(if (-not $Session.Config.EnableFastSwitching -and -not $_.PaysLive) {"Stable"})Price"
             if (-not $_.Exclusive) {
-                $Pool_Rounds = $Pools_Running["$($_.Name)-$($_.Algorithm -replace "\-.+$")-$($_.CoinSymbol)"]
-                $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
-                if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention) -and $Session.Config.Pools."$($_.Name)".MaxMarginOfError -and $Pool_Rounds -eq $null) {
-                    #$Price_Cmp *= 1-[Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100)*($Session.Config.PoolAccuracyWeight/100)
-                    $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
-                }
-                if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
-                    $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
-                }
-                if ($Pool_Rounds -ne $null -and ($Session.IsBenchmarkingRun -or $Pool_Rounds -lt $Session.Config.MinimumMiningIntervals)) {
+                $Pool_Ix = "$($_.Name)-$($_.Algorithm -replace "\-.+$")-$($_.CoinSymbol)"
+                $Pool_Rounds = $Pools_Running[$Pool_Ix]
+                if ($Pool_Rounds -ne $null -and ($Session.IsBenchmarkingRun -and $Pools_Benchmarking[$Pool_Ix] -or $Pool_Rounds -lt $Session.Config.MinimumMiningIntervals)) {
                     $Price_Cmp *= 100
+                } else {
+                    $Price_Cmp *= [Math]::min(([Math]::Log([Math]::max($OutOfSyncLimit,$Session.OutofsyncWindow - ($OutOfSyncTimer - $_.Updated).TotalMinutes))/$OutOfSyncDivisor + 1)/2,1)
+                    if (-not ($Session.Config.EnableFastSwitching -or $Session.SkipSwitchingPrevention)) {
+                        if ($Pool_Rounds -eq $null) {
+                            if ($Session.Config.Pools."$($_.Name)".MaxMarginOfError) {
+                                $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
+                            }
+                        } elseif ($Session.Config.PoolSwitchingHystereis) {
+                            $Price_Cmp = 1+($Session.Config.PoolSwitchingHysteresis/100)
+                        }
+                    }
+                    if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {
+                        $Price_Cmp *= 1-(1-[Math]::Pow($_.Hashrate/$Pools_Hashrates["$($_.Algorithm)$($_.CoinSymbol)"],$Session.Config.HashrateWeightStrength/100)) * ($Session.Config.HashrateWeight/100)
+                    }
                 }
             }
             $_ | Add-Member Price_Cmp $Price_Cmp -Force
@@ -1172,8 +1182,7 @@ function Invoke-Core {
 
         Remove-Variable "Pools_Hashrates"
         Remove-Variable "Pools_Running"
-
-        $PoolsContainExclusive = $false
+        Remove-Variable "Pools_Benchmarking"
 
         Write-Log "Selecting best pool for each algorithm. "
         $Script:AllPools.Algorithm | ForEach-Object {$_.ToLower()} | Select-Object -Unique | ForEach-Object {$Pools | Add-Member $_ ($Script:AllPools | Where-Object Algorithm -EQ $_ | Sort-Object -Descending {$_.Exclusive -and -not $_.Idle}, {$Session.Config.Pools."$($_.Name)".FocusWallet -and $Session.Config.Pools."$($_.Name)".FocusWallet.Count -gt 0 -and $Session.Config.Pools."$($_.Name)".FocusWallet -icontains $_.Currency}, {$LockMiners -and $Session.LockMiners.Pools -icontains "$($_.Name)-$($_.Algorithm -replace "\-.+$")-$($_.CoinSymbol)"}, {$_.PostBlockMining}, {-not $_.PostBlockMining -and (-not $_.CoinSymbol -or $Session.Config.Pools."$($_.Name)".CoinSymbolPBM -inotcontains $_.CoinSymbol)}, {$_.Price_Cmp}, {$_.Region -EQ $Session.Config.Region}, {[int](($ix = $Session.Config.DefaultPoolRegion.IndexOf($_.Region)) -ge 0)*(100-$ix)}, {$_.SSL -EQ $Session.Config.SSL} | Select-Object -First 1)}
@@ -1191,7 +1200,6 @@ function Invoke-Core {
                 }
             } else {
                 $Pool_Price_Bias = $Pool_Price
-                $PoolsContainExclusive = $true
             }
             $Pool_Name  = $Pools.$_.Name
             $Pools.$_ | Add-Member -NotePropertyMembers @{
@@ -1548,7 +1556,7 @@ function Invoke-Core {
     $Miners = $Miners | Where-Object {
         $Miner = $_
         $Miner_WatchdogTimers = $Session.WatchdogTimers | Where-Object MinerName -EQ $Miner.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
-        ($Miner_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>2 -and ($Miner_WatchdogTimers | Where-Object {$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>1 -and (-not $PoolsContainExclusive -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1)
+        ($Miner_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>2 -and ($Miner_WatchdogTimers | Where-Object {$Miner.HashRates.PSObject.Properties.Name -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>1 -and ($Session.Config.DisableDualMining -or $Miner.HashRates.PSObject.Properties.Name.Count -eq 1 -or -not ($Miner.Pools.PSObject.Properties.Value | Where-Object Exclusive))
     }
 
     #Give API access to the miners information
@@ -1724,6 +1732,9 @@ function Invoke-Core {
         $_.Profit_Bias = $_.Profit_Unbias
         if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -or ($_.GetStatus() -eq [MinerStatus]::Running)) {
             if ($_.Rounds -lt $Session.Config.MinimumMiningIntervals -and -not $Session.IsBenchmarkingRun) {$_.IsRunningFirstRounds=$true}
+            if (-not ($Session.SkipSwitchingPrevention -or $Session.Config.EnableFastSwitching) -and $Session.Config.MinerSwitchingHysteresis) {
+                $_.Profit_Bias *= 1+($Session.Config.MinerSwitchingHysteresis/100)
+            }
         }
     }
 
