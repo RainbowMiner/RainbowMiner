@@ -436,9 +436,9 @@ function Invoke-Core {
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
-        $Session.Config.EnableHeatMyFlat = [Math]::Max([Math]::Min($Session.Config.EnableHeatMyFlat,10.0),0.0)
-        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis,100.0),0.0)
-        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis,100.0),0.0)
+        $Session.Config.EnableHeatMyFlat = [Math]::Max([Math]::Min($Session.Config.EnableHeatMyFlat -replace "[^\d\.\-]+",10.0),0.0)
+        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
+        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
@@ -728,6 +728,8 @@ function Invoke-Core {
             $Session.Config.Pools.$p | Add-Member DataWindow (Get-YiiMPDataWindow $Session.Config.Pools.$p.DataWindow) -Force
             $Session.Config.Pools.$p | Add-Member Penalty ([Math]::Round([double]($Session.Config.Pools.$p.Penalty -replace "[^\d\.\-]+"),2)) -Force
             $Session.Config.Pools.$p | Add-Member MaxMarginOfError ([Math]::Round([double]($Session.Config.Pools.$p.MaxMarginOfError -replace "[^\d\.\-]+"),2)) -Force
+            $Pool_SwHyst = $Session.Config.Pools.$p.SwitchingHysteresis -replace "[^\d\.\-]+"
+            $Session.Config.Pools.$p | Add-Member SwitchingHysteresis $(if ("$Pool_SwHyst") {[Math]::Max([Math]::Min([double]$Pool_SwHyst,100.0),0.0)} else {$null}) -Force
             $Session.Config.Pools.$p | Add-Member StatAverage (Get-StatAverage $Session.Config.Pools.$p.StatAverage -Default $Session.Config.PoolStatAverage) -Force
         }
     }
@@ -1167,8 +1169,10 @@ function Invoke-Core {
                             if ($Session.Config.Pools."$($_.Name)".MaxMarginOfError) {
                                 $Price_Cmp *= 1-([Math]::Floor(([Math]::Min($_.MarginOfError,$Session.Config.Pools."$($_.Name)".MaxMarginOfError/100) * $Session.DecayFact) * 100.00) / 100.00) * ($Session.Config.PoolAccuracyWeight/100)
                             }
+                        } elseif ($Session.Config.Pools."$($_.Name)".SwitchingHysteresis -ne $null) {
+                            $Price_Cmp *= 1+($Session.Config.Pools."$($_.Name)".SwitchingHysteresis)
                         } elseif ($Session.Config.PoolSwitchingHystereis) {
-                            $Price_Cmp = 1+($Session.Config.PoolSwitchingHysteresis/100)
+                            $Price_Cmp *= 1+($Session.Config.PoolSwitchingHysteresis/100)
                         }
                     }
                     if ($_.HashRate -ne $null -and $Session.Config.HashrateWeightStrength) {

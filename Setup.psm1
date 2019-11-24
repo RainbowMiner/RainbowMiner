@@ -1876,7 +1876,7 @@ function Start-Setup {
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
                         $PoolsSetup.$Pool_Name.SetupFields.PSObject.Properties.Name | Select-Object | Foreach-Object {$k=($_ -replace "[^A-Za-z0-1]+").ToLower();$PoolSetupFields[$k] = $_;$PoolSetupSteps.Add($k) > $null}
-                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","maxmarginoferror")) > $null
+                        $PoolSetupSteps.AddRange(@("penalty","allowzero","enableautocoin","enablepostblockmining","algorithmtitle","algorithm","excludealgorithm","coinsymbol","excludecoinsymbol","coinsymbolpbm","coinname","excludecoin","minername","excludeminername","stataverage","maxmarginoferror","switchinghysteresis")) > $null
                         if ($IsYiimpPool) {$PoolSetupSteps.AddRange(@("datawindow")) > $null}
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0 -and $Pool_Avail_Currency.Count -gt 0 -and $Pool_Name -notmatch "miningpoolhub") {$PoolSetupSteps.Add("focuswallet") > $null}
                         $PoolSetupSteps.Add("save") > $null                                        
@@ -1913,6 +1913,7 @@ function Start-Setup {
                                     }
                                     "allowzero" {                                                    
                                         $PoolConfig.AllowZero = Read-HostBool -Prompt "Allow mining an alogorithm, even if the pool hashrate equals 0 (not recommended, except for solo or coin mining)" -Default $PoolConfig.AllowZero | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.AllowZero = if ($PoolConfig.AllowZero) {"1"} else {"0"}
                                     }
                                     "apiid" {
                                         $PoolConfig.API_ID = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.API_ID -Default ($PoolConfig.API_ID -replace "^\`$.+") -Characters "A-Z0-9" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_} 
@@ -2014,6 +2015,7 @@ function Start-Setup {
                                     }
                                     "enableautocoin" {
                                         $PoolConfig.EnableAutoCoin = Read-HostBool -Prompt "Automatically add currencies that are activated in coins.config.txt with EnableAutoPool=`"1`"" -Default $PoolConfig.EnableAutoCoin | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnableAutoCoin = if ($PoolConfig.EnableAutoCoin) {"1"} else {"0"}
                                     }
                                     "enableautocreate" {
                                         $PoolConfig.EnableAutoCreate = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnableAutoCreate -Default $PoolConfig.EnableAutoCreate | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2033,6 +2035,7 @@ function Start-Setup {
                                     }
                                     "enablepostblockmining" {
                                         $PoolConfig.EnablePostBlockMining = Read-HostBool -Prompt "Enable forced mining a currency for a timespan after a block has been found (activate in coins.config.txt with PostBlockMining > 0)" -Default $PoolConfig.EnablePostBlockMining | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.EnablePostBlockMining = if ($PoolConfig.EnablePostBlockMining) {"1"} else {"0"}
                                     }
                                     "enablepriceupdates" {
                                         $PoolConfig.EnablePriceUpdates = Read-HostBool -Prompt $PoolsSetup.$Pool_Name.SetupFields.EnablePriceUpdates -Default $PoolConfig.EnablePriceUpdates | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2064,6 +2067,7 @@ function Start-Setup {
                                     }
                                     "maxmarginoferror" {
                                         $PoolConfig.MaxMarginOfError = Read-HostDouble -Prompt "Enter the maximum allowed fluctuation of pool prices in percent" -Default $PoolConfig.MaxMarginOfError -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.MaxMarginOfError = "$($PoolConfig.MaxMarginOfError)"
                                     }
                                     "minername" {
                                         $PoolConfig.MinerName = Read-HostArray -Prompt "Enter the miners your want to use ($(if ($PoolConfig.MinerName) {"clear"} else {"leave empty"}) for all)" -Default $PoolConfig.MinerName -Characters "A-Z0-9.-_" -Valid $Session.AvailMiners | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2080,6 +2084,7 @@ function Start-Setup {
                                     }
                                     "penalty" {
                                         $PoolConfig.Penalty = Read-HostDouble -Prompt "Enter penalty in percent. This value will decrease all reported values." -Default $PoolConfig.Penalty -Min 0 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.Penalty = "$($PoolConfig.Penalty)"
                                     }
                                     "platform" {
                                         $PoolConfig.Platform = Read-HostArray -Prompt $PoolsSetup.$Pool_Name.SetupFields.Platform -Default $PoolConfig.Platform -Valid @("1","v1","old","2","v2","new") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2103,6 +2108,11 @@ function Start-Setup {
 
                                         Write-HostSetupStatAverageHints
                                         $PoolConfig.StatAverage = Read-HostString -Prompt "Enter which moving average is to be used ($(if ($PoolConfig.StatAverage) {"clear"} else {"leave empty"}) for default)" -Default $PoolConfig.StatAverage -Valid @("Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week") -Characters "A-Z0-9_" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                    }
+                                    "switchinghysteresis" {
+                                        if (-not "$($PoolConfig.SwitchingHysteresis)") {$PoolConfig.SwitchingHysteresis = -1}
+                                        $PoolConfig.SwitchingHysteresis = Read-HostDouble -Prompt "Prevention of pool-to-pool hopping: the higher, the less switching (in %, 0 to disable, -1 to use global PoolSwitchingHysteresis)" -Default $PoolConfig.SwitchingHysteresis -Min -1 -Max 100 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $PoolConfig.SwitchingHysteresis = "$(if ($PoolConfig.SwitchingHysteresis -ge 0) {$PoolConfig.SwitchingHysteresis})"
                                     }
                                     "title" {
                                         $PoolConfig.Title = Read-HostString -Prompt $PoolsSetup.$Pool_Name.SetupFields.Title -Default $PoolConfig.Title -Characters "" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
