@@ -1870,8 +1870,8 @@ function Start-Setup {
                         $PoolConfig = $PoolsActual.$Pool_Name.PSObject.Copy()
 
                         $Pool_Avail_Currency = @($Pool.Currency | Select-Object -Unique | Sort-Object)
-                        $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ' '} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
-                        $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ' '} | Select-Object -Unique | Sort-Object)
+                        $Pool_Avail_CoinName = @($Pool | Foreach-Object {@($_.CoinName | Select-Object) -join ','} | Select-Object -Unique | Where-Object {$_} | Sort-Object)
+                        $Pool_Avail_CoinSymbol = @($Pool | Where CoinSymbol | Foreach-Object {@($_.CoinSymbol | Select-Object) -join ','} | Select-Object -Unique | Sort-Object)
 
                         if ($PoolsSetup.$Pool_Name.Currencies -and $PoolsSetup.$Pool_Name.Currencies.Count -gt 0) {$PoolSetupSteps.Add("currency") > $null}
                         $PoolSetupSteps.AddRange(@("basictitle","worker")) > $null
