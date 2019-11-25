@@ -1,4 +1,5 @@
 ﻿[PSCustomObject]@{
+    Name       = ""
     DayOfWeek  = "*"
     From       = "00:00"
     To         = "23:59"
