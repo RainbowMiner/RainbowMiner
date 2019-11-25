@@ -591,6 +591,7 @@ function Invoke-Core {
             if (Test-Config "Scheduler" -Health) {
                 $Session.Config | Add-Member Scheduler @() -Force
                 $AllScheduler | Foreach-Object {
+                    $_ | Add-Member Name "$($_.Name)" -Force
                     $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
                     $_ | Add-Member From $(Get-HourMinStr $_.From) -Force
                     $_ | Add-Member To   $(Get-HourMinStr $_.To -to) -Force

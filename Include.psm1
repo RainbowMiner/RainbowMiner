@@ -5555,6 +5555,10 @@ function Set-SchedulerConfigDefault {
                 foreach($SetupName in @($Default.PSObject.Properties.Name | Select-Object)) {
                     if ($_.$SetupName -eq $null) {$_ | Add-Member $SetupName $Default.$SetupName -Force}
                 }
+                if (-not $_.Name) {
+                    if ($_.DayOfWeek -eq "*") {$_.Name = "All"}
+                    elseif ($_.DayOfWeek -match "^[0-6]$") {$_.Name = "$([DayOfWeek]$_.DayOfWeek)"}
+                }
             }
 
             Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null

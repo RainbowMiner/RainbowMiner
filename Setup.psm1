@@ -2858,6 +2858,7 @@ function Start-Setup {
 
                     $SchedulerActual | Format-Table @(
                         @{Label="No"; Expression={$_.Index}}
+                        @{Label="Name"; Expression={"$($_.Name)"}}
                         @{Label="DayOfWeek"; Expression={"$(if ($_.DayOfWeek -eq "*") {"*"} else {$_.DayOfWeek})"};align="center"}
                         @{Label="From"; Expression={"$((Get-HourMinStr $_.From).SubString(0,5))"}}
                         @{Label="To"; Expression={"$((Get-HourMinStr $_.To -To).SubString(0,5))"}}
@@ -2873,6 +2874,7 @@ function Start-Setup {
                     if ($Scheduler_Action -eq "x") {throw "exit"}
 
                     $ScheduleDefault = [PSCustomObject]@{
+                        Name = ""
                         DayOfWeek = ""
                         From = ""
                         To = ""
@@ -2895,7 +2897,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","from","to","powerprice","pause","enable")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -2906,6 +2908,13 @@ function Start-Setup {
                                 "dayofweek" {
                                     $Schedule.DayOfWeek = Read-HostString -Prompt "Enter on which day of week this schedule activates" -Default $Schedule.DayOfWeek -Valid @("all","*","0","1","2","3","4","5","6") -Mandatory -Characters "0-9\*" | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                     if ($Schedule.DayOfWeek -eq "all") {$Schedule.DayOfWeek = "*"}
+                                }
+                                "name" {
+                                    $NameDefault = "$($Schedule.Name)"
+                                    if (-not $Default) {
+                                        $NameDefault = "$(if ($Schedule.DayOfWeek -eq "*") {"All"} else {[DayOfWeek]$Schedule.DayOfWeek})"
+                                    }
+                                    $Schedule.Name = Read-HostString -Prompt "Enter a title for this schedule" -Default $NameDefault | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
                                 "from" {
                                     $Schedule.From = Read-HostString -Prompt "Enter when this schedule starts" -Default $Schedule.From -Characters "0-9amp: " | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
@@ -2938,6 +2947,7 @@ function Start-Setup {
                                     $SchedulerSave = @()
                                     $SchedulerActual | Foreach-Object {
                                         $SchedulerSave += [PSCustomObject]@{
+                                            Name       = $_.Name
                                             DayOfWeek  = $_.DayOfWeek
                                             From       = $_.From
                                             To         = $_.To
