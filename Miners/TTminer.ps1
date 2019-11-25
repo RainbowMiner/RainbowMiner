@@ -24,9 +24,9 @@ if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDI
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2} #Eaglesong
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH2gb"    ; MinMemGB = 2; NH = $false; Params = "-A ETHASH%CUDA%"} #Ethash2GB 
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH3gb"    ; MinMemGB = 3; NH = $false; Params = "-A ETHASH%CUDA%"} #Ethash3GB 
-    #[PSCustomObject]@{MainAlgorithm = "ETHASH"       ; MinMemGB = 4; NH = $false;  Params = "-A ETHASH%CUDA%"} #Ethash 
+    [PSCustomObject]@{MainAlgorithm = "ETHASH2gb"     ; MinMemGB = 2; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash2GB 
+    [PSCustomObject]@{MainAlgorithm = "ETHASH3gb"     ; MinMemGB = 3; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash3GB 
+    [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 4; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
     #[PSCustomObject]@{MainAlgorithm = "HONEYCOMB"     ; MinMemGB = 2; NH = $false; Params = "-A HONEYCOMB%CUDA%"; ExtendInterval = 2} #HoneyComb
     [PSCustomObject]@{MainAlgorithm = "LYRA2V3"       ; MinMemGB = 2; NH = $true;  Params = "-A LYRA2V3%CUDA%"; ExtendInterval = 2} #LYRA2V3
     [PSCustomObject]@{MainAlgorithm = "MTP"           ; MinMemGB = 6; NH = $true;  Params = "-A MTP%CUDA%"; ExtendInterval = 2} #MTP
