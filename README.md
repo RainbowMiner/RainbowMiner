@@ -875,6 +875,20 @@ Example 1:
 
 In this example, if mining Zergpool, it will autoexchange everything into LTC. The parameter string "pl=1.5" will be added to the password, that is passed to the pool. In the case of ZergPool it will define a payout limit of 1.5 LTC. Of course any parameters can be added here, depending on the pool's options.
 
+For ZergPoolCoins pools, extra password parameters can be assigned per coin, even when using autoexchange to a certain currency:
+
+Example 2:
+
+    "ZergPoolCoins": {
+        "BTC": "<YOUR_BTC_ADDRESS>",
+        "BTC-Params": "pl=0.001",
+        "BTC-MBC-Params": "d=0.1",
+        "Worker": "$WorkerName",
+        "Penalty": "0"
+    }
+
+In example 2, when mining for some MBC on ZergPoolCoins, the difficulty will be set to 0.1 by adding ",d=0.1" to the miner's password parameter. "CURRENCY-COIN-Params" has priority over "CURRENCY-Params"
+
 #### Change a pool's penalty
     
 If you feel like a pool tends to exagerate it's results, you can set a penalty in % through the field "Penalty":
