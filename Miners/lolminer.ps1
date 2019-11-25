@@ -9,18 +9,18 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9-lolminer/lolMiner_v09_Lin64.tar.gz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-lolminer/lolMiner_v091_Lin64.tar.gz"
 } else {
     $Path = ".\Bin\Equihash-lolMiner\lolMiner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9-lolminer/lolMiner_v09_Win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.9.1-lolminer/lolMiner_v091_Win64.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=4724735.0"
 $Port = "317{0:d2}"
 $Cuda = "10.0"
 $DevFee = 1.0
-$Version = "0.9"
+$Version = "0.9.1"
 
-if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "Cuckarood29";     MinMemGB = 4; MinMemGBWin10 = 6; Params = "--coin GRIN-AD29"; Fee=1; ExtendInterval = 2; Vendor = @("AMD"); NH = $true} #Cuckarood29
@@ -37,7 +37,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 if ($InfoOnly) {
     [PSCustomObject]@{
-        Type      = @("AMD","NVIDIA")
+        Type      = @("AMD")
         Name      = $Name
         Path      = $Path
         Port      = $Miner_Port
@@ -49,9 +49,9 @@ if ($InfoOnly) {
     return
 }
 
-if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+#if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
-foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
+foreach ($Miner_Vendor in @("AMD")) {
     $Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
         $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Vendor -EQ $_.Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
