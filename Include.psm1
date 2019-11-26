@@ -1656,7 +1656,7 @@ function Get-BalancesPayouts {
     )
 
     $Payouts | Foreach-Object {
-        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime})"
+        $DateTime = "$(if ($_.time) {$_.time} elseif ($_.date) {$_.date} elseif ($_.datetime) {$_.datetime} elseif ($_.timestamp) {$_.timestamp})"
         [PSCustomObject]@{
             Date     = $(if ($DateTime -match "^\d+$") {[DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc') + [TimeSpan]::FromSeconds($DateTime)} else {(Get-Date $DateTime).ToUniversalTime()})
             Amount   = [Double]$_.amount / $Divisor
@@ -7189,7 +7189,7 @@ function Get-PoolDataFromRequest {
         }
     }
 
-    $rewards.Live.reward = $amountLive * $lastSatPrice        
+    $rewards.Live.reward = $amountLive * $lastSatPrice
 
     if ($addDay) {
         $averageDifficulties = if ($Request.pool.stats.diffs.wavg24h) {$Request.pool.stats.diffs.wavg24h} elseif ($Request.charts.difficulty_1d) {$Request.charts.difficulty_1d} else {($Request.charts.difficulty | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average}

@@ -56,6 +56,9 @@
         "CoinFoundry" = [PSCustomObject]@{
             Currencies=@("BCD")
         }
+        "Cortexmint" = [PSCustomObject]@{
+            Currencies=@("CTXC")
+        }
         "CryptoKnight" = [PSCustomObject]@{
             Currencies=@("XWP")
         }
