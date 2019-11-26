@@ -136,7 +136,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
     if ($ok) {
         $Pool_Hosts = @()
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
-        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains $Pool_Host} | Select-Object host,port | Foreach-Object {
+        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains $_.host} | Select-Object host,port | Foreach-Object {
             $Pool_Hosts += $_.host
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
