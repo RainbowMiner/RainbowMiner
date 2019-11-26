@@ -10,7 +10,7 @@ if (-not $IsWindows) {return}
 $Path = ".\Bin\NVIDIA-Lyra2z330\ccminer.exe"
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r9-ccminerlyra2z330v2/ccminerlyra2z330v2.zip"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r9-ccminerlyra2z330v3/ccminerlyra2z330v3.zip"
         Cuda = "10.0"
     }
 )
@@ -18,12 +18,12 @@ $UriCuda = @(
 $ManualUri = "https://github.com/Minerx117/ccminer8.21r9-lyra2z330/releases"
 $Port = "138{0:d2}"
 $DevFee = 0.0
-$Version = "8.21r9-lyra2z330-v2"
+$Version = "8.21r9-lyra2z330-v3"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-i 11.87"; ExtendInterval = 2; FaultTolerance = 0.3} #Lyra2z330
+    [PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = "-i 12.5"; ExtendInterval = 2; FaultTolerance = 0.3} #Lyra2z330
 )
 
 $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty BaseName
