@@ -91,7 +91,7 @@
                     #Send-APIServerUdp -Port $API.APIport -MachineName $Session.MachineName -IPaddress $Session.MyIP > $null
                     $StopWatch.Restart()
                 }
-                if($task.Wait(500)){$Context = $task.Result}
+                if($task.Wait(500)){$Context = $task.Result;$task = $null}
                 if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
 
