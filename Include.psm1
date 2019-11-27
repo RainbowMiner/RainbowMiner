@@ -7242,22 +7242,30 @@ function Get-Uptime {
         [Parameter(Mandatory = $False)]
         [switch]$System
     )
+    $ts = $null
     if ($System) {
         try {
             if ($IsWindows) {
-                (Get-Date) - (Get-CimInstance Win32_OperatingSystem | Select-Object -ExpandProperty LastBootUpTime)
+                $ts = (Get-Date) - (Get-CimInstance Win32_OperatingSystem -Property LastBootUpTime -ErrorAction Ignore | Select-Object -ExpandProperty LastBootUpTime)
             } elseif ($IsLinux) {
-                New-TimeSpan -Seconds ([double]((cat /proc/uptime) -split "\s+" | Select-Object -First 1))
+                $ts = New-TimeSpan -Seconds ([double]((cat /proc/uptime) -split "\s+" | Select-Object -First 1))
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Could not get system uptime: $($_.Exception.Message)"
-            $System = $false
+            $ts = $null
         }
     }
-    if (-not $System) {
-        (Get-Date).ToUniversalTime() - $Session.StartTime
+    if (-not $ts) {
+        try {
+            $ts = (Get-Date).ToUniversalTime() - $Session.StartTime
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Warn "Could not get script uptime: $($_.Exception.Message)"
+            $ts = $null
+        }
     }
+    if ($ts) {$ts} else {New-TimeSpan -Seconds 0}
 }
 
 function Get-ReadableHex32 {
