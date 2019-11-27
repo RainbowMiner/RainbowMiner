@@ -6586,6 +6586,7 @@ function Invoke-ReportMinerStatus {
             $Response = Invoke-GetUrl $ReportUrl -Body @{address = $Session.Config.MinerStatusKey; workername = $Session.Config.WorkerName; version = $Version; status = $Status; profit = $Profit; miners = $minerreport}
             if ($Response) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1} 
         }
+        if ($Response -ne $null) {Remove-Variable "Response"}
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}

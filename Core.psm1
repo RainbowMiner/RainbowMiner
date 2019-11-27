@@ -881,6 +881,7 @@ function Invoke-Core {
         }
 
         $Session.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
+        $API.DeviceCombos = $Session.DeviceCombos
 
         #Update device information for the first time
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
@@ -891,6 +892,9 @@ function Invoke-Core {
     if (-not $Session.Devices) {
         $Session.PauseMiners = $API.Pause = $true
     }
+
+    $API.AllDevices = $Session.AllDevices
+    $API.Devices    = $Session.Devices
 
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
@@ -965,6 +969,8 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
+    $API.Rates = $Session.Rates
+
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
     if ($Session.CurrentPowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
@@ -979,6 +985,7 @@ function Invoke-Core {
     Write-Log "Loading saved statistics. "
 
     [hashtable]$Session.Stats = Get-Stat -Miners
+    $API.Stats = $Session.Stats
 
     #Load information about the pools
     Write-Log "Loading pool information. "
