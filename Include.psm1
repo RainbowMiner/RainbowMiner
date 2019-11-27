@@ -6574,10 +6574,10 @@ function Invoke-ReportMinerStatus {
                     }
                 }
                 if ($Response.Workers -ne $null) {
-                    $API.RemoteMiners = ConvertTo-Json @($Response.Workers | Where-Object worker -ne $Session.Config.WorkerName | Select-Object) -Depth 10
+                    $API.RemoteMiners = $Response.Workers | Where-Object worker -ne $Session.Config.WorkerName
                 }
                 if ($Response.Compare -ne $null) {
-                    $API.CompareMiners = ConvertTo-Json @($Response.Compare  | Select-Object) -Depth 10
+                    $API.CompareMiners = $Response.Compare
                 }
             }
             $ReportDone = $true

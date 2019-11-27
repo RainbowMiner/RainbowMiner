@@ -234,11 +234,11 @@
                     Break
                 }
                 "/remoteminers" {
-                    $Data = ConvertTo-Json @(($API.RemoteMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object) -Depth 10
+                    $Data = ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 10
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = ConvertTo-Json @(($API.MinersNeedingBenchmark | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
+                    $Data = ConvertTo-Json @($API.MinersNeedingBenchmark | Select-Object)
                     Break
                 }
                 "/minerinfo" {
@@ -246,19 +246,11 @@
                     Break
                 }
                 "/pools" {
-                    $Data = ConvertTo-Json @(($API.Pools | Select-Object | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Select-Object -ExpandProperty Value)
-                    Break
-                }
-                "/newpools" {
-                    $Data = ConvertTo-Json @(($API.NewPools | Select-Object) | ConvertFrom-Json -ErrorAction Ignore | Select-Object)
+                    $Data = ConvertTo-Json @($API.Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
                     Break
                 }
                 "/allpools" {
                     $Data = ConvertTo-Json @($API.AllPools | Select-Object)
-                    Break
-                }
-                "/selectedpools" {
-                    $Data = ConvertTo-Json @(($API.SelectedPools | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
                     Break
                 }
                 "/algorithms" {
@@ -266,18 +258,18 @@
                     Break
                 }
                 "/miners" {
-                    $Data = ConvertTo-Json @(($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
+                    $Data = ConvertTo-Json @($API.Miners | Select-Object)
                     Break
                 }
                 "/fastestminers" {
-                    $Data = ConvertTo-Json @(($API.FastestMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
+                    $Data = ConvertTo-Json @($API.FastestMiners | Select-Object)
                     Break
                 }
                 "/getwtmurls" {
                     $WTMdata = Get-WhatToMineData
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
                     $WTMdata_result = [hashtable]@{}
-                    @(($API.FastestMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
+                    @($API.FastestMiners | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                         $Group = $_.Group
                         $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($API.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($API.Config.PowerPriceCurrency -ne "USD" -and $API.Rates."$($API.Config.PowerPriceCurrency)") {$API.Rates.USD/$API.Rates."$($API.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($API.Config.WorkerName)&commit=Calculate"
                     }
@@ -355,7 +347,7 @@
                     Break
                 }
                 "/downloadlist" {
-                    $Data = ConvertTo-Json @(($API.DownloadList | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Select-Object)
+                    $Data = ConvertTo-Json @($API.DownloadList | Select-Object)
                     Break
                 }
                 "/debug" {
@@ -508,7 +500,7 @@
                     Break
                 }
                 "/balances" {
-                    $Balances = ($API.Balances | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
+                    $Balances = $API.Balances | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
                     if ($Parameters.consolidate) {
                         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
                             $BalanceGroup = $_.Group | Where-Object {$API.Rates."$($_.Currency)"}
@@ -582,7 +574,7 @@
                     Break
                 }
                 "/payouts" {
-                    $Data = ConvertTo-Json @(($API.Balances | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
+                    $Data = ConvertTo-Json @($API.Balances | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
                         $Balance_BaseName = $_.BaseName
                         $Balance_Currency = $_.Currency
                         $_.Payouts | Foreach-Object {
@@ -613,7 +605,7 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    ($API.Miners | Select-Object | ConvertFrom-Json -ErrorAction Ignore) | Where-Object {$_.DeviceModel -notmatch '-' -or $API.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
+                    $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $API.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -696,8 +688,7 @@
                     $Profit = [decimal]$API.CurrentProfit
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
-                    $RemoteMiners = $API.RemoteMiners | Select-Object | ConvertFrom-Json -ErrorAction Ignore
-                    $RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    $API.RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
                     $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
@@ -711,7 +702,6 @@
                                             }
                     $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$Rates;;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
                     Remove-Variable "Rates" -ErrorAction Ignore
-                    Remove-Variable "RemoteMiners" -ErrorAction Ignore
                     Remove-Variable "Timer" -ErrorAction Ignore
                     Remove-Variable "Uptime" -ErrorAction Ignore
                     Remove-Variable "SysUptime" -ErrorAction Ignore

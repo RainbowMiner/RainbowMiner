@@ -1051,7 +1051,7 @@ function Invoke-Core {
                 }
                 Remove-Variable "Earnings"
             }
-            $API.Balances = $BalancesData | ConvertTo-Json -Depth 10
+            $API.Balances = $BalancesData
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
@@ -1233,7 +1233,7 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $API.Pools = $Pools | ConvertTo-Json -Depth 10 -Compress
+    $API.Pools = $Pools
  
     #Load information about the miners
     Write-Log "Getting miner information. "
@@ -1539,7 +1539,7 @@ function Invoke-Core {
         }
         $Session.StartDownloader = $false
     }
-    $API.DownloadList = $Miners_DownloadList | ConvertTo-Json -Depth 10 -Compress
+    $API.DownloadList = $Miners_DownloadList
     $Miners_Downloading = $Miners_DownloadList.Count
     Remove-Variable "AllMiners_VersionCheck" -Force
     Remove-Variable "AllMiners_VersionDate" -Force
@@ -1582,18 +1582,18 @@ function Invoke-Core {
     }
 
     #Give API access to the miners information
-    $API.Miners = $Miners | ConvertTo-Json -Depth 10 -Compress
+    $API.Miners = $Miners
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = $Miners | ConvertTo-Json -Depth 10 -Compress
+    $API.FastestMiners = $Miners
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null}
     $MinersNeedingBenchmarkCount = ($MinersNeedingBenchmark | Measure-Object).Count
-    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark | ConvertTo-Json -Depth 10 -Compress
+    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
 
     #Update the active miners
     $Session.ActiveMiners | Foreach-Object {
