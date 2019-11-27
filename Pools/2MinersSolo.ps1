@@ -136,8 +136,8 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
     if ($ok) {
         $Pool_Hosts = @()
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
-        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains "$($_.host)$($_.port -ge 10000)"} | Select-Object host,port | Foreach-Object {
-            $SSL = $_.port -ge 10000
+        $Pool_HostStatus | Where-Object {$_.host -match "$($Pool_Host)" -and $Pool_Hosts -notcontains "$($_.host)$([int]$_.port -ge 10000)"} | Select-Object host,port | Foreach-Object {
+            $SSL = [int]$_.port -ge 10000
             $Pool_Hosts += "$($_.host)$($_.port -ge 10000)"
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -149,7 +149,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
                 MarginOfError = $Stat.Week_Fluctuation
                 Protocol      = if ($SSL) {"stratum+ssl"} else {"stratum+tcp"}
                 Host          = "$($_.host)"
-                Port          = $_.port
+                Port          = [int]$_.port
                 User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable."$(if ($_.host -match "^(asia|us)-") {$Matches[1]} else {"eu"})"
