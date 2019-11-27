@@ -341,7 +341,17 @@
                     Break
                 }
                 "/ocprofiles" {
-                    $Data = ConvertTo-Json @($API.Config.OCProfiles.PSObject.Properties | Foreach-Object {$_.Value | Add-Member -NotePropertyMembers @{Name=($_.Name -replace "-.+$");Device=$(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})} -Force -PassThru} | Select-Object)
+                    $Data = ConvertTo-Json @($API.Config.OCProfiles.PSObject.Properties | Foreach-Object {
+                                [PSCustomObject]@{
+                                    Name             = $_.Name -replace "-.+$"
+                                    Device           = $(if ($_.Name -match "-(.+)$") {$Matches[1]} else {""})
+                                    PowerLimit       = $_.Value.PowerLimit
+                                    ThermalLimit     = $_.Value.ThermalLimit
+                                    MemoryClockBoost = $_.Value.MemoryClockBoost
+                                    CoreClockBoost   = $_.Value.CoreClockBoost
+                                    LockVoltagePoint = $_.Value.LockVoltagePoint
+                                }
+                            } | Select-Object)
                     Break
                 }
                 "/downloadlist" {
