@@ -1212,6 +1212,15 @@ function Invoke-Core {
             Write-Log "Pool prices are out of sync ($([int]$Pools_OutOfSyncMinutes) minutes). "
         }
 
+        if ($false) {
+            $API.PoolsCalculations = [PSCustomObject]@{
+                Hashrates = $Pools_Hashrates
+                Running   = $Pools_Running
+                Benchmarking = $Pools_Benchmarking
+                PriceCmp  = $Pools_PriceCmp
+            }
+        }
+
         Remove-Variable "Pools_Hashrates" -ErrorAction Ignore
         Remove-Variable "Pools_Running" -ErrorAction Ignore
         Remove-Variable "Pools_Benchmarking" -ErrorAction Ignore

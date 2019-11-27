@@ -253,6 +253,10 @@
                     $Data = ConvertTo-Json @($API.AllPools | Select-Object)
                     Break
                 }
+                "/poolscalculations" {
+                    $Data = ConvertTo-Json $API.PoolsCalculations
+                    Break
+                }
                 "/algorithms" {
                     $Data = ConvertTo-Json @(($API.AllPools | Select-Object).Algorithm | Sort-Object -Unique)
                     Break
