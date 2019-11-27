@@ -491,7 +491,7 @@ function Invoke-Core {
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
-    $API.Version = $ConfirmedVersion | ConvertTo-Json -Compress
+    $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-Content ".\Logs\autoupdate.txt" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
@@ -744,6 +744,7 @@ function Invoke-Core {
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
     $Session.CurrentPowerPrice = $PowerPrice
+    $API.CurrentPowerPrice = $Session.CurrentPowerPrice
 
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
@@ -881,7 +882,9 @@ function Invoke-Core {
         }
 
         $Session.DeviceCombos = @($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) | ForEach-Object {$Session.DevicesByTypes.$_ | Select-Object -ExpandProperty Model -Unique} | Sort-Object
-        $API.DeviceCombos = $Session.DeviceCombos
+
+        $API.DeviceCombos     = $Session.DeviceCombos
+        $API.DevicesToVendors = $Session.DevicesToVendors
 
         #Update device information for the first time
         Update-DeviceInformation @($Session.Devices.Name | Select-Object -Unique) -UseAfterburner (-not $Session.Config.DisableMSIAmonitor) -DeviceConfig $Session.Config.Devices
@@ -933,6 +936,9 @@ function Invoke-Core {
         }
     }
 
+    $API.Config = $Session.Config
+    $API.UserConfig = $Session.UserConfig
+
     $MinerInfoChanged = $false
     if (-not (Test-Path ".\Data\minerinfo.json")) {$Session.MinerInfo = @{}}
     Compare-Object @($Session.AvailMiners | Select-Object) @($Session.MinerInfo.Keys | Select-Object) | Foreach-Object {
@@ -944,6 +950,8 @@ function Invoke-Core {
         $MinerInfoChanged = $true
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo -Compress > $null}
+
+    $API.MinerInfo = $Session.MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -1957,9 +1965,10 @@ function Invoke-Core {
 
     #Update API miner information
     #$RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.ActiveMiners  = $Session.ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
-    $API.RunningMiners = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
-    $API.FailedMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
+    $API.WatchdogTimers = $Session.WatchdogTimers
+    $API.ActiveMiners   = $Session.ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
+    $API.RunningMiners  = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+    $API.FailedMiners   = $Session.ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
 
     #
     #Start output to host
