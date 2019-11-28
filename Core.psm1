@@ -485,6 +485,7 @@ function Invoke-Core {
         $API.APIport = $Session.Config.APIport
         $API.APIUser = $Session.Config.APIUser
         $API.APIPassword = $Session.Config.APIPassword
+        $API.MachineName = $Session.MachineName
     }
 
     if ($CheckConfig) {Update-WatchdogLevels -Reset}

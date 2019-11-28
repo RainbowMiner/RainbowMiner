@@ -19,6 +19,7 @@
     $API.RandTag     = Get-MD5Hash("$((Get-Date).ToUniversalTime())$(Get-Random)")
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
+    $API.MachineName = $Session.MachineName
 
     Set-APICredentials
 
@@ -88,7 +89,7 @@
             $Context = $null
             while(-not $Context -and -not $API.Stop){
                 if ($API.IsServer -and (-not $StopWatch.IsRunning -or $StopWatch.ElapsedMilliseconds -gt 1000)) {
-                    #Send-APIServerUdp -Port $API.APIport -MachineName $Session.MachineName -IPaddress $Session.MyIP > $null
+                    #Send-APIServerUdp -Port $API.APIport -MachineName $API.MachineName -IPaddress $API.MyIP > $null
                     $StopWatch.Restart()
                 }
                 if($task.Wait(500)){$Context = $task.Result;$task = $null}
@@ -781,7 +782,7 @@
                         }
                     }
                     if (-not $Status) {
-                        $Result = if (-not $API.IsServer) {"$($Session.MachineName) is not a server"}
+                        $Result = if (-not $API.IsServer) {"$($API.MachineName) is not a server"}
                               elseif ($API.Version.Version -ne $Parameters.version) {"Server runs on wrong Version v$($API.Version.Version)"}
                               else {"No data found"}
                     }
@@ -882,14 +883,10 @@
                         }
                         $Result = $null
                         try {
-                            if (-not $Parameters.key) {
-                                $PoolName = if ($API.Config.Pools.NiceHash.Platform -in @("2","v2","new") -and $API.Config.Pools.NiceHash.API_Key  -and $API.Config.Pools.NiceHash.API_Secret -and $API.Config.Pools.NiceHash.OrganizationID) {"NiceHash"}
-                                            elseif ($API.Config.Pools.NiceHashV2.API_Key -and $API.Config.Pools.NiceHashV2.API_Secret -and $API.Config.Pools.NiceHashV2.OrganizationID) {"NiceHashV2"}
-                                if ($PoolName) {
-                                    $Parameters | Add-Member key    $API.Config.Pools.$PoolName.API_Key -Force
-                                    $Parameters | Add-Member secret $API.Config.Pools.$PoolName.API_Secret -Force
-                                    $Parameters | Add-Member orgid  $API.Config.Pools.$PoolName.OrganizationID -Force
-                                }
+                            if (-not $Parameters.key -and $API.Config.Pools.NiceHash.API_Key  -and $API.Config.Pools.NiceHash.API_Secret -and $API.Config.Pools.NiceHash.OrganizationID) {
+                                $Parameters | Add-Member key    $API.Config.Pools.NiceHash.API_Key -Force
+                                $Parameters | Add-Member secret $API.Config.Pools.NiceHash.API_Secret -Force
+                                $Parameters | Add-Member orgid  $API.Config.Pools.NiceHash.OrganizationID -Force
                             }
                             if ($Parameters.key -and $Parameters.secret -and $Parameters.orgid) {
                                 $Params = [hashtable]@{}
@@ -905,18 +902,18 @@
                 }
                 "/mrrstats" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    $CpuDevices = ($Session.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Session.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($Pool_Request = Get-MiningRigRentalAlgos) {
                         [hashtable]$StatsCPU = @{}
                         [hashtable]$StatsGPU = @{}
                         if ($CpuDevices) {
-                            $Session.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Session.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Session.Stats.$_.Day}}
+                            $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
                             $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         if ($GpuDevices) {
-                            $Session.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Session.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Session.Stats.$_.Day}}
+                            $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
                             $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         $Pool_Request | Foreach-Object {
@@ -945,8 +942,8 @@
                 }
                 "/mrrrigs" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    $CpuDevices = ($Session.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($Session.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
 
                     if ($API.Config.Pools.MiningRigRentals.API_Key -and $API.Config.Pools.MiningRigRentals.API_Secret) {
                         $Workers = @($API.Config.DeviceModel | Where-Object {$API.Config.Devices.$_.Worker} | Foreach-Object {$API.Config.Devices.$_.Worker} | Select-Object -Unique) + $API.Config.WorkerName | Select-Object -Unique
@@ -954,11 +951,11 @@
                             [hashtable]$StatsCPU = @{}
                             [hashtable]$StatsGPU = @{}
                             if ($CpuDevices) {
-                                $Session.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Session.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Session.Stats.$_.Day}}
+                                $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
                                 $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             if ($GpuDevices) {
-                                $Session.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Session.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Session.Stats.$_.Day}}
+                                $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
                                 $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             $AllRigs_Request | Foreach-Object {
@@ -1058,7 +1055,7 @@
             try {
                 # Send the response
 			    $Response.Headers.Add("Accept-Encoding","gzip");
-			    $Response.Headers.Add("Server","RainbowMiner API on $($Session.MachineName)");
+			    $Response.Headers.Add("Server","RainbowMiner API on $($API.MachineName)");
 			    $Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
                 $Response.Headers.Add("Content-Type", $ContentType)
                 #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
@@ -1076,7 +1073,7 @@
                 }
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                if ($Session.LogLevel -ne "Silent") {
+                if ($API.Config.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
                 }
             }
@@ -1087,7 +1084,7 @@
                     $StreamWriter.Dispose()
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
-                    if ($Session.LogLevel -ne "Silent") {
+                    if ($API.Config.LogLevel -ne "Silent") {
                         Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close streamwriter failed: $($_.Exception.Message)" -Append -Timestamp
                     }
                 }
@@ -1098,13 +1095,13 @@
                 $Response.Close()
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
-                if ($Session.LogLevel -ne "Silent") {
+                if ($API.Config.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close response failed: $($_.Exception.Message)" -Append -Timestamp
                 }
             }
 
             if ($Error.Count) {
-                if ($Session.LogLevel -ne "Silent") {
+                if ($API.Config.LogLevel -ne "Silent") {
                     $Error | Foreach-Object {Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$($_.Exception.Message)" -Append -Timestamp}
                 }
                 $Error.Clear()
