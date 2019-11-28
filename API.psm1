@@ -92,9 +92,10 @@
                     #Send-APIServerUdp -Port $API.APIport -MachineName $API.MachineName -IPaddress $API.MyIP > $null
                     $StopWatch.Restart()
                 }
-                if($task.Wait(500)){$Context = $task.Result;$task = $null}
+                if($task.Wait(500)){$Context = $task.Result}
                 if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
+            $task = $null
 
             if ($API.Stop) {Break}
 
