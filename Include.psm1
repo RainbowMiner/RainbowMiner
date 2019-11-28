@@ -4993,7 +4993,11 @@ function Set-ContentJson {
                     $Exists = $true
             }
             if (-not $Exists -or $MD5hash -eq '' -or ($MD5hash -ne (Get-ContentDataMD5hash($Data)))) {
-                ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                if ($Data -is [array]) {
+                    ConvertTo-Json -InputObject @($Data | Select-Object) -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                } else {
+                    ConvertTo-Json -InputObject $Data -Compress:$Compress -Depth 10 | Set-Content $PathToFile -Encoding utf8 -Force
+                }
             } elseif ($Exists) {
                 (Get-ChildItem $PathToFile).LastWriteTime = Get-Date
             }
@@ -5529,6 +5533,10 @@ function Set-SchedulerConfigDefault {
                 $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }
             $ChangeTag = Get-ContentDataMD5hash($Preset)
+
+            if ($Preset -isnot [array] -and $Preset.value -ne $null) {
+                $Preset = $Preset.value
+            }
             
             $Preset | Foreach-Object {
                 foreach($SetupName in @($Default.PSObject.Properties.Name | Select-Object)) {
@@ -5540,7 +5548,7 @@ function Set-SchedulerConfigDefault {
                 }
             }
 
-            Set-ContentJson -PathToFile $PathToFile -Data $Preset -MD5hash $ChangeTag > $null
+            Set-ContentJson -PathToFile $PathToFile -Data @($Preset | Select-Object) -MD5hash $ChangeTag > $null
         }
         catch{
             if ($Error.Count){$Error.RemoveAt(0)}

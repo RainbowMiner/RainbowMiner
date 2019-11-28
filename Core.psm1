@@ -590,6 +590,7 @@ function Invoke-Core {
         if ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime)) {
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
+                if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
                 $Session.Config | Add-Member Scheduler @() -Force
                 $AllScheduler | Foreach-Object {
                     $_ | Add-Member Name "$($_.Name)" -Force
