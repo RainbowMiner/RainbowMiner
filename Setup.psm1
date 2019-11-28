@@ -1224,8 +1224,8 @@ function Start-Setup {
                         }
                         "miningheatcontrol" {
                             if (Get-Yes $Config.EnableMiningHeatControl) {
-                                $Config.MiningHeatControl = Read-HostDouble -Prompt "Priorize heat over profit to heat my flat (2=default, 0=max.eff., 5=max.heat)" -Default $Config.MiningHeatControl -Min 0 -Max 5 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
-                                $Config.MiningHeatControl = [Math]::Round($Config.MiningHeatControl,1)
+                                $Config.MiningHeatControl = Read-HostDouble -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat)" -Default $Config.MiningHeatControl -Min 0 -Max 5 | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                $Config.MiningHeatControl = "$([Math]::Round($Config.MiningHeatControl,1))"
                             } else {
                                 $GlobalSetupStepStore = $false
                             }
@@ -2957,7 +2957,7 @@ function Start-Setup {
                                 "miningheatcontrol" {
                                     $mhc = $null
                                     while ($mhc -eq $null) {
-                                        $Schedule.MiningHeatControl = Read-HostString -Prompt "Priorize heat over profit to heat my flat (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        $Schedule.MiningHeatControl = Read-HostString -Prompt "Adjust heat vs. profit (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                         if ($Schedule.MiningHeatControl -ne "") {
                                             $Schedule.MiningHeatControl = $Schedule.MiningHeatControl -replace ",","."
                                             try {$mhc = [double]$Schedule.MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)}}
