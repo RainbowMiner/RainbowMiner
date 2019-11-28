@@ -10,14 +10,15 @@ if (-not $IsLinux -and -not $IsWindows) {return}
 if ($IsLinux) {
     $Path = ".\Bin\AMD-SgminerTCR\sgminer"
     $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.4-sgminertcr/sgminertcr-v0.1.4-linux.7z"
+    $Version = "0.1.4"
 } else {
     $Path = ".\Bin\AMD-SgminerTCR\sgminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.4-sgminertcr/sgminertcr-v0.1.4-win64.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.1.5-sgminertcr/sgminertcr-v0.1.5-win64.zip"
+    $Version = "0.1.5"
 }
 $ManualUri = "https://github.com/tecracoin/sgminer/releases"
 $Port = "414{0:d2}"
 $DevFee = 0.0
-$Version = "0.1.4"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No AMD present in system
 
