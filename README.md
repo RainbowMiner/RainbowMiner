@@ -763,7 +763,8 @@ For Server (Runmode=server) setup:
 - **PowerPriceCurrency** = currency of your PowerPrice [default=USD]
 - **UsePowerPrice** = set to (1), if electricity cost should be substracted from profits [default=0]
 - **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
-- **EnableHeatMyFlat** =  set to a value 1..10 to prefer miners, that run hotter (0=disable, 5=good point to start). A "PowerPrice" must be set for this function to work. [default=0]
+- **EnableMiningHeatControl** =  set to (1), if the mining heat control should be enabled [default=0]
+- **MiningHeatControl** =  set to a value 0..5 in steps of 0.1, to control heat over profit (2=default, 0=max.profit, 5=max.heat). A "PowerPrice" must be set for this function to work. [default=2]
 
 
 #### Technical/Other ####

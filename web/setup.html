@@ -88,12 +88,21 @@
                 </div>
             </div>
             <div class="form-group row">
-                <label for="inputEnableHeatMyFlat" class="col-sm-2 col-form-label">Heat my flat</label>
+                <label for="inputEnableMiningHeatControl" class="col-sm-2 col-form-label">Enable Heat Control</label>
+                <div class="input-group col-sm-10">
+                    <select class="form-control mr-sm-2" id="inputEnableMiningHeatControl" name="EnableMiningHeatControl">
+                        <option value="0">disable</option>
+                        <option value="1">enable</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputMiningHeatControl" class="col-sm-2 col-form-label">Heat Control</label>
                 <div class="col col-sm-6">
-                    <input type="range" class="custom-range" min="0" max="10" step="0.1" id="inputEnableHeatMyFlat" name="EnableHeatMyFlat">
+                    <input type="range" class="custom-range" min="0" max="5" step="0.1" id="inputMiningHeatControl" name="MiningHeatControl">
                 </div>
                 <div class="col d-flex" style="width:110px">
-                    <span class="input-group-text" id="inputEnableHeatMyFlatValue">0</span>
+                    <span class="input-group-text" id="inputMiningHeatControlValue">2</span>
                 </div>
             </div>
         </div>
@@ -114,14 +123,26 @@
         $("span#inputEnableHeatMyFlatValue").text(val)
     }
 
+    function update_miningheatcontrol() {
+        var val = parseFloat($("input#inputMiningHeatControl").val())
+        if (!val) val = "Min. Heat"
+        else if (val == 2) val = "Max. Profit"
+        else if (val == 3) val = "Max. Revenue"
+        else if (val == 5) val = "Max. Heat"
+        else val = "Level " + (Math.round(val * 10) / 10)
+        $("span#inputMiningHeatControlValue").text(val)
+    }
+
   $(function() {
       $.ajax({
           url: '/config', success: function (result) {
-              $("input.form-control,input.custom-range").each(function(index) {
-                  var conf = $(this).attr('id').replace(/^input/,"")
-                  $(this).val(result[conf])
+              $("input.form-control,select.form-control,input.custom-range").each(function(index) {
+                  var conf = $(this).attr('id').replace(/^input/, "")
+                  var res = result[conf];
+                  if (typeof res == "boolean") { res = res? 1:0 }
+                  $(this).val(res)
               })
-              update_heatmyflat()
+              update_miningheatcontrol()
               var pools = new Array(), excludepools = new Array()
               $.each(result.Pools, function (key, data) {
                   var checked = $.inArray(key,result.PoolName) !== -1? " checked":''
@@ -142,7 +163,7 @@
               $('#myModal').modal({ show: true });
           });
       })
-      $("#inputEnableHeatMyFlat").change(update_heatmyflat);
+      $("#inputMiningHeatControl").change(update_miningheatcontrol);
   });
 </script>
 <!--#include file="/parts/foot.html" -->

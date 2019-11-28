@@ -436,7 +436,7 @@ function Invoke-Core {
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
-        $Session.Config.EnableHeatMyFlat = [Math]::Max([Math]::Min($Session.Config.EnableHeatMyFlat -replace "[^\d\.\-]+",10.0),0.0)
+        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($Session.Config.MiningHeatControl -replace "[^\d\.\-]+",5.0),0.0),1)
         $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
         $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
@@ -1494,13 +1494,13 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
         }
 
-        $HmF = $Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableHeatMyFlat -and $Miner.PowerDraw
+        $HmF = $Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableMiningHeatControl -and $Miner.PowerDraw
 
         if (($Session.Config.UsePowerPrice -or $HmF) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
-            $Hmf = if ($HmF) {0.5 - $Session.Config.EnableHeatMyFlat/10} else {1.0}
+            $HmF = if ($Session.Config.EnableMiningHeatControl) {3-$Session.Config.MiningHeatControl} else {1.0}
             $Miner.Profit_Bias -= $Miner.Profit_Cost * $HmF
             $Miner.Profit_Unbias -= $Miner.Profit_Cost * $HmF
         }
