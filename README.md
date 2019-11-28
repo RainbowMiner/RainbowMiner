@@ -767,12 +767,13 @@ For Server (Runmode=server) setup:
 - **MiningHeatControl** =  set to a value 0..5 in steps of 0.1, to control heat over profit (2=default, 0=max.profit, 5=max.heat). A "PowerPrice" must be set for this function to work. [default=2]
 
   If "EnableMiningHeatControl" is enabled, the following formula is being used to calculate:
+
   `Heat value=revenue-miner fee-powercost*(3 - MiningHeatControl)`
 
-  "0" = min. heat
-  "2" = max. profit
-  "3" = max. revenue, best heat efficiency
-  "5" = max. heat
+  - "0" = min. heat
+  - "2" = max. profit
+  - "3" = max. revenue, best heat efficiency
+  - "5" = max. heat
 
   A good start is to try values in the range of 2 to 3
 
