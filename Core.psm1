@@ -436,7 +436,7 @@ function Invoke-Core {
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
-        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($Session.Config.MiningHeatControl -replace "[^\d\.\-]+",5.0),0.0),1)
+        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($Session.Config.MiningHeatControl -replace "[^\d\.]+",5.0),0.0),1)
         $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
         $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
@@ -607,6 +607,7 @@ function Invoke-Core {
                     $_.PowerPrice = $PowerPrice
                     $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
                     try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
+                    $MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($MiningHeatControl,5.0),0.0),1)
                     $_.MiningHeatControl = $MiningHeatControl
                     $Session.Config.Scheduler += $_
                 }
@@ -750,10 +751,15 @@ function Invoke-Core {
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
-    $Session.CurrentPowerPrice = $PowerPrice
-    $API.CurrentPowerPrice = $Session.CurrentPowerPrice
+    $Session.CurrentPowerPrice              = $PowerPrice
+    $Session.CurrentEnableMiningHeatControl = $EnableMiningHeatControl
+    $Session.CurrentMiningHeatControl       = $MiningHeatControl
+
+    $API.CurrentPowerPrice                  = $Session.CurrentPowerPrice
+    $API.CurrentEnableMiningHeatControl     = $Session.CurrentEnableMiningHeatControl
+    $API.CurrentMiningHeatControl           = $Session.CurrentMiningHeatControl
 
     #Activate or deactivate donation  
     $DonateMinutes = if ($Session.Config.Donate -lt 10) {10} else {$Session.Config.Donate}
