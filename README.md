@@ -765,6 +765,15 @@ For Server (Runmode=server) setup:
 - **CheckProfitability** = if no more miners are profitable and this is set to (1), RainbowMiner will idle, until profitability returns. UsePowerPrice needs to be (1) and a PowerPrice greater than zero must be set for this function to work. [default=0]
 - **EnableMiningHeatControl** =  set to (1), if the mining heat control should be enabled [default=0]
 - **MiningHeatControl** =  set to a value 0..5 in steps of 0.1, to control heat over profit (2=default, 0=max.profit, 5=max.heat). A "PowerPrice" must be set for this function to work. [default=2]
+  If "EnableMiningHeatControl" is enabled, the following formula is being used to calculate:
+  `Heat value=revenue-miner fee-powercost*(3 - MiningHeatControl)`
+
+  - "0" = min. heat
+  - "2" = max. profit
+  - "3" = max. revenue, best heat efficiency
+  - "5" = max. heat
+
+  A good start is to try values in the range of 2 to 3
 
 
 #### Technical/Other ####
