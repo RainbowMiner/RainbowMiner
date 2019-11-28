@@ -2875,8 +2875,12 @@ function Start-Setup {
                         @{Label="To"; Expression={"$((Get-HourMinStr $_.To -To).SubString(0,5))"}}
                         @{Label="Pause"; Expression={"$(if (Get-Yes $_.Pause) {"1"} else {"0"})"};align="center"}
                         @{Label="Enable"; Expression={"$(if (Get-Yes $_.Enable) {"1"} else {"0"})"};align="center"}
+                        @{Label="EnableMHC"; Expression={"$(if ($_.EnableMiningHeatControl -eq '') {'*'} elseif (Get-Yes $_.EnableMiningHeatControl) {"1"} else {"0"})"};align="center"}
+                        @{Label="MHC"; Expression={"$(if ($_.MiningHeatControl -eq '') {'*'} else {$_.MiningHeatControl})"};align="right"}
                     )
                     Write-Host "DayofWeek: *=all $(((0..6) | %{"$($_)=$([DayOfWeek]$_)"}) -join ' ')"
+                    Write-Host "EnableMHC = EnableMiningHeatControl, *=default, 0=disable, 1=enable"
+                    Write-Host "MHC = MiningHeatControl value 0..5"
                     Write-Host " "
                     [console]::ForegroundColor = $p
 
@@ -2891,7 +2895,9 @@ function Start-Setup {
                         To = ""
                         PowerPrice = ""
                         Enable = "0"
-                        Pause = "0"                            
+                        Pause = "0"
+                        EnableMiningHeatControl = ""
+                        MiningHeatControl = ""
                     }
 
                     if ($Scheduler_Action -eq "a") {
@@ -2908,7 +2914,7 @@ function Start-Setup {
                     $SchedulerSetupStep = 0
 
                     if ($Scheduler_Action -ne "d") {
-                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable")) > $null
+                        $SchedulerSetupSteps.AddRange(@("dayofweek","name","from","to","powerprice","pause","enable","enableminingheatcontrol","miningheatcontrol")) > $null
                     }
                     $SchedulerSetupSteps.Add("save") > $null
 
@@ -2945,6 +2951,21 @@ function Start-Setup {
                                 "enable" {
                                     $Schedule.Enable = Read-HostBool -Prompt "Enable this schedule?" -Default $Schedule.Enable | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 }
+                                "enableminingheatcontrol" {
+                                    $Schedule.EnableMiningHeatControl = Read-HostString -Prompt "Enable mining heat control (0=off, 1=on, $(if ($Schedule.EnableMiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.EnableMiningHeatControl -Valid @("0","1") | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                }
+                                "miningheatcontrol" {
+                                    $mhc = $null
+                                    while ($mhc -eq $null) {
+                                        $Schedule.MiningHeatControl = Read-HostString -Prompt "Priorize heat over profit to heat my flat (0=min.heat, 2=max.profit, 3=max.revenue, 5=max.heat, $(if ($Schedule.MiningHeatControl -ne '') {"clear"} else {"leave empty"}) for global default)" -Default $Schedule.MiningHeatControl | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
+                                        if ($Schedule.MiningHeatControl -ne "") {
+                                            $Schedule.MiningHeatControl = $Schedule.MiningHeatControl -replace ",","."
+                                            try {$mhc = [double]$Schedule.MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+                                            if ($mhc -eq $null -or $mhc -lt 0 -or $mhc -gt 5) {Write-Host "Invalid value, please enter a number between 0..5 in steps of 0.1 or leave empty" -ForegroundColor Red;$mhc = $null}
+                                            else {$Schedule.MiningHeatControl = "$([Math]::Round($mhc,1))"}
+                                        } else {$mhc = ""}
+                                    }
+                                }
                                 "save" {
                                     Write-Host " "
                                     if ($Scheduler_Action -eq "d") {
@@ -2958,13 +2979,15 @@ function Start-Setup {
                                     $SchedulerSave = @()
                                     $SchedulerActual | Foreach-Object {
                                         $SchedulerSave += [PSCustomObject]@{
-                                            Name       = $_.Name
-                                            DayOfWeek  = $_.DayOfWeek
-                                            From       = $_.From
-                                            To         = $_.To
-                                            PowerPrice = $_.PowerPrice
+                                            Name       = "$($_.Name)"
+                                            DayOfWeek  = "$($_.DayOfWeek)"
+                                            From       = "$($_.From)"
+                                            To         = "$($_.To)"
+                                            PowerPrice = "$($_.PowerPrice)"
                                             Pause      = if (Get-Yes $_.Pause) {"1"} else {"0"}
                                             Enable     = if (Get-Yes $_.Enable) {"1"} else {"0"}
+                                            EnableMiningHeatControl = "$($_.EnableMiningHeatControl)"
+                                            MiningHeatControl = "$($_.MiningHeatControl)"
                                         }
                                     }
                                     Set-ContentJson -PathToFile $ConfigFiles["Scheduler"].Path -Data $SchedulerSave > $null

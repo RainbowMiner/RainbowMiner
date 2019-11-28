@@ -599,9 +599,14 @@ function Invoke-Core {
                     $_ | Add-Member PowerPrice $($_.PowerPrice -replace ",","." -replace "[^0-9\.]+") -Force
                     $_ | Add-Member Enable $(Get-Yes $_.Enable) -Force
                     $_ | Add-Member Pause  $(Get-Yes $_.Pause)  -Force
+                    $_ | Add-Member EnableMiningHeatControl $(if ($_.EnableMiningHeatControl -eq "") {$Session.Config.EnableMiningHeatControl} else {Get-Yes $_.EnableMiningHeatControl}) -Force
+                    $_ | Add-Member MiningHeatControl $($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+") -Force
                     $PowerPrice = if ($_.PowerPrice -eq "") {$Session.Config.PowerPrice} else {$_.PowerPrice}
                     try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = $Session.Config.PowerPrice}
                     $_.PowerPrice = $PowerPrice
+                    $MiningHeatControl = if ($_.MiningHeatControl -eq "") {$Session.Config.MiningHeatControl} else {$_.MiningHeatControl}
+                    try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
+                    $_.MiningHeatControl = $MiningHeatControl
                     $Session.Config.Scheduler += $_
                 }
             }
@@ -738,10 +743,12 @@ function Invoke-Core {
 
     #Get PowerPrice and Scheduler events
     $Session.PauseMinersByScheduler = $false
-    $PowerPrice = [Double]$Session.Config.PowerPrice
+    $PowerPrice              = [Double]$Session.Config.PowerPrice
+    $EnableMiningHeatControl = $Session.Config.EnableMiningHeatControl
+    $MiningHeatControl       = $Session.Config.MiningHeatControl
     $TimeOfDay = (Get-Date).TimeOfDay.ToString("hh\:mm")
     $DayOfWeek = "$([int](Get-Date).DayOfWeek)"
-    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
+    $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -eq "*" -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$EnableMiningHeatControl = $_.EnableMiningHeatControl;$MiningHeatControl = $_.MiningHeatControl;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
     $Session.Config.Scheduler | Where-Object {$_.Enable -and $_.DayOfWeek -match "^\d$" -and $DayOfWeek -eq $_.DayOfWeek -and $TimeOfDay -ge $_.From -and $TimeOfDay -le $_.To} | Foreach-Object {$PowerPrice = [Double]$_.PowerPrice;$Session.PauseMinersByScheduler = $_.Pause -and -not $Session.IsExclusiveRun}
 
     $Session.CurrentPowerPrice = $PowerPrice
@@ -1494,13 +1501,13 @@ function Invoke-Core {
             if ($Miner.DeviceName -match "^CPU" -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)) {$Miner.Profit_Cost=0}
         }
 
-        $HmF = $Miner.DeviceModel -ne "CPU" -and $Session.Config.EnableMiningHeatControl -and $Miner.PowerDraw
+        $HmF = $Miner.DeviceModel -ne "CPU" -and $EnableMiningHeatControl -and $Miner.PowerDraw
 
         if (($Session.Config.UsePowerPrice -or $HmF) -and $Miner.Profit_Cost -ne $null -and $Miner.Profit_Cost -gt 0) {
             if ($Session.Config.UsePowerPrice) {
                 $Miner.Profit -= $Miner.Profit_Cost
             }
-            $HmF = if ($Session.Config.EnableMiningHeatControl) {3-$Session.Config.MiningHeatControl} else {1.0}
+            $HmF = if ($EnableMiningHeatControl) {3-$MiningHeatControl} else {1.0}
             $Miner.Profit_Bias -= $Miner.Profit_Cost * $HmF
             $Miner.Profit_Unbias -= $Miner.Profit_Cost * $HmF
         }

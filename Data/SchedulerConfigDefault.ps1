@@ -6,4 +6,6 @@
     PowerPrice = ""
     Enable     = "0"
     Pause      = "0"
+    EnableMiningHeatControl = ""
+    MiningHeatControl = ""
 }
