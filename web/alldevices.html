@@ -23,7 +23,7 @@
       <th data-field="Model" data-sortable="true">Model</th>
       <th data-field="tMemory" data-sortable="true">Memory</th>
       <th data-field="tCores" data-sortable="true">Cores/Stream Processors</th>
-      <th data-field="tClockSpeed" data-sortable="true">Clock Speed</th>
+      <th data-field="tClock" data-sortable="true">Clock Speed</th>
       <th data-field="tDriverVersion">Driver Version</th>
     </tr>
   </thead>
@@ -35,35 +35,18 @@
   // This function can alter the returned data before building the table, formatting it in a way
   // that is easier to display and manipulate in a table
   $.each(data, function(index, item) {
-    // Format the device(s)
-    if (item.OpenCL) {
-      item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
-    } else {
-      item.tMemory = "N/A"
-    }
-    
-    if (item.OpenCL) {
-      item.tClockSpeed = item.OpenCL.MaxClockFrequency
-    } else if (item.CIM) {
-      item.tClockSpeed = item.CIM.MaxClockSpeed
-    } else {
-      item.tClockSpeed = "N/A"
-    }
-    
-    if (item.OpenCL) {
-      item.tDriverVersion = item.OpenCL.DriverVersion
-    } else {
-      item.tDriverVersion = "N/A"
-    }
-    
-    if (item.OpenCL) {
-      item.tCores = item.OpenCL.MaxComputeUnits
-    } else if (item.CIM) {
-      item.tCores = item.CIM.NumberOfLogicalProcessors
-    } else {
-      item.tCores = "N/A"
-    }
-    
+      // Format the device(s)
+      if (item.OpenCL) {
+          item.tDriverVersion = item.OpenCL.DriverVersion
+          item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
+          item.tCores = item.OpenCL.MaxComputeUnits
+      } else {
+          item.tDriverVersion = "N/A"
+          item.tMemory = formatBytes(item.Data.CacheL3 * 1024 * 1024)
+          item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
+      }
+
+      item.tClock = item.Data.Clock ? item.Data.Clock : "N/A"
   });
   return data;
 }

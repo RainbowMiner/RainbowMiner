@@ -43,32 +43,21 @@
     if (item.OpenCL) {
         item.tMemory = formatBytes(item.OpenCL.GlobalMemSize)
         item.tDriverVersion = item.OpenCL.DriverVersion
+        item.tCores = item.OpenCL.MaxComputeUnits
     } else {
-        item.tMemory = "N/A"
+        item.tMemory = formatBytes(item.Data.CacheL3 * 1024 * 1024)
         item.tDriverVersion = "N/A"
+        item.tCores = item.Data.Cores ? item.Data.Cores + "/" + item.Data.Threads : "N/A"
     }
     
-    if (item.OpenCL) {
-        item.tClockSpeed = item.OpenCL.MaxClockFrequency
-        item.tCores = item.OpenCL.MaxComputeUnits
-    } else if (item.CIM) {
-        item.tClockSpeed = item.CIM.MaxClockSpeed
-        item.tCores = item.CIM.NumberOfLogicalProcessors
-        item.tPowerDraw = item.Data.PowerDraw
-    } else {
-        item.tClockSpeed = "N/A"
-        item.tCores = "N/A"
-    }
-
     item.tPowerDraw = typeof(item.Data.PowerDraw) !== "undefined"? Math.round(parseFloat(item.Data.PowerDraw)) + ' W' : "N/A"
     item.tFanSpeed = typeof(item.Data.FanSpeed) !== "undefined"? item.Data.FanSpeed + ' %' : "N/A"
     item.tClock = typeof(item.Data.Clock) !== "undefined"? item.Data.Clock + ' MHz' : "N/A"
     item.tClockMem = typeof(item.Data.ClockMem) !== "undefined"? item.Data.ClockMem + ' MHz' : "N/A"
     item.tPowerLimitPercent = typeof(item.Data.PowerLimitPercent) !== "undefined"? item.Data.PowerLimitPercent + ' %' : "N/A"
-    item.tTemperature = typeof (item.Data.Temperature) !== "undefined" ? item.Data.Temperature + ' °C' : "N/A"
-    item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" ? item.DataMax.Temperature + ' °C' : "N/A"
+    item.tTemperature = typeof (item.Data.Temperature) !== "undefined" && item.Data.Temperature? item.Data.Temperature + ' °C' : "N/A"
+    item.tTemperatureMax = typeof (item.DataMax.Temperature) !== "undefined" && item.Data.Temperature? item.DataMax.Temperature + ' °C' : "N/A"
     item.tUtilization = typeof (item.Data.Utilization) !== "undefined" ? item.Data.Utilization + ' %' : "N/A"
-
   });
   return data;
 }
