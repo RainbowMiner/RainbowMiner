@@ -9,15 +9,15 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\AMD-Teamred\teamredminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.0-teamred/teamredminer-v0.6.0-linux.tgz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-teamred/teamredminer-v0.6.1-linux.tgz"
 } else {
     $Path = ".\Bin\AMD-Teamred\teamredminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.0-teamred/teamredminer-v0.6.0-win.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.6.1-teamred/teamredminer-v0.6.1-win.zip"
 }
 $Port = "409{0:d2}"
 $ManualUri = "https://bitcointalk.org/index.php?topic=5059817.0"
 $DevFee = 3.0
-$Version = "0.6.0"
+$Version = "0.6.1"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No NVIDIA present in system
 
