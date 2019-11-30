@@ -2775,6 +2775,29 @@ function Get-Device {
                     InstanceId = [String]$InstanceId
                     CardId = $CardId
                     GpuGroup = ""
+                    Data = [PSCustomObject]@{
+                                    AdapterId         = 0  #amd
+                                    Utilization       = 0  #amd/nvidia
+                                    UtilizationMem    = 0  #amd/nvidia
+                                    Clock             = 0  #amd/nvidia
+                                    ClockMem          = 0  #amd/nvidia
+                                    FanSpeed          = 0  #amd/nvidia
+                                    Temperature       = 0  #amd/nvidia
+                                    PowerDraw         = 0  #amd/nvidia
+                                    PowerLimit        = 0  #nvidia
+                                    PowerLimitPercent = 0  #amd/nvidia
+                                    PowerMaxLimit     = 0  #nvidia
+                                    PowerDefaultLimit = 0  #nvidia
+                                    Pstate            = "" #nvidia
+                                    Method            = "" #amd/nvidia
+                    }
+                    DataMax = [PSCustomObject]@{
+                                Clock       = 0
+                                ClockMem    = 0
+                                Temperature = 0
+                                FanSpeed    = 0
+                                PowerDraw   = 0
+                    }
                 }
 
                 if ($Device.Type -ne "Cpu" -and 
@@ -2900,6 +2923,21 @@ function Get-Device {
                 Model_Base = "CPU"
                 Model_Name = $Global:GlobalCPUInfo.Name
                 Features = $Global:GlobalCPUInfo.Features.Keys
+                Data = [PSCustomObject]@{
+                            Cores       = 0
+                            Threads     = 0
+                            CacheL3     = 0
+                            Clock       = 0
+                            Utilization = 0
+                            PowerDraw   = 0
+                            Temperature = 0
+                            Method      = ""
+                }
+                DataMax = [PSCustomObject]@{
+                            Clock       = 0
+                            Utilization = 0
+                            PowerDraw   = 0
+                }
             }
 
             if ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))})) {
@@ -3294,29 +3332,23 @@ function Update-DeviceInformation {
                         if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
 
                         $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
-                            $_ | Add-Member Data ([PSCustomObject]@{
-                                    AdapterId         = [int]$AdapterId
-                                    Utilization       = $Utilization
-                                    UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
-                                    Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
-                                    ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
-                                    FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
-                                    Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                                    PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
-                                    PowerLimitPercent = $PowerLimitPercent
-                                    #PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
-                                    Method            = "ab"
-                                }) -Force
+                            $_.Data.AdapterId         = [int]$AdapterId
+                            $_.Data.Utilization       = $Utilization
+                            $_.Data.UtilizationMem    = [int]$($mem = $CardData | Where-Object SrcName -match "^(GPU\d* )?memory usage$"; if ($mem.MaxLimit) {$mem.Data / $mem.MaxLimit * 100})
+                            $_.Data.Clock             = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?core clock$").Data
+                            $_.Data.ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
+                            $_.Data.FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
+                            $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
+                            $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
+                            $_.Data.PowerLimitPercent = $PowerLimitPercent
+                            #$_.Data.PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
+                            $_.Data.Method            = "ab"
 
-                            $DataMax = [PSCustomObject]@{
-                                Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                            }
-
-                            $_ | Add-Member DataMax $DataMax -Force
+                            $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                            $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                            $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                            $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                            $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                         }
                         $DeviceId++
                     }
@@ -3337,25 +3369,19 @@ function Update-DeviceInformation {
 
                             $Devices | Where-Object {$Data.ContainsKey($_.Type_Vendor_Index)} | Foreach-Object {
                                 $DeviceId = $_.Type_Vendor_Index
-                                $_ | Add-Member Data ([PSCustomObject]@{
-                                        AdapterId         = ''
-                                        FanSpeed          = [int]($Data[$DeviceId].Fan)
-                                        Clock             = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                        ClockMem          = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
-                                        Temperature       = [int]($Data[$DeviceId].Temp)
-                                        PowerDraw         = [int]($Data[$DeviceId].Watts)
-                                        Method            = "odvii"
-                                    }) -Force
+                                $_.Data.AdapterId         = ''
+                                $_.Data.FanSpeed          = [int]($Data[$DeviceId].Fan)
+                                $_.Data.Clock             = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Core Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                $_.Data.ClockMem          = [int]($Data[$DeviceId].PSObject.Properties | Where-Object {$_.Name -match "Mem Clock"} | Foreach-Object {[int]$_.Value} | Measure-Object -Maximum).Maximum
+                                $_.Data.Temperature       = [int]($Data[$DeviceId].Temp)
+                                $_.Data.PowerDraw         = [int]($Data[$DeviceId].Watts)
+                                $_.Data.Method            = "odvii"
 
-                                $DataMax = [PSCustomObject]@{
-                                    Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                    ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                    Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                    FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                    PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                                }
-
-                                $_ | Add-Member DataMax $DataMax -Force
+                                $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                             }
                         } else {
                             $DeviceId = 0
@@ -3389,27 +3415,21 @@ function Update-DeviceInformation {
                                     if (-not $AdlResultSplit[2]) {$AdlResultSplit[1]=0;$AdlResultSplit[2]=1}
 
                                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                                        $_ | Add-Member Data ([PSCustomObject]@{
-                                                AdapterId         = $AdlResultSplit[0]
-                                                FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
-                                                Clock             = [int]($AdlResultSplit[3] / 100)
-                                                ClockMem          = [int]($AdlResultSplit[4] / 100)
-                                                Utilization       = [int]$AdlResultSplit[5]
-                                                Temperature       = [int]$AdlResultSplit[6] / 1000
-                                                PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                                PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
-                                                Method            = "tdp"
-                                            }) -Force
+                                        $_.Data.AdapterId         = $AdlResultSplit[0]
+                                        $_.Data.FanSpeed          = [int]($AdlResultSplit[1] / $AdlResultSplit[2] * 100)
+                                        $_.Data.Clock             = [int]($AdlResultSplit[3] / 100)
+                                        $_.Data.ClockMem          = [int]($AdlResultSplit[4] / 100)
+                                        $_.Data.Utilization       = [int]$AdlResultSplit[5]
+                                        $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
+                                        $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
+                                        $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
+                                        $_.Data.Method            = "tdp"
 
-                                        $DataMax = [PSCustomObject]@{
-                                            Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                                            ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
-                                            Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
-                                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                                        }
-
-                                        $_ | Add-Member DataMax $DataMax -Force
+                                        $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                                        $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                                        $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                                     }
                                 }
                                 $DeviceId++
@@ -3430,20 +3450,14 @@ function Update-DeviceInformation {
                                     $Data = $_.Value
                                     $Card = [int]($_.Name -replace "[^\d]")
                                     $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
-                                        $_ | Add-Member Data ([PSCustomObject]@{
-                                                Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
-                                                PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
-                                                FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
-                                                Method            = "rocm"
-                                        }) -Force
+                                        $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
+                                        $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
+                                        $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
+                                        $_.Data.Method            = "rocm"
 
-                                        $DataMax = [PSCustomObject]@{
-                                            Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
-                                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
-                                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-                                        }
-
-                                        $_ | Add-Member DataMax $DataMax -Force
+                                        $_.DataMax.Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
+                                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
                                     }
                                     $DeviceId++
                                 }
@@ -3467,34 +3481,28 @@ function Update-DeviceInformation {
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
                     $Smi = $_
                     $Devices | Where-Object Type_Vendor_Index -eq $DeviceId | Foreach-Object {
-                        $Data = [PSCustomObject]@{
-                            Utilization       = if ($smi.utilization_gpu -ne $null) {$smi.utilization_gpu} else {100}
-                            UtilizationMem    = $smi.utilization_memory
-                            Temperature       = $smi.temperature_gpu
-                            PowerDraw         = $smi.power_draw
-                            PowerLimit        = $smi.power_limit
-                            FanSpeed          = $smi.fan_speed
-                            Pstate            = $smi.pstate
-                            Clock             = $smi.clocks_current_graphics
-                            ClockMem          = $smi.clocks_current_memory
-                            PowerMaxLimit     = $smi.power_max_limit
-                            PowerDefaultLimit = $smi.power_default_limit
-                            Method            = "smi"
-                        }
-                        if ($Data.PowerDefaultLimit) {$Data | Add-Member PowerLimitPercent ([math]::Floor(($Data.PowerLimit * 100) / $Data.PowerDefaultLimit))}
-                        if (-not $Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$Data.PowerLimitPercent / 100) * ([double]$Data.Utilization / 100)}
-                        if ($Data.PowerDraw) {$Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
-                        $_ | Add-Member Data $Data -Force
+                        $_.Data.Utilization       = if ($smi.utilization_gpu -ne $null) {$smi.utilization_gpu} else {100}
+                        $_.Data.UtilizationMem    = $smi.utilization_memory
+                        $_.Data.Temperature       = $smi.temperature_gpu
+                        $_.Data.PowerDraw         = $smi.power_draw
+                        $_.Data.PowerLimit        = $smi.power_limit
+                        $_.Data.FanSpeed          = $smi.fan_speed
+                        $_.Data.Pstate            = $smi.pstate
+                        $_.Data.Clock             = $smi.clocks_current_graphics
+                        $_.Data.ClockMem          = $smi.clocks_current_memory
+                        $_.Data.PowerMaxLimit     = $smi.power_max_limit
+                        $_.Data.PowerDefaultLimit = $smi.power_default_limit
+                        $_.Data.Method            = "smi"
 
-                        $DataMax = [PSCustomObject]@{
-                            Clock       = [Math]::Max([int]$_.DataMax.Clock,$Data.Clock)
-                            ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$Data.ClockMem)
-                            Temperature = [Math]::Max([int]$_.DataMax.Temperature,$Data.Temperature)
-                            FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$Data.FanSpeed)
-                            PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$Data.PowerDraw)
-                        }
+                        if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
+                        if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
+                        if ($_.Data.PowerDraw) {$_.Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
 
-                        $_ | Add-Member DataMax $DataMax -Force
+                        $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                        $_.DataMax.ClockMem    = [Math]::Max([int]$_.DataMax.ClockMem,$_.Data.ClockMem)
+                        $_.DataMax.Temperature = [Math]::Max([int]$_.DataMax.Temperature,$_.Data.Temperature)
+                        $_.DataMax.FanSpeed    = [Math]::Max([int]$_.DataMax.FanSpeed,$_.Data.FanSpeed)
+                        $_.DataMax.PowerDraw   = [Math]::Max([decimal]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
 
                         $DeviceId++
                     }
@@ -3534,51 +3542,41 @@ function Update-DeviceInformation {
                             $CpuName = $_.Name.Trim()
                             if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                             $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
-                        }                    
+                        }
 
-                        $Device | Add-Member Data ([PSCustomObject]@{
-                            Cores       = [int]$_.NumberOfCores
-                            Threads     = [int]$_.NumberOfLogicalProcessors
-                            CacheL3     = [int]($_.L3CacheSize / 1024)
-                            Clock       = [int]$CpuData.Clock
-                            Utilization = [int]$CpuData.Utilization
-                            PowerDraw   = [int]$CpuData.PowerDraw
-                            Temperature = [int]$CpuData.Temperature
-                            Method      = $CpuData.Method
-                        }) -Force
+                        $Device.Data.Cores       = [int]$_.NumberOfCores
+                        $Device.Data.Threads     = [int]$_.NumberOfLogicalProcessors
+                        $Device.Data.CacheL3     = [int]($_.L3CacheSize / 1024)
+                        $Device.Data.Clock       = [int]$CpuData.Clock
+                        $Device.Data.Utilization = [int]$CpuData.Utilization
+                        $Device.Data.PowerDraw   = [int]$CpuData.PowerDraw
+                        $Device.Data.Temperature = [int]$CpuData.Temperature
+                        $Device.Data.Method      = $CpuData.Method
                     }
                 }
                 if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
             } 
             elseif ($IsLinux) {
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                    $Device = $_
-
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
                     if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
-                    $Device | Add-Member Data ([PSCustomObject]@{
-                        Cores       = [int]$Global:GlobalCPUInfo.Cores
-                        Threads     = [int]$Global:GlobalCPUInfo.Threads
-                        CacheL3     = [int]($Global:GlobalCPUInfo.L3CacheSize / 1024)
-                        Clock       = [int]$Global:GlobalCPUInfo.MaxClockSpeed
-                        Utilization = [int]$Utilization
-                        PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
-                        Method      = "tdp"
-                    }) -Force
+                    $_.Data.Cores       = [int]$Global:GlobalCPUInfo.Cores
+                    $_.Data.Threads     = [int]$Global:GlobalCPUInfo.Threads
+                    $_.Data.CacheL3     = [int]($Global:GlobalCPUInfo.L3CacheSize / 1024)
+                    $_.Data.Clock       = [int]$Global:GlobalCPUInfo.MaxClockSpeed
+                    $_.Data.Utilization = [int]$Utilization
+                    $_.Data.PowerDraw   = [int]($CPU_tdp * $Utilization / 100)
+                    $_.Data.Method      = "tdp"
                 }
             }
 
             $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
-                $ClockMax       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
-                $PowerDrawMax   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
-
-                $_ | Add-Member DataMax ([PSCustomObject]@{
-                    Clock       = $ClockMax
-                    PowerDraw   = $PowerDrawMax
-                }) -Force
+                $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
+                $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
+                $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
             }
         }
     } catch {
