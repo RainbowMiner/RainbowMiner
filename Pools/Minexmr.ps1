@@ -96,7 +96,7 @@ if (-not $InfoOnly) {
 
 if ($AllowZero -or $Pool_Request.pool.hashrate -gt 0 -or $InfoOnly) {
     $Pool_SSL = $false
-    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.'
+    $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
     foreach ($Pool_Port in $Pool_Ports) {
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             [PSCustomObject]@{
