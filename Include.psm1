@@ -3884,7 +3884,7 @@ class Miner {
     $Profit_Unbias
     $Profit_Cost
     $PowerDraw
-    $Stratum
+    [PSCustomObject[]]$Stratum = @()
     $Speed
     $Speed_Live
     [double[]]$Variance = @()
@@ -4055,10 +4055,11 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
-        $this.Stratum = @()
-        $this.Algorithm | Foreach-Object {
-            $this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}
-            $this.RejectedShareRatio += 0.0
+        for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
+            if ($Index -lt $this.Stratum.Count) {$this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0}
+            else {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
+            if ($Index -lt $this.RejectedShareRatio.Count) {$this.RejectedShareRatio[$Index] = 0.0}
+            else {$this.RejectedShareRatio += 0.0}
         }
         $this.ActiveLast = Get-Date
     }
