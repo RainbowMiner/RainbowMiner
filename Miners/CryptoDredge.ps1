@@ -85,14 +85,14 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "dedal";       NH = $true;  MinMemGb = 1; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #Dedal, disabled v0.19.0
     [PSCustomObject]@{MainAlgorithm = "hmq1725";     NH = $true;  MinMemGb = 1; Params = ""} #HMQ1725 (new in 0.10.0)
     [PSCustomObject]@{MainAlgorithm = "lux";         NH = $true;  MinMemGb = 1; Params = ""; Algorithm = "phi2"} #Lux/PHI2
-    #[PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3 (CD 0.16.0 faster)
+    [PSCustomObject]@{MainAlgorithm = "lyra2v3";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2Re3
     [PSCustomObject]@{MainAlgorithm = "lyra2vc0ban"; NH = $true;  MinMemGb = 1; Params = ""} #Lyra2vc0banHash
     [PSCustomObject]@{MainAlgorithm = "lyra2z";      NH = $true;  MinMemGb = 1; Params = ""} #Lyra2z
     [PSCustomObject]@{MainAlgorithm = "lyra2zz";     NH = $true;  MinMemGb = 1; Params = ""} #Lyra2zz
     [PSCustomObject]@{MainAlgorithm = "mtp";         NH = $true;  MinMemGb = 5; Params = ""; ExtendInterval = 2; DevFee = 2.0} #MTP
     #[PSCustomObject]@{MainAlgorithm = "neoscrypt";   NH = $true;  MinMemGb = 1; Params = ""} #Neoscrypt (CD 0.16.0 faster)
     #[PSCustomObject]@{MainAlgorithm = "phi";         NH = $true;  MinMemGb = 1; Params = ""} #PHI, disabled v0.19.0
-    #[PSCustomObject]@{MainAlgorithm = "phi2";        NH = $true;  MinMemGb = 1; Params = ""} #PHI2
+    #[PSCustomObject]@{MainAlgorithm = "phi2";        NH = $true;  MinMemGb = 1; Params = ""} #PHI2 (CD 0.16.0 only a little slower, but much more stable)
     [PSCustomObject]@{MainAlgorithm = "pipe";        NH = $true;  MinMemGb = 1; Params = ""} #Pipe
     [PSCustomObject]@{MainAlgorithm = "skunk";       NH = $true;  MinMemGb = 1; Params = ""} #Skunk
     #[PSCustomObject]@{MainAlgorithm = "stellite";    NH = $true;  MinMemGb = 1; Params = ""} #Stellite, disabled v0.19.0
