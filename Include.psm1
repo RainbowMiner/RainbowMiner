@@ -657,7 +657,7 @@ function Set-Total {
                 Date_UTC    = $Updated_UTC
                 PoolName    = "$($Miner.Pool | Select-Object -First 1)"
                 Algorithm   = "$($Miner.BaseAlgorithm | Select-Object -First 1)"
-                Currency    = $Miner.Currency
+                Currency    = "$($Miner.Currency -join '+')"
                 Rate        = [Math]::Round($Session.Rates.USD,2)
                 Profit      = [Math]::Round($TotalProfit*1e8,4)
                 ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)

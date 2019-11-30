@@ -382,6 +382,9 @@ function Invoke-Core {
     if (-not (Test-Internet)) {
         $i = 0
         $Internet_ok = $false
+
+        if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = $false}
+
         do {
             if (-not ($i % 60)) {Write-Log -Level Warn "Waiting 30s for internet connection. Press [X] to exit RainbowMiner"}
             Start-Sleep -Milliseconds 500
@@ -389,6 +392,8 @@ function Invoke-Core {
             $i++
             if (-not ($i % 20)) {$Internet_ok = Test-Internet}
         } until ($Internet_ok -or $keyPressedValue -eq "X")
+
+        if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = -not $Internet_ok}
 
         if ($keyPressedValue -eq "X") {
             Write-Log "User requests to stop script. "
@@ -2264,7 +2269,7 @@ function Invoke-Core {
     $Session.Timer = (Get-Date).ToUniversalTime()
 
     #Start asyncloader after first run
-    if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = $false}
+    if (Test-Path Variable:Global:AsyncLoader) {$AsyncLoader.Pause = -not (Test-Internet)}
 
     #Do nothing for a few seconds as to not overload the APIs and display miner download status
     $Session.SkipSwitchingPrevention = $Session.Stopp = $keyPressed = $false
