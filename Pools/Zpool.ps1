@@ -32,7 +32,7 @@ if (($Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | M
 }
 
 try {
-    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120
+    $PoolCoins_Request = Invoke-RestMethodAsync "http://www.zpool.ca/api/currencies" -tag $Name -cycletime 120 -delay 500
 }
 catch {
     if ($Error.Count){$Error.RemoveAt(0)}
