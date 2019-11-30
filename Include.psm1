@@ -492,7 +492,7 @@ function Write-ToFile {
 
     Process {
         try {
-            if ($Global:IsLinux) {$FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)}
+            $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter ($FilePath, $Append, [System.Text.Encoding]::UTF8)
             if ($Timestamp) {
                 $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
@@ -669,7 +669,7 @@ function Set-Total {
             }
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-            $CsvLine | Export-Csv $PathCsv -NoTypeInformation -ErrorAction Ignore -Append
+            $CsvLine | Export-ToCsvFile $PathCsv
             Remove-Variable "CsvLine"
         }
     } catch {
@@ -865,9 +865,9 @@ function Set-Balance {
                 Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
                 Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
             }
-            $CsvLine | Export-Csv "$($Path0)\Earnings_Localized.csv" -NoTypeInformation -UseCulture -Append -ErrorAction Ignore
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
-            $CsvLine | Export-Csv "$($Path0)\Earnings.csv" -NoTypeInformation -Append -ErrorAction Ignore
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
             Remove-Variable "CsvLine" -Force
         }
 
@@ -909,6 +909,20 @@ function Set-Balance {
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
     $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
     $Stat
+}
+
+function Export-ToCsvFile {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [String]$FilePath,
+        [Parameter(Mandatory = $true, ValueFromPipeline = $True)]
+        $InputObject,
+        [Parameter(Mandatory = $false)]
+        [Switch]$UseCulture = $false
+    )
+    $Skip = if (Test-Path $FilePath) {1} else {0}
+    $InputObject | ConvertTo-Csv -NoTypeInformation -UseCulture:$UseCulture -ErrorAction Ignore | Select-Object -Skip $Skip | Write-ToFile -FilePath $FilePath -Append
 }
 
 function Set-Stat {
@@ -2679,6 +2693,7 @@ function Get-Device {
                         GlobalMemSize   = $_.GlobalMemSize
                         MaxComputeUnits = $_.MaxComputeUnits
                         PlatformVersion = $_.Platform.Version
+                        DriverVersion   = $_.DriverVersion
                         PCIBusId        = if ($_.Vendor -match "NVIDIA") {"{0:X2}:{1:X2}" -f [int]$_.PCIBusId,[int]$_.PCISlotId} else {$_.PCITopology}
                         CardId          = -1
                     }
