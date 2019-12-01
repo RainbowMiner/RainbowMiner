@@ -9,19 +9,19 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\ANY-Xmrig\xmrig"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xmrig/xmrig-5.0.1-xenial-cuda10_1-x64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xmrig/xmrig-5.0.1-xenial-cuda10_1-x64.7z"
     $CudaLib = "libxmrig-cuda.so"
     $DevFee = 1.0
 } else {
     $Path = ".\Bin\ANY-Xmrig\xmrig.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.0.1-xmrig/xmrig-5.0.1-msvc-cuda10_1-win64.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v5.1.0-xmrig/xmrig-5.1.0-msvc-cuda10_1-win64.7z"
     $CudaLib = "xmrig-cuda.dll"
     $DevFee = 0.0
 }
 $ManualUri = "https://github.com/xmrig/xmrig/releases"
 $Port = "350{0:d2}"
 $Cuda = "10.1"
-$Version = "5.0.1"
+$Version = "5.1.0"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 
