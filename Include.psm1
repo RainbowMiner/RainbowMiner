@@ -1417,7 +1417,22 @@ function Get-Stat {
         } else {
             $Path = "$Path\$Name.txt"
         }
-        if (Test-Path $Path) {ConvertFrom-Json (Get-Content $Path -ErrorAction Ignore -Raw) -ErrorAction Ignore}
+        if (Test-Path $Path) {
+            try {
+                $reader = New-Object System.IO.StreamReader($Path)
+                ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Ignore
+            }
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                #Remove broken stat file
+                Write-Log -Level Warn "Stat file ($Path) is corrupt and will be removed. "
+                if (Test-Path $Path) {Remove-Item -Path  $Path -Force -Confirm:$false}
+            }
+            finally {
+                if ($reader) {$reader.Close()}
+            }
+            if ($reader) {Remove-Variable "reader"}
+        }
     } else {
         # Return all stats
         [hashtable]$Stats = @{}
@@ -1428,20 +1443,23 @@ function Get-Stat {
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
-        if ($Miners)    {$Match += "Hashrate"}
-        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF"}
-        if ($Totals)    {$Match += "Total"}
-        if ($TotalAvgs) {$Match += "TotalAvg"}
-        if ($Balances)  {$Match += "Balance"}
+        if ($Miners)    {$Match += "Hashrate";$Path = "Stats\Miners"}
+        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF";$Path = "Stats\Pools"}
+        if ($Totals)    {$Match += "Total";$Path = "Stats\Totals"}
+        if ($TotalAvgs) {$Match += "TotalAvg";$Path = "Stats\Totals"}
+        if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
+
+        if ($Match.Count -gt 1 -or $All) {$Path = "Stats"}
 
         $MatchStr = $Match -join "|"
 
-        foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
+        foreach($p in (Get-ChildItem -Recurse $Path -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
             try {
-                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
+                $reader = New-Object System.IO.StreamReader($FullName)
+                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Stop
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
@@ -1449,7 +1467,11 @@ function Get-Stat {
                 Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
                 if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
             }
+            finally {
+                if ($reader) {$reader.Close()}
+            }
         }
+        if ($reader) {Remove-Variable "reader"}
         Return $Stats
     }
 }
