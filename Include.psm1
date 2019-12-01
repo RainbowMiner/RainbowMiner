@@ -216,7 +216,7 @@ function Get-Balance {
 
 function Set-UnprofitableAlgos {
     if ($Session.UnprofitableAlgos -eq $null) {
-        $Session.UnprofitableAlgos = try{Get-Content ".\Data\unprofitable.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
+        $Session.UnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
     }
 
     if (-not $Session.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
@@ -249,7 +249,7 @@ function Get-CoinSymbol {
         }
         if (-not $Request -or $Request.PSObject.Properties.Name.Count -le 100) {
             $Request = $null
-            if (Test-Path "Data\coins.json") {try {$Request = Get-Content "Data\coins.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
+            if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
         [hashtable]$Global:GlobalCoinNames = @{}
@@ -333,7 +333,7 @@ function Get-WhatToMineData {
                 }
             }
             if ($WtmKeys -and $WtmKeys.count -gt 10) {
-                $WtmFactors = Get-Content ".\Data\wtmfactors.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+                $WtmFactors = Get-ContentByStreamReader ".\Data\wtmfactors.json" | ConvertFrom-Json -ErrorAction Ignore
                 if ($WtmFactors) {
                     $WtmFactors.PSObject.Properties.Name | Where-Object {@($WtmKeys.algo) -inotcontains $_} | Foreach-Object {
                         $WtmKeys += [PSCustomObject]@{
@@ -356,7 +356,7 @@ function Get-WhatToMineData {
     }
 
     if (-not (Test-Path Variable:Global:WTMData)) {
-        $Global:WTMData = Get-Content ".\Data\wtmdata.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        $Global:WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 
     if (-not $Silent) {$Global:WTMData}
@@ -1499,7 +1499,7 @@ function Confirm-ConfigHealth {
         $Name = $_.Name
         $File = $_.Value
         try {
-            Get-Content $File.Path -ErrorAction Stop -Raw | ConvertFrom-Json -ErrorAction Stop > $null
+            Get-ContentByStreamReader $File.Path | ConvertFrom-Json -ErrorAction Stop > $null
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "$($Name) configfile $(Split-Path $File.Path -Leaf) has invalid JSON syntax!"
@@ -1547,14 +1547,14 @@ function Get-ChildItemContent {
             }
         }
         elseif ($Quick) {
-            $Content = try {$_ | Get-Content -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
+            $Content = try {$_ | Get-ContentByStreamReader | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
             if ($Content -eq $null) {$Content = $_ | Get-Content}
         }
         else {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}                
                 try {
-                    ($_ | Get-Content -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
+                    ($_ | Get-ContentByStreamReader | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
                 catch [ArgumentException] {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -1585,12 +1585,18 @@ function Get-ContentByStreamReader {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $True)]
-        [String]$FilePath
+        [String]$FilePath,
+        [Parameter(Mandatory = $false)]
+        [Switch]$ExpandLines = $false
     )
     try {
         $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
         $reader = New-Object System.IO.StreamReader($FilePath)
-        $reader.ReadToEnd()
+        if ($ExpandLines) {
+            while (-not $reader.EndOfStream) {$reader.ReadLine()}
+        } else {
+            $reader.ReadToEnd()
+        }
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -1607,7 +1613,7 @@ function Get-PoolsData {
         [String]$PoolName
     )
     if (Test-Path ".\Data\Pools\$($PoolName).json") {
-        Get-Content ".\Data\Pools\$($PoolName).json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        Get-ContentByStreamReader ".\Data\Pools\$($PoolName).json" | ConvertFrom-Json -ErrorAction Ignore
     }
 }
 
@@ -2680,7 +2686,7 @@ function Get-Device {
         [Switch]$IgnoreOpenCL = $false
     )
 
-    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-Content ".\Data\devices.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore}
 
     if ($Name) {
         $Name_Devices = $Name | ForEach-Object {
@@ -2809,7 +2815,7 @@ function Get-Device {
                                     if (($data | Measure-Object).Count) {Set-ContentJson ".\Data\amd-names.json" -Data $data > $null}
                                 } catch {if ($Error.Count){$Error.RemoveAt(0)}}
                             }
-                            if (Test-Path ".\Data\amd-names.json") {Get-Content ".\Data\amd-names.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                            if (Test-Path ".\Data\amd-names.json") {Get-ContentByStreamReader ".\Data\amd-names.json" | ConvertFrom-Json -ErrorAction Ignore}
                         }
                         if (-not $GPUDeviceNames[$Vendor_Name]) {
                             $GPUDeviceNames[$Vendor_Name] = Get-DeviceName $Vendor_Name -UseAfterburner ($OpenCL_DeviceIDs.Count -lt 7)
@@ -3251,7 +3257,7 @@ function Get-DeviceName {
         [Bool]$UseAfterburner = $true
     )
     try {
-        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-Content ".\Data\$($Vendor.ToLower())-cards.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop}catch{if ($Error.Count){$Error.RemoveAt(0)}}}
+        $Vendor_Cards = if (Test-Path ".\Data\$($Vendor.ToLower())-cards.json") {try {Get-ContentByStreamReader ".\Data\$($Vendor.ToLower())-cards.json" | ConvertFrom-Json -ErrorAction Stop}catch{if ($Error.Count){$Error.RemoveAt(0)}}}
 
         if ($IsWindows -and $UseAfterburner -and $Script:abMonitor) {
             if ($Script:abMonitor) {$Script:abMonitor.ReloadAll()}
@@ -3402,7 +3408,7 @@ function Update-DeviceInformation {
                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $AdapterId = $_.Index
 
-                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                         $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                             $_.Data.AdapterId         = [int]$AdapterId
@@ -3461,7 +3467,7 @@ function Update-DeviceInformation {
 
                             $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
 
-                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-Content ".\Data\amd-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                             if ($null -ne $AdlResult) {
                                 $AdlResult | ForEach-Object {
@@ -3549,7 +3555,7 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-Content ".\Data\nvidia-cards-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
                     $Smi = $_
@@ -3589,7 +3595,7 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-Content ".\Data\cpu-tdp.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}
+            if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
                 $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
@@ -3731,7 +3737,7 @@ function Get-AlgorithmMap {
     )
     if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
         [hashtable]$Global:GlobalAlgorithmMap = @{}
-        (Get-Content "Data\algorithmmap.json" -Raw  -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3794,7 +3800,7 @@ function Get-Algorithms {
     )
     if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
         [hashtable]$Global:GlobalAlgorithms = @{}
-        (Get-Content "Data\algorithms.json" -Raw  -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
         $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3813,7 +3819,7 @@ function Get-CoinsDB {
     )
     if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
         [hashtable]$Global:GlobalCoinsDB = @{}
-        (Get-Content "Data\coinsdb.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
         $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
@@ -3830,7 +3836,7 @@ function Get-EquihashCoins {
     )
     if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
         [hashtable]$Global:GlobalEquihashCoins = @{}
-        (Get-Content "Data\equihashcoins.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
 }
@@ -3843,7 +3849,7 @@ function Get-NimqHashrates {
     )
     if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
         [hashtable]$Global:GlobalNimqHashrates = @{}
-        (Get-Content "Data\nimqhashrates.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
 }
@@ -3862,7 +3868,7 @@ function Get-PoolsInfo {
     )
     
     if (-not (Test-Path Variables:Global:GlobalPoolsInfo)) {
-        $Global:GlobalPoolsInfo = Get-Content "Data\poolsinfo.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        $Global:GlobalPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
         $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
@@ -3892,7 +3898,7 @@ function Get-Regions {
     )
     if (-not (Test-Path Variable:Global:GlobalRegions)) {
         [hashtable]$Global:GlobalRegions = @{}
-        (Get-Content "Data\regions.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {
         if ($AsHash) {$Global:GlobalRegions}
@@ -3908,7 +3914,7 @@ function Get-Regions2 {
     )
     if (-not (Test-Path Variable:Global:GlobalRegions2)) {
         [hashtable]$Global:GlobalRegions2 = @{}
-        (Get-Content "Data\regions2.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
     }
     if (-not $Silent) {$Global:GlobalRegions2.Keys}
 }
@@ -3921,7 +3927,7 @@ function Get-WorldCurrencies {
         [Switch]$Silent = $false
     )
     if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
-        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-Content ".\Data\worldcurrencies.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
     if (-not $Silent) {$Global:GlobalWorldCurrencies}
 }
@@ -5747,7 +5753,7 @@ function Get-ConfigContent {
             if ($UpdateLastWriteTime) {
                 $Session.ConfigFiles[$ConfigName].LastWriteTime = (Get-ChildItem $PathToFile).LastWriteTime.ToUniversalTime()
             }
-            $Result = Get-Content $PathToFile -Raw -ErrorAction Stop
+            $Result = Get-ContentByStreamReader $PathToFile
             if ($Parameters.Count) {
                 $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)",$_.Value}
                 if (-not $ConserveUnkownParameters) {
@@ -5821,7 +5827,7 @@ function Get-ServerConfig {
         $ErrorMessage = ""
         if (-not (Test-Path ".\Data\serverlwt")) {New-Item ".\Data\serverlwt" -ItemType "directory" -ErrorAction Ignore > $null}
         $ServerLWTFile = Join-Path ".\Data\serverlwt" "$(if ($GroupName) {$GroupName} elseif ($WorkerName) {$WorkerName} else {"this"})_$($Server.ToLower() -replace '\.','-')_$($Port).json"
-        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-Content $ServerLWTFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        $ServerLWT = if (Test-Path $ServerLWTFile) {try {Get-ContentByStreamReader $ServerLWTFile | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
         if (-not $ServerLWT) {$ServerLWT = [PSCustomObject]@{}}
         $Params = ($ConfigName | Foreach-Object {$PathToFile = $ConfigFiles[$_].Path;"$($_)ZZZ$(if ($Force -or -not (Test-Path $PathToFile) -or -not $ServerLWT.$_) {"0"} else {$ServerLWT.$_})"}) -join ','
         $Uri = "http://$($Server):$($Port)/getconfig?config=$($Params)&workername=$($WorkerName)&groupname=$($GroupName)&machinename=$($Session.MachineName)&myip=$($Session.MyIP)&version=$(if ($Session.Version -match "^4\.4") {"4.3.9.9"} else {$Session.Version})"
@@ -6623,7 +6629,7 @@ function Invoke-ReportMinerStatus {
         }
     }
 
-    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-Content ".\Data\reportapi.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
+    if (Test-Path ".\Data\reportapi.json") {try {$ReportAPI = Get-ContentByStreamReader ".\Data\reportapi.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$ReportAPI=$null}}
     if (-not $ReportAPI) {$ReportAPI = @([PSCustomObject]@{match    = "rbminer.net";apiurl   = "https://rbminer.net/api/report.php"})}
 
     # Send the request
@@ -6636,7 +6642,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-Content ".\Data\minerdata.json" -Raw -ErrorAction Ignore};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-Content ".\Data\poolsdata.json" -Raw -ErrorAction Ignore};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $Rates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport}
+            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Session.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $Rates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport}
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -6863,7 +6869,7 @@ param(
 }
 
 function Get-LastDrun {
-    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-Content ".\Data\lastdrun.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+    if (Test-Path ".\Data\lastdrun.json") {try {[DateTime](Get-ContentByStreamReader ".\Data\lastdrun.json" | ConvertFrom-Json -ErrorAction Stop).lastdrun} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 }
 
 function Set-LastDrun {
@@ -6877,7 +6883,7 @@ param(
 
 function Get-LastStartTime {
     if (Test-Path ".\Data\starttime.json") {
-        try {[DateTime](Get-Content ".\Data\starttime.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop).starttime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        try {[DateTime](Get-ContentByStreamReader ".\Data\starttime.json" | ConvertFrom-Json -ErrorAction Stop).starttime} catch {if ($Error.Count){$Error.RemoveAt(0)}}
         Remove-Item ".\Data\starttime.json" -Force -ErrorAction Ignore
     }
 }
@@ -6895,7 +6901,7 @@ param(
 )
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
     [System.Collections.ArrayList]$Script:AutoexecCommands = @()
-    foreach($cmd in @(Get-Content ".\Config\autoexec.txt" -ErrorAction Ignore | Select-Object)) {
+    foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {
                 try {

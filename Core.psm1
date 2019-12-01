@@ -22,7 +22,7 @@
             Initialize-OCDaemon
 
             if (-not (Test-Path "/opt/rainbowminer/lib")) {
-                if ($Libs = Get-Content ".\IncludesLinux\libs.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore) {
+                if ($Libs = Get-ContentByStreamReader ".\IncludesLinux\libs.json" | ConvertFrom-Json -ErrorAction Ignore) {
                     $Dir = "$Pwd/IncludesLinux/lib"
 
                     $Libs.PSObject.Properties | Where-Object {-not (Test-Path "$($Dir)/$($_.Name)")} | Foreach-Object {
@@ -41,7 +41,7 @@
             $ColorConfigPath = Join-Path $ConfigPath "colors.$(Split-Path $ConfigFile -Leaf)"
             if (Test-Path $ColorConfigPath) {
                 try {
-                    $Colors = Get-Content $ColorConfigPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                    $Colors = Get-ContentByStreamReader $ColorConfigPath | ConvertFrom-Json -ErrorAction Stop
                     $Colors.PSObject.Properties.Name | Where-Object {$_ -match    "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.UI.RawUI.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.UI.RawUI.$_ = $Colors.$_}
                     $Colors.PSObject.Properties.Name | Where-Object {$_ -notmatch "^(Fore|Back)" -and $Colors.$_ -and $Colors.$_ -ne -1 -and $Host.PrivateData.PSObject.Properties.Name -icontains $_} | Foreach-Object {$Host.PrivateData.$_ = $Colors.$_}
                 } catch {
@@ -152,7 +152,8 @@
             $Session.DefaultValues.Keys | ForEach-Object {$Parameters | Add-Member $_ "`$$($_)" -ErrorAction Ignore -Force}
             Set-ContentJson -PathToFile $ConfigFile -Data $Parameters > $null        
         } else {
-            $ConfigForUpdate = Get-Content $ConfigFile | ConvertFrom-Json
+            $ConfigForUpdate = Get-ContentByStreamReader $ConfigFile | ConvertFrom-Json -ErrorAction Stop
+            if (-not $ConfigForUpdate) {throw "Config file is empty"}
             $ConfigForUpdate_changed = $false
             if ($ConfigForUpdate.PSObject.Properties.Name -icontains "LocalAPIport") {$ConfigForUpdate | Add-Member APIport $ConfigForUpdate.LocalAPIport -Force}
             $MPHLegacyUpdate = if ($ConfigForUpdate.PSObject.Properties.Name -icontains "API_ID") {@{UserName=$ConfigForUpdate.UserName;API_ID=$ConfigForUpdate.API_ID;API_Key=$ConfigForUpdate.API_Key}}
@@ -193,7 +194,7 @@
         try {
             #cleanup legacy data
             if ((Test-Path ".\Cleanup.ps1") -and (Test-Path ".\Data\version.json")) {
-                $LastVersion = (Get-Content ".\Data\version.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).Version
+                $LastVersion = (Get-ContentByStreamReader ".\Data\version.json" | ConvertFrom-Json -ErrorAction Ignore).Version
                 if ($RunCleanup -and $LastVersion -and (Compare-Version $LastVersion $Session.Version) -lt 0) {
                     Write-Host "Cleanup legacy data .."
                     [hashtable]$Cleanup_Parameters = @{
@@ -235,7 +236,7 @@
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
 
         #Read miner info
-        if (Test-Path ".\Data\minerinfo.json") {try {(Get-Content ".\Data\minerinfo.json" -Raw | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Session.MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
@@ -298,7 +299,7 @@ function Update-ActiveMiners {
 function Invoke-Core {
 
     #Validate version file
-    if (-not (Test-Path ".\Data\version.json") -or -not (Get-Content ".\Data\version.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore).Version) {
+    if (-not (Test-Path ".\Data\version.json") -or -not (Get-ContentByStreamReader ".\Data\version.json" | ConvertFrom-Json -ErrorAction Ignore).Version) {
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
     }
 
@@ -500,7 +501,7 @@ function Invoke-Core {
     $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
-        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-Content ".\Logs\autoupdate.txt" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
+        if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
         if (-not $Last_Autoupdate -or $ConfirmedVersion.RemoteVersion -ne (Get-Version $Last_Autoupdate.RemoteVersion) -or $ConfirmedVersion.Version -ne (Get-Version $Last_Autoupdate.Version)) {
             $Last_Autoupdate = [PSCustomObject]@{
                                     RemoteVersion = $ConfirmedVersion.RemoteVersion.ToString()
@@ -789,7 +790,7 @@ function Invoke-Core {
     if ($Session.Timer.AddHours(-$DonateDelayHours).AddMinutes($DonateMinutes) -ge $Session.LastDonated -and $Session.AvailPools.Count -gt 0) {
         if (-not $Session.IsDonationRun -or $CheckConfig) {
             try {$DonationData = Invoke-GetUrl "https://rbminer.net/api/dconf.php";Set-ContentJson -PathToFile ".\Data\dconf.json" -Data $DonationData -Compress > $null} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn "Rbminer.net/api/dconf.php could not be reached"}
-            if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-Content -Raw ".\Data\dconf.json" -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+            if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = '{"Probability":100,"Wallets":{"2Miners":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"BlockMasters":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":50},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"CryptoKnight":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"EthashPool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ethermine":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"F2Pool":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"FairPool":{"WOW":"So2ifgjqGMZJhCrqpFMotQQAiJAiATuJLNAK2HrPLoNzK8hkqNbf9t8gmx6bzAQrXRMnWnoELoiD6GTv8guPBRwH5yoTVNomwVR2oNYDPRua","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"HeroMiners":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Icemining":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Luckypool":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Mintpond":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Nanopool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"NiceHash":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"Platform":"v2","MaximumMarginOfError":"0"},"NiceHashV2":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"MaximumMarginOfError":"0"},"PocketWhale":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"RavenminerEu":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"SparkPool":{"CKB":"sp_rbm","Algorithm":"Eaglesong","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Uupool":{"VOLLAR":"VcSq7vHRb9ymPj1jbeHNfX2fdVTJK75xndX","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12},"ZergPoolCoins":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"CoinSymbol":"CPU,DMS,MBC,RITO,SAFE,XMG"},"ZergPoolSolo":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"Algorithm":"m7m"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":16}},"Pools":["HeroMiners","Nicehash","SparkPool","ZergPoolCoins"],"Algorithm":[],"ExcludeMinerName":["GrinGoldMiner","GrinProMiner","SwapMiner"]}' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $Session.UserConfig = $Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
@@ -1532,7 +1533,7 @@ function Invoke-Core {
         if (-not $AllMiners_VersionCheck.ContainsKey($Miner.BaseName)) {
             $Miner_UriJson = Join-Path (Get-MinerInstPath $Miner.Path) "_uri.json"
             $Miner_Uri = ""
-            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-Content $Miner_UriJson -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()}
+            if ((Test-Path $Miner.Path) -and (Test-Path $Miner_UriJson)) {$Miner_Uri = Get-ContentByStreamReader $Miner_UriJson | ConvertFrom-Json -ErrorAction Ignore | Select-Object -ExpandProperty URI; $AllMiners_VersionDate[$Miner.BaseName] = (Get-ChildItem $Miner_UriJson).LastWriteTime.ToUniversalTime()}
             $AllMiners_VersionCheck[$Miner.BaseName] = $Miner_Uri -eq $Miner.URI            
         }
 
