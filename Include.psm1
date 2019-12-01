@@ -709,7 +709,7 @@ function Set-Total {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | ConvertTo-Json | Set-Content $Path
+    $Stat | Set-StatCache -Path $Path
 }
 
 function Set-TotalsAvg {
@@ -788,7 +788,7 @@ function Set-TotalsAvg {
                 }
 
                 if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-                $_.Value | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$($_.Name)_TotalAvg.txt" -Force
+                $_.Value | Set-StatCache -Path "$Path0/$($_.Name)_TotalAvg.txt"
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
@@ -916,8 +916,7 @@ function Set-Balance {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
-    $Stat
+    $Stat | Set-StatCache -Path $Path -PassThru
 }
 
 function Export-ToCsvFile {
@@ -1385,10 +1384,25 @@ function Set-Stat {
                     Failed = [Int]$Stat.Failed
                 }
             }
-        }) | ConvertTo-Json | Set-Content $Path
+        }) | Set-StatCache -Path $Path
     }
 
     $Stat
+}
+
+function Set-StatCache {
+[CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [String]$Path,
+        [Parameter(Mandatory = $false, ValueFromPipeline = $True)]
+        $InputObject,
+        [Parameter(Mandatory = $false)]
+        [Switch]$PassThru = $false
+    )
+    $Global:StatsCache[$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)] = $InputObject
+    $InputObject | ConvertTo-Json -Depth 10 | Set-Content $Path -Force
+    if ($PassThru) {$InputObject}
 }
 
 function Get-Stat {
@@ -1414,6 +1428,10 @@ function Get-Stat {
         [Switch]$NameIsPath = $false
     )
 
+    if (-not (Test-Path Variable:Global:StatsCache -ErrorAction SilentlyContinue)) {
+        $Global:StatsCache = @{}
+    }
+
     if ($Name) {
         if ($NameIsPath) {
             $Path = $Name
@@ -1434,21 +1452,25 @@ function Get-Stat {
             }
         }
         if (Test-Path $Path) {
-            try {
-                $Path = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
-                $reader = New-Object System.IO.StreamReader($Path)
-                ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Ignore
+            $Path = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+            if (-not $Global:StatsCache[$Path]) {
+                try {
+                    $reader = New-Object System.IO.StreamReader($Path)
+                    $Global:StatsCache[$Path] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Ignore
+                }
+                catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    #Remove broken stat file
+                    Write-Log -Level Warn "Stat file ($Path) is corrupt and will be removed. "
+                    if (Test-Path $Path) {Remove-Item -Path  $Path -Force -Confirm:$false}
+                    $Global:StatsCache[$Path] = $null
+                }
+                finally {
+                    if ($reader) {$reader.Close()}
+                }
+                if ($reader) {Remove-Variable "reader"}
             }
-            catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                #Remove broken stat file
-                Write-Log -Level Warn "Stat file ($Path) is corrupt and will be removed. "
-                if (Test-Path $Path) {Remove-Item -Path  $Path -Force -Confirm:$false}
-            }
-            finally {
-                if ($reader) {$reader.Close()}
-            }
-            if ($reader) {Remove-Variable "reader"}
+            $Global:StatsCache[$Path]
         }
     } else {
         # Return all stats
@@ -1474,18 +1496,26 @@ function Get-Stat {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
-            try {
-                $reader = New-Object System.IO.StreamReader($FullName)
-                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Stop
+
+            if (-not $Global:StatsCache[$FullName]) {
+                try {
+                    $reader = New-Object System.IO.StreamReader($FullName)
+                    $Global:StatsCache[$FullName] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Stop
+                }
+                catch {
+                    if ($Error.Count){$Error.RemoveAt(0)}
+                    #Remove broken stat file
+                    Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
+                    if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
+                    $Global:StatsCache[$FullName] = $null
+                }
+                finally {
+                    if ($reader) {$reader.Close()}
+                }
             }
-            catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
-                #Remove broken stat file
-                Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
-                if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
-            }
-            finally {
-                if ($reader) {$reader.Close()}
+            if ($Global:StatsCache[$FullName]) {
+                if ($Miners -or $All) {$BaseName = $BaseName -replace "^(AMD|CPU|NVIDIA)-"}
+                $Stats[$BaseName] = $Global:StatsCache[$FullName]
             }
         }
         if ($reader) {Remove-Variable "reader"}
