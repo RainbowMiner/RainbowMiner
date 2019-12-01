@@ -376,7 +376,7 @@
                     @(Get-ChildItem ".\Logs\*$(Get-Date -Format "yyyy-MM-dd")*.txt" | Select-Object) + @(Get-ChildItem ".\Logs\*$((Get-Date).AddDays(-1).ToString('yyyy-MM-dd'))*.txt" | Select-Object) | Sort-Object LastWriteTime | Foreach-Object {
                         $LastWriteTime = $_.LastWriteTime
                         $NewFile = "$DebugPath\$($_.Name)"
-                        Get-Content $_ -Raw | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
+                        Get-ContentByStreamReader $_ | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
                     @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
@@ -664,10 +664,7 @@
                 }
                 "/activity" {
                     $LimitDays = (Get-Date).ToUniversalTime().AddDays(-[Math]::Max(1,[Math]::Min(7,[int]$API.Config.MaxActivityDays)))
-                    $BigJson = ''
-                    Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Get-Content -Raw -ErrorAction Ignore | Foreach-Object {$BigJson += $_}
-                    $GroupedData = "[$($BigJson){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore
-                    $Data = $GroupedData | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
+                    $Data = Get-ChildItem "Logs\Activity_*.txt" -ErrorAction Ignore | Where-Object LastWriteTime -gt $LimitDays | Sort-Object LastWriteTime -Descending | Foreach-Object {"[$(Get-ContentByStreamReader $_){`"ActiveStart`":`"0001-01-01 00:00:00`"}]" | ConvertFrom-Json -ErrorAction Ignore | Foreach-Object {$_}} | Where-Object ActiveStart -ne "0001-01-01 00:00:00" | Group-Object ActiveStart,Name,Device | Foreach-Object {
                         $AvgProfit     = ($_.Group | Measure-Object Profit -Average).Average
                         $AvgPowerDraw  = ($_.Group | Measure-Object PowerDraw -Average).Average
                         $One           = $_.Group | Sort-Object ActiveLast -Descending | Select-Object -First 1
@@ -677,9 +674,7 @@
                         $One | Add-Member TotalPowerDraw ($AvgPowerDraw * $Active / 60000) #kWh
                         $One | Add-Member TotalProfit ($AvgProfit * $Active / 1440)
                         $One | Add-Member Active $Active -PassThru
-                    } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json
-                    Remove-Variable "BigJson" -ErrorAction Ignore
-                    Remove-Variable "GroupedData" -ErrorAction Ignore
+                    } | Sort-Object ActiveStart,Name,Device | ConvertTo-Json -Compress
                     Break
                 }
                 "/computerstats" {
@@ -1011,7 +1006,7 @@
                         If ($File.Extension -eq ".ps1") {
                             $Data = (& $File.FullName -Parameters $Parameters) -join "`r`n"
                         } elseif (@(".html",".css",".js",".json",".xml",".txt") -icontains $File.Extension) {
-                            $Data = Get-Content $Filename -Raw -ErrorAction Ignore
+                            $Data = Get-ContentByStreamReader $Filename
 
                             if ($Data -and $File.Extension -match "htm") {
                                 # Process server side includes for html files
@@ -1020,7 +1015,7 @@
                                 $IncludeRegex.Matches($Data) | Foreach-Object {
                                     $IncludeFile = Join-Path $BasePath $_.Groups[1].Value
                                     If (Test-Path $IncludeFile -PathType Leaf) {
-                                        $IncludeData = Get-Content $IncludeFile -Raw -ErrorAction Ignore
+                                        $IncludeData = Get-ContentByStreamReader $IncludeFile
                                         $Data = $Data -Replace $_.Value, $IncludeData
                                     }
                                 }
