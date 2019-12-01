@@ -6410,7 +6410,7 @@ Param(
             $StopWatch.Restart()
             try {                
                 if ($Quickstart) {
-                    if (-not ($Request = Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore)) {
+                    if (-not ($Request = Get-ContentByStreamReader ".\Cache\$($Jobkey).asy")) {
                         Remove-Item ".\Cache\$($Jobkey).asy" -Force
                         $Quickstart = $false                        
                         if ($delay -gt 0) {$AsyncLoader.Quickstart -= $delay;Start-Sleep -Milliseconds $delay}
@@ -6472,9 +6472,9 @@ Param(
         if (Test-Path ".\Cache\$($Jobkey).asy") {
             try {
                 if ($AsyncLoader.Jobs.$JobKey.Method -eq "REST") {
-                    Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Stop
+                    Get-ContentByStreamReader ".\Cache\$($Jobkey).asy" | ConvertFrom-Json -ErrorAction Stop
                 } else {
-                    Get-Content ".\Cache\$($Jobkey).asy" -Raw -ErrorAction Stop
+                    Get-ContentByStreamReader ".\Cache\$($Jobkey).asy"
                 }
             }
             catch {if ($Error.Count){$Error.RemoveAt(0)};Remove-Item ".\Cache\$($Jobkey).asy" -Force -ErrorAction Ignore;throw "Job $Jobkey contains clutter."}
