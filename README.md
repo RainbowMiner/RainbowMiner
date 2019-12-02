@@ -21,7 +21,7 @@ Features: easy setup wizard with adhoc working default (no editing of files need
 
 - **Multi-Platform (AMD, NVIDIA, CPU) on Windows and Linux**
 - **Profit auto-switch between mining programs and [algorithm](https://rbminer.net/algorithms/) for GPUs & CPUs (optimized one for each vendor vs. one for each possible device combination)**
-- **Profit auto-switch between pools (2Miners, AHashPool, BaikalMiner, BlazePool, BlockCruncher, BlockMasters, Bsod, Cortexmint, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, FlyPool, GosCx, GrinMint, Hashpool, HashVault, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningDutch, MiningPoolHub, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Nanopool, Nicehash, Ravenminer, SparkPool, SuprNova, UUpool, Zergpool and Zpool)**
+- **Profit auto-switch between pools (2Miners, AHashPool, BaikalMiner, BlazePool, BlockCruncher, BlockMasters, Bsod, Cortexmint, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, FlyPool, GosCx, GrinMint, Hashcryptos, Hashpool, HashVault, HeroMiners, Icemining, LuckyPool, MinerMore, MinerRocks, MiningDutch, MiningPoolHub, [MiningRigRentals](https://www.miningrigrentals.com?ref=2598069), Mintpond, Nanopool, Nicehash, Ravenminer, SparkPool, SuprNova, UUpool, Zergpool and Zpool)**
 - **Profit calculation, including real cost of electricity per miner**
 - **Uses the top actual available miner programs (Bminer, Ccminer, Claymore, CryptoDredge, Dstm, EnemyZ, Ewbf, Gminer, NBminer, Sgminer, SrbMiner, T-Rex, Xmrig and many more)**
 - **Easy setup wizard with adhoc working default - click Start.bat and off you go (RainbowMiner will ask for your credentials, no hassle with editing configuration files)**
@@ -217,7 +217,7 @@ Alternative: start as Linux `screen`:
 
 ### Done!
 
-<details><summary>Valid poolnames</summary>2Miners, 2MinersSolo, AHashPool, Aionmine, BaikalMine, BaikalMineSolo, BlazePool, BlockMasters, BlockMastersCoins, Bsod, BsodParty, BsodSolo, CoinFoundry, Cortexmint, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashpool, HashVault, HeroMiners, Icemining, LuckyPool, Luxor, MinerMore, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningRigRentals, Mintpond, Nanopool, NiceHash, NLpool, PoolSexy, Ravenminer, RPlant, SparkPool, SuprNova, Tecracoin, UUpool, WhatToMine, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool</details>
+<details><summary>Valid poolnames</summary>2Miners, 2MinersSolo, AHashPool, Aionmine, BaikalMine, BaikalMineSolo, BlazePool, BlockMasters, BlockMastersCoins, Bsod, BsodParty, BsodSolo, CoinFoundry, Cortexmint, CryptoKnight, EthashPool, Ethermine, F2pool, FairPool, FlyPool, GosCx, GosCxParty, GosCxSolo, Grinmint, Hashcryptos, Hashpool, HashVault, HeroMiners, Icemining, LuckyPool, Luxor, MinerMore, MinerRocks, Minexmr, MiningDutch, MiningDutchCoins, MiningPoolHub, MiningPoolHubCoins, MiningRigRentals, Mintpond, Nanopool, NiceHash, NLpool, PoolSexy, Ravenminer, RPlant, SparkPool, SuprNova, Tecracoin, UUpool, WhatToMine, ZergPool, ZergPoolCoins, ZergPoolCoinsParty, ZergPoolCoinsSolo, ZergPoolParty, ZergPoolSolo, Zpool</details>
 <details><summary>Valid algorithms</summary> Balloon, Bitcore, Blakecoin, Blake2s, BlakeVanilla, C11, Cortex, CryptoNightV8, Cuckaroo29, Cuckaroo29s, Ethash, X11, Decred, Equihash, Equihash144, Equihash192, Equihash-BTG, Groestl, Hex, HMQ1725, HSR, JHA, Keccak, Lbry, Lyra2RE2, Lyra2z, MyriadGroestl, NeoScrypt, Pascal, Phi, Phi2, Polytimos, Quark, Qubit, Scrypt, SHA256, Sib, Skunk, Skein, Tensority, Timetravel, Tribus, Veltor, X11, X12, X11evo, X16R, X16S, X17, X18, X21s, X22i, Yescrypt and many more: https://rbminer.net/algorithms/</details>
 
 ## HOTKEYS
@@ -341,7 +341,7 @@ All variables defined in "ExcludeServerConfig" will not be overwritten by the se
 
 <details><summary>2Miners</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>2MinersSolo</summary> https://www.2miners.com/ no auto-exchange, a seperate wallet address is needed for each coin (ETH, XZC and more) you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
-<details><summary>AHashPool / AHashPoolCoins</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
+<details><summary>AHashPool</summary>https://www.ahashpool.com/  auto-exchange and payout in BTC</details>
 <details><summary>Aionmine</summary> https://aionmine.org/ AION/Equihash210,9-pool, pays in AION, enter your Aion wallet address in pools configuration or edit pools.config.txt</details>
 <details><summary>BaikalMine</summary> https://baikalmine.com/ no auto-exchange, enter wallet address for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>BaikalMineSolo</summary> https://baikalmine.com/ no auto-exchange, solo mining, only. Enter wallet address for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -366,6 +366,7 @@ All variables defined in "ExcludeServerConfig" will not be overwritten by the se
 <details><summary>GosCxParty</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo together with others. Set in pools configuration or edit pools.config.txt. Set "PartyPassword" in pools.config.txt for your group</details>
 <details><summary>GosCxSolo</summary> https://gos.cx/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine solo. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>Grinmint</summary> https://grinmint.com/ GRIN/Cuckaroo29-pool, pays in GRIN, set your GRIN-eMail-address as wallet and enter your Grinmint password in pools configuration or edit pools.config.txt</details>
+<details><summary>Hashcryptos</summary>https://www.hashcryptos.com/  auto-exchange and payout in BTC and other currencies. To mine, you need to "activate" your wallet address on their website, first.</details>
 <details><summary>Hashpool</summary> https://hashpool.eu/ no auto-exchange, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>HashVault</summary> https://hashvault.pro/ no auto-exchange, dedicated to cryptonight mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
 <details><summary>HeroMiners</summary> https://herominers.com/ no auto-exchange, dedicated to cryptonight and swap mining, a seperate wallet address is needed for each coin, you want to mine. Set in pools configuration or edit pools.config.txt</details>
@@ -404,7 +405,7 @@ All variables defined in "ExcludeServerConfig" will not be overwritten by the se
 
 If you plan to mine through Nicehash, I strongly recommend, that you register an account with them (https://www.nicehash.com/register). In this case, Nicehash will provide you with an extra NiceHash wallet/bitcoin address (RainbowMiner will ask for this address during the setup or configuration process).
 This lowers the minimum payout sum from 0.1BTC (for external wallet) to a very low 0.001BTC (for Nicehash wallet). An additional benefit for Coinbase users: sending BTC from the Nicehash wallet to your Coinbase account is free of charge.</details>
-<details><summary>Notes for the pools BlockCruncher, BlockMasters, Bsod, CryptoKnight, GosCx, HashPool, Icemining, MinerRocks, NLpool, PhiPhiPool, PocketWhale, Ravenminer, YiiMP and Zpool</summary>
+<details><summary>Notes for the pools BlockCruncher, BlockMasters, Bsod, CryptoKnight, GosCx, Hashcryptos, HashPool, Icemining, MinerRocks, NLpool, PhiPhiPool, PocketWhale, Ravenminer, YiiMP and Zpool</summary>
   
 The miner can be setup to mine any coin or currency, that is listed at the respective pool. The pool will then payout to the given non-BTC wallet address. Take into account, that non-BTC payouts depend heavily on that coin being mined. If the pool has not or is not mining that currency, the payouts will be delayed until the pool has mined the blocks. Read the pools websites, about the mineability and reliability of a currency. It's recommended to use BTC as any other coin could be removed at anytime and payouts will not occur. The pools Bsod, CryptoKnight, GosCx, Icemining, MinerRocks, PhiPhiPool, PocketWhale, Ravenminer and Yiimp do not have auto-exchange to BTC. Please be careful, what you choose to mine.
 </details>
@@ -874,7 +875,7 @@ Example:
 
 #### Add additional password parameters for YiiMP based pools
 
-Many of our pools are based on the open-source YiiMP pool (e.g. AHashpool,BlazePool,Blockmaster,ZergPool,ZPool etc.). Some of these pools accept additional parameters. A prominent example is the setting of a custom payout limit at ZergPool (pl=x.xx). To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
+Many of our pools are based on the open-source YiiMP pool (e.g. AHashpool,BlazePool,Blockmaster,Hashcryptos,ZergPool,ZPool etc.). Some of these pools accept additional parameters. A prominent example is the setting of a custom payout limit at ZergPool (pl=x.xx). To add a password parameter, add one line to pools.config.txt in the form `"CURRENCY-Params": "parameters",`. In fact, all parameters will be added to the preset password contents, using a comma.
 
 Example 1:
 
@@ -916,7 +917,7 @@ This would reduce the hashrate-results from the pool Ravenminer by 5%
 
 #### Change a pool's time frame (data window)
 
-To override the default data window "average2e" of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashpool,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
+To override the default data window "average2e" of the YiiMP based pools (AHashPool,BlazePool,BlockMasters,Hashcryptos,Hashpool,ZergPool,Zpool) the parameter "DataWindow" can be added to the pool's configuration record. 
 Possible values are:
 - estimate_current (=default): the pool's current calculated profitability-estimation (more switching, relies on the honesty of the pool)
 - estimate_last24h: the pool's calculated profitability-estimation for the past 24 hours (less switching, relies on the honesty of the pool)

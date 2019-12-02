@@ -99,6 +99,11 @@
             SetupFields=[PSCustomObject]@{Password="Enter your Grinmint password"}
             Currencies=@("GRIN")
         }
+        "Hashcryptos" = [PSCustomObject]@{
+            Currencies=@("BTC")
+            Autoexchange=$true
+            Yiimp=$true
+        }
         "Hashpool" = [PSCustomObject]@{
             Currencies=@("MBC")
         }
