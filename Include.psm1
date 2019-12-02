@@ -109,7 +109,7 @@ function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
     if (-not (Test-Path Variable:Global:PoolFields)) {
-        $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+        $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
         $Global:PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
         Remove-Variable "Setup"
     }
@@ -1505,7 +1505,6 @@ function Get-ChildItemContent {
 
     Get-ChildItem $Path -File -ErrorAction Ignore | ForEach-Object {
         $Name = $_.BaseName
-        $Content = @()
         if ($_.Extension -eq ".ps1") {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}
@@ -1513,29 +1512,20 @@ function Get-ChildItemContent {
             }
         }
         elseif ($Quick) {
-            $Content = try {$_ | Get-ContentByStreamReader | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$null}
-            if ($Content -eq $null) {$Content = $_ | Get-Content}
+            $Content = try {
+                Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+            if ($Content -eq $null) {$Content = Get-ContenByStreamReader $_.FullName}
         }
         else {
             $Content = & {
                 foreach ($k in $Parameters.Keys) {Set-Variable $k $Parameters.$k}                
                 try {
-                    ($_ | Get-ContentByStreamReader | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
+                    (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Stop) | ForEach-Object {Invoke-ExpressionRecursive $_}
                 }
-                catch [ArgumentException] {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    $null
-                }
+                catch {if ($Error.Count){$Error.RemoveAt(0)}}
             }
-            if ($Content -eq $null) {$Content = $_ | Get-Content}
-        }
-        foreach ($c in $Content) {
-            if ($c.Name) {
-                [PSCustomObject]@{Name = $c.Name; BaseName = $Name; Content = $c}
-            }
-            else {
-                [PSCustomObject]@{Name = $Name; BaseName = $Name; Content = $c}
-            }
+            if ($Content -eq $null) {$Content = Get-ContentByStreamReader $_.FullName}
         }
         if ($Force -and $Content) {
             foreach ($k in $Parameters.Keys) {
@@ -1544,6 +1534,7 @@ function Get-ChildItemContent {
                 }
             }
         }
+        $Content
     }
 }
 
@@ -5092,7 +5083,7 @@ function Set-MinersConfigDefault {
 
         try {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = $null}
-            if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1" | Select-Object -ExpandProperty Content}
+            if (-not (Test-Path ".\nopresets.txt")) {$Setup = Get-ChildItemContent ".\Data\MinersConfigDefault.ps1"}
             $AllDevices = Get-Device "cpu","gpu" -IgnoreOpenCL
             $AllMiners = if (Test-Path "Miners") {@(Get-MinersContent -InfoOnly)}
             foreach ($a in @("CPU","NVIDIA","AMD")) {
@@ -5188,7 +5179,7 @@ function Set-AlgorithmsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = 0;OCprofile=""}
-            $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup = Get-ChildItemContent ".\Data\AlgorithmsConfigDefault.ps1"
             $AllAlgorithms = Get-Algorithms -Values
             foreach ($Algorithm in $AllAlgorithms) {
                 if (-not $Preset.$Algorithm) {$Preset | Add-Member $Algorithm $(if ($Setup.$Algorithm) {$Setup.$Algorithm} else {[PSCustomObject]@{}}) -Force}
@@ -5208,7 +5199,7 @@ function Set-AlgorithmsConfigDefault {
 
 function Set-PresetDefault {
     if (Test-Path ".\Data\PresetDefault.ps1") {
-        $Setup = Get-ChildItemContent ".\Data\PresetDefault.ps1" | Select-Object -ExpandProperty Content
+        $Setup = Get-ChildItemContent ".\Data\PresetDefault.ps1"
         $Setup.PSObject.Properties.Name | Foreach-Object {
             $Session.DefaultValues[$_] = $Setup.$_
         }
@@ -5264,7 +5255,7 @@ function Set-CoinsConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";PostBlockMining="0";MinProfitPercent="0";Wallet="";EnableAutoPool="0";Comment=""}
-            $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup = Get-ChildItemContent ".\Data\CoinsConfigDefault.ps1"
             
             foreach ($Coin in @($Setup.PSObject.Properties.Name | Select-Object)) {
                 if (-not $Preset.$Coin) {$Preset | Add-Member $Coin $(if ($Setup.$Coin) {$Setup.$Coin} else {[PSCustomObject]@{}}) -Force}
@@ -5428,7 +5419,7 @@ function Set-DevicesConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{Algorithm="";ExcludeAlgorithm="";MinerName="";ExcludeMinerName="";DisableDualMining="";DefaultOCprofile="";PowerAdjust="100";Worker=""}
-            $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup = Get-ChildItemContent ".\Data\DevicesConfigDefault.ps1"
             $Devices = Get-Device "cpu","nvidia","amd" -IgnoreOpenCL
             $Devices | Select-Object -Unique Type,Model | Foreach-Object {
                 $DeviceModel = $_.Model
@@ -5467,7 +5458,7 @@ function Set-PoolsConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Done = [PSCustomObject]@{}
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis=""}
-            $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
             $Global:PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0) {
@@ -5525,7 +5516,7 @@ function Set-OCProfilesConfigDefault {
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{PowerLimit = 0;ThermalLimit = 0;MemoryClockBoost = "*";CoreClockBoost = "*";LockVoltagePoint = "*"}
             if ($true -or -not $Preset.PSObject.Properties.Name) {
-                $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                $Setup = Get-ChildItemContent ".\Data\OCProfilesConfigDefault.ps1"
                 $Devices = Get-Device "amd","nvidia" -IgnoreOpenCL
                 $Devices | Select-Object -ExpandProperty Model -Unique | Sort-Object | Foreach-Object {
                     $Model = $_
@@ -5572,7 +5563,7 @@ function Set-SchedulerConfigDefault {
             if (-not $Session.ConfigFiles[$ConfigName].Healthy) {return}
         }
         try {
-            $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1" -Quick | Select-Object -ExpandProperty Content
+            $Default = Get-ChildItemContent ".\Data\SchedulerConfigDefault.ps1"
             if ($Preset -is [string] -or $Preset -eq $null) {
                 $Preset = @($Default) + @((0..6) | Foreach-Object {$a=$Default | ConvertTo-Json -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore;$a.DayOfWeek = "$_";$a})
             }

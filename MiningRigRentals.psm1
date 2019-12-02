@@ -20,7 +20,7 @@ function Set-MiningRigRentalConfigDefault {
             if ($Preset -is [string] -or -not $Preset.PSObject.Properties.Name) {$Preset = [PSCustomObject]@{}}
             $ChangeTag = Get-ContentDataMD5hash($Preset)
             $Default = [PSCustomObject]@{PriceStrategy="mrr";PriceBTC = "0";PriceFactor = "0";MinPriceStrategy="profit";MinPriceBTC = "0";MinPriceFactor = "30";EnablePriceUpdates = "1";Title="";Description=""}
-            $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $Setup = Get-ChildItemContent ".\Data\MRRConfigDefault.ps1"
 
             #price strategies
             # profit = use rig's avergage profit as price

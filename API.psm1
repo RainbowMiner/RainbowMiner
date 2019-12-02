@@ -286,7 +286,7 @@
                     Break
                 }
                 "/loadconfig" {
-                    $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                    $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
                     $ConfigParameters = @{}
                     $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
                         $val = $Session.DefaultValues[$_]
@@ -294,7 +294,7 @@
                         if ($val -is [array]) {$val = $val -join ','}
                         $ConfigParameters.Add($_ , $val)
                     }
-                    $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters | Select-Object -ExpandProperty Content) -Depth 10
+                    $Data = ConvertTo-Json $(Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $ConfigParameters) -Depth 10
                     Remove-Variable "ConfigSetup"
                     Remove-Variable "ConfigParameters"
                     Break

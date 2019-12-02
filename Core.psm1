@@ -323,7 +323,7 @@ function Invoke-Core {
 
             do {
                 if ($Session.Config -eq $null) {Write-Host "Read configuration .."}
-                $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+                $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
                 $Session.ConfigFiles["Config"].LastWriteTime = (Get-ChildItem $Session.ConfigFiles["Config"].Path).LastWriteTime.ToUniversalTime()
                 $Parameters = @{}
                 $Session.DefaultValues.Keys | Where-Object {$_ -ne "SetupOnly"} | ForEach-Object {
@@ -332,7 +332,7 @@ function Invoke-Core {
                     if ($val -is [array]) {$val = $val -join ','}
                     $Parameters.Add($_ , $val)
                 }
-                $Session.Config = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $Parameters | Select-Object -ExpandProperty Content
+                $Session.Config = Get-ChildItemContent $Session.ConfigFiles["Config"].Path -Force -Parameters $Parameters
                 $Session.Config | Add-Member Pools ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
                 $Session.Config | Add-Member OCProfiles ([PSCustomObject]@{}) -Force

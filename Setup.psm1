@@ -86,7 +86,7 @@ function Start-Setup {
         $OCProfilesActual = Get-Content $ConfigFiles["OCProfiles"].Path | ConvertFrom-Json
         $SetupDevices = Get-Device "nvidia","amd","cpu" -IgnoreOpenCL
 
-        $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1" | Select-Object -ExpandProperty Content
+        $PoolsSetup  = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
 
         $AlgorithmsDefault = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind = "0";MSIAprofile = "0";OCprofile = ""}
         $CoinsDefault      = [PSCustomObject]@{Penalty = "0";MinHashrate = "0";MinWorkers = "0";MaxTimeToFind="0";Wallet="";EnableAutoPool="0";PostBlockMining="0";MinProfitPercent="0";Comment=""}
@@ -126,7 +126,7 @@ function Start-Setup {
         if ($IsInitialSetup) {
             $SetupType = "A" 
 
-            $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1" | Select-Object -ExpandProperty Content
+            $ConfigSetup = Get-ChildItemContent ".\Data\ConfigDefault.ps1"
 
             if ((Test-Path ".\setup.json") -and ($SetupJson = Get-Content ".\setup.json" -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore)) {
 
