@@ -977,7 +977,7 @@ function Set-Stat {
 
     $SmallestValue = 1E-20
 
-    $Stat = Get-Content $Path -ErrorAction Ignore -Raw
+    $Stat = Get-ContentByStreamReader $Path
    
     try {
         $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
@@ -1417,7 +1417,7 @@ function Get-Stat {
         } else {
             $Path = "$Path\$Name.txt"
         }
-        if (Test-Path $Path) {ConvertFrom-Json (Get-Content $Path -ErrorAction Ignore -Raw) -ErrorAction Ignore}
+        if (Test-Path $Path) {ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Ignore}
     } else {
         # Return all stats
         [hashtable]$Stats = @{}
@@ -1441,7 +1441,7 @@ function Get-Stat {
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
             try {
-                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
+                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-ContentByStreamReader $FullName) -ErrorAction Stop
             }
             catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
