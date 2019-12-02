@@ -1432,15 +1432,16 @@ function Get-Stat {
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
-        if ($Miners)    {$Match += "Hashrate"}
-        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF"}
-        if ($Totals)    {$Match += "Total"}
-        if ($TotalAvgs) {$Match += "TotalAvg"}
-        if ($Balances)  {$Match += "Balance"}
+        if ($Miners)    {$Match += "Hashrate";$Path = "Stats\Miners"}
+        if ($Pools)     {$Match += "Profit";$Path = "Stats\Pools"}
+        if ($Totals)    {$Match += "Total";$Path = "Stats\Totals"}
+        if ($TotalAvgs) {$Match += "TotalAvg";$Path = "Stats\Totals"}
+        if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
+        if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"}
 
         $MatchStr = $Match -join "|"
 
-        foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
+        foreach($p in (Get-ChildItem -Recurse $Path -File -Filter "*.txt")) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
