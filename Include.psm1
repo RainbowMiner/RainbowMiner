@@ -977,231 +977,228 @@ function Set-Stat {
 
     $SmallestValue = 1E-20
 
-    $Stat = Get-Stat $Path -NameIsPath
+    $Stat = Get-Content $Path -ErrorAction Ignore -Raw
+   
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
-    if ($Stat) {   
-        try {
-            if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
+        if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
+
+        $Stat = Switch ($Mode) {
+            "Miners" {
+                [PSCustomObject]@{
+                    Live = [Double]$Stat.Live
+                    Minute = [Double]$Stat.Minute
+                    Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
+                    Minute_5 = [Double]$Stat.Minute_5
+                    Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
+                    Minute_10 = [Double]$Stat.Minute_10
+                    Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
+                    Hour = [Double]$Stat.Hour
+                    Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
+                    Day = [Double]$Stat.Day
+                    Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+                    ThreeDay = [Double]$Stat.ThreeDay
+                    ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
+                    Week = [Double]$Stat.Week
+                    Week_Fluctuation = [Double]$Stat.Week_Fluctuation
+                    Duration = [TimeSpan]$Stat.Duration
+                    Updated = [DateTime]$Stat.Updated
+                    Failed = [Int]$Stat.Failed
+
+                    # Miners Part
+                    PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
+                    PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
+                    Diff_Live          = [Double]$Stat.Diff_Live
+                    Diff_Average       = [Double]$Stat.Diff_Average
+                    Ratio_Live         = [Double]$Stat.Ratio_Live
+                    Ratio_Average      = [Double]$Stat.Ratio_Average
+                }
+            }
+            "Pools" {
+                [PSCustomObject]@{
+                    Live = [Double]$Stat.Live
+                    Minute = [Double]$Stat.Minute
+                    Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
+                    Minute_5 = [Double]$Stat.Minute_5
+                    Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
+                    Minute_10 = [Double]$Stat.Minute_10
+                    Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
+                    Hour = [Double]$Stat.Hour
+                    Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
+                    Day = [Double]$Stat.Day
+                    Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+                    ThreeDay = [Double]$Stat.ThreeDay
+                    ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
+                    Week = [Double]$Stat.Week
+                    Week_Fluctuation = [Double]$Stat.Week_Fluctuation
+                    Duration = [TimeSpan]$Stat.Duration
+                    Updated = [DateTime]$Stat.Updated
+                    Failed = [Int]$Stat.Failed
+
+                    # Pools part
+                    HashRate_Live      = [Double]$Stat.HashRate_Live
+                    HashRate_Average   = [Double]$Stat.HashRate_Average
+                    BlockRate_Live     = [Double]$Stat.BlockRate_Live
+                    BlockRate_Average  = [Double]$Stat.BlockRate_Average
+                    Actual24h_Week     = [Double]$Stat.Actual24h_Week
+                    Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
+                    ErrorRatio         = [Double]$Stat.ErrorRatio
+                }
+            }
+            default {
+                [PSCustomObject]@{
+                    Live = [Double]$Stat.Live
+                    Minute = [Double]$Stat.Minute
+                    Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
+                    Minute_5 = [Double]$Stat.Minute_5
+                    Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
+                    Minute_10 = [Double]$Stat.Minute_10
+                    Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
+                    Hour = [Double]$Stat.Hour
+                    Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
+                    Day = [Double]$Stat.Day
+                    Day_Fluctuation = [Double]$Stat.Day_Fluctuation
+                    ThreeDay = [Double]$Stat.ThreeDay
+                    ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
+                    Week = [Double]$Stat.Week
+                    Week_Fluctuation = [Double]$Stat.Week_Fluctuation
+                    Duration = [TimeSpan]$Stat.Duration
+                    Updated = [DateTime]$Stat.Updated
+                    Failed = [Int]$Stat.Failed
+                }
+            }
+        }
+
+        $ToleranceMin = $Value
+        $ToleranceMax = $Value
+
+        if ($FaultDetection) {
+            if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
+            if ($FaultTolerance -lt 1) {
+                $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
+                $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100 + 0.1), 0.9))
+            } elseif ($Stat.Hour -gt 0) {
+                if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
+                $ToleranceMin = $Stat.Hour / $FaultTolerance
+                $ToleranceMax = $Stat.Hour * $FaultTolerance
+            }
+        } elseif ($Stat.Hour -gt 0 -and $UplimProtection -gt 1.0) {            
+            $ToleranceMax = $Stat.Hour * $UplimProtection
+        }
+
+        if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live -and ($Mode -ne "Pools" -or [Decimal]$Hashrate -eq [Decimal]$Stat.HashRate_Live)) {$Updated = $Stat.updated}
+        
+        if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
+
+        if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
+            if (-not $Quiet) {
+                if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "}
+                else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString("N2")) is outside fault tolerance $($ToleranceMin.ToString("N2")) to $($ToleranceMax.ToString("N2")). "}
+            }
+            $Stat.Failed += 10
+            if ($Stat.Failed > 30) {$Stat.Failed = 30}
+        } else {
+            $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
+            $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
+            $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
+            $Span_Hour = [Math]::Min($Duration.TotalHours / [Math]::Min($Stat.Duration.TotalHours, 1), 1)
+            $Span_Day = [Math]::Min($Duration.TotalDays / [Math]::Min($Stat.Duration.TotalDays, 1), 1)
+            $Span_ThreeDay = [Math]::Min(($Duration.TotalDays / 3) / [Math]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
+            $Span_Week = [Math]::Min(($Duration.TotalDays / 7) / [Math]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
 
             $Stat = Switch ($Mode) {
                 "Miners" {
                     [PSCustomObject]@{
-                        Live = [Double]$Stat.Live
-                        Minute = [Double]$Stat.Minute
-                        Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
-                        Minute_5 = [Double]$Stat.Minute_5
-                        Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
-                        Minute_10 = [Double]$Stat.Minute_10
-                        Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
-                        Hour = [Double]$Stat.Hour
-                        Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
-                        Day = [Double]$Stat.Day
-                        Day_Fluctuation = [Double]$Stat.Day_Fluctuation
-                        ThreeDay = [Double]$Stat.ThreeDay
-                        ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
-                        Week = [Double]$Stat.Week
-                        Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-                        Duration = [TimeSpan]$Stat.Duration
-                        Updated = [DateTime]$Stat.Updated
-                        Failed = [Int]$Stat.Failed
+                        Live = $Value
+                        Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
+                        Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                        Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
+                        Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                        Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
+                        Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                        Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
+                        Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                        Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
+                        Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                        ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
+                        ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                        Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
+                        Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                        Duration = $Stat.Duration + $Duration
+                        Updated = $Updated
+                        Failed = [Math]::Max($Stat.Failed-1,0)
 
-                        # Miners Part
-                        PowerDraw_Live     = [Double]$Stat.PowerDraw_Live
-                        PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
-                        Diff_Live          = [Double]$Stat.Diff_Live
-                        Diff_Average       = [Double]$Stat.Diff_Average
-                        Ratio_Live         = [Double]$Stat.Ratio_Live
-                        Ratio_Average      = [Double]$Stat.Ratio_Average
+                        # Miners part
+                        PowerDraw_Live     = $PowerDraw
+                        PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {$Stat.PowerDraw_Average + $Span_Week * ($PowerDraw - $Stat.PowerDraw_Average)} else {$PowerDraw}
+                        Diff_Live          = $Difficulty
+                        Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
+                        Ratio_Live         = $Ratio
+                        Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                     }
                 }
                 "Pools" {
                     [PSCustomObject]@{
-                        Live = [Double]$Stat.Live
-                        Minute = [Double]$Stat.Minute
-                        Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
-                        Minute_5 = [Double]$Stat.Minute_5
-                        Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
-                        Minute_10 = [Double]$Stat.Minute_10
-                        Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
-                        Hour = [Double]$Stat.Hour
-                        Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
-                        Day = [Double]$Stat.Day
-                        Day_Fluctuation = [Double]$Stat.Day_Fluctuation
-                        ThreeDay = [Double]$Stat.ThreeDay
-                        ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
-                        Week = [Double]$Stat.Week
-                        Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-                        Duration = [TimeSpan]$Stat.Duration
-                        Updated = [DateTime]$Stat.Updated
-                        Failed = [Int]$Stat.Failed
+                        Live = $Value
+                        Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
+                        Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                        Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
+                        Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                        Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
+                        Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                        Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
+                        Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                        Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
+                        Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                        ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
+                        ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                        Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
+                        Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                        Duration = $Stat.Duration + $Duration
+                        Updated = $Updated
+                        Failed = [Math]::Max($Stat.Failed-1,0)
 
                         # Pools part
-                        HashRate_Live      = [Double]$Stat.HashRate_Live
-                        HashRate_Average   = [Double]$Stat.HashRate_Average
-                        BlockRate_Live     = [Double]$Stat.BlockRate_Live
-                        BlockRate_Average  = [Double]$Stat.BlockRate_Average
-                        Actual24h_Week     = [Double]$Stat.Actual24h_Week
-                        Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
-                        ErrorRatio         = [Double]$Stat.ErrorRatio
+                        HashRate_Live      = $HashRate
+                        HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {$Stat.HashRate_Average + $Span_Hour * ($HashRate - $Stat.HashRate_Average)} else {$HashRate}
+                        BlockRate_Live     = $BlockRate
+                        BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {$Stat.BlockRate_Average + $Span_Hour * ($BlockRate - $Stat.BlockRate_Average)} else {$BlockRate}
+                        Actual24h_Week     = $Stat.Actual24h_Week + $Span_Day * ($Actual24h - $Stat.Actual24h_Week)
+                        Estimate24h_Week   = $Stat.Estimate24h_Week + $Span_Day * ($Estimate24h - $Stat.Estimate24h_Week)
+                        ErrorRatio         = $Stat.ErrorRatio
                     }
                 }
                 default {
                     [PSCustomObject]@{
-                        Live = [Double]$Stat.Live
-                        Minute = [Double]$Stat.Minute
-                        Minute_Fluctuation = [Double]$Stat.Minute_Fluctuation
-                        Minute_5 = [Double]$Stat.Minute_5
-                        Minute_5_Fluctuation = [Double]$Stat.Minute_5_Fluctuation
-                        Minute_10 = [Double]$Stat.Minute_10
-                        Minute_10_Fluctuation = [Double]$Stat.Minute_10_Fluctuation
-                        Hour = [Double]$Stat.Hour
-                        Hour_Fluctuation = [Double]$Stat.Hour_Fluctuation
-                        Day = [Double]$Stat.Day
-                        Day_Fluctuation = [Double]$Stat.Day_Fluctuation
-                        ThreeDay = [Double]$Stat.ThreeDay
-                        ThreeDay_Fluctuation = [Double]$Stat.ThreeDay_Fluctuation
-                        Week = [Double]$Stat.Week
-                        Week_Fluctuation = [Double]$Stat.Week_Fluctuation
-                        Duration = [TimeSpan]$Stat.Duration
-                        Updated = [DateTime]$Stat.Updated
-                        Failed = [Int]$Stat.Failed
+                        Live = $Value
+                        Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
+                        Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
+                        Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
+                        Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
+                        Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
+                        Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
+                        Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
+                        Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
+                        Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
+                        Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
+                        ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
+                        ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
+                        Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
+                        Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
+                        Duration = $Stat.Duration + $Duration
+                        Updated = $Updated
+                        Failed = [Math]::Max($Stat.Failed-1,0)
                     }
                 }
             }
-
-            $ToleranceMin = $Value
-            $ToleranceMax = $Value
-
-            if ($FaultDetection) {
-                if ($FaultTolerance -eq $null) {$FaultTolerance = 0.1}
-                if ($FaultTolerance -lt 1) {
-                    $ToleranceMin = $Stat.Week * (1 - [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100), 0.9))
-                    $ToleranceMax = $Stat.Week * (1 + [Math]::Min([Math]::Max($Stat.Week_Fluctuation * 2, $FaultTolerance + $Stat.Failed/100 + 0.1), 0.9))
-                } elseif ($Stat.Hour -gt 0) {
-                    if ($FaultTolerance -lt 2) {$FaultTolerance = 2}
-                    $ToleranceMin = $Stat.Hour / $FaultTolerance
-                    $ToleranceMax = $Stat.Hour * $FaultTolerance
-                }
-            } elseif ($Stat.Hour -gt 0 -and $UplimProtection -gt 1.0) {            
-                $ToleranceMax = $Stat.Hour * $UplimProtection
-            }
-
-            if ($ChangeDetection -and [Decimal]$Value -eq [Decimal]$Stat.Live -and ($Mode -ne "Pools" -or [Decimal]$Hashrate -eq [Decimal]$Stat.HashRate_Live)) {$Updated = $Stat.updated}
-        
-            if ($Value -gt 0 -and $ToleranceMax -eq 0) {$ToleranceMax = $Value}
-
-            if ($Value -lt $ToleranceMin -or $Value -gt $ToleranceMax) {
-                if (-not $Quiet) {
-                    if ($mode -eq "Miners") {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value | ConvertTo-Hash) is outside fault tolerance $($ToleranceMin | ConvertTo-Hash) to $($ToleranceMax | ConvertTo-Hash). "}
-                    else {Write-Log -Level $LogLevel "Stat file ($Name) was not updated because the value $($Value.ToString("N2")) is outside fault tolerance $($ToleranceMin.ToString("N2")) to $($ToleranceMax.ToString("N2")). "}
-                }
-                $Stat.Failed += 10
-                if ($Stat.Failed > 30) {$Stat.Failed = 30}
-            } else {
-                $Span_Minute = [Math]::Min($Duration.TotalMinutes / [Math]::Min($Stat.Duration.TotalMinutes, 1), 1)
-                $Span_Minute_5 = [Math]::Min(($Duration.TotalMinutes / 5) / [Math]::Min(($Stat.Duration.TotalMinutes / 5), 1), 1)
-                $Span_Minute_10 = [Math]::Min(($Duration.TotalMinutes / 10) / [Math]::Min(($Stat.Duration.TotalMinutes / 10), 1), 1)
-                $Span_Hour = [Math]::Min($Duration.TotalHours / [Math]::Min($Stat.Duration.TotalHours, 1), 1)
-                $Span_Day = [Math]::Min($Duration.TotalDays / [Math]::Min($Stat.Duration.TotalDays, 1), 1)
-                $Span_ThreeDay = [Math]::Min(($Duration.TotalDays / 3) / [Math]::Min(($Stat.Duration.TotalDays / 3), 1), 1)
-                $Span_Week = [Math]::Min(($Duration.TotalDays / 7) / [Math]::Min(($Stat.Duration.TotalDays / 7), 1), 1)
-
-                $Stat = Switch ($Mode) {
-                    "Miners" {
-                        [PSCustomObject]@{
-                            Live = $Value
-                            Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
-                            Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
-                            Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
-                            Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
-                            Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
-                            ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
-                            Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
-                            Duration = $Stat.Duration + $Duration
-                            Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
-
-                            # Miners part
-                            PowerDraw_Live     = $PowerDraw
-                            PowerDraw_Average  = if ($Stat.PowerDraw_Average -gt 0) {$Stat.PowerDraw_Average + $Span_Week * ($PowerDraw - $Stat.PowerDraw_Average)} else {$PowerDraw}
-                            Diff_Live          = $Difficulty
-                            Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
-                            Ratio_Live         = $Ratio
-                            Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
-                        }
-                    }
-                    "Pools" {
-                        [PSCustomObject]@{
-                            Live = $Value
-                            Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
-                            Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
-                            Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
-                            Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
-                            Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
-                            ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
-                            Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
-                            Duration = $Stat.Duration + $Duration
-                            Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
-
-                            # Pools part
-                            HashRate_Live      = $HashRate
-                            HashRate_Average   = if ($Stat.HashRate_Average -gt 0) {$Stat.HashRate_Average + $Span_Hour * ($HashRate - $Stat.HashRate_Average)} else {$HashRate}
-                            BlockRate_Live     = $BlockRate
-                            BlockRate_Average  = if ($Stat.BlockRate_Average -gt 0) {$Stat.BlockRate_Average + $Span_Hour * ($BlockRate - $Stat.BlockRate_Average)} else {$BlockRate}
-                            Actual24h_Week     = $Stat.Actual24h_Week + $Span_Day * ($Actual24h - $Stat.Actual24h_Week)
-                            Estimate24h_Week   = $Stat.Estimate24h_Week + $Span_Day * ($Estimate24h - $Stat.Estimate24h_Week)
-                            ErrorRatio         = $Stat.ErrorRatio
-                        }
-                    }
-                    default {
-                        [PSCustomObject]@{
-                            Live = $Value
-                            Minute = $Stat.Minute + $Span_Minute * ($Value - $Stat.Minute)
-                            Minute_Fluctuation = $Stat.Minute_Fluctuation + $Span_Minute * ([Math]::Abs($Value - $Stat.Minute) / [Math]::Max([Math]::Abs($Stat.Minute), $SmallestValue) - $Stat.Minute_Fluctuation)
-                            Minute_5 = $Stat.Minute_5 + $Span_Minute_5 * ($Value - $Stat.Minute_5)
-                            Minute_5_Fluctuation = $Stat.Minute_5_Fluctuation + $Span_Minute_5 * ([Math]::Abs($Value - $Stat.Minute_5) / [Math]::Max([Math]::Abs($Stat.Minute_5), $SmallestValue) - $Stat.Minute_5_Fluctuation)
-                            Minute_10 = $Stat.Minute_10 + $Span_Minute_10 * ($Value - $Stat.Minute_10)
-                            Minute_10_Fluctuation = $Stat.Minute_10_Fluctuation + $Span_Minute_10 * ([Math]::Abs($Value - $Stat.Minute_10) / [Math]::Max([Math]::Abs($Stat.Minute_10), $SmallestValue) - $Stat.Minute_10_Fluctuation)
-                            Hour = $Stat.Hour + $Span_Hour * ($Value - $Stat.Hour)
-                            Hour_Fluctuation = $Stat.Hour_Fluctuation + $Span_Hour * ([Math]::Abs($Value - $Stat.Hour) / [Math]::Max([Math]::Abs($Stat.Hour), $SmallestValue) - $Stat.Hour_Fluctuation)
-                            Day = $Stat.Day + $Span_Day * ($Value - $Stat.Day)
-                            Day_Fluctuation = $Stat.Day_Fluctuation + $Span_Day * ([Math]::Abs($Value - $Stat.Day) / [Math]::Max([Math]::Abs($Stat.Day), $SmallestValue) - $Stat.Day_Fluctuation)
-                            ThreeDay = $Stat.ThreeDay + $Span_ThreeDay * ($Value - $Stat.ThreeDay)
-                            ThreeDay_Fluctuation = $Stat.ThreeDay_Fluctuation + $Span_ThreeDay * ([Math]::Abs($Value - $Stat.ThreeDay) / [Math]::Max([Math]::Abs($Stat.ThreeDay), $SmallestValue) - $Stat.ThreeDay_Fluctuation)
-                            Week = $Stat.Week + $Span_Week * ($Value - $Stat.Week)
-                            Week_Fluctuation = $Stat.Week_Fluctuation + $Span_Week * ([Math]::Abs($Value - $Stat.Week) / [Math]::Max([Math]::Abs($Stat.Week), $SmallestValue) - $Stat.Week_Fluctuation)
-                            Duration = $Stat.Duration + $Duration
-                            Updated = $Updated
-                            Failed = [Math]::Max($Stat.Failed-1,0)
-                        }
-                    }
-                }
-                $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
-            }
-        }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
-            $Stat = $null
+            $Stat.PSObject.Properties.Name | Where-Object {$_ -match "Fluctuation" -and $Stat.$_ -gt 1} | Foreach-Object {$Stat.$_ = 0}
         }
     }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (-not $Quiet -and (Test-Path $Path)) {Write-Log -Level Warn "Stat file ($Name) is corrupt and will be reset. "}
 
-    if ($Stat -eq $null) {
         $Stat = Switch($Mode) {
             "Miners" {
                 [PSCustomObject]@{
@@ -1376,25 +1373,10 @@ function Set-Stat {
                     Failed = [Int]$Stat.Failed
                 }
             }
-        }) | Set-StatCache -Path $Path
+        }) | ConvertTo-Json | Set-Content $Path
     }
 
     $Stat
-}
-
-function Set-StatCache {
-[CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        [String]$Path,
-        [Parameter(Mandatory = $false, ValueFromPipeline = $True)]
-        $InputObject,
-        [Parameter(Mandatory = $false)]
-        [Switch]$PassThru = $false
-    )
-    $Global:StatsCache[$Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)] = $InputObject
-    $InputObject | ConvertTo-Json -Depth 10 | Set-Content $Path -Force
-    if ($PassThru) {$InputObject}
 }
 
 function Get-Stat {
@@ -1415,55 +1397,27 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Balances = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$All = $false,
-        [Parameter(Mandatory = $false)]
-        [Switch]$NameIsPath = $false
+        [Switch]$All = $false
     )
 
-    if (-not (Test-Path Variable:Global:StatsCache -ErrorAction SilentlyContinue)) {
-        $Global:StatsCache = @{}
-    }
-
     if ($Name) {
-        if ($NameIsPath) {
-            $Path = $Name
+        # Return single requested stat
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
+        elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
+        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
+        elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
+        else {$Path = "Stats"}
+
+        if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
+
+        if ($Sub) {
+            #legacy
+            if (Test-Path ("$Path\$Name.txt")) {Move-Item "$Path\$Name.txt" "$Path\$Sub-$Name.txt" -Force}
+            $Path = "$Path\$Sub-$Name.txt"
         } else {
-            # Return single requested stat
-            if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
-            elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"}
-            elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
-            elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
-            else {$Path = "Stats"}
-
-            if (-not (Test-Path $Path)) {New-Item $Path -ItemType "directory" > $null}
-
-            if ($Sub) {
-                $Path = "$Path\$Sub-$Name.txt"
-            } else {
-                $Path = "$Path\$Name.txt"
-            }
+            $Path = "$Path\$Name.txt"
         }
-        if (Test-Path $Path) {
-            $Path = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
-            if (-not $Global:StatsCache[$Path]) {
-                try {
-                    $reader = New-Object System.IO.StreamReader($Path)
-                    $Global:StatsCache[$Path] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Ignore
-                }
-                catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    #Remove broken stat file
-                    Write-Log -Level Warn "Stat file ($Path) is corrupt and will be removed. "
-                    if (Test-Path $Path) {Remove-Item -Path  $Path -Force -Confirm:$false}
-                    $Global:StatsCache[$Path] = $null
-                }
-                finally {
-                    if ($reader) {$reader.Close()}
-                }
-                if ($reader) {Remove-Variable "reader"}
-            }
-            $Global:StatsCache[$Path]
-        }
+        if (Test-Path $Path) {ConvertFrom-Json (Get-Content $Path -ErrorAction Ignore -Raw) -ErrorAction Ignore}
     } else {
         # Return all stats
         [hashtable]$Stats = @{}
@@ -1474,43 +1428,28 @@ function Get-Stat {
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
-        if ($Miners)    {$Match += "Hashrate";$Path = "Stats\Miners"}
-        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF";$Path = "Stats\Pools"}
-        if ($Totals)    {$Match += "Total";$Path = "Stats\Totals"}
-        if ($TotalAvgs) {$Match += "TotalAvg";$Path = "Stats\Totals"}
-        if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
-
-        if ($Match.Count -gt 1 -or $All) {$Path = "Stats"}
+        if ($Miners)    {$Match += "Hashrate"}
+        if ($Pools)     {$Match += "Profit|BLK|HSR|TTF"}
+        if ($Totals)    {$Match += "Total"}
+        if ($TotalAvgs) {$Match += "TotalAvg"}
+        if ($Balances)  {$Match += "Balance"}
 
         $MatchStr = $Match -join "|"
 
-        foreach($p in (Get-ChildItem -Recurse $Path -File)) {
+        foreach($p in (Get-ChildItem -Recurse "Stats" -File)) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
             if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
-
-            if (-not $Global:StatsCache[$FullName]) {
-                try {
-                    $reader = New-Object System.IO.StreamReader($FullName)
-                    $Global:StatsCache[$FullName] = ConvertFrom-Json ($reader.ReadToEnd()) -ErrorAction Stop
-                }
-                catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    #Remove broken stat file
-                    Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
-                    if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
-                    $Global:StatsCache[$FullName] = $null
-                }
-                finally {
-                    if ($reader) {$reader.Close()}
-                }
+            try {
+                $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-Content $FullName -ErrorAction Stop -Raw) -ErrorAction Stop
             }
-            if ($Global:StatsCache[$FullName]) {
-                if ($Miners -or $All) {$BaseName = $BaseName -replace "^(AMD|CPU|NVIDIA)-"}
-                $Stats[$BaseName] = $Global:StatsCache[$FullName]
+            catch {
+                if ($Error.Count){$Error.RemoveAt(0)}
+                #Remove broken stat file
+                Write-Log -Level Warn "Stat file ($BaseName) is corrupt and will be removed. "
+                if (Test-Path $FullName) {Remove-Item -Path  $FullName -Force -Confirm:$false}
             }
         }
-        if ($reader) {Remove-Variable "reader"}
         Return $Stats
     }
 }
