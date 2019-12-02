@@ -1439,12 +1439,12 @@ function Get-Stat {
         if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
         if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"}
 
-        $MatchStr = $Match -join "|"
+        $MatchStr = if ($Match.Count -gt 1) {"($($Match -join "|"))"} else {$Match}
 
         foreach($p in (Get-ChildItem -Recurse $Path -File -Filter "*.txt")) {
             $BaseName = $p.BaseName
             $FullName = $p.FullName
-            if (-not $All -and $BaseName -notmatch "_($MatchStr)$") {continue}
+            if (-not $All -and $BaseName -notmatch "_$MatchStr$") {continue}
             try {
                 $Stats[$BaseName -replace "^(AMD|CPU|NVIDIA)-"] = ConvertFrom-Json (Get-ContentByStreamReader $FullName) -ErrorAction Stop
             }
