@@ -656,6 +656,25 @@ try {
         }
     }
 
+    if ($Version -le (Get-Version "4.4.8.1")) {
+        $Changes = 0
+        if (Test-Path "Stats\Totals") {
+            Get-ChildItem "Stats\Totals" -Filter "Totals_*.csv" | Foreach-Object {
+                $a = Get-Content $_.FullName -Raw
+                $b = $a -replace '\"\0\"','","'
+                if ($a -ne $b) {$b | Set-Content $_.FullName -Force -Encoding UTF8;$Changes++}
+            }
+        }
+        if (Test-Path "Stats\Balances") {
+            Get-ChildItem "Stats\Balances" -Filter "Earnings.csv" | Foreach-Object {
+                $a = Get-Content $_.FullName -Raw
+                $b = $a -replace '\"\0\"','","'
+                if ($a -ne $b) {$b | Set-Content $_.FullName -Force -Encoding UTF8;$Changes++}
+            }
+        }
+        $ChangesTotal += $Changes
+    }
+
     if ($OverridePoolPenalties) {
         if (Test-Path "Data\PoolsConfigDefault.ps1") {
             $PoolsDefault = Get-ChildItemContent "Data\PoolsConfigDefault.ps1" -Quick
