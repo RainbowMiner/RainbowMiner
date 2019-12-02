@@ -493,7 +493,7 @@ function Write-ToFile {
     Process {
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-            $file = New-Object System.IO.StreamWriter ($FilePath, $Append, [System.Text.Encoding]::UTF8)
+            $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
             if ($Timestamp) {
                 $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
             } else {
@@ -922,7 +922,11 @@ function Export-ToCsvFile {
         [Switch]$UseCulture = $false
     )
     $Skip = if (Test-Path $FilePath) {1} else {0}
-    $InputObject | ConvertTo-Csv -NoTypeInformation -UseCulture:$UseCulture -ErrorAction Ignore | Select-Object -Skip $Skip | Write-ToFile -FilePath $FilePath -Append
+    if ($UseCulture) {
+        $InputObject | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore | Select-Object -Skip $Skip | Write-ToFile -FilePath $FilePath -Append
+    } else {
+        $InputObject | ConvertTo-Csv -NoTypeInformation -ErrorAction Ignore | Select-Object -Skip $Skip | Write-ToFile -FilePath $FilePath -Append
+    }
 }
 
 function Set-Stat {
