@@ -677,25 +677,20 @@ function Set-Total {
         if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Could not write to $($PathCsv_Name) "}
     }
 
-    $Stat = Get-Stat $Path -NameIsPath
+    $Stat = Get-ContentByStreamReader $Path
 
-    if ($Stat) {
-        try {
-            if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
-            $Stat.Duration  += $Duration.TotalMinutes
-            $Stat.Cost      += $TotalCost
-            $Stat.Profit    += $TotalProfit
-            $Stat.ProfitApi += $TotalProfitApi
-            $Stat.Power     += $TotalPower
-            $Stat.Updated    = $Updated_UTC
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
-            $Stat = $null
-        }
-    }
-
-    if ($Stat -eq $null) {
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
+        if ($Stat.ProfitApi -eq $null) {$Stat | Add-Member ProfitApi 0 -Force}
+        $Stat.Duration  += $Duration.TotalMinutes
+        $Stat.Cost      += $TotalCost
+        $Stat.Profit    += $TotalProfit
+        $Stat.ProfitApi += $TotalProfitApi
+        $Stat.Power     += $TotalPower
+        $Stat.Updated    = $Updated_UTC
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Totals file ($Path_Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     Pool          = $Miner.Pool[0]
                     Duration      = $Duration.TotalMinutes
@@ -709,7 +704,7 @@ function Set-Total {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | Set-StatCache -Path $Path
+    $Stat | ConvertTo-Json | Set-Content $Path
 }
 
 function Set-TotalsAvg {
@@ -729,7 +724,7 @@ function Set-TotalsAvg {
     $Totals = [PSCustomObject]@{}
     Get-ChildItem "Stats\Totals" -Filter "*_TotalAvg.txt" | Foreach-Object {
         $PoolName = $_.BaseName -replace "_TotalAvg"
-        $Started = (Get-Stat $_.FullName -NameIsPath).Started
+        $Started = (Get-ContentByStreamReader $_.FullName | ConvertFrom-Json -ErrorAction Ignore).Started
         $Totals | Add-Member $PoolName ([PSCustomObject]@{
                             Pool          = $PoolName
                             Cost_1d       = 0
@@ -788,7 +783,7 @@ function Set-TotalsAvg {
                 }
 
                 if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-                $_.Value | Set-StatCache -Path "$Path0/$($_.Name)_TotalAvg.txt"
+                $_.Value | ConvertTo-Json -Depth 10 | Set-Content "$Path0/$($_.Name)_TotalAvg.txt" -Force
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
             }
@@ -814,91 +809,87 @@ function Set-Balance {
     $Path0 = "Stats\Balances"
     $Path = "$Path0\$($Name).txt"
 
+    $Stat = Get-ContentByStreamReader $Path
+
     $Balance_Total = [Decimal]$Balance.Balance
     $Balance_Paid  = [Decimal]$Balance.Paid
 
-    $Stat = Get-Stat $Path -NameIsPath
+    try {
+        $Stat = $Stat | ConvertFrom-Json -ErrorAction Stop
 
-    if ($Stat) {
-        try {
-            $Stat = [PSCustomObject]@{
-                        PoolName = $Balance.Name
-                        Currency = $Balance.Currency
-                        Balance  = [Decimal]$Stat.Balance
-                        Paid     = [Decimal]$Stat.Paid
-                        Earnings = [Decimal]$Stat.Earnings
-                        Earnings_1h   = [Decimal]$Stat.Earnings_1h
-                        Earnings_1d   = [Decimal]$Stat.Earnings_1d
-                        Earnings_1w   = [Decimal]$Stat.Earnings_1w
-                        Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
-                        Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object)
-                        Started  = [DateTime]$Stat.Started
-                        Updated  = [DateTime]$Stat.Updated
-            }
-
-            if ($Balance.Paid -ne $null) {
-                $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
-            } else {
-                $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
-                if ($Earnings -lt 0) {$Earnings = $Balance_Total}
-            }
-
-            if ($Earnings -gt 0) {
-                $Stat.Balance   = $Balance_Total
-                $Stat.Paid      = $Balance_Paid
-                $Stat.Earnings += $Earnings
-                $Stat.Updated   = $Updated_UTC
-
-                $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
-
-                $Rate = [Decimal]$Session.Rates."$($Balance.Currency)"
-                if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-            
-                $CsvLine = [PSCustomObject]@{
-                    Date      = $Updated
-                    Date_UTC  = $Updated_UTC
-                    PoolName  = $Balance.Name
-                    Currency  = $Balance.Currency
-                    Rate      = $Rate
-                    Balance   = $Stat.Balance
-                    Paid      = $Stat.Paid
-                    Earnings  = $Stat.Earnings
-                    Value     = $Earnings
-                    Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
-                    Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
-                    Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
-                    Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
-                }
-                $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
-                $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
-                $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
-                Remove-Variable "CsvLine" -Force
-            }
-
-            $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
-
-            $Stat.Earnings_1h = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
-            $Stat.Earnings_1d = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
-            $Stat.Earnings_1w = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
-
-            if ($Stat.Earnings_1w) {
-                $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
-                if ($Duration -gt 1) {
-                    $Stat.Earnings_Avg = [Decimal](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
-                } else {
-                    $Stat.Earnings_Avg = $Stat.Earnings_1d
-                }
-            } else {
-                $Stat.Earnings_Avg = 0
-            }
-        } catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-            if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
-            $Stat = $null
+        $Stat = [PSCustomObject]@{
+                    PoolName = $Balance.Name
+                    Currency = $Balance.Currency
+                    Balance  = [Decimal]$Stat.Balance
+                    Paid     = [Decimal]$Stat.Paid
+                    Earnings = [Decimal]$Stat.Earnings
+                    Earnings_1h   = [Decimal]$Stat.Earnings_1h
+                    Earnings_1d   = [Decimal]$Stat.Earnings_1d
+                    Earnings_1w   = [Decimal]$Stat.Earnings_1w
+                    Earnings_Avg  = [Decimal]$Stat.Earnings_Avg
+                    Last_Earnings = @($Stat.Last_Earnings | Foreach-Object {[PSCustomObject]@{Date = [DateTime]$_.Date;Value = [Decimal]$_.Value}} | Select-Object)
+                    Started  = [DateTime]$Stat.Started
+                    Updated  = [DateTime]$Stat.Updated
         }
-    }
 
-    if ($Stat -eq $null) {
+        if ($Balance.Paid -ne $null) {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance + $Balance_Paid - $Stat.Paid)
+        } else {
+            $Earnings = [Decimal]($Balance_Total - $Stat.Balance)
+            if ($Earnings -lt 0) {$Earnings = $Balance_Total}
+        }
+
+        if ($Earnings -gt 0) {
+            $Stat.Balance   = $Balance_Total
+            $Stat.Paid      = $Balance_Paid
+            $Stat.Earnings += $Earnings
+            $Stat.Updated   = $Updated_UTC
+
+            $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
+
+            $Rate = [Decimal]$Session.Rates."$($Balance.Currency)"
+            if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
+            
+            $CsvLine = [PSCustomObject]@{
+                Date      = $Updated
+                Date_UTC  = $Updated_UTC
+                PoolName  = $Balance.Name
+                Currency  = $Balance.Currency
+                Rate      = $Rate
+                Balance   = $Stat.Balance
+                Paid      = $Stat.Paid
+                Earnings  = $Stat.Earnings
+                Value     = $Earnings
+                Balance_Sat = if ($Rate -gt 0) {[int64]($Stat.Balance / $Rate * 1e8)} else {0}
+                Paid_Sat  = if ($Rate -gt 0) {[int64]($Stat.Paid  / $Rate * 1e8)} else {0}
+                Earnings_Sat = if ($Rate -gt 0) {[int64]($Stat.Earnings / $Rate * 1e8)} else {0}
+                Value_Sat  = if ($Rate -gt 0) {[int64]($Earnings  / $Rate * 1e8)} else {0}
+            }
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
+            $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
+            $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
+            Remove-Variable "CsvLine" -Force
+        }
+
+        $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
+
+        $Stat.Earnings_1h = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddHours(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1d = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-1)) | Measure-Object -Property Value -Sum).Sum
+        $Stat.Earnings_1w = [Decimal]($Stat.Last_Earnings | Where-Object Date -ge ($Updated_UTC.AddDays(-7)) | Measure-Object -Property Value -Sum).Sum
+
+        if ($Stat.Earnings_1w) {
+            $Duration = ($Updated_UTC - ($Stat.Last_Earnings | Select-Object -First 1).Date).TotalDays
+            if ($Duration -gt 1) {
+                $Stat.Earnings_Avg = [Decimal](($Stat.Last_Earnings | Measure-Object -Property Value -Sum).Sum / $Duration)
+            } else {
+                $Stat.Earnings_Avg = $Stat.Earnings_1d
+            }
+        } else {
+            $Stat.Earnings_Avg = 0
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        if (Test-Path $Path) {Write-Log -Level $(if ($Quiet) {"Info"} else {"Warn"}) "Balances file ($Name) is corrupt and will be reset. "}
         $Stat = [PSCustomObject]@{
                     PoolName = $Balance.Name
                     Currency = $Balance.Currency
@@ -916,7 +907,8 @@ function Set-Balance {
     }
 
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
-    $Stat | Set-StatCache -Path $Path -PassThru
+    $Stat | ConvertTo-Json -Depth 10 | Set-Content $Path
+    $Stat
 }
 
 function Export-ToCsvFile {
