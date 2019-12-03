@@ -16,11 +16,13 @@
   data-show-refresh="true"
   data-icons-prefix="fa"
   data-icons="icons"
+  data-checkbox-header="false"
   data-detail-view="true"
   data-detail-formatter="detailFormatter"
 >
   <thead>
       <tr>
+          <th data-field="tEnabled" data-align="center" data-sortable="true" data-formatter="formatEnable">On/Off</th>
           <th data-field="Name" data-sortable="true" data-filter-control="select">Pool</th>
           <th data-field="tAlgorithm" data-sortable="true" data-filter-control="select">Algorithm</th>
           <th data-field="tCoin" data-sortable="true" data-filter-control="select">Coin</th>
@@ -37,18 +39,56 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+    var $table = $('table#pools')
+
     $(function () {
         function refreshTable() {
             if (!$("table#pools tr.detail-view").length) $("table#pools").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 10000);
+            window.setTimeout(refreshTable, 60000);
         }
-        window.setTimeout(refreshTable, 10000);
+        window.setTimeout(refreshTable, 60000);
+
+        $table.on('load-success.bs.table', function (e, data) {
+            $.getJSON("/disabled", function (disabled) {
+                $.each(data, function (index, item) {
+                    var algo = item.CoinSymbol? item.CoinSymbol : item.Algorithm.split(/-/)[0]
+                    var name = item.Name + '_' + algo + '_Profit'
+                    var disable = disabled.indexOf(name) > -1
+                    if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
+                    else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
+                })
+            })
+        })
+        $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
+            event.preventDefault();
+            var data = $table.bootstrapTable('getData')
+            var index = parseInt($(this).attr("id").split(/-/)[1])
+            $.getJSON("/action/togglepool?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].Algorithm.split(/-/)[0]) + "&coinsymbol=" + encodeURIComponent(data[index].CoinSymbol), function (res) {
+                if (res.Status) {
+                    $.each(data, function (index2, item) {
+                        if (item.Name == data[index].Name && item.Algorithm == data[index].Algorithm && item.CoinSymbol == data[index].CoinSymbol) {
+                            $table.bootstrapTable('updateCell', { index: index2, field: 'tEnabled', value: !res.Disabled, reinit: false })
+                        }
+                    })
+                }
+            })
+        })
     });
+
+    function formatEnable(value, item, index) {
+        return [
+                    '<div class="custom-control custom-switch">',
+                    '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
+                    '<label class="custom-control-label" for="switch-' + index + '"></label>',
+                    '</div>'
+        ].join('')
+    }
 
     function formatPools(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
+            item.tEnabled = !item.Disabled
             item.tAlgorithm = formatAlgorithm(item.Algorithm);
             item.tCoin = item.Name == "MiningRigRentals" ? item.CoinName : item.CoinSymbol;
             item.tErrorRatio = typeof item.ErrorRatio != "undefined"? parseFloat(item.ErrorRatio).toFixed(3) : "-";

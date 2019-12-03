@@ -271,6 +271,10 @@
                     $Data = ConvertTo-Json @($API.FastestMiners | Select-Object)
                     Break
                 }
+                "/disabled" {
+                    $Data = ConvertTo-Json @((Get-Stat -Disabled).Keys | Select-Object)
+                    Break
+                }
                 "/getwtmurls" {
                     $WTMdata = Get-WhatToMineData
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
@@ -763,6 +767,46 @@
                 }
                 "/clients" {
                     $Data = ConvertTo-Json @($Clients | Select-Object)
+                    Break
+                }
+                "/action/toggleminer" {
+                    $status = $false
+                    if ($Parameters.name -and $Parameters.algorithm -and $Parameters.devicemodel) {
+                        $status = $true
+                        $count = 0
+                        $Vendor = $Session.DevicesToVendors[$Parameters.devicemodel]
+                        $Parameters.algorithm -split '-' | Foreach-Object {
+                            $Name = "$Vendor-$($Parameters.name)_$($_ -replace '-.+$')_HashRate.txt"
+                            Get-ChildItem ".\Stats\Disabled\$Name" -ErrorAction Ignore | Foreach-Object {Remove-Item $_ -ErrorAction Ignore;$count++}
+                        }
+                        if ($count) {$disabled = $false}
+                        else {
+                            $Parameters.algorithm -split '-' | Foreach-Object {
+                                $Name = "$Vendor-$($Parameters.name)_$($_ -replace '-.+$')_HashRate.txt"
+                                if (Test-Path ".\Stats\Miners\$Name") {Copy-Item ".\Stats\Miners\$Name" ".\Stats\Disabled\$Name" -Force}
+                                else {Set-ContentJson -PathToFile ".\Stats\Disabled\$Name" -Data ([PSCustomObject]@{DisabledWhen=(Get-Date).ToUniversalTime()}) -Compress > $null}
+                                $disabled = $true
+                            }
+                        }
+                    }
+                    $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}})
+                    Break
+                }
+                "/action/togglepool" {
+                    $status = $false
+                    if ($Parameters.name -and ($Parameters.algorithm -or $Parameters.coinsymbol)) {
+                        $status = $true
+                        $count = 0
+                        $Name = "$($Parameters.name)_$(if ($Parameters.coinsymbol) {$Parameters.coinsymbol} else {$Parameters.algorithm})_Profit.txt"
+                        Get-ChildItem ".\Stats\Disabled\$Name" -ErrorAction Ignore | Foreach-Object {Remove-Item $_.FullName -Force;$count++}
+                        if ($count) {$disabled = $false}
+                        else {
+                            if (Test-Path ".\Stats\Pools\$Name") {Copy-Item ".\Stats\Pools\$Name" ".\Stats\Disabled\$Name" -Force}
+                            else {Set-ContentJson -PathToFile ".\Stats\Disabled\$Name" -Data ([PSCustomObject]@{DisabledWhen=(Get-Date).ToUniversalTime()}) -Compress > $null}
+                            $disabled = $true
+                        }
+                    }
+                    $Data = ConvertTo-Json $(if ($status) {[PSCustomObject]@{Status=$status;Disabled=$disabled}} else {[PSCustomObject]@{Status=$status}})
                     Break
                 }
                 "/getconfig" {

@@ -1014,6 +1014,8 @@ function Invoke-Core {
     Write-Log "Loading saved statistics. "
 
     [hashtable]$Session.Stats = Get-Stat -Miners
+    [hashtable]$Disabled      = Get-Stat -Disabled
+
     $API.Stats = $Session.Stats
 
     #Load information about the pools
@@ -1030,7 +1032,7 @@ function Invoke-Core {
             $SelectedPoolNames += $_
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
-            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio
+            Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio -Disabled $Disabled
             $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
             Write-Log "$($_) loaded in $($TimerPools[$_])s "
@@ -1139,7 +1141,7 @@ function Invoke-Core {
 
     #Apply watchdog to pools, only if there is more than one pool selected
     if (($Script:AllPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
-        $Script:AllPools = $Script:AllPools | Where-Object {
+        $Script:AllPools = $Script:AllPools | Where-Object {-not $_.Disabled} | Where-Object {
             $Pool = $_
             $Pool_WatchdogTimers = $Session.WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
             $Pool.Exclusive -or (($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2)
@@ -1386,6 +1388,7 @@ function Invoke-Core {
             Profit_Bias   = 0.0
             Profit_Unbias = 0.0
             Profit_Cost   = 0.0
+            Disabled      = $false
         }
 
         if ($Miner.DevFee -eq $null -or $Miner.DevFee -isnot [PSCustomObject]) {$Miner_Setup.DevFee = if ($Miner_AlgoNames.Count -eq 1) {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee}} else {[PSCustomObject]@{$Miner_AlgoNames[0] = $Miner.DevFee;$Miner_AlgoNames[1] = 0}}}
@@ -1490,11 +1493,13 @@ function Invoke-Core {
                 $Miner.Ratios[$_]         = $null
                 $NoResult = $true
             } else {
+                $Miner_Name = "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate"
                 $Miner_DevFeeFactor = (1-$Miner.DevFee.$_/100)
                 if ($Miner.Penalty) {$Miner_DevFeeFactor -= [Double]$(if (@("Hashtable","PSCustomObject") -icontains $Miner.Penalty.GetType().Name) {$Miner.Penalty.$_} else {$Miner.Penalty})/100;if ($Miner_DevFeeFactor -lt 0){$Miner_DevFeeFactor=0}}
+                if (-not $Miner.Disabled -and $Disabled.ContainsKey($Miner_Name)) {$Miner.Disabled = $true}
                 $Miner.HashRates.$_       = [Double]$Miner.HashRates.$_
-                $Miner.Difficulties[$_]   = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Diff_Average)
-                $Miner.Ratios[$_]         = ([Double]$Session.Stats."$($Miner.Name)_$($_ -replace '\-.*$')_HashRate".Ratio_Live)
+                $Miner.Difficulties[$_]   = ([Double]$Session.Stats.$Miner_Name.Diff_Average)
+                $Miner.Ratios[$_]         = ([Double]$Session.Stats.$Miner_Name.Ratio_Live)
                 $Miner_Profits[$_]        = ([Double]$Miner.HashRates.$_ * $Pools.$_.Price * $Miner_DevFeeFactor)
                 $Miner_Profits_Bias[$_]   = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Bias+1e-32) * $Miner_DevFeeFactor)
                 $Miner_Profits_Unbias[$_] = ([Double]$Miner.HashRates.$_ * ($Pools.$_.Price_Unbias+1e-32) * $Miner_DevFeeFactor)
@@ -1580,6 +1585,7 @@ function Invoke-Core {
     Remove-Variable "AllMiners_VersionCheck" -Force
     Remove-Variable "AllMiners_VersionDate" -Force
     Remove-Variable "Miners_DownloadList" -Force
+    Remove-Variable "Disabled" -Force
     $Session.Stats = $null
 
     #Open firewall ports for all miners
@@ -1620,8 +1626,8 @@ function Invoke-Core {
     #Give API access to the miners information
     $API.Miners = $Miners
 
-    #Remove all failed miners
-    $Miners = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -notcontains 0}
+    #Remove all failed and disabled miners
+    $Miners = $Miners | Where-Object {-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0}
 
     #Use only use fastest miner per algo and device index. E.g. if there are 2 miners available to mine the same algo, only the faster of the two will ever be used, the slower ones will also be hidden in the summary screen
     if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}

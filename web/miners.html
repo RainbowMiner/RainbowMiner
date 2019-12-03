@@ -16,11 +16,13 @@
        data-show-refresh="true"
        data-icons-prefix="fa"
        data-icons="icons"
+       data-checkbox-header="false"
        data-detail-view="true"
        data-detail-formatter="detailFormatter">
     <thead>
         <tr>
-            <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Name</th>
+            <th data-field="tEnabled" data-align="center" data-sortable="true" data-formatter="formatEnable">On/Off</th>
+            <th data-field="Name" data-sortable="true" data-filter-control="select" data-filter-strict-search="true" data-formatter="formatName">Name</th>
             <th data-field="tDevices" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">Devices</th>
             <th data-field="tOC" data-sortable="true" data-filter-control="select" data-filter-strict-search="true">OC</th>
             <th data-field="Profit" data-align="right" data-sortable="true" data-formatter="formatPricesBTC">Profit</th>
@@ -38,12 +40,48 @@
 
 <!-- End of page scripts -->
 <script type="text/javascript">
+    var $table = $('table#miners')
+
+    /*
+    $table.on('all.bs.table', function (e, name, args) {
+        console.log(name, args)
+    })
+    */
+
+
     $(function () {
         function refreshTable() {            
             if (!$("table#miners tr.detail-view").length) $("table#miners").bootstrapTable("refresh", { silent: true });
-            window.setTimeout(refreshTable, 10000);
+            window.setTimeout(refreshTable, 30000);
         }
-        window.setTimeout(refreshTable, 10000);
+        //window.setTimeout(refreshTable, 30000);
+
+        $table.on('load-success.bs.table', function (e, data) {
+            $.getJSON("/disabled", function (disabled) {
+                $.each(data, function (index, item) {
+                    var algos = item.BaseAlgorithm.split(/-/)
+                    var disable = false
+                    if (disabled.length) {
+                        for (i = 0; !disable && i < algos.length; i++) {
+                            var name = item.Name + '_' + algos[i] + '_HashRate'
+                            if (disabled.indexOf(name) > -1) { disable = true }
+                        }
+                    }
+                    if (disable && item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: false, reinit: false }) }
+                    else if (!disable && !item.tEnabled) { $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: true, reinit: false }) }
+                })
+            })
+        })
+        $table.on("change", "input[type='checkbox'].enable-switch", function (event) {
+            event.preventDefault();
+            var data = $table.bootstrapTable('getData')
+            var index = parseInt($(this).attr("id").split(/-/)[1])
+            $.getJSON("/action/toggleminer?name=" + encodeURIComponent(data[index].Name) + "&algorithm=" + encodeURIComponent(data[index].BaseAlgorithm) + "&devicemodel=" + encodeURIComponent(data[index].DeviceModel), function (res) {
+                if (res.Status) {
+                    $table.bootstrapTable('updateCell', { index: index, field: 'tEnabled', value: !res.Disabled, reinit: false })
+                }
+            })
+        })
     });
 
     function formatBTCEff(data) {
@@ -52,16 +90,30 @@
         return value.toFixed(2).toString();
     }
 
+    function formatEnable(value, item, index) {
+        return [
+                    '<div class="custom-control custom-switch">',
+                    '<input type="checkbox" class="custom-control-input enable-switch" id="switch-' + index + '"' + (value ? ' checked' : '') + '>',
+                    '<label class="custom-control-label" for="switch-' + index + '"></label>',
+                    '</div>'
+        ].join('')
+    }
+
+    function formatName(value, item, index) {
+        var Name = item.Name.split(/\-/)[0];
+        if (item.ManualUri && item.ManualUri.toString() != '') {
+            Name = '<a href="' + item.ManualUri.toString() + '" target="_blank" title="Official miner page">' + Name + '</a>';
+        }
+        return Name
+    }
+
     function formatMiners(data) {
         // This function can alter the returned data before building the table, formatting it in a way
         // that is easier to display and manipulate in a table
         $.each(data, function (index, item) {
             // Format the device(s)
+            item.tEnabled = !item.Disabled
             item.tDevices = item.DeviceModel.toString();
-            item.Name = item.Name.split(/\-/)[0];
-            if (item.ManualUri && item.ManualUri.toString() != '') {
-                item.Name = '<a href="'+item.ManualUri.toString()+'" target="_blank" title="Official miner page">'+item.Name+'</a>';
-            }
 
             // Format the algorithms and hashrates
             var algorithms = Object.keys(item.HashRates);

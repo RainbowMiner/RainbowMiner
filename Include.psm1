@@ -1395,6 +1395,8 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Miners = $false,
         [Parameter(Mandatory = $false)]
+        [Switch]$Disabled = $false,
+        [Parameter(Mandatory = $false)]
         [Switch]$Totals = $false,
         [Parameter(Mandatory = $false)]
         [Switch]$TotalAvgs = $false,
@@ -1427,19 +1429,22 @@ function Get-Stat {
         [hashtable]$Stats = @{}
 
         if (($Miners -or $All) -and -not (Test-Path "Stats\Miners")) {New-Item "Stats\Miners" -ItemType "directory" > $null}
+        if (($Disabled -or $All) -and -not (Test-Path "Stats\Disabled")) {New-Item "Stats\Disabled" -ItemType "directory" > $null}
         if (($Pools  -or $All) -and -not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
         $Match = @()
         if ($Miners)    {$Match += "Hashrate";$Path = "Stats\Miners"}
+        if ($Disabled)  {$Match += "Hashrate|Profit";$Path = "Stats\Disabled"}
         if ($Pools)     {$Match += "Profit";$Path = "Stats\Pools"}
         if ($Totals)    {$Match += "Total";$Path = "Stats\Totals"}
         if ($TotalAvgs) {$Match += "TotalAvg";$Path = "Stats\Totals"}
         if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
         if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"}
 
-        $MatchStr = if ($Match.Count -gt 1) {"($($Match -join "|"))"} else {$Match}
+        $MatchStr = if ($Match.Count -gt 1) {$Match -join "|"} else {$Match}
+        if ($MatchStr -match "|") {$MatchStr = "($MatchStr)"}
 
         foreach($p in (Get-ChildItem -Recurse $Path -File -Filter "*.txt")) {
             $BaseName = $p.BaseName
@@ -1592,7 +1597,9 @@ function Get-PoolsContent {
         [Parameter(Mandatory = $false)]
         [Bool]$IgnoreFees = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$EnableErrorRatio = $false
+        [Switch]$EnableErrorRatio = $false,
+        [Parameter(Mandatory = $false)]
+        [Hashtable]$Disabled = $null
     )
         
     Get-ChildItem "Pools\$($PoolName).ps1" -File -ErrorAction Ignore | ForEach-Object {
@@ -1618,6 +1625,9 @@ function Get-PoolsContent {
                 $Pool.StablePrice *= $Pool_Factor
                 $Pool.Penalty = $Penalty
                 $Pool.PenaltyFactor = $Pool_Factor
+                if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($Pool.CoinSymbol) {$Pool.CoinSymbol} else {$Pool.Algorithm})_Profit")) {
+                    $Pool | Add-Member Disabled $true -Force
+                }
             }
             $Pool
         }
