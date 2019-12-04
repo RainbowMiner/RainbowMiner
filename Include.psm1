@@ -3489,6 +3489,7 @@ function Update-DeviceInformation {
                             } catch {
                                 if ($Error.Count){$Error.RemoveAt(0)}
                             }
+
                             if ($Rocm) {
                                 $DeviceId = 0
 
@@ -3496,9 +3497,9 @@ function Update-DeviceInformation {
                                     $Data = $_.Value
                                     $Card = [int]($_.Name -replace "[^\d]")
                                     $Devices | Where-Object {$_.CardId -eq $Card -or ($_.CardId -eq -1 -and $_.Type_Vendor_Index -eq $DeviceId)} | Foreach-Object {
-                                        $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature"} | Select-Object -ExpandProperty Value)
-                                        $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -ExpandProperty Value)
-                                        $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -ExpandProperty Value)
+                                        $_.Data.Temperature       = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Temperature" -and $_.Name -notmatch "junction"} | Foreach-Object {[decimal]$_.Value} | Measure-Object -Average).Average
+                                        $_.Data.PowerDraw         = [decimal]($Data.PSObject.Properties | Where-Object {$_.Name -match "Power"} | Select-Object -First 1 -ExpandProperty Value)
+                                        $_.Data.FanSpeed          = [int]($Data.PSObject.Properties | Where-Object {$_.Name -match "Fan.+%"} | Select-Object -First 1 -ExpandProperty Value)
                                         $_.Data.Method            = "rocm"
 
                                         $_.DataMax.Temperature = [Math]::Max([decimal]$_.DataMax.Temperature,$_.Data.Temperature)
