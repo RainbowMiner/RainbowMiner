@@ -9,15 +9,15 @@ if (-not $IsWindows) {return}
 
 $UriCuda = @(
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7-fireice/xmr-stak-win64-2.10.7-rbm-cuda10.1.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.8-fireice/xmr-stak-win64-2.10.8-cuda10.1.7z"
         Cuda = "10.1"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7-fireice/xmr-stak-win64-2.10.7-rbm-cuda10.0.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.8-fireice/xmr-stak-win64-2.10.8-cuda10.0.7z"
         Cuda = "10.0"
     },
     [PSCustomObject]@{
-        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7-fireice/xmr-stak-win64-2.10.7-rbm-cuda9.0.7z"
+        Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.8-fireice/xmr-stak-win64-2.10.8-cuda9.0.7z"
         Cuda = "9.0"
     }
 )
@@ -25,7 +25,7 @@ $Path = ".\Bin\CryptoNight-FireIce250\xmr-stak.exe"
 $DevFee = 0.0
 $Port = "309{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
-$Version = "2.10.7"
+$Version = "2.10.8"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 

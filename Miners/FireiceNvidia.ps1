@@ -8,12 +8,12 @@ param(
 if (-not $IsLinux) {return}
 
 $Path = ".\Bin\NVIDIA-FireIce\xmr-stak"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7-fireice/xmr-stak-linux-2.10.7-cpu_cuda-nvidia.tar.xz"
-$DevFee = 1.0
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.8-fireice/xmr-stak-linux-2.10.8-cpu_cuda-nvidia.tar.xz"
+$DevFee = 2.0
 $Port = "343{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $Cuda = "9.0"
-$Version = "2.10.7"
+$Version = "2.10.8"
 
 if (-not $Session.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No GPU present in system
 

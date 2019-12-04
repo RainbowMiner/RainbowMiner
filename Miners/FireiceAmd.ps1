@@ -8,11 +8,11 @@ param(
 if (-not $IsLinux) {return}
 
 $Path = ".\Bin\AMD-FireIce\xmr-stak"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.7-fireice/xmr-stak-linux-2.10.7-cpu_opencl-amd.tar.xz"
-$DevFee = 1.0
+$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v2.10.8-fireice/xmr-stak-linux-2.10.8-cpu_opencl-amd.tar.xz"
+$DevFee = 2.0
 $Port = "341{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
-$Version = "2.10.7"
+$Version = "2.10.8"
 
 if (-not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
