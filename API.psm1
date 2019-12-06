@@ -505,6 +505,10 @@
                     Remove-Variable "SessionVars"
                     Break
                 }
+                "/gc" {
+                    $Data = ConvertTo-Json $Session.GC -Depth 10
+                    Break
+                }
                 "/watchdogtimers" {
                     $Data = ConvertTo-Json @($API.WatchdogTimers | Select-Object)
                     Break

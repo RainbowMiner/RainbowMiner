@@ -7119,8 +7119,8 @@ function Get-MinerInstPath {
     )
     if ($Path -match "^(\.[/\\]Bin[/\\][^/\\]+)") {$Matches[1]}
     else {
-        if ($Session.GC.MinersInstallationPath -eq $null) {$Session.GC.MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
-        if ($Path.StartsWith($Session.GC.MinersInstallationPath) -and $Path.Substring($Session.GC.MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Session.GC.MinersInstallationPath)$($Matches[1])"}
+        if ($Session.MinersInstallationPath -eq $null) {$Session.MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
+        if ($Path.StartsWith($Session.MinersInstallationPath) -and $Path.Substring($Session.MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Session.MinersInstallationPath)$($Matches[1])"}
         else {Split-Path $Path}
     }
 }
