@@ -140,12 +140,24 @@ param(
         }
 
         if (-not $Session.GC.MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $Session.GC.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+            $Session.GC.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
         }
     }
     if ($Raw) {$Session.GC.MRRCache[$keystr].request}
     else {
         if ($Session.GC.MRRCache[$keystr].request -and $Session.GC.MRRCache[$keystr].request.success) {$Session.GC.MRRCache[$keystr].request.data}
+    }
+
+    try {
+        if ($Session.GC.MRRCacheLastCleanup -eq $null -or $Session.GC.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
+            if ($RemoveKeys = $Session.GC.MRRCache.GetEnumerator() | Where-Object {-not $_.Value.cachetime -or $_.Value.last -lt (Get-Date).AddSeconds(-$_.Value.cachetime).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
+                $RemoveKeys | Foreach-Object {$Session.GC.MRRCache[$_] = $null; $Session.GC.MRRCache.Remove($_)}
+            }
+            $Session.GC.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+        }
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+        Write-Log -Level Info "MiningRigRental cache cleanup: $($_.Exception.Message)"
     }
 }
 
@@ -209,7 +221,7 @@ param(
         }
     }
 
-    if ($Rigs_Ids = $id | Where-Object {-not $Session.GC.MRRInfoCache.ContainsKey($_) -or $Session.GC.MRRInfoCache.$_.updated -lt (Get-Date).AddHours(-24).ToUniversalTime()}) {
+    if ($Rigs_Ids = $id | Where-Object {-not $Session.GC.MRRInfoCache.ContainsKey($_) -or $Session.GC.MRRInfoCache.$_.updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
         $Updated = 0
         @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $key $secret -Timeout 60 | Select-Object) | Foreach-Object {
             $Session.GC.MRRInfoCache[$_.rigid] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
