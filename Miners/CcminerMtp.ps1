@@ -8,7 +8,7 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
-    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer"
+    $Path = ".\Bin\NVIDIA-CcminerMTP\ccminer-linux-cuda"
     $UriCuda = @(
         [PSCustomObject]@{
             Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v1.3.1-ccminermtp/ccminermtp-v1.3.1-linux-cuda101.7z"
@@ -67,6 +67,8 @@ for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
     }
 }
 if (-not $Uri) {return}
+
+if ($IsLinux) {$Path += $Cuda -replace "\."}
 
 $Session.DevicesByTypes.NVIDIA | Select-Object Vendor, Model -Unique | ForEach-Object {
     $Device = $Session.DevicesByTypes."$($_.Vendor)" | Where-Object Model -EQ $_.Model
