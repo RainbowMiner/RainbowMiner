@@ -873,9 +873,8 @@
                                 try {
                                     $RatesUri = [System.Uri]$Parameters.url
                                     $RatesQry = [System.Web.HttpUtility]::ParseQueryString($RatesUri.Query)
-                                    if ($Session.GlobalGetTicker -isnot [array]) {$Session.GlobalGetTicker = @()}
-                                    Compare-Object $Session.GlobalGetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GlobalGetTicker += $_.InputObject.ToUpper()}
-                                    $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
+                                    Compare-Object $Session.GC.GetTicker @([System.Web.HttpUtility]::UrlDecode($RatesQry["symbols"]) -split ',' | Select-Object) | Where-Object {$_.SideIndicator -eq "=>" -and $_.InputObject} | Foreach-Object {$Session.GC.GetTicker += $_.InputObject.ToUpper()}
+                                    $SymbolStr = "$(($Session.GC.GetTicker | Sort-Object) -join ',')".ToUpper()
                                     $Parameters.url = "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)"
                                     Remove-Variable "RatesUri" -ErrorAction Ignore
                                     Remove-Variable "RatesQry" -ErrorAction Ignore

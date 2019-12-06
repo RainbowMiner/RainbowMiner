@@ -294,12 +294,12 @@ function Update-Rates {
 
     Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
-        elseif ($Session.GlobalGetTicker -inotcontains $_.InputObject) {$Session.GlobalGetTicker += $_.InputObject.ToUpper();$NewRatesFound = $true}
+        elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker += $_.InputObject.ToUpper();$NewRatesFound = $true}
     }
 
-    if ($NewRatesFound -and $Session.GlobalGetTicker.Count -gt 0) {
+    if ($NewRatesFound -and $Session.GC.GetTicker.Count -gt 0) {
         try {
-            $SymbolStr = "$(($Session.GlobalGetTicker | Sort-Object) -join ',')".ToUpper()
+            $SymbolStr = "$(($Session.GC.GetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
             if (-not $RatesAPI.status) {
                 Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
@@ -345,7 +345,7 @@ function Get-WhatToMineData {
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
                 Remove-Variable "WtmKeys"
-                if (Test-Path Variable:Global:WTMData) {Remove-Variable "WTMData" -Force -ErrorAction Ignore}
+                $Session.GC.WTMData = $null
             }
             if ($WtmUrl) {Remove-Variable "WtmUrl"}
         } catch {
@@ -355,11 +355,11 @@ function Get-WhatToMineData {
         }
     }
 
-    if (-not (Test-Path Variable:Global:WTMData)) {
-        $Global:WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
+    if ($Session.GC.WTMData -eq $null) {
+        $Session.GC.WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 
-    if (-not $Silent) {$Global:WTMData}
+    if (-not $Silent) {$Session.GC.WTMData}
 }
 
 function Get-WhatToMineUrl {
@@ -380,8 +380,8 @@ function Get-WhatToMineFactor {
         [int]$Factor = 10
     )
     if ($Algo) {
-        if (-not (Test-Path Variable:Global:WTMData)) {Get-WhatToMineData -Silent}
-        $Global:WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
+        if ($Session.GC.WTMData -eq $null) {Get-WhatToMineData -Silent}
+        $Session.GC.WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
     }
 }
 
@@ -3661,9 +3661,9 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {Get-Algorithms -Silent}
+        if ($Session.GC.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-        if ($Global:GlobalAlgorithms.ContainsKey($Algorithm)) {$Global:GlobalAlgorithms[$Algorithm]} else {$Algorithm}
+        if ($Session.GC.Algorithms.ContainsKey($Algorithm)) {$Session.GC.Algorithms[$Algorithm]} else {$Algorithm}
     }
 }
 
@@ -3693,8 +3693,8 @@ function Get-MappedAlgorithm {
         $Algorithm
     )
     if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
-    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
-    $Algorithm | Foreach-Object {if ($Global:GlobalAlgorithmMap.ContainsKey($_)) {$Global:GlobalAlgorithmMap[$_]} else {$_}}
+    if ($Session.GC.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
+    $Algorithm | Foreach-Object {if ($Session.GC.AlgorithmMap.ContainsKey($_)) {$Session.GC.AlgorithmMap[$_]} else {$_}}
 }
 
 function Get-AlgorithmMap {
@@ -3703,13 +3703,13 @@ function Get-AlgorithmMap {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalAlgorithmMap) -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmMapTimeStamp) {
-        [hashtable]$Global:GlobalAlgorithmMap = @{}
-        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithmMap[$_.Name]=$_.Value}
-        $Global:GlobalAlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
+    if ($Session.GC.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmMapTimeStamp) {
+        [hashtable]$Session.GC.AlgorithmMap = @{}
+        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.AlgorithmMap[$_.Name]=$_.Value}
+        $Session.GC.AlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        $Global:GlobalAlgorithmMap
+        $Session.GC.AlgorithmMap
     }
 }
 
@@ -3766,14 +3766,14 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalAlgorithms) -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalAlgorithmsTimeStamp) {
-        [hashtable]$Global:GlobalAlgorithms = @{}
-        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalAlgorithms[$_.Name]=$_.Value}
-        $Global:GlobalAlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
+    if ($Session.GC.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmsTimeStamp) {
+        [hashtable]$Session.GC.Algorithms = @{}
+        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Algorithms[$_.Name]=$_.Value}
+        $Session.GC.AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Global:GlobalAlgorithms.Values | Select-Object -Unique | Sort-Object}
-        else {$Global:GlobalAlgorithms.Keys | Sort-Object}
+        if ($Values) {$Session.GC.Algorithms.Values | Select-Object -Unique | Sort-Object}
+        else {$Session.GC.Algorithms.Keys | Sort-Object}
     }
 }
 
@@ -7119,8 +7119,8 @@ function Get-MinerInstPath {
     )
     if ($Path -match "^(\.[/\\]Bin[/\\][^/\\]+)") {$Matches[1]}
     else {
-        if (-not (Test-Path Variable:Global:MinersInstallationPath)) {$Global:MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
-        if ($Path.StartsWith($Global:MinersInstallationPath) -and $Path.Substring($Global:MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Global:MinersInstallationPath)$($Matches[1])"}
+        if ($Session.GC.MinersInstallationPath -eq $null) {$Session.GC.MinersInstallationPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(".\Bin")}
+        if ($Path.StartsWith($Session.GC.MinersInstallationPath) -and $Path.Substring($Session.GC.MinersInstallationPath.Length) -match "^([/\\][^/\\]+)") {"$($Session.GC.MinersInstallationPath)$($Matches[1])"}
         else {Split-Path $Path}
     }
 }
@@ -7367,9 +7367,9 @@ param(
     if ($secret) {$secret = Get-ReadableHex32 $secret}
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
-    $keystr = Get-MD5Hash "$($endpoint)$($params | ConvertTo-Json -Depth 10 -Compress)"
-    if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]::Synchronized(@{})}
-    if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
+    if ($Session.GC.NHCache -eq $null) {$Session.GC.NHCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Session.GC.NHCache[$keystr] -or -not $Session.GC.NHCache[$keystr].request -or $Session.GC.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -7428,11 +7428,11 @@ param(
             }
         }
 
-        if (-not $Global:NHCache[$keystr] -or $Request) {
-            $Global:NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        if (-not $Session.GC.NHCache[$keystr] -or $Request) {
+            $Session.GC.NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    $Global:NHCache[$keystr].request
+    $Session.GC.NHCache[$keystr].request
 }
 
 function Get-WalletWithPaymentId {

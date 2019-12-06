@@ -86,6 +86,9 @@
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
         [hashtable]$Session.MinerInfo = @{}
+        [hashtable]$Session.GC        = @{}
+
+        $Session.GC.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
@@ -95,7 +98,6 @@
         $Session.DecayPeriod       = 60 #seconds
         $Session.DecayBase         = 1 - 0.1 #decimal percentage
 
-        $Session.GlobalGetTicker = @()
         $Session.RoundCounter = 0
 
         $Session.SkipSwitchingPrevention = $false
