@@ -25,9 +25,9 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
 
 [hashtable]$Pool_Algorithms = @{}
 
-$Wallets = $Pools | Where-Object {$_.Algorithm -notmatch '-'} | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
+$WTMWallets = $Pools | Where-Object {$_.Algorithm -notmatch '-'} | Foreach-Object {[PSCustomObject]@{Algorithm=$_.Algorithm;CoinSymbol=$_.CoinSymbol}} | Select-Object Algorithm,CoinSymbol -Unique
 
-$Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
+$Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
 $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.$_.tag} | ForEach-Object {
     $Pool_Currency   = $Pool_Request.$_.tag
@@ -37,9 +37,9 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
 
     $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
 
-    if ($Divisor -and ($Wallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
-        $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
         if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
             $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_Request.$_.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
@@ -58,7 +58,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
     }
 }
 
-if (-not ($Wallets | Measure-Object).Count) {return}
+if (-not ($WTMWallets | Measure-Object).Count) {return}
 
 $Pool_Request = [PSCustomObject]@{}
 try {
@@ -75,7 +75,7 @@ if (-not $Pool_Request -or ($Pool_Request.PSObject.Properties.Name | Measure-Obj
     return
 }
 
-$Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
+$Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
 $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $Pool_Request.$_.tag} | ForEach-Object {
     $Pool_Currency   = $Pool_Request.$_.tag
@@ -85,9 +85,9 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
 
     $Divisor = Get-WhatToMineFactor $Pool_Algorithm_Norm
 
-    if ($Divisor -and ($Wallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+    if ($Divisor -and ($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
-        $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
         $Pool_CoinRequest = [PSCustomObject]@{}
         try {
@@ -97,16 +97,17 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
         }
 
         if ($Pool_CoinRequest -and $Pool_CoinRequest.tag) {
-            if (-not [double]$Pool_CoinRequest.btc_revenue) {
+            $btc_revenue = [double]$Pool_CoinRequest.btc_revenue
+            if (-not $btc_revenue) {
                 $lastSatPrice = Get-LastSatPrice $Pool_CoinRequest.tag ([double]$Pool_CoinRequest.exchange_rate)
-                $Pool_CoinRequest | Add-Member btc_revenue ($lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards) -Force
+                $btc_revenue = $lastSatPrice * [double]$Pool_CoinRequest.estimated_rewards
             }
-            $Pool_CoinRequest | Add-Member btc_revenue24 $Pool_CoinRequest.btc_revenue
+            $btc_revenue24 = $btc_revenue
 
             if (Test-Path ".\Stats\Pools\$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit") {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue / $Divisor) -Duration $StatSpan -ChangeDetection $true -Quiet
             } else {
-                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ([Double]$Pool_CoinRequest.btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
+                $Stat = Set-Stat -Name "$($Name)_$($Pool_Algorithm_Norm)_$($Pool_Currency)_Profit" -Value ($btc_revenue24 / $Divisor) -Duration (New-TimeSpan -Days 1) -ChangeDetection $false -Quiet
             }
 
             [PSCustomObject]@{
@@ -121,7 +122,7 @@ $Pool_Request.PSObject.Properties.Name | Where-Object {$Pool_Coins -icontains $P
     }
 }
 
-if (-not ($Wallets | Measure-Object).Count) {return}
+if (-not ($WTMWallets | Measure-Object).Count) {return}
 
 $Pool_Request = @()
 try {
@@ -138,7 +139,7 @@ if (-not $Pool_Request -or ($Pool_Request | Measure-Object).Count -lt 10) {
     return
 }
 
-$Pool_Coins = @($Wallets.CoinSymbol | Select-Object)
+$Pool_Coins = @($WTMWallets.CoinSymbol | Select-Object)
 
 $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | ForEach-Object {
     $Pool_Currency   = $_.coin1
@@ -146,9 +147,9 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
     if (-not $Pool_Algorithms.ContainsKey($Pool_Algorithm)) {$Pool_Algorithms.$Pool_Algorithm = Get-Algorithm $Pool_Algorithm}
     $Pool_Algorithm_Norm = $Pool_Algorithms.$Pool_Algorithm
 
-    if (($Wallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
+    if (($WTMWallets | Where-Object {$_.Algorithm -eq $Pool_Algorithm_Norm -and $_.CoinSymbol -eq $Pool_Currency} | Measure-Object).Count) {
 
-        $Wallets = $Wallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
+        $WTMWallets = $WTMWallets | Where-Object {$_.Algorithm -ne $Pool_Algorithm_Norm -or $_.CoinSymbol -ne $Pool_Currency}
 
         $Pool_CoinRequest = [PSCustomObject]@{reward=$null;revenue=$null}
         try {
@@ -189,4 +190,4 @@ $Pool_Request | Where-Object {$Pool_Coins -eq $_.coin1 -and -not $_.coin2} | For
     }
 }
 
-if ($Wallets -ne $null) {Remove-Variable "Wallets"}
+if ($WTMWallets -ne $null) {Remove-Variable "WTMWallets"}
