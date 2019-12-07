@@ -11,11 +11,13 @@ class Xmrig3 : Miner {
         $Miner_Path        = Split-Path $this.Path
         $Parameters        = $Arguments | ConvertFrom-Json
 
-        $ConfigFN          = "config_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)_$($Parameters.Threads).json"
+        $ConfigName        = "$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)$(if ($Parameters.Affinity -ne $null) {"_$($Parameters.Affinity)"})_$($Parameters.Threads)"
+
+        $ConfigFN          = "config_$($ConfigName).json"
         $ThreadsConfigFN   = "threads_$($Parameters.HwSig).json"
         $ConfigFile        = Join-Path $Miner_Path $ConfigFN
         $ThreadsConfigFile = Join-Path $Miner_Path $ThreadsConfigFN
-        $LogFile           = "log_$($this.BaseAlgorithm -join '-')_$($Parameters.HwSig)_$($Parameters.Threads).txt"
+        $LogFile           = "log_$($ConfigName).txt"
 
         $Algo              = $Parameters.Algorithm
         $Algo0             = $Parameters.Algorithm -replace "/.+$"
