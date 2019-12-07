@@ -233,7 +233,7 @@ param(
 $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
-Init-Session
+Initialize-Session
 
 $Session.Version         = "4.4.8.4"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"

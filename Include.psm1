@@ -2,7 +2,7 @@
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
-function Init-Session {
+function Initialize-Session {
 
     Set-OsFlags
 

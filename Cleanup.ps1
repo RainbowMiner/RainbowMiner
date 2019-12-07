@@ -6,7 +6,7 @@ if ($script:MyInvocation.MyCommand.Path) {Set-Location (Split-Path $script:MyInv
 
 $SavedFiles = @("Start.bat")
 
-Init-Session
+Initialize-Session
 
 $DownloadsCleanup = $true
 $MinersConfigCleanup = $true
