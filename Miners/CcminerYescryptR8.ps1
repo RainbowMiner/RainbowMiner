@@ -11,7 +11,7 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-YesCryptR8\ccminer"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.tar.7z"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r17kotov2-ccminerklaust/ccminer-KlausT-8.21-mod-r17-koto-sapling-2.7z"
             Cuda = "9.1"
         }
     )
