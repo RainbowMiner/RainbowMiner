@@ -140,7 +140,7 @@ param(
         }
 
         if (-not $Session.GC.MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $Session.GC.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+            $Session.GC.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
     if ($Raw) {$Session.GC.MRRCache[$keystr].request}
@@ -150,7 +150,7 @@ param(
 
     try {
         if ($Session.GC.MRRCacheLastCleanup -eq $null -or $Session.GC.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Session.GC.MRRCache.GetEnumerator() | Where-Object {-not $_.Value.cachetime -or $_.Value.last -lt (Get-Date).AddSeconds(-$_.Value.cachetime).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
+            if ($RemoveKeys = $Session.GC.MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddHours(-1).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
                 $RemoveKeys | Foreach-Object {$Session.GC.MRRCache[$_] = $null; $Session.GC.MRRCache.Remove($_)}
             }
             $Session.GC.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
