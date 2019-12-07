@@ -2,6 +2,23 @@
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
+function Init-Session {
+
+    Set-OsFlags
+
+    if (-not (Test-Path Variable:Global:Session)) {
+        $Global:Session = [hashtable]::Synchronized(@{})
+        if ($Global:IsWindows) {
+            $Global:Session.WindowsVersion = [System.Environment]::OSVersion.Version
+        }
+        $Global:Session.IsAdmin            = Test-IsElevated
+        $Global:Session.MachineName        = [System.Environment]::MachineName
+    }
+    if ($Global:Session.GC -eq $null) {
+        [hashtable]$Global:Session.GC      = @{}
+    }
+}
+
 function Get-Version {
     [CmdletBinding()]
     param($Version)

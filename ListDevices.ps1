@@ -2,6 +2,8 @@
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
+Init-Session
+
 function Get-DeviceDebug {
     [CmdletBinding()]
     param(

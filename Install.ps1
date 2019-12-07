@@ -1,6 +1,6 @@
 ﻿using module .\Include.psm1
 
-Set-OsFlags
+Init-Session
 
 if ($MyInvocation.MyCommand.Path) {$Dir = (Split-Path $script:MyInvocation.MyCommand.Path);Set-Location $Dir}
 

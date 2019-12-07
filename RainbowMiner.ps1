@@ -233,16 +233,12 @@ param(
 $ForceFullCollection = $true
 $EnableMinerStatus = $true
 
-Set-OsFlags
+Init-Session
 
-$Global:Session        = [hashtable]::Synchronized(@{})
-
-$Session.Version         = "4.4.8.3"
+$Session.Version         = "4.4.8.4"
 $Session.MainWindowTitle = "RainbowMiner v$($Session.Version)"
 $Session.SetupOnly       = $SetupOnly
 $Session.LogLevel        = $LogLevel
-
-if ($IsWindows) {$Session.WindowsVersion = [System.Environment]::OSVersion.Version}
 
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 

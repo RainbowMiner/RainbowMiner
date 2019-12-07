@@ -86,7 +86,6 @@
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
         [hashtable]$Session.MinerInfo = @{}
-        [hashtable]$Session.GC        = @{}
 
         $Session.GC.GetTicker = @()
 
@@ -120,8 +119,6 @@
         $Session.ReportTotals = $false
         $Session.ReportMinerData = $false
         $Session.ReportPoolsData = $false
-        $Session.IsAdmin = Test-IsElevated
-        $Session.MachineName = [System.Environment]::MachineName
         $Session.TimeDiff = 0
 
         try {$Session.EnableColors = [System.Environment]::OSVersion.Version -ge (Get-Version "10.0") -and $PSVersionTable.PSVersion -ge (Get-Version "5.1")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.EnableColors = $false}
@@ -222,7 +219,7 @@
         try {
             #if linux and running as root re-install libraries and binaries
             if ($IsLinux -and (Test-Path ".\IncludesLinux\linux.updated") -and (Test-Path ".\install.sh")) {
-                if (Test-IsElevated) {
+                if ($Session.IsAdmin) {
                     Write-Host "Re-installing libraries and binaries .."
                     bash -c "./install.sh"
                 } else {
