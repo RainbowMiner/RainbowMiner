@@ -1033,7 +1033,7 @@ function Set-Stat {
                     Diff_Live          = [Double]$Stat.Diff_Live
                     Diff_Average       = [Double]$Stat.Diff_Average
                     Ratio_Live         = [Double]$Stat.Ratio_Live
-                    Ratio_Average      = [Double]$Stat.Ratio_Average
+                    #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
             }
             "Pools" {
@@ -1156,7 +1156,7 @@ function Set-Stat {
                         Diff_Live          = $Difficulty
                         Diff_Average       = $Stat.Diff_Average + $Span_Day * ($Difficulty - $Stat.Diff_Average)
                         Ratio_Live         = $Ratio
-                        Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
+                        #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                     }
                 }
                 "Pools" {
@@ -1248,7 +1248,7 @@ function Set-Stat {
                     Diff_Live          = $Difficulty
                     Diff_Average       = $Difficulty
                     Ratio_Live         = $Ratio
-                    Ratio_Average      = $Ratio
+                    #Ratio_Average      = $Ratio
                 }
             }
             "Pools" {
@@ -1338,7 +1338,7 @@ function Set-Stat {
                     Diff_Live          = [Decimal]$Stat.Diff_Live
                     Diff_Average       = [Decimal]$Stat.Diff_Average
                     Ratio_Live         = [Decimal]$Stat.Ratio_Live
-                    Ratio_Average      = [Decimal]$Stat.Ratio_Average
+                    #Ratio_Average      = [Decimal]$Stat.Ratio_Average
                 }
             }
             "Pools" {
