@@ -1735,6 +1735,9 @@ function Invoke-Core {
             }
         }
         else {
+            #Load API declaration
+            Get-ChildItem "APIs\$($Miner.API).ps1" -File | Foreach-Object {. $_.FullName}
+
             #Write-Log "New miner object for $($Miner.BaseName)"
             $NewMiner = New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name

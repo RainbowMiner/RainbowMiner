@@ -299,9 +299,6 @@ if ($IsWindows -and (Get-Command "Get-MpPreference" -ErrorAction Ignore) -and (G
     Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
 }
 
-Write-Host "Loading API modules .."
-Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
-
 while (-not $Session.Stopp) {
 
     Invoke-Core
