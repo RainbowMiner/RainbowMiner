@@ -537,6 +537,9 @@ function Invoke-Core {
     }
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
+    #Load API declaration
+    Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
+
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
         if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
@@ -1033,6 +1036,7 @@ function Invoke-Core {
 
     [System.Collections.ArrayList]$SelectedPoolNames = @()
     $NewPools = @()
+    $TimerPools = @{}
     $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
@@ -1040,12 +1044,14 @@ function Invoke-Core {
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio -Disabled $Disabled
-            $Timed = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
-            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($Timed)s) "}
-            Write-Log "$($_) loaded in $($Timed)s "
+            $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
+            Write-Log "$($_) loaded in $($TimerPools[$_])s "
         }
     }
+    $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
     Remove-Variable "StopWatch"
+    Remove-Variable "TimerPools"
 
     #Store pools to file
     if (-not $Session.IsDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
@@ -1735,9 +1741,6 @@ function Invoke-Core {
             }
         }
         else {
-            #Load API declaration
-            Get-ChildItem "APIs\$($Miner.API).ps1" -File | Foreach-Object {. $_.FullName}
-
             #Write-Log "New miner object for $($Miner.BaseName)"
             $NewMiner = New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
