@@ -35,11 +35,7 @@ class Lol : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response.Content
-            HashRate = $HashRate
-            Device   = @()
-        })
+        $this.AddMinerData($Data,$HashRate)
 
         $this.CleanupMinerData()
     }

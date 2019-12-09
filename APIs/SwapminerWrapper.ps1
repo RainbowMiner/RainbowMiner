@@ -67,11 +67,7 @@ class SwapminerWrapper : Miner {
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
-                        $this.AddMinerData([PSCustomObject]@{
-                            Raw = $Line_Simple
-                            HashRate = $HashRate                          
-                            Device = @()
-                        })
+                        $this.AddMinerData($Line_Simple,$HashRate)
                     }
                 }
             }

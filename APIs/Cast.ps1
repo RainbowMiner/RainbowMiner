@@ -35,11 +35,7 @@ class Cast : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
-        })
+        $this.AddMinerData($Response,$HashRate)
 
         $this.CleanupMinerData()
     }

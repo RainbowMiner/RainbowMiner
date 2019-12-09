@@ -29,11 +29,7 @@ class XmrigWrapper : Miner {
                             $HashRate | Add-Member @{$HashRate_Name = $HashRate_Value}
                         }
 
-                        $this.AddMinerData([PSCustomObject]@{
-                            Raw = $Line_Simple
-                            HashRate = $HashRate                          
-                            Device = @()
-                        })
+                        $this.AddMinerData($Line_Simple,$HashRate)
                     } elseif ($Mode -eq "accepted" -and $Words[0] -match "(\d+)/(\d+)") {
                         $Accepted_Shares = [Int64]$Matches[1]
                         $Rejected_Shares = [Int64]$Matches[2]

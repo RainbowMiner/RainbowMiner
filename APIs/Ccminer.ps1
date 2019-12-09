@@ -36,12 +36,7 @@ class Ccminer : Miner {
             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
         }
 
-        $this.AddMinerData([PSCustomObject]@{
-            Raw        = $Response
-            HashRate   = $HashRate
-            Difficulty = $Difficulty
-            Device     = @()
-        })
+        $this.AddMinerData($Response,$HashRate,$Difficulty)
 
         $this.CleanupMinerData()
     }

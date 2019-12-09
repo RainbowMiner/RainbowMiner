@@ -41,12 +41,7 @@ class EthminerWrapper : Miner {
                             $this.UpdateShares(0,$Accepted_Shares,$Rejected_Shares)
                         }
 
-                        $this.AddMinerData([PSCustomObject]@{
-                            Raw        = $Line_Simple
-                            HashRate   = $HashRate
-                            Difficulty = $Difficulty
-                            Device = @()
-                        })
+                        $this.AddMinerData($Line_Simple,$HashRate,$Difficulty)
                     }
                 }
             }

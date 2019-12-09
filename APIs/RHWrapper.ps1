@@ -35,12 +35,7 @@ class RHWrapper : Miner {
                             $Difficulty | Add-Member @{$HashRate_Name = $this.Difficulty_Value}
                         }
 
-                        $this.AddMinerData([PSCustomObject]@{
-                            Raw        = $Line_Simple
-                            HashRate   = $HashRate
-                            Difficulty = $Difficulty
-                            Device = @()
-                        })
+                        $this.AddMinerData($Line_Simple,$HashRate,$Difficulty)
                     }
                 }
             }

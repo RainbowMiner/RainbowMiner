@@ -53,11 +53,7 @@ class BMiner : Miner {
             $Index++
         }
 
-        $this.AddMinerData([PSCustomObject]@{
-            Raw      = $Response
-            HashRate = $HashRate
-            Device   = @()
-        })
+        $this.AddMinerData($Response,$HashRate)
 
         $this.CleanupMinerData()
     }

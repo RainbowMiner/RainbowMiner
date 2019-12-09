@@ -2719,11 +2719,10 @@ function Get-Device {
     $GPUVendorLists = @{}
     $GPUDeviceNames = @{}
     foreach ($GPUVendor in @("NVIDIA","AMD","INTEL")) {$GPUVendorLists | Add-Member $GPUVendor @(Get-GPUVendorList $GPUVendor)}
-
-    $AllPlatforms = @()
+    [System.Collections.ArrayList]$AllPlatforms = @()
     $Platform_Devices = try {
         [OpenCl.Platform]::GetPlatformIDs() | Where-Object {$AllPlatforms -inotcontains "$($_.Name) $($_.Version)"} | ForEach-Object {
-            $AllPlatforms +=  "$($_.Name) $($_.Version)"
+            $AllPlatforms.Add("$($_.Name) $($_.Version)") > $null
             $Device_Index = 0
             [PSCustomObject]@{
                 PlatformId=$PlatformId
@@ -2769,7 +2768,7 @@ function Get-Device {
 
     try {
         $AmdModels   = @{}
-        $AmdModelsEx = @()
+        [System.Collections.ArrayList]$AmdModelsEx = @()
         $Platform_Devices | Foreach-Object {
             $PlatformId = $_.PlatformId
             $_.Devices | Foreach-Object {    
@@ -2865,7 +2864,7 @@ function Get-Device {
                     $Devices += $Device | Add-Member Name ("{0}#{1:d2}" -f $Device.Type, $Device.Type_Index).ToUpper() -PassThru
                     if ($AmdModelsEx -notcontains $Device.Model) {
                         $AmdGb = [int]($Device.OpenCL.GlobalMemSize / 1GB)
-                        if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx+=$Device.Model}
+                        if ($AmdModels.ContainsKey($Device.Model) -and $AmdModels[$Device.Model] -ne $AmdGb) {$AmdModelsEx.Add($Device.Model) > $null}
                         else {$AmdModels[$Device.Model]=$AmdGb}
                     }
                     $Index++
@@ -3995,7 +3994,7 @@ class Miner {
     hidden [TimeSpan]$Active = [TimeSpan]::Zero
     hidden [Int]$Activated = 0
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
-    hidden [Array]$Data = @()
+    hidden [System.Collections.ArrayList]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
     hidden [Array]$OCprofileBackup = @()
     hidden [PSCustomObject]$EthPill = $null
@@ -4112,11 +4111,14 @@ class Miner {
     }
 
     hidden StartMiningPreProcess() {
-        for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
-            if ($Index -lt $this.Stratum.Count) {$this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0}
-            else {$this.Stratum += [PSCustomObject]@{Accepted=0;Rejected=0}}
-            if ($Index -lt $this.RejectedShareRatio.Count) {$this.RejectedShareRatio[$Index] = 0.0}
-            else {$this.RejectedShareRatio += 0.0}
+        if ($this.Stratum.Count -lt $this.Algorithm.Count -or $this.RejectedShareRatio.Count -lt $this.Algorithm.Count) {
+            $this.Stratum = @([PSCustomObject]@{Accepted=0;Rejected=0}) * $this.Algorithm.Count
+            $this.RejectedShareRatio = @(0.0) * $this.Algorithm.Count
+        } else {
+            for ($Index = 0; $Index -lt $this.Algorithm.Count; $Index++) {
+                $this.Stratum[$Index].Accepted = $this.Stratum[$Index].Rejected = 0
+                $this.RejectedShareRatio[$Index] = 0.0
+            }
         }
         $this.ActiveLast = Get-Date
     }
@@ -4361,13 +4363,7 @@ class Miner {
                             }
                         }
 
-                        $this.AddMinerData([PSCustomObject]@{
-                            Date = $Date
-                            Raw = $Line_Simple
-                            HashRate = [PSCustomObject]@{[String]$this.Algorithm = $HashRates} 
-                            PowerDraw = Get-DevicePowerDraw -DeviceName $this.DeviceName                           
-                            Device = $Devices
-                        })
+                        $this.AddMinerData($Line_Simple,[PSCustomObject]@{[String]$this.Algorithm = $HashRates},$null,$Devices)
                     }
                 }
             }
@@ -4376,13 +4372,27 @@ class Miner {
         }
     }
 
-    AddMinerData($data) {
-        $this.Data += $data | Add-Member -NotePropertyMembers @{
-            Date = (Get-Date).ToUniversalTime()
-            PowerDraw = $(Get-DevicePowerDraw -DeviceName $this.DeviceName)
-            Round = $this.Rounds
-        } -Force -PassThru
+    AddMinerData($Raw,$HashRate,$Difficulty,$Devices) {
+        $this.Data.Add(
+            [PSCustomObject]@{
+                Raw        = $Raw
+                HashRate   = $HashRate
+                Difficulty = $Difficulty
+                Devices    = $Devices
+                Date       = (Get-Date).ToUniversalTime()
+                PowerDraw  = Get-DevicePowerDraw -DeviceName $this.DeviceName
+                Round      = $this.Rounds
+            }
+        ) > $null        
         $this.ActiveLast = Get-Date
+    }
+
+    AddMinerData($Raw,$HashRate) {
+        $this.AddMinerData($Raw,$HashRate,$null,$null)
+    }
+
+    AddMinerData($Raw,$HashRate,$Difficulty) {
+        $this.AddMinerData($Raw,$HashRate,$Difficulty,$null)
     }
 
     [Int]GetMinerDataCount() {
@@ -4392,12 +4402,13 @@ class Miner {
     CleanupMinerData() {
         if ($this.Data.Count -gt $this.MinSamples) {
             $DataMinTime = (Get-Date).ToUniversalTime().AddSeconds( - $this.DataInterval*[Math]::max($this.ExtendInterval,1)*2)
-            $i=0; $this.Data = @($this.Data | Foreach-Object {if ($_.Date -ge $DataMinTime -or ($this.Data.Count - $i) -le $this.MinSamples) {$_};$i++} | Select-Object)
+            $i=0; While ($this.Data[$i].Date -lt $DataMinTime -and ($this.Data.Count - $i) -gt $this.MinSamples) {$i++}
+            if ($i -gt 0) {$this.Data.RemoveRange(0,$i)}
         }
     }
 
     ResetMinerData() {
-        $this.Data = @()
+        $this.Data.Clear()
     }
 
     [Double]GetDifficulty([String]$Algorithm = [String]$this.Algorithm) {
