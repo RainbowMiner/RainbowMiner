@@ -4650,19 +4650,21 @@ function Invoke-NvidiaSettings {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
-        [System.Collections.ArrayList]$NvCmd = @(),
+        [Array]$NvCmd = @(),
         [Parameter(Mandatory = $False)]
         [Switch]$SetPowerMizer
     )
     if ($IsLinux) {
+        $Cmd = "$($NvCmd -join ' ')"
         if ($SetPowerMizer) {
-            Get-Device "nvidia" | Select-Object -ExpandProperty Type_Vendor_index | Foreach-Object {$NvCmd.Add("-a '[gpu:$($_)]/GPUPowerMizerMode=1'") > $null}
+            Get-Device "nvidia" | Select-Object -ExpandProperty Type_Vendor_index | Foreach-Object {$Cmd = "$Cmd -a '[gpu:$($_)]/GPUPowerMizerMode=1'"}
         }
-        if ($NvCmd) {
+        $Cmd = $Cmd.Trim()
+        if ($Cmd) {
             if (Test-OCDaemon) {
-                Set-OCDaemon "nvidia-settings $($NvCmd -join ' ')" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+                Set-OCDaemon "nvidia-settings $Cmd" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
             } else {
-                Invoke-Exe -FilePath "nvidia-settings" -ArgumentList ($NvCmd -join ' ') -Runas > $null
+                Invoke-Exe -FilePath "nvidia-settings" -ArgumentList $Cmd -Runas > $null
             }
         }
     }
@@ -6975,13 +6977,11 @@ param(
 )
     if (-not ($NVSMI = Get-NvidiaSmi)) {return}
 
+    $ArgumentsString = "$($Arguments -join ' ')"
     if ($Query) {
-        $Arguments += @(
-            "--query-gpu=$($Query -join ',')"
-            "--format=csv,noheader,nounits"
-        )
+        $ArgumentsString = "$ArgumentsString --query-gpu=$($Query -join ',') --format=csv,noheader,nounits"
         $CsvParams =  @{Header = @($Query | Foreach-Object {$_ -replace "[^a-z_-]","_" -replace "_+","_"} | Select-Object)}
-        Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
+        Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString.Trim() -ExcludeEmptyLines -ExpandLines -Runas:$Runas | ConvertFrom-Csv @CsvParams | Foreach-Object {
             $obj = $_
             $obj.PSObject.Properties.Name | Foreach-Object {
                 $v = $obj.$_
@@ -7002,9 +7002,9 @@ param(
         }
     } else {
         if ($IsLinux -and $Runas -and (Test-OCDaemon)) {
-            Set-OCDaemon "$NVSMI $($Arguments -join ' ')" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+            Set-OCDaemon "$NVSMI $ArgumentsString" -OnEmptyAdd "$(if ($Session.Config.EnableLinuxHeadless) {"export DISPLAY=:0;"})export CUDA_DEVICE_ORDER=PCI_BUS_ID"
         } else {
-            Invoke-Exe -FilePath $NVSMI -ArgumentList ($Arguments -join ' ') -ExcludeEmptyLines -ExpandLines -Runas:$Runas
+            Invoke-Exe -FilePath $NVSMI -ArgumentList $ArgumentsString -ExcludeEmptyLines -ExpandLines -Runas:$Runas
         }
     }
 }
@@ -7020,12 +7020,11 @@ param(
 )
     if (-not $PowerLimitPercent.Count -or -not $Device.Count) {return}
     try {
-        While ($PowerLimitPercent.Count -lt $Device.Count) {$PowerLimitPercent += $PowerLimitPercent | Select-Object -Last 1}
         for($i=0;$i -lt $Device.Count;$i++) {$Device[$i] = [int]$Device[$i]}
         Invoke-NvidiaSmi "index","power.default_limit","power.min_limit","power.max_limit","power.limit" -Arguments "-i $($Device -join ',')" | Where-Object {$_.index -match "^\d+$"} | Foreach-Object {
             $index = $Device.IndexOf([int]$_.index)
             if ($index -ge 0) {
-                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[$index]/100),2)
+                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[[Math]::Max($index,$PowerLimitPercent.Count)]/100),2)
                 $PCur = [Math]::Round([double]($_.power_limit -replace '[^\d,\.]'))
                 if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [Math]::max($PLim, $lim)}
                 if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [Math]::min($PLim, $lim)}
