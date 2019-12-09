@@ -601,7 +601,7 @@ function Invoke-Core {
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
-                $Session.Config | Add-Member Scheduler @() -Force
+                $Session.Config | Add-Member Scheduler ([System.Collections.ArrayList]@()) -Force
                 $AllScheduler | Foreach-Object {
                     $_ | Add-Member Name "$($_.Name)" -Force
                     $_ | Add-Member DayOfWeek $([string]("$($_.DayOfWeek -replace "[^0-6\*]+")"[0])) -Force
@@ -619,7 +619,7 @@ function Invoke-Core {
                     try {$MiningHeatControl = [Double]$MiningHeatControl} catch {if ($Error.Count){$Error.RemoveAt(0)};$MiningHeatControl = $Session.Config.MiningHeatControl}
                     $MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($MiningHeatControl,5.0),0.0),1)
                     $_.MiningHeatControl = $MiningHeatControl
-                    $Session.Config.Scheduler += $_
+                    $Session.Config.Scheduler.Add($_) > $null
                 }
             }
             if ($AllScheduler) {Remove-Variable "AllScheduler" -Force}
@@ -784,7 +784,7 @@ function Invoke-Core {
     }
     if (-not $Session.LastDonated -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {
         if (-not $Session.LastDonated) {$Session.LastDonated = Get-LastDrun}
-        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)        
+        $ShiftDonationRun = $Session.Timer.AddHours(1 - $DonateDelayHours).AddMinutes($DonateMinutes)
         if (-not $Session.LastDonated -or $Session.LastDonated -lt $ShiftDonationRun -or $Session.PauseMiners -or $Session.PauseMinersByScheduler) {$Session.LastDonated = Set-LastDrun $ShiftDonationRun}
     }
     if ($Session.Timer.AddHours(-$DonateDelayHours) -ge $Session.LastDonated.AddSeconds(59)) {
@@ -2189,16 +2189,14 @@ function Invoke-Core {
         $NextBalances = $Session.Config.BalanceUpdateMinutes-[int]((Get-Date).ToUniversalTime()-$Session.Updatetracker.Balances).TotalMinutes
         $NextBalances = if ($NextBalances -gt 0){"in $($NextBalances) minutes"}else{"now"}
         Write-Host "Pool Balances as of $([System.Timezone]::CurrentTimeZone.ToLocalTime($Session.Updatetracker.Balances)) (next update $($NextBalances)): "        
-        $Columns = @()
-        $ColumnFormat = [Array]@{Name = "Name"; Expression = "Name"}
+        [System.Collections.ArrayList]$ColumnFormat = @()
+        $ColumnFormat.Add(@{Name = "Name"; Expression = "Name"}) > $null
         if (($BalancesData.Currency | Select-Object -Unique | Measure-Object).Count -gt 1) {
-            $ColumnFormat += @{Name = "Sym"; Expression = {if ($_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}
-            $ColumnFormat += @{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}            
+            $ColumnFormat.Add(@{Name = "Sym"; Expression = {if ($_.Currency -and (-not $Session.Config.Pools."$($_.Name)".AECurrency -or $Session.Config.Pools."$($_.Name)".AECurrency -eq $_.Currency)) {$ColumnMark -replace "{value}","$($_.Currency)"} else {$_.Currency}}}) > $null
+            $ColumnFormat.Add(@{Name = "Balance"; Expression = {$_."Balance ($($_.Currency))"}}) > $null
         }
-        $Columns += $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique
-        $ColumnFormat += $Columns | Foreach-Object {@{Name = "$($_ -replace "Value in\s+")"; Expression = "$_"; Align = "right"}}
+        $BalancesData | Foreach-Object {$_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name} | Where-Object {$_ -like "Value in *"} | Sort-Object -Unique | Foreach-Object {$ColumnFormat.Add(@{Name = "$($_ -replace "Value in\s+")"; Expression = "$_"; Align = "right"}) > $null}
         $BalancesData | Format-Table -Wrap -Property $ColumnFormat | Out-Host
-        Remove-Variable "Columns" -Force
         Remove-Variable "ColumnFormat" -Force
         Remove-Variable "BalancesData" -Force
     }
