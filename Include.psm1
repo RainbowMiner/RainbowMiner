@@ -150,15 +150,15 @@ function Get-Balance {
     if (-not $Balances) {return}
 
     #Get exchange rates for all payout currencies
-    $CurrenciesWithBalances = @()
-    $CurrenciesToExchange   = @()
-    $CurrenciesMissing = @()
+    [System.Collections.ArrayList]$CurrenciesWithBalances = @()
+    [System.Collections.ArrayList]$CurrenciesToExchange   = @()
+    [System.Collections.ArrayList]$CurrenciesMissing = @()
 
     $RatesAPI = [PSCustomObject]@{}
     
-    $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesWithBalances += $_}
-    @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange += $_}
-    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Session.Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing += $_}
+    $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesWithBalances.Add($_) > $null}
+    @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange.Add($_) > $null}
+    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Session.Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing.Add($_) > $null}
 
     if ($CurrenciesMissing.Count) {Update-Rates $CurrenciesMissing}
 
@@ -226,6 +226,10 @@ function Get-Balance {
     }
     
     $Balances
+
+    Remove-Variable "CurrenciesWithBalances"
+    Remove-Variable "CurrenciesToExchange"
+    Remove-Variable "CurrenciesMissing"
 
     Remove-Variable "Balances"
     Remove-Variable "Totals"
@@ -311,7 +315,7 @@ function Update-Rates {
 
     Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
-        elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker += $_.InputObject.ToUpper();$NewRatesFound = $true}
+        elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
     if ($NewRatesFound -and $Session.GC.GetTicker.Count -gt 0) {
@@ -342,21 +346,18 @@ function Get-WhatToMineData {
     if (-not (Test-Path ".\Data\wtmdata.json") -or (Get-ChildItem ".\Data\wtmdata.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-12).ToUniversalTime()) {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
-            $WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
-                [PSCustomObject]@{
-                    algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
-                    id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
-                    factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
+            [System.Collections.ArrayList]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
+                    ([PSCustomObject]@{
+                        algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
+                        id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
+                        factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
+                    })
                 }
-            }
             if ($WtmKeys -and $WtmKeys.count -gt 10) {
                 $WtmFactors = Get-ContentByStreamReader ".\Data\wtmfactors.json" | ConvertFrom-Json -ErrorAction Ignore
                 if ($WtmFactors) {
                     $WtmFactors.PSObject.Properties.Name | Where-Object {@($WtmKeys.algo) -inotcontains $_} | Foreach-Object {
-                        $WtmKeys += [PSCustomObject]@{
-                            algo = $_
-                            factor = $WtmFactors.$_
-                        }
+                        $WtmKeys.Add([PSCustomObject]@{algo = $_;factor = $WtmFactors.$_}) > $null
                     }
                     Remove-Variable "WtmFactors"
                 }
@@ -1451,13 +1452,13 @@ function Get-Stat {
         if (($Totals -or $TotalAvgs -or $All) -and -not (Test-Path "Stats\Totals")) {New-Item "Stats\Totals" -ItemType "directory" > $null}
         if (($Balances -or $All) -and -not (Test-Path "Stats\Balances")) {New-Item "Stats\Balances" -ItemType "directory" > $null}
 
-        $Match = @()
-        if ($Miners)    {$Match += "Hashrate";$Path = "Stats\Miners"}
-        if ($Disabled)  {$Match += "Hashrate|Profit";$Path = "Stats\Disabled"}
-        if ($Pools)     {$Match += "Profit";$Path = "Stats\Pools"}
-        if ($Totals)    {$Match += "Total";$Path = "Stats\Totals"}
-        if ($TotalAvgs) {$Match += "TotalAvg";$Path = "Stats\Totals"}
-        if ($Balances)  {$Match += "Balance";$Path = "Stats\Balances"}
+        [System.Collections.ArrayList]$Match = @()
+        if ($Miners)    {$Match.Add("Hashrate") > $null;$Path = "Stats\Miners"}
+        if ($Disabled)  {$Match.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
+        if ($Pools)     {$Match.Add("Profit") > $null;$Path = "Stats\Pools"}
+        if ($Totals)    {$Match.Add("Total") > $null;$Path = "Stats\Totals"}
+        if ($TotalAvgs) {$Match.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
+        if ($Balances)  {$Match.Add("Balance") > $null;$Path = "Stats\Balances"}
         if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"}
 
         $MatchStr = if ($Match.Count -gt 1) {$Match -join "|"} else {$Match}

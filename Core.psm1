@@ -87,7 +87,7 @@
         }
         [hashtable]$Session.MinerInfo = @{}
 
-        $Session.GC.GetTicker = @()
+        [System.Collections.ArrayList]$Session.GC.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
