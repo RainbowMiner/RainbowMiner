@@ -414,6 +414,7 @@ function Invoke-Core {
 
     #Convert to array, if needed and check contents of some fields, if Config has been reread or reset
     if ($CheckConfig) {
+        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating config data"}
         #for backwards compatibility
         if ($Session.Config.Type -ne $null) {$Session.Config | Add-Member DeviceName $Session.Config.Type -Force;$Session.Config | Add-Member ExcludeDeviceName @() -Force}
         if ($Session.Config.GPUs -ne $null -and $Session.Config.GPUs) {
@@ -539,6 +540,7 @@ function Invoke-Core {
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
         if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating algorithms config data"}
             $AllAlgorithms = Get-ConfigContent "Algorithms" -UpdateLastWriteTime
             if (Test-Config "Algorithms" -Health) {
                 $Session.Config | Add-Member Algorithms ([PSCustomObject]@{}) -Force
@@ -559,6 +561,7 @@ function Invoke-Core {
     $CheckCoins = $false
     if (Set-ConfigDefault "Coins") {
         if ($CheckConfig -or -not $Session.Config.Coins -or (Test-Config "Coins" -LastWriteTime) -or ($ConfigBackup.Coins -and (Compare-Object $Session.Config.Coins $ConfigBackup.Coins | Measure-Object).Count)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating coins config data"}
             $AllCoins = Get-ConfigContent "Coins" -UpdateLastWriteTime
             if (Test-Config "Coins" -Health) {
                 $Session.Config | Add-Member Coins ([PSCustomObject]@{})  -Force
@@ -582,6 +585,7 @@ function Invoke-Core {
     #Check for oc profile config
     if (Set-ConfigDefault "OCProfiles") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.OCProfiles -or (Test-Config "OCProfiles" -LastWriteTime))) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating ocprofiles config data"}
             $AllOCProfiles = Get-ConfigContent "OCProfiles" -UpdateLastWriteTime
             if (Test-Config "OCProfiles" -Health) {
                 $Session.Config | Add-Member OCProfiles $AllOCProfiles -Force
@@ -593,6 +597,7 @@ function Invoke-Core {
     #Check for powerprice config
     if (Set-ConfigDefault "Scheduler") {
         if ($CheckConfig -or $Session.Config.Scheduler -eq $null -or (Test-Config "Scheduler" -LastWriteTime)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating scheduler config data"}
             $AllScheduler = Get-ConfigContent "Scheduler" -UpdateLastWriteTime
             if (Test-Config "Scheduler" -Health) {
                 if ($AllScheduler -isnot [array] -and $AllScheduler.value -ne $null) {$AllScheduler = $AllScheduler.value}
@@ -624,6 +629,7 @@ function Invoke-Core {
     #Check for devices config
     if (Set-ConfigDefault "Devices") {
         if (-not $Session.IsDonationRun -and ($CheckConfig -or -not $Session.Config.Devices -or (Test-Config "Devices" -LastWriteTime))) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating devices config data"}
             $AllDevices = Get-ConfigContent "Devices" -UpdateLastWriteTime
             if (Test-Config "Devices" -Health) {
                 $Session.Config | Add-Member Devices $AllDevices -Force
@@ -651,6 +657,7 @@ function Invoke-Core {
     #Check for gpugroups config
     if (Set-ConfigDefault "GpuGroups") {
         if ($CheckConfig -or -not $Session.Config.GpuGroups -or (Test-Config "GpuGroups" -LastWriteTime) -or ($ConfigBackup.GpuGroups -and (Compare-Object $Session.Config.GpuGroups $ConfigBackup.GpuGroups | Measure-Object).Count)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating gpugroups config data"}
             $AllGpuGroups = Get-ConfigContent "GpuGroups" -UpdateLastWriteTime
             if (Test-Config "GpuGroups" -Health) {
                 $Session.Config | Add-Member GpuGroups ([PSCustomObject]@{})  -Force
@@ -703,6 +710,7 @@ function Invoke-Core {
     }
 
     $Session.AvailPools | Where-Object {-not $Session.Config.Pools.$_} | ForEach-Object {
+        Write-Log -Level Info "Alas! Missing pool $_ will be added to config manually"
         $Session.Config.Pools | Add-Member $_ (
             [PSCustomObject]@{
                 BTC     = $Session.Config.Wallet
@@ -716,6 +724,7 @@ function Invoke-Core {
     }
 
     if ($CheckPools) {
+        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating pools config data"}
         foreach ($p in @($Session.Config.Pools.PSObject.Properties.Name)) {
             foreach($q in @("Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","CoinSymbolPBM","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet")) {
                 if ($Session.Config.Pools.$p.$q -is [string]) {$Session.Config.Pools.$p.$q = @($Session.Config.Pools.$p.$q -replace "[^A-Z0-9,;]+" -split "[,;]+" | Where-Object {$_} | Select-Object)}
@@ -836,11 +845,14 @@ function Invoke-Core {
     }
 
     #Clear pool cache if the pool configuration has changed
-    if ($Script:AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {$Script:AllPools = $null}
+    if ($Script:AllPools -ne $null -and (($ConfigBackup.Pools | ConvertTo-Json -Compress -Depth 10) -ne ($Session.Config.Pools | ConvertTo-Json -Compress -Depth 10) -or (Compare-Object @($ConfigBackup.PoolName) @($Session.Config.PoolName)) -or (Compare-Object @($ConfigBackup.ExcludePoolName) @($Session.Config.ExcludePoolName)))) {
+        Write-Log -Level Info "Resetting AllPools data store"
+        $Script:AllPools = $null
+    }
 
     #load device(s) information and device combos
     if ($CheckConfig -or $CheckCombos -or $ConfigBackup.MiningMode -ne $Session.Config.MiningMode -or (Compare-Object $Session.Config.DeviceName $ConfigBackup.DeviceName | Measure-Object).Count -gt 0 -or (Compare-Object $Session.Config.ExcludeDeviceName $ConfigBackup.ExcludeDeviceName | Measure-Object).Count -gt 0) {
-        Write-Log "Device configuration changed. Refreshing now. "
+        if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Device configuration changed. Refreshing now."}
 
         #Load information about the devices
         $Session.Devices = @()
@@ -922,6 +934,7 @@ function Invoke-Core {
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
         if ($CheckConfig -or -not $Session.Config.Miners -or (Test-Config "Miners" -LastWriteTime)) {
+            if ($Session.RoundCounter -ne 0) {Write-Log -Level Info "Updating miners config data"}
             $AllMiners = Get-ConfigContent "Miners" -UpdateLastWriteTime
             if (Test-Config "Miners" -Health) {
                 $Session.Config | Add-Member Miners ([PSCustomObject]@{}) -Force
@@ -937,8 +950,8 @@ function Invoke-Core {
                             if ($(foreach($q in $p.PSObject.Properties.Name) {if (($q -ne "MainAlgorithm" -and $q -ne "SecondaryAlgorithm" -and $q -ne "Disable" -and ($p.$q -isnot [string] -or $p.$q.Trim() -ne "")) -or ($q -eq "Disable" -and $p.Disable)) {$true;break}})) {
                                 $CcMinerNameToAdd = $CcMinerName
                                 if ($p.MainAlgorithm -ne '*') {
-                                    $CcMinerNameToAdd += "-$(Get-Algorithm $p.MainAlgorithm)"
-                                    if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd += "-$(Get-Algorithm $p.SecondaryAlgorithm)"}
+                                    $CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.MainAlgorithm)"
+                                    if ($p.SecondaryAlgorithm) {$CcMinerNameToAdd = "$CcMinerNameToAdd-$(Get-Algorithm $p.SecondaryAlgorithm)"}
                                 }
                                 if ($p.MSIAprofile -ne $null -and $p.MSIAprofile -and $p.MSIAprofile -notmatch "^[1-5]$") {
                                     Write-Log -Level Warn "Invalid MSIAprofile for $($CcMinerNameToAdd) in miners.config.txt: `"$($p.MSIAprofile)`" (empty or 1-5 allowed, only)"
@@ -982,10 +995,6 @@ function Invoke-Core {
     if ($Session.Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Session.Config.Proxy}
     else {$PSDefaultParameterValues.Remove("*:Proxy")}
 
-    if ($Session.RoundCounter -eq 0) {Write-Host "Loading API modules .."}
-
-    Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
-
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
 
@@ -1022,24 +1031,21 @@ function Invoke-Core {
 
     if ($Session.RoundCounter -eq 0) {Write-Host "Loading pool modules .."}
 
-    $SelectedPoolNames = @()
+    [System.Collections.ArrayList]$SelectedPoolNames = @()
     $NewPools = @()
-    $TimerPools = @{}
     $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
     if (Test-Path "Pools") {
         $NewPools = $Session.AvailPools | Where-Object {$Session.Config.Pools.$_ -and ($Session.Config.PoolName.Count -eq 0 -or $Session.Config.PoolName -icontains $_) -and ($Session.Config.ExcludePoolName.Count -eq 0 -or $Session.Config.ExcludePoolName -inotcontains $_)} | Foreach-Object {
-            $SelectedPoolNames += $_
+            $SelectedPoolNames.Add($_) > $null
             if ($Session.RoundCounter -eq 0) {Write-Host ".. loading $($_) " -NoNewline}
             $StopWatch.Restart()
             Get-PoolsContent $_ -Config $Session.Config.Pools.$_ -StatSpan $RoundSpan -InfoOnly $false -IgnoreFees $Session.Config.IgnoreFees -Algorithms $Session.Config.Algorithms -Coins $Session.Config.Coins -EnableErrorRatio:$Session.Config.EnableErrorRatio -Disabled $Disabled
-            $TimerPools[$_] = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
-            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($TimerPools[$_])s) "}
-            Write-Log "$($_) loaded in $($TimerPools[$_])s "
+            $Timed = [Math]::Round($StopWatch.ElapsedMilliseconds/1000,3)
+            if ($Session.RoundCounter -eq 0) {Write-Host "done ($($Timed)s) "}
+            Write-Log "$($_) loaded in $($Timed)s "
         }
     }
-    $TimerPools | ConvertTo-Json | Set-Content ".\Logs\timerpools.json" -Force
     Remove-Variable "StopWatch"
-    Remove-Variable "TimerPools"
 
     #Store pools to file
     if (-not $Session.IsDonationRun -and (-not $Session.Updatetracker.PoolsSave -or $Session.Updatetracker.PoolsSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\poolsdata.json"))) {
