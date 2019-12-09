@@ -2126,38 +2126,38 @@ function Start-SubProcessInScreen {
 
     Set-ContentJson -Data @{miner_exec = "$FilePath"; start_date = "$(Get-Date)"; pid_path = "$PIDPath" } -PathToFile $PIDInfo > $null
 
-    $Stuff = @()
-    $Stuff += "export DISPLAY=:0"
-    $Stuff += "cd /"
-    $Stuff += "cd '$WorkingDirectory'"
+    [System.Collections.ArrayList]$Stuff = @()
+    $Stuff.Add("export DISPLAY=:0") > $null
+    $Stuff.Add("cd /") > $null
+    $Stuff.Add("cd '$WorkingDirectory'") > $null
 
     if ($SetAMDEnv) {
-        $Stuff += "export GPU_FORCE_64BIT_PTR=1"
-        $Stuff += "export GPU_MAX_HEAP_SIZE=100"
-        $Stuff += "export GPU_USE_SYNC_OBJECTS=1"
-        $Stuff += "export GPU_MAX_ALLOC_PERCENT=100"
-        $Stuff += "export GPU_SINGLE_ALLOC_PERCENT=100"
-        $Stuff += "export GPU_MAX_WORKGROUP_SIZE=256"
+        $Stuff.Add("export GPU_FORCE_64BIT_PTR=1") > $null
+        $Stuff.Add("export GPU_MAX_HEAP_SIZE=100") > $null
+        $Stuff.Add("export GPU_USE_SYNC_OBJECTS=1") > $null
+        $Stuff.Add("export GPU_MAX_ALLOC_PERCENT=100") > $null
+        $Stuff.Add("export GPU_SINGLE_ALLOC_PERCENT=100") > $null
+        $Stuff.Add("export GPU_MAX_WORKGROUP_SIZE=256") > $null
     }
-    $Stuff += "export CUDA_DEVICE_ORDER=PCI_BUS_ID"
+    $Stuff.Add("export CUDA_DEVICE_ORDER=PCI_BUS_ID") > $null
 
-    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff += "export $($matches[1])=$($matches[2])"}
+    $EnvVars | Where-Object {$_ -match "^(\S*?)\s*=\s*(.*)$"} | Foreach-Object {$Stuff.Add("export $($matches[1])=$($matches[2])") > $null}
 
-    $Stuff += "export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})"
-    $Stuff += "start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList"
+    $Stuff.Add("export LD_LIBRARY_PATH=./:$(if (Test-Path "/opt/rainbowminer/lib") {"/opt/rainbowminer/lib"} else {(Resolve-Path ".\IncludesLinux\lib")})") > $null
+    $Stuff.Add("start-stop-daemon --start --make-pidfile --chdir '$WorkingDirectory' --pidfile '$PIDPath' --exec '$FilePath' -- $ArgumentList") > $null
 
-    $Cmd = @()
-    $Cmd += "screen -ls `"$ScreenName`" | ("
-    $Cmd += "  IFS=`$(printf '\t');"
-    $Cmd += "  sed `"s/^`$IFS//`" |"
-    $Cmd += "  while read -r name stuff; do"
-    $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
-    $Cmd += "    screen -S `"`$name`" -X quit  >/dev/null 2>&1"
-    $Cmd += "  done"
-    $Cmd += ")"
-    $Cmd += "screen -S $($ScreenName) -d -m", "sleep .1"
+    [System.Collections.ArrayList]$Cmd = @()
+    $Cmd.Add("screen -ls `"$ScreenName`" | (") > $null
+    $Cmd.Add("  IFS=`$(printf '\t');") > $null
+    $Cmd.Add("  sed `"s/^`$IFS//`" |") > $null
+    $Cmd.Add("  while read -r name stuff; do") > $null
+    $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+    $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
+    $Cmd.Add("  done") > $null
+    $Cmd.Add(")") > $null
+    $Cmd.Add("screen -S $($ScreenName) -d -m", "sleep .1") > $null
 
-    $Stuff | Foreach-Object {$Cmd += "screen -S $($ScreenName) -X stuff $`"$_\n`"", "sleep .1"}
+    $Stuff | Foreach-Object {$Cmd.Add("screen -S $($ScreenName) -X stuff $`"$_\n`"", "sleep .1") > $null}
 
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
     Set-BashFile -FilePath $PIDtest -Cmd $Stuff
@@ -2675,26 +2675,20 @@ function Get-Device {
 
     if ($Name) {
         $Name_Devices = $Name | ForEach-Object {
-            $Name_Split = $_ -split '#'
-            $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
-            $Name_Split += @("*") * (100 - $Name_Split.Count)
-
+            $Name_Split = @("*","*","*")
+            $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
             $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-
+            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
     }
 
     if ($ExcludeName) {
         $ExcludeName_Devices = $ExcludeName | ForEach-Object {
-            $Name_Split = $_ -split '#'
-            $Name_Split = @($Name_Split | Select-Object -First 1) + @($Name_Split | Select-Object -Skip 1 | ForEach-Object {[Int]$_})
-            $Name_Split += @("*") * (100 - $Name_Split.Count)
-
+            $Name_Split = @("*","*","*")
+            $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
             $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
-            $Name_Device | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
-
+            $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
     }
