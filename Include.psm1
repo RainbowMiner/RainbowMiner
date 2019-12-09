@@ -8,14 +8,14 @@ function Initialize-Session {
 
     if (-not (Test-Path Variable:Global:Session)) {
         $Global:Session = [hashtable]::Synchronized(@{})
-        if ($Global:IsWindows) {
-            $Global:Session.WindowsVersion = [System.Environment]::OSVersion.Version
+        if ($IsWindows) {
+            $Session.WindowsVersion = [System.Environment]::OSVersion.Version
         }
-        $Global:Session.IsAdmin            = Test-IsElevated
-        $Global:Session.MachineName        = [System.Environment]::MachineName
+        $Session.IsAdmin            = Test-IsElevated
+        $Session.MachineName        = [System.Environment]::MachineName
     }
-    if ($Global:Session.GC -eq $null) {
-        [hashtable]$Global:Session.GC      = @{}
+    if ($Session.GC -eq $null) {
+        [hashtable]$Session.GC      = @{}
     }
 }
 
@@ -125,12 +125,12 @@ function Get-NvidiaArchitecture {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    if (-not (Test-Path Variable:Global:PoolFields)) {
+    if ($Session.GC.PoolFields -eq $null) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $Global:PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
+        $Session.GC.PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
         Remove-Variable "Setup"
     }
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Global:PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Session.GC.PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -181,7 +181,7 @@ function Get-Balance {
     Get-WorldCurrencies -Silent
 
     [hashtable]$Digits = @{}
-    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($Global:GlobalWorldCurrencies -icontains $_) {2} else {8}}
+    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($Session.WorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
@@ -256,7 +256,7 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
     
-    if (-not (Test-Path Variable:Global:GlobalCoinNames) -or -not $Global:GlobalCoinNames.Count) {
+    if ($Session.GC.CoinNames -eq $null -or -not $Session.GC.CoinNames.Count) {
         try {
             $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
@@ -269,14 +269,14 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        [hashtable]$Global:GlobalCoinNames = @{}
-        $Request.PSObject.Properties | Foreach-Object {$Global:GlobalCoinNames[$_.Name] = $_.Value}
+        [hashtable]$Session.GC.CoinNames = @{}
+        $Request.PSObject.Properties | Foreach-Object {$Session.GC.CoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
         if ($Reverse) {
-            (Get-Culture).TextInfo.ToTitleCase("$($Global:GlobalCoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($Session.GC.CoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
         } else {
-            $Global:GlobalCoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+            $Session.GC.CoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
     }
 }
@@ -332,7 +332,7 @@ function Update-Rates {
     }
 
     Get-WorldCurrencies -Silent
-    Compare-Object $Global:GlobalWorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
+    Compare-Object $Session.WorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
 }
 
 function Get-WhatToMineData {
@@ -3697,9 +3697,9 @@ function Get-Coin {
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
     else {
-        if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {Get-CoinsDB -Silent}
+        if ($Session.GC.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.CoinsDBTimeStamp) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        if ($Global:GlobalCoinsDB.ContainsKey($CoinSymbol)) {$Global:GlobalCoinsDB[$CoinSymbol]}
+        if ($Session.GC.CoinsDB.ContainsKey($CoinSymbol)) {$Session.GC.CoinsDB[$CoinSymbol]}
     }
 }
 
@@ -3738,8 +3738,8 @@ function Get-EquihashCoinPers {
         [Parameter(Mandatory = $false)]
         [String]$Default = "auto"
     )
-    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {Get-EquihashCoins -Silent}        
-    if ($Coin -and $Global:GlobalEquihashCoins.ContainsKey($Coin)) {$Global:GlobalEquihashCoins[$Coin]} else {$Default}
+    if ($Session.GC.EquihashCoins -eq $null) {Get-EquihashCoins -Silent}        
+    if ($Coin -and $Session.GC.EquihashCoins.ContainsKey($Coin)) {$Session.GC.EquihashCoins[$Coin]} else {$Default}
 }
 
 function Get-NimqHashrate {
@@ -3750,8 +3750,8 @@ function Get-NimqHashrate {
         [Parameter(Mandatory = $false)]
         [Int]$Default = 100
     )
-    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {Get-NimqHashrates -Silent}        
-    if ($GPU -and $Global:GlobalNimqHashrates.ContainsKey($GPU)) {$Global:GlobalNimqHashrates[$GPU]} else {$Default}
+    if ($Session.GC.NimqHashrates -eq $null) {Get-NimqHashrates -Silent}        
+    if ($GPU -and $Session.GC.NimqHashrates.ContainsKey($GPU)) {$Session.GC.NimqHashrates[$GPU]} else {$Default}
 }
 
 function Get-Region {
@@ -3760,9 +3760,9 @@ function Get-Region {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions)) {Get-Regions -Silent}
+    if ($Session.GC.Regions -eq $null) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Global:GlobalRegions.ContainsKey($Region)) {$Global:GlobalRegions[$Region]} else {foreach($r in @($Global:GlobalRegions.Keys)) {if ($Region -match "^$($r)") {$Global:GlobalRegions[$r];return}};$Region}
+    if ($Session.GC.Regions.ContainsKey($Region)) {$Session.GC.Regions[$Region]} else {foreach($r in @($Session.GC.Regions.Keys)) {if ($Region -match "^$($r)") {$Session.GC.Regions[$r];return}};$Region}
 }
 
 function Get-Region2 {
@@ -3771,8 +3771,8 @@ function Get-Region2 {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions2)) {Get-Regions2 -Silent}
-    if ($Global:GlobalRegions2.ContainsKey($Region)) {$Global:GlobalRegions2[$Region]}
+    if ($Session.GC.Regions2 -eq $null) {Get-Regions2 -Silent}
+    if ($Session.GC.Regions2.ContainsKey($Region)) {$Session.GC.Regions2[$Region]}
 }
 
 function Get-Algorithms {
@@ -3802,14 +3802,14 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalCoinsDB) -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Global:GlobalCoinsDBTimeStamp) {
-        [hashtable]$Global:GlobalCoinsDB = @{}
-        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalCoinsDB[$_.Name]=$_.Value}
-        $Global:GlobalCoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
+    if ($Session.GC.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.CoinsDBTimeStamp) {
+        [hashtable]$Session.GC.CoinsDB = @{}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.CoinsDB[$_.Name]=$_.Value}
+        $Session.GC.CoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Global:GlobalCoinsDB.Values | Select-Object -Unique | Sort-Object}
-        else {$Global:GlobalCoinsDB.Keys | Sort-Object}
+        if ($Values) {$Session.GC.CoinsDB.Values | Select-Object -Unique | Sort-Object}
+        else {$Session.GC.CoinsDB.Keys | Sort-Object}
     }
 }
 
@@ -3819,11 +3819,11 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalEquihashCoins)) {
-        [hashtable]$Global:GlobalEquihashCoins = @{}
-        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalEquihashCoins[$_.Name]=$_.Value}
+    if ($Session.GC.EquihashCoins -eq $null) {
+        [hashtable]$Session.GC.EquihashCoins = @{}
+        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.EquihashCoins[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Global:GlobalEquihashCoins.Keys}
+    if (-not $Silent) {$Session.GC.EquihashCoins.Keys}
 }
 
 function Get-NimqHashrates {
@@ -3832,11 +3832,11 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalNimqHashrates)) {
-        [hashtable]$Global:GlobalNimqHashrates = @{}
-        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalNimqHashrates[$_.Name]=$_.Value}
+    if ($Session.GC.NimqHashrates -eq $null) {
+        [hashtable]$Session.GC.NimqHashrates = @{}
+        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.NimqHashrates[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Global:GlobalNimqHashrates.Keys}
+    if (-not $Silent) {$Session.GC.NimqHashrates.Keys}
 }
 
 function Get-PoolsInfo {
@@ -3881,13 +3881,13 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions)) {
-        [hashtable]$Global:GlobalRegions = @{}
-        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions[$_.Name]=$_.Value}
+    if ($Session.GC.Regions -eq $null) {
+        [hashtable]$Session.GC.Regions = @{}
+        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Regions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {
-        if ($AsHash) {$Global:GlobalRegions}
-        else {$Global:GlobalRegions.Keys}
+        if ($AsHash) {$Session.GC.Regions}
+        else {$Session.GC.Regions.Keys}
     }
 }
 
@@ -3897,11 +3897,11 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalRegions2)) {
-        [hashtable]$Global:GlobalRegions2 = @{}
-        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Global:GlobalRegions2[$_.Name]=$_.Value}
+    if ($Session.GC.Regions2 -eq $null) {
+        [hashtable]$Session.GC.Regions2 = @{}
+        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Regions2[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Global:GlobalRegions2.Keys}
+    if (-not $Silent) {$Session.GC.Regions2.Keys}
 }
 
 
@@ -3911,10 +3911,10 @@ function Get-WorldCurrencies {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if (-not (Test-Path Variable:Global:GlobalWorldCurrencies)) {
-        $Global:GlobalWorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+    if ($Session.WorldCurrencies -eq $null) {
+        $Session.WorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
-    if (-not $Silent) {$Global:GlobalWorldCurrencies}
+    if (-not $Silent) {$Session.WorldCurrencies}
 }
 
 enum MinerStatus {
@@ -5488,7 +5488,7 @@ function Set-PoolsConfigDefault {
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
-            $Global:PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+            $Session.GC.PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0) {
                 $Pools | Foreach-Object {
                     $Pool_Name = $_
@@ -7117,9 +7117,9 @@ function Test-IsElevated
 }
 
 function Set-OsFlags {
-    if ($IsWindows -eq $null) {
+    if ($Global:IsWindows -eq $null) {
         $Global:IsWindows = [System.Environment]::OSVersion.Platform -eq "Win32NT" -or [System.Boolean](Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore)
-        $Global:IsLinux   = -not $Global:IsWindows
+        $Global:IsLinux   = -not $IsWindows
         $Global:IsMacOS   = $false
     }
 }
@@ -7384,7 +7384,7 @@ param(
     if ($secret) {$secret = Get-ReadableHex32 $secret}
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
-    $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
+    $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property Name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
     if ($Session.GC.NHCache -eq $null) {$Session.GC.NHCache = [hashtable]@{}}
     if (-not $Cache -or -not $Session.GC.NHCache[$keystr] -or -not $Session.GC.NHCache[$keystr].request -or $Session.GC.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
