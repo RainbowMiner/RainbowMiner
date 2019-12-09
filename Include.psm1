@@ -3996,7 +3996,7 @@ class Miner {
     hidden [MinerStatus]$Status = [MinerStatus]::Idle
     hidden [System.Collections.ArrayList]$Data = @()
     hidden [Bool]$HasOwnMinerWindow = $false    
-    hidden [Array]$OCprofileBackup = @()
+    hidden [System.Collections.ArrayList]$OCprofileBackup = @()
     hidden [PSCustomObject]$EthPill = $null
     hidden [DateTime]$IntervalBegin = 0
     hidden [DateTime]$LastSetOCTime = 0
@@ -4501,13 +4501,13 @@ class Miner {
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Failed to communicate with MSI Afterburner"
-            $this.OCprofileBackup = @()
+            $this.OCprofileBackup.Clear()
             return
         }
         if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
         foreach($Profile in $this.OCprofileBackup) {foreach($Name in $Profile.Keys) {if ($Name -ne "Index") {$Script:abControl.GpuEntries[$Profile.Index].$Name = $Profile.$Name}}}
         $Script:abControl.CommitChanges()
-        $this.OCprofileBackup = @()
+        $this.OCprofileBackup.Clear()
         Write-Log "OC reset for $($this.BaseName)"
         if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
     }
@@ -4520,7 +4520,7 @@ class Miner {
 
         $this.LastSetOCTime = (Get-Date).ToUniversalTime()
 
-        $this.OCprofileBackup = @()
+        $this.OCprofileBackup.Clear()
 
         if (-not $this.HasOCprofile()) {return}
 
@@ -4561,8 +4561,8 @@ class Miner {
                 default {3}
             }
 
-            $DeviceIds = @()
-            $CardIds = @()
+            [System.Collections.ArrayList]$DeviceIds = @()
+            [System.Collections.ArrayList]$CardIds   = @()
             $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
                 $CardId = $_.CardId
@@ -4570,8 +4570,8 @@ class Miner {
                 if ($Id) {
                     $Profiles | Add-Member "$($DeviceModel)[$($Id)]" ([PSCustomObject]@{Index = @($VendorIndex); CardId = @($CardId); Profile = $Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($Id)"; x = $x}) -Force
                 } else {
-                    $DeviceIds += $VendorIndex
-                    $CardIds += $CardId
+                    $DeviceIds.Add($VendorIndex) > $null
+                    $CardIds.Add($CardId) > $null
                 }
             }
             if ($DeviceIds.Count -gt 0) {
@@ -4623,7 +4623,7 @@ class Miner {
                         try {if (-not ($GpuEntry.CoreClockBoostMin -eq 0 -and $GpuEntry.CoreClockBoostMax -eq 0) -and $Profile.CoreClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.CoreClockBoostCur = $GpuEntry.CoreClockBoostCur;$Script:abControl.GpuEntries[$_].CoreClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.CoreClockBoost) * 1000,$GpuEntry.CoreClockBoostMax),$GpuEntry.CoreClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         try {if (-not ($GpuEntry.MemoryClockBoostMin -eq 0 -and $GpuEntry.MemoryClockBoostMax -eq 0) -and $Profile.MemoryClockBoost -match '^\-*[0-9]+$') {$ProfileBackup.MemoryClockBoostCur = $GpuEntry.MemoryClockBoostCur;$Script:abControl.GpuEntries[$_].MemoryClockBoostCur = [math]::max([math]::min([convert]::ToInt32($Profile.MemoryClockBoost) * 1000,$GpuEntry.MemoryClockBoostMax),$GpuEntry.MemoryClockBoostMin)}} catch {if ($Error.Count){$Error.RemoveAt(0)};Write-Log -Level Warn $_.Exception.Message}
                         if ($Profile.LockVoltagePoint -match '^\-*[0-9]+$') {Write-Log -Level Warn "$DeviceModel does not support LockVoltagePoint overclocking"}
-                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup += $ProfileBackup;$applied_any=$true}
+                        if ($ProfileBackup.Count) {$ProfileBackup.Index = $_;$this.OCprofileBackup.Add($ProfileBackup) > $null;$applied_any=$true}
                     }
                     $DeviceId++
                 }                 
@@ -4650,14 +4650,13 @@ function Invoke-NvidiaSettings {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $False)]
-        [Array]$NvCmd = @(),
+        [System.Collections.ArrayList]$NvCmd = @(),
         [Parameter(Mandatory = $False)]
         [Switch]$SetPowerMizer
     )
     if ($IsLinux) {
         if ($SetPowerMizer) {
-            $Devices = Get-Device "nvidia" | Select-Object -ExpandProperty Type_Vendor_index | Foreach-Object {"-a '[gpu:$($_)]/GPUPowerMizerMode=1'"}
-            if ($Devices) {$NvCmd += $Devices}
+            Get-Device "nvidia" | Select-Object -ExpandProperty Type_Vendor_index | Foreach-Object {$NvCmd.Add("-a '[gpu:$($_)]/GPUPowerMizerMode=1'") > $null}
         }
         if ($NvCmd) {
             if (Test-OCDaemon) {
@@ -6041,9 +6040,9 @@ function Get-YiiMPValue {
 function Get-DeviceSubsets($Device) {
     $Models = @($Device | Select-Object Model,Model_Name -Unique)
     if ($Models.Count) {
-        $a = @();0..$($Models.Count-1) | Foreach-Object {$a+=$_}
+        [System.Collections.ArrayList]$a = @();0..$($Models.Count-1) | Foreach-Object {$a.Add('{0:x}' -f $_) > $null}
         @(Get-Subsets $a | Where-Object {$_.Length -gt 1} | Foreach-Object{
-            [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[string]$_/1]}) | Sort-Object -Property Model
+            [PSCustomObject[]]$x = @($_.ToCharArray() | Foreach-Object {$Models[[int]"0x$_"]}) | Sort-Object -Property Model
             [PSCustomObject]@{
                 Model = @($x.Model)
                 Model_Name = @($x.Model_Name)
@@ -6058,7 +6057,7 @@ function Get-Subsets($a){
     #e.g. 'B','C','D','E','E' would become 'B','C','D','E'
     $a = $a | Select-Object -Unique
     #create an array to store output
-    $l = @()
+    [System.Collections.ArrayList]$l = @()
     #for any set of length n the maximum number of subsets is 2^n
     for ($i = 0; $i -lt [Math]::Pow(2,$a.Length); $i++)
     { 
@@ -6075,7 +6074,7 @@ function Get-Subsets($a){
             }
         }
         #stick subset into an array
-        $l += -join $out
+        $l.Add(-join $out) > $null
     }
     #group the subsets by length, iterate through them and sort
     $l | Group-Object -Property Length | %{$_.Group | sort}
@@ -6501,10 +6500,10 @@ function Invoke-ReportMinerStatus {
     $Rates = [PSCustomObject]@{}
     $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
 
-    $Including_Strings = @()
-    if ($Session.ReportTotals) {$Including_Strings += "totals"}
-    if ($Session.ReportMinerData) {$Including_Strings += "minerdata"}
-    if ($Session.ReportPoolsData) {$Including_Strings += "poolsdata"}
+    [System.Collections.ArrayList]$Including_Strings = @()
+    if ($Session.ReportTotals)    {$Including_Strings.Add("totals") > $null}
+    if ($Session.ReportMinerData) {$Including_Strings.Add("minerdata") > $null}
+    if ($Session.ReportPoolsData) {$Including_Strings.Add("poolsdata") > $null}
     Write-Log "Pinging monitoring server$(if ($Including_Strings.Count) {" (including $($Including_Strings -join ", "))"}). "
     Remove-Variable "Including_Strings"
 
@@ -6519,11 +6518,11 @@ function Invoke-ReportMinerStatus {
             $Profit += [Double]$Miner.Profit
             $PowerDraw += [Double]$Miner_PowerDraw
 
-            $Devices = @()
+            [System.Collections.ArrayList]$Devices = @()
             Get-Device $Miner.DeviceName | Foreach-Object {
                 if ($_.Type -eq "GPU") {
                     if ($_.Data.Temperature -gt $Session.Config.MinerStatusMaxTemp) {$TempAlert++}
-                    $Devices += [PSCustomObject]@{
+                    $Devices.Add([PSCustomObject]@{
                         Id    = $_.Type_PlatformId_Index
                         Name  = $_.Model
                         Mem   = [int]($_.OpenCL.GlobalMemSize / 1GB)
@@ -6533,13 +6532,13 @@ function Invoke-ReportMinerStatus {
                         Core  = $_.Data.Clock
                         MemC  = $_.Data.ClockMem
                         MaxTemp = $_.DataMax.Temperature
-                    }
+                    }) > $null
                 } else {
-                    $Devices += [PSCustomObject]@{
+                    $Devices.Add([PSCustomObject]@{
                         Id    = $_.Type_PlatformId_Index
                         Name  = $_.Model_Name
                         Watt  = $_.Data.PowerDraw
-                    }
+                    }) > $null
                 }
             }
 
@@ -6846,15 +6845,15 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$ConvertDot = $false
 )
-    $Uri2 = @()
+    [System.Collections.ArrayList]$Uri2 = @()
     while ($Uri -match "^(.*?)({[^}]+})(.*?)$") {
-        if ($Matches[1].Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Matches[1])}
+        if ($Matches[1].Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Matches[1])) > $null}
         $Tmp=$Matches[2]
         $Uri=$Matches[3]
         if ($Tmp -match "^{(\w+):(.*?)}$") {$Tmp = "{$($Matches[1]):$([System.Web.HttpUtility]::UrlEncode($($Matches[2] -replace "\$","*dollar*")) -replace "\*dollar\*","$")}"}
-        $Uri2+=$Tmp
+        $Uri2.Add($Tmp) > $null
     }
-    if ($Uri.Length) {$Uri2+=[System.Web.HttpUtility]::UrlEncode($Uri)}
+    if ($Uri.Length) {$Uri2.Add([System.Web.HttpUtility]::UrlEncode($Uri)) > $null}
     $Uri = $Uri2 -join ''
     if ($ConvertDot) {$Uri -replace "\.","%2e"} else {$Uri}
 }
@@ -7356,7 +7355,7 @@ param (
         $key
     } else {
         $s = ""
-        for ($i=0; $i -lt $key.Length; $i+=32) {$s+="$($key.Substring($i,8))-$($key.Substring($i+4,4))-$($key.Substring($i+8,4))-$($key.Substring($i+12,4))-$($key.Substring($i+16,12))"}
+        for ($i=0; $i -lt $key.Length; $i+=32) {$s="$s$($key.Substring($i,8))-$($key.Substring($i+4,4))-$($key.Substring($i+8,4))-$($key.Substring($i+12,4))-$($key.Substring($i+16,12))"}
         $s
     }
 }
