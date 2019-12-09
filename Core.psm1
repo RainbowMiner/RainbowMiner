@@ -68,8 +68,8 @@
         $Script:AllPools = $null
 
         #Setup session variables
-        $Session.ActiveMiners = @()
-        $Session.WatchdogTimers = @()
+        [System.Collections.ArrayList]$Session.ActiveMiners = @()
+        [System.Collections.ArrayList]$Session.WatchdogTimers = @()
         [hashtable]$Session.Rates = @{BTC = [Double]1}
         [hashtable]$Session.ConfigFiles = @{
             Config     = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -402,7 +402,7 @@ function Invoke-Core {
         }
         if ($i -gt $Session.Config.BenchmarkInterval*2) {
             Update-WatchdogLevels -Reset
-            $Session.WatchdogTimers = @()
+            $Session.WatchdogTimers.Clear()
         }
     }
 
@@ -1736,7 +1736,7 @@ function Invoke-Core {
         }
         else {
             #Write-Log "New miner object for $($Miner.BaseName)"
-            $Session.ActiveMiners += New-Object $Miner.API -Property @{
+            $NewMiner = New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 Version              = $Miner.Version
                 BaseName             = $Miner.BaseName
@@ -1794,6 +1794,7 @@ function Invoke-Core {
                 MiningAffinity       = $Miner.MiningAffinity
                 MultiProcess         = [int]$Miner.MultiProcess
             }
+            $Session.ActiveMiners.Add($NewMiner) > $null
         }
     }
 
@@ -1910,7 +1911,7 @@ function Invoke-Core {
         $Miner.Stopped = $true
 
         #Remove watchdog timer
-        if ($Session.Config.Watchdog -and $Session.WatchdogTimers) {
+        if ($Session.Config.Watchdog -and $Session.WatchdogTimers.Count) {
             $Miner_Name = $Miner.Name
             $Miner_Index = 0
             $Miner.Algorithm | ForEach-Object {
@@ -1924,7 +1925,7 @@ function Invoke-Core {
                         Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
                     }
                     else {
-                        $Session.WatchdogTimers = $Session.WatchdogTimers -ne $WatchdogTimer
+                        $Session.WatchdogTimers.Remove($WatchdogTimer)
                     }
                 }
                 $Miner_Index++
@@ -1989,13 +1990,13 @@ function Invoke-Core {
                 $Miner_Algorithm = $_
                 $WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if (-not $WatchdogTimer) {
-                    $Session.WatchdogTimers += [PSCustomObject]@{
+                    $Session.WatchdogTimers.Add([PSCustomObject]@{
                         MinerName = $Miner_Name
                         DeviceModel= $Miner_DeviceModel
                         PoolName  = $Pools.$Miner_Algorithm.Name
                         Algorithm = $Miner_Algorithm
                         Kicked    = $Session.Timer
-                    }
+                    }) > $null
                 }
                 elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset))) {
                     $WatchdogTimer.Kicked = $Session.Timer
@@ -2448,7 +2449,7 @@ function Invoke-Core {
                 "W" {
                     $API.WatchdogReset = $false
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    $Session.WatchdogTimers = @()
+                    $Session.WatchdogTimers.Clear()
                     Update-WatchdogLevels -Reset
                     Write-Log "Watchdog reset."
                     $keyPressed = $true
