@@ -3971,7 +3971,7 @@ class Miner {
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
             $Devices = @($this.DeviceModel -split '-')
-            $Vendor  = $Global:Session.GC.CachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+            $Vendor  = $Script:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
             $ArgumentList = $this.GetArguments()
             
@@ -4450,7 +4450,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
         [System.Collections.ArrayList]$AmdCmd = @()
 
-        $Vendor = $Global:Session.GC.CachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Script:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Global:IsWindows) {
             if ($Vendor -ne "NVIDIA") {
@@ -4485,7 +4485,7 @@ class Miner {
 
             [System.Collections.ArrayList]$DeviceIds = @()
             [System.Collections.ArrayList]$CardIds   = @()
-            $Global:Session.GC.CachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
+            $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
                 $CardId = $_.CardId
                 $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
