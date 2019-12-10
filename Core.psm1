@@ -66,8 +66,8 @@
 
         #Setup Core script variables
         $Script:AllPools = $null
-        [System.Collections.ArrayList]$Script:ActiveMiners   = [Miner[]]@()
-        [System.Collections.ArrayList]$Script:WatchdogTimers = [PSCustomObject[]]@()
+        [System.Collections.ArrayList]$Script:ActiveMiners   = @()
+        [System.Collections.ArrayList]$Script:WatchdogTimers = @()
 
         #Setup session variables
         [hashtable]$Session.Rates = @{BTC = [Double]1}
