@@ -2694,8 +2694,8 @@ function Get-Device {
     }
 
     # Try to get cached devices first to improve performance
-    if ($Session.GC.CachedDevices -ne $null -and -not $Refresh) {
-        $Session.GC.CachedDevices | Foreach-Object {
+    if ((Test-Path Variable:Script:GlobalCachedDevices) -and -not $Refresh) {
+        $Script:GlobalCachedDevices | Foreach-Object {
             $Device = $_
             if (
                 ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
@@ -3008,7 +3008,7 @@ function Get-Device {
         Write-Log -Level Warn "CPU detection has failed. "
     }
 
-    $Session.GC.CachedDevices = $Devices
+    $Script:GlobalCachedDevices = $Devices
     $Devices
 }
 
@@ -3123,7 +3123,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Session.GC.CachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Script:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -3356,13 +3356,13 @@ function Update-DeviceInformation {
     $abReload = $true
 
     $PowerAdjust = @{}
-    $Session.GC.CachedDevices | Foreach-Object {
+    $Script:GlobalCachedDevices | Foreach-Object {
         $Model = $_.Model
         $PowerAdjust[$Model] = 100
         if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
     }
 
-    $Session.GC.CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
@@ -3576,9 +3576,9 @@ function Update-DeviceInformation {
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             if ($Session.GC.CpuTDP -eq $null) {$Session.GC.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
-                $CPU_count = ($Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+                $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
-                $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
                     $CIM_CPU | Select-Object -Index $Device.Type_Index | ForEach-Object {
                         if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
@@ -3615,7 +3615,7 @@ function Update-DeviceInformation {
                 if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
             } 
             elseif ($IsLinux) {
-                $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
@@ -3631,7 +3631,7 @@ function Update-DeviceInformation {
                 }
             }
 
-            $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+            $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                 $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
                 $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
@@ -5328,7 +5328,7 @@ function Set-GpuGroupsConfigDefault {
             $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Session.GC.CachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+                elseif ($Preset.$GpuName -ne "") {$Script:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
@@ -5367,7 +5367,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Session.GC.CachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
+                $SubsetDevices = @($Script:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 

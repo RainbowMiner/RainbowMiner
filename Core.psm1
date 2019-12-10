@@ -68,7 +68,7 @@
         $Script:AllPools = $null
 
         #Setup session variables
-        [System.Collections.ArrayList]$Session.GC.ActiveMiners = @()
+        [System.Collections.ArrayList]$Session.GC.ActiveMiners = [Miner[]]@()
         [System.Collections.ArrayList]$Session.GC.WatchdogTimers = @()
         [hashtable]$Session.Rates = @{BTC = [Double]1}
         [hashtable]$Session.ConfigFiles = @{
