@@ -138,14 +138,14 @@ function Get-Balance {
     [CmdletBinding()]
     param($Config, [Bool]$Refresh = $false, [Bool]$Details = $false)
     
-    if (-not (Test-Path Variable:Script:CachedPoolBalances) -or $Refresh) {
-        $Script:CachedPoolBalances = @(Get-BalancesContent -Config $Config | Group-Object -Property Caption | Foreach-Object {
+    if (-not $Session.GC.CachedPoolBalances -or $Refresh) {
+        $Session.GC.CachedPoolBalances = @(Get-BalancesContent -Config $Config | Group-Object -Property Caption | Foreach-Object {
             if ($_.Count -gt 1){foreach ($p in @("Balance","Pending","Total","Paid","Earned","Payouts")) {if (Get-Member -InputObject $_.Group[0] -Name $p) {if ($p -eq "Payouts") {$_.Group[0].$p = @($_.Group.$p | Select-Object)} else {$_.Group[0].$p = ($_.Group.$p | Measure-Object -Sum).Sum}}}}
             $_.Group[0]
         })
     }
 
-    $Balances = $Script:CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
+    $Balances = $Session.GC.CachedPoolBalances | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json -ErrorAction Ignore
 
     if (-not $Balances) {return}
 
@@ -294,27 +294,27 @@ function Update-Rates {
 
     $NewRatesFound = $false
 
-    if (-not (Test-Path Variable:Script:NewRates)) {[hashtable]$Script:NewRates = @{}}
+    if ($Session.GC.NewRates -eq $null) {[hashtable]$Session.GC.NewRates = @{}}
 
     if (-not $Symbols) {
         $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
-        $Script:NewRates.Clear()
-        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear()}
+        $Session.GC.NewRates.Clear()
+        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Session.GC.NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.GC.NewRates.Clear()}
 
-        if (-not $Script:NewRates.Count) {
+        if (-not $Session.GC.NewRates.Count) {
             Write-Log -Level Info "Coinbase is down, using fallback. "
-            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Session.GC.NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.GC.NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
         }
 
-        $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
+        $Session.Rates["BTC"] = $Session.GC.NewRates["BTC"] = [Double]1
 
         $NewRatesFound = $true
     } else {
         $Symbols = @($Symbols | Select-Object -Unique)
     }
 
-    Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
+    Compare-Object $Symbols @($Session.GC.NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Session.GC.NewRates[$_.InputObject]}
         elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
@@ -429,7 +429,7 @@ function Set-MinerStats {
     )
 
     $Miner_Failed_Total = 0
-    $Session.ActiveMiners | Foreach-Object {
+    $Session.GC.ActiveMiners | Foreach-Object {
         $Miner = $_
 
         if ($Miner.New) {$Miner.New = [Boolean]($Miner.Algorithm | Where-Object {-not (Get-Stat -Name "$($Miner.Name)_$($_ -replace '\-.*$')_HashRate" -Sub $Session.DevicesToVendors[$Miner.DeviceModel])})}
@@ -460,7 +460,7 @@ function Set-MinerStats {
                 }
 
                 #Update watchdog timer
-                if ($WatchdogTimer = $Session.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
+                if ($WatchdogTimer = $Session.GC.WatchdogTimers | Where-Object {$_.MinerName -eq $Miner.Name -and $_.PoolName -eq $Miner.Pool[$Miner_Index] -and $_.Algorithm -eq $Miner_Algorithm}) {
                     if ($Stat -and $Stat.Updated -gt $WatchdogTimer.Kicked) {
                         $WatchdogTimer.Kicked = $Stat.Updated
                         $Miner.CrashCount = 0
@@ -2694,8 +2694,8 @@ function Get-Device {
     }
 
     # Try to get cached devices first to improve performance
-    if ((Test-Path Variable:Script:GlobalCachedDevices) -and -not $Refresh) {
-        $Script:GlobalCachedDevices | Foreach-Object {
+    if ($Session.GC.CachedDevices -ne $null -and -not $Refresh) {
+        $Session.GC.CachedDevices | Foreach-Object {
             $Device = $_
             if (
                 ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
@@ -3008,7 +3008,7 @@ function Get-Device {
         Write-Log -Level Warn "CPU detection has failed. "
     }
 
-    $Script:GlobalCachedDevices = $Devices
+    $Session.GC.CachedDevices = $Devices
     $Devices
 }
 
@@ -3123,7 +3123,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Script:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Session.GC.CachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -3356,13 +3356,13 @@ function Update-DeviceInformation {
     $abReload = $true
 
     $PowerAdjust = @{}
-    $Script:GlobalCachedDevices | Foreach-Object {
+    $Session.GC.CachedDevices | Foreach-Object {
         $Model = $_.Model
         $PowerAdjust[$Model] = 100
         if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
     }
 
-    $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Session.GC.CachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
@@ -3386,7 +3386,7 @@ function Update-DeviceInformation {
                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $AdapterId = $_.Index
 
-                        if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                        if ($Session.GC.AmdCardsTDP -eq $null) {$Session.GC.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                         $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                             $_.Data.AdapterId         = [int]$AdapterId
@@ -3396,7 +3396,7 @@ function Update-DeviceInformation {
                             $_.Data.ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                             $_.Data.FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                             $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                            $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
+                            $_.Data.PowerDraw         = $Session.GC.AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
                             $_.Data.PowerLimitPercent = $PowerLimitPercent
                             #$_.Data.PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                             $_.Data.Method            = "ab"
@@ -3445,7 +3445,7 @@ function Update-DeviceInformation {
 
                             $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
 
-                            if (-not (Test-Path Variable:Script:AmdCardsTDP)) {$Script:AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                            if ($Session.GC.AmdCardsTDP -eq $null) {$Session.GC.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                             if ($null -ne $AdlResult) {
                                 $AdlResult | ForEach-Object {
@@ -3479,7 +3479,7 @@ function Update-DeviceInformation {
                                         $_.Data.Utilization       = [int]$AdlResultSplit[5]
                                         $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
                                         $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        $_.Data.PowerDraw         = $Script:AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
+                                        $_.Data.PowerDraw         = $Session.GC.AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
                                         $_.Data.Method            = "tdp"
 
                                         $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
@@ -3534,7 +3534,7 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                if (-not (Test-Path Variable:Script:NvidiaCardsTDP)) {$Script:NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($Session.GC.NvidiaCardsTDP -eq $null) {$Session.GC.NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
                     $Smi = $_
@@ -3553,7 +3553,7 @@ function Update-DeviceInformation {
                         $_.Data.Method            = "smi"
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
-                        if (-not $_.Data.PowerDraw -and $Script:NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Script:NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
+                        if (-not $_.Data.PowerDraw -and $Session.GC.NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Session.GC.NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
                         if ($_.Data.PowerDraw) {$_.Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
 
                         $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
@@ -3574,11 +3574,11 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if (-not (Test-Path Variable:Script:CpuTDP)) {$Script:CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+            if ($Session.GC.CpuTDP -eq $null) {$Session.GC.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
-                $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+                $CPU_count = ($Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
-                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
                     $CIM_CPU | Select-Object -Index $Device.Type_Index | ForEach-Object {
                         if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
@@ -3598,7 +3598,7 @@ function Update-DeviceInformation {
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = 100}
                         if (-not $CpuData.PowerDraw) {
                             $CpuName = $_.Name.Trim()
-                            if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                            if (-not ($CPU_tdp = $Session.GC.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Session.GC.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                             $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
                         }
 
@@ -3615,11 +3615,11 @@ function Update-DeviceInformation {
                 if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
             } 
             elseif ($IsLinux) {
-                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
-                    if (-not ($CPU_tdp = $Script:CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Script:CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                    if (-not ($CPU_tdp = $Session.GC.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Session.GC.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
                     $_.Data.Cores       = [int]$Global:GlobalCPUInfo.Cores
                     $_.Data.Threads     = [int]$Global:GlobalCPUInfo.Threads
@@ -3631,7 +3631,7 @@ function Update-DeviceInformation {
                 }
             }
 
-            $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+            $Session.GC.CachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                 $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
                 $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
@@ -3846,26 +3846,26 @@ function Get-PoolsInfo {
         [Switch]$Clear = $false
     )
     
-    if (-not (Test-Path Variables:Global:GlobalPoolsInfo)) {
-        $Global:GlobalPoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {
+    if ($Session.GC.PoolsInfo -eq $null) {
+        $Session.GC.PoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
+        $Session.GC.PoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
     }
     if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
         if ($Values.Count) {
             if ($AsObjects) {
-                $Global:GlobalPoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+                $Session.GC.PoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Global:GlobalPoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
+                $Session.GC.PoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
-            $Global:GlobalPoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+            $Session.GC.PoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
         }
     } else {
-        $Global:GlobalPoolsInfo.$Name
+        $Session.GC.PoolsInfo.$Name
     }
-    if ($Clear) {Remove-Variable "GlobalPoolsInfo" -Scope Global -Force}
+    if ($Clear) {$Session.GC.PoolsInfo = $null}
 }
 
 function Get-Regions {
@@ -4047,7 +4047,7 @@ class Miner {
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
             $Devices = @($this.DeviceModel -split '-')
-            $Vendor  = $Script:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+            $Vendor  = $Session.GC.CachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
             $ArgumentList = $this.GetArguments()
             
@@ -4373,17 +4373,15 @@ class Miner {
     }
 
     AddMinerData($Raw,$HashRate,$Difficulty,$Devices) {
-        $this.Data.Add(
-            [PSCustomObject]@{
-                Raw        = $Raw
+        $this.Data.Add([PSCustomObject]@{
+                Raw        = if ($Global:Session.LogLevel -eq "Debug") {$Raw} else {$null}
                 HashRate   = $HashRate
                 Difficulty = $Difficulty
                 Devices    = $Devices
                 Date       = (Get-Date).ToUniversalTime()
                 PowerDraw  = Get-DevicePowerDraw -DeviceName $this.DeviceName
                 Round      = $this.Rounds
-            }
-        ) > $null        
+            }) > $null        
         $this.ActiveLast = Get-Date
     }
 
@@ -4528,7 +4526,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
         [System.Collections.ArrayList]$AmdCmd = @()
 
-        $Vendor = $Script:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Session.GC.CachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Global:IsWindows) {
             if ($Vendor -ne "NVIDIA") {
@@ -4563,7 +4561,7 @@ class Miner {
 
             [System.Collections.ArrayList]$DeviceIds = @()
             [System.Collections.ArrayList]$CardIds   = @()
-            $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
+            $Session.GC.CachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
                 $CardId = $_.CardId
                 $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
@@ -5330,7 +5328,7 @@ function Set-GpuGroupsConfigDefault {
             $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Script:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+                elseif ($Preset.$GpuName -ne "") {$Session.GC.CachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
@@ -5369,7 +5367,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Script:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
+                $SubsetDevices = @($Session.GC.CachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -6514,7 +6512,7 @@ function Invoke-ReportMinerStatus {
     $TempAlert = 0
 
     $minerreport = ConvertTo-Json @(
-        $Session.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
+        $Session.GC.ActiveMiners | Where-Object {$_.Activated -GT 0 -and $_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {
             $Miner = $_
             $Miner_PowerDraw = $Miner.GetPowerDraw()
             $Profit += [Double]$Miner.Profit
