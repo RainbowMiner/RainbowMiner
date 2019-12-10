@@ -6665,7 +6665,7 @@ param(
         Invoke-NvidiaSmi "index","power.default_limit","power.min_limit","power.max_limit","power.limit" -Arguments "-i $($Device -join ',')" | Where-Object {$_.index -match "^\d+$"} | Foreach-Object {
             $index = $Device.IndexOf([int]$_.index)
             if ($index -ge 0) {
-                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[[Math]::Max($index,$PowerLimitPercent.Count)]/100),2)
+                $PLim = [Math]::Round([double]($_.power_default_limit -replace '[^\d,\.]')*($PowerLimitPercent[[Math]::Min($index,$PowerLimitPercent.Count)]/100),2)
                 $PCur = [Math]::Round([double]($_.power_limit -replace '[^\d,\.]'))
                 if ($lim = [int]($_.power_min_limit -replace '[^\d,\.]')) {$PLim = [Math]::max($PLim, $lim)}
                 if ($lim = [int]($_.power_max_limit -replace '[^\d,\.]')) {$PLim = [Math]::min($PLim, $lim)}
