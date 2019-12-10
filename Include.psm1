@@ -294,27 +294,27 @@ function Update-Rates {
 
     $NewRatesFound = $false
 
-    if ($Session.GC.NewRates -eq $null) {[hashtable]$Session.GC.NewRates = @{}}
+    if (-not (Test-Path Variable:Script:NewRates)) {[hashtable]$Script:NewRates = @{}}
 
     if (-not $Symbols) {
         $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
-        $Session.GC.NewRates.Clear()
-        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Session.GC.NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.GC.NewRates.Clear()}
+        $Script:NewRates.Clear()
+        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear()}
 
-        if (-not $Session.GC.NewRates.Count) {
+        if (-not $Script:NewRates.Count) {
             Write-Log -Level Info "Coinbase is down, using fallback. "
-            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Session.GC.NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Session.GC.NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
         }
 
-        $Session.Rates["BTC"] = $Session.GC.NewRates["BTC"] = [Double]1
+        $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
 
         $NewRatesFound = $true
     } else {
         $Symbols = @($Symbols | Select-Object -Unique)
     }
 
-    Compare-Object $Symbols @($Session.GC.NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Session.GC.NewRates[$_.InputObject]}
+    Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
         elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
