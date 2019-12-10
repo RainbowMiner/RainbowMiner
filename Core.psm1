@@ -894,9 +894,6 @@ function Invoke-Core {
     }
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
-    #Load API declaration
-    Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
-
     #Check for algorithms config
     if (Set-ConfigDefault "Algorithms") {
         if ($CheckConfig -or -not $Session.Config.Algorithms -or (Test-Config "Algorithms" -LastWriteTime) -or ($ConfigBackup.Algorithms -and (Compare-Object $Session.Config.Algorithms $ConfigBackup.Algorithms | Measure-Object).Count)) {
@@ -1354,6 +1351,10 @@ function Invoke-Core {
 
     if ($Session.Config.Proxy) {$PSDefaultParameterValues["*:Proxy"] = $Session.Config.Proxy}
     else {$PSDefaultParameterValues.Remove("*:Proxy")}
+
+    if ($Session.RoundCounter -eq 0) {Write-Host "Loading API modules .."}
+
+    Get-ChildItem "APIs" -File | Foreach-Object {. $_.FullName}
 
     if ($UseTimeSync) {Test-TimeSync}
     $Session.Timer = (Get-Date).ToUniversalTime()
