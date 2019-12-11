@@ -953,7 +953,7 @@ function Invoke-Core {
                     $_ | Add-Member Enable $(Get-Yes $_.Enable) -Force
                     $_ | Add-Member Pause  $(Get-Yes $_.Pause)  -Force
                     $_ | Add-Member EnableMiningHeatControl $(if ($_.EnableMiningHeatControl -eq "") {$Session.Config.EnableMiningHeatControl} else {Get-Yes $_.EnableMiningHeatControl}) -Force
-                    $_ | Add-Member MiningHeatControl $($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+") -Force
+                    $_ | Add-Member MiningHeatControl "$($_.MiningHeatControl -replace ",","." -replace "[^0-9\.]+")" -Force
                     $PowerPrice = if ($_.PowerPrice -eq "") {$Session.Config.PowerPrice} else {$_.PowerPrice}
                     try {$PowerPrice = [Double]$PowerPrice} catch {if ($Error.Count){$Error.RemoveAt(0)};$PowerPrice = $Session.Config.PowerPrice}
                     $_.PowerPrice = $PowerPrice
