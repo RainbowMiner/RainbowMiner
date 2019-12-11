@@ -784,9 +784,9 @@ function Invoke-Core {
         $Session.Config.Currency = @($Session.Config.Currency | ForEach-Object {$_.ToUpper()} | Where-Object {$_})
         $Session.Config.UIstyle = if ($Session.Config.UIstyle -ne "full" -and $Session.Config.UIstyle -ne "lite") {"full"} else {$Session.Config.UIstyle}
         $Session.Config.PowerPriceCurrency = $Session.Config.PowerPriceCurrency | ForEach-Object {$_.ToUpper()}
-        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min($Session.Config.MiningHeatControl -replace "[^\d\.]+",5.0),0.0),1)
-        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.PoolSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
-        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min($Session.Config.MinerSwitchingHysteresis -replace "[^\d\.\-]+",100.0),0.0)
+        $Session.Config.MiningHeatControl = [Math]::Round([Math]::Max([Math]::Min([double]($Session.Config.MiningHeatControl -replace ",","." -replace "[^\d\.]+"),5.0),0.0),1)
+        $Session.Config.PoolSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.PoolSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
+        $Session.Config.MinerSwitchingHysteresis = [Math]::Max([Math]::Min([double]($Session.Config.MinerSwitchingHysteresis -replace ",","." -replace "[^\d\.\-]+"),100.0),0.0)
         $Session.Config.PoolStatAverage =  Get-StatAverage $Session.Config.PoolStatAverage
         if ($Session.Config.BenchmarkInterval -lt 60) {$Session.Config.BenchmarkInterval = 60}
         if (-not $Session.Config.APIport) {$Session.Config | Add-Member APIport 4000 -Force}
