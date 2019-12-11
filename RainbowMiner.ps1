@@ -230,7 +230,7 @@ param(
     [String]$LogLevel = "Info" #select log level from "Debug", "Info", "Warn", "Error" and "Silent"
 )
 
-$ForceFullCollection = $true
+$ForceFullCollection = $false
 $EnableMinerStatus = $true
 
 Initialize-Session
@@ -310,6 +310,8 @@ while (-not $Session.Stopp) {
             [System.GC]::WaitForPendingFinalizers()
             [System.GC]::Collect()
             Get-MemoryUsage -ForceFullCollection >$null
+        } else {
+            [System.GC]::Collect()
         }
         Write-Log (Get-MemoryUsage -Reset).MemText
     }
