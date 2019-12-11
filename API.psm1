@@ -33,6 +33,8 @@
 
     $API.Server = [PowerShell]::Create().AddScript({
 
+        if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+
         $ProgressPreference = "SilentlyContinue"
 
         # Set the starting directory
@@ -475,6 +477,7 @@
                         $Data = $Balances | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
                         $Data = $Data -join "`r`n"
                     } else {
+                        $Balances = $Balances | ConvertTo-Json -Compress -Depth 10 | ConvertFrom-Json
                         if ($Parameters.add_btc) {
                             $Balances | Foreach-Object {
                                 $Rate = $API.Rates."$($_.Currency)"
@@ -1060,9 +1063,11 @@
                 $Error.Clear()
             }
         }
-        # Only gets here if something is wrong and the server couldn't start or stops listening
+
         $Server.Stop()
         $Server.Close()
+
+        Stop-Transcript
     }) #end of $apiserver
 
     $API.Server.Runspace = $newRunspace
