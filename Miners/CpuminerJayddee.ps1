@@ -22,59 +22,59 @@ $Version = "3.10.2"
 if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "allium"; Params = ""} #Garlicoin
-    [PSCustomObject]@{MainAlgorithm = "anime"; Params = ""} #Anime
-    [PSCustomObject]@{MainAlgorithm = "argon2"; Params = ""} #Argon2
-    #[PSCustomObject]@{MainAlgorithm = "argon2d-crds"; Params = ""} #Argon2Credits
-    #[PSCustomObject]@{MainAlgorithm = "argon2d-dyn"; Params = ""} #Argon2Dynamic
-    #[PSCustomObject]@{MainAlgorithm = "argon2d-uis"; Params = ""} #Argon2Unitus
-    #[PSCustomObject]@{MainAlgorithm = "axiom"; Params = ""} #axiom
-    [PSCustomObject]@{MainAlgorithm = "bastion"; Params = ""} #bastion
-    [PSCustomObject]@{MainAlgorithm = "blake2s"; Params = ""} #blake2s
-    [PSCustomObject]@{MainAlgorithm = "bmw"; Params = ""} #bmw
-    #[PSCustomObject]@{MainAlgorithm = "bmw512"; Params = ""} #bmw512
-    #[PSCustomObject]@{MainAlgorithm = "cpupower"; Params = "-N 2048 -R 32 -K `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
-    #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; Params = ""} #CryptoNightV7
-    [PSCustomObject]@{MainAlgorithm = "deep"; Params = ""} #deep
-    [PSCustomObject]@{MainAlgorithm = "drop"; Params = ""} #drop
-    [PSCustomObject]@{MainAlgorithm = "fresh"; Params = ""} #fresh
-    [PSCustomObject]@{MainAlgorithm = "heavy"; Params = ""} #heavy
-    [PSCustomObject]@{MainAlgorithm = "hex"; Params = ""} #HEX
-    [PSCustomObject]@{MainAlgorithm = "hodl"; Params = ""} #HODL
-    [PSCustomObject]@{MainAlgorithm = "jha"; Params = ""} #JHA
-    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; Params = ""} #Lyra2v3
-    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; Params = ""} #lyra2z330, CpuminerRplant faster
-    #[PSCustomObject]@{MainAlgorithm = "m7m"; Params = ""} #m7m, (CpuminerRKZ faster)
-    [PSCustomObject]@{MainAlgorithm = "pentablake"; Params = ""} #pentablake
-    [PSCustomObject]@{MainAlgorithm = "phi2"; Params = ""} #PHI2
-    [PSCustomObject]@{MainAlgorithm = "pluck"; Params = ""} #pluck
-    [PSCustomObject]@{MainAlgorithm = "power2b"; Params = ""} #power2b
-    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; Params = ""} #Verium
-    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; Params = ""} #ScryptN
-    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; Params = ""} #Scrypt8k
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; Params = ""} #ScryptJane16
-    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; Params = ""} #scryptjane:nf
-    [PSCustomObject]@{MainAlgorithm = "sha256q"; Params = ""} #sha256q
-    [PSCustomObject]@{MainAlgorithm = "shavite3"; Params = ""} #shavite3
-    [PSCustomObject]@{MainAlgorithm = "skein2"; Params = ""} #skein2
-    [PSCustomObject]@{MainAlgorithm = "sonoa"; Params = ""} #Sonoa
-    [PSCustomObject]@{MainAlgorithm = "veltor"; Params = ""} #Veltor
-    [PSCustomObject]@{MainAlgorithm = "x12"; Params = ""} #x12
-    [PSCustomObject]@{MainAlgorithm = "x15"; Params = ""} #x15
-    #[PSCustomObject]@{MainAlgorithm = "x13bcd"; Params = ""} #bcd
-    #[PSCustomObject]@{MainAlgorithm = "x16rt"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
-    #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
-    [PSCustomObject]@{MainAlgorithm = "x16rv2"; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
-    [PSCustomObject]@{MainAlgorithm = "x21s"; Params = ""} #x21s
-    [PSCustomObject]@{MainAlgorithm = "x22i"; Params = ""} #x22i
-    [PSCustomObject]@{MainAlgorithm = "x25x"; Params = ""} #x25x
-    [PSCustomObject]@{MainAlgorithm = "yescrypt"; Params = ""} #Yescrypt
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; Params = ""} #yescryptr16, CpuminerOptBF faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; Params = ""} #yescryptr32, CpuminerOptBF faster
-    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; Params = ""} #yescryptr8, CpuminerOptBF faster
-    [PSCustomObject]@{MainAlgorithm = "yespower"; Params = ""} #YesPower
-    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; Params = ""} #YesPowerR16, CpuminerRplant faster
-    [PSCustomObject]@{MainAlgorithm = "zr5"; Params = ""} #zr5
+    [PSCustomObject]@{MainAlgorithm = "allium"; NH = $true; Params = ""} #Garlicoin
+    [PSCustomObject]@{MainAlgorithm = "anime";  NH = $true; Params = ""} #Anime
+    [PSCustomObject]@{MainAlgorithm = "argon2"; NH = $true; Params = ""} #Argon2
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-crds"; NH = $true; Params = ""} #Argon2Credits
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-dyn";  NH = $true; Params = ""} #Argon2Dynamic
+    #[PSCustomObject]@{MainAlgorithm = "argon2d-uis";  NH = $true; Params = ""} #Argon2Unitus
+    #[PSCustomObject]@{MainAlgorithm = "axiom"; NH = $true; Params = ""} #axiom
+    [PSCustomObject]@{MainAlgorithm = "bastion"; NH = $true; Params = ""} #bastion
+    [PSCustomObject]@{MainAlgorithm = "blake2s"; NH = $false; Params = ""} #blake2s
+    [PSCustomObject]@{MainAlgorithm = "bmw"; NH = $true; Params = ""} #bmw
+    #[PSCustomObject]@{MainAlgorithm = "bmw512"; NH = $true; Params = ""} #bmw512
+    #[PSCustomObject]@{MainAlgorithm = "cpupower"; NH = $true; Params = "-N 2048 -R 32 -K `"CPUpower: The number of CPU working or available for proof-of-work mining`""; Algorithm = "yespower"} #CpuPower
+    #[PSCustomObject]@{MainAlgorithm = "cryptonightv7"; NH = $true; Params = ""} #CryptoNightV7
+    [PSCustomObject]@{MainAlgorithm = "deep"; NH = $true; Params = ""} #deep
+    [PSCustomObject]@{MainAlgorithm = "drop"; NH = $true; Params = ""} #drop
+    [PSCustomObject]@{MainAlgorithm = "fresh"; NH = $true; Params = ""} #fresh
+    [PSCustomObject]@{MainAlgorithm = "heavy"; NH = $true; Params = ""} #heavy
+    [PSCustomObject]@{MainAlgorithm = "hex"; NH = $true; Params = ""} #HEX
+    [PSCustomObject]@{MainAlgorithm = "hodl"; NH = $true; Params = ""} #HODL
+    [PSCustomObject]@{MainAlgorithm = "jha"; NH = $true; Params = ""} #JHA
+    [PSCustomObject]@{MainAlgorithm = "lyra2rev3"; NH = $true; Params = ""} #Lyra2v3
+    #[PSCustomObject]@{MainAlgorithm = "lyra2z330"; NH = $true; Params = ""} #lyra2z330, CpuminerRplant faster
+    #[PSCustomObject]@{MainAlgorithm = "m7m"; NH = $true; Params = ""} #m7m, (CpuminerRKZ faster)
+    [PSCustomObject]@{MainAlgorithm = "pentablake"; NH = $true; Params = ""} #pentablake
+    [PSCustomObject]@{MainAlgorithm = "phi2"; NH = $true; Params = ""} #PHI2
+    [PSCustomObject]@{MainAlgorithm = "pluck"; NH = $true; Params = ""} #pluck
+    [PSCustomObject]@{MainAlgorithm = "power2b"; NH = $true; Params = ""} #power2b
+    [PSCustomObject]@{MainAlgorithm = "scrypt:1048576"; NH = $true; Params = ""} #Verium
+    [PSCustomObject]@{MainAlgorithm = "scrypt:2048"; NH = $true; Params = ""} #ScryptN
+    [PSCustomObject]@{MainAlgorithm = "scrypt:8192"; NH = $true; Params = ""} #Scrypt8k
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:16"; NH = $true; Params = ""} #ScryptJane16
+    [PSCustomObject]@{MainAlgorithm = "scryptjane:nf"; NH = $true; Params = ""} #scryptjane:nf
+    [PSCustomObject]@{MainAlgorithm = "sha256q"; NH = $true; Params = ""} #sha256q
+    [PSCustomObject]@{MainAlgorithm = "shavite3"; NH = $true; Params = ""} #shavite3
+    [PSCustomObject]@{MainAlgorithm = "skein2"; NH = $true; Params = ""} #skein2
+    [PSCustomObject]@{MainAlgorithm = "sonoa"; NH = $true; Params = ""} #Sonoa
+    [PSCustomObject]@{MainAlgorithm = "veltor"; NH = $true; Params = ""} #Veltor
+    [PSCustomObject]@{MainAlgorithm = "x12"; NH = $true; Params = ""} #x12
+    [PSCustomObject]@{MainAlgorithm = "x15"; NH = $true; Params = ""} #x15
+    #[PSCustomObject]@{MainAlgorithm = "x13bcd"; NH = $true; Params = ""} #bcd
+    #[PSCustomObject]@{MainAlgorithm = "x16rt"; NH = $true; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt
+    #[PSCustomObject]@{MainAlgorithm = "x16rt-veil"; NH = $true; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rt-veil
+    [PSCustomObject]@{MainAlgorithm = "x16rv2"; NH = $true; Params = ""; ExtendInterval = 3; FaultTolerance = 0.7; HashrateDuration = "Day"} #x16rv2
+    [PSCustomObject]@{MainAlgorithm = "x21s"; NH = $true; Params = ""} #x21s
+    [PSCustomObject]@{MainAlgorithm = "x22i"; NH = $true; Params = ""} #x22i
+    [PSCustomObject]@{MainAlgorithm = "x25x"; NH = $true; Params = ""} #x25x
+    [PSCustomObject]@{MainAlgorithm = "yescrypt"; NH = $true; Params = ""} #Yescrypt
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr16"; NH = $true; Params = ""} #yescryptr16, CpuminerOptBF faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr32"; NH = $true; Params = ""} #yescryptr32, CpuminerOptBF faster
+    #[PSCustomObject]@{MainAlgorithm = "yescryptr8"; NH = $true; Params = ""} #yescryptr8, CpuminerOptBF faster
+    [PSCustomObject]@{MainAlgorithm = "yespower"; NH = $true; Params = ""} #YesPower
+    #[PSCustomObject]@{MainAlgorithm = "yespowerr16"; NH = $true; Params = ""} #YesPowerR16, CpuminerRplant faster
+    [PSCustomObject]@{MainAlgorithm = "zr5"; NH = $true; Params = ""} #zr5
 
     #GPU or ASIC - never profitable
     #[PSCustomObject]@{MainAlgorithm = "bitcore"; Params = ""} #Bitcore
@@ -150,7 +150,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
         $Algorithm_Norm_0 = Get-Algorithm $_.MainAlgorithm
 
 		foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Lyra2z330" -or $Pools.$Algorithm_Norm.Name -ne "Zpool")) {
+			if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and ($Algorithm_Norm -ne "Lyra2z330" -or $Pools.$Algorithm_Norm.Name -ne "Zpool") -and ($_.NH -or $Pools.$Algorithm_Norm.Name -ne "NiceHash")) {
                 if ($First) {
                     $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)
                     $Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
