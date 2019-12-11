@@ -34,14 +34,13 @@
     $API.Server = [PowerShell]::Create().AddScript({
 
         $ProgressPreference = "SilentlyContinue"
-        $WarningPreference = "SilentlyContinue"
-        $InformationPreference = "SilentlyContinue"
 
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
         Import-Module ".\Include.psm1"
         Import-Module ".\MiningRigRentals.psm1"
+        Import-Module ".\APIhelper.psm1"
 
         $BasePath = Join-Path $PWD "web"
 
@@ -51,24 +50,7 @@
             [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
         }
 
-        # List of possible mime types for files
-        $MIMETypes = @{
-            ".js" = "application/x-javascript"
-            ".html" = "text/html"
-            ".htm" = "text/html"
-            ".json" = "application/json"
-            ".css" = "text/css"
-            ".txt" = "text/plain"
-            ".ico" = "image/x-icon"
-            ".png" = "image/png"
-            ".jpg" = "image/jpeg"
-            ".gif" = "image/gif"
-            ".ps1" = "text/html" # ps1 files get executed, assume their response is html
-            ".7z"  = "application/x-7z-compressed”
-            ".zip" = "application/zip”
-        }
-
-        $Clients = @()
+        [System.Collections.ArrayList]$Clients = @()
 
         # Setup the listener
         $Server = New-Object System.Net.HttpListener
@@ -82,11 +64,12 @@
         $Server.Start()
 
         $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
-        $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 
         While ($Server.IsListening -and -not $API.Stop) {
-            $task = $Server.GetContextAsync();
+            $Data    = $null
             $Context = $null
+
+            $task = $Server.GetContextAsync()
             while(-not $Context -and -not $API.Stop){
                 if ($API.IsServer -and (-not $StopWatch.IsRunning -or $StopWatch.ElapsedMilliseconds -gt 1000)) {
                     #Send-APIServerUdp -Port $API.APIport -MachineName $API.MachineName -IPaddress $API.MyIP > $null
@@ -95,102 +78,34 @@
                 if($task.Wait(500)){$Context = $task.Result}
                 if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
-            $task = $null
 
             if ($API.Stop) {Break}
+
+            $Response = $Context.Response
+			$Response.Headers.Add("Accept-Encoding","gzip");
+			$Response.Headers.Add("Server","RainbowMiner API on $($API.MachineName)");
+			$Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
 
             $Request         = $Context.Request
 		    $InputStream     = $Request.InputStream
 			$ContentEncoding = $Request.ContentEncoding
 
-            $Parameters = [PSCustomObject]@{}
-
-            # Get query parameters		
-    		foreach ($Query in $Request.QueryString) {
-			    $QueryString = $Request.QueryString["$Query"]
-			    if ($QueryString -and $Query) {
-                    $Parameters | Add-Member $Query $QueryString -Force
-			    }
-		    }
-
-            # Get post parameters
-            if($Request.HasEntityBody -and $Request.HttpMethod -in @("POST","PUT")) {
-	            $PostCommand = New-Object IO.StreamReader ($InputStream,$ContentEncoding)
-	            $PostCommand = $PostCommand.ReadToEnd()
-	            $PostCommand = $PostCommand.ToString()
-	
-	            if ($PostCommand) {
-		            $PostCommand = $PostCommand -replace('\+'," ")
-		            $PostCommand = $PostCommand -replace("%20"," ")
-		            $PostCommand = $PostCommand -replace("%21","!")
-		            $PostCommand = $PostCommand -replace('%22','"')
-		            $PostCommand = $PostCommand -replace("%23","#")
-		            $PostCommand = $PostCommand -replace("%24","$")
-		            $PostCommand = $PostCommand -replace("%25","%")
-		            $PostCommand = $PostCommand -replace("%27","'")
-		            $PostCommand = $PostCommand -replace("%28","(")
-		            $PostCommand = $PostCommand -replace("%29",")")
-		            $PostCommand = $PostCommand -replace("%2A","*")
-		            $PostCommand = $PostCommand -replace("%2B","+")
-		            $PostCommand = $PostCommand -replace("%2C",",")
-		            $PostCommand = $PostCommand -replace("%2D","-")
-		            $PostCommand = $PostCommand -replace("%2E",".")
-		            $PostCommand = $PostCommand -replace("%2F","/")
-		            $PostCommand = $PostCommand -replace("%3A",":")
-		            $PostCommand = $PostCommand -replace("%3B",";")
-		            $PostCommand = $PostCommand -replace("%3C","<")
-		            $PostCommand = $PostCommand -replace("%3E",">")
-		            $PostCommand = $PostCommand -replace("%3F","?")
-		            $PostCommand = $PostCommand -replace("%5B","[")
-		            $PostCommand = $PostCommand -replace("%5C","\")
-		            $PostCommand = $PostCommand -replace("%5D","]")
-		            $PostCommand = $PostCommand -replace("%5E","^")
-		            $PostCommand = $PostCommand -replace("%5F","_")
-		            $PostCommand = $PostCommand -replace("%7B","{")
-		            $PostCommand = $PostCommand -replace("%7C","|")
-		            $PostCommand = $PostCommand -replace("%7D","}")
-		            $PostCommand = $PostCommand -replace("%7E","~")
-		            $PostCommand = $PostCommand -replace("%7F","_")
-		            $PostCommand = $PostCommand -replace("%7F%25","%")
-		            $PostCommand = $PostCommand.Split("&")
-
-		            foreach ($Post in $PostCommand) {
-			            $PostValue = $Post.Replace("%26","&")
-			            $PostContent = $PostValue.Split("=")
-			            $PostName = $PostContent[0] -replace("%3D","=")
-			            $PostValue = $PostContent[1] -replace("%3D","=")
-
-			            if ($PostName.EndsWith("[]")) {
-				            $PostName = $PostName.Substring(0,$PostName.Length-2)
-				            if ($Parameters.$Postname -isnot [array]) {
-					            $Parameters | Add-Member $Postname (@()) -Force
-					            $Parameters."$PostName" += $PostValue
-				            } else {
-					            $Parameters."$PostName" += $PostValue
-				            }
-			            } else {
-				            $Parameters | Add-Member $PostName $PostValue -Force
-			            }
-		            }
-                    Remove-Variable "PostCommand" -ErrorAction Ignore
-                }
-          	}
-
+			# Get query and post parameters
+			$Parameters = Get-QueryParameters -Request $Request -InputStream $InputStream -ContentEncoding $ContentEncoding
+				
             # Determine the requested resource and parse query strings
             $Path = $Request.Url.LocalPath
 
-            # Create a new response and the defaults for associated settings
-            $Response = $Context.Response
-            $ContentType = "application/json"
-            $StatusCode = 200
-            $Data = ""
+            # Create the defaults for associated settings
+            $ContentType     = "application/json"
+            $StatusCode      = [System.Net.HttpStatusCode]::OK
             $ContentFileName = ""
 
             if ($Path -match $API.RandTag) {$Path = "/stop";$API.APIAuth = $false}
             
             if($API.RemoteAPI -and $API.APIauth -and (-not $Context.User.Identity.IsAuthenticated -or $Context.User.Identity.Name -ne $API.APIuser -or $Context.User.Identity.Password -ne $API.APIpassword)) {
-                $Data = "Access denied"
-                $StatusCode = 401
+                $Data        = "Access denied"
+                $StatusCode  = [System.Net.HttpStatusCode]::Unauthorized
                 $ContentType = "text/html"
             } else {
                 # Set the proper content type, status code and data for each resource
@@ -407,7 +322,7 @@
                     Remove-Item $DebugPath -Recurse -Force
 
                     $Data = [System.IO.File]::ReadAllBytes("$($DebugPath).zip")
-                    $ContentType = $MIMETypes[".zip"]
+                    $ContentType = Get-MimeType ".zip"
                     $ContentFileName = "debug_$($DebugDate).zip"
 
                     Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
@@ -416,7 +331,6 @@
                 }
                 "/setup.json" {
                     $Data = ConvertTo-Json ([PSCustomObject]@{Autostart=[PSCustomObject]@{Enable="0";ConfigName="All";DeviceName="GPU";WorkerName=""};Exclude=$API.Config.ExcludeServerConfigVars;Config=(Get-ConfigContent "config");Pools=(Get-ConfigContent "pools");Coins=(Get-ConfigContent "coins");OCProfiles=(Get-ConfigContent "ocprofiles");Scheduler=(Get-ConfigContent "scheduler")}) -Depth 10
-                    $ContentType = $MIMETypes[".json"]
                     $ContentFileName = "setup.json"
                     Break
                 }
@@ -770,7 +684,7 @@
                     Break
                 }
                 "/clients" {
-                    $Data = ConvertTo-Json @($Clients | Select-Object)
+                    $Data = ConvertTo-Json $Clients
                     Break
                 }
                 "/action/toggleminer" {
@@ -822,7 +736,7 @@
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = [PSCustomObject]@{}
                         $Parameters.config -split ',' | Where-Object {$_} | Foreach-Object {
@@ -857,7 +771,7 @@
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -904,7 +818,7 @@
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -936,7 +850,7 @@
                                 $Client.machineip = $Parameters.myip
                                 $Client.timestamp = Get-UnixTimestamp
                             }
-                            else {$Clients += [PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}}
+                            else {$Clients.Add([PSCustomObject]@{workername = $Parameters.workername; machinename = $Parameters.machinename; machineip = $Parameters.myip; timestamp = Get-UnixTimestamp}) > $null}
                         }
                         $Result = $null
                         try {
@@ -1085,17 +999,11 @@
                             $Data = [System.IO.File]::ReadAllBytes($File.FullName)
                         }
 
-                        # Set content type based on file extension
-                        If ($MIMETypes.ContainsKey($File.Extension)) {
-                            $ContentType = $MIMETypes[$File.Extension]
-                        } else {
-                            # If it's an unrecognized file type, prompt for download
-                            $ContentType = "application/octet-stream"
-                        }
+                        $ContentType = Get-MimeType $File.Extension
                     } else {
-                        $StatusCode = 404
+                        $Data        = "URI '$Path' is not a valid resource."
+                        $StatusCode  = [System.Net.HttpStatusCode]::NotFound
                         $ContentType = "text/html"
-                        $Data = "URI '$Path' is not a valid resource."
                     }
                 }
             }
@@ -1103,27 +1011,28 @@
 
             # If $Data is null, the API will just return whatever data was in the previous request.  Instead, show an error
             # This happens if the script just started and hasn't filled all the properties in yet.
-            If($Data -eq $null) {
-                $StatusCode = 404
+            If ($Data -eq $null) {
+                $Data        = "API data not (yet) available"
+                $StatusCode  = [System.Net.HttpStatusCode]::NotFound
                 $ContentType = "text/html"
-                $Data = "API data not (yet) available"
             }
 
             try {
                 # Send the response
-			    $Response.Headers.Add("Accept-Encoding","gzip");
-			    $Response.Headers.Add("Server","RainbowMiner API on $($API.MachineName)");
-			    $Response.Headers.Add("X-Powered-By","Microsoft PowerShell");
-                $Response.Headers.Add("Content-Type", $ContentType)
-                #if ($StatusCode -eq 401) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
+                #$Response.Headers.Add("Content-Type", $ContentType)
+                #if ($StatusCode -eq [System.Net.HttpStatusCode]::Unauthorized) {$Response.Headers.Add("WWW-Authenticate","Basic Realm=`"RainbowMiner API`"")}
                 if ($ContentFileName -ne "") {
                     $Response.Headers.Add("Content-Disposition", "attachment; filename=$($ContentFileName)")
                 }
-                $Response.StatusCode = $StatusCode
+
+                $Response.ContentType = "$ContentType"
+                $Response.StatusCode  = $StatusCode
+
                 if ($Data -is [string]) {
-                    $StreamWriter = New-Object IO.StreamWriter($Response.OutputStream,$Utf8NoBomEncoding)
-					$StreamWriter.WriteLine($Data)
-                    $StreamWriter.Flush()
+                    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+                    $ResponseStream = New-Object IO.StreamWriter($Response.OutputStream,$Utf8NoBomEncoding)
+					$ResponseStream.Write($Data)
+                    $ResponseStream.Flush()
                 } else {
                     $Response.ContentLength64 = $Data.Length
                     $Response.OutputStream.Write($Data,0,$Data.Length)
@@ -1133,19 +1042,6 @@
                 if ($API.Config.LogLevel -ne "Silent") {
                     Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Response not sent: $($_.Exception.Message)" -Append -Timestamp
                 }
-            }
-
-            if ($StreamWriter) {
-                try {
-                    $StreamWriter.Close()
-                    $StreamWriter.Dispose()
-                } catch {
-                    if ($Error.Count){$Error.RemoveAt(0)}
-                    if ($API.Config.LogLevel -ne "Silent") {
-                        Write-ToFile -FilePath "Logs\errors_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "Close streamwriter failed: $($_.Exception.Message)" -Append -Timestamp
-                    }
-                }
-                if ($StreamWriter) {Remove-Variable "StreamWriter"}
             }
 
             try {
@@ -1163,7 +1059,6 @@
                 }
                 $Error.Clear()
             }
-            Foreach ($var in @("Context","Data","ContentEncoding","InputStream","Parameters","Request","Response","ResponseBuffer","task")) {Remove-Variable $var -Force -ErrorAction Ignore}
         }
         # Only gets here if something is wrong and the server couldn't start or stops listening
         $Server.Stop()
