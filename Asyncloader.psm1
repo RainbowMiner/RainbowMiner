@@ -27,15 +27,16 @@ Param(
     $newRunspace.SessionStateProxy.SetVariable("Session", $Session)
     $newRunspace.SessionStateProxy.Path.SetLocation($(pwd)) > $null
 
-    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({        
-        Import-Module ".\Include.psm1"
+    $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
+
+        if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
-        $WarningPreference = "SilentlyContinue"
-        $InformationPreference = "SilentlyContinue"
 
         # Set the starting directory
         if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
+
+        Import-Module ".\Include.psm1"
 
         Set-OsFlags
 
@@ -80,6 +81,7 @@ Param(
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
+        Stop-Transcript
     });
     $AsyncLoader.Loader.Runspace = $newRunspace
     $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
