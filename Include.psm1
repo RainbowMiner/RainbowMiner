@@ -128,7 +128,6 @@ function Get-PoolPayoutCurrencies {
     if ($Session.GC.PoolFields -eq $null) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
         $Session.GC.PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
-        #Remove-Variable "Setup"
     }
     @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Session.GC.PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
@@ -226,7 +225,6 @@ function Update-Rates {
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
                 $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
             }
-            #if ($RatesAPI) {Remove-Variable "RatesAPI"}
         }
         catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -258,13 +256,10 @@ function Get-WhatToMineData {
                     $WtmFactors.PSObject.Properties.Name | Where-Object {@($WtmKeys.algo) -inotcontains $_} | Foreach-Object {
                         $WtmKeys.Add([PSCustomObject]@{algo = $_;factor = $WtmFactors.$_}) > $null
                     }
-                    #Remove-Variable "WtmFactors"
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
-                #Remove-Variable "WtmKeys"
                 $Session.GC.WTMData = $null
             }
-            #if ($WtmUrl) {Remove-Variable "WtmUrl"}
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Info "WhatToMiner datagrabber failed. "
@@ -342,7 +337,6 @@ function Write-ToFile {
             }
             $file.Close()
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
-        #if ($file) {Remove-Variable "file"}
     }
 }
 
@@ -407,7 +401,6 @@ Function Write-Log {
             if ($mutex.WaitOne(2000)) {
                 $proc = Get-Process -id $PID
                 Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
-                #Remove-Variable "proc"
                 $mutex.ReleaseMutex()
             }
             else {
@@ -511,7 +504,6 @@ function Set-Total {
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
             $CsvLine | Export-ToCsvFile $PathCsv
-            #Remove-Variable "CsvLine"
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -709,7 +701,6 @@ function Set-Balance {
             $CsvLine | Export-ToCsvFile "$($Path0)\Earnings_Localized.csv" -UseCulture
             $CsvLine.PSObject.Properties | Foreach-Object {$_.Value = "$($_.Value)"}
             $CsvLine | Export-ToCsvFile "$($Path0)\Earnings.csv"
-            #Remove-Variable "CsvLine" -Force
         }
 
         $Stat.Last_Earnings = @($Stat.Last_Earnings | Where-Object Date -gt ($Updated_UTC.AddDays(-7)) | Select-Object)
@@ -1472,7 +1463,6 @@ function Get-PoolsContent {
             }
             $Pool
         }
-        #Remove-Variable "Parameters"
     }
 }
 
@@ -1509,7 +1499,6 @@ function Get-MinersContent {
             }
         }
     }
-    #Remove-Variable "Parameters"
 }
 
 function Get-BalancesContent {
@@ -2014,7 +2003,6 @@ function Start-SubProcessInScreen {
             }
             if ($null -ne ($BashProc = Start-Process @ProcessParams)) {
                 $started = $BashProc.WaitForExit(60000)
-                #Remove-Variable "BashProc" -Force
             }
         }
         if ($started) {
@@ -2028,8 +2016,6 @@ function Start-SubProcessInScreen {
             } until ($Process -ne $null -or ($StopWatch.Elapsed.TotalSeconds) -ge 10)
             $StopWatch.Stop()
         }
-
-        #Remove-Variable "StopWatch"
 
         if (-not $Process) {
             [PSCustomObject]@{ProcessId = $null}
@@ -2341,8 +2327,6 @@ function Invoke-Exe {
     } finally {
         if ($psi) {
             $process.Dispose()
-            #Remove-Variable "psi" -ErrorAction Ignore -Force
-            #Remove-Variable "process" -ErrorAction Ignore -Force
         }
     }
 }
@@ -2753,7 +2737,6 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $CIM_CPU[0].MaxClockSpeed
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
                     Get-CPUFeatures | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
-                    #if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
                 }
             } elseif ($IsLinux) {
                 $Data = Get-Content "/proc/cpuinfo"
@@ -3342,7 +3325,6 @@ function Update-DeviceInformation {
                                     }
                                     $DeviceId++
                                 }
-                                #Remove-Variable "Rocm" -ErrorAction Ignore -For
                             }
                         }
                     }
@@ -3435,7 +3417,6 @@ function Update-DeviceInformation {
                         $Device.Data.Method      = $CpuData.Method
                     }
                 }
-                #if ($CIM_CPU) {Remove-Variable "CIM_CPU" -Force}
             } 
             elseif ($IsLinux) {
                 $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
@@ -3859,7 +3840,6 @@ class Miner {
                     $portmax = [math]::min($this.Port+9999,65535)
                     while ($this.Port -le $portmax -and $PortsInUse.Contains($this.Port)) {$this.Port+=20}
                     if ($this.Port -gt $portmax) {$this.Port=$this.StartPort}
-                    #if ($PortsInUse -ne $null) {Remove-Variable "PortsInUse"}
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
                     Write-Log -Level Warn "Auto-Port failed for $($this.Name): $($_.Exception.Message)"
@@ -5988,7 +5968,6 @@ Param(
                 myip      = $Session.MyIP
             }
             $Result = Invoke-GetUrl "http://$($Session.Config.ServerName):$($Session.Config.ServerPort)/getjob" -body $serverbody -user $Session.Config.ServerUser -password $Session.Config.ServerPassword -ForceLocal
-            #Remove-Variable "serverbody"
             if ($Result.Status) {return $Result.Content}
         }
 
@@ -6035,8 +6014,6 @@ Param(
             }
 
             [PSCustomObject]@{Data = $Data}
-
-            #if ($Data -ne $null) {Remove-Variable "Data"}
         }
 
         if (Get-Command "Start-ThreadJob" -ErrorAction Ignore) {
@@ -6044,8 +6021,6 @@ Param(
         } else {
             $Job = Start-Job -ArgumentList $RequestUrl,$method,$useragent,$timeout,$requestmethod,$headers_local,$body -ScriptBlock $ScriptBlock
         }
-
-        #Remove-Variable "headers_local"
 
         if ($Job) {
             $Job | Wait-Job -Timeout ($timeout*2) > $null
@@ -6056,10 +6031,8 @@ Param(
             } else {
                 try {$Data = Receive-Job -Job $Job} catch {if ($Error.Count){$Error.RemoveAt(0)}}
                 if ($Data -and $Data.Data.ErrorMessage -ne $null)  {$ErrorMessage = $Data.Data.ErrorMessage} else {$Data.Data}
-                #if ($Data -ne $null) {Remove-Variable "Data"}
             }
             try {Remove-Job $Job -Force} catch {if ($Error.Count){$Error.RemoveAt(0)}}
-            #Remove-Variable "Job"
             if ($ErrorMessage -ne '') {throw $ErrorMessage}
         }
     } else {
@@ -6082,8 +6055,6 @@ Param(
             if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
         }
         if ($ErrorMessage -eq '') {$Data}
-        #if ($Data -ne $null) {Remove-Variable "Data"}
-        #Remove-Variable "headers_local"
         if ($ErrorMessage -ne '') {throw $ErrorMessage}
     }
 }
@@ -6195,7 +6166,6 @@ Param(
     if (-not (Test-Path Variable:Global:Asyncloader)) {
         if ($delay) {Start-Sleep -Milliseconds $delay}
         Invoke-GetUrl -JobData $JobData -JobKey $JobKey
-        #Remove-Variable "JobData"
         return
     }
     
@@ -6268,7 +6238,6 @@ Param(
         } until ($retry -le 0)
 
         $StopWatch.Stop()
-        #Remove-Variable "StopWatch"
 
         if ($RequestError -or -not $Request) {
             $AsyncLoader.Jobs.$Jobkey.Prefail++
@@ -6280,7 +6249,6 @@ Param(
                 $Request | Out-File ".\Cache\$($Jobkey).asy" -Encoding utf8 -ErrorAction Ignore -Force
             }
         }
-        #if ($Request) {Remove-Variable "Request"}
         if (-not (Test-Path ".\Cache\$($Jobkey).asy")) {New-Item ".\Cache\$($Jobkey).asy" -ItemType File > $null}
         $AsyncLoader.Jobs.$Jobkey.Error = $RequestError
         $AsyncLoader.Jobs.$Jobkey.Running = $false
@@ -7056,7 +7024,6 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "Nicehash server call: $($_.Exception.Message)"
             }
-            #Remove-Variable "Result" -ErrorAction Ignore -Force
         }
 
         if (-not $Remote -and $key -and $secret -and $organizationid) {

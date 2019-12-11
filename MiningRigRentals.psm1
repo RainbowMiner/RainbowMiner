@@ -104,7 +104,6 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental server call: $($_.Exception.Message)"
             }
-            Remove-Variable "Result" -ErrorAction Ignore -Force
         }
 
         if (-not $Remote) {
@@ -132,7 +131,7 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Info "MiningRigRental call: $($_.Exception.Message)"
             } finally {
-                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null;Remove-Variable "ServicePoint"}
+                if ($ServicePoint) {$ServicePoint.CloseConnectionGroup("") > $null}
             }
         }
         if ($Request.success -ne $null -and -not $Request.success) {
@@ -351,8 +350,6 @@ function Invoke-MiningRigRentalUpdatePrices {
             if (-not $MRRActual.Algorithms.$m.PriceFactor) {$MRRActual.Algorithms.$m.PriceFactor = $MRRActual.PriceFactor}
         }
     }
-    if ($AllMRRConfig) {Remove-Variable "AllMRRConfig" -Force}
-
     $Models = Get-Device (Get-ConfigArray $Session.Config.DeviceName) | Select-Object -ExpandProperty Model | Select-Object -Unique | Sort-Object
 
     $DevicesActual = Get-ConfigContent "Devices"
