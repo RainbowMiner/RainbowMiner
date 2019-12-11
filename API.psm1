@@ -20,6 +20,7 @@
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
+    $API.Debug       = $Session.LogLevel -eq "Debug"
 
     Set-APICredentials
 
@@ -33,7 +34,7 @@
 
     $API.Server = [PowerShell]::Create().AddScript({
 
-        if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+        if ($API.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\API_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
 
@@ -1067,7 +1068,7 @@
         $Server.Stop()
         $Server.Close()
 
-        Stop-Transcript
+        if ($API.Debug) {Stop-Transcript}
     }) #end of $apiserver
 
     $API.Server.Runspace = $newRunspace

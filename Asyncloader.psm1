@@ -19,6 +19,7 @@ Param(
     $AsyncLoader.Interval   = $Interval
     $AsyncLoader.Quickstart = if ($Quickstart) {0} else {-1}
     $AsyncLoader.Verbose    = $false
+    $AsyncLoader.Debug      = $Session.LogLevel -eq "Debug"
 
      # Setup runspace to launch the AsyncLoader in a separate thread
     $newRunspace = [runspacefactory]::CreateRunspace()
@@ -29,7 +30,7 @@ Param(
 
     $AsyncLoader.Loader = [PowerShell]::Create().AddScript({
 
-        if (-not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
+        if ($AsyncLoader.Debug -and -not $psISE -and $Session.LogLevel -ne "Silent") {Start-Transcript ".\Logs\AsyncLoader_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss").txt"}
 
         $ProgressPreference = "SilentlyContinue"
 
@@ -81,7 +82,7 @@ Param(
             $Delta = $AsyncLoader.CycleTime-$StopWatch.Elapsed.TotalSeconds
             if ($Delta -gt 0)  {Start-Sleep -Milliseconds ($Delta*1000)}
         }
-        Stop-Transcript
+        if ($AsyncLoader.Debug) {Stop-Transcript}
     });
     $AsyncLoader.Loader.Runspace = $newRunspace
     $AsyncLoader.Handle = $AsyncLoader.Loader.BeginInvoke()
