@@ -478,7 +478,9 @@
                         $Data = $Balances | ConvertTo-Csv -NoTypeInformation -UseCulture -ErrorAction Ignore
                         $Data = $Data -join "`r`n"
                     } else {
-                        $Balances = $Balances | ConvertTo-Json -Compress -Depth 10 | ConvertFrom-Json
+                        if (-not $Parameters.consolidate) {
+                            $Balances = $Balances | ConvertTo-Json -Compress -Depth 10 | ConvertFrom-Json
+                        }
                         if ($Parameters.add_btc) {
                             $Balances | Foreach-Object {
                                 $Rate = $API.Rates."$($_.Currency)"
