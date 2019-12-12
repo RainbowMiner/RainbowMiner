@@ -154,7 +154,7 @@
                     Break
                 }
                 "/remoteminers" {
-                    $Data = ConvertTo-Json @($API.RemoteMiners | Select-Object) -Depth 10
+                    $Data = $API.RemoteMiners
                     Break
                 }
                 "/minersneedingbenchmark" {
@@ -641,7 +641,9 @@
                     $Profit = [decimal]$API.CurrentProfit
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
-                    $API.RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    if ($API.RemoteMiners) {
+                        $API.RemoteMiners | ConvertFrom-Json | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    }
                     $ActualRates = [PSCustomObject]@{}; $Rates.PSObject.Properties.Name | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
