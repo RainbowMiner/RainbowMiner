@@ -1287,9 +1287,9 @@ function Get-Stat {
 
     if ($Name) {
         # Return single requested stat
-        if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
+        if ($Name -match '_Profit$') {$Path = "Stats\Pools"; $Cached = $true}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true}
-        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"; $Cached = $true}
+        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
         else {$Path = "Stats"}
 
