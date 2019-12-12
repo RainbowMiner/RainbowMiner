@@ -20,7 +20,7 @@
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
-    $API.Debug       = $true -or $Session.LogLevel -eq "Debug"
+    $API.Debug       = $Session.LogLevel -eq "Debug"
 
     Set-APICredentials
 
@@ -66,18 +66,12 @@
         }
         $Server.Start()
 
-        $StopWatch = New-Object -TypeName System.Diagnostics.StopWatch
-
         While ($Server.IsListening -and -not $API.Stop) {
             $Data    = $null
             $Context = $null
 
             $task = $Server.GetContextAsync()
             while(-not $Context -and -not $API.Stop){
-                if ($API.IsServer -and (-not $StopWatch.IsRunning -or $StopWatch.ElapsedMilliseconds -gt 1000)) {
-                    #Send-APIServerUdp -Port $API.APIport -MachineName $API.MachineName -IPaddress $API.MyIP > $null
-                    $StopWatch.Restart()
-                }
                 if($task.Wait(500)){$Context = $task.Result}
                 if (-not $Context) {Start-Sleep -Milliseconds 100}
             }
@@ -95,9 +89,13 @@
 
 			# Get query and post parameters
 			$Parameters = Get-QueryParameters -Request $Request -InputStream $InputStream -ContentEncoding $ContentEncoding
-				
+
             # Determine the requested resource and parse query strings
             $Path = $Request.Url.LocalPath
+
+            if ($API.Debug) {
+                Write-ToFile -FilePath "Logs\requests_$(Get-Date -Format "yyyy-MM-dd").api.txt" -Message "$Path $($Parameters | ConvertTo-Json -Compress)" -Append -Timestamp
+            }
 
             # Create the defaults for associated settings
             $ContentType     = "application/json"
@@ -228,7 +226,7 @@
                     $DataSaved = [hashtable]@{}
                     $ConfigChanged = 0
                     $Parameters.PSObject.Properties.Name | Where-Object {$ConfigActual.$_ -ne $null} | Foreach-Object {
-                        $DataSaved[$_] = "$(if ($Parameters.$_ -is [array]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
+                        $DataSaved[$_] = "$(if ($Parameters.$_ -is [System.Collections.ArrayList]) {($Parameters.$_ | Foreach-Object {$_.Trim()}) -join ","} else {$Parameters.$_.Trim()})"
                         if ($DataSaved[$_] -ne "$($ConfigActual.$_)") {
                             $ConfigChanged++
                         }

@@ -40,7 +40,7 @@ param (
 		$QueryStrings = $Request.QueryString
 		foreach ($Query in $QueryStrings) {
 			$QueryString = $Request.QueryString["$Query"]
-			if ($QueryString -and $Query) {
+			if ($QueryString -and $Query -and $Query -ne "_") {
 				$Properties | Add-Member $Query $QueryString
 			}
 		}
@@ -91,17 +91,17 @@ param (
 			        $PostName = $PostContent[0] -replace("%3D","=")
 			        $PostValue = $PostContent[1] -replace("%3D","=")
 
-			        if ($PostName.EndsWith("[]")) {
-				        $PostName = $PostName.Substring(0,$PostName.Length-2)
-				        if ($Properties.$Postname -isnot [array]) {
-					        $Properties | Add-Member $Postname (@()) -Force
-					        $Properties."$PostName" += $PostValue
-				        } else {
-					        $Properties."$PostName" += $PostValue
-				        }
-			        } else {
-				        $Properties | Add-Member $PostName $PostValue -Force
-			        }
+                    if ($PostName -ne "_") {
+			            if ($PostName.EndsWith("[]")) {
+				            $PostName = $PostName.Substring(0,$PostName.Length-2)
+				            if ($Properties.$Postname -isnot [System.Collections.ArrayList]) {
+					            $Properties | Add-Member $Postname ([System.Collections.ArrayList]@()) -Force
+				            }
+					        $Properties."$PostName".Add($PostValue) > $null
+			            } else {
+				            $Properties | Add-Member $PostName $PostValue -Force
+			            }
+                    }
 		        }
             }
         }
