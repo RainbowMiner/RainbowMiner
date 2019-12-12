@@ -805,11 +805,11 @@ function Set-Stat {
 
     $Mode     = ""
     $LogLevel = if ($Quiet) {"Info"} else {"Warn"}
-    $Cached   = $false
+    $Cached   = $true
 
     if ($Name -match '_Profit$')       {$Path0 = "Stats\Pools";    $Mode = "Pools"}
-    elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"; $Cached = $true}
-    else                               {$Path0 = "Stats";          $Mode = "Profit"}
+    elseif ($Name -match '_Hashrate$') {$Path0 = "Stats\Miners";   $Mode = "Miners"}
+    else                               {$Path0 = "Stats";          $Mode = "Profit"; $Cached = $false}
 
     $Path = if ($Sub) {"$Path0\$Sub-$Name.txt"} else {"$Path0\$Name.txt"}
 
@@ -1127,6 +1127,10 @@ function Set-Stat {
         }
     }
 
+    if ($Mode -eq "Pools") {
+        $Stat.ErrorRatio = [Math]::Min(1+$(if ($Stat.Estimate24h_Week) {($Stat.Actual24h_Week/$Stat.Estimate24h_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}),[Math]::Max($Stat.Duration.TotalDays,1))
+    }
+
     if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
 
     if ($Stat.Duration -ne 0) {
@@ -1189,7 +1193,7 @@ function Set-Stat {
                     BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
-                    ErrorRatio         = [Decimal][Math]::Min(1+$(if ($Stat.Estimate24h_Week) {($Stat.Actual24h_Week/$Stat.Estimate24h_Week-1) * $(if ($Stat.Duration.TotalDays -lt 7) {$Stat.Duration.TotalDays/7*(2 - $Stat.Duration.TotalDays/7)} else {1})}),[Math]::Max($Stat.Duration.TotalDays,1))
+                    ErrorRatio         = [Decimal]$Stat.ErrorRatio
                 }
             }
             default {
@@ -1285,7 +1289,7 @@ function Get-Stat {
         # Return single requested stat
         if ($Name -match '_Profit$') {$Path = "Stats\Pools"}
         elseif ($Name -match '_Hashrate$') {$Path = "Stats\Miners"; $Cached = $true}
-        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"}
+        elseif ($Name -match '_(Total|TotalAvg)$') {$Path = "Stats\Totals"; $Cached = $true}
         elseif ($Name -match '_Balance$') {$Path = "Stats\Balances"}
         else {$Path = "Stats"}
 
@@ -1311,11 +1315,11 @@ function Get-Stat {
         [System.Collections.ArrayList]$Match = @()
         if ($Miners)    {$Match.Add("Hashrate") > $null;$Path = "Stats\Miners";$Cached = $true}
         if ($Disabled)  {$Match.Add("Hashrate|Profit") > $null;$Path = "Stats\Disabled"}
-        if ($Pools)     {$Match.Add("Profit") > $null;$Path = "Stats\Pools"}
+        if ($Pools)     {$Match.Add("Profit") > $null;$Path = "Stats\Pools"; $Cached = $true}
         if ($Totals)    {$Match.Add("Total") > $null;$Path = "Stats\Totals"}
         if ($TotalAvgs) {$Match.Add("TotalAvg") > $null;$Path = "Stats\Totals"}
         if ($Balances)  {$Match.Add("Balance") > $null;$Path = "Stats\Balances"}
-        if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"}
+        if (-not $Path -or $All -or $Match.Count -gt 1) {$Path = "Stats"; $Cached = $false}
 
         $MatchStr = if ($Match.Count -gt 1) {$Match -join "|"} else {$Match}
         if ($MatchStr -match "|") {$MatchStr = "($MatchStr)"}
