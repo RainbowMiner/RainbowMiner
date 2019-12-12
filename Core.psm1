@@ -1272,8 +1272,8 @@ function Invoke-Core {
         $Session.PauseMiners = $API.Pause = $true
     }
 
-    $API.AllDevices = $Session.AllDevices
-    $API.Devices    = $Session.Devices
+    $API.AllDevices = ConvertTo-Json @($Session.AllDevices | Select-Object)
+    $API.Devices    = ConvertTo-Json @($Session.Devices | Select-Object)
 
     #Check for miner config
     if (Set-ConfigDefault "Miners") {
@@ -1313,7 +1313,7 @@ function Invoke-Core {
         }
     }
 
-    $API.Config = $Session.Config
+    $API.Config     = $Session.Config
     $API.UserConfig = $Session.UserConfig
 
     $MinerInfoChanged = $false
@@ -1354,7 +1354,7 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
-    $API.Rates = $Session.Rates
+    $API.Rates = ConvertTo-Json $Session.Rates
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
@@ -1372,7 +1372,7 @@ function Invoke-Core {
     [hashtable]$Session.Stats = Get-Stat -Miners
     [hashtable]$Disabled      = Get-Stat -Disabled
 
-    $API.Stats = $Session.Stats
+    $API.Stats = ConvertTo-Json $Session.Stats
 
     #Load information about the pools
     Write-Log "Loading pool information. "
@@ -1430,7 +1430,7 @@ function Invoke-Core {
                 }
             }
             if ($Earnings -ne $null) {Remove-Variable "Earnings"}
-            $API.Balances = $BalancesData
+            $API.Balances = ConvertTo-Json $BalancesData
             $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
             $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
@@ -1944,7 +1944,7 @@ function Invoke-Core {
     if ($AllMiners_VersionDate -ne $null) {Remove-Variable "AllMiners_VersionDate"}
     if ($Miners_DownloadList -ne $null) {Remove-Variable "Miners_DownloadList"}
     if ($Disabled -ne $null) {Remove-Variable "Disabled"}
-    $Session.Stats = $null
+    #$Session.Stats = $null
 
     #Open firewall ports for all miners
     try {
@@ -2378,9 +2378,9 @@ function Invoke-Core {
     #Update API miner information
     #$RunningMiners = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.WatchdogTimers = $Script:WatchdogTimers
-    $API.ActiveMiners   = $Script:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner}
-    $API.RunningMiners  = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
-    $API.FailedMiners   = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed}
+    $API.ActiveMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+    $API.RunningMiners  = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+    $API.FailedMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
 
     #
     #Start output to host

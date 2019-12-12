@@ -142,15 +142,15 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = ConvertTo-Json @($API.ActiveMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+                    $Data = $API.ActiveMiners
                     break
                 }
                 "/runningminers" {
-                    $Data = ConvertTo-Json @($API.RunningMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+                    $Data = $API.RunningMiners
                     Break
                 }
                 "/failedminers" {
-                    $Data = ConvertTo-Json @($API.FailedMiners | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+                    $Data = $API.FailedMiners
                     Break
                 }
                 "/remoteminers" {
@@ -197,14 +197,16 @@
                     $WTMdata = Get-WhatToMineData
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
                     $WTMdata_result = [hashtable]@{}
+                    if ($API.Rates) {$Rates = ConvertFrom-Json $API.Rates}
                     @($API.FastestMiners | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                         $Group = $_.Group
-                        $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($API.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($API.Config.PowerPriceCurrency -ne "USD" -and $API.Rates."$($API.Config.PowerPriceCurrency)") {$API.Rates.USD/$API.Rates."$($API.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($API.Config.WorkerName)&commit=Calculate"
+                        $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($API.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($API.Config.PowerPriceCurrency -ne "USD" -and $Rates."$($API.Config.PowerPriceCurrency)") {$Rates.USD/$Rates."$($API.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($API.Config.WorkerName)&commit=Calculate"
                     }
                     $Data = ConvertTo-Json $WTMdata_result
                     Remove-Variable "WTMdata"
                     Remove-Variable "WTMdata_algos"
                     Remove-Variable "WTMdata_result"
+                    if ($Rates -ne $null) {Remove-Variable "Rates"}
                     Break
                 }
                 "/loadconfig" {
@@ -338,11 +340,11 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = ConvertTo-Json @($API.AllDevices | Select-Object)
+                    $Data = $API.AllDevices
                     Break
                 }
                 "/devices" {
-                    $Data = ConvertTo-Json @($API.Devices | Select-Object)
+                    $Data = $API.Devices
                     Break
                 }
                 "/devicecombos" {
@@ -350,7 +352,7 @@
                     Break
                 }
                 "/stats" {
-                    $Data = ConvertTo-Json @($API.Stats | Select-Object)
+                    $Data = $API.Stats
                     Break
                 }
                 "/totals" {
@@ -366,9 +368,10 @@
                 }
                 "/earnings" {
                     $Data = ""
+                    if ($API.Rates) {$Rates = ConvertFrom-Json $API.Rates}
                     if (Test-Path "Stats\Balances\Earnings.csv") {
                         $Earnings = @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
-                            $Rate = $API.Rates."$($_.Currency)"
+                            $Rate = $Rates."$($_.Currency)"
                             [PSCustomObject]@{
                                 Date = if ($Parameters.as_csv) {[DateTime]$_.Date} else {([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")}
                                 Date_UTC = if ($Parameters.as_csv) {[DateTime]$_.Date_UTC} else {([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")}
@@ -409,6 +412,7 @@
                         }
                         Remove-Variable "Earnings" -ErrorAction Ignore
                     }
+                    if ($Rates -ne $null) {Remove-Variable "Rates"}
                     Break
                 }
                 "/poolstats" {
@@ -431,19 +435,21 @@
                     Break
                 }
                 "/balances" {
-                    $Balances = $API.Balances | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
+                    if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
+                    if ($API.Rates)    {$Rates = ConvertFrom-Json $API.Rates}
+                    $Balances = $Balances | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
                     if ($Parameters.consolidate) {
                         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
-                            $BalanceGroup = $_.Group | Where-Object {$API.Rates."$($_.Currency)"}
+                            $BalanceGroup = $_.Group | Where-Object {$Rates."$($_.Currency)"}
                             [PSCustomObject]@{
                                 Name = $_.Name
-                                Total = [Decimal]($BalanceGroup | Foreach-Object {$_.Total / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Paid  = [Decimal]($BalanceGroup | Foreach-Object {$_.Paid / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1h  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1h / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1d  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1d / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1w  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1w / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_Avg = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_Avg / $API.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Total = [Decimal]($BalanceGroup | Foreach-Object {$_.Total / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Paid  = [Decimal]($BalanceGroup | Foreach-Object {$_.Paid / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1h  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1h / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1d  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1d / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1w  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1w / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_Avg = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_Avg / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
                             }
                         }
                     }
@@ -451,7 +457,7 @@
                     if ($Parameters.as_csv) {
                         if (-not $Parameters.consolidate) {
                             $Balances = $Balances | Foreach-Object {
-                                $Rate = $API.Rates."$($_.Currency)"
+                                $Rate = $Rates."$($_.Currency)"
                                 [PSCustomObject]@{
                                     Name = $_.Name
                                     Currency = $_.Currency
@@ -483,7 +489,7 @@
                         }
                         if ($Parameters.add_btc) {
                             $Balances | Foreach-Object {
-                                $Rate = $API.Rates."$($_.Currency)"
+                                $Rate = $Rates."$($_.Currency)"
                                 $_ | Add-Member -NotePropertyMembers @{
                                     Total_BTC = [Decimal]$(if ($Rate) {$_.Total / $Rate} else {0})
                                     Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
@@ -504,11 +510,13 @@
                         $Balances | Where-Object {$_.Started} | Foreach-Object {$_.Started = ([DateTime]$_.Started).ToString("yyyy-MM-dd HH:mm:ss")}
                         $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
                     }
-                    Remove-Variable "Balances" -Force -ErrorAction Ignore
+                    if ($Balances -ne $null) {Remove-Variable "Balances"}
+                    if ($Rates -ne $null) {Remove-Variable "Rates"}
                     Break
                 }
                 "/payouts" {
-                    $Data = ConvertTo-Json @($API.Balances | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
+                    if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
+                    $Data = ConvertTo-Json @($Balances | Where {$_.Currency -ne $null -and $_.Payouts} | Select-Object BaseName,Currency,Payouts | Foreach-Object {
                         $Balance_BaseName = $_.BaseName
                         $Balance_Currency = $_.Currency
                         $_.Payouts | Foreach-Object {
@@ -521,10 +529,11 @@
                             }
                         }
                     } | Sort-Object Date,Name,Currency | Select-Object)
+                    if ($Balances -ne $null) {Remove-Variable "Balances"}
                     Break
                 }
                 "/rates" {
-                    $Data = ConvertTo-Json @($API.Rates | Select-Object)
+                    $Data = $API.Rates
                     Break
                 }
                 "/asyncloaderjobs" {
@@ -628,11 +637,12 @@
                     Break
                 }
                 "/currentprofit" {
+                    if ($API.Rates) {$Rates = ConvertFrom-Json $API.Rates}
                     $Profit = [decimal]$API.CurrentProfit
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
                     $API.RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
-                    $Rates = [PSCustomObject]@{}; $API.Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $API.Rates.$_}
+                    $ActualRates = [PSCustomObject]@{}; $Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
@@ -643,11 +653,12 @@
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
-                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$Rates;;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
-                    Remove-Variable "Rates" -ErrorAction Ignore
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$ActualRates;;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+                    Remove-Variable "ActualRates" -ErrorAction Ignore
                     Remove-Variable "Timer" -ErrorAction Ignore
                     Remove-Variable "Uptime" -ErrorAction Ignore
                     Remove-Variable "SysUptime" -ErrorAction Ignore
+                    if ($Rates -ne $null) {Remove-Variable "Rates"}
                     Break
                 }
                 "/stop" {
@@ -879,19 +890,23 @@
                 }
                 "/mrrstats" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    if ($API.Stats)        {$Stats = ConvertFrom-Json $API.Stats}
+                    if ($API.ActiveMiners) {$ActiveMiners = ConvertFrom-Json $API.ActiveMiners}
+                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
+                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    if ($Devices -ne $null) {Remove-Variable "Devices"}
 
                     if ($Pool_Request = Get-MiningRigRentalAlgos) {
                         [hashtable]$StatsCPU = @{}
                         [hashtable]$StatsGPU = @{}
                         if ($CpuDevices) {
                             $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
-                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                            $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         if ($GpuDevices) {
                             $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
-                            $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                            $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         $Pool_Request | Foreach-Object {
                             $Algo  = Get-MiningRigRentalAlgorithm $_.name
@@ -915,12 +930,18 @@
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "Mrr_Data"
+                    if ($Stats -ne $null) {Remove-Variable "Stats"}
+                    if ($ActiveMiners -ne $null) {Remove-Variable "ActiveMiners"}
                     break
                 }
                 "/mrrrigs" {
                     [System.Collections.ArrayList]$Mrr_Data = @()
-                    $CpuDevices = ($API.Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
-                    $GpuDevices = ($API.Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    if ($API.Stats)        {$Stats = ConvertFrom-Json $API.Stats}
+                    if ($API.ActiveMiners) {$ActiveMiners = ConvertFrom-Json $API.ActiveMiners}
+                    if ($API.Devices)      {$Devices = ConvertFrom-Json $API.Devices}
+                    $CpuDevices = ($Devices | Where-Object Type -eq "CPU" | Measure-Object).Count
+                    $GpuDevices = ($Devices | Where-Object Type -eq "GPU" | Measure-Object).Count
+                    if ($Devices -ne $null) {Remove-Variable "Devices"}
 
                     if ($API.Config.Pools.MiningRigRentals.API_Key -and $API.Config.Pools.MiningRigRentals.API_Secret) {
                         $Workers = @($API.Config.DeviceModel | Where-Object {$API.Config.Devices.$_.Worker} | Foreach-Object {$API.Config.Devices.$_.Worker} | Select-Object -Unique) + $API.Config.WorkerName | Select-Object -Unique
@@ -929,11 +950,11 @@
                             [hashtable]$StatsGPU = @{}
                             if ($CpuDevices) {
                                 $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
-                                $API.ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                                $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             if ($GpuDevices) {
                                 $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
-                                $API.ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
+                                $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             $AllRigs_Request | Foreach-Object {
                                 $Rig = $_
@@ -969,6 +990,8 @@
                     }
                     $Data = ConvertTo-Json @($Mrr_Data) -Depth 10 -Compress
                     Remove-Variable "Mrr_Data"
+                    if ($Stats -ne $null) {Remove-Variable "Stats"}
+                    if ($ActiveMiners -ne $null) {Remove-Variable "ActiveMiners"}
                     break
                 }
                 default {
