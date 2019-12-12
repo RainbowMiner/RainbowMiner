@@ -524,7 +524,15 @@ function Invoke-ReportMinerStatus {
                     }
                 }
                 if ($Response.Workers -ne $null) {
-                    $API.RemoteMiners = ConvertTo-Json @($Response.Workers | Where-Object worker -ne $Session.Config.WorkerName | Select-Object) -Depth 10
+                    $OtherWorkers = @($Response.Workers | Where-Object worker -ne $Session.Config.WorkerName | Select-Object)
+                    $Profit       = 0.0
+                    $Earnings_Avg = 0.0
+                    $Earnings_1d  = 0.0
+                    $OtherWorkers | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
+                    $API.RemoteMiners = ConvertTo-Json $OtherWorkers -Depth 10
+                    $API.RemoteMinersProfit = $Profit
+                    $API.RemoteMinersEarnings_Avg = $Earnings_Avg
+                    $API.RemoteMinersEarnings_1d  = $Earnings_1d
                 }
                 if ($Response.Compare -ne $null) {
                     $API.CompareMiners = ConvertTo-Json @($Response.Compare | Select-Object)
@@ -1355,6 +1363,9 @@ function Invoke-Core {
     Update-Rates
 
     $API.Rates = ConvertTo-Json $Session.Rates
+    $ActualRates = [PSCustomObject]@{}
+    $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Session.Rates.$_}
+    $API.ActualRates = $ActualRates
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
