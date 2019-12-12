@@ -2,6 +2,10 @@
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
+function Initialize-Cache {
+    [hashtable]$Global:StatsCache = @{}
+}
+
 function Initialize-Session {
 
     Set-OsFlags
@@ -1158,11 +1162,11 @@ function Set-Stat {
 
                     # Miners part
                     PowerDraw_Live     = [Decimal]$Stat.PowerDraw_Live
-                    PowerDraw_Average  = [Decimal]$Stat.PowerDraw_Average
-                    Diff_Live          = [Decimal]$Stat.Diff_Live
-                    Diff_Average       = [Decimal]$Stat.Diff_Average
-                    Ratio_Live         = [Decimal]$Stat.Ratio_Live
-                    #Ratio_Average      = [Decimal]$Stat.Ratio_Average
+                    PowerDraw_Average  = [Double]$Stat.PowerDraw_Average
+                    Diff_Live          = [Double]$Stat.Diff_Live
+                    Diff_Average       = [Double]$Stat.Diff_Average
+                    Ratio_Live         = [Double]$Stat.Ratio_Live
+                    #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
             }
             "Pools" {
@@ -1188,9 +1192,9 @@ function Set-Stat {
 
                     # Pools part
                     HashRate_Live      = [Decimal]$Stat.HashRate_Live
-                    HashRate_Average   = [Decimal]$Stat.HashRate_Average
+                    HashRate_Average   = [Double]$Stat.HashRate_Average
                     BlockRate_Live     = [Decimal]$Stat.BlockRate_Live
-                    BlockRate_Average  = [Decimal]$Stat.BlockRate_Average
+                    BlockRate_Average  = [Double]$Stat.BlockRate_Average
                     Actual24h_Week     = [Decimal]$Stat.Actual24h_Week
                     Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
                     ErrorRatio         = [Decimal]$Stat.ErrorRatio
@@ -1221,7 +1225,7 @@ function Set-Stat {
         }) | ConvertTo-Json | Set-Content $Path
     }
 
-    if ($Cached) {$Script:StatsCache[$Name] = $Stat}
+    if ($Cached) {$Global:StatsCache[$Name] = $Stat}
 
     $Stat
 }
@@ -1236,13 +1240,12 @@ function Get-StatFromFile {
         [Parameter(Mandatory = $false)]
         [Switch]$Cached = $false
     )
-    if ($Cached -and -not (Test-Path Variable:Script:StatsCache)) {[hashtable]$Script:StatsCache = @{}}
 
     if (Test-Path $Path) {
-        if (-not $Cached -or $Script:StatsCache[$Name] -eq $null) {
+        if (-not $Cached -or $Global:StatsCache[$Name] -eq $null) {
             try {
                 $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
-                if ($Cached) {$Script:StatsCache[$Name] = $Stat}
+                if ($Cached) {$Global:StatsCache[$Name] = $Stat}
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
@@ -1251,12 +1254,12 @@ function Get-StatFromFile {
         }
 
         if ($Cached) {
-            $Script:StatsCache[$Name]
+            $Global:StatsCache[$Name]
         } else {
             $Stat
         }
-    } elseif ($Cached -and $Script:StatsCache[$Name] -ne $null) {
-        $Script:StatsCache[$Name].Remove($Name)
+    } elseif ($Cached -and $Global:StatsCache[$Name] -ne $null) {
+        $Global:StatsCache[$Name].Remove($Name)
     }
 }
 
@@ -1336,8 +1339,8 @@ function Get-Stat {
             }
         }
         if ($Cached) {
-            $RemoveKeys = Compare-Object $Stats.Keys $Script:StatsCache.Keys | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
-            $RemoveKeys | Foreach-Object {$Script:StatsCache.Remove($_)}
+            $RemoveKeys = Compare-Object $Stats.Keys $Global:StatsCache.Keys | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
+            $RemoveKeys | Foreach-Object {$Global:StatsCache.Remove($_)}
         }
         Return $Stats
     }

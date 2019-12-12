@@ -63,6 +63,9 @@
         Write-Host "Starting $(if ($SetupOnly) {"setup for "})v$($Session.Version)! Please wait.."
         Write-Host " "
 
+        #Initialize script cache
+        Initialize-Cache
+
         #Setup Core script variables
         $Script:AllPools = $null
         [System.Collections.ArrayList]$Script:ActiveMiners   = @()
