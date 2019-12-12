@@ -766,9 +766,7 @@ function Set-Stat {
 
     $SmallestValue = 1E-20
 
-    $Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached
-   
-    if ($Stat) {
+    if ($Stat = Get-StatFromFile -Path $Path -Name $Name -Cached:$Cached) {
         try {
             if ($Mode -in @("Pools","Profit") -and $Stat.Week_Fluctuation -and [Double]$Stat.Week_Fluctuation -ge 0.8) {throw "Fluctuation out of range"}
 
@@ -1188,25 +1186,26 @@ function Get-StatFromFile {
         [Switch]$Cached = $false
     )
 
-    if (Test-Path $Path) {
-        if (-not $Cached -or $Global:StatsCache[$Name] -eq $null) {
-            try {
-                $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
-                if ($Cached) {$Global:StatsCache[$Name] = $Stat}
-            } catch {
-                if ($Error.Count){$Error.RemoveAt(0)}
+    if (-not $Cached -or $Global:StatsCache[$Name] -eq $null) {
+        try {
+            $Stat = ConvertFrom-Json (Get-ContentByStreamReader $Path) -ErrorAction Stop
+            if ($Cached) {$Global:StatsCache[$Name] = $Stat}
+        } catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            if (Test-Path $Path) {
                 Write-Log -Level Warn "Stat file ($([IO.Path]::GetFileName($Path)) is corrupt and will be removed. "
-                if (Test-Path $Path) {Remove-Item -Path $Path -Force -Confirm:$false}
+                Remove-Item -Path $Path -Force -Confirm:$false
+            }
+            if ($Cached -and $Global:StatsCache[$Name] -ne $null) {
+                $Global:StatsCache[$Name].Remove($Name)
             }
         }
+    }
 
-        if ($Cached) {
-            $Global:StatsCache[$Name]
-        } else {
-            $Stat
-        }
-    } elseif ($Cached -and $Global:StatsCache[$Name] -ne $null) {
-        $Global:StatsCache[$Name].Remove($Name)
+    if ($Cached) {
+        $Global:StatsCache[$Name]
+    } else {
+        $Stat
     }
 }
 
