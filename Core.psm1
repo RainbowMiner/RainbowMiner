@@ -70,6 +70,7 @@
         $Script:AllPools = $null
         [System.Collections.ArrayList]$Script:ActiveMiners   = @()
         [System.Collections.ArrayList]$Script:WatchdogTimers = @()
+        [hashtable]$Script:NewRates = @{}
 
         #Setup session variables
         [hashtable]$Session.Rates = @{BTC = [Double]1}
@@ -646,6 +647,57 @@ function Get-Balance {
     }
     
     $Balances
+}
+
+function Update-Rates {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $Symbols
+    )
+
+    $NewRatesFound = $false
+
+    if (-not $Symbols) {
+        $Symbols = @($Session.Config.Currency | Select-Object) + @("USD") + @($Session.Config.Pools.PSObject.Properties.Name | Foreach-Object {$Session.Config.Pools.$_.Wallets.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+        $Script:NewRates.Clear()
+        try {Invoke-RestMethodAsync "https://api.coinbase.com/v2/exchange-rates?currency=BTC" -Jobkey "coinbase" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty rates | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear()}
+
+        if (-not $Script:NewRates.Count) {
+            Write-Log -Level Info "Coinbase is down, using fallback. "
+            try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
+        }
+
+        $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
+
+        $NewRatesFound = $true
+    } else {
+        $Symbols = @($Symbols | Select-Object -Unique)
+    }
+
+    Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
+        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
+        elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
+    }
+
+    if ($NewRatesFound -and $Session.GC.GetTicker.Count -gt 0) {
+        try {
+            $SymbolStr = "$(($Session.GC.GetTicker | Sort-Object) -join ',')".ToUpper()
+            $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
+            if (-not $RatesAPI.status) {
+                Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
+            } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
+                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
+            }
+        }
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+            Write-Log -Level Info "Rbminer.net/cmc API for $($SymbolStr) has failed. "
+        }
+    }
+
+    Get-WorldCurrencies -Silent
+    Compare-Object $Session.WorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
 }
 
 function Invoke-Core {
