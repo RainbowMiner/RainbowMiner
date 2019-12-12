@@ -20,7 +20,7 @@
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
-    $API.Debug       = $Session.LogLevel -eq "Debug"
+    $API.Debug       = $true -or $Session.LogLevel -eq "Debug"
 
     Set-APICredentials
 
@@ -642,7 +642,7 @@
                     $Earnings_Avg = [decimal]$API.Earnings_Avg
                     $Earnings_1d  = [decimal]$API.Earnings_1d
                     $API.RemoteMiners | Where-Object {[Math]::Floor(([DateTime]::UtcNow - [DateTime]::new(1970, 1, 1, 0, 0, 0, 0, 'Utc')).TotalSeconds)-5*60 -lt $_.lastseen} | Foreach-Object {$Profit += [decimal]$_.profit;$Earnings_Avg = [Math]::Max($Earnings_Avg,[decimal]$_.earnings_avg);$Earnings_1d = [Math]::Max($Earnings_1d,[decimal]$_.earnings_1d)}
-                    $ActualRates = [PSCustomObject]@{}; $Rates.Keys | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Rates.$_}
+                    $ActualRates = [PSCustomObject]@{}; $Rates.PSObject.Properties.Name | Where-Object {$API.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Rates.$_}
                     $Timer = Get-UpTime
                     $Uptime= [PSCustomObject]@{
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
@@ -653,7 +653,7 @@
                                                 AsString = "{0:d}.{1:d2}:{2:d2}:{3:d2}" -f ($Timer.Days,$Timer.Hours,$Timer.Minutes,$Timer.Seconds+[int]($Timer.Milliseconds/1000))
                                                 Seconds  = [int64]$Timer.TotalSeconds
                                             }
-                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$ActualRates;;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
+                    $Data  = [PSCustomObject]@{AllProfitBTC=$Profit;ProfitBTC=[decimal]$API.CurrentProfit;Earnings_Avg=[decimal]$API.Earnings_Avg;Earnings_1d=[decimal]$API.Earnings_1d;AllEarnings_Avg=$Earnings_Avg;AllEarnings_1d=$Earnings_1d;Rates=$ActualRates;PowerPrice=$API.CurrentPowerPrice;Uptime=$Uptime;SysUptime=$SysUptime} | ConvertTo-Json
                     Remove-Variable "ActualRates" -ErrorAction Ignore
                     Remove-Variable "Timer" -ErrorAction Ignore
                     Remove-Variable "Uptime" -ErrorAction Ignore
