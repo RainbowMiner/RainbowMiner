@@ -413,13 +413,9 @@
                     if ($Rates -ne $null) {Remove-Variable "Rates"}
                     Break
                 }
-                "/poolstats" {
-                    $Data = ConvertTo-Json @(Get-Stat -Pools | Select-Object)
-                    Break
-                }
                 "/sessionvars" {           
                     $SessionVars = [hashtable]@{}
-                    $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array] -and $Session[$_] -isnot [pscustomobject] -and $Session[$_] -ne $null} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
+                    $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array] -and $Session[$_] -isnot [pscustomobject] -and $Session[$_] -isnot [System.Collections.ArrayList] -and $Session[$_] -ne $null} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
                     $Data = ConvertTo-Json $SessionVars
                     Remove-Variable "SessionVars"
                     Break
