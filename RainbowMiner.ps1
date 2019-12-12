@@ -243,7 +243,7 @@ $Session.LogLevel        = $LogLevel
 if ($MyInvocation.MyCommand.Path) {Set-Location (Split-Path $MyInvocation.MyCommand.Path)}
 
 if ($IsWindows) {
-    if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {
+    if ($Session.IsCore) {
         Import-Module NetSecurity -ErrorAction Ignore -SkipEditionCheck
         Import-Module Defender -ErrorAction Ignore -SkipEditionCheck
         Import-Module NetTCPIP -ErrorAction Ignore -SkipEditionCheck
@@ -296,7 +296,7 @@ $MyCommandParameters | Where-Object {Get-Variable $_ -ErrorAction Ignore} | Fore
 if (-not (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly)) {Exit}
 
 if ($IsWindows -and (Get-Command "Get-MpPreference" -ErrorAction Ignore) -and (Get-MpPreference).ExclusionPath -notcontains (Convert-Path .)) {
-    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
+    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) "-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\Defender\Defender.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); Add-MpPreference -ExclusionPath '$(Convert-Path .)'" -Verb runAs -WindowStyle Hidden
 }
 
 while (-not $Session.Stopp) {

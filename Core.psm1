@@ -1964,7 +1964,7 @@ function Invoke-Core {
                 if ($Session.MinerFirewalls -eq $null) {$Session.MinerFirewalls = Get-NetFirewallApplicationFilter | Where-Object {$_.Program -like "$(Get-Location)\Bin\*"} | Select-Object -ExpandProperty Program}
                 $OpenFirewallFor = "$(@($AllMiners | Select-Object -ExpandProperty Path -Unique) | Compare-Object @($Session.MinerFirewalls | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ConvertTo-Json -Compress)"
                 if ($OpenFirewallFor -ne "") {
-                    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($PSVersionTable.PSVersion -ge (Get-Version "6.1")) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
+                    Start-Process (@{desktop = "powershell"; core = "pwsh"}.$PSEdition) ("-Command Import-Module '$env:Windir\System32\WindowsPowerShell\v1.0\Modules\NetSecurity\NetSecurity.psd1'$(if ($Session.IsCore) {" -SkipEditionCheck"}); ('$OpenFirewallFor' | ConvertFrom-Json -ErrorAction Ignore) | ForEach {New-NetFirewallRule -DisplayName 'RainbowMiner' -Program `$_}" -replace '"', '\"') -Verb runAs -WindowStyle Hidden
                     $Session.MinerFirewalls = $null
                     Remove-Variable "OpenFirewallFor"
                 }
@@ -2389,9 +2389,9 @@ function Invoke-Core {
     #Update API miner information
     #$RunningMiners = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
     $API.WatchdogTimers = $Script:WatchdogTimers
-    $API.ActiveMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
-    $API.RunningMiners  = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
-    $API.FailedMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | Select-Object -ExcludeProperty EthPill,Process) -Depth 2
+    $API.ActiveMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
+    $API.RunningMiners  = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
+    $API.FailedMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
 
     #
     #Start output to host
