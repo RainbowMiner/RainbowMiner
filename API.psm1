@@ -20,7 +20,7 @@
     $API.RemoteAPI   = Test-APIServer -Port $Session.Config.APIport
     $API.IsServer    = $Session.Config.RunMode -eq "Server"
     $API.MachineName = $Session.MachineName
-    $API.Debug       = $true -or $Session.LogLevel -eq "Debug"
+    $API.Debug       = $Session.LogLevel -eq "Debug"
 
     Set-APICredentials
 
