@@ -1,6 +1,6 @@
 {
   "Algorithms": [
-    "Blake2s",
+    "Blake2b",
     "BlakeCoin",
     "BlakeVanilla",
     "Cryptolight",
