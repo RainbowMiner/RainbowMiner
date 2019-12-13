@@ -141,19 +141,19 @@
                     break
                 }
                 "/activeminers" {
-                    $Data = $API.ActiveMiners
+                    $Data = if ($API.ActiveMiners) {$API.ActiveMiners} else {"[]"}
                     break
                 }
                 "/runningminers" {
-                    $Data = $API.RunningMiners
+                    $Data = if ($API.RunningMiners) {$API.RunningMiners} else {"[]"}
                     Break
                 }
                 "/failedminers" {
-                    $Data = $API.FailedMiners
+                    $Data = if ($API.FailedMiners) {$API.FailedMiners} else {"[]"}
                     Break
                 }
                 "/remoteminers" {
-                    $Data = $API.RemoteMiners
+                    $Data = if ($API.RemoteMiners) {$API.RemoteMiners} else {"[]"}
                     Break
                 }
                 "/minersneedingbenchmark" {
@@ -346,11 +346,11 @@
                     Break
                 }
                 "/alldevices" {
-                    $Data = $API.AllDevices
+                    $Data = if ($API.AllDevices) {$API.AllDevices} else {"[]"}
                     Break
                 }
                 "/devices" {
-                    $Data = $API.Devices
+                    $Data = if ($API.Devices) {$API.Devices} else {"[]"}
                     Break
                 }
                 "/devicecombos" {
@@ -437,7 +437,7 @@
                     Break
                 }
                 "/watchdogtimers" {
-                    $Data = $API.WatchdogTimers
+                    $Data = if ($API.WatchdogTimers) {$API.WatchdogTimers} else {"[]"}
                     Break
                 }
                 "/balances" {
