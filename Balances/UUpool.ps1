@@ -30,7 +30,7 @@ $Pool_Request | Where-Object {$Pool_Currency = $_.coin -replace "(29|31)" -repla
             [PSCustomObject]@{
                 Caption     = "$($Name) ($($_.Name))"
 				BaseName    = $Name
-                Currency    = if ($Session.Rates."$($_.coin)") {$_.coin} else {$Pool_Currency}
+                Currency    = if ($Global:Rates."$($_.coin)") {$_.coin} else {$Pool_Currency}
                 Balance     = [Decimal]$Request.balance / 1e8
                 Pending     = [Decimal]0
                 Total       = [Decimal]$Request.balance / 1e8
