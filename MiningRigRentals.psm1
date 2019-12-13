@@ -75,8 +75,8 @@ param(
     [switch]$Raw
 )
     $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
-    if ($Session.GC.MRRCache -eq $null) {[hashtable]$Session.GC.MRRCache = @{}}
-    if (-not $Cache -or -not $Session.GC.MRRCache[$keystr] -or -not $Session.GC.MRRCache[$keystr].request -or -not $Session.GC.MRRCache[$keystr].request.success -or $Session.GC.MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if ($SyncCache.MRRCache -eq $null) {[hashtable]$SyncCache.MRRCache = @{}}
+    if (-not $Cache -or -not $SyncCache.MRRCache[$keystr] -or -not $SyncCache.MRRCache[$keystr].request -or -not $SyncCache.MRRCache[$keystr].request.success -or $SyncCache.MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -138,21 +138,21 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
         }
 
-        if (-not $Session.GC.MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $Session.GC.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+        if (-not $SyncCache.MRRCache[$keystr] -or ($Request -and $Request.success)) {
+            $SyncCache.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
         }
     }
-    if ($Raw) {$Session.GC.MRRCache[$keystr].request}
+    if ($Raw) {$SyncCache.MRRCache[$keystr].request}
     else {
-        if ($Session.GC.MRRCache[$keystr].request -and $Session.GC.MRRCache[$keystr].request.success) {$Session.GC.MRRCache[$keystr].request.data}
+        if ($SyncCache.MRRCache[$keystr].request -and $SyncCache.MRRCache[$keystr].request.success) {$SyncCache.MRRCache[$keystr].request.data}
     }
 
     try {
-        if ($Session.GC.MRRCacheLastCleanup -eq $null -or $Session.GC.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Session.GC.MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$_.Value.cachetime)).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
-                $RemoveKeys | Foreach-Object {$Session.GC.MRRCache[$_] = $null; $Session.GC.MRRCache.Remove($_)}
+        if ($SyncCache.MRRCacheLastCleanup -eq $null -or $SyncCache.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
+            if ($RemoveKeys = $SyncCache.MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$_.Value.cachetime)).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
+                $RemoveKeys | Foreach-Object {$SyncCache.MRRCache[$_] = $null; $SyncCache.MRRCache.Remove($_)}
             }
-            $Session.GC.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+            $SyncCache.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -207,8 +207,8 @@ param(
 )
     if (-not $id) {return}
 
-    if ($Session.GC.MRRInfoCache -eq $null) {
-        [hashtable]$Session.GC.MRRInfoCache = @{}
+    if ($SyncCache.MRRInfoCache -eq $null) {
+        [hashtable]$SyncCache.MRRInfoCache = @{}
         if (Test-Path ".\Data\mrrinfo.json") {
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -216,19 +216,19 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $MrrInfo = @()
             }
-            $MrrInfo | Foreach-Object {$Session.GC.MRRInfoCache["$($_.rigid)"] = $_}
+            $MrrInfo | Foreach-Object {$SyncCache.MRRInfoCache["$($_.rigid)"] = $_}
         }
     }
 
-    if ($Rigs_Ids = $id | Where-Object {-not $Session.GC.MRRInfoCache.ContainsKey("$_") -or $Session.GC.MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
+    if ($Rigs_Ids = $id | Where-Object {-not $SyncCache.MRRInfoCache.ContainsKey("$_") -or $SyncCache.MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
         $Updated = 0
         @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $key $secret -Timeout 60 | Select-Object) | Foreach-Object {
-            $Session.GC.MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
+            $SyncCache.MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
             $Updated++
         }
-        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Session.GC.MRRInfoCache.Values -Compress > $null}
+        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $SyncCache.MRRInfoCache.Values -Compress > $null}
     }
-    $id | Where-Object {$Session.GC.MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Session.GC.MRRInfoCache."$_"}
+    $id | Where-Object {$SyncCache.MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$SyncCache.MRRInfoCache."$_"}
 }
 
 function Get-MiningRigRentalsDivisor {
@@ -256,18 +256,18 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Status = ""
 )
-    if ($Session.GC.MRRStatus -eq $null) {$Session.GC.MRRStatus = @{}}
+    if ($SyncCache.MRRStatus -eq $null) {$SyncCache.MRRStatus = @{}}
     $time = (Get-Date).ToUniversalTime()
     $RigKey = "$RigId"
-    if ($Session.GC.MRRStatus.ContainsKey($RigKey)) {
-        if ($Stop) {$Session.GC.MRRStatus.Remove($RigKey)}
-        elseif ($Status -eq "online") {$Session.GC.MRRStatus[$RigKey].next = $time;$Session.GC.MRRStatus[$RigKey].wait = $false;$Session.GC.MRRStatus[$RigKey].enable = $true}
-        elseif ($time -ge $Session.GC.MRRStatus[$RigKey].next) {
-            if ($Session.GC.MRRStatus[$RigKey].wait) {$Session.GC.MRRStatus[$RigKey].next = $time.AddMinutes(15);$Session.GC.MRRStatus[$RigKey].wait = $Session.GC.MRRStatus[$RigKey].enable = $false}
-            else {$Session.GC.MRRStatus[$RigKey].next = $time.AddMinutes(3);$Session.GC.MRRStatus[$RigKey].wait = $Session.GC.MRRStatus[$RigKey].enable = $true}
+    if ($SyncCache.MRRStatus.ContainsKey($RigKey)) {
+        if ($Stop) {$SyncCache.MRRStatus.Remove($RigKey)}
+        elseif ($Status -eq "online") {$SyncCache.MRRStatus[$RigKey].next = $time;$SyncCache.MRRStatus[$RigKey].wait = $false;$SyncCache.MRRStatus[$RigKey].enable = $true}
+        elseif ($time -ge $SyncCache.MRRStatus[$RigKey].next) {
+            if ($SyncCache.MRRStatus[$RigKey].wait) {$SyncCache.MRRStatus[$RigKey].next = $time.AddMinutes(15);$SyncCache.MRRStatus[$RigKey].wait = $SyncCache.MRRStatus[$RigKey].enable = $false}
+            else {$SyncCache.MRRStatus[$RigKey].next = $time.AddMinutes(3);$SyncCache.MRRStatus[$RigKey].wait = $SyncCache.MRRStatus[$RigKey].enable = $true}
         }
-    } else {$Session.GC.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
-    if (-not $Stop) {$Session.GC.MRRStatus[$RigKey].enable}
+    } else {$SyncCache.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
+    if (-not $Stop) {$SyncCache.MRRStatus[$RigKey].enable}
 }
 
 function Get-MiningRigRentalAlgos {

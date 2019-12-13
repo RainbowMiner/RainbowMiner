@@ -19,8 +19,8 @@ function Initialize-Session {
         $Session.IsCore             = $PSVersionTable.PSVersion -ge (Get-Version "6.1")
         $Session.MachineName        = [System.Environment]::MachineName
     }
-    if ($Session.GC -eq $null) {
-        [hashtable]$Session.GC      = @{}
+    if (-not (Test-Path Variable:Global:SyncCache)) {
+        $Global:SyncCache = [hashtable]::Synchronized(@{})
     }
 }
 
@@ -130,11 +130,11 @@ function Get-NvidiaArchitecture {
 function Get-PoolPayoutCurrencies {
     param($Pool)
     $Payout_Currencies = [PSCustomObject]@{}
-    if ($Session.GC.PoolFields -eq $null) {
+    if ($SyncCache.PoolFields -eq $null) {
         $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
-        $Session.GC.PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
+        $SyncCache.PoolFields = @($Setup.PSObject.Properties.Value | Where-Object {$_.Fields} | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) + @("Worker","DataWindow","Penalty","Algorithm","ExcludeAlgorithm","CoinName","ExcludeCoin","CoinSymbol","ExcludeCoinSymbol","MinerName","ExcludeMinerName","FocusWallet","Wallets","EnableAutoCoin","EnablePostBlockMining") | Select-Object -Unique | Sort-Object
     }
-    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $Session.GC.PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
+    @($Pool.PSObject.Properties) | Where-Object Membertype -eq "NoteProperty" | Where-Object {$_.Value -is [string] -and ($_.Value.Length -gt 2 -or $_.Value -eq "`$Wallet" -or $_.Value -eq "`$$($_.Name)") -and $SyncCache.PoolFields -inotcontains $_.Name -and $_.Name -notmatch "-Params$" -and $_.Name -notmatch "^#"} | Select-Object Name,Value -Unique | Sort-Object Name,Value | Foreach-Object{$Payout_Currencies | Add-Member $_.Name $_.Value}
     $Payout_Currencies
 }
 
@@ -163,7 +163,7 @@ function Get-CoinSymbol {
     [CmdletBinding()]
     param($CoinName = "Bitcoin",[Switch]$Silent,[Switch]$Reverse)
     
-    if ($Session.GC.CoinNames -eq $null -or -not $Session.GC.CoinNames.Count) {
+    if ($SyncCache.CoinNames -eq $null -or -not $SyncCache.CoinNames.Count) {
         try {
             $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/coins.json" -cycletime 86400 -Jobkey "coins"
         }
@@ -176,14 +176,14 @@ function Get-CoinSymbol {
             if (Test-Path "Data\coins.json") {try {$Request = Get-ContentByStreamReader "Data\coins.json" | ConvertFrom-Json -ErrorAction Stop} catch {$Request = $null}}
             if (-not $Request) {Write-Log -Level Warn "Coins API return empty string. ";return}
         } else {Set-ContentJson -PathToFile "Data\coins.json" -Data $Request > $null}
-        [hashtable]$Session.GC.CoinNames = @{}
-        $Request.PSObject.Properties | Foreach-Object {$Session.GC.CoinNames[$_.Name] = $_.Value}
+        [hashtable]$SyncCache.CoinNames = @{}
+        $Request.PSObject.Properties | Foreach-Object {$SyncCache.CoinNames[$_.Name] = $_.Value}
     }
     if (-not $Silent) {
         if ($Reverse) {
-            (Get-Culture).TextInfo.ToTitleCase("$($Session.GC.CoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($SyncCache.CoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
         } else {
-            $Session.GC.CoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
+            $SyncCache.CoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
     }
 }
@@ -210,7 +210,7 @@ function Get-WhatToMineData {
                     }
                 }
                 Set-ContentJson ".\Data\wtmdata.json" -Data $WtmKeys > $null
-                $Session.GC.WTMData = $null
+                $SyncCache.WTMData = $null
             }
         } catch {
             if ($Error.Count){$Error.RemoveAt(0)}
@@ -219,11 +219,11 @@ function Get-WhatToMineData {
         }
     }
 
-    if ($Session.GC.WTMData -eq $null) {
-        $Session.GC.WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
+    if ($SyncCache.WTMData -eq $null) {
+        $SyncCache.WTMData = Get-ContentByStreamReader ".\Data\wtmdata.json" | ConvertFrom-Json -ErrorAction Ignore
     }
 
-    if (-not $Silent) {$Session.GC.WTMData}
+    if (-not $Silent) {$SyncCache.WTMData}
 }
 
 function Get-WhatToMineUrl {
@@ -244,8 +244,8 @@ function Get-WhatToMineFactor {
         [int]$Factor = 10
     )
     if ($Algo) {
-        if ($Session.GC.WTMData -eq $null) {Get-WhatToMineData -Silent}
-        $Session.GC.WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
+        if ($SyncCache.WTMData -eq $null) {Get-WhatToMineData -Silent}
+        $SyncCache.WTMData | Where-Object {$_.algo -eq $Algo} | Foreach-Object {$_.factor * $Factor}
     }
 }
 
@@ -3188,7 +3188,7 @@ function Update-DeviceInformation {
                         $Utilization = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?usage$").Data
                         $AdapterId = $_.Index
 
-                        if ($Session.GC.AmdCardsTDP -eq $null) {$Session.GC.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                        if ($SyncCache.AmdCardsTDP -eq $null) {$SyncCache.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                         $Devices | Where-Object {$_.Vendor -eq $Vendor -and $_.Type_Vendor_Index -eq $DeviceId} | Foreach-Object {
                             $_.Data.AdapterId         = [int]$AdapterId
@@ -3198,7 +3198,7 @@ function Update-DeviceInformation {
                             $_.Data.ClockMem          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?memory clock$").Data
                             $_.Data.FanSpeed          = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?fan speed$").Data
                             $_.Data.Temperature       = [int]$($CardData | Where-Object SrcName -match "^(GPU\d* )?temperature$").Data
-                            $_.Data.PowerDraw         = $Session.GC.AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
+                            $_.Data.PowerDraw         = $SyncCache.AmdCardsTDP."$($_.Model_Name)" * ((100 + $PowerLimitPercent) / 100) * ($Utilization / 100) * ($PowerAdjust[$_.Model] / 100)
                             $_.Data.PowerLimitPercent = $PowerLimitPercent
                             #$_.Data.PCIBus            = [int]$($null = $_.GpuId -match "&BUS_(\d+)&"; $matches[1])
                             $_.Data.Method            = "ab"
@@ -3247,7 +3247,7 @@ function Update-DeviceInformation {
 
                             $AdlResult = Invoke-Exe '.\Includes\OverdriveN.exe' -WorkingDirectory $Pwd -ExpandLines -ExcludeEmptyLines | Where-Object {$_ -notlike "*&???" -and $_ -ne "ADL2_OverdriveN_Capabilities_Get is failed" -and $_ -ne "Failed to load ADL library"}
 
-                            if ($Session.GC.AmdCardsTDP -eq $null) {$Session.GC.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                            if ($SyncCache.AmdCardsTDP -eq $null) {$SyncCache.AmdCardsTDP = Get-ContentByStreamReader ".\Data\amd-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                             if ($null -ne $AdlResult) {
                                 $AdlResult | ForEach-Object {
@@ -3281,7 +3281,7 @@ function Update-DeviceInformation {
                                         $_.Data.Utilization       = [int]$AdlResultSplit[5]
                                         $_.Data.Temperature       = [int]$AdlResultSplit[6] / 1000
                                         $_.Data.PowerLimitPercent = 100 + [int]$AdlResultSplit[7]
-                                        $_.Data.PowerDraw         = $Session.GC.AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
+                                        $_.Data.PowerDraw         = $SyncCache.AmdCardsTDP."$($_.Model_Name)" * ((100 + $AdlResultSplit[7]) / 100) * ($AdlResultSplit[5] / 100) * ($PowerAdjust[$_.Model] / 100)
                                         $_.Data.Method            = "tdp"
 
                                         $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
@@ -3335,7 +3335,7 @@ function Update-DeviceInformation {
             if ($Vendor -eq 'NVIDIA') {
                 #NVIDIA
                 $DeviceId = 0
-                if ($Session.GC.NvidiaCardsTDP -eq $null) {$Session.GC.NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+                if ($SyncCache.NvidiaCardsTDP -eq $null) {$SyncCache.NvidiaCardsTDP = Get-ContentByStreamReader ".\Data\nvidia-cards-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
 
                 Invoke-NvidiaSmi "index","utilization.gpu","utilization.memory","temperature.gpu","power.draw","power.limit","fan.speed","pstate","clocks.current.graphics","clocks.current.memory","power.max_limit","power.default_limit" | ForEach-Object {
                     $Smi = $_
@@ -3354,7 +3354,7 @@ function Update-DeviceInformation {
                         $_.Data.Method            = "smi"
 
                         if ($_.Data.PowerDefaultLimit) {$_.Data.PowerLimitPercent = [math]::Floor(($_.Data.PowerLimit * 100) / $_.Data.PowerDefaultLimit)}
-                        if (-not $_.Data.PowerDraw -and $Session.GC.NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $Session.GC.NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
+                        if (-not $_.Data.PowerDraw -and $SyncCache.NvidiaCardsTDP."$($_.Model_Name)") {$_.Data.PowerDraw = $SyncCache.NvidiaCardsTDP."$($_.Model_Name)" * ([double]$_.Data.PowerLimitPercent / 100) * ([double]$_.Data.Utilization / 100)}
                         if ($_.Data.PowerDraw) {$_.Data.PowerDraw *= ($PowerAdjust[$_.Model] / 100)}
 
                         $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
@@ -3375,7 +3375,7 @@ function Update-DeviceInformation {
 
     try { #CPU
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
-            if ($Session.GC.CpuTDP -eq $null) {$Session.GC.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
+            if ($SyncCache.CpuTDP -eq $null) {$SyncCache.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
                 $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
@@ -3399,7 +3399,7 @@ function Update-DeviceInformation {
                         if (-not $CpuData.Utilization) {$CpuData.Utilization = 100}
                         if (-not $CpuData.PowerDraw) {
                             $CpuName = $_.Name.Trim()
-                            if (-not ($CPU_tdp = $Session.GC.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Session.GC.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                            if (-not ($CPU_tdp = $SyncCache.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($SyncCache.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
                             $CpuData.PowerDraw = $CPU_tdp * ($CpuData.Utilization / 100) * ($PowerAdjust[$Device.Model] / 100)
                         }
 
@@ -3419,7 +3419,7 @@ function Update-DeviceInformation {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
-                    if (-not ($CPU_tdp = $Session.GC.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($Session.GC.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
+                    if (-not ($CPU_tdp = $SyncCache.CpuTDP.PSObject.Properties | Where-Object {$CpuName -match $_.Name} | Select-Object -First 1 -ExpandProperty Value)) {$CPU_tdp = ($SyncCache.CpuTDP.PSObject.Properties.Value | Measure-Object -Average).Average}
 
                     $_.Data.Cores       = [int]$Global:GlobalCPUInfo.Cores
                     $_.Data.Threads     = [int]$Global:GlobalCPUInfo.Threads
@@ -3472,9 +3472,9 @@ function Get-Algorithm {
     if ($Algorithm -eq '*') {$Algorithm}
     elseif ($Algorithm -match "[,;]") {@($Algorithm -split "\s*[,;]+\s*") | Foreach-Object {Get-Algorithm $_}}
     else {
-        if ($Session.GC.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmsTimeStamp) {Get-Algorithms -Silent}
+        if ($SyncCache.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.AlgorithmsTimeStamp) {Get-Algorithms -Silent}
         $Algorithm = (Get-Culture).TextInfo.ToTitleCase(($Algorithm -replace "[^a-z0-9]+", " ")) -replace " "
-        if ($Session.GC.Algorithms.ContainsKey($Algorithm)) {$Session.GC.Algorithms[$Algorithm]} else {$Algorithm}
+        if ($SyncCache.Algorithms.ContainsKey($Algorithm)) {$SyncCache.Algorithms[$Algorithm]} else {$Algorithm}
     }
 }
 
@@ -3491,9 +3491,9 @@ function Get-Coin {
     if ($CoinSymbol -eq '*') {$CoinSymbol}
     elseif ($CoinSymbol -match "[,;]") {@($CoinSymbol -split "\s*[,;]+\s*") | Foreach-Object {Get-Coin $_}}
     else {
-        if ($Session.GC.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.CoinsDBTimeStamp) {Get-CoinsDB -Silent}
+        if ($SyncCache.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.CoinsDBTimeStamp) {Get-CoinsDB -Silent}
         $CoinSymbol = ($CoinSymbol -replace "[^A-Z0-9`$-]+").ToUpper()
-        if ($Session.GC.CoinsDB.ContainsKey($CoinSymbol)) {$Session.GC.CoinsDB[$CoinSymbol]}
+        if ($SyncCache.CoinsDB.ContainsKey($CoinSymbol)) {$SyncCache.CoinsDB[$CoinSymbol]}
     }
 }
 
@@ -3504,8 +3504,8 @@ function Get-MappedAlgorithm {
         $Algorithm
     )
     if (-not $Session.Config.EnableAlgorithmMapping) {return $Algorithm}
-    if ($Session.GC.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
-    $Algorithm | Foreach-Object {if ($Session.GC.AlgorithmMap.ContainsKey($_)) {$Session.GC.AlgorithmMap[$_]} else {$_}}
+    if ($SyncCache.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.AlgorithmMapTimeStamp) {Get-AlgorithmMap -Silent}
+    $Algorithm | Foreach-Object {if ($SyncCache.AlgorithmMap.ContainsKey($_)) {$SyncCache.AlgorithmMap[$_]} else {$_}}
 }
 
 function Get-AlgorithmMap {
@@ -3514,13 +3514,13 @@ function Get-AlgorithmMap {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if ($Session.GC.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmMapTimeStamp) {
-        [hashtable]$Session.GC.AlgorithmMap = @{}
-        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.AlgorithmMap[$_.Name]=$_.Value}
-        $Session.GC.AlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
+    if ($SyncCache.AlgorithmMap -eq $null -or (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.AlgorithmMapTimeStamp) {
+        [hashtable]$SyncCache.AlgorithmMap = @{}
+        (Get-ContentByStreamReader "Data\algorithmmap.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.AlgorithmMap[$_.Name]=$_.Value}
+        $SyncCache.AlgorithmMapTimeStamp = (Get-ChildItem "Data\algorithmmap.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        $Session.GC.AlgorithmMap
+        $SyncCache.AlgorithmMap
     }
 }
 
@@ -3532,8 +3532,8 @@ function Get-EquihashCoinPers {
         [Parameter(Mandatory = $false)]
         [String]$Default = "auto"
     )
-    if ($Session.GC.EquihashCoins -eq $null) {Get-EquihashCoins -Silent}        
-    if ($Coin -and $Session.GC.EquihashCoins.ContainsKey($Coin)) {$Session.GC.EquihashCoins[$Coin]} else {$Default}
+    if ($SyncCache.EquihashCoins -eq $null) {Get-EquihashCoins -Silent}        
+    if ($Coin -and $SyncCache.EquihashCoins.ContainsKey($Coin)) {$SyncCache.EquihashCoins[$Coin]} else {$Default}
 }
 
 function Get-NimqHashrate {
@@ -3544,8 +3544,8 @@ function Get-NimqHashrate {
         [Parameter(Mandatory = $false)]
         [Int]$Default = 100
     )
-    if ($Session.GC.NimqHashrates -eq $null) {Get-NimqHashrates -Silent}        
-    if ($GPU -and $Session.GC.NimqHashrates.ContainsKey($GPU)) {$Session.GC.NimqHashrates[$GPU]} else {$Default}
+    if ($SyncCache.NimqHashrates -eq $null) {Get-NimqHashrates -Silent}        
+    if ($GPU -and $SyncCache.NimqHashrates.ContainsKey($GPU)) {$SyncCache.NimqHashrates[$GPU]} else {$Default}
 }
 
 function Get-Region {
@@ -3554,9 +3554,9 @@ function Get-Region {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if ($Session.GC.Regions -eq $null) {Get-Regions -Silent}
+    if ($SyncCache.Regions -eq $null) {Get-Regions -Silent}
     $Region = (Get-Culture).TextInfo.ToTitleCase(($Region -replace "-", " " -replace "_", " ")) -replace " "
-    if ($Session.GC.Regions.ContainsKey($Region)) {$Session.GC.Regions[$Region]} else {foreach($r in @($Session.GC.Regions.Keys)) {if ($Region -match "^$($r)") {$Session.GC.Regions[$r];return}};$Region}
+    if ($SyncCache.Regions.ContainsKey($Region)) {$SyncCache.Regions[$Region]} else {foreach($r in @($SyncCache.Regions.Keys)) {if ($Region -match "^$($r)") {$SyncCache.Regions[$r];return}};$Region}
 }
 
 function Get-Region2 {
@@ -3565,8 +3565,8 @@ function Get-Region2 {
         [Parameter(Mandatory = $false)]
         [String]$Region = ""
     )
-    if ($Session.GC.Regions2 -eq $null) {Get-Regions2 -Silent}
-    if ($Session.GC.Regions2.ContainsKey($Region)) {$Session.GC.Regions2[$Region]}
+    if ($SyncCache.Regions2 -eq $null) {Get-Regions2 -Silent}
+    if ($SyncCache.Regions2.ContainsKey($Region)) {$SyncCache.Regions2[$Region]}
 }
 
 function Get-Algorithms {
@@ -3577,14 +3577,14 @@ function Get-Algorithms {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if ($Session.GC.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.AlgorithmsTimeStamp) {
-        [hashtable]$Session.GC.Algorithms = @{}
-        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Algorithms[$_.Name]=$_.Value}
-        $Session.GC.AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
+    if ($SyncCache.Algorithms -eq $null -or (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.AlgorithmsTimeStamp) {
+        [hashtable]$SyncCache.Algorithms = @{}
+        (Get-ContentByStreamReader "Data\algorithms.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.Algorithms[$_.Name]=$_.Value}
+        $SyncCache.AlgorithmsTimeStamp = (Get-ChildItem "Data\algorithms.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Session.GC.Algorithms.Values | Select-Object -Unique | Sort-Object}
-        else {$Session.GC.Algorithms.Keys | Sort-Object}
+        if ($Values) {$SyncCache.Algorithms.Values | Select-Object -Unique | Sort-Object}
+        else {$SyncCache.Algorithms.Keys | Sort-Object}
     }
 }
 
@@ -3596,14 +3596,14 @@ function Get-CoinsDB {
         [Parameter(Mandatory = $false)]
         [Switch]$Values = $false
     )
-    if ($Session.GC.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $Session.GC.CoinsDBTimeStamp) {
-        [hashtable]$Session.GC.CoinsDB = @{}
-        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.CoinsDB[$_.Name]=$_.Value}
-        $Session.GC.CoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
+    if ($SyncCache.CoinsDB -eq $null -or (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime() -gt $SyncCache.CoinsDBTimeStamp) {
+        [hashtable]$SyncCache.CoinsDB = @{}
+        (Get-ContentByStreamReader "Data\coinsdb.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.CoinsDB[$_.Name]=$_.Value}
+        $SyncCache.CoinsDBTimeStamp = (Get-ChildItem "Data\coinsdb.json").LastWriteTime.ToUniversalTime()
     }
     if (-not $Silent) {
-        if ($Values) {$Session.GC.CoinsDB.Values | Select-Object -Unique | Sort-Object}
-        else {$Session.GC.CoinsDB.Keys | Sort-Object}
+        if ($Values) {$SyncCache.CoinsDB.Values | Select-Object -Unique | Sort-Object}
+        else {$SyncCache.CoinsDB.Keys | Sort-Object}
     }
 }
 
@@ -3613,11 +3613,11 @@ function Get-EquihashCoins {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if ($Session.GC.EquihashCoins -eq $null) {
-        [hashtable]$Session.GC.EquihashCoins = @{}
-        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.EquihashCoins[$_.Name]=$_.Value}
+    if ($SyncCache.EquihashCoins -eq $null) {
+        [hashtable]$SyncCache.EquihashCoins = @{}
+        (Get-ContentByStreamReader "Data\equihashcoins.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.EquihashCoins[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Session.GC.EquihashCoins.Keys}
+    if (-not $Silent) {$SyncCache.EquihashCoins.Keys}
 }
 
 function Get-NimqHashrates {
@@ -3626,11 +3626,11 @@ function Get-NimqHashrates {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if ($Session.GC.NimqHashrates -eq $null) {
-        [hashtable]$Session.GC.NimqHashrates = @{}
-        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.NimqHashrates[$_.Name]=$_.Value}
+    if ($SyncCache.NimqHashrates -eq $null) {
+        [hashtable]$SyncCache.NimqHashrates = @{}
+        (Get-ContentByStreamReader "Data\nimqhashrates.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.NimqHashrates[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Session.GC.NimqHashrates.Keys}
+    if (-not $Silent) {$SyncCache.NimqHashrates.Keys}
 }
 
 function Get-PoolsInfo {
@@ -3646,26 +3646,26 @@ function Get-PoolsInfo {
         [Switch]$Clear = $false
     )
     
-    if ($Session.GC.PoolsInfo -eq $null) {
-        $Session.GC.PoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
-        $Session.GC.PoolsInfo.PSObject.Properties | Foreach-Object {
+    if ($SyncCache.PoolsInfo -eq $null) {
+        $SyncCache.PoolsInfo = Get-ContentByStreamReader "Data\poolsinfo.json" | ConvertFrom-Json -ErrorAction Ignore
+        $SyncCache.PoolsInfo.PSObject.Properties | Foreach-Object {
             $_.Value | Add-Member Minable @(Compare-Object $_.Value.Currency $_.Value.CoinSymbol -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject) -Force
         }
     }
     if ($Name -and @("Algorithm","Currency","CoinSymbol","CoinName","Minable") -icontains $Name) {
         if ($Values.Count) {
             if ($AsObjects) {
-                $Session.GC.PoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
+                $SyncCache.PoolsInfo.PSObject.Properties | Foreach-Object {[PSCustomObject]@{Pool=$_.Name;Currencies = @(Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Select-Object -Unique | Sort-Object)}} | Where-Object {($_.Currencies | Measure-Object).Count} | Sort-Object Name
             } else {
-                $Session.GC.PoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
+                $SyncCache.PoolsInfo.PSObject.Properties | Where-Object {Compare-Object $_.Value.$Name $Values -IncludeEqual -ExcludeDifferent} | Select-Object -ExpandProperty Name | Sort-Object
             }
         } else {
-            $Session.GC.PoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
+            $SyncCache.PoolsInfo.PSObject.Properties.Value.$Name | Select-Object -Unique | Sort-Object
         }
     } else {
-        $Session.GC.PoolsInfo.$Name
+        $SyncCache.PoolsInfo.$Name
     }
-    if ($Clear) {$Session.GC.PoolsInfo = $null}
+    if ($Clear) {$SyncCache.PoolsInfo = $null}
 }
 
 function Get-Regions {
@@ -3675,13 +3675,13 @@ function Get-Regions {
         [Switch]$Silent = $false,
         [Switch]$AsHash = $false
     )
-    if ($Session.GC.Regions -eq $null) {
-        [hashtable]$Session.GC.Regions = @{}
-        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Regions[$_.Name]=$_.Value}
+    if ($SyncCache.Regions -eq $null) {
+        [hashtable]$SyncCache.Regions = @{}
+        (Get-ContentByStreamReader "Data\regions.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.Regions[$_.Name]=$_.Value}
     }
     if (-not $Silent) {
-        if ($AsHash) {$Session.GC.Regions}
-        else {$Session.GC.Regions.Keys}
+        if ($AsHash) {$SyncCache.Regions}
+        else {$SyncCache.Regions.Keys}
     }
 }
 
@@ -3691,11 +3691,11 @@ function Get-Regions2 {
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if ($Session.GC.Regions2 -eq $null) {
-        [hashtable]$Session.GC.Regions2 = @{}
-        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$Session.GC.Regions2[$_.Name]=$_.Value}
+    if ($SyncCache.Regions2 -eq $null) {
+        [hashtable]$SyncCache.Regions2 = @{}
+        (Get-ContentByStreamReader "Data\regions2.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | %{$SyncCache.Regions2[$_.Name]=$_.Value}
     }
-    if (-not $Silent) {$Session.GC.Regions2.Keys}
+    if (-not $Silent) {$SyncCache.Regions2.Keys}
 }
 
 
@@ -5292,7 +5292,7 @@ function Set-PoolsConfigDefault {
             $Default = [PSCustomObject]@{Worker = "`$WorkerName";Penalty = "0";Algorithm = "";ExcludeAlgorithm = "";CoinName = "";ExcludeCoin = "";CoinSymbol = "";ExcludeCoinSymbol = "";MinerName = "";ExcludeMinerName = "";FocusWallet = "";AllowZero = "0";EnableAutoCoin = "0";EnablePostBlockMining = "0";CoinSymbolPBM = "";DataWindow = "";StatAverage = "";MaxMarginOfError = "100";SwitchingHysteresis=""}
             $Setup = Get-ChildItemContent ".\Data\PoolsConfigDefault.ps1"
             $Pools = @(Get-ChildItem ".\Pools\*.ps1" -ErrorAction Ignore | Select-Object -ExpandProperty BaseName)
-            $Session.GC.PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
+            $SyncCache.PoolFields = @("Wallets") + $Default.PSObject.Properties.Name + @($Setup.PSObject.Properties.Value | Where-Object Fields | Foreach-Object {$_.Fields.PSObject.Properties.Name} | Select-Object -Unique) | Select-Object -Unique
             if ($Pools.Count -gt 0) {
                 $Pools | Foreach-Object {
                     $Pool_Name = $_
@@ -6994,8 +6994,8 @@ param(
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
     $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property Name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
-    if ($Session.GC.NHCache -eq $null) {$Session.GC.NHCache = [hashtable]@{}}
-    if (-not $Cache -or -not $Session.GC.NHCache[$keystr] -or -not $Session.GC.NHCache[$keystr].request -or $Session.GC.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if ($SyncCache.NHCache -eq $null) {$SyncCache.NHCache = [hashtable]@{}}
+    if (-not $Cache -or -not $SyncCache.NHCache[$keystr] -or -not $SyncCache.NHCache[$keystr].request -or $SyncCache.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -7053,11 +7053,11 @@ param(
             }
         }
 
-        if (-not $Session.GC.NHCache[$keystr] -or $Request) {
-            $Session.GC.NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        if (-not $SyncCache.NHCache[$keystr] -or $Request) {
+            $SyncCache.NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    $Session.GC.NHCache[$keystr].request
+    $SyncCache.NHCache[$keystr].request
 }
 
 function Get-WalletWithPaymentId {

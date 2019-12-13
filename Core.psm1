@@ -90,7 +90,7 @@
         }
         [hashtable]$Session.MinerInfo = @{}
 
-        [System.Collections.ArrayList]$Session.GC.GetTicker = @()
+        [System.Collections.ArrayList]$SyncCache.GetTicker = @()
 
         $Session.StartTime         = if ($LastStartTime = (Get-LastStartTime)) {$LastStartTime} else {(Get-Date).ToUniversalTime()}
 
@@ -287,7 +287,7 @@ function Update-ActiveMiners {
         }        
     }
     if ($MinersFailed) {
-        $API.RunningMiners = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running}
+        $API.RunningMiners  = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
     }
     if (-not $Silent) {
         [PSCustomObject]@{
@@ -677,12 +677,12 @@ function Update-Rates {
 
     Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
         if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
-        elseif ($Session.GC.GetTicker -inotcontains $_.InputObject) {$Session.GC.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
+        elseif ($SyncCache.GetTicker -inotcontains $_.InputObject) {$SyncCache.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
-    if ($NewRatesFound -and $Session.GC.GetTicker.Count -gt 0) {
+    if ($NewRatesFound -and $SyncCache.GetTicker.Count -gt 0) {
         try {
-            $SymbolStr = "$(($Session.GC.GetTicker | Sort-Object) -join ',')".ToUpper()
+            $SymbolStr = "$(($SyncCache.GetTicker | Sort-Object) -join ',')".ToUpper()
             $RatesAPI = Invoke-RestMethodAsync "https://rbminer.net/api/cmc.php?symbols=$($SymbolStr)" -Jobkey "morerates" -cycletime 600
             if (-not $RatesAPI.status) {
                 Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
@@ -927,7 +927,7 @@ function Invoke-Core {
     $Session.OCmode = if ($MSIAenabled) {"msia"} elseif ($Session.Config.EnableOCProfiles) {"ocp"} else {"off"}
 
     if ($CheckConfig) {
-        $API.Info = [PSCustomObject]@{
+        $API.Info = ConvertTo-Json ([PSCustomObject]@{
                                 Version                = $ConfirmedVersion.Version
                                 RemoteVersion          = $ConfirmedVersion.RemoteVersion
                                 ManualURI              = $ConfirmedVersion.ManualURI
@@ -938,7 +938,7 @@ function Invoke-Core {
                                 UsePowerPrice          = $Session.Config.UsePowerPrice
                                 PowerPriceCurrency     = $Session.Config.PowerPriceCurrency
                                 DecSep                 = (Get-Culture).NumberFormat.NumberDecimalSeparator
-                            }
+                            }) -Depth 10
     }
     if ($Session.RoundCounter -eq 0 -and $Session.Config.StartPaused) {$Session.PauseMiners = $API.Pause = $true}
 
@@ -1197,6 +1197,7 @@ function Invoke-Core {
         $Session.LastDonated = Set-LastDrun $Session.Timer
         $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         $Session.UserConfig = $null
+        $API.UserConfig = ConvertTo-Json $Session.UserConfig
         $Script:AllPools = $null
         Write-Log "Donation run finished. "
     }
@@ -1206,7 +1207,8 @@ function Invoke-Core {
             if (-not $DonationData -or -not $DonationData.Wallets) {try {$DonationData = Get-ContentByStreamReader ".\Data\dconf.json" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = '{"Probability":100,"Wallets":{"2Miners":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"BlockMasters":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":50},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"CryptoKnight":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"EthashPool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ethermine":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"F2Pool":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"FairPool":{"WOW":"So2ifgjqGMZJhCrqpFMotQQAiJAiATuJLNAK2HrPLoNzK8hkqNbf9t8gmx6bzAQrXRMnWnoELoiD6GTv8guPBRwH5yoTVNomwVR2oNYDPRua","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"HeroMiners":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Icemining":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Luckypool":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Mintpond":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Nanopool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"NiceHash":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"Platform":"v2","MaximumMarginOfError":"0"},"NiceHashV2":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"MaximumMarginOfError":"0"},"PocketWhale":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"RavenminerEu":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"SparkPool":{"CKB":"sp_rbm","Algorithm":"Eaglesong","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Uupool":{"VOLLAR":"VcSq7vHRb9ymPj1jbeHNfX2fdVTJK75xndX","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12},"ZergPoolCoins":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"CoinSymbol":"CPU,DMS,MBC,RITO,SAFE,XMG"},"ZergPoolSolo":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"Algorithm":"m7m"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":16}},"Pools":["HeroMiners","Nicehash","SparkPool","ZergPoolCoins"],"Algorithm":[],"ExcludeMinerName":["GrinGoldMiner","GrinProMiner","SwapMiner"]}' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
-            $Session.UserConfig = $Session.Config | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
+            $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
+            $Session.UserConfig = $API.UserConfig | ConvertFrom-Json
             $Session.IsDonationRun = $true            
             $Session.AvailPools | ForEach-Object {
                 $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
@@ -1376,8 +1378,7 @@ function Invoke-Core {
         }
     }
 
-    $API.Config     = $Session.Config
-    $API.UserConfig = $Session.UserConfig
+    #$API.Config     = ConvertTo-Json $Session.Config -Depth 10
 
     $MinerInfoChanged = $false
     if (-not (Test-Path ".\Data\minerinfo.json")) {$Session.MinerInfo = @{}}
@@ -1391,7 +1392,7 @@ function Invoke-Core {
     }
     if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Session.MinerInfo -Compress > $null}
 
-    $API.MinerInfo = $Session.MinerInfo
+    #$API.MinerInfo = $Session.MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -1659,12 +1660,12 @@ function Invoke-Core {
         }
 
         if ($false) {
-            $API.PoolsCalculations = [PSCustomObject]@{
+            $API.PoolsCalculations = ConvertTo-Json ([PSCustomObject]@{
                 Hashrates = $Pools_Hashrates
                 Running   = $Pools_Running
                 Benchmarking = $Pools_Benchmarking
                 PriceCmp  = $Pools_PriceCmp
-            }
+            })
         }
 
         if ($Pools_Hashrates -ne $null) {Remove-Variable "Pools_Hashrates"}
@@ -2443,7 +2444,7 @@ function Invoke-Core {
 
     #Update API miner information
     #$RunningMiners = $Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Foreach-Object {$_ | Add-Member ActiveTime $_.GetActiveTime() -Force -PassThru}
-    $API.WatchdogTimers = $Script:WatchdogTimers
+    $API.WatchdogTimers = ConvertTo-Json $Script:WatchdogTimers
     $API.ActiveMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.Profit -or $_.IsFocusWalletMiner} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
     $API.RunningMiners  = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Running} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
     $API.FailedMiners   = ConvertTo-Json @($Script:ActiveMiners | Where-Object {$_.GetStatus() -eq [MinerStatus]::Failed} | Select-Object -Property * -ExcludeProperty EthPill,Process) -Depth 2
