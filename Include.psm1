@@ -1971,7 +1971,8 @@ function Start-SubProcessInScreen {
     $Cmd.Add("    screen -S `"`$name`" -X quit  >/dev/null 2>&1") > $null
     $Cmd.Add("  done") > $null
     $Cmd.Add(")") > $null
-    $Cmd.Add("screen -S $($ScreenName) -d -m", "sleep .1") > $null
+    $Cmd.Add("screen -S $($ScreenName) -d -m") > $null
+    $Cmd.Add("sleep .1") > $null
 
     $Stuff | Foreach-Object {
         $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$_\n`"") > $null
