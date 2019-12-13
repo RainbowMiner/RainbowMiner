@@ -111,7 +111,7 @@ function Start-Setup {
         Write-Host " "
 
         try {
-            $TotalMem = (($Session.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
+            $TotalMem = (($Global:DeviceCache.AllDevices | Where-Object {$_.Type -eq "Gpu" -and @("amd","nvidia") -icontains $_.Vendor}).OpenCl.GlobalMemSize | Measure-Object -Sum).Sum / 1GB
             if ($IsWindows) {$TotalSwap = (Get-CimInstance Win32_PageFile | Select-Object -ExpandProperty FileSize | Measure-Object -Sum).Sum / 1GB}
             if ($TotalSwap -and $TotalMem -gt $TotalSwap) {
                 Write-Log -Level Warn "You should increase your windows pagefile to at least $TotalMem GB"
@@ -201,7 +201,7 @@ function Start-Setup {
                 if ($val -is [array]) {$val = $val -join ','}
                 if ($val -is [bool] -or -not $Config.$ConfigSetup_Name) {$Config | Add-Member $ConfigSetup_Name $val -Force}
             }
-            if (($Session.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
+            if (($Global:DeviceCache.AllDevices | Where-Object Vendor -eq "AMD" | Measure-Object).Count -eq 0) {
                 $Config | Add-Member DisableMSIAmonitor $true -Force
             }
         } else {
@@ -1285,7 +1285,7 @@ function Start-Setup {
                         }
                         "nvsmipath" {
                             $GlobalSetupStepStore = $false
-                            if ($Config.EnableOCProfiles -and ($Session.AllDevices | where-object vendor -eq "nvidia" | measure-object).count -gt 0) {
+                            if ($Config.EnableOCProfiles -and ($Global:DeviceCache.AllDevices | where-object vendor -eq "nvidia" | measure-object).count -gt 0) {
                                 $Config.NVSMIpath = Read-HostString -Prompt "Enter path to Nvidia NVSMI" -Default $Config.NVSMIpath -Characters '' | Foreach-Object {if ($Controls -icontains $_) {throw $_};$_}
                                 if (-not (Test-Path $Config.NVSMIpath)) {Write-Host "Nvidia NVSMI not found at given path. RainbowMiner will use included nvsmi" -ForegroundColor Yellow}
                                 $GlobalSetupStepStore = $true

@@ -66,7 +66,7 @@ $diffLive     = [decimal]$Pool_Request.nodes[0].difficulty
 $reward       = [decimal]$Pool_BlocksRequest.matured[0].reward
 $profitLive   = if ($diffLive) {86400/$diffLive*$reward/1e18} else {0}
 
-$btcPrice      = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+$btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
    
 if (-not $InfoOnly) {
     $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)_Profit" -Value ($profitLive * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.hashrate -BlockRate $Pool_BLK

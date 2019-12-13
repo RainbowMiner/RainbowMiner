@@ -67,7 +67,7 @@ if (-not $InfoOnly) {
     $coinUnits    = 1e12
     $Divisor      = 1e8
 
-    $lastSatPrice = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency*1e8} elseif ($Pool_Request.charts.price) {[Double]($Pool_Request.charts.price | Select-Object -Last 1)[1]} else {0}
+    $lastSatPrice = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency*1e8} elseif ($Pool_Request.charts.price) {[Double]($Pool_Request.charts.price | Select-Object -Last 1)[1]} else {0}
 
     $diffLive     = $Pool_Request.network.difficulty
     $reward       = $Pool_Request.network.reward

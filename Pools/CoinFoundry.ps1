@@ -77,7 +77,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {$Wallets
         $blocks         = $Pool_BLK
         $hashrate       = [int64]$_.hashrate
 
-        $lastBTCPrice   = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency}
+        $lastBTCPrice   = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency}
 
         if ($Stat = Get-Stat -Name "$($Name)_$($Pool_Currency)_Profit") {
             if ($Stat.BlockRate_Average) {$blocks   = $Stat.BlockRate_Average}

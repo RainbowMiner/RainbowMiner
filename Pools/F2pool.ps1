@@ -37,8 +37,8 @@ $Pool_Request.PSObject.Properties.Value | Where-Object {$Pool_Currency = $_.curr
     if (-not $InfoOnly) {
         $Divisor  = Switch($_.scale) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
         $Hashrate = Switch($_.hashrateunit) {"K" {1e3}; "M" {1e6}; "G" {1e9}; "T" {1e12}; "P" {1e15}; "E" {1e18}; default {1}}
-        $Pool_Rate = $Session.Rates.$Pool_Currency
-        if (-not $Pool_Rate -and $_.price -and $Session.Rates.USD) {$Pool_Rate = $Session.Rates.USD / $_.price}                          
+        $Pool_Rate = $Global:Rates.$Pool_Currency
+        if (-not $Pool_Rate -and $_.price -and $Global:Rates.USD) {$Pool_Rate = $Global:Rates.USD / $_.price}                          
         $Stat = Set-Stat -Name "$($Name)_$($Pool_Currency)$($_.id -split '-' | Select-Object -Skip 1)_Profit" -Value $(if ($Pool_Rate) {$_.estimate / $Divisor / $Pool_Rate} else {0}) -Duration $StatSpan -ChangeDetection $false -HashRate ($_.hashrate * $Hashrate) -Quiet
         if (-not $Stat.HashRate_Live -and -not $AllowZero) {return}
     }

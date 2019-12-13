@@ -117,7 +117,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol -replace "\d")" -or $InfoOnly}
         $Pool_BLK       = [int]$(if ($avgTime) {86400/$avgTime})
         $Pool_TSL       = $timestamp - $Pool_Request.stats.lastBlockFound
         $reward         = $(if ($blocks) {($blocks | Measure-Object reward -Average).Average} else {0})/$Pool_Divisor
-        $btcPrice       = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+        $btcPrice       = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
 
         if ($_.cycles) {
             $PBR  = (86400 / $_.cycles) * ($(if ($_.primary) {$Pool_Request.nodes.primaryWeight} else {$Pool_Request.nodes.secondaryScale})/$Pool_Request.nodes.difficulty)

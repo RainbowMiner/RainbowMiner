@@ -196,16 +196,16 @@
                     $WTMdata = Get-WhatToMineData
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
                     $WTMdata_result = [hashtable]@{}
-                    if ($API.Rates) {$Rates = ConvertFrom-Json $API.Rates}
+                    if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
                     @($API.FastestMiners | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                         $Group = $_.Group
-                        $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $Rates."$($Session.Config.PowerPriceCurrency)") {$Rates.USD/$Rates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
+                        $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
                     }
                     $Data = ConvertTo-Json $WTMdata_result
                     Remove-Variable "WTMdata"
                     Remove-Variable "WTMdata_algos"
                     Remove-Variable "WTMdata_result"
-                    if ($Rates -ne $null) {Remove-Variable "Rates"}
+                    if ($LocalRates -ne $null) {Remove-Variable "LocalRates"}
                     Break
                 }
                 "/loadconfig" {
@@ -374,10 +374,10 @@
                 }
                 "/earnings" {
                     $Data = ""
-                    if ($API.Rates) {$Rates = ConvertFrom-Json $API.Rates}
+                    if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
                     if (Test-Path "Stats\Balances\Earnings.csv") {
                         $Earnings = @(Import-Csv "Stats\Balances\Earnings.csv" | Foreach-Object {
-                            $Rate = $Rates."$($_.Currency)"
+                            $Rate = $LocalRates."$($_.Currency)"
                             [PSCustomObject]@{
                                 Date = if ($Parameters.as_csv) {[DateTime]$_.Date} else {([DateTime]$_.Date).ToString("yyyy-MM-dd HH:mm:ss")}
                                 Date_UTC = if ($Parameters.as_csv) {[DateTime]$_.Date_UTC} else {([DateTime]$_.Date_UTC).ToString("yyyy-MM-dd HH:mm:ss")}
@@ -418,7 +418,7 @@
                         }
                         Remove-Variable "Earnings" -ErrorAction Ignore
                     }
-                    if ($Rates -ne $null) {Remove-Variable "Rates"}
+                    if ($LocalRates -ne $null) {Remove-Variable "LocalRates"}
                     Break
                 }
                 "/sessionvars" {           
@@ -442,20 +442,20 @@
                 }
                 "/balances" {
                     if ($API.Balances) {$Balances = ConvertFrom-Json $API.Balances}
-                    if ($API.Rates)    {$Rates = ConvertFrom-Json $API.Rates}
+                    if ($API.Rates)    {$LocalRates = ConvertFrom-Json $API.Rates}
                     $Balances = $Balances | Where-Object {$Parameters.add_total -or $_.Name -ne "*Total*"}
                     if ($Parameters.consolidate) {
                         $Balances = $Balances | Group-Object -Property Name | Foreach-Object {
-                            $BalanceGroup = $_.Group | Where-Object {$Rates."$($_.Currency)"}
+                            $BalanceGroup = $_.Group | Where-Object {$LocalRates."$($_.Currency)"}
                             [PSCustomObject]@{
                                 Name = $_.Name
-                                Total = [Decimal]($BalanceGroup | Foreach-Object {$_.Total / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Paid  = [Decimal]($BalanceGroup | Foreach-Object {$_.Paid / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1h  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1h / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1d  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1d / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_1w  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1w / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-                                Earnings_Avg = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_Avg / $Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Total = [Decimal]($BalanceGroup | Foreach-Object {$_.Total / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Paid  = [Decimal]($BalanceGroup | Foreach-Object {$_.Paid / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1h  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1h / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1d  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1d / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_1w  = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_1w / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
+                                Earnings_Avg = [Decimal]($BalanceGroup | Foreach-Object {$_.Earnings_Avg / $LocalRates."$($_.Currency)"} | Measure-Object -Sum).Sum
                             }
                         }
                     }
@@ -463,7 +463,7 @@
                     if ($Parameters.as_csv) {
                         if (-not $Parameters.consolidate) {
                             $Balances = $Balances | Foreach-Object {
-                                $Rate = $Rates."$($_.Currency)"
+                                $Rate = $LocalRates."$($_.Currency)"
                                 [PSCustomObject]@{
                                     Name = $_.Name
                                     Currency = $_.Currency
@@ -495,7 +495,7 @@
                         }
                         if ($Parameters.add_btc) {
                             $Balances | Foreach-Object {
-                                $Rate = $Rates."$($_.Currency)"
+                                $Rate = $LocalRates."$($_.Currency)"
                                 $_ | Add-Member -NotePropertyMembers @{
                                     Total_BTC = [Decimal]$(if ($Rate) {$_.Total / $Rate} else {0})
                                     Paid_BTC = [Decimal]$(if ($Rate) {$_.Paid / $Rate} else {0})
@@ -517,7 +517,7 @@
                         $Data = ConvertTo-Json @($Balances | Select-Object) -Depth 10
                     }
                     if ($Balances -ne $null) {Remove-Variable "Balances"}
-                    if ($Rates -ne $null) {Remove-Variable "Rates"}
+                    if ($LocalRates -ne $null) {Remove-Variable "LocalRates"}
                     Break
                 }
                 "/payouts" {

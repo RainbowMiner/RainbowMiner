@@ -81,7 +81,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $diffLive     = [decimal]$Pool_Request.network_statistics.difficulty
         $reward       = [decimal]$Pool_Request.network_statistics.value
         $profitLive   = if ($diffLive) {86400/$diffLive*$reward/$coinUnits} else {0}
-        $lastBTCPrice = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency} else {[decimal]$Pool_Request.market.price_btc}
+        $lastBTCPrice = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency} else {[decimal]$Pool_Request.market.price_btc}
 
         $blocks_measure = $Pool_Blocks | Where-Object {$_.ts -ge $timestamp24h} | Select-Object -ExpandProperty ts | Measure-Object -Minimum -Maximum
         $Pool_BLK = [int]$($(if ($blocks_measure.Count -gt 1 -and ($blocks_measure.Maximum - $blocks_measure.Minimum)) {86400000/($blocks_measure.Maximum - $blocks_measure.Minimum)} else {1})*$blocks_measure.Count)

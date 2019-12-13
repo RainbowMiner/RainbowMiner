@@ -64,7 +64,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             $coinUnits    = 1e18
             $Divisor      = 1e8
 
-            $priceBTC     = if ($Session.Rates.$Pool_Currency) {1/$Session.Rates.$Pool_Currency} else {[double]$Pool_Request.prices.price_btc}
+            $priceBTC     = if ($Global:Rates.$Pool_Currency) {1/$Global:Rates.$Pool_Currency} else {[double]$Pool_Request.prices.price_btc}
 
             $blocks       = $Pool_RequestBlocks.candidates + $Pool_RequestBlocks.immature + $Pool_RequestBlocks.matured | Where-Object {$_.timestamp -gt $timestamp24h -and -not $_.orphan} | Sort-Object timestamp -Descending
             $blocks_measure = $blocks | Select-Object -ExpandProperty timestamp | Measure-Object -Minimum -Maximum

@@ -53,7 +53,7 @@ $PBR31  = (86400 / 42) * (7936/$diff) #31*2^8
 $lastBlock     = $Pool_Request.mined_blocks | Sort-Object height | Select-Object -last 1
 $Pool_BLK      = $Pool_Request.pool_stats.blocks_found_last_24_hours
 $Pool_TSL      = if ($lastBlock) {((Get-Date).ToUniversalTime() - (Get-Date $lastBlock.time).ToUniversalTime()).TotalSeconds}
-$btcPrice      = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+$btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
     
 if (-not $InfoOnly) {
     $Stat29 = Set-Stat -Name "$($Name)_$($Pool_Currency)29_Profit" -Value ($PBR29 * $reward * $btcPrice) -Duration $StatSpan -ChangeDetection $true -HashRate $Pool_Request.pool_stats.secondary_hashrate -BlockRate $Pool_BLK

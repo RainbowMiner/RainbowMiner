@@ -39,7 +39,7 @@ $Pool_Request.pools | Where-Object {$Pool_Currency = $_.coin.type;$Pool_User = $
     
     $Pool_BLK      = [Math]::Floor(86400 / $_.networkStats.networkDifficulty * $_.poolStats.poolHashrate)
     $reward        = 1.5
-    $btcPrice      = if ($Session.Rates.$Pool_Currency) {1/[double]$Session.Rates.$Pool_Currency} else {0}
+    $btcPrice      = if ($Global:Rates.$Pool_Currency) {1/[double]$Global:Rates.$Pool_Currency} else {0}
     $btcRewardLive = if ($_.poolStats.poolHashrate -gt 0) {$btcPrice * $reward * $Pool_BLK / $_.poolStats.poolHashrate} else {0}
     $Divisor       = 1
     

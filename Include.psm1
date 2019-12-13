@@ -5,6 +5,7 @@ Add-Type -Path .\DotNet\OpenCL\*.cs
 function Initialize-Cache {
     [hashtable]$Global:StatsCache   = @{}
     [hashtable]$Global:DeviceCache  = @{}
+    [hashtable]$Global:Rates        = @{BTC = [Double]1}
 }
 
 function Initialize-Session {
@@ -22,7 +23,6 @@ function Initialize-Session {
     }
     if (-not (Test-Path Variable:Global:SyncCache)) {
         $Global:SyncCache = [hashtable]::Synchronized(@{})
-        $Global:SyncCache.Stats = [hashtable]@{}
     }
 }
 
@@ -446,7 +446,7 @@ function Set-Total {
                 PoolName    = "$($Miner.Pool | Select-Object -First 1)"
                 Algorithm   = "$($Miner.BaseAlgorithm | Select-Object -First 1)"
                 Currency    = "$($Miner.Currency -join '+')"
-                Rate        = [Math]::Round($Session.Rates.USD,2)
+                Rate        = [Math]::Round($Global:Rates.USD,2)
                 Profit      = [Math]::Round($TotalProfit*1e8,4)
                 ProfitApi   = [Math]::Round($TotalProfitApi*1e8,4)
                 Cost        = [Math]::Round($TotalCost*1e8,4)
@@ -634,7 +634,7 @@ function Set-Balance {
 
             $Stat.Last_Earnings += [PSCustomObject]@{Date=$Updated_UTC;Value=$Earnings}
 
-            $Rate = [Decimal]$Session.Rates."$($Balance.Currency)"
+            $Rate = [Decimal]$Global:Rates."$($Balance.Currency)"
             if (-not (Test-Path $Path0)) {New-Item $Path0 -ItemType "directory" > $null}
             
             $CsvLine = [PSCustomObject]@{
@@ -6803,8 +6803,8 @@ function Get-LastSatPrice {
         [Double]$lastSatPrice = 0
     )
 
-    if ($Session.Rates.$Currency -and -not $lastSatPrice) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
-    if (-not $Session.Rates.$Currency -and $lastSatPrice) {$Session.Rates.$Currency = 1/$lastSatPrice*1e8}
+    if ($Global:Rates.$Currency -and -not $lastSatPrice) {$lastSatPrice = 1/$Global:Rates.$Currency*1e8}
+    if (-not $Global:Rates.$Currency -and $lastSatPrice) {$Global:Rates.$Currency = 1/$lastSatPrice*1e8}
     $lastSatPrice
 }
 
@@ -6858,7 +6858,7 @@ function Get-PoolDataFromRequest {
     if (-not $Currency) {$Currency = $Request.config.symbol}
     if (-not $chartCurrency -and $Request.config.priceCurrency) {$chartCurrency = $Request.config.priceCurrency}
 
-    $lastSatPrice = if ($Session.Rates.$Currency) {1/$Session.Rates.$Currency*1e8} else {0}
+    $lastSatPrice = if ($Global:Rates.$Currency) {1/$Global:Rates.$Currency*1e8} else {0}
 
     if (-not $priceFromSession -and -not $lastSatPrice) {
         if     ($Request.price.btc)           {$lastSatPrice = 1e8*[decimal]$Request.price.btc}
@@ -6867,9 +6867,9 @@ function Get-PoolDataFromRequest {
         elseif ($Request.coinPrice."coin-btc"){$lastSatPrice = 1e8*[decimal]$Request.coinPrice."coin-btc"}
         else {
             $lastSatPrice = if ($Request.charts.price) {[decimal]($Request.charts.price | Select-Object -Last 1)[1]} else {0}
-            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Session.Rates.$chartCurrency}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:Rates.$chartCurrency) {$lastSatPrice *= 1e8/$Global:Rates.$chartCurrency}
             elseif ($chartCurrency -eq "BTC" -and $lastSatPrice -lt 1.0) {$lastSatPrice*=1e8}
-            if (-not $lastSatPrice -and $Session.Rates.$Currency) {$lastSatPrice = 1/$Session.Rates.$Currency*1e8}
+            if (-not $lastSatPrice -and $Global:Rates.$Currency) {$lastSatPrice = 1/$Global:Rates.$Currency*1e8}
         }
     }
 
@@ -6879,7 +6879,7 @@ function Get-PoolDataFromRequest {
         $averageDifficulties = if ($Request.pool.stats.diffs.wavg24h) {$Request.pool.stats.diffs.wavg24h} elseif ($Request.charts.difficulty_1d) {$Request.charts.difficulty_1d} else {($Request.charts.difficulty | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average}
         if ($averageDifficulties) {
             $averagePrices = if ($Request.charts.price_1d) {$Request.charts.price_1d} elseif ($Request.charts.price) {($Request.charts.price | Where-Object {$_[0] -gt $timestamp24h} | Foreach-Object {$_[1]} | Measure-Object -Average).Average} else {0}
-            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Session.Rates.$chartCurrency) {$averagePrices *= 1e8/$Session.Rates.$chartCurrency}
+            if ($chartCurrency -and $chartCurrency -ne "BTC" -and $Global:Rates.$chartCurrency) {$averagePrices *= 1e8/$Global:Rates.$chartCurrency}
             elseif ($chartCurrency -eq "BTC" -and $averagePrices -lt 1.0) {$averagePrices*=1e8}
             if (-not $averagePrices) {$averagePrices = $lastSatPrice}
             $profitDay = 86400/$averageDifficulties*$reward/$Divisor

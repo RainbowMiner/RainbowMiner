@@ -73,7 +73,6 @@
         [hashtable]$Script:NewRates = @{}
 
         #Setup session variables
-        [hashtable]$Session.Rates = @{BTC = [Double]1}
         [hashtable]$Session.ConfigFiles = @{
             Config     = @{Path='';LastWriteTime=0;Healthy=$false}
             Colors     = @{Path='';LastWriteTime=0;Healthy=$false}
@@ -380,8 +379,8 @@ function Invoke-ReportMinerStatus {
 
     $Version = "RainbowMiner $($Session.Version.ToString())"
     $Status = if ($Session.Paused) {"Paused"} elseif (-not $Session.Profitable) {"Waiting"} else {"Running"}
-    $Rates = [PSCustomObject]@{}
-    $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$Rates | Add-Member $_ $Session.Rates.$_ -Force}
+    $ReportRates = [PSCustomObject]@{}
+    $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ReportRates | Add-Member $_ $Global:Rates.$_ -Force}
 
     [System.Collections.ArrayList]$Including_Strings = @()
     if ($Session.ReportTotals)    {$Including_Strings.Add("totals") > $null}
@@ -487,7 +486,7 @@ function Invoke-ReportMinerStatus {
                         ProfitApi = "$([Math]::Round($_.Value.ProfitApi_Avg,5))"
                         Cost      = "$([Math]::Round($_.Value.Cost_Avg,5))"
                         Power     = "$([Math]::Round($_.Value.Power_Avg,2))"
-                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Session.Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Session.Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
+                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Global:Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Global:Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
                     }
                 } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
@@ -510,7 +509,7 @@ function Invoke-ReportMinerStatus {
 
         $ReportAPI | Where-Object {-not $ReportDone -and $ReportUrl -match $_.match} | Foreach-Object {
             $ReportUrl = $_.apiurl
-            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $Rates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport}
+            $Response = Invoke-GetUrl $ReportUrl -body @{user = $Session.Config.MinerStatusKey; email = $Session.Config.MinerStatusEmail; pushoverkey = $Session.Config.PushOverUserKey; worker = $Session.Config.WorkerName; machinename = $Session.MachineName; machineip = $Session.MyIP; cpu = "$($Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique)";version = $Version; status = $Status; profit = "$Profit"; powerdraw = "$PowerDraw"; earnings_avg = "$($Session.Earnings_Avg)"; earnings_1d = "$($Session.Earnings_1d)"; pool_totals = ConvertTo-Json @($Pool_Totals | Select-Object) -Compress; minerdata = "$(if ($Session.ReportMinerData -and (Test-Path ".\Data\minerdata.json")) {Get-ContentByStreamReader ".\Data\minerdata.json"};$Session.ReportMinerData=$false)"; poolsdata = "$(if ($Session.ReportPoolsData -and (Test-Path ".\Data\poolsdata.json")) {Get-ContentByStreamReader ".\Data\poolsdata.json"};$Session.ReportPoolsData=$false)"; rates = ConvertTo-Json $ReportRates -Compress; interval = $ReportInterval; uptime = "$((Get-Uptime).TotalSeconds)"; sysuptime = "$((Get-Uptime -System).TotalSeconds)";maxtemp = "$($Session.Config.MinerStatusMaxTemp)"; tempalert=$TempAlert; data = $minerreport}
             if ($Response -is [string] -or $Response.Status -eq $null) {$ReportStatus = $Response -split "[\r\n]+" | select-object -first 1}
             else {
                 $ReportStatus = $Response.Status
@@ -579,16 +578,16 @@ function Get-Balance {
     
     $Balances.currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesWithBalances.Add($_) > $null}
     @("BTC") + $Config.Currency | Select-Object -Unique | Sort-Object | Foreach-Object {$CurrenciesToExchange.Add($_) > $null}
-    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Session.Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing.Add($_) > $null}
+    $CurrenciesWithBalances + $CurrenciesToExchange | Where-Object {-not $Global:Rates.ContainsKey($_)} | Foreach-Object {$CurrenciesMissing.Add($_) > $null}
 
     if ($CurrenciesMissing.Count) {Update-Rates $CurrenciesMissing}
 
     $CurrenciesWithBalances | Foreach-Object {
         $Currency = $_
-        if ($Session.Rates.ContainsKey($Currency) -and $Session.Rates[$Currency]) {
+        if ($Global:Rates.ContainsKey($Currency) -and $Global:Rates[$Currency]) {
             $RatesAPI | Add-Member "$($Currency)" ([PSCustomObject]@{})
-            $CurrenciesToExchange | Where-Object {$Session.Rates.ContainsKey($_)} | Foreach-Object {
-                $RatesAPI.$Currency | Add-Member $_ ($Session.Rates.$_/$Session.Rates.$Currency)
+            $CurrenciesToExchange | Where-Object {$Global:Rates.ContainsKey($_)} | Foreach-Object {
+                $RatesAPI.$Currency | Add-Member $_ ($Global:Rates.$_/$Global:Rates.$Currency)
             }
         }
     }
@@ -668,7 +667,7 @@ function Update-Rates {
             try {Invoke-GetUrl "https://rbminer.net/api/data/coinbase.json" | Select-Object | Foreach-Object {$_.PSObject.Properties | Foreach-Object {$Script:NewRates[$_.Name] = [Double]$_.Value}}} catch {if ($Error.Count){$Error.RemoveAt(0)};$Script:NewRates.Clear();Write-Log -Level Warn "Coinbase down. "}
         }
 
-        $Session.Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
+        $Global:Rates["BTC"] = $Script:NewRates["BTC"] = [Double]1
 
         $NewRatesFound = $true
     } else {
@@ -676,7 +675,7 @@ function Update-Rates {
     }
 
     Compare-Object $Symbols @($Script:NewRates.Keys) -IncludeEqual | Where-Object {$_.SideIndicator -ne "=>" -and $_.InputObject} | Foreach-Object {
-        if ($_.SideIndicator -eq "==") {$Session.Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
+        if ($_.SideIndicator -eq "==") {$Global:Rates[$_.InputObject] = [Double]$Script:NewRates[$_.InputObject]}
         elseif ($SyncCache.GetTicker -inotcontains $_.InputObject) {$SyncCache.GetTicker.Add($_.InputObject.ToUpper()) > $null;$NewRatesFound = $true}
     }
 
@@ -687,7 +686,7 @@ function Update-Rates {
             if (-not $RatesAPI.status) {
                 Write-Log -Level Info "Rbminer.net/cmc failed for $($SymbolStr)"
             } elseif ($RatesAPI.data -and $RatesAPI -is [object]) {
-                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Session.Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
+                $RatesAPI.data.PSObject.Properties | Foreach-Object {$Global:Rates[$_.Name] = if ($_.Value -gt 0) {[double](1e8/$_.Value)} else {0}}                    
             }
         }
         catch {
@@ -697,7 +696,7 @@ function Update-Rates {
     }
 
     Get-WorldCurrencies -Silent
-    Compare-Object $SyncCache.WorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
+    Compare-Object $SyncCache.WorldCurrencies @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 }
 
 function Invoke-Core {
@@ -1418,16 +1417,16 @@ function Invoke-Core {
     Write-Log "Updating exchange rates. "
     Update-Rates
 
-    $API.Rates = ConvertTo-Json $Session.Rates
+    $API.Rates = ConvertTo-Json $Global:Rates
     $ActualRates = [PSCustomObject]@{}
-    $Session.Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Session.Rates.$_}
+    $Global:Rates.Keys | Where-Object {$Session.Config.Currency -icontains $_} | Foreach-Object {$ActualRates | Add-Member $_ $Global:Rates.$_}
     $API.ActualRates = $ActualRates
 
     #PowerPrice check
     [Double]$PowerPriceBTC = 0
     if ($Session.CurrentPowerPrice -gt 0 -and $Session.Config.PowerPriceCurrency) {
-        if ($Session.Rates."$($Session.Config.PowerPriceCurrency)") {
-            $PowerPriceBTC = [Double]$Session.CurrentPowerPrice/[Double]$Session.Rates."$($Session.Config.PowerPriceCurrency)"
+        if ($Global:Rates."$($Session.Config.PowerPriceCurrency)") {
+            $PowerPriceBTC = [Double]$Session.CurrentPowerPrice/[Double]$Global:Rates."$($Session.Config.PowerPriceCurrency)"
         } else {
             Write-Log -Level Warn "Powerprice currency $($Session.Config.PowerPriceCurreny) not found. Cost of electricity will be ignored."
         }
@@ -1498,8 +1497,8 @@ function Invoke-Core {
             }
             if ($Earnings -ne $null) {Remove-Variable "Earnings"}
             $API.Balances = ConvertTo-Json $BalancesData
-            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
-            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Session.Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Session.Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_Avg = $API.Earnings_Avg = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_Avg / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
+            $Session.Earnings_1d  = $API.Earnings_1d  = ($BalancesData | Where-Object {$_.Name -ne "*Total*" -and $Global:Rates."$($_.Currency)"} | Foreach-Object {$_.Earnings_1d / $Global:Rates."$($_.Currency)"} | Measure-Object -Sum).Sum
 
             if ($RefreshBalances) {$Session.ReportTotals = $true}
         }
@@ -2512,7 +2511,7 @@ function Invoke-Core {
             @{Label = "Power$(if ($Session.Config.UsePowerPrice -and ($Session.Config.PowerOffset -gt 0 -or $Session.Config.PowerOffsetPercent -gt 0)){"*"})"; Expression = {"{0:d}W" -f [int]$_.PowerDraw}; Align = 'right'}
         )
         foreach($Miner_Currency in @($Session.Config.Currency | Sort-Object)) {
-            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Session.Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Session.Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
+            $Miner_Table.Add(@{Label = "$Miner_Currency/Day $($_.Profit)"; Expression = [scriptblock]::Create("if (`$_.Profit -and `"$($Global:Rates.$Miner_Currency)`") {ConvertTo-LocalCurrency `$(`$_.Profit) $($Global:Rates.$Miner_Currency) -Offset 2} else {`"Unknown`"}"); Align = "right"}) > $null
         }
         $Miner_Table.AddRange(@(
             @{Label = "Accuracy"; Expression = {$_.Pools.PSObject.Properties.Value.MarginOfError | ForEach-Object {(1 - $_).ToString("P0")}}; Align = 'right'}, 
@@ -2647,9 +2646,9 @@ function Invoke-Core {
                     -3 {$Miner_Currency_Out = "sat"; $CurrentProfitTotal_Out*=1e8;$CurrentProfitWithoutCostTotal_Out*=1e8;$CurrentProfit_Offset = 10}
                 }
             }
-            if ($Session.Rates.$Miner_Currency) {$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Session.Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null}
+            if ($Global:Rates.$Miner_Currency) {$StatusLine.Add("$(ConvertTo-LocalCurrency $CurrentProfitTotal_Out $($Global:Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)$(if ($Session.Config.UsePowerPrice) {"/$(ConvertTo-LocalCurrency $CurrentProfitWithoutCostTotal_Out $($Global:Rates.$Miner_Currency) -Offset $CurrentProfit_Offset)"}) $Miner_Currency_Out/Day") > $null}
     }
-    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Session.Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Session.Rates.$_)"})  -join ' = ')") > $null}
+    if ($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_}) {$StatusLine.Add("1 BTC = $(($Session.Config.Currency | Where-Object {$_ -ne "BTC" -and $Global:Rates.$_} | Sort-Object | ForEach-Object { "$($_) $($Global:Rates.$_)"})  -join ' = ')") > $null}
 
     $API.CurrentProfit = $CurrentProfitTotal
 
