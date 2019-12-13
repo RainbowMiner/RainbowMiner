@@ -602,7 +602,7 @@ function Get-Balance {
     Get-WorldCurrencies -Silent
 
     [hashtable]$Digits = @{}
-    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($Session.WorldCurrencies -icontains $_) {2} else {8}}
+    $CurrenciesWithBalances + $Config.Currency | Where-Object {$_} | Select-Object -Unique | Foreach-Object {$Digits[$_] = if ($SyncCache.WorldCurrencies -icontains $_) {2} else {8}}
 
     $CurrenciesWithBalances | ForEach-Object {
         $Currency = $_.ToUpper()
@@ -697,7 +697,7 @@ function Update-Rates {
     }
 
     Get-WorldCurrencies -Silent
-    Compare-Object $Session.WorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
+    Compare-Object $SyncCache.WorldCurrencies @($Session.Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Session.Rates[$_] = [Math]::Round($Session.Rates[$_],3)}
 }
 
 function Invoke-Core {
@@ -1535,8 +1535,8 @@ function Invoke-Core {
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Session.Config.Algorithm.Count -and -not (Compare-Object @($Session.Config.Algorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object @($Session.Config.ExcludeAlgorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Algorithms -and $Session.UnprofitableAlgos.Algorithms.Count -and (Compare-Object @($Session.UnprofitableAlgos.Algorithms | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $Session.UnprofitableAlgos.Pools.$Pool_Name -and $Session.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object @($Session.UnprofitableAlgos.Pools.$Pool_Name | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object @($SyncCache.UnprofitableAlgos.Algorithms | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object @($SyncCache.UnprofitableAlgos.Pools.$Pool_Name | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and @($Session.Config.ExcludeCoin) -icontains $_.CoinName) -or
                 ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and @($Session.Config.ExcludeCoinSymbol) -icontains $_.CoinSymbol) -or
                 ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Session.Config.Pools.$Pool_Name.Algorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
@@ -1997,11 +1997,11 @@ function Invoke-Core {
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]}
     if ((($AllMiners | Measure-Object).Count -ne ($Miners | Measure-Object).Count) -or $Session.StartDownloader) {
         $Miners_DownloadList = @($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Where-Object {$AllMiners_VersionCheck[$_.BaseName] -ne $true} | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "Searchable"; expression = {$true}}, @{name = "IsMiner"; expression = {$true}})
-        if ($Miners_DownloadList.Count -gt 0 -and $Session.Downloader.State -ne "Running") {
+        if ($Miners_DownloadList.Count -gt 0 -and $Script:Downloader.State -ne "Running") {
             Clear-Host
             Write-Log "Starting download of $($Miners_DownloadList.Count) files."
             if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) files) .."}
-            $Session.Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
+            $Script:Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
         }
         $Session.StartDownloader = $false
     }
@@ -2365,7 +2365,7 @@ function Invoke-Core {
         Get-Process | Where-Object Path | Where-Object {$_.Path -like "$(Get-Location)/bin/*"} | Where-Object {-not (Compare-Object @($Script:ActiveMiners | Foreach-Object {$_.GetProcessIds()} | Where-Object {$_} | Select-Object -Unique) @($_.Id,$_.Parent.Id) -ExcludeDifferent -IncludeEqual) -and @($Script:ActiveMiners | Select-Object -ExpandProperty Path | Split-Path -Leaf | Select-Object -unique) -icontains $_.ProcessName} | Select-Object Id,ProcessName | Foreach-Object {Write-Log -Level Warn "Stop-Process $($_.ProcessName) with Id $($_.Id)"; if (Test-OCDaemon) {Invoke-OCDaemon -Cmd "kill $($_.Id)" -Quiet > $null} else {Stop-Process -Id $_.Id -Force -ErrorAction Ignore}}
     }
 
-    if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
+    if ($Script:Downloader.HasMoreData) {$Script:Downloader | Receive-Job}
     if ($Session.Config.Delay -gt 0) {Start-Sleep $Session.Config.Delay} #Wait to prevent BSOD
 
     $Script:ActiveMiners | Where-Object {$_.Best -EQ $true -and $_.GetStatus() -ne [MinerStatus]::Running} | ForEach-Object {
@@ -2913,7 +2913,7 @@ function Invoke-Core {
 
     if ($SamplesPicked -eq 0) {Update-ActiveMiners > $null;$Session.Timer = (Get-Date).ToUniversalTime();$SamplesPicked++}
 
-    if ($Session.Downloader.HasMoreData) {$Session.Downloader | Receive-Job}
+    if ($Script:Downloader.HasMoreData) {$Script:Downloader | Receive-Job}
 
     if (-not $keyPressed) {
         $host.UI.RawUI.CursorPosition = $CursorPosition

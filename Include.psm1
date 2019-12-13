@@ -141,12 +141,12 @@ function Get-PoolPayoutCurrencies {
 }
 
 function Set-UnprofitableAlgos {
-    if ($Session.UnprofitableAlgos -eq $null) {
-        $Session.UnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
+    if ($SyncCache.UnprofitableAlgos -eq $null) {
+        $SyncCache.UnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
     }
 
-    if (-not $Session.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
-        $Key = Get-ContentDataMD5hash $Session.UnprofitableAlgos
+    if (-not $SyncCache.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
+        $Key = Get-ContentDataMD5hash $SyncCache.UnprofitableAlgos
         try {
             $Request = Invoke-GetUrlAsync "https://rbminer.net/api/data/unprofitable2.json" -cycletime 3600 -Jobkey "unprofitable2"
         }
@@ -155,8 +155,8 @@ function Set-UnprofitableAlgos {
             Write-Log -Level Warn "Unprofitable algo API failed. "
         }
         if ($Request.Algorithms -and $Request.Algorithms -gt 10) {
-            $Session.UnprofitableAlgos = $Request
-            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $Session.UnprofitableAlgos -MD5hash $Key > $null
+            $SyncCache.UnprofitableAlgos = $Request
+            Set-ContentJson -PathToFile ".\Data\unprofitable.json" -Data $SyncCache.UnprofitableAlgos -MD5hash $Key > $null
         }
     }
 }
@@ -3702,17 +3702,16 @@ function Get-Regions2 {
     if (-not $Silent) {$SyncCache.Regions2.Keys}
 }
 
-
 function Get-WorldCurrencies {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [Switch]$Silent = $false
     )
-    if ($Session.WorldCurrencies -eq $null) {
-        $Session.WorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
+    if ($SyncCache.WorldCurrencies -eq $null) {
+        $SyncCache.WorldCurrencies = if (Test-Path ".\Data\worldcurrencies.json") {Get-ContentByStreamReader ".\Data\worldcurrencies.json" | ConvertFrom-Json -ErrorAction Ignore} else {@("USD","INR","RUB","EUR","GBP")}
     }
-    if (-not $Silent) {$Session.WorldCurrencies}
+    if (-not $Silent) {$SyncCache.WorldCurrencies}
 }
 
 enum MinerStatus {
