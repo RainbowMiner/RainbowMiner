@@ -1383,20 +1383,22 @@ function Get-ContentByStreamReader {
         [Parameter(Mandatory = $false)]
         [Switch]$ExpandLines = $false
     )
-    try {
-        $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-        $reader = New-Object System.IO.StreamReader($FilePath)
-        if ($ExpandLines) {
-            while (-not $reader.EndOfStream) {$reader.ReadLine()}
-        } else {
-            $reader.ReadToEnd()
+    if (Test-Path $FilePath) {
+        try {
+            $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
+            $reader = New-Object System.IO.StreamReader($FilePath)
+            if ($ExpandLines) {
+                while (-not $reader.EndOfStream) {$reader.ReadLine()}
+            } else {
+                $reader.ReadToEnd()
+            }
         }
-    }
-    catch {
-        if ($Error.Count){$Error.RemoveAt(0)}
-    }
-    finally {
-        if ($reader) {$reader.Close()}
+        catch {
+            if ($Error.Count){$Error.RemoveAt(0)}
+        }
+        finally {
+            if ($reader) {$reader.Close()}
+        }
     }
 }
 
@@ -1971,7 +1973,10 @@ function Start-SubProcessInScreen {
     $Cmd.Add(")") > $null
     $Cmd.Add("screen -S $($ScreenName) -d -m", "sleep .1") > $null
 
-    $Stuff | Foreach-Object {$Cmd.Add("screen -S $($ScreenName) -X stuff $`"$_\n`"", "sleep .1") > $null}
+    $Stuff | Foreach-Object {
+        $Cmd.Add("screen -S $($ScreenName) -X stuff $`"$_\n`"") > $null
+        $Cmd.Add("sleep .1") > $null
+    }
 
     Set-BashFile -FilePath $PIDbash -Cmd $Cmd
     Set-BashFile -FilePath $PIDtest -Cmd $Stuff
