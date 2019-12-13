@@ -35,7 +35,7 @@ $Version = "15.0"
 $DevFee = 1.0
 $DevFeeDual = 1.0
 
-if (-not $Session.DevicesByTypes.NVIDIA -and -not $Session.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $Global:DeviceCache.DevicesByTypes.AMD -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "ethash"; MinMemGB = 4; SecondAlgorithm = ""; SecondIntensity = 00; Params = ""} #Ethash
@@ -119,18 +119,18 @@ if ($InfoOnly) {
 }
 
 for($i=0;$i -le $UriCuda.Count -and -not $Uri;$i++) {
-    if (-not $Session.DevicesByTypes.NVIDIA -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda)) {
+    if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -or (Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $UriCuda[$i].Cuda)) {
         $Uri = $UriCuda[$i].Uri
         $Cuda= $UriCuda[$i].Cuda
     }
 }
 
-if ($Session.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
+if ($Global:DeviceCache.DevicesByTypes.NVIDIA) {$Cuda = Confirm-Cuda -ActualVersion $Session.Config.CUDAVersion -RequiredVersion $Cuda -Warning $Name}
 
 foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
-	$Session.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Type -eq "GPU" | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
 		$Miner_Model = $_.Model
-		$Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+		$Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
 		$Fee = 0
 		if ($Device | Where-Object {$_.OpenCL.GlobalMemsize -ge 4gb}) {$Fee=$DevFee}
 
@@ -182,12 +182,12 @@ foreach ($Miner_Vendor in @("AMD","NVIDIA")) {
 
 					if ($Arguments_Platform) {
 						if ($SecondAlgorithm) {
-							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week; "$SecondAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week}
+							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week; "$SecondAlgorithm_Norm" = $Global:StatsCache."$($Miner_Name)_$($SecondAlgorithm_Norm)_HashRate".Week}
 							$Pool_Port_Second = if ($Pools.$SecondAlgorithm_Norm.Ports -ne $null -and $Pools.$SecondAlgorithm_Norm.Ports.GPU) {$Pools.$SecondAlgorithm_Norm.Ports.GPU} else {$Pools.$SecondAlgorithm_Norm.Port}
 							$Arguments_Second = "-mode 0 -dcoin $($Coins.$SecondAlgorithm) -dpool $($Pools.$SecondAlgorithm_Norm.Host):$($Pool_Port_Second) -dwal $($Pools.$SecondAlgorithm_Norm.User)$(if ($Pools.$SecondAlgorithm_Norm.Pass) {" -dpsw $($Pools.$SecondAlgorithm_Norm.Pass)"})$(if($_.SecondIntensity -ge 0){" -dcri $($_.SecondIntensity)"})"
 						}
 						else {
-							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Session.Stats."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
+							$Miner_HashRates = [PSCustomObject]@{"$MainAlgorithm_Norm" = $Global:StatsCache."$($Miner_Name)_$($MainAlgorithm_Norm_0)_HashRate".Week}
 							$Arguments_Second = "-mode 1"
 						}
 

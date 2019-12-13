@@ -19,7 +19,7 @@ $Port = "533{0:d2}"
 $DevFee = 3.0
 $Version = "1.5.3"
 
-if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
 $Commands = [PSCustomObject[]]@(
     [PSCustomObject]@{MainAlgorithm = "RandomHash"; Params = ""; NH = $true; ExtendInterval = 2; DevFee = 3.0} #RandomHash/PASCcoin
@@ -41,9 +41,9 @@ if ($InfoOnly) {
     return
 }
 
-$Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
+$Global:DeviceCache.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Object {
     $First = $true
-    $Miner_Device = $Session.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
+    $Miner_Device = $Global:DeviceCache.DevicesByTypes.CPU | Where-Object Model -EQ $_.Model
     $Miner_Model  = $_.Model
 
     $DeviceParams = "$(if ($Session.Config.CPUMiningThreads){" -cputhreads $($Session.Config.CPUMiningThreads)"})$(if ($Session.Config.CPUMiningAffinity -ne ''){" -processorsaffinity $((ConvertFrom-CPUAffinity $Session.Config.CPUMiningAffinity) -join ",")"})"
@@ -90,7 +90,7 @@ $Session.DevicesByTypes.CPU | Select-Object Vendor, Model -Unique | ForEach-Obje
 					DeviceModel    = $Miner_Model
 					Path           = $Path
 					Arguments      = $Arguments
-					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
+					HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 					API            = "Nanominer"
 					Port           = $Miner_Port
 					Uri            = $Uri

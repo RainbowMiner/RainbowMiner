@@ -161,7 +161,7 @@
                     Break
                 }
                 "/minerinfo" {
-                    $Data = ConvertTo-Json @($Session.MinerInfo | Select-Object)
+                    $Data = ConvertTo-Json @($SyncCache.MinerInfo | Select-Object)
                     Break
                 }
                 "/pools" {
@@ -284,7 +284,8 @@
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"
                     $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
                     $PurgeStrings = @()
-                    @($Session.Config,$API.UserConfig) | Select-Object | Foreach-Object {
+                    $UserConfig = $API.UserConfig | ConvertFrom-Json
+                    @($Session.Config,$UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
                         @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
                         $CurrentConfig.Pools.PSObject.Properties.Value | Foreach-Object {
@@ -302,9 +303,14 @@
                         Get-ContentByStreamReader $_ | Foreach-Object {$_ -replace "($($PurgeStrings -join "|"))","XXX"} | Out-File $NewFile                        
                     }
 
-                    @("Config","UserConfig") | Where-Object {$API.$_} | Foreach-Object {
+                    @("Config") | Where-Object {$API.$_} | Foreach-Object {
                         $NewFile = "$DebugPath\$($_).json"
                         ($API.$_ | Select-Object | ConvertTo-Json -Depth 10) -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
+                    }
+
+                    @("UserConfig") | Where-Object {$API.$_} | Foreach-Object {
+                        $NewFile = "$DebugPath\$($_).json"
+                        $UserConfig -replace "($($PurgeStrings -join "|"))","XXX" | Out-File $NewFile
                     }
 
                     if ($IsLinux) {
@@ -331,6 +337,7 @@
 
                     Remove-Item "$($DebugPath).zip" -Force -ErrorAction Ignore
                     Remove-Variable "PurgeStrings" -ErrorAction Ignore
+                    if ($UserConfig -ne $null) {Remove-Variable "UserConfig"}
                     Break
                 }
                 "/setup.json" {
@@ -419,6 +426,10 @@
                     $Session.Keys | Where-Object {$Session[$_] -isnot [hashtable] -and $Session[$_] -isnot [array] -and $Session[$_] -isnot [pscustomobject] -and $Session[$_] -isnot [System.Collections.ArrayList] -and $Session[$_] -ne $null} | Sort-Object | Foreach-Object {$SessionVars[$_] = $Session[$_]}
                     $Data = ConvertTo-Json $SessionVars
                     Remove-Variable "SessionVars"
+                    Break
+                }
+                "/session" {
+                    $Data = ConvertTo-Json $Session -Depth 10
                     Break
                 }
                 "/gc" {
@@ -704,7 +715,7 @@
                     if ($Parameters.name -and $Parameters.algorithm -and $Parameters.devicemodel) {
                         $status = $true
                         $count = 0
-                        $Vendor = $Session.DevicesToVendors[$Parameters.devicemodel]
+                        $Vendor = $API.DevicesToVendors[$Parameters.devicemodel]
                         $Parameters.algorithm -split '-' | Foreach-Object {
                             $Name = "$Vendor-$($Parameters.name)_$($_ -replace '-.+$')_HashRate.txt"
                             Get-ChildItem ".\Stats\Disabled\$Name" -ErrorAction Ignore | Foreach-Object {Remove-Item $_ -ErrorAction Ignore;$count++}
@@ -896,11 +907,11 @@
                         [hashtable]$StatsCPU = @{}
                         [hashtable]$StatsGPU = @{}
                         if ($CpuDevices) {
-                            $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Stats.$_.Day}}
                             $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         if ($GpuDevices) {
-                            $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                            $Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Stats.$_.Day}}
                             $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                         }
                         $Pool_Request | Foreach-Object {
@@ -944,11 +955,11 @@
                             [hashtable]$StatsCPU = @{}
                             [hashtable]$StatsGPU = @{}
                             if ($CpuDevices) {
-                                $API.Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsCPU[$Matches[1]] = $API.Stats.$_.Day}}
+                                $Stats.Keys | Where-Object {$_ -match "CPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsCPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsCPU[$Matches[1]] = $Stats.$_.Day}}
                                 $ActiveMiners | Where-Object {$_.DeviceName -match "CPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsCPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             if ($GpuDevices) {
-                                $API.Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $API.Stats.$_.Day) {$StatsGPU[$Matches[1]] = $API.Stats.$_.Day}}
+                                $Stats.Keys | Where-Object {$_ -match "GPU#.+_(.+)_HashRate"} | Foreach-Object {if ($StatsGPU[$Matches[1]] -lt $Stats.$_.Day) {$StatsGPU[$Matches[1]] = $Stats.$_.Day}}
                                 $ActiveMiners | Where-Object {$_.DeviceName -match "GPU"} | Group-Object {$_.BaseAlgorithm[0]} | Foreach-Object {$StatsGPU[$_.Name] = ($_.Group.Speed | Measure-Object -Maximum).Maximum}
                             }
                             $AllRigs_Request | Foreach-Object {

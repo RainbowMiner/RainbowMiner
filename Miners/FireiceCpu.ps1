@@ -14,7 +14,7 @@ $Port = "342{0:d2}"
 $ManualUri = "https://github.com/fireice-uk/xmr-stak/releases"
 $Version = "2.10.8"
 
-if (-not $Session.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
+if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No GPU present in system
 
 $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "cryptonight/1";          Threads = 1; MinMemGb = 2; Algorithm = "cryptonight_v7"; Params = ""}
@@ -53,8 +53,8 @@ if ($InfoOnly) {
 }
 
 foreach ($Miner_Vendor in @("CPU")) {
-	$Session.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
-        $Device = $Session.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
+	$Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object {$_.Vendor -ne "NVIDIA" -or $Cuda} | Select-Object Vendor, Model -Unique | ForEach-Object {
+        $Device = $Global:DeviceCache.DevicesByTypes.$Miner_Vendor | Where-Object Model -EQ $_.Model
         $Miner_Model = $_.Model
             
         switch($Miner_Vendor) {
@@ -132,7 +132,7 @@ foreach ($Miner_Vendor in @("CPU")) {
 						DeviceModel    = $Miner_Model
 						Path           = $Path
 						Arguments      = $Arguments
-						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Session.Stats."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
+						HashRates      = [PSCustomObject]@{$Algorithm_Norm = $Global:StatsCache."$($Miner_Name)_$($Algorithm_Norm_0)_HashRate".Week}
 						API            = "Fireice"
 						Port           = $Miner_Port
 						Uri            = $Uri

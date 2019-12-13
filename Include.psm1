@@ -3,7 +3,8 @@
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
 function Initialize-Cache {
-    [hashtable]$Global:StatsCache = @{}
+    [hashtable]$Global:StatsCache   = @{}
+    [hashtable]$Global:DeviceCache  = @{}
 }
 
 function Initialize-Session {
@@ -21,6 +22,7 @@ function Initialize-Session {
     }
     if (-not (Test-Path Variable:Global:SyncCache)) {
         $Global:SyncCache = [hashtable]::Synchronized(@{})
+        $Global:SyncCache.Stats = [hashtable]@{}
     }
 }
 
@@ -1229,7 +1231,9 @@ function Get-Stat {
         [Parameter(Mandatory = $false)]
         [Switch]$Balances = $false,
         [Parameter(Mandatory = $false)]
-        [Switch]$All = $false
+        [Switch]$All = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$Quiet = $false
     )
 
     $Cached = $false
@@ -1285,10 +1289,10 @@ function Get-Stat {
             }
         }
         if ($Cached) {
-            $RemoveKeys = Compare-Object $Stats.Keys $Global:StatsCache.Keys | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
+            $RemoveKeys = (Compare-Object @($Stats.Keys | Select-Object) @($Global:StatsCache.Keys | Where {$_ -match "_$MatchStr$"} | Select-Object)) | Where-Object {$_.SideIndicator -eq "=>"} | Foreach-Object {$_.InputObject}
             $RemoveKeys | Foreach-Object {$Global:StatsCache.Remove($_)}
         }
-        Return $Stats
+        if (-not $Quiet) {$Stats}
     }
 }
 
@@ -1480,7 +1484,7 @@ function Get-MinersContent {
 
     foreach($Miner in @(Get-ChildItem "Miners\$($MinerName).ps1" -File -ErrorAction Ignore | Where-Object {$InfoOnly -or $Session.Config.MinerName.Count -eq 0 -or (Compare-Object $Session.Config.MinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0} | Where-Object {$InfoOnly -or $Session.Config.ExcludeMinerName.Count -eq 0 -or (Compare-Object $Session.Config.ExcludeMinerName $_.BaseName -IncludeEqual -ExcludeDifferent | Measure-Object).Count -eq 0})) {
         $Name = $Miner.BaseName
-        if ($InfoOnly -or ((Compare-Object @($Session.DevicesToVendors.Values | Select-Object) @($Session.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
+        if ($InfoOnly -or ((Compare-Object @($Global:DeviceCache.DevicesToVendors.Values | Select-Object) @($SyncCache.MinerInfo.$Name | Select-Object) -IncludeEqual -ExcludeDifferent | Measure-Object).Count -gt 0)) {
             foreach($c in @(& $Miner.FullName @Parameters)) {
                 if ($InfoOnly) {
                     $c | Add-Member -NotePropertyMembers @{
@@ -1488,8 +1492,8 @@ function Get-MinersContent {
                         BaseName = $Name
                     } -Force -PassThru
                 } else {
-                    $c.PowerDraw = $Session.Stats."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
-                    if (@($Session.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Session.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
+                    $c.PowerDraw = $Global:StatsCache."$($c.Name)_$($c.BaseAlgorithm -replace '\-.*$')_HashRate".PowerDraw_Average
+                    if (@($Global:DeviceCache.DevicesByTypes.FullComboModels.PSObject.Properties.Name) -icontains $c.DeviceModel) {$c.DeviceModel = $Global:DeviceCache.DevicesByTypes.FullComboModels."$($c.DeviceModel)"}
                     $c
                 }
             }
@@ -6648,7 +6652,7 @@ param(
     [String[]]$DeviceName
 )
     if (-not $IsWindows) {return}
-    $Device = $Session.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
+    $Device = $Global:DeviceCache.DevicesByTypes.AMD | Where-Object {$DeviceName -icontains $_.Name -and $_.Model -match "Vega"}
     if ($Device) {
         $DeviceId   = $Device.Type_Vendor_Index -join ','
         $PlatformId = $Device | Select -Property Platformid -Unique -ExpandProperty PlatformId
