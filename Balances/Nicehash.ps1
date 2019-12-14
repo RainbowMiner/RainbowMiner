@@ -24,7 +24,7 @@ catch {
 
 if ($PoolConfig.API_Key -and $PoolConfig.API_Secret -and $PoolConfig.OrganizationID) {
     try {
-        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID -Cache ($Config.BalanceUpdateMinutes*60)
+        $Request_Balance = Invoke-NHRequest "/main/api/v2/accounting/accounts" $PoolConfig.API_Key $PoolConfig.API_Secret $PoolConfig.OrganizationID
     }
     catch {
         if ($Error.Count){$Error.RemoveAt(0)}
