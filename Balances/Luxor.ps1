@@ -23,7 +23,7 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -or $Conf
     $coinUnits = 1e18
 
     try {
-        $Pool_Wallet = if ($Config.Pools.$Name.Wallets."$($_.symbol)") {$Config.Pools.$Name.Wallets."$($_.symbol)"} else {$User}
+        $Pool_Wallet = if ($Config.Pools.$Name.Wallets."$($_.symbol)") {$Config.Pools.$Name.Wallets."$($_.symbol)"} else {$Config.Pools.$Name.User}
         $Request = Invoke-RestMethodAsync "http://mining.luxor.tech/api/$($Pool_Currency)/user/$($Pool_Wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
 
         if (-not $Request -or -not $coinUnits) {
