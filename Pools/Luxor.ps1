@@ -5,6 +5,8 @@ param(
     [PSCustomObject]$Params,
     [alias("WorkerName")]
     [String]$Worker,
+    [alias("UserName")]
+    [String]$User,
     [TimeSpan]$StatSpan,
     [String]$DataWindow = "estimate_current",
     [Bool]$InfoOnly = $false,
@@ -29,7 +31,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
 )
 
-$Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
+$Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
     $Pool_Coin      = Get-Coin $_.symbol
     $Pool_Fee       = $_.fee
     $Pool_Port      = $_.port
@@ -67,6 +69,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$Wall
     }
     
     if ($ok -or $InfoOnly) {
+        $Pool_Wallet = if ($Wallets.$Pool_Currency) {$Wallets.$Pool_Currency} else {$User}
         foreach ($Pool_Region in $Pool_Region_Default) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
@@ -79,7 +82,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$Wall
                 Protocol      = "stratum+tcp"
                 Host          = "$($Pool_RpcPath)-$(if ($Pool_Region -eq "sg") {"asia"} else {$Pool_Region}).luxor.tech"
                 Port          = $Pool_Port
-                User          = "$($Wallets.$Pool_Currency).{workername:$Worker}"
+                User          = "$($Pool_Wallet).{workername:$Worker}"
                 Pass          = "x"
                 Region        = $Pool_RegionsTable[$Pool_Region]
                 SSL           = $false
@@ -93,7 +96,7 @@ $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$Wall
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
-                Wallet        = $Wallets.$Pool_Currency
+                Wallet        = $Pool_Wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
             }
