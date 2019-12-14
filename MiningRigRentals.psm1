@@ -75,8 +75,8 @@ param(
     [switch]$Raw
 )
     $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
-    if ($SyncCache.MRRCache -eq $null) {[hashtable]$SyncCache.MRRCache = @{}}
-    if (-not $Cache -or -not $SyncCache.MRRCache[$keystr] -or -not $SyncCache.MRRCache[$keystr].request -or -not $SyncCache.MRRCache[$keystr].request.success -or $SyncCache.MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
+    if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or -not $Global:MRRCache[$keystr].request.success -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -138,21 +138,21 @@ param(
             Write-Log -Level Warn "MiningRigRental error: $(if ($Request.data.message) {$Request.data.message} else {"unknown"})"
         }
 
-        if (-not $SyncCache.MRRCache[$keystr] -or ($Request -and $Request.success)) {
-            $SyncCache.MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
+        if (-not $Global:MRRCache[$keystr] -or ($Request -and $Request.success)) {
+            $Global:MRRCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request; cachetime = $Cache}
         }
     }
-    if ($Raw) {$SyncCache.MRRCache[$keystr].request}
+    if ($Raw) {$Global:MRRCache[$keystr].request}
     else {
-        if ($SyncCache.MRRCache[$keystr].request -and $SyncCache.MRRCache[$keystr].request.success) {$SyncCache.MRRCache[$keystr].request.data}
+        if ($Global:MRRCache[$keystr].request -and $Global:MRRCache[$keystr].request.success) {$Global:MRRCache[$keystr].request.data}
     }
 
     try {
-        if ($SyncCache.MRRCacheLastCleanup -eq $null -or $SyncCache.MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $SyncCache.MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$_.Value.cachetime)).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
-                $RemoveKeys | Foreach-Object {$SyncCache.MRRCache[$_] = $null; $SyncCache.MRRCache.Remove($_)}
+        if ($Global:MRRCacheLastCleanup -eq $null -or $Global:MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
+            if ($RemoveKeys = $Global:MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$_.Value.cachetime)).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
+                $RemoveKeys | Foreach-Object {$Global:MRRCache[$_] = $null; $Global:MRRCache.Remove($_)}
             }
-            $SyncCache.MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
+            $Global:MRRCacheLastCleanup = (Get-Date).ToUniversalTime()
         }
     } catch {
         if ($Error.Count){$Error.RemoveAt(0)}
@@ -300,7 +300,7 @@ param(
     [Parameter(Mandatory = $True)]
     [String[]]$workers,
     [Parameter(Mandatory = $False)]
-    [Int]$Cache = 55
+    [Int]$Cache = 0
 )
     Invoke-MiningRigRentalRequest "/rig/mine" $key $secret -Cache $Cache | Where-Object description -match "\[($($workers -join '|'))\]"
 }

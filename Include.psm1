@@ -198,11 +198,11 @@ function Get-WhatToMineData {
         try {
             $WtmUrl  = Invoke-GetUrlAsync "https://www.whattomine.com" -cycletime (12*3600) -retry 3 -timeout 10 -method "WEB"
             [System.Collections.ArrayList]$WtmKeys = ([regex]'(?smi)data-content="Include (.+?)".+?factor_([a-z0-9]+?)_hr.+?>([hkMG]+)/s<').Matches($WtmUrl) | Foreach-Object {
-                    ([PSCustomObject]@{
+                    [PSCustomObject]@{
                         algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
                         id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
                         factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
-                    })
+                    }
                 }
             if ($WtmKeys -and $WtmKeys.count -gt 10) {
                 $WtmFactors = Get-ContentByStreamReader ".\Data\wtmfactors.json" | ConvertFrom-Json -ErrorAction Ignore
@@ -7005,8 +7005,8 @@ param(
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
     $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property Name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
-    if ($SyncCache.NHCache -eq $null) {$SyncCache.NHCache = [hashtable]@{}}
-    if (-not $Cache -or -not $SyncCache.NHCache[$keystr] -or -not $SyncCache.NHCache[$keystr].request -or $SyncCache.NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
+    if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]@{}}
+    if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
        $Remote = $false
 
@@ -7064,11 +7064,11 @@ param(
             }
         }
 
-        if (-not $SyncCache.NHCache[$keystr] -or $Request) {
-            $SyncCache.NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
+        if (-not $Global:NHCache[$keystr] -or $Request) {
+            $Global:NHCache[$keystr] = [PSCustomObject]@{last = (Get-Date).ToUniversalTime(); request = $Request}
         }
     }
-    $SyncCache.NHCache[$keystr].request
+    $Global:NHCache[$keystr].request
 }
 
 function Get-WalletWithPaymentId {
