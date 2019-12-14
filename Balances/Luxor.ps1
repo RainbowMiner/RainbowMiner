@@ -8,10 +8,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "AION";    port = 3366; fee = 3.0; rpc = "aion"}
     [PSCustomObject]@{symbol = "BTC";     port = 3366; fee = 0.0; rpc = "btc"}
     [PSCustomObject]@{symbol = "GRIN";    port = 3000; fee = 2.0; rpc = "grin"}
-    [PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
-    [PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
+    #[PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
+    #[PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
     [PSCustomObject]@{symbol = "XMR";     port = 8888; fee = 2.0; rpc = "xmr"}
-    [PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
+    #[PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
 )
 
 $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -or $Config.Pools.$Name.User} | Foreach-Object {

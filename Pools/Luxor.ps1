@@ -25,10 +25,10 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "AION";    port = 3366; fee = 3.0; rpc = "aion"}
     [PSCustomObject]@{symbol = "GRIN29";  port = 3000; fee = 2.0; rpc = "grin"}
     [PSCustomObject]@{symbol = "GRIN31";  port = 3000; fee = 2.0; rpc = "grin"}
-    [PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
-    [PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
+    #[PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
+    #[PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
     [PSCustomObject]@{symbol = "XMR";     port = 8888; fee = 2.0; rpc = "xmr"}
-    [PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
+    #[PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
 )
 
 $Pools_Data | Where-Object {$Pool_Currency = $_.symbol -replace "(29|31)$";$User -or $Wallets.$Pool_Currency -or $InfoOnly} | ForEach-Object {
