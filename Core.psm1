@@ -1557,9 +1557,6 @@ function Invoke-Core {
             )}
     if ($NewPools -ne $null) {Remove-Variable "NewPools"}
 
-    $API.AllPools   = ConvertTo-Json @($Script:AllPools | Select-Object)
-    $API.Algorithms = ConvertTo-Json @(($Script:AllPools | Select-Object).Algorithm | Sort-Object -Unique) 
-
     $AllPools_BeforeWD_Count = ($Script:AllPools | Measure-Object).Count
 
     #Apply watchdog to pools, only if there is more than one pool selected
@@ -1594,6 +1591,9 @@ function Invoke-Core {
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($done)s) "}
             Write-Log "WhatToMine loaded in $($done)s "
         }
+
+        $API.AllPools   = ConvertTo-Json @($Script:AllPools | Select-Object)
+        $API.Algorithms = ConvertTo-Json @(($Script:AllPools | Select-Object).Algorithm | Sort-Object -Unique) 
 
         #Decrease compare prices, if out of sync window
         # \frac{\left(\frac{\ln\left(60-x\right)}{\ln\left(50\right)}+1\right)}{2}
@@ -1692,6 +1692,9 @@ function Invoke-Core {
                 HasMinerExclusions = ($Session.Config.Pools.$Pool_Name.MinerName.Count -or $Session.Config.Pools.$Pool_Name.ExcludeMinerName.Count)
             } -Force
         }
+    } else {
+        $API.AllPools   = $null
+        $API.Algorithms = $null
     }
 
     #Give API access to the pools information
