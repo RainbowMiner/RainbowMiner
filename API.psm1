@@ -113,7 +113,7 @@
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
                 "/version" {
-                    $Data = ConvertTo-Json $API.Version -Depth 10
+                    $Data = $API.Version
                     break
                 }
                 "/info" {
@@ -157,19 +157,19 @@
                     Break
                 }
                 "/minersneedingbenchmark" {
-                    $Data = ConvertTo-Json @($API.MinersNeedingBenchmark | Select-Object)
+                    $Data = if ($API.MinersNeedingBenchmark) {$API.MinersNeedingBenchmark} else {"[]"}
                     Break
                 }
                 "/minerinfo" {
-                    $Data = ConvertTo-Json @($SyncCache.MinerInfo | Select-Object)
+                    $Data = if ($API.MinerInfo) {$API.MinerInfo} else {"[]"}
                     Break
                 }
                 "/pools" {
-                    $Data = ConvertTo-Json @($API.Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
+                    $Data = if ($API.Pools) {$API.Pools} else {"[]"}
                     Break
                 }
                 "/allpools" {
-                    $Data = ConvertTo-Json @($API.AllPools | Select-Object)
+                    $Data = if ($API.AllPools) {$API.AllPools} else {"[]"}
                     Break
                 }
                 "/poolscalculations" {
@@ -177,15 +177,15 @@
                     Break
                 }
                 "/algorithms" {
-                    $Data = ConvertTo-Json @(($API.AllPools | Select-Object).Algorithm | Sort-Object -Unique)
+                    $Data = if ($API.Algorithms) {$API.Algorithms} else {"[]"}
                     Break
                 }
                 "/miners" {
-                    $Data = ConvertTo-Json @($API.Miners | Select-Object)
+                    $Data = if ($API.Miners) {$API.Miners} else {"[]"}
                     Break
                 }
                 "/fastestminers" {
-                    $Data = ConvertTo-Json @($API.FastestMiners | Select-Object)
+                    $Data = if ($API.FastestMiners) {$API.FastestMiners} else {"[]"}
                     Break
                 }
                 "/disabled" {
@@ -197,7 +197,7 @@
                     $WTMdata_algos = @($WTMdata | Where-Object {$_.id} | Select-Object -ExpandProperty algo)
                     $WTMdata_result = [hashtable]@{}
                     if ($API.Rates) {$LocalRates = ConvertFrom-Json $API.Rates}
-                    @($API.FastestMiners | Select-Object) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
+                    @($API.FastestMiners | ConvertFrom-Json) | Where-Object {$_.BaseAlgorithm -notmatch '-' -and $WTMdata_algos -icontains $_.BaseAlgorithm} | Group-Object -Property DeviceModel | Foreach-Object {
                         $Group = $_.Group
                         $WTMdata_result[$_.Name] = "https://whattomine.com/coins?$(@($WTMdata | Where-Object {$_.id} | Foreach-Object {$Algo = $_.algo;if (($One = $Group | Where-Object {$_.BaseAlgorithm -eq $Algo} | Select-Object -First 1) -and $One.HashRates.$Algo -gt 0) {"$($_.id)=true&factor[$($_.id)_hr]=$([Math]::Round($One.HashRates.$Algo/$_.factor,3))&factor[$($_.id)_p]=$([int]$One.PowerDraw)"} else {"$($_.id)=false&factor[$($_.id)_hr]=$(if ($_.id -eq "eth") {"0.000001"} else {"0"})&factor[$($_.id)_p]=0"}}) -join '&')&factor[cost]=$(if ($Session.Config.UsePowerPrice) {[Math]::Round($API.CurrentPowerPrice*$(if ($Session.Config.PowerPriceCurrency -ne "USD" -and $LocalRates."$($Session.Config.PowerPriceCurrency)") {$LocalRates.USD/$LocalRates."$($Session.Config.PowerPriceCurrency)"} else {1}),4)} else {0})&sort=Profitability24&volume=0&revenue=24h&dataset=$($Session.Config.WorkerName)&commit=Calculate"
                     }
@@ -284,7 +284,7 @@
                     $DebugDate = Get-Date -Format "yyyy-MM-dd"
                     $DebugPath = Join-Path (Resolve-Path ".\Logs") "debug-$DebugDate"
                     $PurgeStrings = @()
-                    $UserConfig = $API.UserConfig | ConvertFrom-Json
+                    $UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
                     @($Session.Config,$UserConfig) | Select-Object | Foreach-Object {
                         $CurrentConfig = $_
                         @("Wallet","UserName","API_ID","API_Key","MinerStatusKey","MinerStatusEmail","PushOverUserKey") | Where-Object {$CurrentConfig.$_} | Foreach-Object {$PurgeStrings += $CurrentConfig.$_}
@@ -554,7 +554,8 @@
                     [hashtable]$JsonUri_Dates = @{}
                     [hashtable]$Miners_List = @{}
                     [System.Collections.ArrayList]$Out = @()
-                    $API.Miners | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
+                    
+                    ($API.Miners | ConvertFrom-Json) | Where-Object {$_.DeviceModel -notmatch '-' -or $Session.Config.MiningMode -eq "legacy"} | Select-Object BaseName,Name,Path,HashRates,DeviceModel,MSIAprofile,OCprofile,PowerDraw,Ratios | Foreach-Object {
                         if (-not $JsonUri_Dates.ContainsKey($_.BaseName)) {
                             $JsonUri = Join-Path (Get-MinerInstPath $_.Path) "_uri.json"
                             $JsonUri_Dates[$_.BaseName] = if (Test-Path $JsonUri) {(Get-ChildItem $JsonUri -ErrorAction Ignore).LastWriteTime.ToUniversalTime()} else {$null}
@@ -752,7 +753,8 @@
                 }
                 "/getconfig" {
                     $Status = $false
-                    if ($API.IsServer -and -not (Compare-Version $API.Version.Version $Parameters.version -revs 1)) {
+                    $Version = $API.Version | ConvertFrom-Json -ErrorAction Ignore
+                    if ($API.IsServer -and -not (Compare-Version $Version.Version $Parameters.version -revs 1)) {
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
@@ -778,11 +780,12 @@
                     }
                     if (-not $Status) {
                         $Result = if (-not $API.IsServer) {"$($API.MachineName) is not a server"}
-                              elseif ($API.Version.Version -ne $Parameters.version) {"Server runs on wrong Version v$($API.Version.Version)"}
+                              elseif ($Version.Version -ne $Parameters.version) {"Server runs on wrong Version v$($Version.Version)"}
                               else {"No data found"}
                     }
                     $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
                     Remove-Variable "Result" -ErrorAction Ignore
+                    if ($Version -ne $null) {Remove-Variable "Version"}
                     Break
                 }
                 "/getjob" {

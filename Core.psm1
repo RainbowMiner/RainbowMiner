@@ -70,7 +70,8 @@
         $Script:AllPools = $null
         [System.Collections.ArrayList]$Script:ActiveMiners   = @()
         [System.Collections.ArrayList]$Script:WatchdogTimers = @()
-        [hashtable]$Script:NewRates = @{}
+        [hashtable]$Script:NewRates  = @{}
+        [hashtable]$Global:MinerInfo = @{}
 
         #Setup session variables
         [hashtable]$Session.ConfigFiles = @{
@@ -87,7 +88,6 @@
             Combos     = @{Path='';LastWriteTime=0;Healthy=$false}
             MRR        = @{Path='';LastWriteTime=0;Healthy=$true}
         }
-        [hashtable]$SyncCache.MinerInfo = @{}
 
         [System.Collections.ArrayList]$SyncCache.GetTicker = @()
 
@@ -237,7 +237,7 @@
         if (Test-Path "Start.bat.saved") {Remove-Item "Start.bat.saved" -Force -ErrorAction Ignore}
 
         #Read miner info
-        if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$SyncCache.MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
+        if (Test-Path ".\Data\minerinfo.json") {try {(Get-ContentByStreamReader ".\Data\minerinfo.json" | ConvertFrom-Json -ErrorAction Ignore).PSObject.Properties | Foreach-Object {$Global:MinerInfo[$_.Name] = $_.Value}} catch {if ($Error.Count){$Error.RemoveAt(0)}}}
 
         #write version to data
         Set-ContentJson -PathToFile ".\Data\version.json" -Data ([PSCustomObject]@{Version=$Session.Version}) > $null
@@ -902,7 +902,7 @@ function Invoke-Core {
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
-    $API.Version = $ConfirmedVersion
+    $API.Version = ConvertTo-Json $ConfirmedVersion -Depth 10
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
@@ -1196,7 +1196,7 @@ function Invoke-Core {
         $Session.LastDonated = Set-LastDrun $Session.Timer
         $Session.Config = $Session.UserConfig | ConvertTo-Json -Depth 10 -Compress | ConvertFrom-Json
         $Session.UserConfig = $null
-        $API.UserConfig = ConvertTo-Json $Session.UserConfig
+        $API.UserConfig = $null
         $Script:AllPools = $null
         Write-Log "Donation run finished. "
     }
@@ -1207,7 +1207,7 @@ function Invoke-Core {
             if (-not $DonationData -or -not $DonationData.Wallets) {$DonationData = '{"Probability":100,"Wallets":{"2Miners":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Blockcruncher":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"BlockMasters":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":50},"Bsod":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"CryptoKnight":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"EthashPool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ethermine":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"F2Pool":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"FairPool":{"WOW":"So2ifgjqGMZJhCrqpFMotQQAiJAiATuJLNAK2HrPLoNzK8hkqNbf9t8gmx6bzAQrXRMnWnoELoiD6GTv8guPBRwH5yoTVNomwVR2oNYDPRua","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"HeroMiners":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Icemining":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Luckypool":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Mintpond":{"XZC":"aKB3gmAiNe3c4SasGbSo35sNoA3mAqrxtM","Worker":"mpx","DataWindow":"estimate_current","Penalty":18},"Nanopool":{"ETH":"0x3084A8657ccF9d21575e5dD8357A2DEAf1904ef6","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"NiceHash":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"Platform":"v2","MaximumMarginOfError":"0"},"NiceHashV2":{"BTC":"3PfUUT1Tknfyd4SnYrEwwpUEAQEzWd2BuD","Worker":"mpx","DataWindow":"estimate_current","Penalty":0,"MaximumMarginOfError":"0"},"PocketWhale":{"XWP":"fi371vX9nG9fUFD4DEGHMC8axwSBbUhy8Eqr7r1zYbVUcYLaEdgeqeLj24DYzoQb26TodLoEoa484TqP1VtwTzrP3CtitfoXhVM1JCH8RPby","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Ravenminer":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"RavenminerEu":{"RVN":"RGo5UgbnyNkfA8sUUbv62cYnV4EfYziNxH","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"SparkPool":{"CKB":"sp_rbm","Algorithm":"Eaglesong","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"Uupool":{"VOLLAR":"VcSq7vHRb9ymPj1jbeHNfX2fdVTJK75xndX","Worker":"mpx","DataWindow":"estimate_current","Penalty":0},"MiningPoolHub":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"MiningPoolHubCoins":{"Worker":"mpx","User":"rbm","API_ID":"422496","API_Key":"ef4f18b4f48d5964c5f426b90424d088c156ce0cd0aa0b9884893cabf6be350e","DataWindow":"estimate_current","Penalty":12,"Algorithm":["monero","skein","myriadgroestl"]},"ZergPool":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12},"ZergPoolCoins":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"CoinSymbol":"CPU,DMS,MBC,RITO,SAFE,XMG"},"ZergPoolSolo":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","DataWindow":"estimate_current","Penalty":12,"Algorithm":"m7m"},"Default":{"BTC":"3DxRETpBoXKrEBQxFb2HsPmG6apxHmKmUx","Worker":"mpx","User":"rbm","DataWindow":"estimate_current","Penalty":16}},"Pools":["HeroMiners","Nicehash","SparkPool","ZergPoolCoins"],"Algorithm":[],"ExcludeMinerName":["GrinGoldMiner","GrinProMiner","SwapMiner"]}' | ConvertFrom-Json}
             if (-not $Session.IsDonationRun) {Write-Log "Donation run started for the next $(($Session.LastDonated-($Session.Timer.AddHours(-$DonateDelayHours))).Minutes +1) minutes. "}
             $API.UserConfig = $Session.Config | ConvertTo-Json -Depth 10
-            $Session.UserConfig = $API.UserConfig | ConvertFrom-Json
+            $Session.UserConfig = $API.UserConfig | ConvertFrom-Json -ErrorAction Ignore
             $Session.IsDonationRun = $true            
             $Session.AvailPools | ForEach-Object {
                 $DonationData1 = if (Get-Member -InputObject ($DonationData.Wallets) -Name $_ -MemberType NoteProperty) {$DonationData.Wallets.$_} else {$DonationData.Wallets.Default};
@@ -1380,18 +1380,18 @@ function Invoke-Core {
     #$API.Config     = ConvertTo-Json $Session.Config -Depth 10
 
     $MinerInfoChanged = $false
-    if (-not (Test-Path ".\Data\minerinfo.json")) {$SyncCache.MinerInfo = @{}}
-    Compare-Object @($Session.AvailMiners | Select-Object) @($SyncCache.MinerInfo.Keys | Select-Object) | Foreach-Object {
+    if (-not (Test-Path ".\Data\minerinfo.json")) {$Global:MinerInfo = @{}}
+    Compare-Object @($Session.AvailMiners | Select-Object) @($Global:MinerInfo.Keys | Select-Object) | Foreach-Object {
         $CcMinerName = $_.InputObject
         Switch ($_.SideIndicator) {
-            "<=" {$SyncCache.MinerInfo[$CcMinerName] = @(Get-MinersContent -MinerName $CcMinerName -InfoOnly | Select-Object -ExpandProperty Type)}
-            "=>" {$SyncCache.MinerInfo.Remove($CcMinerName)}
+            "<=" {$Global:MinerInfo[$CcMinerName] = @(Get-MinersContent -MinerName $CcMinerName -InfoOnly | Select-Object -ExpandProperty Type)}
+            "=>" {$Global:MinerInfo.Remove($CcMinerName)}
         }
         $MinerInfoChanged = $true
     }
-    if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $SyncCache.MinerInfo -Compress > $null}
+    if ($MinerInfoChanged) {Set-ContentJson -PathToFile ".\Data\minerinfo.json" -Data $Global:MinerInfo -Compress > $null}
 
-    #$API.MinerInfo = $SyncCache.MinerInfo
+    $API.MinerInfo = ConvertTo-Json $Global:MinerInfo
 
     #Check for GPU failure and reboot, if needed
     if ($Session.Config.RebootOnGPUFailure) { 
@@ -1557,7 +1557,8 @@ function Invoke-Core {
             )}
     if ($NewPools -ne $null) {Remove-Variable "NewPools"}
 
-    $API.AllPools = $Script:AllPools
+    $API.AllPools   = ConvertTo-Json @($Script:AllPools | Select-Object)
+    $API.Algorithms = ConvertTo-Json @(($Script:AllPools | Select-Object).Algorithm | Sort-Object -Unique) 
 
     $AllPools_BeforeWD_Count = ($Script:AllPools | Measure-Object).Count
 
@@ -1694,7 +1695,7 @@ function Invoke-Core {
     }
 
     #Give API access to the pools information
-    $API.Pools = $Pools
+    $API.Pools = ConvertTo-Json @($Pools.PSObject.Properties | Select-Object -ExpandProperty Value)
  
     #Load information about the miners
     Write-Log "Getting miner information. "
@@ -2049,7 +2050,7 @@ function Invoke-Core {
     if ($Miner_WatchdogTimers -ne $null) {Remove-Variable "Miner_WatchdogTimers"}
 
     #Give API access to the miners information
-    $API.Miners = $Miners
+    $API.Miners = ConvertTo-Json @($Miners | Select-Object)
 
     #Remove all failed and disabled miners
     $Miners = $Miners | Where-Object {-not $_.Disabled -and $_.HashRates.PSObject.Properties.Value -notcontains 0}
@@ -2058,12 +2059,12 @@ function Invoke-Core {
     if ($Session.Config.FastestMinerOnly) {$Miners = $Miners | Sort-Object -Descending {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {([Double]($_ | Measure-Object Profit_Bias -Sum).Sum)}, {($_ | Where-Object Profit -NE 0 | Measure-Object).Count} | Group-Object {"$($_.DeviceName -join '')$($_.BaseAlgorithm -replace '-')$(if($_.HashRates.PSObject.Properties.Value -contains $null) {$_.Name})"} | Foreach-Object {$_.Group[0]}}
  
     #Give API access to the fasted miners information
-    $API.FastestMiners = $Miners
+    $API.FastestMiners = ConvertTo-Json @($Miners | Select-Object)
 
     #Get count of miners, that need to be benchmarked. If greater than 0, the UIstyle "full" will be used
     $MinersNeedingBenchmark = $Miners | Where-Object {$_.HashRates.PSObject.Properties.Value -contains $null}
     $MinersNeedingBenchmarkCount = ($MinersNeedingBenchmark | Measure-Object).Count
-    $API.MinersNeedingBenchmark = $MinersNeedingBenchmark
+    $API.MinersNeedingBenchmark = ConvertTo-Json @($MinersNeedingBenchmark | Select-Object)
 
     #Update the active miners
     $Script:ActiveMiners | Foreach-Object {
