@@ -6,6 +6,7 @@ $Name = Get-Item $MyInvocation.MyCommand.Path | Select-Object -ExpandProperty Ba
 
 $Pools_Data = @(
     [PSCustomObject]@{symbol = "AION";    port = 3366; fee = 3.0; rpc = "aion"}
+    [PSCustomObject]@{symbol = "BTC";     port = 3366; fee = 0.0; rpc = "btc"}
     [PSCustomObject]@{symbol = "GRIN";    port = 3000; fee = 2.0; rpc = "grin"}
     [PSCustomObject]@{symbol = "LOKI";    port = 9999; fee = 1.0; rpc = "loki"}
     [PSCustomObject]@{symbol = "VEIL";    port = 3033; fee = 0.0; rpc = "veil"}
@@ -13,7 +14,7 @@ $Pools_Data = @(
     [PSCustomObject]@{symbol = "YEC";     port = 6655; fee = 0.0; rpc = "yec"}
 )
 
-$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreach-Object {
+$Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)" -or $Config.Pools.$Name.User} | Foreach-Object {
     $Pool_Currency = $_.symbol
     $Pool_RpcPath  = $_.rpc
 
@@ -22,7 +23,8 @@ $Pools_Data | Where-Object {$Config.Pools.$Name.Wallets."$($_.symbol)"} | Foreac
     $coinUnits = 1e18
 
     try {
-        $Request = Invoke-RestMethodAsync "http://mining.luxor.tech/api/$($Pool_Currency)/user/$($Config.Pools.$Name.Wallets."$($_.symbol)")" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
+        $Pool_Wallet = if ($Config.Pools.$Name.Wallets."$($_.symbol)") {$Config.Pools.$Name.Wallets."$($_.symbol)"} else {$User}
+        $Request = Invoke-RestMethodAsync "http://mining.luxor.tech/api/$($Pool_Currency)/user/$($Pool_Wallet)" -delay 100 -cycletime ($Config.BalanceUpdateMinutes*60) -timeout 15
 
         if (-not $Request -or -not $coinUnits) {
             Write-Log -Level Info "Pool Balance API ($Name) for $($Pool_Currency) returned nothing. "
