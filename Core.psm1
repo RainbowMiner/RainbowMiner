@@ -2091,7 +2091,7 @@ function Invoke-Core {
             $_.Path -eq $Miner.Path -and
             $_.Arguments -eq $Miner.Arguments -and
             $_.API -eq $Miner.API -and
-            (Compare-Object $_.Algorithm ($Miner.HashRates | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name) | Measure-Object).Count -eq 0
+            (Compare-Object $_.Algorithm ($Miner.HashRates.PSObject.Properties.Name | Select-Object) | Measure-Object).Count -eq 0
         }
 
         $FirstAlgoName            = $Miner.HashRates.PSObject.Properties.Name | Select-Object -First 1
@@ -2118,8 +2118,8 @@ function Invoke-Core {
             $ActiveMiner.Profit_Cost        = $Miner.Profit_Cost
             $ActiveMiner.PowerDraw          = $Miner.PowerDraw
             $ActiveMiner.Speed              = $Miner.HashRates.PSObject.Properties.Value #temp fix, must use 'PSObject.Properties' to preserve order
-            $ActiveMiner.DeviceName         = $Miner.DeviceName
-            $ActiveMiner.DeviceModel        = $Miner.DeviceModel
+            #$ActiveMiner.DeviceName         = $Miner.DeviceName
+            #$ActiveMiner.DeviceModel        = $Miner.DeviceModel
             $ActiveMiner.ShowMinerWindow    = ($Miner.ShowMinerWindow -or $Session.Config.ShowMinerWindow -or $IsLinux)
             $ActiveMiner.MSIAprofile        = $Miner.MSIAprofile
             $ActiveMiner.FaultTolerance     = $Miner.FaultTolerance
@@ -2138,9 +2138,9 @@ function Invoke-Core {
             $ActiveMiner.MinSamples         = $Miner_MinSamples
             $ActiveMiner.CoinName           = $Miner.Pools.PSObject.Properties.Value.CoinName
             $ActiveMiner.CoinSymbol         = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-            $ActiveMiner.EnvVars            = @($Miner.EnvVars | Select-Object)
-            $ActiveMiner.StartCommand       = $Miner.StartCommand
-            $ActiveMiner.StopCommand        = $Miner.StopCommand
+            #$ActiveMiner.EnvVars            = @($Miner.EnvVars | Select-Object)
+            #$ActiveMiner.StartCommand       = $Miner.StartCommand
+            #$ActiveMiner.StopCommand        = $Miner.StopCommand
             $ActiveMiner.NoCPUMining        = [bool]$Miner.NoCPUMining
             $ActiveMiner.NeedsBenchmark     = $Miner.HashRates.PSObject.Properties.Value -contains $null
             $ActiveMiner.MaxRejectedShareRatio = $Miner_MaxRejectedShareRatio
@@ -2172,7 +2172,7 @@ function Invoke-Core {
                 Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
                 CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
                 CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-                DeviceName           = $Miner.DeviceName
+                DeviceName           = @($Miner.DeviceName | Select-Object)
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
                 Profit_Bias          = $Miner.Profit_Bias
