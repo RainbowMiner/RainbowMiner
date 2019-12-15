@@ -207,8 +207,8 @@ param(
 )
     if (-not $id) {return}
 
-    if ($SyncCache.MRRInfoCache -eq $null) {
-        [hashtable]$SyncCache.MRRInfoCache = @{}
+    if ($Global:MRRInfoCache -eq $null) {
+        [hashtable]$Global:MRRInfoCache = @{}
         if (Test-Path ".\Data\mrrinfo.json") {
             try {
                 $MrrInfo = Get-Content ".\Data\mrrinfo.json" -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -216,19 +216,19 @@ param(
                 if ($Error.Count){$Error.RemoveAt(0)}
                 $MrrInfo = @()
             }
-            $MrrInfo | Foreach-Object {$SyncCache.MRRInfoCache["$($_.rigid)"] = $_}
+            $MrrInfo | Foreach-Object {$Global:MRRInfoCache["$($_.rigid)"] = $_}
         }
     }
 
-    if ($Rigs_Ids = $id | Where-Object {-not $SyncCache.MRRInfoCache.ContainsKey("$_") -or $SyncCache.MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
+    if ($Rigs_Ids = $id | Where-Object {-not $Global:MRRInfoCache.ContainsKey("$_") -or $Global:MRRInfoCache."$_".updated -lt (Get-Date).AddHours(-24).ToUniversalTime()} | Sort-Object) {
         $Updated = 0
         @(Invoke-MiningRigRentalRequest "/rig/$($Rigs_Ids -join ";")/port" $key $secret -Timeout 60 | Select-Object) | Foreach-Object {
-            $SyncCache.MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
+            $Global:MRRInfoCache["$($_.rigid)"] = [PSCustomObject]@{rigid=$_.rigid;port=$_.port;server=$_.server;updated=(Get-Date).ToUniversalTime()}
             $Updated++
         }
-        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $SyncCache.MRRInfoCache.Values -Compress > $null}
+        if ($Updated) {Set-ContentJson -PathToFile ".\Data\mrrinfo.json" -Data $Global:MRRInfoCache.Values -Compress > $null}
     }
-    $id | Where-Object {$SyncCache.MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$SyncCache.MRRInfoCache."$_"}
+    $id | Where-Object {$Global:MRRInfoCache.ContainsKey("$_")} | Foreach-Object {$Global:MRRInfoCache."$_"}
 }
 
 function Get-MiningRigRentalsDivisor {
@@ -256,18 +256,18 @@ param(
     [Parameter(Mandatory = $False)]
     [String]$Status = ""
 )
-    if ($SyncCache.MRRStatus -eq $null) {$SyncCache.MRRStatus = @{}}
+    if ($Global:MRRStatus -eq $null) {$Global:MRRStatus = @{}}
     $time = (Get-Date).ToUniversalTime()
     $RigKey = "$RigId"
-    if ($SyncCache.MRRStatus.ContainsKey($RigKey)) {
-        if ($Stop) {$SyncCache.MRRStatus.Remove($RigKey)}
-        elseif ($Status -eq "online") {$SyncCache.MRRStatus[$RigKey].next = $time;$SyncCache.MRRStatus[$RigKey].wait = $false;$SyncCache.MRRStatus[$RigKey].enable = $true}
-        elseif ($time -ge $SyncCache.MRRStatus[$RigKey].next) {
-            if ($SyncCache.MRRStatus[$RigKey].wait) {$SyncCache.MRRStatus[$RigKey].next = $time.AddMinutes(15);$SyncCache.MRRStatus[$RigKey].wait = $SyncCache.MRRStatus[$RigKey].enable = $false}
-            else {$SyncCache.MRRStatus[$RigKey].next = $time.AddMinutes(3);$SyncCache.MRRStatus[$RigKey].wait = $SyncCache.MRRStatus[$RigKey].enable = $true}
+    if ($Global:MRRStatus.ContainsKey($RigKey)) {
+        if ($Stop) {$Global:MRRStatus.Remove($RigKey)}
+        elseif ($Status -eq "online") {$Global:MRRStatus[$RigKey].next = $time;$Global:MRRStatus[$RigKey].wait = $false;$Global:MRRStatus[$RigKey].enable = $true}
+        elseif ($time -ge $Global:MRRStatus[$RigKey].next) {
+            if ($Global:MRRStatus[$RigKey].wait) {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(15);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $false}
+            else {$Global:MRRStatus[$RigKey].next = $time.AddMinutes(3);$Global:MRRStatus[$RigKey].wait = $Global:MRRStatus[$RigKey].enable = $true}
         }
-    } else {$SyncCache.MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
-    if (-not $Stop) {$SyncCache.MRRStatus[$RigKey].enable}
+    } else {$Global:MRRStatus[$RigKey] = [PSCustomObject]@{next = $time.AddMinutes(3); wait = $true; enable = $true}}
+    if (-not $Stop) {$Global:MRRStatus[$RigKey].enable}
 }
 
 function Get-MiningRigRentalAlgos {
