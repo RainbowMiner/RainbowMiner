@@ -2040,7 +2040,7 @@ function Invoke-Core {
     #Store miners to file
     if (-not $Session.IsDonationRun -and -not $Session.Benchmarking -and (-not $Session.Updatetracker.MinerSave -or $Session.Updatetracker.MinerSave -lt (Get-Date).AddHours(-6) -or -not (Test-Path ".\Data\minerdata.json"))) {
         $Session.Updatetracker.MinerSave = Get-Date
-        Set-ContentJson ".\Data\minerdata.json" ([PSObject]@{Miners = @($Miners | Where-Object {$_.BaseAlgorithm -notmatch "\-"} | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm -replace '-.*$'}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
+        Set-ContentJson ".\Data\minerdata.json" ([PSCustomObject]@{Miners = @($Miners | Where-Object {$_.BaseAlgorithm -notmatch "\-"} | Select-Object @{Name="Name";Expression={$_.BaseName}}, Version, @{Name="Algorithm";Expression={$_.BaseAlgorithm -replace '-.*$'}}, @{Name="DeviceName";Expression={$_.DeviceName -join '-'}}, DeviceModel, @{Name="HashRate"; Expression={$_.HashRates.PSObject.Properties.Value | Select-Object -First 1}}, PowerDraw, @{Name="OCProfile"; Expression={if ($Session.Config.EnableOCProfiles -and $_.DeviceModel -ne "CPU" -and $_.DeviceModel -notmatch '-') {$_.OCprofile.Values | Select-Object -First 1} else {""}}} -Unique); OCprofiles=$Session.Config.OCprofiles; CPU=$Global:DeviceCache.DevicesByTypes.CPU.Model_Name | Select-Object -Unique}) -Compress > $null
         $Session.ReportMinerData = $true
     }
 
@@ -2138,7 +2138,7 @@ function Invoke-Core {
             $ActiveMiner.MinSamples         = $Miner_MinSamples
             $ActiveMiner.CoinName           = $Miner.Pools.PSObject.Properties.Value.CoinName
             $ActiveMiner.CoinSymbol         = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-            $ActiveMiner.EnvVars            = $Miner.EnvVars
+            $ActiveMiner.EnvVars            = @($Miner.EnvVars | Select-Object)
             $ActiveMiner.StartCommand       = $Miner.StartCommand
             $ActiveMiner.StopCommand        = $Miner.StopCommand
             $ActiveMiner.NoCPUMining        = [bool]$Miner.NoCPUMining
@@ -2209,7 +2209,7 @@ function Invoke-Core {
                 IsLocked             = $Miner_IsLocked
                 PostBlockMining      = $Miner_PostBlockMining
                 MinSamples           = $Miner_MinSamples
-                EnvVars              = $Miner.EnvVars
+                EnvVars              = @($Miner.EnvVars | Select-Object)
                 NoCPUMining          = [bool]$Miner.NoCPUMining
                 NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
                 MaxRejectedShareRatio= $Miner_MaxRejectedShareRatio
