@@ -279,18 +279,29 @@ function Write-ToFile {
         [Parameter(Mandatory = $False)]
         [switch]$Timestamp = $false
     )
-
-    Process {
+    Begin {
         try {
             $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
             $file = New-Object System.IO.StreamWriter($FilePath, $Append, [System.Text.Encoding]::UTF8)
-            if ($Timestamp) {
-                $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
-            } else {
-                $file.WriteLine($Message)
-            }
-            $file.Close()
         } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+    }
+    Process {
+        if ($file) {
+            try {
+                if ($Timestamp) {
+                    $file.WriteLine("[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] $Message")
+                } else {
+                    $file.WriteLine($Message)
+                }
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
+    }
+    End {
+        if ($file) {
+            try {
+                $file.Close()
+            } catch {if ($Error.Count){$Error.RemoveAt(0)}}
+        }
     }
 }
 
@@ -372,12 +383,11 @@ Function Write-ActivityLog {
         [Parameter(Mandatory = $false)][Int]$Crashed = 0
     )
 
-    Begin { }
-    Process {
+    Begin {
         $ActiveStart = $Miner.GetActiveStart()
-
         if (-not $ActiveStart) {return}
-
+    }
+    Process {
         $mutex = New-Object System.Threading.Mutex($false, "RBMWriteActivityLog")
 
         $filename = ".\Logs\Activity_$(Get-Date -Format "yyyy-MM-dd").txt"
@@ -1383,22 +1393,21 @@ function Get-ContentByStreamReader {
         [Parameter(Mandatory = $false)]
         [Switch]$ExpandLines = $false
     )
-    if (Test-Path $FilePath) {
-        try {
-            $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-            $reader = New-Object System.IO.StreamReader($FilePath)
-            if ($ExpandLines) {
-                while (-not $reader.EndOfStream) {$reader.ReadLine()}
-            } else {
-                $reader.ReadToEnd()
-            }
+    try {
+        if (-not (Test-Path $FilePath)) {return}
+        $FilePath = $Global:ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
+        $reader = New-Object System.IO.StreamReader($FilePath)
+        if ($ExpandLines) {
+            while (-not $reader.EndOfStream) {$reader.ReadLine()}
+        } else {
+            $reader.ReadToEnd()
         }
-        catch {
-            if ($Error.Count){$Error.RemoveAt(0)}
-        }
-        finally {
-            if ($reader) {$reader.Close()}
-        }
+    }
+    catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+    finally {
+        if ($reader) {$reader.Close()}
     }
 }
 
