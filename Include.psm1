@@ -321,10 +321,6 @@ Function Write-Log {
         if (-not $PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
         if (-not $PSBoundParameters.ContainsKey('Debug')) {$DebugPreference = $PSCmdlet.GetVariableValue('DebugPreference')}
 
-        # Get mutex named RBMWriteLog. Mutexes are shared across all threads and processes.
-        # This lets us ensure only one thread is trying to write to the file at a time.
-        $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
-
         $filename = ".\Logs\RainbowMiner_$(Get-Date -Format "yyyy-MM-dd").txt"
 
         if (-not (Test-Path "Stats\Pools")) {New-Item "Stats\Pools" -ItemType "directory" > $null}
@@ -342,7 +338,7 @@ Function Write-Log {
             }
             'Info' {
                 $LevelText = 'INFO:'
-                Write-Information -MessageData $Message
+                #Write-Information -MessageData $Message
             }
             'Verbose' {
                 $LevelText = 'VERBOSE:'
@@ -354,7 +350,6 @@ Function Write-Log {
             }
         }
 
-        # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
         $NoLog = Switch ($Session.LogLevel) {
                     "Silent" {$true}
                     "Info"   {$Level -eq "Debug"}
@@ -363,6 +358,10 @@ Function Write-Log {
                 }
 
         if (-not $NoLog) {
+            # Get mutex named RBMWriteLog. Mutexes are shared across all threads and processes.
+            # This lets us ensure only one thread is trying to write to the file at a time.
+            $mutex = New-Object System.Threading.Mutex($false, "RBM$(Get-MD5Hash ([io.fileinfo](".\Logs")).FullName)")
+            # Attempt to aquire mutex, waiting up to 2 second if necessary.  If aquired, write to the log file and release mutex.  Otherwise, display an error.
             if ($mutex.WaitOne(2000)) {
                 $proc = Get-Process -id $PID
                 Write-ToFile -FilePath $filename -Message "[$("{0:n2}" -f ($proc.WorkingSet64/1MB)) $("{0:n2}" -f ($proc.PrivateMemorySize64/1MB))] $LevelText $Message" -Append -Timestamp
@@ -5564,7 +5563,7 @@ function Get-ConfigContent {
             }
             $Result = Get-ContentByStreamReader $PathToFile
             if ($Parameters.Count) {
-                $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)",$_.Value}
+                $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)","$($_.Value)"}
                 if (-not $ConserveUnkownParameters) {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
