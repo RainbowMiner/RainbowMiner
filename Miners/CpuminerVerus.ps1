@@ -8,16 +8,17 @@ param(
 if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
+    if (-not $Global:GlobalCPUInfo.Features.avx) {return}
     $Path = ".\Bin\CPU-Verus\ccminer"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5-ccminerverus/ccminerverus-3.5cpu-linux.7z"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.61cpu-linux.7z"
 } else {
-    $Path = ".\Bin\CPU-Verus\ccminer.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.5-ccminerverus/ccminerverus-3.5cpu-win.7z"
+    $Path = ".\Bin\CPU-Verus\ccminer$($f=$Global:GlobalCPUInfo.Features;if (-not $f.avx) {"nonavx"}).exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.61-ccminerverus/ccminerverus-3.61cpu-win.7z"
 }
 $ManualUri = "https://github.com/monkins1010/ccminer/releases"
 $Port = "535{0:d2}"
 $DevFee = 0.0
-$Version = "3.5"
+$Version = "3.61"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
