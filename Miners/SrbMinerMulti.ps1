@@ -39,7 +39,7 @@ $Commands = [PSCustomObject[]]@(
     #[PSCustomObject]@{MainAlgorithm = "blake2s"       ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2s
     [PSCustomObject]@{MainAlgorithm = "eaglesong"     ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #eaglesong
     [PSCustomObject]@{MainAlgorithm = "k12"           ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #kangaroo12/AEON from 2019-10-25
-    [PSCustomObject]@{MainAlgorithm = "kadena"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU")} #blake2s / Kadena
+    [PSCustomObject]@{MainAlgorithm = "kadena"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD","CPU"); Coins = @("KDA")} #blake2s / Kadena
     [PSCustomObject]@{MainAlgorithm = "keccak"        ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #keccak
     [PSCustomObject]@{MainAlgorithm = "mtp"           ; Params = ""; Fee = 0.85; MinMemGb = 6; Vendor = @("AMD")} #mtp
     [PSCustomObject]@{MainAlgorithm = "rainforestv2"  ; Params = ""; Fee = 0.85; MinMemGb = 2; Vendor = @("AMD")} #rainforestv2
@@ -76,7 +76,7 @@ foreach ($Miner_Vendor in @("AMD","CPU")) {
             $Miner_Device = $Device | Where-Object {$Miner_Vendor -eq "CPU" -or $_.OpenCL.GlobalMemsize -ge ($MinMemGb * 1gb - 0.25gb)}
 
 		    foreach($Algorithm_Norm in @($Algorithm_Norm_0,"$($Algorithm_Norm_0)-$($Miner_Model)")) {
-			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device) {
+			    if ($Pools.$Algorithm_Norm.Host -and $Miner_Device -and (-not $_.Coins -or $_.Coins -icontains $Pools.$Algorithm_Norm.CoinSymbol)) {
                     if ($First) {
 				        $Miner_Port = $Port -f ($Miner_Device | Select-Object -First 1 -ExpandProperty Index)            
 				    	$Miner_Name = (@($Name) + @($Miner_Device.Name | Sort-Object) | Select-Object) -join '-'
