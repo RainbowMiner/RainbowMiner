@@ -9,21 +9,22 @@ if (-not $IsWindows -and -not $IsLinux) {return}
 
 if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-ttminer/TT-Miner-3.1.1.tar.xz"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-ttminer/TT-Miner-3.2.2.tar.xz"
 } else {
     $Path = ".\Bin\NVIDIA-TTminer\TT-Miner.exe"
-    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.1.1-ttminer/TT-Miner-3.1.1.zip"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v3.2.2-ttminer/TT-Miner-3.2.2.zip"
 }
 $ManualUri = "https://bitcointalk.org/index.php?topic=5025783.0"
 $Port = "333{0:d2}"
 $DevFee = 1.0
 $Cuda = "9.2"
-$Version = "3.1.1"
+$Version = "3.2.2"
 
 if (-not $Global:DeviceCache.DevicesByTypes.NVIDIA -and -not $InfoOnly) {return} # No NVIDIA present in system
 
 $Commands = [PSCustomObject[]]@(
-    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2} #Eaglesong
+    [PSCustomObject]@{MainAlgorithm = "BLAKE2S"       ; MinMemGB = 3; NH = $false; Params = "-A BLAKE2S%CUDA% -coin kda"; ExtendInterval = 2; Coins = @("KDA")} #Kadena
+    [PSCustomObject]@{MainAlgorithm = "EAGLESONG"     ; MinMemGB = 3; NH = $false; Params = "-A EAGLESONG%CUDA% -coin ckb"; ExtendInterval = 2; Coins = @("CKB")} #Eaglesong
     [PSCustomObject]@{MainAlgorithm = "ETHASH2gb"     ; MinMemGB = 2; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash2GB 
     [PSCustomObject]@{MainAlgorithm = "ETHASH3gb"     ; MinMemGB = 3; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash3GB 
     [PSCustomObject]@{MainAlgorithm = "ETHASH"        ; MinMemGB = 4; NH = $true;  Params = "-A ETHASH%CUDA%"} #Ethash 
