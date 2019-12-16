@@ -2,12 +2,6 @@
 
 Add-Type -Path .\DotNet\OpenCL\*.cs
 
-function Initialize-Cache {
-    [hashtable]$Global:StatsCache   = @{}
-    [hashtable]$Global:DeviceCache  = @{}
-    [hashtable]$Global:Rates        = @{BTC = [Double]1}
-}
-
 function Initialize-Session {
 
     Set-OsFlags
@@ -54,7 +48,7 @@ function Confirm-Version {
     param($RBMVersion, [Switch]$Force = $false, [Switch]$Silent = $false)
 
     $Name = "RainbowMiner"
-    if ($Force -or -not (Test-Path Variable:Script:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Script:GlobalVersion.NextCheck) {
+    if ($Force -or -not (Test-Path Variable:Global:GlobalVersion) -or (Get-Date).ToUniversalTime() -ge $Global:GlobalVersion.NextCheck) {
 
         $RBMVersion = $Version = Get-Version($RBMVersion)
         $Uri = ""
@@ -85,7 +79,7 @@ function Confirm-Version {
             if ($Error.Count){$Error.RemoveAt(0)}
             Write-Log -Level Warn "Github could not be reached. "
         }
-        $Script:GlobalVersion = [PSCustomObject]@{
+        $Global:GlobalVersion = [PSCustomObject]@{
             Version = $RBMVersion
             RemoteVersion = $Version
             DownloadURI = $Uri
@@ -95,13 +89,13 @@ function Confirm-Version {
     }
 
     if (-not $Silent) {
-        if ($Script:GlobalVersion.RemoteVersion -gt $Script:GlobalVersion.Version) {
-            Write-Log -Level Warn "$Name is out of date: lastest release version v$($Script:GlobalVersion.RemoteVersion) is available."
-        } elseif ($Script:GlobalVersion.RemoteVersion -lt $Script:GlobalVersion.Version) {
+        if ($Global:GlobalVersion.RemoteVersion -gt $Global:GlobalVersion.Version) {
+            Write-Log -Level Warn "$Name is out of date: lastest release version v$($Global:GlobalVersion.RemoteVersion) is available."
+        } elseif ($Global:GlobalVersion.RemoteVersion -lt $Global:GlobalVersion.Version) {
             Write-Log -Level Warn "You are running $Name prerelease v$RBMVersion. Use at your own risk."
         }
     }
-    $Script:GlobalVersion
+    $Global:GlobalVersion
 }
 
 function Confirm-Cuda {
@@ -2494,13 +2488,13 @@ function Get-Device {
         [Switch]$IgnoreOpenCL = $false
     )
 
-    if (-not (Test-Path Variable:Script:GlobalDataDeviceList) -or -not $Script:GlobalDataDeviceList) {$Script:GlobalDataDeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore}
+    if (-not (Test-Path Variable:Global:GlobalDataDeviceList) -or -not $Global:GlobalDataDeviceList) {$Global:GlobalDataDeviceList = Get-ContentByStreamReader ".\Data\devices.json" | ConvertFrom-Json -ErrorAction Ignore}
 
     if ($Name) {
         $Name_Devices = $Name | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
@@ -2510,15 +2504,15 @@ function Get-Device {
         $ExcludeName_Devices = $ExcludeName | ForEach-Object {
             $Name_Split = @("*","*","*")
             $ix = 0;foreach ($a in ($_ -split '#' | Select-Object -First 3)) {$Name_Split[$ix] = if ($ix -gt 0) {[int]$a} else {$a};$ix++}
-            $Name_Device = $Script:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
+            $Name_Device = $Global:GlobalDataDeviceList.("{0}" -f $Name_Split) | Select-Object *
             $Name_Device.PSObject.Properties.Name | ForEach-Object {$Name_Device.$_ = $Name_Device.$_ -f $Name_Split}
             $Name_Device
         }
     }
 
     # Try to get cached devices first to improve performance
-    if ((Test-Path Variable:Script:GlobalCachedDevices) -and -not $Refresh) {
-        $Script:GlobalCachedDevices | Foreach-Object {
+    if ((Test-Path Variable:Global:GlobalCachedDevices) -and -not $Refresh) {
+        $Global:GlobalCachedDevices | Foreach-Object {
             $Device = $_
             if (
                 ((-not $Name) -or ($Name_Devices | Where-Object {($Device | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name)) -like ($_ | Select-Object ($_ | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select-Object -ExpandProperty Name))}) -or ($Name | Where-Object {@($Device.Model,$Device.Model_Name) -like $_})) -and
@@ -2830,7 +2824,7 @@ function Get-Device {
         Write-Log -Level Warn "CPU detection has failed. "
     }
 
-    $Script:GlobalCachedDevices = $Devices
+    $Global:GlobalCachedDevices = $Devices
     $Devices
 }
 
@@ -2945,7 +2939,7 @@ function Get-DevicePowerDraw {
         [Parameter(Mandatory = $false)]
         [String[]]$DeviceName = @()
     )
-    (($Script:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
+    (($Global:GlobalCachedDevices | Where-Object {-not $DeviceName -or $DeviceName -icontains $_.Name}).Data.PowerDraw | Measure-Object -Sum).Sum
 }
 
 function Start-Afterburner {
@@ -3178,13 +3172,13 @@ function Update-DeviceInformation {
     $abReload = $true
 
     $PowerAdjust = @{}
-    $Script:GlobalCachedDevices | Foreach-Object {
+    $Global:GlobalCachedDevices | Foreach-Object {
         $Model = $_.Model
         $PowerAdjust[$Model] = 100
         if ($DeviceConfig -and $DeviceConfig.$Model -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne $null -and $DeviceConfig.$Model.PowerAdjust -ne "") {$PowerAdjust[$Model] = $DeviceConfig.$Model.PowerAdjust}
     }
 
-    $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
+    $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "GPU" -and $DeviceName -icontains $_.Name} | Group-Object Vendor | Foreach-Object {
         $Devices = $_.Group
         $Vendor = $_.Name
 
@@ -3397,9 +3391,9 @@ function Update-DeviceInformation {
         if (-not $DeviceName -or $DeviceName -like "CPU*") {
             if ($SyncCache.CpuTDP -eq $null) {$SyncCache.CpuTDP = Get-ContentByStreamReader ".\Data\cpu-tdp.json" | ConvertFrom-Json -ErrorAction Ignore}
             if ($IsWindows) {
-                $CPU_count = ($Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
+                $CPU_count = ($Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Measure-Object).Count
                 if ($CPU_count -gt 0) {$CIM_CPU = Get-CimInstance -ClassName CIM_Processor}
-                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     $Device = $_
                     $CIM_CPU | Select-Object -Index $Device.Type_Index | ForEach-Object {
                         if ($UseAfterburner -and $Script:abMonitor -and $CPU_count -eq 1) {
@@ -3435,7 +3429,7 @@ function Update-DeviceInformation {
                 }
             } 
             elseif ($IsLinux) {
-                $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+                $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                     [int]$Utilization = [math]::min((((Invoke-Exe "ps" -ArgumentList "-A -o pcpu" -ExpandLines) -match "\d" | Measure-Object -Sum).Sum / $Global:GlobalCPUInfo.Threads), 100)
 
                     $CpuName = $Global:GlobalCPUInfo.Name.Trim()
@@ -3451,7 +3445,7 @@ function Update-DeviceInformation {
                 }
             }
 
-            $Script:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
+            $Global:GlobalCachedDevices | Where-Object {$_.Type -eq "CPU"} | Foreach-Object {
                 $_.DataMax.Clock       = [Math]::Max([int]$_.DataMax.Clock,$_.Data.Clock)
                 $_.DataMax.Utilization = [Math]::Max([int]$_.DataMax.Utilization,$_.Data.Utilization)
                 $_.DataMax.PowerDraw   = [Math]::Max([int]$_.DataMax.PowerDraw,$_.Data.PowerDraw)
@@ -3865,7 +3859,7 @@ class Miner {
             Write-Log -Level Info "Start mining $($this.BaseAlgorithm[0]) on $($this.Pool[0])$(if ($this.BaseAlgorithm.Count -eq 2) {" and $($this.BaseAlgorithm[1]) on $($this.Pool[1])"}) with miner $($this.BaseName) using API on port $($this.Port)"
 
             $Devices = @($this.DeviceModel -split '-')
-            $Vendor  = $Script:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
+            $Vendor  = $Global:GlobalCachedDevices | Where-Object {$Devices -contains $_.Model} | Select-Object -ExpandProperty Vendor -Unique
 
             $ArgumentList = $this.GetArguments()
             
@@ -4344,7 +4338,7 @@ class Miner {
         [System.Collections.ArrayList]$NvCmd = @()
         [System.Collections.ArrayList]$AmdCmd = @()
 
-        $Vendor = $Script:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
+        $Vendor = $Global:GlobalCachedDevices | Where-Object {$this.OCprofile.ContainsKey($_.Model)} | Select-Object -ExpandProperty Vendor -Unique
 
         if ($Global:IsWindows) {
             if ($Vendor -ne "NVIDIA") {
@@ -4379,7 +4373,7 @@ class Miner {
 
             [System.Collections.ArrayList]$DeviceIds = @()
             [System.Collections.ArrayList]$CardIds   = @()
-            $Script:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
+            $Global:GlobalCachedDevices | Where-Object Model -eq $DeviceModel | Foreach-Object {
                 $VendorIndex = $_.Type_Vendor_Index
                 $CardId = $_.CardId
                 $Id = if ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Index)" -ne $null) {$_.Index} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.Name)" -ne $null) {$_.Name} elseif ($Config.OCProfiles."$($this.OCprofile.$DeviceModel)-$($_.OpenCL.PCIBusId)" -ne $null) {$_.OpenCL.PCIBusId}
@@ -5146,7 +5140,7 @@ function Set-GpuGroupsConfigDefault {
             $GpuNames = Get-Device "nvidia","amd" -IgnoreOpenCL | Select-Object -ExpandProperty Name -Unique
             foreach ($GpuName in $GpuNames) {
                 if ($Preset.$GpuName -eq $null) {$Preset | Add-Member $GpuName "" -Force}
-                elseif ($Preset.$GpuName -ne "") {$Script:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
+                elseif ($Preset.$GpuName -ne "") {$Global:GlobalCachedDevices | Where-Object Name -eq $GpuName | Foreach-Object {$_.Model += $Preset.$GpuName.ToUpper();$_.GpuGroup = $Preset.$GpuName.ToUpper()}}
             }
             $Sorted = [PSCustomObject]@{}
             $Preset.PSObject.Properties.Name | Sort-Object | Foreach-Object {$Sorted | Add-Member $_ $Preset.$_ -Force}
@@ -5185,7 +5179,7 @@ function Set-CombosConfigDefault {
 
                 $NewSubsetModels = @()
 
-                $SubsetDevices = @($Script:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
+                $SubsetDevices = @($Global:GlobalCachedDevices | Where-Object {$_.Vendor -eq $SubsetType} | Select-Object)
 
                 if (($SubsetDevices.Model | Select-Object -Unique).Count -gt 1) {
 
@@ -5908,14 +5902,14 @@ Param(
     [Switch]$Reset
 )
     $memusagebyte = [System.GC]::GetTotalMemory($ForceFullCollection)
-    $memdiff = $memusagebyte - [int64]$script:last_memory_usage_byte
+    $memdiff = $memusagebyte - [int64]$Global:last_memory_usage_byte
     [PSCustomObject]@{
         MemUsage   = $memusagebyte
         MemDiff    = $memdiff
         MemText    = "Memory usage: {0:n1} MB ({1:n0} Bytes {2})" -f  ($memusagebyte/1MB), $memusagebyte, "$(if ($memdiff -gt 0){"+"})$($memdiff)"
     }
     if ($Reset) {
-        $script:last_memory_usage_byte = $memusagebyte
+        $Global:last_memory_usage_byte = $memusagebyte
     }
 }
 
@@ -6516,7 +6510,7 @@ param(
     [Int]$Priority = 0
 )
     if (-not (Test-Path ".\Config\autoexec.txt") -and (Test-Path ".\Data\autoexec.default.txt")) {Copy-Item ".\Data\autoexec.default.txt" ".\Config\autoexec.txt" -Force -ErrorAction Ignore}
-    [System.Collections.ArrayList]$Script:AutoexecCommands = @()
+    [System.Collections.ArrayList]$Global:AutoexecCommands = @()
     foreach($cmd in @(Get-ContentByStreamReader ".\Config\autoexec.txt" -ExpandLines | Select-Object)) {
         if ($cmd -match "^[\s\t]*`"(.+?)`"(.*)$") {
             if (Test-Path $Matches[1]) {
@@ -6527,7 +6521,7 @@ param(
                         $Job | Add-Member Arguments "$($Matches[2].Trim())" -Force
                         $Job | Add-Member HasOwnMinerWindow $true -Force
                         Write-Log "Autoexec command started: $($Matches[1]) $($Matches[2].Trim())"
-                        $Script:AutoexecCommands.Add($Job) >$null
+                        $Global:AutoexecCommands.Add($Job) >$null
                     }
                 } catch {
                     if ($Error.Count){$Error.RemoveAt(0)}
@@ -6541,7 +6535,7 @@ param(
 }
 
 function Stop-Autoexec {
-    $Script:AutoexecCommands | Where-Object Process | Foreach-Object {
+    $Global:AutoexecCommands | Where-Object Process | Foreach-Object {
         Stop-SubProcess -Job $_ -Title "Autoexec command" -Name "$($_.FilePath) $($_.Arguments)"
     }
 }
