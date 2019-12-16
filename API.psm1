@@ -113,7 +113,7 @@
                 # Set the proper content type, status code and data for each resource
                 Switch($Path) {
                 "/version" {
-                    $Data = $API.Version
+                    $Data = ConvertTo-Json $API.Version -ErrorAction Ignore
                     break
                 }
                 "/info" {
@@ -755,8 +755,7 @@
                 }
                 "/getconfig" {
                     $Status = $false
-                    $Version = $API.Version | ConvertFrom-Json -ErrorAction Ignore
-                    if ($API.IsServer -and -not (Compare-Version $Version.Version $Parameters.version -revs 1)) {
+                    if ($API.IsServer -and -not (Compare-Version $API.Version.Version $Parameters.version -revs 1)) {
                         if ($Parameters.workername -and $Parameters.machinename) {
                             $Client = $Clients | Where-Object {$_.workername -eq $Parameters.workername -and $_.machinename -eq $Parameters.machinename}
                             if ($Client) {
@@ -782,12 +781,11 @@
                     }
                     if (-not $Status) {
                         $Result = if (-not $API.IsServer) {"$($API.MachineName) is not a server"}
-                              elseif ($Version.Version -ne $Parameters.version) {"Server runs on wrong Version v$($Version.Version)"}
+                              elseif ($API.Version.Version -ne $Parameters.version) {"Server runs on wrong Version v$($API.Version.Version)"}
                               else {"No data found"}
                     }
                     $Data = [PSCustomObject]@{Status=$Status;Content=$Result;ExcludeList=$Session.Config.ExcludeServerConfigVars} | ConvertTo-Json -Depth 10
                     Remove-Variable "Result" -ErrorAction Ignore
-                    if ($Version -ne $null) {Remove-Variable "Version"}
                     Break
                 }
                 "/getjob" {

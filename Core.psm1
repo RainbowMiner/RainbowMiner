@@ -904,7 +904,7 @@ function Invoke-Core {
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
-    $API.Version = ConvertTo-Json $ConfirmedVersion -Depth 10
+    $API.Version = $ConfirmedVersion
     $Session.AutoUpdate = $false
     if ($ConfirmedVersion.RemoteVersion -gt $ConfirmedVersion.Version -and $Session.Config.EnableAutoUpdate -and -not $Session.IsExclusiveRun) {
         if (Test-Path ".\Logs\autoupdate.txt") {try {$Last_Autoupdate = Get-ContentByStreamReader ".\Logs\autoupdate.txt" | ConvertFrom-Json -ErrorAction Stop} catch {if ($Error.Count){$Error.RemoveAt(0)};$Last_Autoupdate = $null}}
