@@ -37,6 +37,7 @@
 136	CcminerTcr
 137	CcminerYescryptR8G
 138	CcminerLyra2z330
+139	CcminerVerus
 
 200	ClaymoreCryptonightAmd
 201	ClaymoreEquihashAmd
