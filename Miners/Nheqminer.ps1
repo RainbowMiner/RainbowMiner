@@ -5,14 +5,19 @@ param(
     [Bool]$InfoOnly
 )
 
-if (-not $IsWindows) {return}
+if (-not $IsWindows -and -not $IsLinux) {return}
 
-$Path = ".\Bin\CPU-Nheqminer\nheqminer.exe"
-$Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.7.2-nheqminer/nheqminer-Windows-v0.7.2.zip"
+if ($IsLinux) {
+    $Path = ".\Bin\CPU-Nheqminer\nheqminer"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-nheqminer/nheqminer-Linux-v0.8.0.tar.gz"
+} else {
+    $Path = ".\Bin\CPU-Nheqminer\nheqminer.exe"
+    $Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v0.8.0-nheqminer/nheqminer-Windows-v0.8.0.zip"
+}
 $ManualUri = "https://github.com/VerusCoin/nheqminer/releases"
 $Port = "536{0:d2}"
 $DevFee = 0.0
-$Version = "0.7.2"
+$Version = "0.8.0"
 
 if (-not $Global:DeviceCache.DevicesByTypes.CPU -and -not $InfoOnly) {return} # No CPU present in system
 
