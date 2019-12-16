@@ -1629,7 +1629,7 @@ function Invoke-Core {
         Write-Log "Calculating pool compare prices. "
         $Script:AllPools | Foreach-Object {
             $Pool_Ix = "$($_.Name)-$($_.Algorithm -replace "\-.+$")-$($_.CoinSymbol)"
-            if (-not $Pools_PriceCmp.ContainsKey($Pool_Ix)) {
+            if ($Pools_PriceCmp[$Pool_Ix] -eq $null) {
                 $Price_Cmp =  $_."$(if (-not $Session.Config.EnableFastSwitching -and -not $_.PaysLive) {"Stable"})Price"
                 if (-not $_.Exclusive) {
                     $Pool_Rounds = $Pools_Running[$Pool_Ix]
