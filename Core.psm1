@@ -1524,7 +1524,10 @@ function Invoke-Core {
 
     #This finds any pools that were already in $Script:AllPools (from a previous loop) but not in $NewPools. Add them back to the list. Their API likely didn't return in time, but we don't want to cut them off just yet
     #since mining is probably still working.  Then it filters out any algorithms that aren't being used.
-    $Script:AllPools = @($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Script:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:AllPools | Where-Object Name -EQ $_ | Foreach-Object {$_ | ConvertTo-Json -Depth 10 -Compress -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore}}) | Where-Object {
+    $Test_Algorithm = @($Session.Config.Algorithm | Select-Object)
+    $Test_ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | Select-Object)
+
+    $Script:AllPools = @(@($NewPools) + @(Compare-Object @($NewPools.Name | Select-Object -Unique) @($Script:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject | ForEach-Object {$Script:AllPools | Where-Object Name -EQ $_}) | Where-Object {
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm -replace '\-.+$'
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
@@ -1532,18 +1535,18 @@ function Invoke-Core {
                 (-not $Session.Config.Pools.$Pool_Name) -or
                 ($Session.Config.PoolName.Count -and $Session.Config.PoolName -inotcontains $Pool_Name) -or
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
-                ($Session.Config.Algorithm.Count -and -not (Compare-Object @($Session.Config.Algorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object @($Session.Config.ExcludeAlgorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object @($SyncCache.UnprofitableAlgos.Algorithms | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object @($SyncCache.UnprofitableAlgos.Pools.$Pool_Name | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and @($Session.Config.ExcludeCoin) -icontains $_.CoinName) -or
-                ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and @($Session.Config.ExcludeCoinSymbol) -icontains $_.CoinSymbol) -or
-                ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object @($Session.Config.Pools.$Pool_Name.Algorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object @($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm | Select-Object) $Pool_Algo -IncludeEqual -ExcludeDifferent | Measure-Object).Count) -or
-                ($_.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and @($Session.Config.Pools.$Pool_Name.CoinName) -inotcontains $_.CoinName) -or
-                ($_.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoin) -icontains $_.CoinName) -or
-                ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.CoinSymbol) -inotcontains $_.CoinSymbol) -or
-                ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and @($Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol) -icontains $_.CoinSymbol)
+                ($Session.Config.Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
+                ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Session.Config.ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
+                ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Session.Config.Pools.$Pool_Name.ExcludeAlgorithm.Count -and (Compare-Object $Session.Config.Pools.$Pool_Name.ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($_.CoinName -and $Session.Config.Pools.$Pool_Name.CoinName.Count -and $Session.Config.Pools.$Pool_Name.CoinName -inotcontains $_.CoinName) -or
+                ($_.CoinName -and $Session.Config.Pools.$Pool_Name.ExcludeCoin.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoin -icontains $_.CoinName) -or
+                ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.CoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.CoinSymbol -inotcontains $_.CoinSymbol) -or
+                ($_.CoinSymbol -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol.Count -and $Session.Config.Pools.$Pool_Name.ExcludeCoinSymbol -icontains $_.CoinSymbol)
             ) -and (
                 ($_.Exclusive -and -not $_.Idle) -or -not (
                     ($_.Idle) -or
@@ -1555,6 +1558,10 @@ function Invoke-Core {
                     ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind)))
                 )                
             )}
+        )
+    Remove-Variable "Test_Algorithm"
+    Remove-Variable "Test_ExcludeAlgorithm"
+
     if ($NewPools -ne $null) {Remove-Variable "NewPools"}
 
     $AllPools_BeforeWD_Count = ($Script:AllPools | Measure-Object).Count
