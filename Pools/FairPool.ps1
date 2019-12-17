@@ -76,6 +76,7 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
         $Pool_Wallet = Get-WalletWithPaymentId $Wallets.$Pool_Currency -pidchar '.' -asobject
         [PSCustomObject]@{
             Algorithm     = $Pool_Algorithm_Norm
+            Algorithm0    = $Pool_Algorithm_Norm
             CoinName      = $Pool_Coin.Name
             CoinSymbol    = $Pool_Currency
             Currency      = $Pool_Currency
@@ -100,6 +101,10 @@ $Pools_Data | Where-Object {$Wallets."$($_.symbol)" -or $InfoOnly} | ForEach-Obj
             Name          = $Name
             Penalty       = 0
             PenaltyFactor = 1
+            Disabled      = $false
+            HasMinerExclusions = $false
+            Price_Bias    = 0.0
+            Price_Unbias  = 0.0
             Wallet        = $Pool_Wallet.wallet
             Worker        = "{workername:$Worker}"
             Email         = $Email

@@ -66,6 +66,7 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
@@ -90,6 +91,10 @@ $Pool_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | Select
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Wallets.$Pool_Currency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email

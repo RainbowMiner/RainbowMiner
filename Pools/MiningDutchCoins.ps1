@@ -69,6 +69,7 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
         if ($Pool_User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $_.Value.currency
                 CoinSymbol    = $Pool_Currency
                 Currency      = if ($AECurrency) {$AECurrency} else {$Pool_Currency}
@@ -93,6 +94,10 @@ $PoolCoins_Request.PSObject.Properties | Where-Object {[int]$_.Value.port -and $
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Pool_User
                 Worker        = "{workername:$Worker}"
                 Email         = $Email

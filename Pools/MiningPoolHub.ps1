@@ -69,6 +69,7 @@ $Pool_Request.return | ForEach-Object {
         if ($User -or $InfoOnly) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
+				Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_Symbol
                 Currency      = $Pool_Currency
@@ -88,6 +89,10 @@ $Pool_Request.return | ForEach-Object {
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Wallets.$Pool_Currency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email
@@ -96,6 +101,8 @@ $Pool_Request.return | ForEach-Object {
             if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
+            Algorithm0    = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = $Pool_Currency
@@ -114,6 +121,10 @@ $Pool_Request.return | ForEach-Object {
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
+					Disabled      = $false
+					HasMinerExclusions = $false
+					Price_Bias    = 0.0
+					Price_Unbias  = 0.0
                     Wallet        = $Wallets.$Pool_Currency
                     Worker        = "{workername:$Worker}"
                     Email         = $Email

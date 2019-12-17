@@ -143,6 +143,7 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
             #Option 2/3
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_ExCurrency
@@ -166,6 +167,10 @@ $PoolCoins_Request | Get-Member -MemberType NoteProperty -ErrorAction Ignore | S
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Wallets.$Pool_Currency
                 Worker        = "{workername:$Worker}"
                 Email         = $Email

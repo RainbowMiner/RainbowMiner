@@ -94,6 +94,7 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {$Wallets
         foreach ($Pool_Port in $Pool_Ports) {
             [PSCustomObject]@{
                 Algorithm     = $Pool_Algorithm_Norm
+                Algorithm0    = $Pool_Algorithm_Norm
                 CoinName      = $_.name
                 CoinSymbol    = $Pool_Currency
                 Currency      = $Pool_Currency
@@ -118,6 +119,10 @@ $Pools_Request | Where-Object {$Pools_Ports."$($_.id)"} | Where-Object {$Wallets
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Pool_Wallet.wallet
                 Worker        = "{workername:$Worker}"
                 Email         = $Email

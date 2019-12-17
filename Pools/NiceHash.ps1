@@ -69,6 +69,7 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
             foreach($Pool_Protocol in @("stratum+tcp","stratum+ssl")) {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
+					Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = ""
                     Currency      = "BTC"
@@ -98,6 +99,10 @@ $Pool_Request.miningAlgorithms | Where-Object {([Double]$_.paying -gt 0.00) -or 
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
+					Disabled      = $false
+					HasMinerExclusions = $false
+					Price_Bias    = 0.0
+					Price_Unbias  = 0.0
                     Wallet        = $Wallets.BTC
                     Worker        = "{workername:$Worker}"
                     Email         = $Email

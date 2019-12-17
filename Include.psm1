@@ -1462,7 +1462,7 @@ function Get-PoolsContent {
                 $Pool.Penalty = $Penalty
                 $Pool.PenaltyFactor = $Pool_Factor
                 if ($Disabled -and $Disabled.ContainsKey("$($PoolName)_$(if ($Pool.CoinSymbol) {$Pool.CoinSymbol} else {$Pool.Algorithm})_Profit")) {
-                    $Pool | Add-Member Disabled $true -Force
+                    $Pool.Disabled = $true
                 }
             }
             $Pool

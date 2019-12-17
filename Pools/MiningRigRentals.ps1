@@ -35,6 +35,10 @@ if ($InfoOnly) {
         Name          = $Name
         Penalty       = 0
         PenaltyFactor = 1
+        Disabled      = $false
+        HasMinerExclusions = $false
+        Price_Bias    = 0.0
+        Price_Unbias  = 0.0
         Wallet        = $Wallets.BTC
         Worker        = $Worker
         Email         = $Email
@@ -170,6 +174,7 @@ foreach ($Worker1 in $Workers) {
             
                 [PSCustomObject]@{
                     Algorithm     = "$Pool_Algorithm_Norm$(if ($Worker1 -ne $Worker) {"-$(($Session.Config.DeviceModel | Where-Object {$Session.Config.Devices.$_.Worker -eq $Worker1} | Sort-Object | Select-Object -Unique) -join '-')"})"
+					Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = if ($_.status.status -eq "rented" -or $_.status.rented) {try {$ts=[timespan]::fromhours($_.status.hours);"{0:00}h{1:00}m{2:00}s" -f [Math]::Floor($ts.TotalHours),$ts.Minutes,$ts.Seconds}catch{"$($_.status.hours)h"}} else {""}
                     CoinSymbol    = $Pool_CoinSymbol
                     Currency      = "BTC"
@@ -200,6 +205,10 @@ foreach ($Worker1 in $Workers) {
                     Name          = $Name
                     Penalty       = 0
                     PenaltyFactor = 1
+					Disabled      = $false
+					HasMinerExclusions = $false
+					Price_Bias    = 0.0
+					Price_Unbias  = 0.0
                     Wallet        = $Wallets.BTC
                     Worker        = $Worker1
                     Email         = $Email

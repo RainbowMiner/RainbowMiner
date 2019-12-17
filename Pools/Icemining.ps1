@@ -76,6 +76,7 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
         foreach($Pool_Region in $Pool_RegionsTable.Keys) {        
             [PSCustomObject]@{
                 Algorithm     = $_
+				Algorithm0    = $_
                 CoinName      = $Pool_Coin
                 CoinSymbol    = $Pool_CoinSymbol
                 Currency      = $Pool_Currency
@@ -99,6 +100,10 @@ $PoolCoins_Request.PSObject.Properties.Name | Where-Object {$Pool_CoinSymbol = $
                 Name          = $Name
                 Penalty       = 0
                 PenaltyFactor = 1
+                Disabled      = $false
+                HasMinerExclusions = $false
+                Price_Bias    = 0.0
+                Price_Unbias  = 0.0
                 Wallet        = $Pool_User
                 Worker        = "{workername:$Worker}"
                 Email         = $Email

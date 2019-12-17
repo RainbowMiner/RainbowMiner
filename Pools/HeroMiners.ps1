@@ -103,6 +103,7 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                 foreach ($Pool_Region in $Pool_Regions) {
                     [PSCustomObject]@{
                         Algorithm     = $Pool_Algorithm_Norm
+						Algorithm0    = $Pool_Algorithm_Norm
                         CoinName      = "$($Pool_Coin.Name)$(if ($Pool_Coin2) {"+$($Pool_Coin2.Name)"})"
                         CoinSymbol    = $Pool_Currency
                         Currency      = $Pool_Currency
@@ -126,6 +127,10 @@ $Pools_Data | Where-Object {($Wallets."$($_.symbol)" -and (-not $_.symbol2 -or $
                         Name          = $Name
                         Penalty       = 0
                         PenaltyFactor = 1
+						Disabled      = $false
+						HasMinerExclusions = $false
+						Price_Bias    = 0.0
+						Price_Unbias  = 0.0
                         Wallet        = $Pool_Wallet.wallet
                         Worker        = "{workername:$Worker}"
                         Email         = $Email
