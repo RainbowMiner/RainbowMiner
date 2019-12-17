@@ -1534,9 +1534,10 @@ function Invoke-Core {
         $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
 
-    $NewPools = @($NewPools | Where-Object {
+    $NewPools = $NewPools | Where-Object {
         $Pool_Name = $_.Name
         $Pool_Algo = $_.Algorithm0
+        $Pool_CheckForUnprofitableAlgo = -not $Session.Config.DisableUnprofitableAlgolist -and -not ($_.Exclusive -and -not $_.Idle)
         if ($_.CoinSymbol) {$Pool_Algo = @($Pool_Algo,"$($Pool_Algo)-$($_.CoinSymbol)")}
         -not (
                 (-not $Session.Config.Pools.$Pool_Name) -or
@@ -1544,8 +1545,8 @@ function Invoke-Core {
                 ($Session.Config.ExcludePoolName.Count -and $Session.Config.ExcludePoolName -icontains $Pool_Name) -or
                 ($Session.Config.Algorithm.Count -and -not (Compare-Object $Test_Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeAlgorithm.Count -and (Compare-Object $Test_ExcludeAlgorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
-                (-not $Session.Config.DisableUnprofitableAlgolist -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $SyncCache.UnprofitableAlgos.Algorithms -and $SyncCache.UnprofitableAlgos.Algorithms.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Algorithms $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
+                ($Pool_CheckForUnprofitableAlgo -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name -and $SyncCache.UnprofitableAlgos.Pools.$Pool_Name.Count -and (Compare-Object $SyncCache.UnprofitableAlgos.Pools.$Pool_Name $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
                 ($Session.Config.ExcludeCoin.Count -and $_.CoinName -and $Session.Config.ExcludeCoin -icontains $_.CoinName) -or
                 ($Session.Config.ExcludeCoinSymbol.Count -and $_.CoinSymbol -and $Session.Config.ExcludeCoinSymbol -icontains $_.CoinSymbol) -or
                 ($Session.Config.Pools.$Pool_Name.Algorithm.Count -and -not (Compare-Object $Session.Config.Pools.$Pool_Name.Algorithm $Pool_Algo -IncludeEqual -ExcludeDifferent)) -or
@@ -1565,7 +1566,6 @@ function Invoke-Core {
                     ($_.CoinSymbol -and $_.BLK -ne $null -and $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind -and ($_.BLK -eq 0 -or ($_.BLK -gt 0 -and (24/$_.BLK*3600) -gt $Session.Config.Coins."$($_.CoinSymbol)".MaxTimeToFind)))
                 )                
             )}
-        )
     Remove-Variable "Test_Algorithm"
     Remove-Variable "Test_ExcludeAlgorithm"
 
@@ -1604,6 +1604,7 @@ function Invoke-Core {
             $done = [Math]::Round(((Get-UnixTimestamp -Milliseconds) - $start)/1000,3)
             if ($Session.RoundCounter -eq 0) {Write-Host "done ($($done)s) "}
             Write-Log "WhatToMine loaded in $($done)s "
+            Remove-Variable "Pools_WTM"
         }
 
         $API.AllPools   = ConvertTo-Json @($NewPools | Select-Object)
