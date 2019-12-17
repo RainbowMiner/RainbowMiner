@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 
-screen -S RainbowMiner -m ./start.sh
+screen -S RainbowMiner -d -m ./start.sh
