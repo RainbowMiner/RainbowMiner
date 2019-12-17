@@ -1573,9 +1573,11 @@ function Invoke-Core {
 
     #Apply watchdog to pools, only if there is more than one pool selected
     if (($NewPools.Name | Select-Object -Unique | Measure-Object).Count -gt 1) {
+        $WDIntervalTime = $Session.Timer.AddSeconds( - $Session.WatchdogInterval)
+        $WDResetTime    = $Session.Timer.AddSeconds( - $Session.WatchdogReset)
         $NewPools = $NewPools | Where-Object {-not $_.Disabled} | Where-Object {
             $Pool = $_
-            $Pool_WatchdogTimers = $Global:WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $Session.Timer.AddSeconds( - $Session.WatchdogInterval) | Where-Object Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset)
+            $Pool_WatchdogTimers = $Global:WatchdogTimers | Where-Object PoolName -EQ $Pool.Name | Where-Object Kicked -LT $WDIntervalTime | Where-Object Kicked -GT $WDResetTime
             $Pool.Exclusive -or (($Pool_WatchdogTimers | Measure-Object | Select-Object -ExpandProperty Count) -lt <#stage#>3 -and ($Pool_WatchdogTimers | Where-Object {$Pool.Algorithm -contains $_.Algorithm} | Measure-Object | Select-Object -ExpandProperty Count) -lt <#statge#>2)
         }
     }
