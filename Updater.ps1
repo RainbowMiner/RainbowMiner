@@ -35,6 +35,20 @@ if ($IsWindows -eq $null) {
 
 $RBMVersion = Confirm-Version (Get-Content ".\Data\version.json" | ConvertFrom-Json).Version -Force -Silent
 
+if (Test-Path ".\Downloads\config.json") {
+    try {
+        $DownloaderConfig = Get-ContentByStreamReader ".\Downloads\config.json" | ConvertFrom-Json -ErrorAction Ignore
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+}
+if (-not $DownloaderConfig) {
+    $DownloaderConfig = [PSCustomObject]@{
+            EnableMinerBackups  = $true
+            EnableKeepDownloads = $true
+        }
+}
+
 $Name = "RainbowMiner"
 try {
     if ($RBMVersion.RemoteVersion -gt $RBMVersion.Version -and $RBMVersion.DownloadURI) {
@@ -86,6 +100,10 @@ try {
             Get-ChildItem ".\*.sh" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bash\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
             Get-ChildItem ".\IncludesLinux\bin\*" -File | Foreach-Object {try {& chmod +x "$($_.FullName)" > $null} catch {}}
+        }
+
+        if (-not $DownloaderConfig.EnableKeepDownloads -and (Test-Path $FileName)) {
+            Get-ChildItem $FileName -File | Foreach-Object {Remove-Item $_}
         }
 
         Write-Host "Update finished. Restarting $Name .." -ForegroundColor Green
