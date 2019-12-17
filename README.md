@@ -816,6 +816,12 @@ For Server (Runmode=server) setup:
 - **Quickstart** = set to 1 to read all pool data from cache during startup (speeds up first start, but balance data may be out of date)
 - **StartPaused** = set to 1 to start RainbowMiner in pause mode (no mining, you will have to press "P" to enable mining)
 
+#### Maintenance ####
+- **MaxLogfileDays** = max. days to keep logfiles in Logs folder [default=5]
+- **MaxDownloadfileDays** = max. days to keep downloaded files in Downloads folder [default=14]
+- **MaxCachefileDays** = max. days to keep cache files in Cache folder [default=14]
+- **EnableMinerBackups** = keep backups of updated miners in Bin folder, set to 0, if you have limited space [default=1]
+- **EnableKeepDownloads** = keep downloaded miners in Downloads folder, set to 0, if you have limited space [default=1]
 
 **Notes for HashrateWeight**
 
