@@ -40,6 +40,20 @@ if ([Net.ServicePointManager]::SecurityProtocol -notmatch [Net.SecurityProtocolT
     [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
 }
 
+if (Test-Path ".\Downloads\config.json") {
+    try {
+        $DownloaderConfig = Get-ContentByStreamReader ".\Downloads\config.json" | ConvertFrom-Json -ErrorAction Ignore
+    } catch {
+        if ($Error.Count){$Error.RemoveAt(0)}
+    }
+}
+if (-not $DownloaderConfig) {
+    $DownloaderConfig = [PSCustomObject]@{
+            EnableMinerBackups  = $true
+            EnableKeepDownloads = $true
+        }
+}
+
 $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | ForEach-Object {
     $URI = $_.URI
     $Path = $_.Path
@@ -64,7 +78,7 @@ $DownloadList | Where-Object {-not $RunningMiners_Paths.Contains($_.Path)} | For
                 Invoke-WebRequest $URI -OutFile $Path -UseBasicParsing -ErrorAction Stop
             }
             else {
-                Expand-WebRequest $URI $(if ($IsMiner) {Get-MinerInstPath $Path} else {Split-Path $Path}) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop
+                Expand-WebRequest $URI $(if ($IsMiner) {Get-MinerInstPath $Path} else {Split-Path $Path}) -ProtectedFiles @(if ($IsMiner) {$ProtectedMinerFiles}) -Sha256 ($Sha256.$URI) -ErrorAction Stop -EnableMinerBackups:$DownloaderConfig.EnableMinerBackups -EnableKeepDownloads:$DownloaderConfig.EnableKeepDownloads
             }
             if ($IsMiner) {[PSCustomObject]@{URI = $URI} | ConvertTo-Json | Set-Content $UriJson -Encoding UTF8}
         }

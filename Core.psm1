@@ -129,10 +129,6 @@
 
         if ($Session.IsAdmin) {Write-Log "Run as administrator"}
 
-        #Cleanup the log and cache
-        if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-5)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
-        if (Test-Path ".\Cache"){Get-ChildItem -Path ".\Cache" -Filter "*" | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-14)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Cache" -ItemType "directory" -Force > $null}
-
         #Set env variables
         if ($env:GPU_FORCE_64BIT_PTR -ne 1)          {$env:GPU_FORCE_64BIT_PTR = 1}
         if ($env:GPU_MAX_HEAP_SIZE -ne 100)          {$env:GPU_MAX_HEAP_SIZE = 100}
@@ -901,6 +897,22 @@ function Invoke-Core {
     }
 
     if ($CheckConfig) {Update-WatchdogLevels -Reset}
+
+    #Cleanup
+    if (-not (Test-Path Variable:Global:GlobalLastCleanup) -or (Get-Date).AddHours(-12).ToUniversalTime() -lt $Global:GlobalLastCleanup) {
+        if (Test-Path ".\Logs"){Get-ChildItem -Path ".\Logs" -Filter "*" -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-$Session.Config.MaxLogfileDays)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Logs" -ItemType "directory" -Force > $null}
+        if (Test-Path ".\Cache"){Get-ChildItem -Path ".\Cache" -Filter "*" -File | Where-Object {$_.LastWriteTime -lt (Get-Date).AddDays(-$Session.Config.MaxCachefileDays)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Cache" -ItemType "directory" -Force > $null}
+        if (Test-Path ".\Downloads"){Get-ChildItem -Path ".\Downloads" -Filter "*" -File | Where-Object {$_.Name -ne "config.json" -and $_.LastWriteTime -lt (Get-Date).AddDays(-$Session.Config.MaxDownloadfileDays)} | Remove-Item -ErrorAction Ignore} else {New-Item ".\Downloads" -ItemType "directory" -Force > $null}
+        $Global:GlobalLastCleanup = (Get-Date).ToUniversalTime()
+    }
+
+    if ($CheckConfig) {
+        if (-not (Test-Path ".\Downloads")){New-Item ".\Downloads" -ItemType "directory" -Force > $null}
+        Set-ContentJson -PathToFile ".\Downloads\config.json" -Data ([PSCustomObject]@{
+            EnableMinerBackups  = $Session.Config.EnableMinerBackups
+            EnableKeepDownloads = $Session.Config.EnableKeepDownloads
+        }) > $null
+    }
 
     #Versioncheck
     $ConfirmedVersion = Confirm-Version $Session.Version
@@ -2019,11 +2031,11 @@ function Invoke-Core {
     $Miners = $AllMiners | Where-Object {(Test-Path $_.Path) -and ((-not $_.PrerequisitePath) -or (Test-Path $_.PrerequisitePath)) -and $AllMiners_VersionCheck[$_.BaseName]}
     if ((($AllMiners | Measure-Object).Count -ne ($Miners | Measure-Object).Count) -or $Session.StartDownloader) {
         $Miners_DownloadList = @($AllMiners | Where-Object {$_.PrerequisitePath} | Select-Object -Unique PrerequisiteURI,PrerequisitePath | Where-Object {-not (Test-Path $_.PrerequisitePath)} | Select-Object @{name = "URI"; expression = {$_.PrerequisiteURI}}, @{name = "Path"; expression = {$_.PrerequisitePath}}, @{name = "Searchable"; expression = {$false}}, @{name = "IsMiner"; expression = {$false}}) + @($AllMiners | Where-Object {$AllMiners_VersionCheck[$_.BaseName] -ne $true} | Sort-Object {$_.ExtendInterval} -Descending | Select-Object -Unique @{name = "URI"; expression = {$_.URI}}, @{name = "Path"; expression = {$_.Path}}, @{name = "Searchable"; expression = {$true}}, @{name = "IsMiner"; expression = {$true}})
-        if ($Miners_DownloadList.Count -gt 0 -and $Script:Downloader.State -ne "Running") {
+        if ($Miners_DownloadList.Count -gt 0 -and $Global:Downloader.State -ne "Running") {
             Clear-Host
             Write-Log "Starting download of $($Miners_DownloadList.Count) files."
             if ($Session.RoundCounter -eq 0) {Write-Host "Starting downloader ($($Miners_DownloadList.Count) files) .."}
-            $Script:Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
+            $Global:Downloader = Start-Job -InitializationScript ([scriptblock]::Create("Set-Location('$(Get-Location)')")) -ArgumentList ($Miners_DownloadList) -FilePath .\Downloader.ps1
         }
         $Session.StartDownloader = $false
     }

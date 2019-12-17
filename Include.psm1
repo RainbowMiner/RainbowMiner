@@ -136,7 +136,7 @@ function Get-PoolPayoutCurrencies {
 
 function Set-UnprofitableAlgos {
     if ($SyncCache.UnprofitableAlgos -eq $null) {
-        $SyncCache.UnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {@()}
+        $SyncCache.UnprofitableAlgos = try{Get-ContentByStreamReader ".\Data\unprofitable.json" | ConvertFrom-Json -ErrorAction Ignore} catch {if ($Error.Count){$Error.RemoveAt(0)};@()}
     }
 
     if (-not $SyncCache.UnprofitableAlgos -or -not (Test-Path ".\Data\unprofitable.json") -or (Get-ChildItem ".\Data\unprofitable.json").LastWriteTime.ToUniversalTime() -lt (Get-Date).AddHours(-1).ToUniversalTime()) {
@@ -2205,7 +2205,11 @@ function Expand-WebRequest {
         [Parameter(Mandatory = $false)]
         [String]$Sha256 = "",
         [Parameter(Mandatory = $false)]
-        [String]$ArgumentList = "-qb"
+        [String]$ArgumentList = "-qb",
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableMinerBackups = $false,
+        [Parameter(Mandatory = $false)]
+        [Switch]$EnableKeepDownloads = $false
     )
 
     # Set current path used by .net methods to the same as the script's path
@@ -2278,8 +2282,12 @@ function Expand-WebRequest {
         }
         if (Test-Path $Path_Bak) {
             $ProtectedFiles | Foreach-Object {Get-ChildItem (Join-Path $Path_Bak $_) -ErrorAction Ignore -File | Where-Object {[IO.Path]::GetExtension($_) -notmatch "(dll|exe|bin)$"} | Foreach-Object {Copy-Item $_ $Path_New -Force}}
-            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip 3 | Foreach-Object {Remove-Item $_ -Recurse -Force}
+            $SkipBackups = if ($EnableMinerBackups) {3} else {0}
+            Get-ChildItem (Join-Path (Split-Path $Path) "$(Split-Path $Path -Leaf).*") -Directory | Sort-Object Name -Descending | Select-Object -Skip $SkipBackups | Foreach-Object {Remove-Item $_ -Recurse -Force}
         }
+    }
+    if (-not $EnableKeepDownloads -and (Test-Path $FileName)) {
+        Get-ChildItem $FileName -File | Foreach-Object {Remove-Item $_}
     }
 }
 

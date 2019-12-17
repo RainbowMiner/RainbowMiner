@@ -21,6 +21,8 @@
     EnableMinerStatus = $true
     EnableAutoMinerPorts = $true
     EnableMiningHeatControl = $false
+    EnableMinerBackups  = $true
+    EnableKeepDownloads = $true
     MiningHeatControl = 2.0
     DisableUnprofitableAlgolist = $false
     CPUMiningThreads = $Global:GlobalCPUInfo.Cores

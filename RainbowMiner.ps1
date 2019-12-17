@@ -199,6 +199,12 @@ param(
     [Parameter(Mandatory = $false)]
     [int]$MaxActivityDays = 2, # maximum days for the activity list on localhost
     [Parameter(Mandatory = $false)]
+    [int]$MaxLogfileDays = 5, # maximum days for the logfiles to keep
+    [Parameter(Mandatory = $false)]
+    [int]$MaxDownloadfileDays = 14, # maximum days for the downloads to keep
+    [Parameter(Mandatory = $false)]
+    [int]$MaxCachefileDays = 14, # maximum days for the cachefiles to keep
+    [Parameter(Mandatory = $false)]
     [Switch]$StartPaused = $false,
     [Parameter(Mandatory = $false)]
     [Int]$MinimumMiningIntervals = 1, #minimum mining intervals, before the regular interval time is used
@@ -222,6 +228,10 @@ param(
     [Array]$ExcludeServerConfigVars = @("APIAuth","APIPassword","APIPort","APIUser","CPUMiningAffinity","CPUMiningThreads","DeviceName","EnableServerConfig","ExcludeDeviceName","ExcludeServerConfigVars","GPUMiningAffinity","GroupName","MSIApath","NVSMIpath","Proxy","RunMode","ServerConfigName","ServerName","ServerPassword","ServerPort","ServerUser","StartPaused","WorkerName"), # do not copy these vars from the server's config.txt
     [Parameter(Mandatory = $false)]
     [Switch]$EnableServerExcludeList = $false,
+    [Parameter(Mandatory = $false)]
+    [Switch]$EnableMinerBackups = $false,
+    [Parameter(Mandatory = $false)]
+    [Switch]$EnableKeepDownloads = $false,
     [Parameter(Mandatory = $false)]
     [String]$RunMode = "standalone", # enter standalone, server or client
     [Parameter(Mandatory = $false)]
@@ -290,7 +300,7 @@ if (Get-Command "Unblock-File" -ErrorAction SilentlyContinue) {Get-ChildItem . -
 [hashtable]$Session.DefaultValues = @{}
 
 if (-not $psISE) {$MyCommandParameters = $MyInvocation.MyCommand.Parameters.Keys | Where-Object {$_ -and $_ -ne "ConfigFile" -and (Get-Variable $_ -ErrorAction Ignore)}}
-if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","APIPort","APIUser","APIPassword","APIAuth","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","Quickstart","PoolDataWindow","PoolStatAverage","EnableErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","StartPaused","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","RunMode","SetupOnly","LogLevel")}
+if (-not $MyCommandParameters) {$MyCommandParameters = @("Wallet","WorkerName","Interval","Region","DefaultPoolRegion","SSL","DeviceName","ExcludeDeviceName","Algorithm","MinerName","ExcludeAlgorithm","ExcludeMinerName","PoolName","ExcludePoolName","ExcludeCoin","ExcludeCoinSymbol","Currency","Donate","Proxy","Delay","Watchdog","MinerStatusUrl","MinerStatusKey","MinerStatusEmail","PushOverUserKey","MinerStatusMaxTemp","SwitchingPrevention","PoolSwitchingHysteresis","MinerSwitchingHysteresis","MaxRejectedShareRatio","MinComboOverSingleRatio","ShowMinerWindow","FastestMinerOnly","IgnoreFees","ExcludeMinersWithFee","DisableUnprofitableAlgolist","EnableCheckMiningConflict","ShowPoolBalances","ShowPoolBalancesDetails","ShowPoolBalancesExcludedPools","DisableDualMining","APIPort","APIUser","APIPassword","APIAuth","RebootOnGPUFailure","MiningMode","MSIApath","MSIAprofile","UIstyle","UseTimeSync","PowerPrice","PowerPriceCurrency","UsePowerPrice","PowerOffset","PowerOffsetPercent","CheckProfitability","DisableExtendInterval","EthPillEnable","EthPillEnableMTP","EnableOCProfiles","EnableOCVoltage","EnableLinuxHeadless","EnableAutoUpdate","EnableAutoBenchmark","EnableAutoMinerPorts","DisableMSIAmonitor","CPUMiningThreads","CPUMiningAffinity","GPUMiningAffinity","DisableAPI","DisableAsyncLoader","EnableMinerStatus","EnableFastSwitching","NVSMIpath","MiningPriorityCPU","MiningPriorityGPU","AutoexecPriority","HashrateWeight","HashrateWeightStrength","PoolAccuracyWeight","BalanceUpdateMinutes","Quickstart","PoolDataWindow","PoolStatAverage","EnableErrorRatio","EnableAutoAlgorithmAdd","EnableAlgorithmMapping","EnableResetVega","EnableMiningHeatControl","MiningHeatControl","MaxActivityDays","MaxLogfileDays","MaxDownloadfileDays","MaxCachefileDays","StartPaused","MinimumMiningIntervals","BenchmarkInterval","ServerName","ServerPort","ServerUser","ServerPassword","EnableServerConfig","ServerConfigName","GroupName","ExcludeServerConfigVars","EnableServerExcludeList","EnableMinerBackups","EnableKeepDownloads","RunMode","SetupOnly","LogLevel")}
 $MyCommandParameters | Where-Object {Get-Variable $_ -ErrorAction Ignore} | Foreach-Object {$Session.DefaultValues[$_] = Get-Variable $_ -ValueOnly -ErrorAction SilentlyContinue}
 
 if (-not (Start-Core -ConfigFile $ConfigFile -SetupOnly:$SetupOnly)) {Exit}
