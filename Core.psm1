@@ -1530,7 +1530,8 @@ function Invoke-Core {
     $Test_ExcludeAlgorithm = @($Session.Config.ExcludeAlgorithm | Select-Object)
 
     if ($PoolsToBeReadded = Compare-Object @($NewPools.Name | Select-Object -Unique) @($Global:AllPools.Name | Select-Object -Unique) | Where-Object SideIndicator -EQ "=>" | Select-Object -ExpandProperty InputObject) {
-        $NewPools += $Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name}
+        Write-Log -Level Info "Re-Adding currently failed pools: $($PoolsToBeReadded -join ", ")"
+        $NewPools = @($NewPools | Select-Object) + ($Global:AllPools | Where-Object {$PoolsToBeReadded -icontains $_.Name} | Foreach-Object {$_ | ConvertTo-Json -Depth 10 | ConvertFrom-Json} | Select-Object)
     }
 
     $NewPools = @($NewPools | Where-Object {
