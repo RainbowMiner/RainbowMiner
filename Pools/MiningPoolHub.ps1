@@ -101,8 +101,7 @@ $Pool_Request.return | ForEach-Object {
             if ($Pool_Algorithm_Norm -like "Cryptonight*" -or $Pool_Algorithm_Norm -like "Equihash*") {
                 [PSCustomObject]@{
                     Algorithm     = $Pool_Algorithm_Norm
-            Algorithm0    = $Pool_Algorithm_Norm
-                Algorithm0    = $Pool_Algorithm_Norm
+                    Algorithm0    = $Pool_Algorithm_Norm
                     CoinName      = $Pool_Coin
                     CoinSymbol    = $Pool_Symbol
                     Currency      = $Pool_Currency
