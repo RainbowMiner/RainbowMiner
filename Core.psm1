@@ -70,8 +70,8 @@
         [hashtable]$Global:NewRates     = @{}
         [hashtable]$Global:MinerInfo    = @{}
 
-        [System.Collections.ArrayList]$Global:ActiveMiners   = @()
-        [System.Collections.ArrayList]$Global:WatchdogTimers = @()
+        $Global:ActiveMiners   = @()
+        $Global:WatchdogTimers = @()
 
         $Global:AllPools = $null
 
@@ -314,8 +314,8 @@ function Set-MinerStats {
 
         if ($Miner.New) {$Miner.Benchmarked++}
 
-        if ($Miner.GetStatus() -eq [Minerstatus]::Running -or $Miner.New) {
-            $Miner.Speed_Live = [Double[]]@()            
+        if (($Miner.GetStatus() -eq [Minerstatus]::Running) -or $Miner.New) {
+            if (-not $Miner.Speed_Live) {$Miner.Speed_Live = @(0.0) * $Miner.Algorithm.Count}
 
             $Miner_PowerDraw = $Miner.GetPowerDraw()
 
@@ -327,7 +327,7 @@ function Set-MinerStats {
                 $Miner_Speed = $Miner.GetHashRate($Miner_Algorithm,$true)
                 $Miner_Diff  = $Miner.GetDifficulty($Miner_Algorithm)
 
-                $Miner.Speed_Live += [Double]$Miner_Speed
+                $Miner.Speed_Live[$Miner_Index] = [Double]$Miner_Speed
 
                 Write-Log -Level Info "$($Miner.BaseName) $(if ($Miner.IsBenchmarking()) {"benchmarking"} else {"mining"}) $($Miner_Algorithm) on $($Miner.DeviceModel): $($Miner.GetMinerDataCount()) samples / round $(if ($Miner.IsBenchmarking()) {"$($Miner.Benchmarked) / variance $("{0:f2}" -f ($Miner.Variance[$Miner.Algorithm.IndexOf($Miner_Algorithm)]*100))%"} else {$Miner.Rounds})"
 
@@ -458,33 +458,33 @@ function Invoke-ReportMinerStatus {
 
             if ($Pool_Stats) {
                 $Pool_Stats_Consolidated = @{}
-                $Pool_Stats.GetEnumerator() | Foreach-Object {
-                    $StatName = $_.Name -replace "(Coins|Party|Solo)_","_"
+                $Pool_Stats.Keys | Foreach-Object {
+                    $StatName = $_ -replace "(Coins|Party|Solo)_","_"
                     if ($Pool_Stats_Consolidated.ContainsKey($StatName)) {
-                        $Pool_Stats_Consolidated[$StatName].Profit_Avg += $_.Value.Profit_Avg
-                        $Pool_Stats_Consolidated[$StatName].ProfitApi_Avg += $_.Value.ProfitApi_Avg
-                        $Pool_Stats_Consolidated[$StatName].Cost_Avg += $_.Value.Cost_Avg
-                        $Pool_Stats_Consolidated[$StatName].Power_Avg += $_.Value.Power_Avg
+                        $Pool_Stats_Consolidated[$StatName].Profit_Avg += $Pool_Stats.$_.Profit_Avg
+                        $Pool_Stats_Consolidated[$StatName].ProfitApi_Avg += $Pool_Stats.$_.ProfitApi_Avg
+                        $Pool_Stats_Consolidated[$StatName].Cost_Avg += $Pool_Stats.$_.Cost_Avg
+                        $Pool_Stats_Consolidated[$StatName].Power_Avg += $Pool_Stats.$_.Power_Avg
                     } else {
                         $Pool_Stats_Consolidated[$StatName] = [PSCustomObject]@{
-                            Pool = $_.Value.Pool -replace "(Coins|Party|Solo)$"
-                            Profit_Avg = $_.Value.Profit_Avg
-                            ProfitApi_Avg = $_.Value.ProfitApi_Avg
-                            Cost_Avg = $_.Value.Cost_Avg
-                            Power_Avg = $_.Value.Power_Avg
+                            Pool = $Pool_Stats.$_.Pool -replace "(Coins|Party|Solo)$"
+                            Profit_Avg = $Pool_Stats.$_.Profit_Avg
+                            ProfitApi_Avg = $Pool_Stats.$_.ProfitApi_Avg
+                            Cost_Avg = $Pool_Stats.$_.Cost_Avg
+                            Power_Avg = $Pool_Stats.$_.Power_Avg
                         }
                     }
                 }
 
-                $Pool_Stats_Consolidated.GetEnumerator() | Foreach-Object {
+                $Pool_Stats_Consolidated.Keys | Foreach-Object {
                     $PoolName = $_.Value.Pool                    
                     [PSCustomObject]@{
                         Name      = $PoolName
-                        Profit    = "$([Math]::Round($_.Value.Profit_Avg,5))"
-                        ProfitApi = "$([Math]::Round($_.Value.ProfitApi_Avg,5))"
-                        Cost      = "$([Math]::Round($_.Value.Cost_Avg,5))"
-                        Power     = "$([Math]::Round($_.Value.Power_Avg,2))"
-                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.GetEnumerator() | Where-Object {$_.Value.PoolName -eq $PoolName -and $Global:Rates."$($_.Value.Currency)"} | Foreach-Object {$_.Value.Earnings_Avg / $Global:Rates."$($_.Value.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
+                        Profit    = "$([Math]::Round($Pool_Stats_Consolidated.$_.Profit_Avg,5))"
+                        ProfitApi = "$([Math]::Round($Pool_Stats_Consolidated.$_.ProfitApi_Avg,5))"
+                        Cost      = "$([Math]::Round($Pool_Stats_Consolidated.$_.Cost_Avg,5))"
+                        Power     = "$([Math]::Round($Pool_Stats_Consolidated.$_.Power_Avg,2))"
+                        Earnings  = "$(if ($Earn_Stats) {[Math]::Round(($Earn_Stats.Keys | Where-Object {$Earn_Stats.$_.PoolName -eq $PoolName -and $Global:Rates."$($Earn_Stats.$_.Currency)"} | Foreach-Object {$Earn_Stats.$_.Earnings_Avg / $Global:Rates."$($Earn_Stats.$_.Currency)"} | Measure-Object -Sum).Sum *1e8,5)} else {0})"
                     }
                 } | Where-Object {$_.Profit -gt 0 -and $_.Earnings -gt 0}
             }
@@ -697,6 +697,30 @@ function Update-Rates {
     Compare-Object $SyncCache.WorldCurrencies @($Global:Rates.Keys) -IncludeEqual -ExcludeDifferent | Select-Object -ExpandProperty InputObject | Foreach-Object {$Global:Rates[$_] = [Math]::Round($Global:Rates[$_],3)}
 }
 
+function Get-BestMinerDeviceCombos {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        $BestMiners = @(),
+        [Parameter(Mandatory = $false)]
+        [String]$SortBy = "Profit_Bias"
+    )
+    if ($BestMiners) {
+        $BestMiners_DeviceNames = @($BestMiners | Select-Object -ExpandProperty DeviceName -Unique | Sort-Object)
+        $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames | Measure-Object).Count -eq 0})
+        $Miners_Device_Combos | ForEach-Object {
+            $Miner_Device_Combo = $_.Combination
+            [PSCustomObject]@{
+                Combination = $Miner_Device_Combo | ForEach-Object {
+                    $Miner_Device_Count = $_.DeviceName.Count
+                    [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
+                    $BestMiners | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
+                }
+            }
+        } | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object $SortBy -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
+    }
+}
+
 function Invoke-Core {
 
     #Validate version file
@@ -804,7 +828,7 @@ function Invoke-Core {
         }
         if ($i -gt $Session.Config.BenchmarkInterval*2) {
             Update-WatchdogLevels -Reset
-            $Global:WatchdogTimers.Clear()
+            $Global:WatchdogTimers = @()
         }
     }
 
@@ -2184,13 +2208,13 @@ function Invoke-Core {
                 $ActiveMiner.DevFee         = $Miner_DevFee | ConvertFrom-Json -ErrorAction Ignore
             }
 
-            if (Compare-Object @($ActiveMiner.OCprofile.GetEnumerator() | Foreach-Object {"$($_.Name):$($_.Value)"}) @($Miner.OCprofile.GetEnumerator() | Foreach-Object {"$($_.Name):$($_.Value)"})) {
+            if (Compare-Object @($ActiveMiner.OCprofile.Keys | Foreach-Object {"$($_):$($ActiveMiner.OCprofile.$_)"}) @($Miner.OCprofile.Keys | Foreach-Object {"$($_):$($Miner.OCprofile.$_)"})) {
                 $ActiveMiner.OCprofile      = $Miner.OCprofile.Clone()
             }
         }
         else {
             Write-Log -Level Info "New miner object $($Miner.BaseName): $($Miner.HashRates.PSObject.Properties.Name -join '+')"
-            $NewMiner = New-Object $Miner.API -Property @{
+            $Global:ActiveMiners += New-Object $Miner.API -Property @{
                 Name                 = $Miner.Name
                 Version              = $Miner.Version
                 BaseName             = $Miner.BaseName
@@ -2199,11 +2223,11 @@ function Invoke-Core {
                 API                  = $Miner.API
                 Port                 = $Miner.Port
                 Algorithm            = $Miner.HashRates.PSObject.Properties.Name #temp fix, must use 'PSObject.Properties' to preserve order
-                BaseAlgorithm        = @($Miner.BaseAlgorithm -split '-' | Select-Object)
+                BaseAlgorithm        = $Miner.BaseAlgorithm -split '-'
                 Currency             = $Miner.Pools.PSObject.Properties.Value.Currency
                 CoinName             = $Miner.Pools.PSObject.Properties.Value.CoinName
                 CoinSymbol           = $Miner.Pools.PSObject.Properties.Value.CoinSymbol
-                DeviceName           = @($Miner.DeviceName | Select-Object)
+                DeviceName           = $Miner.DeviceName
                 DeviceModel          = $Miner.DeviceModel
                 Profit               = $Miner.Profit
                 Profit_Bias          = $Miner.Profit_Bias
@@ -2240,7 +2264,7 @@ function Invoke-Core {
                 IsLocked             = $Miner_IsLocked
                 PostBlockMining      = $Miner_PostBlockMining
                 MinSamples           = $Miner_MinSamples
-                EnvVars              = @($Miner.EnvVars | Select-Object)
+                EnvVars              = $Miner.EnvVars
                 NoCPUMining          = [bool]$Miner.NoCPUMining
                 NeedsBenchmark       = $Miner.HashRates.PSObject.Properties.Value -contains $null
                 MaxRejectedShareRatio= $Miner_MaxRejectedShareRatio
@@ -2248,7 +2272,6 @@ function Invoke-Core {
                 MiningAffinity       = $Miner.MiningAffinity
                 MultiProcess         = [int]$Miner.MultiProcess
             }
-            $Global:ActiveMiners.Add($NewMiner) > $null
         }
     }
 
@@ -2274,15 +2297,15 @@ function Invoke-Core {
 
     if (($Miners | Measure-Object).Count -gt 0) {
         #Get most profitable miner combination
-        $BestMiners             = $Global:ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Global:ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
+        $BestMiners = $Global:ActiveMiners | Where-Object Enabled | Select-Object DeviceName -Unique | ForEach-Object {$Miner_GPU = $_; ($Global:ActiveMiners | Where-Object {$_.Enabled -and (Compare-Object $Miner_GPU.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1)}
 
         #If post block mining: check for minimum profit
         if ($Miners_PBM = $BestMiners | Where-Object {$_.PostBlockMining -gt 0 -and -not $_.IsExclusiveMiner -and -not $_.IsLocked -and -not $_.IsFocusWalletMiner -and -not $_.NeedsBenchmark -and -not $_.IsRunningFirstRounds -and $Session.Config.Coins."$($_.CoinSymbol)".MinProfitPercent -gt 0}) {
             $Miners_PBM | Foreach-Object {
                 $Miner_PBM = $_
                 $BestMiner = $Global:ActiveMiners | Where-Object {$_.Enabled -and $_.PostBlockMining -eq 0 -and (Compare-Object $Miner_PBM.DeviceName $_.DeviceName | Measure-Object).Count -eq 0} | Sort-Object -Descending {$_.IsExclusiveMiner}, {$_.IsLocked}, {($_ | Where-Object Profit -EQ $null | Measure-Object).Count}, {$_.IsFocusWalletMiner}, {$_.PostBlockMining -gt 0}, {$_.IsRunningFirstRounds -and -not $_.NeedsBenchmark}, {($_ | Measure-Object Profit_Bias -Sum).Sum}, {$_.Benchmarked}, {if ($Session.Config.DisableExtendInterval){0}else{$_.ExtendInterval}} | Select-Object -First 1
-                $BestMiner_Profit = $BestMiner.Profit + $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) {$BestMiner.Profit_Cost})
-                $Miner_PBM_Profit = $Miner_PBM.Profit + $(if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) {$Miner_PBM.Profit_Cost})
+                $BestMiner_Profit = $BestMiner.Profit - $(if ($Session.Config.UsePowerPrice -and $BestMiner.Profit_Cost -ne $null -and $BestMiner.Profit_Cost -gt 0) {$BestMiner.Profit_Cost})
+                $Miner_PBM_Profit = $Miner_PBM.Profit - $(if ($Session.Config.UsePowerPrice -and $Miner_PBM.Profit_Cost -ne $null -and $Miner_PBM.Profit_Cost -gt 0) {$Miner_PBM.Profit_Cost})
                 if ($BestMiner -and ($BestMiner_Profit * $Session.Config.Coins."$($Miner_PBM.CoinSymbol)".MinProfitPercent / 100 -gt $Miner_PBM_Profit)) {
                     $BestMiners = (@($BestMiners | Select-Object) + $BestMiner) | Where-Object {$_ -ne $Miner_PBM}
                 }
@@ -2385,7 +2408,7 @@ function Invoke-Core {
                         Write-Log -Level Warn "Miner $Miner_Name mining $($Miner_Algorithm) on pool $($Miner_Pool) temporarily disabled. "
                     }
                     else {
-                        $Global:WatchdogTimers.Remove($WatchdogTimer)
+                        $Global:WatchdogTimers = @($Global:WatchdogTimers | Where-Object {$_ -ne $WatchdogTimer} | Select-Object)
                     }
                 }
                 $Miner_Index++
@@ -2450,13 +2473,13 @@ function Invoke-Core {
                 $Miner_Algorithm = $_
                 $WatchdogTimer = $Global:WatchdogTimers | Where-Object {$_.MinerName -eq $Miner_Name -and $_.PoolName -eq $Pools.$Miner_Algorithm.Name -and $_.Algorithm -eq $Miner_Algorithm}
                 if (-not $WatchdogTimer) {
-                    $Global:WatchdogTimers.Add([PSCustomObject]@{
+                    $Global:WatchdogTimers += [PSCustomObject]@{
                         MinerName = $Miner_Name
                         DeviceModel= $Miner_DeviceModel
                         PoolName  = $Pools.$Miner_Algorithm.Name
                         Algorithm = $Miner_Algorithm
                         Kicked    = $Session.Timer
-                    }) > $null
+                    }
                 }
                 elseif (-not ($WatchdogTimer.Kicked -GT $Session.Timer.AddSeconds( - $Session.WatchdogReset))) {
                     $WatchdogTimer.Kicked = $Session.Timer
@@ -2520,8 +2543,8 @@ function Invoke-Core {
     }
     if ($Session.ConfigFiles.Values.Healthy -contains $false) {
         Write-Host " "
-        $Session.ConfigFiles.GetEnumerator() | Where-Object {-not $_.Value.Healthy} | Foreach-Object {
-            Write-Log -Level Warn "Invalid JSON format in $($_.Value.Path)"
+        $Session.ConfigFiles.Keys | Where-Object {-not $Session.ConfigFiles.$_.Healthy} | Foreach-Object {
+            Write-Log -Level Warn "Invalid JSON format in $($Session.ConfigFiles.$_.Path)"
         }
         Write-Host " "
         Write-Host "Correct or delete the invalid config files! E.g. use https://jsonlint.com to validate " -ForegroundColor Yellow
@@ -2917,7 +2940,7 @@ function Invoke-Core {
                 "W" {
                     $API.WatchdogReset = $false
                     Write-Host -NoNewline "[W] pressed - resetting WatchDog."
-                    $Global:WatchdogTimers.Clear()
+                    $Global:WatchdogTimers = @()
                     Update-WatchdogLevels -Reset
                     Write-Log "Watchdog reset."
                     $keyPressed = $true

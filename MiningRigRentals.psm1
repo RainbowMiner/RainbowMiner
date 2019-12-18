@@ -74,7 +74,7 @@ param(
     [Parameter(Mandatory = $False)]
     [switch]$Raw
 )
-    $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
+    $keystr = Get-MD5Hash "$($endpoint)$(@($params.Keys | Sort-Object | Foreach-Object {"$($_)=$($params.$_)"}) -join ",")"
     if (-not (Test-Path Variable:Global:MRRCache)) {[hashtable]$Global:MRRCache = @{}}
     if (-not $Cache -or -not $Global:MRRCache[$keystr] -or -not $Global:MRRCache[$keystr].request -or -not $Global:MRRCache[$keystr].request.success -or $Global:MRRCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
@@ -149,7 +149,7 @@ param(
 
     try {
         if ($Global:MRRCacheLastCleanup -eq $null -or $Global:MRRCacheLastCleanup -lt (Get-Date).AddMinutes(-10).ToUniversalTime()) {
-            if ($RemoveKeys = $Global:MRRCache.GetEnumerator() | Where-Object {$_.Name -ne $keystr -and $_.Value.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$_.Value.cachetime)).ToUniversalTime()} | Select-Object -ExpandProperty Name) {
+            if ($RemoveKeys = $Global:MRRCache.Keys | Where-Object {$_ -ne $keystr -and $Global:MRRCache.$_.last -lt (Get-Date).AddSeconds(-[Math]::Max(3600,$Global:MRRCache.$_.cachetime)).ToUniversalTime()} | Select-Object) {
                 $RemoveKeys | Foreach-Object {$Global:MRRCache[$_] = $null; $Global:MRRCache.Remove($_)}
             }
             $Global:MRRCacheLastCleanup = (Get-Date).ToUniversalTime()

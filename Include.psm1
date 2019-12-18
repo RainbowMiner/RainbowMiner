@@ -177,7 +177,7 @@ function Get-CoinSymbol {
     }
     if (-not $Silent) {
         if ($Reverse) {
-            (Get-Culture).TextInfo.ToTitleCase("$($SyncCache.CoinNames.GetEnumerator() | Where-Object {$_.Value -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
+            (Get-Culture).TextInfo.ToTitleCase("$($SyncCache.CoinNames.Keys | Where-Object {$SyncCache.CoinNames.$_ -eq $CoinName.ToUpper()} | Select-Object -ExpandProperty Name -First 1)")
         } else {
             $SyncCache.CoinNames[$CoinName.ToLower() -replace "[^a-z0-9]+"]
         }
@@ -1301,9 +1301,9 @@ function Get-Stat {
 
 function Confirm-ConfigHealth {
     $Ok = $true
-    $Session.ConfigFiles.GetEnumerator() | Where-Object {$_.Value.Path -and (Test-Path $_.Value.Path)} | Where-Object {(Get-ChildItem $_.Value.Path).LastWriteTime.ToUniversalTime() -gt $_.Value.LastWriteTime} | Foreach-Object {
-        $Name = $_.Name
-        $File = $_.Value
+    $Session.ConfigFiles.Keys | Where-Object {$Session.ConfigFiles.$_.Path -and (Test-Path $Session.ConfigFiles.$_.Path)} | Where-Object {(Get-ChildItem $Session.ConfigFiles.$_.Path).LastWriteTime.ToUniversalTime() -gt $_.Value.LastWriteTime} | Foreach-Object {
+        $Name = $_
+        $File = $Session.ConfigFiles.$_
         try {
             Get-ContentByStreamReader $File.Path | ConvertFrom-Json -ErrorAction Stop > $null
         } catch {
@@ -1666,30 +1666,6 @@ function Get-Combination {
             $ones = (($new_smallest / $smallest) -shr 1) - 1
             $x = $ripple -bor $ones
         }
-    }
-}
-
-function Get-BestMinerDeviceCombos {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $false)]
-        $BestMiners = @(),
-        [Parameter(Mandatory = $false)]
-        [String]$SortBy = "Profit_Bias"
-    )
-    if ($BestMiners) {
-        $BestMiners_DeviceNames = @($BestMiners | Select-Object -ExpandProperty DeviceName -Unique | Sort-Object)
-        $Miners_Device_Combos   = (Get-Combination ($BestMiners | Select-Object DeviceName -Unique) | Where-Object {(Compare-Object ($_.Combination | Select-Object -ExpandProperty DeviceName) $BestMiners_DeviceNames | Measure-Object).Count -eq 0})
-        $Miners_Device_Combos | ForEach-Object {
-            $Miner_Device_Combo = $_.Combination
-            [PSCustomObject]@{
-                Combination = $Miner_Device_Combo | ForEach-Object {
-                    $Miner_Device_Count = $_.DeviceName.Count
-                    [Regex]$Miner_Device_Regex = "^(" + (($_.DeviceName | ForEach-Object {[Regex]::Escape($_)}) -join '|') + ")$"
-                    $BestMiners | Where-Object {([Array]$_.DeviceName -notmatch $Miner_Device_Regex).Count -eq 0 -and ([Array]$_.DeviceName -match $Miner_Device_Regex).Count -eq $Miner_Device_Count}
-                }
-            }
-        } | Sort-Object -Descending {($_.Combination | Where-Object Profit -EQ $null | Measure-Object).Count}, {($_.Combination | Measure-Object $SortBy -Sum).Sum} | Select-Object -First 1 | Select-Object -ExpandProperty Combination
     }
 }
 
@@ -2743,7 +2719,7 @@ function Get-Device {
                     $Global:GlobalCPUInfo | Add-Member L3CacheSize   $chkcpu.l3
                     $Global:GlobalCPUInfo | Add-Member MaxClockSpeed $chkcpu.cpu_speed
                     $Global:GlobalCPUInfo | Add-Member Features      @{}
-                    $chkcpu.GetEnumerator() | Where-Object {"$($_.Value)" -eq "1" -and $_.Name -notmatch '_' -and $_.Name -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features."$($_.Name)" = $true}
+                    $chkcpu.Keys | Where-Object {"$($chkcpu.$_)" -eq "1" -and $_ -notmatch '_' -and $_ -notmatch "^l\d$"} | Foreach-Object {$Global:GlobalCPUInfo.Features.$_ = $true}
                 } else {
                     $CIM_CPU = Get-CimInstance -ClassName CIM_Processor
                     $Global:GlobalCPUInfo | Add-Member Name          $CIM_CPU[0].Name
@@ -2938,7 +2914,7 @@ function Get-CPUFeatures {
         $features.fma4 = ($info[2] -band ([int]1 -shl 16)) -ne 0
         $features.xop = ($info[2] -band ([int]1 -shl 11)) -ne 0
     }
-    $features.GetEnumerator() | Where-Object Value | Select-Object -ExpandProperty Name
+    $features.Keys | Where-Object {$features.$_} | Select-Object
 }
 
 function Get-DevicePowerDraw {
@@ -4458,7 +4434,7 @@ class Miner {
                 if ($Global:IsLinux) {}
                 else {}
             } else {$Script:abControl.CommitChanges()}
-            $applied.GetEnumerator() | Foreach-Object {Write-Log $_}
+            $applied | Foreach-Object {Write-Log $_}
             if ($Sleep -gt 0) {Start-Sleep -Milliseconds $Sleep}
         }
     }
@@ -5565,7 +5541,7 @@ function Get-ConfigContent {
             }
             $Result = Get-ContentByStreamReader $PathToFile
             if ($Parameters.Count) {
-                $Parameters.GetEnumerator() | Foreach-Object {$Result = $Result -replace "\`$$($_.Name)","$($_.Value)"}
+                $Parameters.Keys | Foreach-Object {$Result = $Result -replace "\`$$($_)","$($Parameters.$_)"}
                 if (-not $ConserveUnkownParameters) {
                     $Result = $Result -replace "\`$[A-Z0-9_]+"
                 }
@@ -7014,7 +6990,7 @@ param(
     if ($secret) {$secret = Get-ReadableHex32 $secret}
     if ($organizationid) {$organizationid = Get-ReadableHex32 $organizationid}
 
-    $keystr = Get-MD5Hash "$($endpoint)$(@($params.GetEnumerator() | Sort-Object -Property Name | Foreach-Object {"$($_.Name)=$($_.Value)"}) -join ",")"
+    $keystr = Get-MD5Hash "$($endpoint)$(@($params.Keys | Sort-Object | Foreach-Object {"$($_)=$($params.$_)"}) -join ",")"
     if (-not (Test-Path Variable:Global:NHCache)) {$Global:NHCache = [hashtable]@{}}
     if (-not $Cache -or -not $Global:NHCache[$keystr] -or -not $Global:NHCache[$keystr].request -or $Global:NHCache[$keystr].last -lt (Get-Date).ToUniversalTime().AddSeconds(-$Cache)) {
 
@@ -7048,7 +7024,7 @@ param(
             $timestamp = Get-UnixTimestamp -Milliseconds
             #$timestamp_nh = Invoke-GetUrl "$($base)/main/api/v2/time" -timeout $Timeout | Select-Object -ExpandProperty serverTime
             #if ([Math]::Abs($timestamp_nh - $timestamp) -gt 3000) {$timestamp = $timestamp_nh}
-            $paramstr = "$(($params.GetEnumerator() | Foreach-Object {"$($_.Name)=$([System.Web.HttpUtility]::UrlEncode($_.Value))"}) -join '&')"
+            $paramstr = "$(($params.Keys | Foreach-Object {"$($_)=$([System.Web.HttpUtility]::UrlEncode($params.$_))"}) -join '&')"
             $str = "$key`0$timestamp`0$uuid`0`0$organizationid`0`0$($method.ToUpper())`0$endpoint`0$(if ($method -eq "GET") {$paramstr} else {"`0$($params | ConvertTo-Json -Depth 10 -Compress)"})"
             $sha = [System.Security.Cryptography.KeyedHashAlgorithm]::Create("HMACSHA256")
             $sha.key = [System.Text.Encoding]::UTF8.Getbytes($secret)
