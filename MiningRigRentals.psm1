@@ -120,8 +120,8 @@ param(
             $ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
             try {
                 $body = Switch($method) {
-                    "PUT" {$params | ConvertTo-Json -Depth 10}
-                    "GET" {if ($params.Count) {$params} else {$null}}
+                    "PUT" {$params | ConvertTo-Json -Depth 10;Break}
+                    "GET" {if ($params.Count) {$params} else {$null};Break}
                 }
                 #Write-Log -Level Info "MiningRigRental call: $($endpoint)"
                 $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint("$base$endpoint")
@@ -167,14 +167,14 @@ param(
     [String]$Name
 )
     Get-Algorithm $(Switch ($Name) {
-            "x16rt"             {"Veil"}
-            "x16rtgin"          {"X16rt"}
-            "cuckoocycle"       {"Cuckarood29"}
-            "cuckoocycleo"      {"Cuckaroo29"}
-            "cuckoocycle29swap" {"Cuckaroo29s"}
-            "cuckoocycle31"     {"Cuckatoo31"}
-            "equihash1505"      {"EquihashR25x5x3"}
-            "hashimotos"        {"Ethash"}
+            "x16rt"             {"Veil";Break}
+            "x16rtgin"          {"X16rt";Break}
+            "cuckoocycle"       {"Cuckarood29";Break}
+            "cuckoocycleo"      {"Cuckaroo29";Break}
+            "cuckoocycle29swap" {"Cuckaroo29s";Break}
+            "cuckoocycle31"     {"Cuckatoo31";Break}
+            "equihash1505"      {"EquihashR25x5x3";Break}
+            "hashimotos"        {"Ethash";Break}
             default             {$Name}
         }
     )
@@ -187,10 +187,10 @@ param(
     [String]$Name
 )
     Switch ($Name) {
-            "cuckoocycle"       {"GRIN"}
-            "cuckoocycle29swap" {"SWAP"}
-            "equihash1505"      {"BEAM"}
-            "equihash1505g"     {"GRIMM"}
+            "cuckoocycle"       {"GRIN";Break}
+            "cuckoocycle29swap" {"SWAP";Break}
+            "equihash1505"      {"BEAM";Break}
+            "equihash1505g"     {"GRIMM";Break}
             default             {""}
     }
 }
@@ -238,10 +238,10 @@ param(
     [String]$unit
 )
     Switch (($unit -split "\*")[0]) {
-        "kh" {1e3}
-        "mh" {1e6}
-        "gh" {1e9}
-        "th" {1e12}
+        "kh" {1e3;Break}
+        "mh" {1e6;Break}
+        "gh" {1e9;Break}
+        "th" {1e12;Break}
         default {1}
     }
 }

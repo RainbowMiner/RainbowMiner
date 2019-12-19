@@ -117,8 +117,8 @@ function Get-NvidiaArchitecture {
     [CmdLetBinding()]
     param($Model)
     Switch ($Model) {
-        {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing"}
-        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal"}
+        {$_ -match "^RTX20\d{2}" -or $_ -match "^GTX16\d{2}" -or $_ -match "^TU"} {"Turing";Break}
+        {$_ -match "^GTX10\d{2}" -or $_ -match "^GTXTitanX" -or $_ -match "^GP" -or $_ -match "^P"} {"Pascal";Break}
         default {"Other"}
     }
 }
@@ -195,7 +195,7 @@ function Get-WhatToMineData {
                     [PSCustomObject]@{
                         algo   = (Get-Algorithm ($_.Groups | Where-Object Name -eq 1 | Select-Object -ExpandProperty Value)) -replace "Cuckaroo29","Cuckarood29"
                         id     = $_.Groups | Where-Object Name -eq 2 | Select-Object -ExpandProperty Value
-                        factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9};"Mh" {1e6};"kh" {1e3};default {1}}}
+                        factor = $_.Groups | Where-Object Name -eq 3 | Select-Object -ExpandProperty Value | Foreach-Object {Switch($_) {"Gh" {1e9;Break};"Mh" {1e6;Break};"kh" {1e3;Break};default {1}}}
                     }
                 }
             if ($WtmKeys -and $WtmKeys.count -gt 10) {
@@ -326,30 +326,35 @@ Function Write-Log {
             'Error' {
                 $LevelText = 'ERROR:'
                 Write-Error -Message $Message
+                Break
             }
             'Warn' {
                 $LevelText = 'WARNING:'
                 Write-Warning -Message $Message
+                Break
             }
             'Info' {
                 $LevelText = 'INFO:'
                 #Write-Information -MessageData $Message
+                Break
             }
             'Verbose' {
                 $LevelText = 'VERBOSE:'
                 Write-Verbose -Message $Message
+                Break
             }
             'Debug' {
                 $LevelText = 'DEBUG:'
                 Write-Debug -Message $Message
+                Break
             }
         }
 
         $NoLog = Switch ($Session.LogLevel) {
-                    "Silent" {$true}
-                    "Info"   {$Level -eq "Debug"}
-                    "Warn"   {@("Info","Debug") -icontains $Level}
-                    "Error"  {@("Warn","Info","Debug") -icontains $Level}
+                    "Silent" {$true;Break}
+                    "Info"   {$Level -eq "Debug";Break}
+                    "Warn"   {@("Info","Debug") -icontains $Level;Break}
+                    "Error"  {@("Warn","Info","Debug") -icontains $Level;Break}
                 }
 
         if (-not $NoLog) {
@@ -806,6 +811,7 @@ function Set-Stat {
                         Ratio_Live         = [Double]$Stat.Ratio_Live
                         #Ratio_Average      = [Double]$Stat.Ratio_Average
                     }
+                    Break
                 }
                 "Pools" {
                     [PSCustomObject]@{
@@ -837,6 +843,7 @@ function Set-Stat {
                         Estimate24h_Week   = [Double]$Stat.Estimate24h_Week
                         ErrorRatio         = [Double]$Stat.ErrorRatio
                     }
+                    Break
                 }
                 default {
                     [PSCustomObject]@{
@@ -929,6 +936,7 @@ function Set-Stat {
                             Ratio_Live         = $Ratio
                             #Ratio_Average      = if ($Stat.Ratio_Average -gt 0) {[Math]::Round($Stat.Ratio_Average - $Span_Hour * ($Ratio - $Stat.Ratio_Average),4)} else {$Ratio}
                         }
+                        Break
                     }
                     "Pools" {
                         [PSCustomObject]@{
@@ -960,6 +968,7 @@ function Set-Stat {
                             Estimate24h_Week   = $Stat.Estimate24h_Week + $Span_Day * ($Estimate24h - $Stat.Estimate24h_Week)
                             ErrorRatio         = $Stat.ErrorRatio
                         }
+                        Break
                     }
                     default {
                         [PSCustomObject]@{
@@ -1025,6 +1034,7 @@ function Set-Stat {
                     Ratio_Live         = $Ratio
                     #Ratio_Average      = $Ratio
                 }
+                Break
             }
             "Pools" {
                 [PSCustomObject]@{
@@ -1056,6 +1066,7 @@ function Set-Stat {
                     Estimate24h_Week   = 0
                     ErrorRatio         = 0
                 }
+                Break
             }
             default {
                 [PSCustomObject]@{
@@ -1119,6 +1130,7 @@ function Set-Stat {
                     Ratio_Live         = [Double]$Stat.Ratio_Live
                     #Ratio_Average      = [Double]$Stat.Ratio_Average
                 }
+                Break
             }
             "Pools" {
                 [PSCustomObject]@{
@@ -1150,6 +1162,7 @@ function Set-Stat {
                     Estimate24h_Week   = [Decimal]$Stat.Estimate24h_Week
                     ErrorRatio         = [Decimal]$Stat.ErrorRatio
                 }
+                Break
             }
             default {
                 [PSCustomObject]@{
@@ -1552,14 +1565,14 @@ filter ConvertTo-Float {
     $Num = $_
 
     switch ([math]::floor([math]::log($Num, 1e3))) {
-        "-Infinity" {"0  "}
-        -2 {"{0:n2} µ" -f ($Num * 1e6)}
-        -1 {"{0:n2} m" -f ($Num * 1e3)}
-         0 {"{0:n2}  " -f ($Num / 1)}
-         1 {"{0:n2} k" -f ($Num / 1e3)}
-         2 {"{0:n2} M" -f ($Num / 1e6)}
-         3 {"{0:n2} G" -f ($Num / 1e9)}
-         4 {"{0:n2} T" -f ($Num / 1e12)}
+        "-Infinity" {"0  ";Break}
+        -2 {"{0:n2} µ" -f ($Num * 1e6);Break}
+        -1 {"{0:n2} m" -f ($Num * 1e3);Break}
+         0 {"{0:n2}  " -f ($Num / 1);Break}
+         1 {"{0:n2} k" -f ($Num / 1e3);Break}
+         2 {"{0:n2} M" -f ($Num / 1e6);Break}
+         3 {"{0:n2} G" -f ($Num / 1e9);Break}
+         4 {"{0:n2} T" -f ($Num / 1e12);Break}
          Default {"{0:n2} P" -f ($Num / 1e15)}
     }
 }
@@ -1575,11 +1588,11 @@ function ConvertFrom-Hash {
     )
     try {$Num = [double]($Hash -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     [int64]$(switch (($Hash -replace "[^kMGHTP]")[0]) {
-        "k" {$Num*1e3}
-        "M" {$Num*1e6}
-        "G" {$Num*1e9}
-        "T" {$Num*1e12}
-        "P" {$Num*1e15}
+        "k" {$Num*1e3;Break}
+        "M" {$Num*1e6;Break}
+        "G" {$Num*1e9;Break}
+        "T" {$Num*1e12;Break}
+        "P" {$Num*1e15;Break}
         default {$Num}
     })
 }
@@ -1591,10 +1604,10 @@ function ConvertFrom-Time {
     )
     try {$Num = [double]($Time -replace "[^0-9`.]")} catch {if ($Error.Count){$Error.RemoveAt(0)};$Num=0}
     [int64]$(switch (($Time -replace "[^mhdw]")[0]) {
-        "m" {$Num*60}
-        "h" {$Num*3600}
-        "d" {$Num*86400}
-        "w" {$Num*604800}
+        "m" {$Num*60;Break}
+        "h" {$Num*3600;Break}
+        "d" {$Num*86400;Break}
+        "w" {$Num*604800;Break}
         default {$Num}
     })
 }
@@ -1628,9 +1641,9 @@ function ConvertTo-BTC {
     $Currency = "BTC"
     if ($Number -ne 0) {
         switch ([math]::truncate([math]::log([math]::Abs($Number), 1000))) {
-            -1 {$Currency = "mBTC";$Number*=1e3;$Offset = 5}
-            -2 {$Currency = "µBTC";$Number*=1e6;$Offset = 8}
-            -3 {$Currency = "sat"; $Number*=1e8;$Offset = 10}
+            -1 {$Currency = "mBTC";$Number*=1e3;$Offset = 5;Break}
+            -2 {$Currency = "µBTC";$Number*=1e6;$Offset = 8;Break}
+            -3 {$Currency = "sat"; $Number*=1e8;$Offset = 10;Break}
         }
     }
 
@@ -3855,8 +3868,8 @@ class Miner {
             if ($Prescription -and -not ($this.Name -match "^ClaymoreDual" -and $ArgumentList -match "-strap")) {
                 $Prescription_Device = @(Get-Device $this.DeviceName) | Where-Object Model -in @("GTX1080","GTX1080Ti","TITANXP")
                 $Prescription = switch ($Prescription) {
-                    "RevA" {$Prescription = "revA"}
-                    "RevB" {$Prescription = "revB"}
+                    "RevA" {$Prescription = "revA";Break}
+                    "RevB" {$Prescription = "revB";Break}
                 }
                 if ($Prescription -ne "" -and $Prescription_Device) {
                     Write-Log "Starting OhGodAnETHlargementPill $($Prescription) on $($Prescription_Device.Name -join ',')"
@@ -4018,17 +4031,15 @@ class Miner {
     }
 
     [MinerStatus]GetStatus() {
-        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore | Select-Object Id,HasExited}
+        $MiningProcess = $this.ProcessId | Foreach-Object {Get-Process -Id $_ -ErrorAction Ignore}
 
         if ((-not $MiningProcess -and $this.Process.State -eq "Running") -or ($MiningProcess -and ($MiningProcess | Where-Object {-not $_.HasExited} | Measure-Object).Count -eq $(if ($Global:IsLinux) {1} else {$this.MultiProcess+1}))) {
             return [MinerStatus]::Running
         }
         elseif ($this.Status -eq [MinerStatus]::Running) {
-            return [MinerStatus]::RunningFailed
+            $this.Status = [MinerStatus]::RunningFailed
         }
-        else {
-            return $this.Status
-        }
+        return $this.Status
     }
 
     [Int]GetProcessId() {
@@ -4059,11 +4070,13 @@ class Miner {
                 $this.StartMiningPreProcess()
                 $this.StartMining()
                 $this.StartMiningPostProcess()
+                Break
             }
             Idle {
                 $this.StopMiningPreProcess()
                 $this.StopMining()
                 $this.StopMiningPostProcess()
+                Break
             }
             Default {
                 $this.StopMiningPreProcess()
@@ -4130,11 +4143,11 @@ class Miner {
                             }
 
                             switch -wildcard ($HashRate_Unit) {
-                                "kh/s*" {$HashRate *= 1E+3}
-                                "mh/s*" {$HashRate *= 1E+6}
-                                "gh/s*" {$HashRate *= 1E+9}
-                                "th/s*" {$HashRate *= 1E+12}
-                                "ph/s*" {$HashRate *= 1E+15}
+                                "kh/s*" {$HashRate *= 1E+3;Break}
+                                "mh/s*" {$HashRate *= 1E+6;Break}
+                                "gh/s*" {$HashRate *= 1E+9;Break}
+                                "th/s*" {$HashRate *= 1E+12;Break}
+                                "ph/s*" {$HashRate *= 1E+15;Break}
                             }
 
                             $HashRates += $HashRate
@@ -4348,12 +4361,12 @@ class Miner {
         $Profiles = [PSCustomObject]@{}
         foreach ($DeviceModel in @($this.OCprofile.Keys)) {
             $x = Switch -Regex ($DeviceModel) {
-                "1050" {2}
-                "P106-?100" {2}
-                "P106-?090" {1}
-                "P104-?100" {1}
-                "P102-?100" {1}
-                "1660" {4}
+                "1050" {2;Break}
+                "P106-?100" {2;Break}
+                "P106-?090" {1;Break}
+                "P104-?100" {1;Break}
+                "P102-?100" {1;Break}
+                "1660" {4;Break}
                 default {3}
             }
 
@@ -5183,11 +5196,11 @@ function Set-CombosConfigDefault {
                             $Model = $_.Model
                             $Mem = [int]($_.OpenCL.GlobalMemSize / 1GB)
                             Switch ($SubsetType) {
-                                "AMD"    {"$($Model.SubString(0,2))$($Mem)GB"}
+                                "AMD"    {"$($Model.SubString(0,2))$($Mem)GB";Break}
                                 "NVIDIA" {"$(
                                     Switch (Get-NvidiaArchitecture $Model) {
-                                        "Pascal" {Switch -Regex ($Model) {"105" {"GTX5"};"106" {"GTX6"};"(104|107|108)" {"GTX7"};default {$Model}}}
-                                        "Turing" {"RTX"}
+                                        "Pascal" {Switch -Regex ($Model) {"105" {"GTX5";Break};"106" {"GTX6";Break};"(104|107|108)" {"GTX7";Break};default {$Model}};Break}
+                                        "Turing" {"RTX";Break}
                                         default  {$Model}
                                     })$(if ($Mem -lt 6) {"$($Mem)GB"})"}
                             }
@@ -5461,16 +5474,16 @@ function Set-ConfigDefault {
     )
 
     Switch ($ConfigName) {
-        "Algorithms"  {Set-AlgorithmsConfigDefault -Force:$Force}
-        "Coins"       {Set-CoinsConfigDefault -Force:$Force}
-        "Colors"      {Set-ColorsConfigDefault -Force:$Force}
-        "Combos"      {Set-CombosConfigDefault -Force:$Force}
-        "Devices"     {Set-DevicesConfigDefault -Force:$Force}
-        "GpuGroups"   {Set-GpuGroupsConfigDefault -Force:$Force}
-        "Miners"      {Set-MinersConfigDefault -Force:$Force}
-        "OCProfiles"  {Set-OCProfilesConfigDefault -Force:$Force}
-        "Pools"       {Set-PoolsConfigDefault -Force:$Force}
-        "Scheduler"   {Set-SchedulerConfigDefault -Force:$Force}
+        "Algorithms"  {Set-AlgorithmsConfigDefault -Force:$Force;Break}
+        "Coins"       {Set-CoinsConfigDefault -Force:$Force;Break}
+        "Colors"      {Set-ColorsConfigDefault -Force:$Force;Break}
+        "Combos"      {Set-CombosConfigDefault -Force:$Force;Break}
+        "Devices"     {Set-DevicesConfigDefault -Force:$Force;Break}
+        "GpuGroups"   {Set-GpuGroupsConfigDefault -Force:$Force;Break}
+        "Miners"      {Set-MinersConfigDefault -Force:$Force;Break}
+        "OCProfiles"  {Set-OCProfilesConfigDefault -Force:$Force;Break}
+        "Pools"       {Set-PoolsConfigDefault -Force:$Force;Break}
+        "Scheduler"   {Set-SchedulerConfigDefault -Force:$Force;Break}
     }
 }
 
@@ -5710,10 +5723,10 @@ function Get-StatAverage {
         [String]$Default = ''
     )
     Switch ($Average -replace "[^A-Za-z0-9_]+") {
-        {"Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week" -icontains $_} {$_}
-        {"Minute5","Min5","Min_5","5Minute","5_Minute","5" -icontains $_} {"Minute_5"}
-        {"Minute10","Min10","Min_10","10Minute","10_Minute","10" -icontains $_} {"Minute_10"}
-        {"3Day","3_Day","Three_Day" -icontains $_} {"ThreeDay"}
+        {"Live","Minute_5","Minute_10","Hour","Day","ThreeDay","Week" -icontains $_} {$_;Break}
+        {"Minute5","Min5","Min_5","5Minute","5_Minute","5" -icontains $_} {"Minute_5";Break}
+        {"Minute10","Min10","Min_10","10Minute","10_Minute","10" -icontains $_} {"Minute_10";Break}
+        {"3Day","3_Day","Three_Day" -icontains $_} {"ThreeDay";Break}
         default {if ($Default) {$Default} else {"Minute_10"}}
     }
 }
@@ -5727,21 +5740,21 @@ function Get-YiiMPDataWindow {
         [String]$Default = $Session.Config.PoolDataWindow
     )
     Switch ($DataWindow -replace "[^A-Za-z0-9]+") {
-        {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current"}
-        {"2","e2","e24","e24h","last24","estimate24h","24h","estimatelast24h" -icontains $_} {"estimate_last24h"}
-        {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h"}                
-        {"4","min","min2","minimum","minimum2" -icontains $_} {"minimum-2"}
-        {"5","max","max2","maximum","maximum2" -icontains $_} {"maximum-2"}
-        {"6","avg","avg2","average","average2" -icontains $_} {"average-2"}
-        {"7","min3","minimum3","minall","minimumall" -icontains $_} {"minimum-3"}
-        {"8","max3","maximum3","maxall","maximumall" -icontains $_} {"maximum-3"}
-        {"9","avg3","average3","avgall","averageall" -icontains $_} {"average-3"}
-        {"10","mine","min2e","minimume","minimum2e" -icontains $_} {"minimum-2e"}
-        {"11","maxe","max2e","maximume","maximum2e" -icontains $_} {"maximum-2e"}
-        {"12","avge","avg2e","averagee","average2e" -icontains $_} {"average-2e"}
-        {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h"}
-        {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h"}
-        {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h"}
+        {"1","e1","e","ec","ecurrent","current","default","estimatecurrent" -icontains $_} {"estimate_current";Break}
+        {"2","e2","e24","e24h","last24","estimate24h","24h","estimatelast24h" -icontains $_} {"estimate_last24h";Break}
+        {"3","a2","a","a24","a24h","actual","actual24h","actuallast24h" -icontains $_} {"actual_last24h";Break}
+        {"4","min","min2","minimum","minimum2" -icontains $_} {"minimum-2";Break}
+        {"5","max","max2","maximum","maximum2" -icontains $_} {"maximum-2";Break}
+        {"6","avg","avg2","average","average2" -icontains $_} {"average-2";Break}
+        {"7","min3","minimum3","minall","minimumall" -icontains $_} {"minimum-3";Break}
+        {"8","max3","maximum3","maxall","maximumall" -icontains $_} {"maximum-3";Break}
+        {"9","avg3","average3","avgall","averageall" -icontains $_} {"average-3";Break}
+        {"10","mine","min2e","minimume","minimum2e" -icontains $_} {"minimum-2e";Break}
+        {"11","maxe","max2e","maximume","maximum2e" -icontains $_} {"maximum-2e";Break}
+        {"12","avge","avg2e","averagee","average2e" -icontains $_} {"average-2e";Break}
+        {"13","minh","min2h","minimumh","minimum2h" -icontains $_} {"minimum-2h";Break}
+        {"14","maxh","max2h","maximumh","maximum2h" -icontains $_} {"maximum-2h";Break}
+        {"15","avgh","avg2h","averageh","average2h" -icontains $_} {"average-2h";Break}
         default {if ($Default) {$Default} else {"estimate_current"}}
     }
 }
@@ -5794,10 +5807,10 @@ function Get-YiiMPValue {
     if ($Value -eq 0) {
         if ($DataWindow -match '^(.+)-(.+)$') {
             Switch ($Matches[2]) {
-                "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current")}
-                "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current")}
-                "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h")}
-                "3"  {[System.Collections.ArrayList]$fields = $allfields}
+                "2"  {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_current");Break}
+                "2e" {[System.Collections.ArrayList]$fields = @("estimate_last24h","estimate_current");Break}
+                "2h" {[System.Collections.ArrayList]$fields = @("actual_last24h","estimate_last24h");Break}
+                "3"  {[System.Collections.ArrayList]$fields = $allfields;Break}
             }
             Switch ($Matches[1]) {
                 "minimum" {
@@ -5807,6 +5820,7 @@ function Get-YiiMPValue {
                         $v = $values[$field]
                         if ($set -or $v -lt $Value) {$Value = $v;$set=$false}
                     }
+                    Break
                 }
                 "maximum" {
                     $set = $true
@@ -5815,6 +5829,7 @@ function Get-YiiMPValue {
                         $v = $values[$field]
                         if ($set -or $v -gt $Value) {$Value = $v;$set=$false}
                     }
+                    Break
                 }
                 "average" {
                     $c=0
@@ -5824,6 +5839,7 @@ function Get-YiiMPValue {
                         $c++
                     }
                     if ($c) {$Value/=$c}
+                    Break
                 }
             }
         } else {
@@ -6778,9 +6794,9 @@ function Get-PoolPortsFromRequest {
             $result = [PSCustomObject]@{}
             foreach($PortType in @("CPU","GPU","RIG")) {
                 $Port = Switch ($PortType) {
-                    "CPU" {$Ports | Where-Object {$mCPU -and $_.$descField -match $mCPU} | Select-Object -First 1}
-                    "GPU" {$Ports | Where-Object {$mGPU -and $_.$descField -match $mGPU} | Select-Object -First 1}
-                    "RIG" {$Ports | Where-Object {$mRIG -and $_.$descField -match $mRIG} | Select-Object -First 1}
+                    "CPU" {$Ports | Where-Object {$mCPU -and $_.$descField -match $mCPU} | Select-Object -First 1;Break}
+                    "GPU" {$Ports | Where-Object {$mGPU -and $_.$descField -match $mGPU} | Select-Object -First 1;Break}
+                    "RIG" {$Ports | Where-Object {$mRIG -and $_.$descField -match $mRIG} | Select-Object -First 1;Break}
                 }
                 if (-not $Port) {$Port = $Ports | Select-Object -First 1}
                 $result | Add-Member $PortType $Port.$portField -Force
@@ -7041,7 +7057,7 @@ param(
             }
             try {
                 $body = Switch($method) {
-                    "GET" {if ($params.Count) {$params} else {$null}}
+                    "GET" {if ($params.Count) {$params} else {$null};Break}
                     default {$params | ConvertTo-Json -Depth 10}
                 }
 
