@@ -294,6 +294,7 @@ function Write-ToFile {
         if ($file) {
             try {
                 $file.Close()
+                $file.Dispose()
             } catch {if ($Error.Count){$Error.RemoveAt(0)}}
         }
     }
@@ -1400,7 +1401,7 @@ function Get-ContentByStreamReader {
         if ($Error.Count){$Error.RemoveAt(0)}
     }
     finally {
-        if ($reader) {$reader.Close()}
+        if ($reader) {$reader.Close();$reader.Dispose()}
     }
 }
 
@@ -2440,6 +2441,7 @@ function Test-TcpServer {
         $Result = $Conn.AsyncWaitHandle.WaitOne($Timeout*1000,$false)
         if ($Result) {$Client.EndConnect($Conn)>$null}
         $Client.Close()
+        $Client.Dispose()
     } catch {
         if ($Error.Count){if ($Verbose) {Write-Log -Level Warn $Error[0]};$Error.RemoveAt(0)}
         $Result = $false
@@ -6418,7 +6420,7 @@ param(
         $cs = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Compress)
         $sw = New-Object System.IO.StreamWriter($cs)
         $sw.Write($s)
-        $sw.Close();
+        $sw.Close()
         [System.Convert]::ToBase64String($ms.ToArray())
     } catch {if ($Error.Count){$Error.RemoveAt(0)};$s}
 }

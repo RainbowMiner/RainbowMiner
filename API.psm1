@@ -1071,6 +1071,8 @@
                     $ResponseStream = New-Object IO.StreamWriter($Response.OutputStream,$Utf8NoBomEncoding)
 					$ResponseStream.Write($Data)
                     $ResponseStream.Flush()
+                    $ResponseStream.Close()
+                    $ResponseStream.Dispose()
                 } else {
                     $Response.ContentLength64 = $Data.Length
                     $Response.OutputStream.Write($Data,0,$Data.Length)
@@ -1084,6 +1086,7 @@
 
             try {
                 $Response.Close()
+                $Response.Dispose()
             } catch {
                 if ($Error.Count){$Error.RemoveAt(0)}
                 if ($Session.Config.LogLevel -ne "Silent") {
@@ -1097,6 +1100,17 @@
                 }
                 $Error.Clear()
             }
+
+            $Data = $null
+            $Parameters = $null
+            $Utf8NoBomEncoding = $null
+            $ResponseStream = $null
+            $Response = $null
+            $InputStream = $null
+            $ContentEncoding = $null
+            $Request = $null
+            $Context = $null
+            $task = $null
         }
 
         $Server.Stop()
