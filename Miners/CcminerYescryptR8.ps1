@@ -21,12 +21,12 @@ if ($IsLinux) {
     $Path = ".\Bin\NVIDIA-YesCryptR8\ccminer.exe"
     $UriCuda = @(
         [PSCustomObject]@{
-            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18v4-ccminerklaust/ccmineryescryptrv4.zip"
-            Cuda = "10.0"
+            Uri = "https://github.com/RainbowMiner/miner-binaries/releases/download/v8.21r18o1-ccminerklaust/ccminer-KlausT-8.21-r18-o1.zip"
+            Cuda = "10.1"
         }
     )
-    $ManualUri = "https://github.com/Minerx117/ccmineryescryptr8g/releases"
-    $Version = "8.21-r18kotov4"
+    $ManualUri = "https://github.com/okoto-xyz/ccminer/releases"
+    $Version = "8.21-r18o1"
 }
 
 $Port = "137{0:d2}"
